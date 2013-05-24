@@ -1,16 +1,14 @@
 /*global define*/
 define([
-        '../Core/BoxTessellator',
+        '../Core/BoxGeometry',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Color',
         '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
         '../Core/BoundingSphere',
         '../Core/PrimitiveType',
         '../Renderer/CullFace',
@@ -24,17 +22,15 @@ define([
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
-        BoxTessellator,
+        BoxGeometry,
         Cartesian3,
         Cartesian4,
-        Color,
         combine,
         ComponentDatatype,
         DeveloperError,
         destroyObject,
         Ellipsoid,
         Matrix4,
-        MeshFilters,
         BoundingSphere,
         PrimitiveType,
         CullFace,
@@ -204,7 +200,7 @@ define([
             return vertexArray;
         }
 
-        var mesh = BoxTessellator.compute({
+        var mesh = new BoxGeometry({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 

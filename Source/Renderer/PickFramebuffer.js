@@ -90,6 +90,9 @@ define([
             framebuffer : this._fb
         });
 
+// TODO: remove
+console.log(pixels[0] + ', ' + pixels[1] + ', ' + pixels[2] + ', ' + pixels[3]);
+
         var max = Math.max(width, height);
         var length = max * max;
         var halfWidth = Math.floor(width * 0.5);

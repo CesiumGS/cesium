@@ -12,14 +12,12 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/ComponentDatatype',
-        '../Core/CubeMapEllipsoidTessellator',
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/GeographicProjection',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
-        '../Core/MeshFilters',
         '../Core/Occluder',
         '../Core/PrimitiveType',
         '../Core/Transforms',
@@ -60,14 +58,12 @@ define([
         Cartesian4,
         Cartographic,
         ComponentDatatype,
-        CubeMapEllipsoidTessellator,
         Ellipsoid,
         Extent,
         GeographicProjection,
         Intersect,
         CesiumMath,
         Matrix4,
-        MeshFilters,
         Occluder,
         PrimitiveType,
         Transforms,
@@ -393,7 +389,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                 }
             }
         }
@@ -441,7 +437,7 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                  }
             }
         }
@@ -577,7 +573,7 @@ define([
             });
         } else {
             var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
         }
 
         var shaderCache = context.getShaderCache();

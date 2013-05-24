@@ -1,29 +1,35 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/MeshFilters',
+         'Core/GeometryFilters',
          'Core/PrimitiveType',
          'Core/ComponentDatatype',
-         'Core/CubeMapEllipsoidTessellator',
+         'Core/EllipsoidGeometry',
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Core/Tipsify',
-         'Core/GeographicProjection'
+         'Core/GeographicProjection',
+         'Core/Geometry',
+         'Core/GeometryAttribute',
+         'Core/GeometryIndices'
      ], function(
-         MeshFilters,
+         GeometryFilters,
          PrimitiveType,
          ComponentDatatype,
-         CubeMapEllipsoidTessellator,
+         EllipsoidGeometry,
          Ellipsoid,
          Cartesian3,
          EncodedCartesian3,
          Tipsify,
-         GeographicProjection) {
+         GeographicProjection,
+         Geometry,
+         GeometryAttribute,
+         GeometryIndices) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2, 3, 4, 5]
@@ -51,7 +57,7 @@ defineSuite([
     });
 
     it('converts a triangle fan to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_FAN,
                 values : [0, 1, 2, 3]
@@ -79,7 +85,7 @@ defineSuite([
     });
 
     it('converts a triangle strip to wireframe in place', function() {
-        var mesh = MeshFilters.toWireframeInPlace({
+        var mesh = GeometryFilters.toWireframe({
             indexLists : [{
                 primitiveType : PrimitiveType.TRIANGLE_STRIP,
                 values : [0, 1, 2, 3]
@@ -115,7 +121,7 @@ defineSuite([
             }
         };
 
-        var indices = MeshFilters.createAttributeIndices(mesh);
+        var indices = GeometryFilters.createAttributeIndices(mesh);
 
         var validIndices = [0, 1, 2];
         expect(validIndices).toContain(indices.position);
@@ -132,7 +138,7 @@ defineSuite([
             colors : 2
         };
 
-        var mappedIndices = MeshFilters.mapAttributeIndices(indices, {
+        var mappedIndices = GeometryFilters.mapAttributeIndices(indices, {
             positions : 'position',
             normals : 'normal',
             colors : 'color'
@@ -159,7 +165,7 @@ defineSuite([
                 componentsPerAttribute : 3,
                 values : [0, 1, 2, 3, 4, 5]
             };
-            mesh = MeshFilters.reorderForPreVertexCache(mesh);
+            mesh = GeometryFilters.reorderForPreVertexCache(mesh);
         }).toThrow();
     });
 
@@ -189,7 +195,7 @@ defineSuite([
             componentsPerAttribute : 3,
             values : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
         };
-        MeshFilters.reorderForPreVertexCache(mesh);
+        GeometryFilters.reorderForPreVertexCache(mesh);
 
         expect(mesh.indexLists[0].values[0]).toEqual(0);
         expect(mesh.indexLists[0].values[1]).toEqual(1);
@@ -233,7 +239,10 @@ defineSuite([
     });
 
     it('can reorder indices for the post vertex cache', function() {
-        var mesh = CubeMapEllipsoidTessellator.compute(new Ellipsoid(10.0, 10.0, 10.0), 100);
+        var mesh = new EllipsoidGeometry({
+            ellipsoid : new Ellipsoid(10.0, 10.0, 10.0),
+            numberOfPartitions : 100
+        });
         var indices = mesh.indexLists[0].values;
         var numIndices = indices.length;
         var maximumIndex = 0;
@@ -246,7 +255,7 @@ defineSuite([
                                                 maximumIndex : maximumIndex,
                                                 cacheSize : 24});
         expect(ACMRbefore).toBeGreaterThan(1.00);
-        mesh = MeshFilters.reorderForPostVertexCache(mesh);
+        mesh = GeometryFilters.reorderForPostVertexCache(mesh);
         indices = mesh.indexLists[0].values;
         var ACMRafter = Tipsify.calculateACMR({indices : indices,
                                                maximumIndex : maximumIndex,
@@ -274,7 +283,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(1);
         expect(meshes[0]).toBe(mesh);
@@ -301,7 +310,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(1);
         expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
@@ -340,7 +349,7 @@ defineSuite([
             }]
         };
 
-        var meshes = MeshFilters.fitToUnsignedShortIndices(mesh);
+        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
         expect(meshes.length).toEqual(2);
 
@@ -368,7 +377,7 @@ defineSuite([
         };
 
         expect(function() {
-            return MeshFilters.fitToUnsignedShortIndices(mesh);
+            return GeometryFilters.fitToUnsignedShortIndices(mesh);
         }).toThrow();
     });
 
@@ -395,7 +404,7 @@ defineSuite([
         };
 
         expect(function() {
-            return MeshFilters.fitToUnsignedShortIndices(mesh);
+            return GeometryFilters.fitToUnsignedShortIndices(mesh);
         }).toThrow();
     });
 
@@ -411,7 +420,7 @@ defineSuite([
             values : [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z]
         };
 
-        mesh = MeshFilters.projectTo2D(mesh);
+        mesh = GeometryFilters.projectTo2D(mesh);
 
         var ellipsoid = Ellipsoid.WGS84;
         var projection = new GeographicProjection();
@@ -431,7 +440,7 @@ defineSuite([
         expect(mesh.attributes.position3D.values[5]).toEqual(p2.z);
     });
 
-    it('MeshFilters.encodeAttribute encodes positions', function() {
+    it('GeometryFilters.encodeAttribute encodes positions', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);
 
@@ -444,7 +453,7 @@ defineSuite([
                 }
             }
         };
-        mesh = MeshFilters.encodeAttribute(mesh);
+        mesh = GeometryFilters.encodeAttribute(mesh);
 
         expect(mesh.attributes.positionHigh).toBeDefined();
         expect(mesh.attributes.positionHigh.values[0]).toEqual(encoded.high.x);
@@ -457,29 +466,29 @@ defineSuite([
         expect(mesh.attributes.position).not.toBeDefined();
     });
 
-    it('MeshFilters.encodeAttribute throws without a mesh', function() {
+    it('GeometryFilters.encodeAttribute throws without a mesh', function() {
         expect(function() {
-            MeshFilters.encodeAttribute(undefined);
+            GeometryFilters.encodeAttribute(undefined);
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws with mesh without attributes property', function() {
+    it('GeometryFilters.encodeAttribute throws with mesh without attributes property', function() {
         expect(function() {
-            MeshFilters.encodeAttribute({});
+            GeometryFilters.encodeAttribute({});
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws without attribute', function() {
+    it('GeometryFilters.encodeAttribute throws without attribute', function() {
         expect(function() {
             var mesh = {
                 attributes : {
                 }
             };
-            MeshFilters.encodeAttribute(mesh);
+            GeometryFilters.encodeAttribute(mesh);
         }).toThrow();
     });
 
-    it('MeshFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
+    it('GeometryFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
         expect(function() {
             var mesh = {
                 attributes : {
@@ -488,8 +497,295 @@ defineSuite([
                     values : [0.0]
                 }
             };
-            MeshFilters.encodeAttribute(mesh);
+            GeometryFilters.encodeAttribute(mesh);
         }).toThrow();
     });
 
+    it('GeometryFilters.combine combines one mesh', function() {
+        var mesh = new Geometry({
+            attributes : new GeometryAttribute({
+                position : {
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 0.0, 0.0]
+                }
+            })
+        });
+
+        var combinedMesh = GeometryFilters.combine([mesh]);
+        expect(combinedMesh).toBe(mesh);
+    });
+
+    it('GeometryFilters.combine combines several meshes', function() {
+        var mesh = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0
+                    ]
+                }),
+                normal : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0
+                    ]
+                })
+            },
+            indexLists : [new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [0, 1, 2]
+            }), new GeometryIndices({
+                primitiveType : PrimitiveType.LINES,
+                values : [1, 2]
+            })]
+        });
+        var anotherMesh = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [
+                        3.0, 3.0, 3.0,
+                        4.0, 4.0, 4.0,
+                        5.0, 5.0, 5.0
+                    ]
+                })
+            },
+            indexLists : [new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [0, 1, 2]
+            }), new GeometryIndices({
+                primitiveType : PrimitiveType.POINTS,
+                values : [0, 1, 2]
+            })]
+        });
+
+        var combinedMesh = GeometryFilters.combine([mesh, anotherMesh]);
+        expect(combinedMesh).toEqual(new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0,
+                        2.0, 2.0, 2.0,
+                        3.0, 3.0, 3.0,
+                        4.0, 4.0, 4.0,
+                        5.0, 5.0, 5.0
+                    ])
+                })
+            },
+            indexLists : [new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : new Uint16Array([0, 1, 2, 3, 4, 5])
+            }), new GeometryIndices({
+                primitiveType : PrimitiveType.LINES,
+                values : new Uint16Array([1, 2])
+            }), new GeometryIndices({
+                primitiveType : PrimitiveType.POINTS,
+                values : new Uint16Array([3, 4, 5])
+            })]
+        }));
+    });
+
+    it('GeometryFilters.combine throws with meshes', function() {
+        expect(function() {
+            GeometryFilters.combine();
+        }).toThrow();
+    });
+
+    it('GeometryFilters.combine throws when meshes.length is zero', function() {
+        expect(function() {
+            GeometryFilters.combine([]);
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals();
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry());
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {}
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {}
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute: 2
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is not a multiple of 3', function() {
+        expect(function() {
+            GeometryFilters.computeNormals(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4, 3],
+                        componentsPerAttribute: 3
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeNormals does not compute normals when mesh.indexLists is undefined', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                    componentsPerAttribute: 3
+                }
+            }
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
+    });
+
+    it('GeometryFilters.computeNormals does not compute normals when primitive type is not triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLE_STRIP,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
+    });
+
+
+    it('GeometryFilters.computeNormals computes normal for one triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(3*3);
+        expect(mesh.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
+    });
+
+    it('GeometryFilters.computeNormals computes normal for two triangles', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 1,
+                             1, 1, 1,
+                             2, 0, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2, 1, 3, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(4*3);
+        var a = new Cartesian3(-1, 0, 1).normalize();
+        expect(mesh.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(3, 9)).toEqual([0, 0, 1, 0, 0, 1]);
+        a = new Cartesian3(1, 0, 1).normalize();
+        expect(mesh.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
+    });
+
+    it('GeometryFilters.computeNormals computes normal for six triangles', function() {
+        var mesh = new Geometry ({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             1, 0, 1,
+                             0, 0, 1,
+                             0, 1, 1,
+                             0, 1, 0,
+                             1, 1, 0],
+                             componentsPerAttribute: 3
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormals(mesh);
+
+        expect(mesh.attributes.normal.values.length).toEqual(7*3);
+        var a = new Cartesian3(-1, -1, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
+        a = new Cartesian3(0, -1, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(3, 6)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(6, 9)).toEqual([0, -1, 0]);
+        a = new Cartesian3(-1, -1, 0).normalize();
+        expect(mesh.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(12, 15)).toEqual([-1, 0, 0]);
+        a = new Cartesian3(-1, 0, -1).normalize();
+        expect(mesh.attributes.normal.values.slice(15,18)).toEqual([a.x, a.y, a.z]);
+        expect(mesh.attributes.normal.values.slice(18,21)).toEqual([0, 0, -1]);
+    });
 });

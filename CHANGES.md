@@ -4,6 +4,25 @@ Change Log
 Beta Releases
 -------------
 
+### TODO
+
+* Breaking changes:
+   * Replaced tessellators and meshes with geometry.  In particular:
+      * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
+      * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Removed `PlaneTessellator`.  It was incomplete and not used.
+      * Renamed `MeshFilters` to `GeometryFilters`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
+   * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Added `GeometryFilters.combine` to combine meshes for better batching.
+* Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
+* Added `EllipseGeometry` and `CircleGeometry`.
+* Added `BoundingSphere.fromEllipsoid`.
+* Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
+* Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+
 ### b17 - 2013-06-03
 
 * Breaking changes:

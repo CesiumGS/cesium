@@ -524,6 +524,24 @@ define([
     };
 
     /**
+     * DOC_TBA
+     *
+     * @exception {DeveloperError} ellipsoid is required.
+     */
+    BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
+        if (typeof ellipsoid === 'undefined') {
+            throw new DeveloperError('ellipsoid is required.');
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingSphere();
+        }
+
+        result.radius = ellipsoid.getMaximumRadius();
+        return result;
+    };
+
+    /**
      * Duplicates a BoundingSphere instance.
      * @memberof BoundingSphere
      *

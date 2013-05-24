@@ -11,7 +11,10 @@ define([
         './Matrix2',
         './GeographicProjection',
         './ComponentDatatype',
-        './PrimitiveType'
+        './PrimitiveType',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryIndices'
     ], function(
         clone,
         defaultValue,
@@ -24,18 +27,16 @@ define([
         Matrix2,
         GeographicProjection,
         ComponentDatatype,
-        PrimitiveType) {
+        PrimitiveType,
+        Geometry,
+        GeometryAttribute,
+        GeometryIndices) {
     "use strict";
 
     /**
      * Contains class functions to create a mesh or vertex array from a cartographic extent.
      *
      * @exports ExtentTessellator
-     *
-     * @see HeightmapTessellator
-     * @see CubeMapEllipsoidTessellator
-     * @see BoxTessellator
-     * @see PlaneTessellator
      */
     var ExtentTessellator = {};
 
@@ -231,8 +232,8 @@ define([
      * from the extent for creating a vertex array. (returns undefined if no indices are found)
      *
      * @see Context#createVertexArrayFromMesh
-     * @see MeshFilters.createAttributeIndices
-     * @see MeshFilters.toWireframeInPlace
+     * @see GeometryFilters.createAttributeIndices
+     * @see GeometryFilters.toWireframe
      * @see Extent
      *
      * @example
@@ -248,10 +249,10 @@ define([
      *     granularity : 0.01,
      *     surfaceHeight : 10000.0
      * });
-     * mesh = MeshFilters.toWireframeInPlace(mesh);
+     * mesh = GeometryFilters.toWireframe(mesh);
      * var va = context.createVertexArrayFromMesh({
      *     mesh             : mesh,
-     *     attributeIndices : MeshFilters.createAttributeIndices(mesh)
+     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh)
      * });
      */
     ExtentTessellator.compute = function(description) {
@@ -289,28 +290,28 @@ define([
             return undefined;
         }
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {},
-            indexLists : [{
+            indexLists : [new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
                 values : indices
-            }]
-        };
+            })]
+        });
 
         var positionName = defaultValue(description.positionName, 'position');
-        mesh.attributes[positionName] = {
+        mesh.attributes[positionName] = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
             values : vertices
-        };
+        });
 
         if (description.generateTextureCoordinates) {
             var textureCoordinatesName = defaultValue(description.textureCoordinatesName, 'textureCoordinates');
-            mesh.attributes[textureCoordinatesName] = {
+            mesh.attributes[textureCoordinatesName] = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : textureCoordinates
-            };
+            });
         }
 
         return mesh;
@@ -348,8 +349,8 @@ define([
      *
      * var datatype = ComponentDatatype.FLOAT;
      * var usage = BufferUsage.STATIC_DRAW;
-     * var positionBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.positions), usage);
-     * var textureCoordinateBuffer = context.createVertexBuffer(datatype.toTypedArray(buffers.textureCoordinates), usage);
+     * var positionBuffer = context.createVertexBuffer(datatype.createTypedArray(buffers.positions), usage);
+     * var textureCoordinateBuffer = context.createVertexBuffer(datatype.createTypedArray(buffers.textureCoordinates), usage);
      * attributes = [{
      *         index : attributeIndices.position,
      *         vertexBuffer : positionBuffer,
@@ -376,7 +377,7 @@ define([
      *
      * var datatype = ComponentDatatype.FLOAT;
      * var usage = BufferUsage.STATIC_DRAW;
-     * var typedArray = datatype.toTypedArray(buffers.vertices);
+     * var typedArray = datatype.createTypedArray(buffers.vertices);
      * var buffer = context.createVertexBuffer(typedArray, usage);
      * var stride = 5 * datatype.sizeInBytes;
      * var attributes = [{
