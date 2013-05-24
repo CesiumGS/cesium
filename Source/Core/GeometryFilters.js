@@ -863,7 +863,7 @@ define([
     var v0 = new Cartesian3();
     var v1 = new Cartesian3();
     var v2 = new Cartesian3();
-    GeometryFilters.computeNormals = function(mesh) {
+    GeometryFilters.computeNormal = function(mesh) {
         if (typeof mesh === 'undefined') {
             throw new DeveloperError('mesh is required.');
         }
@@ -1041,7 +1041,7 @@ define([
 
             var numVertices = mesh.attributes.position.values.length/3;
             var numIndices = indices.length;
-            var tan1 = new Array(numVertices*2);
+            var tan1 = new Array(numVertices);
             for (var i = 0; i < tan1.length; i++) {
                 tan1[i] = new Cartesian3();
             }
@@ -1114,15 +1114,14 @@ define([
                 var i32 = i3+2;
 
                 var n = new Cartesian3(normals[i3], normals[i31], normals[i32]);
-                var t = tan1[i];
-                var tr = new Cartesian3();
+                var t = tan1[i].normalize();
                 var scalar = n.dot(t);
                 var v = n.multiplyByScalar(scalar);
-                tr = (t.subtract(v)).normalize();
+                var tr = (t.subtract(v)).normalize();
                 mesh.attributes.tangent.values[i3] = tr.x;
                 mesh.attributes.tangent.values[i31] = tr.y;
                 mesh.attributes.tangent.values[i32] = tr.z;
-                tr = n.cross(tr);
+                tr = tr.cross(n, tr).normalize();
                 mesh.attributes.binormal.values[i3] = tr.x;
                 mesh.attributes.binormal.values[i31] = tr.y;
                 mesh.attributes.binormal.values[i32] = tr.z;
