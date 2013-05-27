@@ -21,8 +21,8 @@ defineSuite([
 
     it('create simple absolute', function() {
         var coords = [
-            new Cartographic(49, 18, 1000),
-            new Cartographic(50, 18, 1000)
+            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
+            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
         ];
 
         var w = new WallGeometry({
@@ -36,8 +36,8 @@ defineSuite([
 
     it('create relative to ground no terrain', function() {
         var coords = [
-            new Cartographic(49, 18, 1000),
-            new Cartographic(50, 18, 1000)
+            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
+            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
         ];
 
         // this will throw an exception, as no terrain is specified
@@ -51,13 +51,13 @@ defineSuite([
 
     it('create relative to ground', function() {
         var coords = [
-            new Cartographic(49, 18, 1000),
-            new Cartographic(50, 18, 1000)
+            Cartographic.fromDegrees(49.0, 18.0, 1000.0),
+            Cartographic.fromDegrees(50.0, 18.0, 1000.0)
         ];
 
         var terrain = [
-            new Cartographic(49, 18, 100),
-            new Cartographic(50, 18, 110)
+            Cartographic.fromDegrees(49.0, 18.0, 100.0),
+            Cartographic.fromDegrees(50.0, 18.0, 110.0)
         ];
 
         var w = new WallGeometry({

@@ -8,8 +8,6 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
-         'Core/BoundingRectangle',
-         'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
@@ -31,8 +29,6 @@ defineSuite([
          frameState,
          pick,
          render,
-         BoundingRectangle,
-         BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
@@ -90,33 +86,33 @@ defineSuite([
 
     it('create throws with less than three positions', function() {
         expect(function() {
-            var p = new PolygonGeometry({ positions : [new Cartesian3()] });
+            return new PolygonGeometry({ positions : [new Cartesian3()] });
         }).toThrow();
     });
 
     it('create polygon from hierarchy', function() {
         var hierarchy = {
                 positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                    new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
-                    new Cartographic.fromDegrees(-110.0, 35.0, 0.0),
-                    new Cartographic.fromDegrees(-110.0, 40.0, 0.0),
-                    new Cartographic.fromDegrees(-124.0, 40.0, 0.0)
+                    Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                    Cartographic.fromDegrees(-110.0, 35.0, 0.0),
+                    Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                    Cartographic.fromDegrees(-124.0, 40.0, 0.0)
                 ]),
                 holes : [{
+                    positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-122.0, 36.0, 0.0),
+                        Cartographic.fromDegrees(-122.0, 39.0, 0.0),
+                        Cartographic.fromDegrees(-112.0, 39.0, 0.0),
+                        Cartographic.fromDegrees(-112.0, 36.0, 0.0)
+                    ]),
+                    holes : [{
                         positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                            new Cartographic.fromDegrees(-122.0, 36.0, 0.0),
-                            new Cartographic.fromDegrees(-122.0, 39.0, 0.0),
-                            new Cartographic.fromDegrees(-112.0, 39.0, 0.0),
-                            new Cartographic.fromDegrees(-112.0, 36.0, 0.0)
-                        ]),
-                        holes : [{
-                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0),
-                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0)
-                            ])
-                        }]
+                            Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                            Cartographic.fromDegrees(-114.0, 36.5, 0.0),
+                            Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                            Cartographic.fromDegrees(-120.0, 38.5, 0.0)
+                        ])
+                    }]
                 }]
         };
 
@@ -125,28 +121,28 @@ defineSuite([
 
     it('create polygon from clockwise hierarchy', function() {
         var hierarchy = {
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                Cartographic.fromDegrees(-124.0, 40.0, 0.0),
+                Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                Cartographic.fromDegrees(-110.0, 35.0, 0.0)
+            ]),
+            holes : [{
                 positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                    new Cartographic.fromDegrees(-124.0, 35.0, 0.0),
-                    new Cartographic.fromDegrees(-124.0, 40.0, 0.0),
-                    new Cartographic.fromDegrees(-110.0, 40.0, 0.0),
-                    new Cartographic.fromDegrees(-110.0, 35.0, 0.0)
+                    Cartographic.fromDegrees(-122.0, 36.0, 0.0),
+                    Cartographic.fromDegrees(-112.0, 36.0, 0.0),
+                    Cartographic.fromDegrees(-112.0, 39.0, 0.0),
+                    Cartographic.fromDegrees(-122.0, 39.0, 0.0)
                 ]),
                 holes : [{
-                        positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                            new Cartographic.fromDegrees(-122.0, 36.0, 0.0),
-                            new Cartographic.fromDegrees(-112.0, 36.0, 0.0),
-                            new Cartographic.fromDegrees(-112.0, 39.0, 0.0),
-                            new Cartographic.fromDegrees(-122.0, 39.0, 0.0)
-                        ]),
-                        holes : [{
-                            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                                new Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                                new Cartographic.fromDegrees(-120.0, 38.5, 0.0),
-                                new Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                                new Cartographic.fromDegrees(-114.0, 36.5, 0.0)
-                            ])
-                        }]
+                    positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                        Cartographic.fromDegrees(-120.0, 38.5, 0.0),
+                        Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                        Cartographic.fromDegrees(-114.0, 36.5, 0.0)
+                    ])
                 }]
+            }]
         };
 
         var p = new PolygonGeometry({ polygonHierarchy : hierarchy });
@@ -154,12 +150,13 @@ defineSuite([
 
     it('create from PolygonHierarchy throws with less than three positions', function() {
         var hierarchy = {
-                positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                    new Cartographic()
-                ])
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                new Cartographic()
+            ])
         };
+
         expect(function() {
-            var p = new PolygonGeometry({ polygonHierarchy : hierarchy });
+            return new PolygonGeometry({ polygonHierarchy : hierarchy });
         }).toThrow();
     });
 
@@ -170,7 +167,10 @@ defineSuite([
         material.uniforms.color = { red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
         var appearance = new Appearance({ material : material });
 
-        var primitive = new Primitive({ geometries : [ polygon ], appearance : appearance });
+        var primitive = new Primitive({
+            geometries : polygon,
+            appearance : appearance
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -183,7 +183,10 @@ defineSuite([
         var material = Material.fromType(undefined, Material.ColorType);
         material.uniforms.color = { red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
         var appearance = new Appearance({ material : material });
-        var primitive = new Primitive({ geometries : [ polygon ], appearance : appearance });
+        var primitive = new Primitive({
+            geometries : polygon,
+            appearance : appearance
+        });
         primitive.show = false;
 
         expect(render(context, frameState, primitive)).toEqual(0);
@@ -208,23 +211,24 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var hierarchy = {
                 positions : ellipsoid.cartographicArrayToCartesianArray([
-                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
-                    new Cartographic.fromDegrees(1.0, 1.0, 0.0),
-                    new Cartographic.fromDegrees(1.0, 1.0, 0.0)
+                    Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    Cartographic.fromDegrees(1.0, 1.0, 0.0),
+                    Cartographic.fromDegrees(1.0, 1.0, 0.0)
                 ]),
                 holes : [{
-                        positions : ellipsoid.cartographicArrayToCartesianArray([
-                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
-                            new Cartographic.fromDegrees(0.0, 0.0, 0.0),
-                            new Cartographic.fromDegrees(0.0, 0.0, 0.0)
-                        ])
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                        Cartographic.fromDegrees(0.0, 0.0, 0.0),
+                        Cartographic.fromDegrees(0.0, 0.0, 0.0)
+                    ])
                 }]
         };
 
         expect(function() {
-            polygon = new PolygonGeometry({ polygonHierarchy : hierarchy, ellipsoid : ellipsoid });
+            polygon = new PolygonGeometry({
+                polygonHierarchy : hierarchy,
+                ellipsoid : ellipsoid
+            });
         }).toThrow();
     });
-
-
 }, 'WebGL');

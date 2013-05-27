@@ -1,13 +1,8 @@
 /*global define*/
 define([
         './DeveloperError',
-        './Cartesian2',
-        './Cartesian3',
         './Cartesian4',
-        './Matrix3',
-        './Cartographic',
         './Ellipsoid',
-        './Math',
         './Matrix4',
         './ComponentDatatype',
         './PrimitiveType',
@@ -18,21 +13,13 @@ define([
         './PolygonPipeline',
         './EllipsoidTangentPlane',
         './WindingOrder',
-        './BoundingRectangle',
         './GeometryFilters',
         './Queue',
-        './Intersect',
-        '../Scene/sampleTerrain',
-        '../ThirdParty/when'
+        './Intersect'
     ], function(
         DeveloperError,
-        Cartesian2,
-        Cartesian3,
         Cartesian4,
-        Matrix3,
-        Cartographic,
         Ellipsoid,
-        CesiumMath,
         Matrix4,
         ComponentDatatype,
         PrimitiveType,
@@ -43,12 +30,9 @@ define([
         PolygonPipeline,
         EllipsoidTangentPlane,
         WindingOrder,
-        BoundingRectangle,
         GeometryFilters,
         Queue,
-        Intersect,
-        sampleTerrain,
-        when) {
+        Intersect) {
     "use strict";
 
     var ellipsoid;
@@ -225,32 +209,39 @@ define([
         }));
 
         /**
-         * The height of the polygon.
-         */
-        this.height = defaultValue(options.height, 0.0);
-
-        /**
-         * The attributes (vertices)
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
          */
         this.attributes = attributes;
 
         /**
-         * The indexes used for GL rendering
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
          */
         this.indexLists = indexLists;
 
         /**
-         * The bounding sphere for the whole geometry
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
          */
         this.boundingSphere = boundingSphere;
 
         /**
-         * The model matrix, simply the identity
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
-         * Pick data used for selection
+         * DOC_TBA
          */
         this.pickData = options.pickData;
     };

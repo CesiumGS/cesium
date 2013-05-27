@@ -1,34 +1,24 @@
 /*global define*/
 define([
         './DeveloperError',
-        './Cartesian3',
-        './Cartographic',
         './Ellipsoid',
-        './Math',
         './Matrix4',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
         './GeometryAttribute',
-        './GeometryIndices',
-        '../Scene/sampleTerrain',
-        '../ThirdParty/when'
+        './GeometryIndices'
     ], function(
         DeveloperError,
-        Cartesian3,
-        Cartographic,
         Ellipsoid,
-        Math,
         Matrix4,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
         GeometryAttribute,
-        GeometryIndices,
-        sampleTerrain,
-        when) {
+        GeometryIndices) {
     "use strict";
 
     /**
@@ -43,7 +33,7 @@ define([
      * @param {string} altitudeMode either 'absolute' or 'relativeToGround'. 'absolute' means the height
      *        is treated from the WGS84 ellipsoid. 'relativeToGround' means they are treated
      *        relative to the supplied terrain data
-     * @param {Array} [terrain] requred if altitudeMode is 'relativeToGround'. has to denote the same points
+     * @param {Array} [terrain] required if altitudeMode is 'relativeToGround'. has to denote the same points
      *        as in positions, with the ground elevation reflecting the terrain elevation
      * @param {Number} [top] optional, the top of the wall. if specified, the top of the wall is treated as this
      *        height, and the information in the positions array is disregarded
@@ -60,21 +50,11 @@ define([
      * @example
      *
      *  var positions = [
-     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
-     *                              Cesium.Math.toRadians(47),
-     *                              10000),
-     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
-     *                              Cesium.Math.toRadians(48),
-     *                              10000),
-     *      new Cesium.Cartographic(Cesium.Math.toRadians(20),
-     *                              Cesium.Math.toRadians(48),
-     *                              10000),
-     *      new Cesium.Cartographic(Cesium.Math.toRadians(20),
-     *                              Cesium.Math.toRadians(47),
-     *                              10000),
-     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
-     *                              Cesium.Math.toRadians(47),
-     *                              10000)
+     *      Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *      Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *      Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *      Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *      Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      *  ];
      *
      *  // create a wall that spans from ground level to 10000 meters
@@ -176,7 +156,6 @@ define([
 
         var indexes = indexLists[0].values;
         for (i = 0, j = 0; i < noPoints1; i += 2) {
-
             // first do A C B
             indexes[j++] = i + 1;
             indexes[j++] = i;
@@ -189,27 +168,39 @@ define([
         }
 
         /**
-         * The attributes (vertices)
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
          */
         this.attributes = attributes;
 
         /**
-         * The indexes used for GL rendering
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
          */
         this.indexLists = indexLists;
 
         /**
-         * The bounding sphere for the whole geometry
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
          */
         this.boundingSphere = new BoundingSphere.fromVertices(attributes.position.values);
 
         /**
-         * The model matrix, simply the identity
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
-         * Pick data used for selection
+         * DOC_TBA
          */
         this.pickData = options.pickData;
     };
