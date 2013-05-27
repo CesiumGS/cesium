@@ -13,7 +13,6 @@ defineSuite([
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/Extent',
          'Core/Matrix4',
          'Core/Math',
          'Core/JulianDate',
@@ -37,7 +36,6 @@ defineSuite([
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         Extent,
          Matrix4,
          CesiumMath,
          JulianDate,
@@ -165,17 +163,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('create from extent', function() {
-        var extent = new Extent(
-            0.0,
-            0.0,
-            CesiumMath.toRadians(10.0),
-            CesiumMath.toRadians(10.0)
-        );
-
-        var p = new PolygonGeometry({ extent : extent });
-    });
-
     it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
 
@@ -184,33 +171,6 @@ defineSuite([
         var appearance = new Appearance({ material : material });
 
         var primitive = new Primitive({ geometries : [ polygon ], appearance : appearance });
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
-    it('renders extent', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var p = new PolygonGeometry({
-            extent : new Extent(
-                    0.0,
-                    0.0,
-                    CesiumMath.toRadians(10.0),
-                    CesiumMath.toRadians(10.0)
-                ),
-            ellipsoid : ellipsoid
-        });
-
-        var material = Material.fromType(undefined, Material.ColorType);
-        material.uniforms.color = { red : 1.0, green : 0.0, blue : 0.0, alpha : 1.0 };
-        var appearance = new Appearance({ material : material });
-
-        var primitive = new Primitive({ geometries : [ p ], appearance : appearance });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -263,20 +223,6 @@ defineSuite([
 
         expect(function() {
             polygon = new PolygonGeometry({ polygonHierarchy : hierarchy, ellipsoid : ellipsoid });
-        }).toThrow();
-    });
-
-    it('cannot create with empty extent', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var extent = new Extent(
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        );
-
-        expect(function() {
-            polygon = new PolygonGeometry({ extent : extent, ellipsoid : ellipsoid });
         }).toThrow();
     });
 

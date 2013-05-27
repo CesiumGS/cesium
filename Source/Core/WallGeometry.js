@@ -32,27 +32,58 @@ define([
     "use strict";
 
     /**
-     * Creates a wall, which is similar to a line string. A wall is defined by a series of points,
+     * Creates a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally they can extrude downwards to a specified height.
      * The points in the wall can be offset by supplied terrain elevation data.
      *
      * @alias WallGeometry
      * @constructor
      *
-     * @param {array of Cartesian} positions an array of Cartesian objects, which are the points of the wall
+     * @param {Array} positions an array of Cartesian objects, which are the points of the wall
      * @param {string} altitudeMode either 'absolute' or 'relativeToGround'. 'absolute' means the height
      *        is treated from the WGS84 ellipsoid. 'relativeToGround' means they are treated
      *        relative to the supplied terrain data
-     * @param {array of Cartesian} [terrain] requred if altitudeMode is 'relativeToGround'. has to denote the same points
+     * @param {Array} [terrain] requred if altitudeMode is 'relativeToGround'. has to denote the same points
      *        as in positions, with the ground elevation reflecting the terrain elevation
-     * @param {number} [top] optional, the top of the wall. if specified, the top of the wall is treated as this
+     * @param {Number} [top] optional, the top of the wall. if specified, the top of the wall is treated as this
      *        height, and the information in the positions array is disregarded
-     * @param {number} [bottom] optional, the bottom of the wall. if specified, the bottom of the wall is treated as
+     * @param {Number} [bottom] optional, the bottom of the wall. if specified, the bottom of the wall is treated as
      *        this height. otherwise its treated as 'ground' (the WGS84 ellipsoid height 0)
-     * @param {object} [pickData] the geometry pick data
+     * @param {Object} [pickData] the geometry pick data
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] ellispoid for coordinate manipulation
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
+     * @exception {DeveloperError} positions is required
+     * @exception {DeveloperError} No terrain supplied when required.
+     * @exception {DeveloperError} Coordinates and terrain points don't match in number
+     *
+     * @example
+     *
+     *  var positions = [
+     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
+     *                              Cesium.Math.toRadians(47),
+     *                              10000),
+     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
+     *                              Cesium.Math.toRadians(48),
+     *                              10000),
+     *      new Cesium.Cartographic(Cesium.Math.toRadians(20),
+     *                              Cesium.Math.toRadians(48),
+     *                              10000),
+     *      new Cesium.Cartographic(Cesium.Math.toRadians(20),
+     *                              Cesium.Math.toRadians(47),
+     *                              10000),
+     *      new Cesium.Cartographic(Cesium.Math.toRadians(19),
+     *                              Cesium.Math.toRadians(47),
+     *                              10000)
+     *  ];
+     *
+     *  // create a wall that spans from ground level to 10000 meters
+     *  var wall1 = new Cesium.WallGeometry({
+     *      altitudeMode : 'absolute',
+     *      positions    : ellipsoid.cartographicArrayToCartesianArray(positions),
+     *      pickData     : 'wall1'
+     *  });
+     *
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -62,7 +93,7 @@ define([
         if (typeof options.positions !== 'undefined') {
             positions = options.positions;
         } else {
-            throw new DeveloperError('positions must be supplied.');
+            throw new DeveloperError('positions is required.');
         }
 
         var attributes = {};
@@ -71,7 +102,7 @@ define([
         if (options.altitudeMode === 'relativeToGround' && typeof options.terrain === 'undefined') {
             throw new DeveloperError('No terrain supplied when required.');
         }
-        if (typeof options.terrain !== 'undefined' && options.terrain.length !== options.positions.length) {
+        if (typeof options.terrain !== 'undefined' && options.terrain.length !== positions.length) {
             throw new DeveloperError('Coordinates and terrain points don\'t match in number');
         }
 
@@ -80,17 +111,18 @@ define([
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 3,
-            values : []
+            values : new Array(positions.length * 6)
         });
 
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
         var origHeight;
         var c;
-        for (var i = 0; i < options.positions.length; ++i) {
-            c = ellipsoid.cartesianToCartographic(options.positions[i]);
+        var values = attributes.position.values;
+        for (var i = 0, j = 0; i < positions.length; ++i) {
+            c = ellipsoid.cartesianToCartographic(positions[i]);
             origHeight = c.height;
-            c.height = 0;
+            c.height = 0.0;
             if (options.bottom !== undefined) {
                 c.height = options.bottom;
             }
@@ -102,9 +134,9 @@ define([
             var v = ellipsoid.cartographicToCartesian(c);
 
             // insert the lower point
-            attributes.position.values.push(v.x);
-            attributes.position.values.push(v.y);
-            attributes.position.values.push(v.z);
+            values[j++] = v.x;
+            values[j++] = v.y;
+            values[j++] = v.z;
 
             // get the original height back, or set the top value
             c.height    = options.top === undefined ? origHeight : options.top;
@@ -114,15 +146,17 @@ define([
             v = ellipsoid.cartographicToCartesian(c);
 
             // insert the upper point
-            attributes.position.values.push(v.x);
-            attributes.position.values.push(v.y);
-            attributes.position.values.push(v.z);
+            values[j++] = v.x;
+            values[j++] = v.y;
+            values[j++] = v.z;
         }
+
+        var noPoints1 = attributes.position.values.length / 3 - 2;
 
         indexLists.push(
             new GeometryIndices({
                 primitiveType : PrimitiveType.TRIANGLES,
-                values : []
+                values : new Array(noPoints1 * 3)
         }));
 
 
@@ -140,25 +174,19 @@ define([
         //    C (i)    D (i+2) F
         //
 
-        var noPoints1 = attributes.position.values.length / 3 - 2;
         var indexes = indexLists[0].values;
-        for (i = 0; i < noPoints1; i += 2) {
+        for (i = 0, j = 0; i < noPoints1; i += 2) {
 
             // first do A C B
-            indexes.push(i + 1);
-            indexes.push(i);
-            indexes.push(i + 3);
+            indexes[j++] = i + 1;
+            indexes[j++] = i;
+            indexes[j++] = i + 3;
 
             // now do B C D
-            indexes.push(i + 3);
-            indexes.push(i);
-            indexes.push(i + 2);
+            indexes[j++] = i + 3;
+            indexes[j++] = i;
+            indexes[j++] = i + 2;
         }
-
-        /**
-         * The ellipsoid used to convert from cartographic to cartesian
-         */
-        this.ellipsoid = ellipsoid;
 
         /**
          * The attributes (vertices)
@@ -184,102 +212,6 @@ define([
          * Pick data used for selection
          */
         this.pickData = options.pickData;
-    };
-
-    // default KML namespace resolver, see
-    // https://developer.mozilla.org/en-US/docs/Introduction_to_using_XPath_in_JavaScript#Implementing_a_User_Defined_Namespace_Resolver
-    function kmlNsResolver(prefix) {
-        return 'http://www.opengis.net/kml/2.2';
-    }
-
-    /**
-     * Create a set of Walls from a KML document that includes LineString elements.
-     *
-     * @param {DOM node} kmlNode the KML documents document node
-     * @param {CesiumTerrainProvider} terrainProvider an optional terrain provider for LineStrings that need
-     *        a ground reference.
-     * @param {function(wall)} callback a function that will receive each WallGeometry created, one at a time.
-     */
-    WallGeometry.fromKML = function kmlReqListener(kmlNode, terrainProvider, callback) {
-        var name = kmlNode.evaluate('//kml:name', kmlNode, kmlNsResolver,
-                                    XPathResult.STRING_TYPE, null);
-
-        var it = kmlNode.evaluate('//kml:LineString', kmlNode, kmlNsResolver,
-                                  XPathResult.UNORDERED_NODE_ITERATOR_TYPE, null);
-
-        var addNameToWall = function(wall) {
-            wall.pickData = name;
-            callback(wall);
-        };
-
-        for (var node = it.iterateNext(); node; node = it.iterateNext()) {
-            WallGeometry.fromKMLLineString(node, terrainProvider, addNameToWall);
-        }
-    };
-
-    /**
-     *  Create a Wall from a KML LineString DOM element.
-     *
-     *  @param {DOM node} lineString the KML LineString DOM node to build this Wall from.
-     *  @param {CesiumTerrainProvider} [terrainProvider] an optional terrain provider, used when relative-to-ground elevation
-     *         data is needed to render the wall
-     *  @param {function(wall)} callback the callback that will be called with the created WallGeometry
-     */
-    WallGeometry.fromKMLLineString = function(lineString, terrainProvider, callback) {
-        var altitudeMode;
-        var coordinates = [];
-
-        var doc = lineString.ownerDocument;
-
-        // get the coordinates
-        var xpResult = doc.evaluate('kml:coordinates/text()', lineString, kmlNsResolver,
-                                     XPathResult.STRING_TYPE, null);
-        var coordString = xpResult.stringValue;
-        var coordSplitWs = coordString.split(/[\s]/);
-        for (var i = 0; i < coordSplitWs.length; ++i) {
-            var coordLine = coordSplitWs[i];
-
-            if (!coordLine.trim()) {
-                continue;
-            }
-            var coordSplit = coordLine.split(',');
-
-            var c = new Cartographic(Math.toRadians(parseFloat(coordSplit[0])),
-                                     Math.toRadians(parseFloat(coordSplit[1])),
-                                     coordSplit.length < 3 ? 0 : parseFloat(coordSplit[2]));
-            coordinates.push(c);
-        }
-
-        // get the altitudeMode flag
-        xpResult = doc.evaluate('kml:altitudeMode/text()', lineString, kmlNsResolver,
-                                XPathResult.STRING_TYPE, null);
-        altitudeMode = xpResult.stringValue;
-
-        var options = {
-            altitudeMode : altitudeMode,
-            positions    : Ellipsoid.WGS84.cartographicArrayToCartesianArray(coordinates)
-        };
-
-        if (altitudeMode === 'relativeToGround') {
-            // request the terrain data for each point of the line string
-            var coords = [];
-
-            for (i = 0; i < options.positions.length; ++i) {
-                coords.push(Ellipsoid.WGS84.cartesianToCartographic(options.positions[i]));
-            }
-
-            // request the elevation ground data
-            when(sampleTerrain(terrainProvider, 11, coords), function(positions) {
-                options.terrain = Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
-
-                var wall = new WallGeometry(options);
-                callback(wall);
-            });
-        } else {
-            // just create a Wall and return it
-            var wall = new WallGeometry(options);
-            callback(wall);
-        }
     };
 
     return WallGeometry;

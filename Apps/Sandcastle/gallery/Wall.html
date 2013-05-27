@@ -73,7 +73,7 @@ require([
             material : material
         });
 
-        var coords = [
+        var positions = [
             new Cesium.Cartographic(Cesium.Math.toRadians(19),
                                     Cesium.Math.toRadians(47),
                                     10000),
@@ -94,7 +94,7 @@ require([
         // create a wall that spans from ground level to 10000 meters
         var wall1 = new Cesium.WallGeometry({
             altitudeMode : 'absolute',
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : ellipsoid.cartographicArrayToCartesianArray(positions),
             pickData     : 'wall1'
         });
 
@@ -109,7 +109,7 @@ require([
         // create a wall with the same coordinates, but from 15000 - 25000 meters
         var wall2 = new Cesium.WallGeometry({
             altitudeMode : 'absolute',
-            positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+            positions    : ellipsoid.cartographicArrayToCartesianArray(positions),
             bottom       : 15000,
             top          : 25000,
             pickData     : 'wall2'
@@ -124,26 +124,26 @@ require([
 
         // create a wall with a resolution of 0.01 degrees, spanning 1 degree
         // that will follow the terrain offset above a 1000 meters
-        coords = [];
+        positions = [];
 
         var res = 0.01;
         for (var i = 0; i < 1 / res; ++i) {
             var c = new Cesium.Cartographic(Cesium.Math.toRadians(17 + i * res),
                                             Cesium.Math.toRadians(47),
                                             1000);
-            coords.push(c);
+            positions.push(c);
         }
 
         var t = [];
-        for (i = 0; i < coords.length; ++i) {
-            t[i] = Cesium.Cartographic.clone(coords[i]);
+        for (i = 0; i < positions.length; ++i) {
+            t[i] = Cesium.Cartographic.clone(positions[i]);
         }
 
         Cesium.when(Cesium.sampleTerrain(terrainProvider, 11, t), function(terrain) {
 
             var wall3 = new Cesium.WallGeometry({
                 altitudeMode : 'relativeToGround',
-                positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
+                positions    : ellipsoid.cartographicArrayToCartesianArray(positions),
                 terrain      : terrain,
                 pickData     : 'wall3'
             });
@@ -156,21 +156,6 @@ require([
             primitives.add(p);
         });
 
-
-        // create a wall from a KML LineString
-        var req = new XMLHttpRequest();
-        req.onload = function() {
-            Cesium.WallGeometry.fromKML(this.responseXML, terrainProvider, function(wall) {
-                var p = new Cesium.Primitive({
-                    geometries : [ wall ],
-                    appearance : appearance
-                });
-
-                primitives.add(p);
-            });
-        };
-        req.open("get", '../images/akosmaroy-2013-03-05-LHTL-LHSK-3d.kml', true);
-        req.send();
     }
 
     createPrimitives(widget);

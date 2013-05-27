@@ -36,150 +36,103 @@ require([
 {
     "use strict";
 
-    function createAppearance(color) {
-        var material = Cesium.Material.fromType(undefined, Cesium.Material.ColorType);
-        material.uniforms.color = color;
-        var appearance = new Cesium.Appearance({
-            renderState : {
-                cull : {
-                    enabled : false
-                },
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                blending : Cesium.BlendingState.ALPHA_BLEND
-            },
-            material : material
-        });
-
-        return appearance;
-    }
-
     function createPrimitives(widget) {
         var scene = widget.scene;
         var ellipsoid = widget.centralBody.getEllipsoid();
         var primitives = scene.getPrimitives();
 
         // Create a simple polygon
-        var polygon = new Cesium.PolygonGeometry({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                            Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-                            Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-                            Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-                            Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-                            Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-                        ]),
-            pickData : 'polygon1'
-        });
-
-        var primitive = new Cesium.Primitive({
-            geometries : [ polygon ],
-            appearance : createAppearance(new Cesium.Color(1.0, 1.0, 0.0, 0.75))
-        });
-        primitives.add(primitive);
-
-        // create a polygon from an extent with rotation
-        polygon = new Cesium.PolygonGeometry({
-            extent : new Cesium.Extent(Cesium.Math.toRadians(-110.0),
-                                       Cesium.Math.toRadians(0.0),
-                                       Cesium.Math.toRadians(-90.0),
-                                       Cesium.Math.toRadians(20.0)),
-            height   : 0.0,
-            rotation : Cesium.Math.toRadians(45),
-            pickData : 'polygon2'
-        });
-
-        primitive = new Cesium.Primitive({
-            geometries : [ polygon ],
-            appearance : createAppearance({red: 1.0, green: 0.0, blue: 1.0, alpha: 0.75})
-        });
-        primitives.add(primitive);
+        var polygon = new Cesium.Polygon();
+        Sandcastle.declare(polygon);    // For highlighting on mouseover in Sandcastle.
+        polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+            Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-68.0, 40.0)
+        ]));
+        primitives.add(polygon);
+        
+        polygon = new Cesium.Polygon();
+        Sandcastle.declare(polygon);
+        polygon.configureExtent(new Cesium.Extent(
+                Cesium.Math.toRadians(-110.0),
+                Cesium.Math.toRadians(0.0),
+                Cesium.Math.toRadians(-90.0),
+                Cesium.Math.toRadians(20.0)),
+                0.0, Cesium.Math.toRadians(45));
+        polygon.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ColorType);
+        polygon.material.uniforms.color = {red: 1.0, green: 0.0, blue: 1.0, alpha: 0.75};
+        primitives.add(polygon);
 
         // Create a nested polygon with holes
-        polygon = new Cesium.PolygonGeometry({
-            polygonHierarchy : {
+        var polygonHierarchy = new Cesium.Polygon();
+        Sandcastle.declare(polygonHierarchy);   // For highlighting on mouseover in Sandcastle.
+
+        var hierarchy = {
+            positions : ellipsoid.cartographicArrayToCartesianArray(
+                            [
+                             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
+                             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+                             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+                             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+                            ]),
+            holes : [{
                 positions : ellipsoid.cartographicArrayToCartesianArray(
                                 [
-                                Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-                                Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-                                Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-                                Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+                                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
+                                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+                                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
+                                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
                                 ]),
                 holes : [{
                     positions : ellipsoid.cartographicArrayToCartesianArray(
                                     [
-                                    Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-                                    Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-                                    Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-                                    Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+                                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
+                                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
+                                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
+                                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
                                     ]),
                     holes : [{
                         positions : ellipsoid.cartographicArrayToCartesianArray(
                                         [
-                                        Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-                                        Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-                                        Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-                                        Cesium.Cartographic.fromDegrees(-105.0, 37.0)
-                                        ]),
-                        holes : [{
-                            positions : ellipsoid.cartographicArrayToCartesianArray(
-                                            [
-                                            Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-                                            Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-                                            Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-                                            Cesium.Cartographic.fromDegrees(-103.0, 36.0)
-                                            ])
-                        }]
+                                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
+                                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
+                                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
+                                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+                                        ])
                     }]
                 }]
-            },
-            pickData : 'polygon3'
-        });
+            }]
+        };
 
-        primitive = new Cesium.Primitive({
-            geometries : [ polygon ],
-            appearance : createAppearance(new Cesium.Color(0.0, 1.0, 1.0, 0.75))
-        });
-        primitives.add(primitive);
-
+        polygonHierarchy.material = Cesium.Material.fromType(scene.getContext(), 'Color');
+        polygonHierarchy.material.uniforms.color = new Cesium.Color(0.0, 1.0, 1.0, 0.75);
+        polygonHierarchy.configureFromPolygonHierarchy(hierarchy);
+        primitives.add(polygonHierarchy);
 
         // Create a polygon from an extent
-        polygon = new Cesium.PolygonGeometry({
-            extent : new Cesium.Extent(Cesium.Math.toRadians(-180.0),
-                                       Cesium.Math.toRadians(50.0),
-                                       Cesium.Math.toRadians(180.0),
-                                       Cesium.Math.toRadians(90.0)),
-            pickData : 'polygon4'
-        });
-
-        primitive = new Cesium.Primitive({
-            geometries : [ polygon ],
-            appearance : createAppearance({red: 1.0, green: 1.0, blue: 0.0, alpha: 0.75})
-        });
-        primitives.add(primitive);
-
+        var polygonExtent = new Cesium.Polygon();
+        Sandcastle.declare(polygonExtent);  // For highlighting on mouseover in Sandcastle.
+        polygonExtent.configureExtent(
+                new Cesium.Extent(
+                        Cesium.Math.toRadians(-180.0),
+                        Cesium.Math.toRadians(50.0),
+                        Cesium.Math.toRadians(180.0),
+                        Cesium.Math.toRadians(90.0)));
+        primitives.add(polygonExtent);
 
         // Apply a material to a polygon
-        polygon = new Cesium.PolygonGeometry({
-            positions : ellipsoid.cartographicArrayToCartesianArray([
-                            Cesium.Cartographic.fromDegrees(-90.0, 30.0),
-                            Cesium.Cartographic.fromDegrees(-80.0, 30.0),
-                            Cesium.Cartographic.fromDegrees(-80.0, 40.0),
-                            Cesium.Cartographic.fromDegrees(-90.0, 40.0)
-                        ]),
-            pickData : 'polygon5'
-        });
-
-        var appearance = new Cesium.Appearance({
-            material : Cesium.Material.fromType(scene.getContext(), 'Checkerboard')
-        });
-
-        primitive = new Cesium.Primitive({
-            geometries : [ polygon ],
-            appearance : appearance
-        });
-        primitives.add(primitive);
+        var checkeredPolygon = new Cesium.Polygon();
+        Sandcastle.declare(checkeredPolygon);   // For highlighting on mouseover in Sandcastle.
+        checkeredPolygon.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-90.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-80.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-80.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-90.0, 40.0)
+        ]));
+        checkeredPolygon.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+        primitives.add(checkeredPolygon);
     }
 
     var widget = new CesiumViewerWidget({
