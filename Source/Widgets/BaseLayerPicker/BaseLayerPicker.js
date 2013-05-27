@@ -42,7 +42,8 @@ define(['./BaseLayerPickerViewModel',
      * // and in the body, include: &lt;div id="baseLayerPickerContainer"&gt;&lt;/div&gt;
      *
      * //Create the list of available providers we would like the user to select from.
-     * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
+     * //This example uses 4, OpenStreetMap, The Black Marble, and a single, non-streaming world image,
+     * //and an array of ImageryLayers with the Bing satellite layer overlayed with the Black Marble layer
      * var providerViewModels = [];
      * providerViewModels.push(ImageryProviderViewModel.fromConstants({
      *      name : 'Open\u00adStreet\u00adMap',
@@ -78,6 +79,33 @@ define(['./BaseLayerPickerViewModel',
      *          return new SingleTileImageryProvider({
      *              url : 'NE2_LR_LC_SR_W_DR_2048.jpg',
      *          });
+     *      }
+     *  }));
+     *
+     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *      name : 'Bing areal with black marble overlay',
+     *      iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
+     *      tooltip : 'Bing Areal imagery with the lights of cities and villages trace the outlines of civilization in this global view of the \
+Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
+     *      creationFunction : function() {
+     *          var bing = new BingMapsImageryProvider({
+     *              url : 'http://dev.virtualearth.net',
+     *              mapStyle : BingMapsStyle.AERIAL,
+     *              proxy : proxyIfNeeded
+     *          });
+     *
+     *          var black = new TileMapServiceImageryProvider({
+     *              url : 'http://cesium.agi.com/blackmarble',
+     *              maximumLevel : 8,
+     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+     *              proxy : proxyIfNeeded,
+     *          });
+     *
+     *          var bingLayer = new ImageryLayer(bing);
+     *          var blackLayer = new ImageryLayer(black);
+     *          blackLayer.alpha = 0.4;
+     *
+     *          return [ bingLayer, blackLayer ];
      *      }
      *  }));
      *

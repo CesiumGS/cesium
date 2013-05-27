@@ -5,14 +5,16 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Clock',
         '../../Core/ClockRange',
-        '../../Core/JulianDate'
+        '../../Core/JulianDate',
+        '../../Core/destroyObject'
     ], function (
          TimelineTrack,
          TimelineHighlightRange,
          DeveloperError,
          Clock,
          ClockRange,
-         JulianDate) {
+         JulianDate,
+         destroyObject) {
     "use strict";
 
     var timelineWheelDelta = 1e12;
@@ -129,37 +131,33 @@ define([
 
         this.zoomTo(clock.startTime, clock.stopTime);
 
-        this._timeBarEle.addEventListener('mousedown', function(e) {
-            widget._handleMouseDown(e);
-        }, false);
-        document.addEventListener('mouseup', function(e) {
-            widget._handleMouseUp(e);
-        }, false);
-        document.addEventListener('mousemove', function(e) {
-            widget._handleMouseMove(e);
-        }, false);
-        this._timeBarEle.addEventListener('DOMMouseScroll', function(e) {
-            widget._handleMouseWheel(e);
-        }, false); // Mozilla mouse wheel
-        this._timeBarEle.addEventListener('mousewheel', function(e) {
-            widget._handleMouseWheel(e);
-        }, false);
-        this._timeBarEle.addEventListener('touchstart', function(e) {
-            widget._handleTouchStart(e);
-        }, false);
-        document.addEventListener('touchmove', function(e) {
-            widget._handleTouchMove(e);
-        }, false);
-        document.addEventListener('touchend', function(e) {
-            widget._handleTouchEnd(e);
-        }, false);
+        this.onmousedown = function(e) { widget._handleMouseDown(e); };
+        this._timeBarEle.addEventListener('mousedown', this.onmousedown, false);
+
+        this.onmousemove = function(e) { widget._handleMouseMove(e); };
+        this._timeBarEle.addEventListener('mousemove', this.onmousemove, false);
+
+        this.onDOMMouseScroll = function(e) { widget._handleMouseWheel(e); };
+        this._timeBarEle.addEventListener('DOMMouseScroll', this.onDOMMouseScroll, false);
+
+        this.onmousewheel = function(e) { widget._handleMouseWheel(e); };
+        this._timeBarEle.addEventListener('mousewheel', this.onmousewheel, false);
+
+        this.ontouchstart = function(e) { widget._handleTouchStart(e); };
+        this._timeBarEle.addEventListener('touchstart', this.ontouchstart, false);
+
+        this.ontouchmove = function(e) { widget._handleTouchMove(e); };
+        this._timeBarEle.addEventListener('touchmove', this.ontouchmove, false);
+
+        this.ontouchend = function(e) { widget._handleTouchEnd(e); };
+        this._timeBarEle.addEventListener('touchend', this.ontouchend, false);
+
         this.container.oncontextmenu = function() {
             return false;
         };
 
-        window.addEventListener('resize', function() {
-            widget.handleResize();
-        }, false);
+        this.onresize = function() { widget.handleResize(); };
+        window.addEventListener('resize', this.onresize);
 
         this.addEventListener = function(type, listener, useCapture) {
             widget.container.addEventListener(type, listener, useCapture);
@@ -671,6 +669,33 @@ define([
         this._trackListEle.width = this._trackListEle.clientWidth;
         this._trackListEle.height = trackListHeight;
         this._makeTics();
+    };
+
+    /**
+     * Destroys the  widget.  Should be called if permanently
+     * removing the widget from layout.
+     * @memberof Timeline
+     */
+    Timeline.prototype.destroy = function() {
+        var container = this.container;
+
+        this._timeBarEle.removeEventListener('mousedown', this.onmousedown, false);
+        this._timeBarEle.removeEventListener('mousemove', this.onmousemove, false);
+        this._timeBarEle.removeEventListener('DOMMouseScroll', this.onDOMMouseScroll, false);
+        this._timeBarEle.removeEventListener('mousewheel', this.onmousewheel, false);
+        this._timeBarEle.removeEventListener('touchstart', this.ontouchstart, false);
+        this._timeBarEle.removeEventListener('touchmove', this.ontouchmove, false);
+        this._timeBarEle.removeEventListener('touchend', this.ontouchend, false);
+        window.removeEventListener('resize', this.onresize);
+
+        this._clock.onTick.removeEventListener(this.updateFromClock, this);
+
+        while (container.firstChild) {
+            container.removeChild(container.firstChild);
+        }
+        container.className = container.className.replace('cesium-timeline-main', '');
+
+        return destroyObject(this);
     };
 
     return Timeline;
