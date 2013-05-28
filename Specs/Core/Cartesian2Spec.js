@@ -618,4 +618,17 @@ defineSuite([
             Cartesian2.equalsEpsilon(new Cartesian2(), new Cartesian2(), undefined);
         }).toThrow();
     });
+
+    it('fromElements returns a cartesian2 with corrrect coordinates', function(){
+        var cartesian2 = Cartesian2.fromElements(2, 2);
+        var expectedResult = new Cartesian2(2, 2);
+        expect(cartesian2).toEqual(expectedResult);
+    });
+
+    it('fromElements result param returns cartesian2 with correct coordinates', function(){
+        var cartesian2 = new Cartesian2();
+        Cartesian2.fromElements(2, 2, cartesian2);
+        var expectedResult = new Cartesian2(2, 2);
+        expect(cartesian2).toEqual(expectedResult);
+    });
 });
