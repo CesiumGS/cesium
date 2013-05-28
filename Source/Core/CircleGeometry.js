@@ -20,12 +20,13 @@ define([
      * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
      * @param {Number} [options.center=1.0] The radius in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle.
+     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} center is required.
+     * @exception {DeveloperError} radius is required.
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
@@ -40,8 +41,12 @@ define([
      */
     var CircleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var radius = options.radius;
 
-        var radius = defaultValue(options.radius, 1.0);
+        if (typeof radius === 'undefined') {
+            throw new DeveloperError('radius is required.');
+        }
+
         if (radius <= 0.0) {
             throw new DeveloperError('radius must be greater than zero.');
         }

@@ -16,14 +16,24 @@ defineSuite([
 
     it('throws without a center', function() {
         expect(function() {
-            return new CircleGeometry({});
+            return new CircleGeometry({
+                radius : 1.0
+            });
+        }).toThrow();
+    });
+
+    it('throws without a radius', function() {
+        expect(function() {
+            return new CircleGeometry({
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic())
+            });
         }).toThrow();
     });
 
     it('throws with a negative radius', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Cartesian3.UNIT_X,
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
                 radius : -1.0
             });
         }).toThrow();
@@ -32,7 +42,8 @@ defineSuite([
     it('throws with a negative granularity', function() {
         expect(function() {
             return new CircleGeometry({
-                center : Cartesian3.UNIT_X,
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                radius : 1.0,
                 granularity : -1.0
             });
         }).toThrow();

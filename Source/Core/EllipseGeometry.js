@@ -53,12 +53,14 @@ define([
      * @param {Number} [options.semiMajorAxis=1.0] The length of the ellipse's semi-major axis in meters.
      * @param {Number} [options.semiMinorAxis=1.0] The length of the ellipse's semi-minor axis in meters.
      * @param {Number} [options.bearing=0.0] The angle from north (clockwise) in radians. The default is zero.
-     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle.
+     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} center is required.
+     * @exception {DeveloperError} semiMajorAxis is required.
+     * @exception {DeveloperError} semiMinorAxis is required.
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
@@ -76,15 +78,23 @@ define([
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var center = options.center;
+        var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var semiMajorAxis = defaultValue(options.semiMajorAxis, 1.0);
-        var semiMinorAxis = defaultValue(options.semiMinorAxis, 1.0);
         var bearing = defaultValue(options.bearing, 0.0);
         var granularity = defaultValue(options.granularity, 0.02);
 
         if (typeof center === 'undefined') {
             throw new DeveloperError('center is required.');
+        }
+
+        if (typeof semiMajorAxis === 'undefined') {
+            throw new DeveloperError('semiMajorAxis is required.');
+        }
+
+        if (typeof semiMinorAxis === 'undefined') {
+            throw new DeveloperError('semiMinorAxis is required.');
         }
 
         if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {

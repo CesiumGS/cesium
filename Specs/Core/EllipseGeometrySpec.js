@@ -16,15 +16,37 @@ defineSuite([
 
     it('throws without a center', function() {
         expect(function() {
-            return new EllipseGeometry({});
+            return new EllipseGeometry({
+                semiMajorAxis : 1.0,
+                semiMinorAxis : 1.0
+            });
+        }).toThrow();
+    });
+
+    it('throws without a semiMajorAxis', function() {
+        expect(function() {
+            return new EllipseGeometry({
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                semiMinorAxis : 1.0
+            });
+        }).toThrow();
+    });
+
+    it('throws without a semiMinorAxis', function() {
+        expect(function() {
+            return new EllipseGeometry({
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                semiMajorAxis : 1.0
+            });
         }).toThrow();
     });
 
     it('throws with a negative axis', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.UNIT_X,
-                semiMajorAxis : -1.0
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                semiMajorAxis : 1.0,
+                semiMinorAxis : -1.0
             });
         }).toThrow();
     });
@@ -32,7 +54,9 @@ defineSuite([
     it('throws with a negative granularity', function() {
         expect(function() {
             return new EllipseGeometry({
-                center : Cartesian3.UNIT_X,
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                semiMajorAxis : 1.0,
+                semiMinorAxis : 1.0,
                 granularity : -1.0
             });
         }).toThrow();
