@@ -994,6 +994,8 @@ define([
      * Computes the tangent and binormal of all vertices in a geometry
      * This assumes a counter-clockwise vertex winding order.
      *
+     * Based on: Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software 3D Graphics Library, 2001. http://www.terathon.com/code/tangent.html
+     *
      * @param {Geometry} geometry The geometry for which to calculate tangents and binormals, which is modified in place.
      * @param {Object} geometry.attributes.position The vertices of the geometry
      * @param {Object} geometry.attributes.normal The normals of the vertices
@@ -1066,7 +1068,9 @@ define([
                 tan1[i] = 0;
             }
 
-            var i03, i13, i23;
+            var i03;
+            var i13;
+            var i23;
             for (i = 0; i < numIndices; i+=3) {
                 var i0 = indices[i];
                 var i1 = indices[i+1];
@@ -1111,21 +1115,15 @@ define([
                 i13 = i03+1;
                 i23 = i03+2;
 
-                var n = normalScratch;
-                n.x = normals[i03];
-                n.y = normals[i13];
-                n.z = normals[i23];
-                var t = tScratch;
-                t.x = tan1[i03];
-                t.y = tan1[i13];
-                t.z = tan1[i23];
+                var n = Cartesian3.fromArray(normals.slice(i03, i03 + 3), 0, normalScratch);
+                var t = Cartesian3.fromArray(tan1.slice(i03, i03 + 3), 0, tScratch);
                 var scalar = n.dot(t);
                 n.multiplyByScalar(scalar, normalScale);
                 t.subtract(normalScale, t).normalize(t);
                 tangentValues[i03] = t.x;
                 tangentValues[i13] = t.y;
                 tangentValues[i23] = t.z;
-                t.cross(n, t).normalize(t);
+                n.cross(t, t).normalize(t);
                 binormalValues[i03] = t.x;
                 binormalValues[i13] = t.y;
                 binormalValues[i23] = t.z;

@@ -1108,7 +1108,7 @@ defineSuite([
         mesh = GeometryFilters.computeTangentAndBinormal(mesh);
 
         expect(mesh.attributes.tangent.values).toEqual([1, 0, 0, 1, 0, 0, 1, 0, 0]);
-        expect(mesh.attributes.binormal.values).toEqual([0, -1, 0, 0, -1, 0, 0, -1, 0]);
+        expect(mesh.attributes.binormal.values).toEqual([0, 1, 0, 0, 1, 0, 0, 1, 0]);
     });
 
     it('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for two triangles', function() {
@@ -1141,10 +1141,10 @@ defineSuite([
                                                         0, 1, 0,
                                                         0, 1, 0,
                                                         -0.5773502691896258, 0.5773502691896258, 0.5773502691896258], CesiumMath.EPSILON8);
-        expect(mesh.attributes.binormal.values).toEqualEpsilon([0, -1, 0,
-                                                        1, 0, 0,
-                                                        1, 0, 0,
-                                                        0.4082482904638631, 0.8164965809277261, -0.4082482904638631], CesiumMath.EPSILON8);
+        expect(mesh.attributes.binormal.values).toEqualEpsilon([0, 1, 0,
+                                                        -1, 0, 0,
+                                                        -1, 0, 0,
+                                                        -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON8);
     });
 
     it ('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for an EllipsoidGeometry', function() {
