@@ -29,7 +29,6 @@ define([
         './SceneMode',
         './TerrainProvider',
         './TerrainState',
-        './TileLoadQueue',
         './TileReplacementQueue',
         './TileState',
         './TileTerrain',
@@ -64,7 +63,6 @@ define([
         SceneMode,
         TerrainProvider,
         TerrainState,
-        TileLoadQueue,
         TileReplacementQueue,
         TileState,
         TileTerrain,
@@ -106,7 +104,7 @@ define([
         this._tileCommands = [];
         this._tileCommandUniformMaps = [];
         this._tileTraversalQueue = new Queue();
-        this._tileLoadQueue = new TileLoadQueue();
+        this._tileLoadQueue = [];
         this._tileReplacementQueue = new TileReplacementQueue();
         this._tileCacheSize = 100;
 
@@ -359,8 +357,7 @@ define([
         debug.texturesRendered = 0;
         debug.tilesWaitingForChildren = 0;
 
-        surface._tileLoadQueue.clear();
-        surface._tileLoadQueue.markInsertionPoint();
+        surface._tileLoadQueue.length = 0;
         surface._tileReplacementQueue.markStartOfRenderFrame();
 
         // We can't render anything before the level zero tiles exist.
@@ -654,7 +651,7 @@ define([
     }
 
     function queueTileLoad(surface, tile) {
-        surface._tileLoadQueue.insertBeforeInsertionPoint(tile);
+        surface._tileLoadQueue.push(tile);
     }
 
     function processTileLoadQueue(surface, context, frameState) {
@@ -662,8 +659,7 @@ define([
         var terrainProvider = surface._terrainProvider;
         var imageryLayerCollection = surface._imageryLayerCollection;
 
-        var tile = tileLoadQueue.head;
-        if (typeof tile === 'undefined') {
+        if (tileLoadQueue.length === 0) {
             return;
         }
 
@@ -675,19 +671,16 @@ define([
         var timeSlice = surface._loadQueueTimeSlice;
         var endTime = startTime + timeSlice;
 
-        do {
+        for (var len = tileLoadQueue.length - 1, i = len; i >= 0; --i) {
+            var tile = tileLoadQueue[i];
             surface._tileReplacementQueue.markTileRendered(tile);
 
             tile.processStateMachine(context, terrainProvider, imageryLayerCollection);
 
-            var next = tile.loadNext;
-
-            if (tile.state === TileState.READY) {
-                tileLoadQueue.remove(tile);
+            if (Date.now() >= endTime) {
+                break;
             }
-
-            tile = next;
-        } while (Date.now() < endTime && typeof tile !== 'undefined');
+        }
     }
 
     // This is debug code to render the bounding sphere of the tile in
