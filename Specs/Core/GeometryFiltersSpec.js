@@ -11,7 +11,9 @@ defineSuite([
          'Core/GeographicProjection',
          'Core/Geometry',
          'Core/GeometryAttribute',
-         'Core/GeometryIndices'
+         'Core/GeometryIndices',
+         'Core/VertexFormat',
+         'Core/Math'
      ], function(
          GeometryFilters,
          PrimitiveType,
@@ -24,7 +26,9 @@ defineSuite([
          GeographicProjection,
          Geometry,
          GeometryAttribute,
-         GeometryIndices) {
+         GeometryIndices,
+         VertexFormat,
+         CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -608,29 +612,29 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh is undefined', function() {
+    it('GeometryFilters.computeNormal throws when mesh is undefined', function() {
         expect(function() {
-            GeometryFilters.computeNormals();
+            GeometryFilters.computeNormal();
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh.attributes is undefined', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes is undefined', function() {
         expect(function() {
-            GeometryFilters.computeNormals(new Geometry());
+            GeometryFilters.computeNormal(new Geometry());
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh.attributes.position is undefined', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes.position is undefined', function() {
         expect(function() {
-            GeometryFilters.computeNormals(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry( {
                 attributes: {}
             }));
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is undefined', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes.position.values is undefined', function() {
         expect(function() {
-            GeometryFilters.computeNormals(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry( {
                 attributes: {
                     position: {}
                 }
@@ -638,9 +642,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
         expect(function() {
-            GeometryFilters.computeNormals(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry( {
                 attributes: {
                     position: {
                         values: [3, 2, 1, 1, 2, 4],
@@ -651,9 +655,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals throws when mesh.attributes.position.values is not a multiple of 3', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes.position.values is not a multiple of 3', function() {
         expect(function() {
-            GeometryFilters.computeNormals(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry( {
                 attributes: {
                     position: {
                         values: [3, 2, 1, 1, 2, 4, 3],
@@ -664,7 +668,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormals does not compute normals when mesh.indexLists is undefined', function() {
+    it('GeometryFilters.computeNormal does not compute normals when mesh.indexLists is undefined', function() {
         var mesh = new Geometry({
             attributes: {
                 position: {
@@ -676,12 +680,12 @@ defineSuite([
             }
         });
 
-        mesh = GeometryFilters.computeNormals(mesh);
+        mesh = GeometryFilters.computeNormal(mesh);
 
         expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
     });
 
-    it('GeometryFilters.computeNormals does not compute normals when primitive type is not triangle', function() {
+    it('GeometryFilters.computeNormal does not compute normals when primitive type is not triangle', function() {
         var mesh = new Geometry({
             attributes: {
                 position: {
@@ -698,13 +702,13 @@ defineSuite([
             }]
         });
 
-        mesh = GeometryFilters.computeNormals(mesh);
+        mesh = GeometryFilters.computeNormal(mesh);
 
         expect(typeof mesh.attributes.normal === 'undefined').toEqual(true);
     });
 
 
-    it('GeometryFilters.computeNormals computes normal for one triangle', function() {
+    it('GeometryFilters.computeNormal computes normal for one triangle', function() {
         var mesh = new Geometry({
             attributes: {
                 position: {
@@ -720,13 +724,13 @@ defineSuite([
             }]
         });
 
-        mesh = GeometryFilters.computeNormals(mesh);
+        mesh = GeometryFilters.computeNormal(mesh);
 
         expect(mesh.attributes.normal.values.length).toEqual(3*3);
         expect(mesh.attributes.normal.values).toEqual([0, 0, 1, 0, 0, 1, 0, 0, 1]);
     });
 
-    it('GeometryFilters.computeNormals computes normal for two triangles', function() {
+    it('GeometryFilters.computeNormal computes normal for two triangles', function() {
         var mesh = new Geometry({
             attributes: {
                 position: {
@@ -743,7 +747,7 @@ defineSuite([
             }]
         });
 
-        mesh = GeometryFilters.computeNormals(mesh);
+        mesh = GeometryFilters.computeNormal(mesh);
 
         expect(mesh.attributes.normal.values.length).toEqual(4*3);
         var a = new Cartesian3(-1, 0, 1).normalize();
@@ -753,7 +757,7 @@ defineSuite([
         expect(mesh.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
     });
 
-    it('GeometryFilters.computeNormals computes normal for six triangles', function() {
+    it('GeometryFilters.computeNormal computes normal for six triangles', function() {
         var mesh = new Geometry ({
             attributes: {
                 position: {
@@ -773,7 +777,7 @@ defineSuite([
             }]
         });
 
-        mesh = GeometryFilters.computeNormals(mesh);
+        mesh = GeometryFilters.computeNormal(mesh);
 
         expect(mesh.attributes.normal.values.length).toEqual(7*3);
         var a = new Cartesian3(-1, -1, -1).normalize();
@@ -787,5 +791,368 @@ defineSuite([
         a = new Cartesian3(-1, 0, -1).normalize();
         expect(mesh.attributes.normal.values.slice(15,18)).toEqual([a.x, a.y, a.z]);
         expect(mesh.attributes.normal.values.slice(18,21)).toEqual([0, 0, -1]);
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal();
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry());
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {}
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.values is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {}
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute: 2
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.values is not a multiple of 3', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4, 3],
+                        componentsPerAttribute: 3
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.values is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    normal: {}
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.componentsPerAttribute is not 3', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute: 3
+                    },
+                    normal: {
+                        values: [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute: 2
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.values is not a multiple of 3', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [3, 2, 1, 1, 2, 3],
+                        componentsPerAttribute: 3
+                    },
+                    normal: {
+                        values: [3, 2, 1, 1, 2, 3, 4],
+                        componentsPerAttribute: 3
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.st is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    normal: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.values is undefined', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    normal: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    st: {}
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.st.componentsPerAttribute is not 2', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    normal: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    st: {
+                        values: [0, 1],
+                        componentsPerAttribute: 3
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.st.values is not a multiple of 2', function() {
+        expect(function() {
+            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+                attributes: {
+                    position: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    normal: {
+                        values: [0, 0, 0,
+                                 1, 0, 0,
+                                 0, 1, 0],
+                                 componentsPerAttribute: 3
+
+                    },
+                    st: {
+                        values: [0, 1, 3],
+                        componentsPerAttribute: 2
+                    }
+                }
+            }));
+        }).toThrow();
+    });
+
+
+    it('GeometryFilters.computeTangentAndBinormal does not compute tangent and binormals when mesh.indexLists is undefined', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                },
+                normal: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                },
+                st: {
+                    values: [0, 1],
+                    componentsPerAttribute: 2
+                }
+            }
+        });
+
+        mesh = GeometryFilters.computeTangentAndBinormal(mesh);
+
+        expect(typeof mesh.attributes.tangent === 'undefined').toEqual(true);
+        expect(typeof mesh.attributes.binormal === 'undefined').toEqual(true);
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal does not compute tangent and binormals when primitive type is not triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                },
+                normal: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+
+                },
+                st: {
+                    values: [0, 1],
+                    componentsPerAttribute: 2
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLE_STRIP,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeTangentAndBinormal(mesh);
+
+        expect(typeof mesh.attributes.tangent === 'undefined').toEqual(true);
+        expect(typeof mesh.attributes.binormal === 'undefined').toEqual(true);
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for one triangle', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 0,
+                             0, 1, 0],
+                             componentsPerAttribute: 3
+                },
+                st: {
+                    values: [0, 0,
+                             1, 0,
+                             0, 1],
+                             componentsPerAttribute: 2
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormal(mesh);
+        mesh = GeometryFilters.computeTangentAndBinormal(mesh);
+
+        expect(mesh.attributes.tangent.values).toEqual([1, 0, 0, 1, 0, 0, 1, 0, 0]);
+        expect(mesh.attributes.binormal.values).toEqual([0, 1, 0, 0, 1, 0, 0, 1, 0]);
+    });
+
+    it('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for two triangles', function() {
+        var mesh = new Geometry({
+            attributes: {
+                position: {
+                    values: [0, 0, 0,
+                             1, 0, 1,
+                             1, 1, 1,
+                             2, 0, 0],
+                             componentsPerAttribute: 3
+                },
+                st: {
+                    values: [0, 0,
+                             1, 0,
+                             1, 1,
+                             0, 1],
+                             componentsPerAttribute: 2
+                }
+            },
+            indexLists: [{
+                primitiveType: PrimitiveType.TRIANGLES,
+                values: [0, 1, 2, 1, 3, 2]
+            }]
+        });
+
+        mesh = GeometryFilters.computeNormal(mesh);
+        mesh = GeometryFilters.computeTangentAndBinormal(mesh);
+        expect(mesh.attributes.tangent.values).toEqualEpsilon([0.7071067811865475, 0, 0.7071067811865475,
+                                                        0, 1, 0,
+                                                        0, 1, 0,
+                                                        -0.5773502691896258, 0.5773502691896258, 0.5773502691896258], CesiumMath.EPSILON8);
+        expect(mesh.attributes.binormal.values).toEqualEpsilon([0, 1, 0,
+                                                        -1, 0, 0,
+                                                        -1, 0, 0,
+                                                        -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON8);
+    });
+
+    it ('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for an EllipsoidGeometry', function() {
+        var mesh = new EllipsoidGeometry();
+        var expected = new EllipsoidGeometry({vertexFormat: new VertexFormat({tangent: true, binormal: true})});
+
+        mesh = GeometryFilters.computeTangentAndBinormal(mesh);
+        expect(mesh.attributes.tangent.values.slice(1000,1200)).toEqualEpsilon(expected.attributes.tangent.values.slice(1000,1200), CesiumMath.EPSILON1);
+        expect(mesh.attributes.binormal.values.slice(1000,1200)).toEqualEpsilon(expected.attributes.binormal.values.slice(1000,1200), CesiumMath.EPSILON1);
     });
 });
