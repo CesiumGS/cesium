@@ -65,7 +65,7 @@ define([
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [description.rotation=0.0] The rotation of the extent in radians.
+     * @param {Number} [description.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
      *
      * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -206,8 +206,6 @@ define([
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                     ellipsoid.geodeticSurfaceNormal(position, normal);
-                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                    Cartesian3.cross(normal, tangent, binormal);
 
                     if (vertexFormat.normal) {
                         normals[normalIndex++] = normal.x;
@@ -216,12 +214,17 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+
                         tangents[tangentIndex++] = tangent.x;
                         tangents[tangentIndex++] = tangent.y;
                         tangents[tangentIndex++] = tangent.z;
                     }
 
                     if (vertexFormat.binormal) {
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                        Cartesian3.cross(normal, tangent, binormal);
+
                         binormals[binormalIndex++] = binormal.x;
                         binormals[binormalIndex++] = binormal.y;
                         binormals[binormalIndex++] = binormal.z;
