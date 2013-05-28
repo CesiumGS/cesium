@@ -49,11 +49,12 @@ define([
      * @constructor
      *
      * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
+     * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
+     * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.semiMajorAxis=1.0] The length of the ellipse's semi-major axis in meters.
-     * @param {Number} [options.semiMinorAxis=1.0] The length of the ellipse's semi-minor axis in meters.
+     * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.bearing=0.0] The angle from north (clockwise) in radians. The default is zero.
-     * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
+     * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
@@ -83,6 +84,7 @@ define([
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var bearing = defaultValue(options.bearing, 0.0);
+        var height = defaultValue(options.height, 0.0);
         var granularity = defaultValue(options.granularity, 0.02);
 
         if (typeof center === 'undefined') {
@@ -150,7 +152,7 @@ define([
         var positions = new Array(size * 3);
         positions[0] = semiMajorAxis;
         positions[1] = 0.0;
-        positions[2] = 0.0;
+        positions[2] = height;
         var positionIndex = 3;
 
         var position = scratchCartesian1;
@@ -162,11 +164,13 @@ define([
             // Compute the position on the ellipse in the first quadrant.
             position.x = Math.cos(angle) * semiMajorAxis;
             position.y = Math.sin(angle) * semiMinorAxis;
+            position.z = height;
 
             // Reflect the position across the x axis for a point on the ellipse
             // in the fourth quadrant.
             reflectedPosition.x =  position.x;
             reflectedPosition.y = -position.y;
+            reflectedPosition.z =  position.z;
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
