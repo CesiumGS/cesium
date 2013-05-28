@@ -394,8 +394,6 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
