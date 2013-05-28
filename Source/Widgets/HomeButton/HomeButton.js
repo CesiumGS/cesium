@@ -49,7 +49,7 @@ define(['./HomeButtonViewModel',
          * @memberof HomeButton
          * @type {HomeButtonViewModel}
          */
-        this.viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
+        this.viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, 1500);
 
         /**
          * Gets the container element for the widget.
