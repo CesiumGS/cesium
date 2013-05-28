@@ -10,11 +10,15 @@ Beta Releases
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
       * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Replaced `ExtentTessletaor` with `ExtentGeometry`.
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryFilters`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
+   * Removed `Polygon.configureExtent`.
+   * Added `height` parameter to `BoundingSphere.fromExtent3D`.
+   * Added `height` parameter to `Extent.subsample`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.

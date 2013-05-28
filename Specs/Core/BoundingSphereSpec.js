@@ -287,6 +287,15 @@ defineSuite([
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
     });
 
+    it('fromExtent3D with height', function() {
+        var extent = new Extent(0.1, -0.3, 0.2, -0.4);
+        var height = 100000.0;
+        var ellipsoid = Ellipsoid.WGS84;
+        var points = extent.subsample(ellipsoid, height);
+        var expected = BoundingSphere.fromPoints(points);
+        expect(BoundingSphere.fromExtent3D(extent, ellipsoid, height)).toEqual(expected);
+    });
+
     it('fromCornerPoints', function() {
         var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-1.0, -0.0, 0.0), new Cartesian3(1.0, 0.0, 0.0));
         expect(sphere).toEqual(new BoundingSphere(Cartesian3.ZERO, 1.0));
