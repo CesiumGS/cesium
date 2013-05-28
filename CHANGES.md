@@ -26,6 +26,7 @@ Beta Releases
 * Added rotation parameter to `Polygon.configureExtent`.
 * Added camera flight to extents.  See new methods `CameraController.getExtentCameraCoordinates` and `CameraFlightPath.createAnimationExtent`.
 * Fixed issue for camera flights when `frameState.mode === SceneMode.MORPHING`
+* Improved the load ordering of terrain and imagery tiles, so that relevant detail is now more likely to be loaded first.
 
 ### b16 - 2013-05-01
 
