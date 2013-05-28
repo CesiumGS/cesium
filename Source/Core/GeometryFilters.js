@@ -856,7 +856,7 @@ define([
      * @exception {DeveloperError} mesh.attributes.position.values.length must be a multiple of 3
      *
      * @example
-     * mesh = GeometryFilters.computeNormals(mesh);
+     * mesh = GeometryFilters.computeNormal(mesh);
      *
      */
     var normal = new Cartesian3();
@@ -990,42 +990,64 @@ define([
         return mesh;
     };
 
+    /**
+     * Computes the tangent and binormal of all vertices in a geometry
+     * This assumes a counter-clockwise vertex winding order.
+     *
+     * @param {Geometry} geometry The geometry for which to calculate tangents and binormals, which is modified in place.
+     * @param {Object} geometry.attributes.position The vertices of the geometry
+     * @param {Object} geometry.attributes.normal The normals of the vertices
+     * @param {Object} geometry.attributes.st The texture coordinates
+     *
+     * @returns The modified <code>geometry</code> argument.
+     *
+     * @exception {DeveloperError} geometry.attributes.position.values is required
+     * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry.attributes.normal.values is required
+     * @exception {DeveloperError} geometry.attributes.normal.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry.attributes.st.values is required
+     * @exception {DeveloperError} geometry.attributes.st.values.length must be a multiple of 2
+     *
+     * @example
+     * geometry = GeometryFilters.computeTangentAndBinormal(geometry);
+     *
+     */
     var normalScratch = new Cartesian3();
     var normalScale = new Cartesian3();
     var tScratch = new Cartesian3();
-    GeometryFilters.computeTangentAndBinormal = function(mesh) {
-        if (typeof mesh === 'undefined') {
-            throw new DeveloperError('mesh is required.');
+    GeometryFilters.computeTangentAndBinormal = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
         }
-        var attributes = mesh.attributes;
+        var attributes = geometry.attributes;
         if (typeof attributes === 'undefined' || typeof attributes.position === 'undefined' ||
                 typeof attributes.position.values === 'undefined') {
-            throw new DeveloperError('mesh.attributes.position.values is required');
+            throw new DeveloperError('geometry.attributes.position.values is required');
         }
-        var vertices = mesh.attributes.position.values;
-        if (mesh.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
-            throw new DeveloperError('mesh.attributes.position.values.length must be a multiple of 3');
+        var vertices = geometry.attributes.position.values;
+        if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
+            throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
         }
         if (typeof attributes.normal === 'undefined' ||
                 typeof attributes.normal.values === 'undefined') {
-            throw new DeveloperError('mesh.attributes.normal.values is required');
+            throw new DeveloperError('geometry.attributes.normal.values is required');
         }
-        var normals = mesh.attributes.normal.values;
-        if (mesh.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
-            throw new DeveloperError('mesh.attributes.normals.values.length must be a multiple of 3');
+        var normals = geometry.attributes.normal.values;
+        if (geometry.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
+            throw new DeveloperError('geometry.attributes.normals.values.length must be a multiple of 3');
         }
         if (typeof attributes.st === 'undefined' ||
                 typeof attributes.st.values === 'undefined') {
-            throw new DeveloperError('mesh.attributes.st.values is required');
+            throw new DeveloperError('geometry.attributes.st.values is required');
         }
-        var st = mesh.attributes.st.values;
-        if (mesh.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
-            throw new DeveloperError('mesh.attributes.st.values.length must be a multiple of 2');
+        var st = geometry.attributes.st.values;
+        if (geometry.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
+            throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
         }
 
-        var indexLists = mesh.indexLists;
+        var indexLists = geometry.indexLists;
         if (typeof indexLists === 'undefined') {
-            return mesh;
+            return geometry;
         }
 
         var length = indexLists.length;
@@ -1036,7 +1058,7 @@ define([
                 continue;
             }
 
-            var numVertices = mesh.attributes.position.values.length/3;
+            var numVertices = geometry.attributes.position.values.length/3;
             var numIndices = indices.length;
             var tan1 = new Array(numVertices*3);
 
@@ -1082,21 +1104,8 @@ define([
                 tan1[i23+1] += sdiry;
                 tan1[i23+2] += sdirz;
             }
-
-            if (typeof mesh.attributes.tangent === 'undefined') {
-                mesh.attributes.tangent = new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.FLOAT,
-                        componentsPerAttribute: 3,
-                        values: new Array(numVertices * 3)
-                });
-            }
-            if (typeof mesh.attributes.binormal === 'undefined') {
-                mesh.attributes.binormal = new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.FLOAT,
-                        componentsPerAttribute: 3,
-                        values: new Array(numVertices * 3)
-                });
-            }
+            var binormalValues = new Array(numVertices * 3);
+            var tangentValues = new Array(numVertices * 3);
             for (i = 0; i < numVertices; i++) {
                 i03 = i*3;
                 i13 = i03+1;
@@ -1113,16 +1122,34 @@ define([
                 var scalar = n.dot(t);
                 n.multiplyByScalar(scalar, normalScale);
                 t.subtract(normalScale, t).normalize(t);
-                mesh.attributes.tangent.values[i03] = t.x;
-                mesh.attributes.tangent.values[i13] = t.y;
-                mesh.attributes.tangent.values[i23] = t.z;
+                tangentValues[i03] = t.x;
+                tangentValues[i13] = t.y;
+                tangentValues[i23] = t.z;
                 t.cross(n, t).normalize(t);
-                mesh.attributes.binormal.values[i03] = t.x;
-                mesh.attributes.binormal.values[i13] = t.y;
-                mesh.attributes.binormal.values[i23] = t.z;
+                binormalValues[i03] = t.x;
+                binormalValues[i13] = t.y;
+                binormalValues[i23] = t.z;
+            }
+            if (typeof geometry.attributes.tangent === 'undefined') {
+                geometry.attributes.tangent = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: tangentValues
+                });
+            } else {
+                geometry.attributes.tangent.values = tangentValues;
+            }
+            if (typeof geometry.attributes.binormal === 'undefined') {
+                geometry.attributes.binormal = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: binormalValues
+                });
+            } else {
+                geometry.attributes.binormal.values = binormalValues;
             }
         }
-        return mesh;
+        return geometry;
     };
 
     return GeometryFilters;
