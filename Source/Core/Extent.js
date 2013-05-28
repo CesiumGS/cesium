@@ -356,16 +356,18 @@ define([
 
     var subsampleLlaScratch = new Cartographic();
     /**
-     * Samples this Extent so that it includes a list of Cartesian points suitable for passing to
+     * Samples this extent so that it includes a list of Cartesian points suitable for passing to
      * {@link BoundingSphere#fromPoints}.  Sampling is necessary to account
      * for extents that cover the poles or cross the equator.
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use.
+     * @param {Number} [surfaceHeight=0.0] The height of the extent above the ellipsoid.
      * @param {Array} [result] The array of Cartesians onto which to store the result.
      * @return {Array} The modified result parameter or a new Array of Cartesians instances if none was provided.
      */
-    Extent.prototype.subsample = function(ellipsoid, result) {
+    Extent.prototype.subsample = function(ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         if (typeof result === 'undefined') {
             result = [];
@@ -378,6 +380,8 @@ define([
         var west = this.west;
 
         var lla = subsampleLlaScratch;
+        lla.height = surfaceHeight;
+
         lla.longitude = west;
         lla.latitude = north;
         result[length] = ellipsoid.cartographicToCartesian(lla, result[length]);

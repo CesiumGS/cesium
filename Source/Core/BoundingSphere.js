@@ -287,15 +287,17 @@ define([
      *
      * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
+     * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtent3D = function(extent, ellipsoid, result) {
+    BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
         if (typeof extent !== 'undefined') {
-            positions = extent.subsample(ellipsoid, fromExtent3DScratch);
+            positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
         }
 
         return BoundingSphere.fromPoints(positions, result);
