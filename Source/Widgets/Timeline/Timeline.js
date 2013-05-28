@@ -131,33 +131,33 @@ define([
 
         this.zoomTo(clock.startTime, clock.stopTime);
 
-        this.onmousedown = function(e) { widget._handleMouseDown(e); };
-        this._timeBarEle.addEventListener('mousedown', this.onmousedown, false);
+        this._onMouseDown = function(e) { widget._handleMouseDown(e); };
+        this._timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
 
-        this.onmousemove = function(e) { widget._handleMouseMove(e); };
-        this._timeBarEle.addEventListener('mousemove', this.onmousemove, false);
+        this._onMouseMove = function(e) { widget._handleMouseMove(e); };
+        this._timeBarEle.addEventListener('mousemove', this._onMouseMove, false);
 
-        this.onDOMMouseScroll = function(e) { widget._handleMouseWheel(e); };
-        this._timeBarEle.addEventListener('DOMMouseScroll', this.onDOMMouseScroll, false);
+        this._onDOMMouseScroll = function(e) { widget._handleMouseWheel(e); };
+        this._timeBarEle.addEventListener('DOMMouseScroll', this._onDOMMouseScroll, false);
 
-        this.onmousewheel = function(e) { widget._handleMouseWheel(e); };
-        this._timeBarEle.addEventListener('mousewheel', this.onmousewheel, false);
+        this._onMouseWheel = function(e) { widget._handleMouseWheel(e); };
+        this._timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
 
-        this.ontouchstart = function(e) { widget._handleTouchStart(e); };
-        this._timeBarEle.addEventListener('touchstart', this.ontouchstart, false);
+        this._onTouchStart = function(e) { widget._handleTouchStart(e); };
+        this._timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
 
-        this.ontouchmove = function(e) { widget._handleTouchMove(e); };
-        this._timeBarEle.addEventListener('touchmove', this.ontouchmove, false);
+        this._onTouchMove = function(e) { widget._handleTouchMove(e); };
+        this._timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
 
-        this.ontouchend = function(e) { widget._handleTouchEnd(e); };
-        this._timeBarEle.addEventListener('touchend', this.ontouchend, false);
+        this._onTouchEnd = function(e) { widget._handleTouchEnd(e); };
+        this._timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
 
         this.container.oncontextmenu = function() {
             return false;
         };
 
-        this.onresize = function() { widget.handleResize(); };
-        window.addEventListener('resize', this.onresize);
+        this._onResize = function() { widget.handleResize(); };
+        window.addEventListener('resize', this._onResize);
 
         this.addEventListener = function(type, listener, useCapture) {
             widget.container.addEventListener(type, listener, useCapture);
@@ -672,6 +672,14 @@ define([
     };
 
     /**
+     * Return if the widget has been destroyed.
+     * @memberof Timeline
+     */
+    Timeline.prototype.isDestroyed() {
+        return false;
+    }
+
+    /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof Timeline
@@ -679,14 +687,14 @@ define([
     Timeline.prototype.destroy = function() {
         var container = this.container;
 
-        this._timeBarEle.removeEventListener('mousedown', this.onmousedown, false);
-        this._timeBarEle.removeEventListener('mousemove', this.onmousemove, false);
-        this._timeBarEle.removeEventListener('DOMMouseScroll', this.onDOMMouseScroll, false);
-        this._timeBarEle.removeEventListener('mousewheel', this.onmousewheel, false);
-        this._timeBarEle.removeEventListener('touchstart', this.ontouchstart, false);
-        this._timeBarEle.removeEventListener('touchmove', this.ontouchmove, false);
-        this._timeBarEle.removeEventListener('touchend', this.ontouchend, false);
-        window.removeEventListener('resize', this.onresize);
+        this._timeBarEle.removeEventListener('mousedown', this._onMouseDown, false);
+        this._timeBarEle.removeEventListener('mousemove', this._onMouseMove, false);
+        this._timeBarEle.removeEventListener('DOMMouseScroll', this._onDOMMouseScroll, false);
+        this._timeBarEle.removeEventListener('mousewheel', this._onMouseWheel, false);
+        this._timeBarEle.removeEventListener('touchstart', this._onTouchStart, false);
+        this._timeBarEle.removeEventListener('touchmove', this._onTouchMove, false);
+        this._timeBarEle.removeEventListener('touchend', this._onTouchEnd, false);
+        window.removeEventListener('resize', this._onResize);
 
         this._clock.onTick.removeEventListener(this.updateFromClock, this);
 
