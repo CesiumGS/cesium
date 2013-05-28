@@ -21,12 +21,13 @@ Beta Releases
    * Added `height` parameter to `Extent.subsample`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
-* Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
-* Added `EllipseGeometry` and `CircleGeometry`.
+* Added `GeometryFilters.computeNormal` to find the normals of vertices in a mesh.
+* Added `GeometryFilters.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Added `WallGeometry` and `PolygonGeometry`.
+* Added `EllipseGeometry` and `CircleGeometry`.
 
 ### b17 - 2013-06-03
 
