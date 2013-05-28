@@ -31,12 +31,7 @@ define([
         this.head = undefined;
         this.tail = undefined;
         this.length = 0;
-        this.earTipLength = 0;
-        this.earTipHead = undefined;
-        this.earTipTail = undefined;
-        this.reflexLength = 0;
-        this.reflexHead = undefined;
-        this.reflexTail = undefined;
+        this.list = new Array(length);
     }
 
     EarClipLinkedList.prototype.add = function(item, index) {
@@ -45,14 +40,9 @@ define([
                 item : item,
                 index: index,
                 previous : this.tail,
-                next : this.head,
-                previousEarTip: undefined,
-                nextEarTip: undefined,
-                isEar: false,
-                previousReflex: undefined,
-                nextReflex: undefined,
-                isReflex: false
+                next : this.head
             };
+            this.list[index] = node;
 
             if (this.length === 0) {
                 this.head = node;
@@ -67,119 +57,36 @@ define([
         }
     };
 
-    EarClipLinkedList.prototype.addEarTip = function(node) {
-        if (typeof node !== 'undefined') {
-            node.previousEarTip = this.earTipTail;
-            node.nextEarTip = this.earTipHead;
-            node.isEar = true;
-
-            if (this.earTipLength === 0) {
-                this.earTipHead = node;
-                this.earTipTail = node;
-            } else {
-                this.earTipHead.previousEarTip = node;
-                this.earTipTail.nextEarTip = node;
-                this.earTipTail = node;
-            }
-
-            ++this.earTipLength;
-        }
-    };
-
-    EarClipLinkedList.prototype.addReflex = function(node) {
-        if (typeof node !== 'undefined') {
-            node.previousReflex = this.reflexTail;
-            node.isReflex = true;
-
-            if (this.reflexLength === 0) {
-                this.reflexHead = node;
-                this.reflexTail = node;
-            } else {
-                this.reflexTail.nextReflex = node;
-                this.reflexTail = node;
-            }
-
-            ++this.reflexLength;
-        }
-    };
-
-    EarClipLinkedList.prototype.remove = function(node) {
-        if (typeof node !== 'undefined') {
-            this.removeEarTip(node);
-            if (this.length > 1) {
-                node.previous.next = node.next;
-                node.next.previous = node.previous;
-                if (node === this.head) {
-                    this.head = node.next;
+    EarClipLinkedList.prototype.remove = function(index) {
+        if (typeof index !== 'undefined') {
+            var node = this.list[index];
+            if (typeof node !== 'undefined') {
+                if (this.length > 1) {
+                    node.previous.next = node.next;
+                    node.next.previous = node.previous;
+                    if (node === this.head) {
+                        this.head = node.next;
+                    }
+                    if (node === this.tail) {
+                        this.tail = node.previous;
+                    }
+                } else {
+                    // Remove last node in linked list.
+                    this.head = undefined;
+                    this.tail = undefined;
                 }
-                if (node === this.tail) {
-                    this.tail = node.previous;
-                }
-            } else {
-                // Remove last node in linked list.
-                this.head = undefined;
-                this.tail = undefined;
-                this.earTipHead = undefined;
-                this.earTipTail = undefined;
+                this.list[index] = undefined;
+                --this.length;
+                return node;
             }
-
-            --this.length;
         }
     };
-
-    EarClipLinkedList.prototype.removeEarTip = function(node) {
-        if (typeof node !== 'undefined') {
-            if (this.earTipLength > 1) {
-                node.previousEarTip.nextEarTip = node.nextEarTip;
-                node.nextEarTip.previousEarTip = node.previousEarTip;
-                node.isEar = false;
-                if (node === this.earTipHead) {
-                    this.earTipHead = node.nextEarTip;
-                }
-                if (node === this.earTipTail) {
-                    this.earTipTail = node.previousEarTip;
-                }
-
-            } else {
-                // Remove last node in linked list.
-                this.earTipHead = undefined;
-                this.earTipTail = undefined;
-            }
-            --this.earTipLength;
-        }
-    };
-
-    EarClipLinkedList.prototype.removeReflex = function(node) {
-        if (typeof node !== 'undefined') {
-            if(typeof node.previousReflex !== 'undefined' && typeof node.nextReflex !== 'undefined') {
-                node.previousReflex.nextReflex = node.nextReflex;
-                node.nextReflex.previousReflex = node.previousReflex;
-            } else if (typeof node.nextReflex !== 'undefined') {
-                node.nextReflex.previousReflex = undefined;
-                this.reflexHead = node.nextReflex;
-            } else if (typeof node.previousReflex !== 'undefined') {
-                node.previousReflex.nextReflex = undefined;
-                this.reflexTail = node.previousReflex;
-            } else {
-                this.reflexHead = undefined;
-                this.reflexTail = undefined;
-            }
-            node.isReflex = false;
-            --this.reflexLength;
-        }
-    };
-
 
     EarClipLinkedList.prototype.clear = function() {
         this.head = undefined;
         this.tail = undefined;
         this.length = 0;
-        this.earTipHead = undefined;
-        this.earTipTail = undefined;
-        this.earTipLength = 0;
-        this.reflexHead = undefined;
-        this.reflexTail = undefined;
-        this.reflexLength = 0;
+        this.list.length = 0;
     };
 
     function isTipConvex(p0, p1, p2) {
@@ -190,9 +97,9 @@ define([
         return ((u.x * v.y) - (u.y * v.x)) > 0.0;
     }
 
-    function isVertexEar (v0, v, v1, ll){
-        for (var reflex = ll.reflexHead; typeof reflex !== 'undefined'; reflex = reflex.nextReflex) {
-            var n = reflex.item;
+    function isVertexEar (v0, v, v1, reflexList){
+        for (var i = 0; i < reflexList.length; i++) {
+            var n = reflexList[i];
             if (pointInsideTriangle2D(n, v0, v, v1)) {
                 return false;
             }
@@ -615,74 +522,97 @@ define([
             }
 
             var indices = [];
+            var reflex = [];
+            var isReflex = new Array(length);
+            var convex = [];
+            var earTips = [];
+            var isEarTip = new Array(length);
             var v, v0, v1;
 
             for (var i = 0; i < length; ++i) {
                 polygonVertices.add(positions[i], i); //add vertex list
                 v = positions[i];
                 v0 = (i === 0) ? positions[length-1] : positions[i-1];
-                v1 = (i === length-1) ? positions[0] : positions[i+1];
-                if (!isTipConvex(v0, v, v1)) {
-                    polygonVertices.addReflex(polygonVertices.tail); //add to reflex vertex list
+                v1 = positions[(i+1)%length];
+                if (isTipConvex(v0, v, v1)) {
+                    convex.push(i);
+                    isReflex[i] = false;
+                } else {
+                    reflex.push(positions[i]);
+                    isReflex[i] = true;
                 }
             }
 
-            v = polygonVertices.head;
-            for (i = 0; i < length; i++) {
-                if (!v.isReflex) { //if v is convex
-                    v0 = v.previous;
-                    v1 = v.next;
-                    if (isVertexEar(v0.item, v.item, v1.item, polygonVertices)) {
-                        polygonVertices.addEarTip(v); //add to ear clip list
+            if (reflex.length > 0) {
+                for (i = 0; i < convex.length; i++) {
+                    var index = convex[i];
+                    v = positions[index];
+                    v0 = (index === 0) ? positions[length-1] : positions[index-1];
+                    v1 = positions[(index+1)%length];
+                    if (isVertexEar(v0, v, v1, reflex)) {
+                        earTips.push(index);
+                        isEarTip[index] = true;
+                    } else {
+                        isEarTip[index] = false;
                     }
                 }
-                v = v.next;
+            } else {
+                earTips = convex;
             }
 
             while (polygonVertices.length > 3) {
-                v = polygonVertices.earTipHead;
+                v = polygonVertices.remove(earTips.pop());
                 v0 = v.previous;
                 v1 = v.next;
+                var v0index = v0.index;
+                var v1index = v1.index;
+                var v0item = v0.item;
+                var v1item = v1.item;
+                var v0previousitem = v0.previous.item;
+                var v0nextitem = v0.next.item;
+                var v1previousitem = v1.previous.item;
+                var v1nextitem = v1.next.item;
 
-                indices.push(v0.index, v.index, v1.index);
-
-                polygonVertices.remove(v);
+                indices.push(v0index, v.index, v1index);
 
                 // Check adjacent vertices for changes
-                if (v0.isReflex) { // If reflex vertex is now convex
-                    if(isTipConvex(v0.previous.item, v0.item, v0.next.item)) {
-                        polygonVertices.removeReflex(v0);
+                if (isReflex[v0index]) { // If reflex vertex is now convex
+                    if(isTipConvex(v0previousitem, v0item, v0nextitem)) {
+                        isReflex[v0index] = false;
+                        reflex.splice(reflex.indexOf(v0item), 1);
                     }
                 }
-                if (v1.isReflex) { // If reflex vertex is now convex
-                    if(isTipConvex(v1.previous.item, v1.item, v1.next.item)) {
-                        polygonVertices.removeReflex(v1);
+                if (isReflex[v1index]) { // If reflex vertex is now convex
+                    if(isTipConvex(v1previousitem, v1item, v1nextitem)) {
+                        isReflex[v1index] = false;
+                        reflex.splice(reflex.indexOf(v1item), 1);
                     }
                 }
-                if (v0.isEar) { // If tip that was previously an ear tip is no longer
-                    if (!isVertexEar(v0.previous.item, v0.item, v0.next.item, polygonVertices)) {
-                        polygonVertices.removeEarTip(v0);
+                if (isEarTip[v0index]) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v0previousitem, v0item, v0nextitem, reflex)) {
+                        isEarTip[v0index] = false;
+                        earTips.splice(earTips.indexOf(v0index), 1);
                     }
-                } else if(!v0.isReflex) { // If convex vertex is now also an ear tip
-                    if (isVertexEar(v0.previous.item, v0.item, v0.next.item, polygonVertices)) { // If vertex is also an ear tip
-                        polygonVertices.addEarTip(v0);
+                } else if(!isReflex[v0index]) { // If convex vertex is now also an ear tip
+                    if (isVertexEar(v0previousitem, v0item, v0nextitem, reflex)) { // If vertex is also an ear tip
+                        isEarTip[v0index] = true;
+                        earTips.push(v0index);
                     }
                 }
-                if (v1.isEar) { // If tip that was previously an ear tip is no longer
-                    if (!isVertexEar(v1.previous.item, v1.item, v1.next.item, polygonVertices)) {
-                        polygonVertices.removeEarTip(v1);
+                if (isEarTip[v1index]) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v1previousitem, v1item, v1nextitem, reflex)) {
+                        isEarTip[v1index] = false;
+                        earTips.splice(earTips.indexOf(v1index), 1);
                     }
-                } else if (!v1.isReflex) { // If convex vertex is now also an ear tip
-                    if (isVertexEar(v1.previous.item, v1.item, v1.next.item, polygonVertices)) {
-                        polygonVertices.addEarTip(v1);
+                } else if (!isReflex[v1index]) { // If convex vertex is now also an ear tip
+                    if (isVertexEar(v1previousitem, v1item, v1nextitem, reflex)) {
+                        isEarTip[v1index] = true;
+                        earTips.push(v1index);
                     }
                 }
             }
 
-            v = polygonVertices.earTipHead;
-            v0 = v.previous;
-            v1 = v.next;
-            indices.push(v0.index, v.index, v1.index);
+            indices.push(earTips[0], earTips[1], earTips[2]);
 
             return indices;
         },
