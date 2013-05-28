@@ -1115,8 +1115,8 @@ define([
                 i13 = i03+1;
                 i23 = i03+2;
 
-                var n = Cartesian3.fromArray(normals.slice(i03, i03 + 3), 0, normalScratch);
-                var t = Cartesian3.fromArray(tan1.slice(i03, i03 + 3), 0, tScratch);
+                var n = Cartesian3.fromArray(normals, i03, normalScratch);
+                var t = Cartesian3.fromArray(tan1, i03, tScratch);
                 var scalar = n.dot(t);
                 n.multiplyByScalar(scalar, normalScale);
                 t.subtract(normalScale, t).normalize(t);
