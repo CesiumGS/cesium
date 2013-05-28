@@ -341,7 +341,7 @@ defineSuite([
         var extent = new Extent(west, south, east, north);
         var cartesian0 = new Cartesian3();
         var results = [cartesian0];
-        var returnedResult = extent.subsample(Ellipsoid.WGS84, results);
+        var returnedResult = extent.subsample(Ellipsoid.WGS84, 0.0, results);
         expect(results).toBe(returnedResult);
         expect(results[0]).toBe(cartesian0);
         expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest()),
@@ -383,6 +383,30 @@ defineSuite([
         var cartographic5 = Ellipsoid.WGS84.cartesianToCartographic(returnedResult[5]);
         expect(cartographic5.latitude).toEqual(0.0);
         expect(cartographic5.longitude).toEqualEpsilon(east, CesiumMath.EPSILON16);
+    });
+
+    it('subsample works at a height above the ellipsoid', function() {
+        var west = 0.1;
+        var south = -0.3;
+        var east = 0.2;
+        var north = -0.4;
+        var extent = new Extent(west, south, east, north);
+        var height = 100000.0;
+        var returnedResult = extent.subsample(Ellipsoid.WGS84, height);
+
+        var nw = extent.getNorthwest();
+        nw.height = height;
+        var ne = extent.getNortheast();
+        ne.height = height;
+        var se = extent.getSoutheast();
+        se.height = height;
+        var sw = extent.getSouthwest();
+        sw.height = height;
+
+        expect(returnedResult).toEqual([Ellipsoid.WGS84.cartographicToCartesian(nw),
+                                        Ellipsoid.WGS84.cartographicToCartesian(ne),
+                                        Ellipsoid.WGS84.cartographicToCartesian(se),
+                                        Ellipsoid.WGS84.cartographicToCartesian(sw)]);
     });
 
     it('equalsEpsilon throws with no epsilon', function() {

@@ -11,7 +11,7 @@ define([
         'Core/Matrix4',
         'Core/Ellipsoid',
         'Core/Extent',
-        'Core/ExtentTessellator',
+        'Core/ExtentGeometry',
         'Core/EllipseGeometry',
         'Core/EllipsoidGeometry',
         'Core/BoxGeometry',
@@ -37,7 +37,7 @@ define([
         Matrix4,
         Ellipsoid,
         Extent,
-        ExtentTessellator,
+        ExtentGeometry,
         EllipseGeometry,
         EllipsoidGeometry,
         BoxGeometry,
@@ -75,7 +75,7 @@ define([
         var scene = widget.scene;
         var ellipsoid = widget.ellipsoid;
 
-        var mesh = ExtentTessellator.compute({
+        var mesh = new ExtentGeometry({
             extent : new Extent(
                 CesiumMath.toRadians(-180.0),
                 CesiumMath.toRadians(50.0),
