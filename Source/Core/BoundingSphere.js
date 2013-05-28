@@ -287,31 +287,17 @@ define([
      *
      * @param {Extent} extent The valid extent used to create a bounding sphere.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
-     * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     */
-    BoundingSphere.fromExtent3D = function(extent, ellipsoid, result) {
-        return BoundingSphere.fromExtentWithHeight3D(extent, ellipsoid, 0.0, result);
-    };
-
-    /**
-     * Computes a bounding sphere from an extent at a given height in 3D. The bounding sphere is created using a subsample of points
-     * above the ellipsoid and contained in the extent. It may not be accurate for all extents on all types of ellipsoids.
-     * @memberof BoundingSphere
-     *
-     * @param {Extent} extent The valid extent used to create a bounding sphere.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
-    BoundingSphere.fromExtentWithHeight3D = function(extent, ellipsoid, surfaceHeight, result) {
+    BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
         if (typeof extent !== 'undefined') {
-            positions = extent.subsampleWithHeight(ellipsoid, surfaceHeight, fromExtent3DScratch);
+            positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
         }
 
         return BoundingSphere.fromPoints(positions, result);

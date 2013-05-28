@@ -20,6 +20,8 @@ Beta Releases
 * Added `GeometryFilters.combine` to combine meshes for better batching.
 * Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `height` parameter to `BoundingSphere.fromExtent3D`.
+* Added `height` parameter to `Extent.subsample`.
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Added `WallGeometry` and `PolygonGeometry`.
