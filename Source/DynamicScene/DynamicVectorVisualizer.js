@@ -169,8 +169,6 @@ define([
         return destroyObject(this);
     };
 
-    var cachedPosition = new Cartesian3();
-    var cachedDirection = new Cartesian3();
     DynamicVectorVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var dynamicVector = dynamicObject.vector;
         if (typeof dynamicVector === 'undefined') {
@@ -206,7 +204,7 @@ define([
             } else {
                 vectorVisualizerIndex = this._polylineCollection.getLength();
                 polyline = this._polylineCollection.add();
-                polyline._visualizerPositions = new Array(2);
+                polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
             polyline.dynamicObject = dynamicObject;
@@ -227,13 +225,12 @@ define([
 
         polyline.setShow(true);
 
-        var position = positionProperty.getValueCartesian(time, cachedPosition);
-        var direction = directionProperty.getValue(time, cachedDirection);
+        var positions = polyline._visualizerPositions;
+        var position = positionProperty.getValueCartesian(time, positions[0]);
+        var direction = directionProperty.getValue(time, positions[1]);
         var length = lengthProperty.getValue(time);
         if (typeof position !== 'undefined' && typeof direction !== 'undefined' && typeof length !== 'undefined') {
-            var positions = polyline._visualizerPositions;
-            positions[0] = position;
-            positions[1] = Cartesian3.add(position, direction.normalize(direction).multiplyByScalar(length), positions[1]);
+            Cartesian3.add(position, direction.normalize(direction).multiplyByScalar(length, direction), direction);
             polyline.setPositions(positions);
         }
 
