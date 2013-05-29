@@ -48,7 +48,12 @@ define(['../createCommand',
         }
         var flight;
         var description;
+
         if (mode === SceneMode.SCENE2D) {
+            camera.transform = new Matrix4(0, 0, 1, 0,
+                    1, 0, 0, 0,
+                    0, 1, 0, 0,
+                    0, 0, 0, 1);
             description = {
                     destination: Extent.MAX_VALUE,
                     duration: flightDuration
@@ -56,6 +61,12 @@ define(['../createCommand',
             flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.SCENE3D) {
+            Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
+            var rotation = Matrix4.getRotation(camera.transform);
+            rotation.multiplyByVector(camera.direction, camera.direction);
+            rotation.multiplyByVector(camera.up, camera.up);
+            rotation.multiplyByVector(camera.right, camera.right);
+            camera.transform = Matrix4.IDENTITY.clone();
             var defaultCamera = new Camera(canvas);
             description = {
                     destination: defaultCamera.position,
@@ -66,6 +77,10 @@ define(['../createCommand',
             flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
+            camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                    1.0, 0.0, 0.0, 0.0,
+                    0.0, 1.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 1.0);
             var maxRadii = ellipsoid.getMaximumRadius();
             var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
             var direction = Cartesian3.ZERO.subtract(position).normalize();
