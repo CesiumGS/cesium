@@ -1,22 +1,16 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/Cartesian2',
-        '../Core/Cartographic',
         '../Core/WebMercatorProjection',
         './TilingScheme'
     ], function(
         defaultValue,
-        DeveloperError,
-        CesiumMath,
         Ellipsoid,
         Extent,
         Cartesian2,
-        Cartographic,
         WebMercatorProjection,
         TilingScheme) {
     "use strict";

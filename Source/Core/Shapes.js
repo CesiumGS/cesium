@@ -3,7 +3,6 @@ define([
         './defaultValue',
         './DeveloperError',
         './Math',
-        './Cartesian2',
         './Cartesian3',
         './Quaternion',
         './Matrix3'
@@ -11,7 +10,6 @@ define([
         defaultValue,
         DeveloperError,
         CesiumMath,
-        Cartesian2,
         Cartesian3,
         Quaternion,
         Matrix3) {

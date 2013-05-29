@@ -1,10 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Renderer/Context',
          'Specs/createContext',
          'Specs/destroyContext'
      ], 'Renderer/Sampler', function(
-         Context,
          createContext,
          destroyContext) {
     "use strict";

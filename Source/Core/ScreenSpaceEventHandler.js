@@ -3,7 +3,6 @@ define([
         './DeveloperError',
         './destroyObject',
         './Cartesian2',
-        './JulianDate',
         './ScreenSpaceEventType',
         './KeyboardEventModifier',
         './defaultValue'
@@ -11,7 +10,6 @@ define([
         DeveloperError,
         destroyObject,
         Cartesian2,
-        JulianDate,
         ScreenSpaceEventType,
         KeyboardEventModifier,
         defaultValue) {
@@ -184,7 +182,7 @@ define([
         }
     };
 
-    function getModifier(screenSpaceEventHandler, event) {
+    function getModifier(event) {
         if (event.shiftKey) {
             return KeyboardEventModifier.SHIFT;
         } else if (event.ctrlKey) {
@@ -205,7 +203,7 @@ define([
             return;
         }
 
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action;
 
         // IE_TODO:  On some versions of IE, the left-button is 1, and the right-button is 4.
@@ -232,7 +230,7 @@ define([
     }
 
     function handleMouseUp(screenSpaceEventHandler, event) {
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action, clickAction;
         if (screenSpaceEventHandler._seenAnyTouchEvents) {
             return;
@@ -291,7 +289,7 @@ define([
             motion : new Cartesian2()
         };
 
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.MOUSE_MOVE, modifier);
         if (typeof action !== 'undefined') {
             action(movement);
@@ -308,7 +306,7 @@ define([
     function handleTouchStart(screenSpaceEventHandler, event) {
         var pos, pos2, numberOfTouches = event.touches.length;
         screenSpaceEventHandler._seenAnyTouchEvents = true;
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action;
 
         pos = getPosition(screenSpaceEventHandler, event.touches[0]);
@@ -366,7 +364,7 @@ define([
     function handleTouchEnd(screenSpaceEventHandler, event) {
         var numberOfTouches = event.touches.length;
         var numberOfChangedTouches = event.changedTouches.length;
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action, clickAction;
 
         if (screenSpaceEventHandler._leftMouseButtonDown) {
@@ -409,7 +407,7 @@ define([
     }
 
     function handleTouchMove(screenSpaceEventHandler, event) {
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var pos, pos2, action, movement;
 
         if (screenSpaceEventHandler._leftMouseButtonDown && (event.touches.length === 1)) {
@@ -488,7 +486,7 @@ define([
         // to the angle it was rotated in degrees.
         var delta = event.detail ? event.detail * -120 : event.wheelDelta;
 
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var type = ScreenSpaceEventType.WHEEL;
         var action = screenSpaceEventHandler.getInputAction(type, modifier);
 
@@ -499,7 +497,7 @@ define([
     }
 
     function handleMouseDblClick(screenSpaceEventHandler, event) {
-        var modifier = getModifier(screenSpaceEventHandler, event);
+        var modifier = getModifier(event);
         var action;
         var pos = getPosition(screenSpaceEventHandler, event);
 
