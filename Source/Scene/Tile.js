@@ -119,18 +119,6 @@ define([
         this.state = TileState.START;
 
         /**
-         * The previous tile in the {@link TileLoadQueue}.
-         * @type Tile
-         */
-        this.loadPrevious = undefined;
-
-        /**
-         * The next tile in the {@link TileLoadQueue}.
-         * @type Tile
-         */
-        this.loadNext = undefined;
-
-        /**
          * The previous tile in the {@link TileReplacementQueue}.
          * @type Tile
          */
