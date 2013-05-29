@@ -412,6 +412,9 @@ define([
      * @see Scene#getFrameState
      * @see Scene#getAnimations
      */
+    var dirScratch = new Cartesian3();
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
     CameraFlightPath.createAnimation = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
@@ -432,9 +435,52 @@ define([
         var onComplete = description.onComplete;
 
         if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            if (frameState.mode !== SceneMode.SCENE2D) {
+                return {
+                    duration : 0,
+                    onComplete : onComplete
+                };
+            }
+        }
+
+        if (duration <= 0) {
+            var newOnComplete = function() {
+                var position = destination;
+                if (frameState.mode === SceneMode.SCENE3D) {
+                    dirScratch = defaultValue(description.direction, position.negate(dirScratch).normalize(dirScratch));
+                    rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                    upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
+                } else {
+                    dirScratch = defaultValue(description.direction, Cartesian3.UNIT_Z.negate(dirScratch));
+                    rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                    upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
+                }
+
+                frameState.camera.position = position;
+                frameState.camera.direction = dirScratch;
+                frameState.camera.up = upScratch;
+                frameState.camera.right = rightScratch;
+
+                if (frameState.mode === SceneMode.SCENE2D) {
+                    var zoom = frameState.camera.position.z;
+
+                    var frustum = frameState.camera.frustum;
+                    var ratio = frustum.top / frustum.right;
+
+                    var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
+                    frustum.right += incrementAmount;
+                    frustum.left -= incrementAmount;
+                    frustum.top = ratio * frustum.right;
+                    frustum.bottom = -frustum.top;
+                }
+
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+            };
             return {
                 duration : 0,
-                onComplete : description.onComplete
+                onComplete : newOnComplete
             };
         }
 
@@ -503,10 +549,12 @@ define([
         }
 
         if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete
-            };
+            if (frameState.mode !== SceneMode.SCENE2D) {
+                return {
+                    duration : 0,
+                    onComplete : description.onComplete
+                };
+            }
         }
 
         var createAnimationDescription = clone(description);
@@ -550,10 +598,12 @@ define([
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
 
         if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete
-            };
+            if (frameState.mode !== SceneMode.SCENE2D) {
+                return {
+                    duration : 0,
+                    onComplete : description.onComplete
+                };
+            }
         }
 
         createAnimationDescription.destination = c3destination;
