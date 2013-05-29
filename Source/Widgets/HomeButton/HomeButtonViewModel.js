@@ -51,7 +51,7 @@ define(['../createCommand',
         if (mode === SceneMode.SCENE2D) {
             description = {
                     destination: Extent.MAX_VALUE,
-                    duration: flightDuration()
+                    duration: flightDuration
                 };
             flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
@@ -59,7 +59,7 @@ define(['../createCommand',
             var defaultCamera = new Camera(canvas);
             description = {
                     destination: defaultCamera.position,
-                    duration: flightDuration(),
+                    duration: flightDuration,
                     up: defaultCamera.up,
                     direction: defaultCamera.direction
             };
@@ -74,7 +74,7 @@ define(['../createCommand',
 
             description = {
                     destination: position,
-                    duration: flightDuration(),
+                    duration: flightDuration,
                     up: up,
                     direction: direction
             };
@@ -134,7 +134,7 @@ define(['../createCommand',
          * @type Command
          */
         this.command = createCommand(function() {
-            viewHome(that.scene, that.ellipsoid, that.transitioner, that.flightDuration);
+            viewHome(that.scene, that.ellipsoid, that.transitioner, that.flightDuration());
         });
 
         /**
