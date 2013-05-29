@@ -2,7 +2,6 @@
 defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
-         'Core/Cartesian4',
          'Core/PrimitiveType',
          'Core/Color',
          'Renderer/PixelFormat',
@@ -10,13 +9,10 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/DepthFunction',
-         'Renderer/RenderbufferFormat',
-         'Renderer/StencilFunction',
-         'Renderer/StencilOperation'
+         'Renderer/RenderbufferFormat'
      ], 'Renderer/Framebuffer', function(
          createContext,
          destroyContext,
-         Cartesian4,
          PrimitiveType,
          Color,
          PixelFormat,
@@ -24,9 +20,7 @@ defineSuite([
          BufferUsage,
          ClearCommand,
          DepthFunction,
-         RenderbufferFormat,
-         StencilFunction,
-         StencilOperation) {
+         RenderbufferFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

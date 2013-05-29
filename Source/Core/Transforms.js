@@ -12,7 +12,6 @@ define([
         './Cartesian4',
         './TimeConstants',
         './Ellipsoid',
-        './JulianDate',
         './EarthOrientationParameters',
         './EarthOrientationParametersSample',
         '../ThirdParty/when'
@@ -30,7 +29,6 @@ define([
         Cartesian4,
         TimeConstants,
         Ellipsoid,
-        JulianDate,
         EarthOrientationParameters,
         EarthOrientationParametersSample,
         when) {

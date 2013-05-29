@@ -1,17 +1,13 @@
 /*global define*/
 define(['../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../../Core/ClockStep',
         '../../Core/Color',
-        '../../Core/defaultValue',
-        '../../ThirdParty/sprintf'
-        ], function(
-         destroyObject,
-         DeveloperError,
-         ClockStep,
-         Color,
-         defaultValue,
-         sprintf) {
+        '../../Core/defaultValue'
+    ], function(
+        destroyObject,
+        DeveloperError,
+        Color,
+        defaultValue) {
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";

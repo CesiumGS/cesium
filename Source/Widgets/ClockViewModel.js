@@ -1,15 +1,14 @@
 /*global define*/
-define(['../Core/DeveloperError',
+define([
         '../Core/defaultValue',
         '../Core/Clock',
         '../Core/JulianDate',
         '../ThirdParty/knockout'
-        ], function(
-         DeveloperError,
-         defaultValue,
-         Clock,
-         JulianDate,
-         knockout) {
+    ], function(
+        defaultValue,
+        Clock,
+        JulianDate,
+        knockout) {
     "use strict";
 
     /**
