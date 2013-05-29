@@ -181,11 +181,12 @@ define([
         var showProperty = dynamicVector.show;
         var positionProperty = dynamicObject.position;
         var directionProperty = dynamicVector.direction;
+        var lengthProperty = dynamicVector.length;
         var vectorVisualizerIndex = dynamicObject._vectorVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
 
         if (!show || //
-           (typeof directionProperty === 'undefined' || typeof positionProperty === 'undefined')) {
+           (typeof directionProperty === 'undefined' || typeof positionProperty === 'undefined' || typeof lengthProperty === 'undefined')) {
             //Remove the existing primitive if we have one
             if (typeof vectorVisualizerIndex !== 'undefined') {
                 polyline = this._polylineCollection.get(vectorVisualizerIndex);
@@ -199,8 +200,7 @@ define([
         var uniforms;
         if (typeof vectorVisualizerIndex === 'undefined') {
             var unusedIndexes = this._unusedIndexes;
-            var length = unusedIndexes.length;
-            if (length > 0) {
+            if (unusedIndexes.length > 0) {
                 vectorVisualizerIndex = unusedIndexes.pop();
                 polyline = this._polylineCollection.get(vectorVisualizerIndex);
             } else {
@@ -229,10 +229,11 @@ define([
 
         var position = positionProperty.getValueCartesian(time, cachedPosition);
         var direction = directionProperty.getValue(time, cachedDirection);
-        if (typeof position !== 'undefined' && typeof direction !== 'undefined') {
+        var length = lengthProperty.getValue(time);
+        if (typeof position !== 'undefined' && typeof direction !== 'undefined' && typeof length !== 'undefined') {
             var positions = polyline._visualizerPositions;
             positions[0] = position;
-            positions[1] = Cartesian3.add(position, direction, positions[1]);
+            positions[1] = Cartesian3.add(position, direction.normalize(direction).multiplyByScalar(length), positions[1]);
             polyline.setPositions(positions);
         }
 

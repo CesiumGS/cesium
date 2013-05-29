@@ -52,6 +52,11 @@ function(
          * @type DynamicProperty
          */
         this.direction = undefined;
+        /**
+         * A DynamicProperty of type CzmlNumber which determines the vector's graphical length.
+         * @type DynamicProperty
+         */
+        this.length = undefined;
     };
 
     /**
@@ -114,6 +119,15 @@ function(
             direction.processCzmlIntervals(vectorData.direction, interval);
         }
 
+        if (typeof vectorData.length !== 'undefined') {
+            var length = vector.length;
+            if (typeof length === 'undefined') {
+                vector.length = length = new DynamicProperty(CzmlNumber);
+                vectorUpdated = true;
+            }
+            length.processCzmlIntervals(vectorData.length, interval);
+        }
+
         if (typeof vectorData.show !== 'undefined') {
             var show = vector.show;
             if (typeof show === 'undefined') {
@@ -148,6 +162,7 @@ function(
             targetVector.color = defaultValue(targetVector.color, vectorToMerge.color);
             targetVector.width = defaultValue(targetVector.width, vectorToMerge.width);
             targetVector.direction = defaultValue(targetVector.direction, vectorToMerge.direction);
+            targetVector.length = defaultValue(targetVector.length, vectorToMerge.length);
             targetVector.show = defaultValue(targetVector.show, vectorToMerge.show);
         }
     };

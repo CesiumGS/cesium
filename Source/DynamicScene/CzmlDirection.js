@@ -54,19 +54,36 @@ define([
          * @param {Object} czmlInterval The CZML interval to unwrap.
          */
         unwrapInterval : function(czmlInterval) {
-            var cartesian = czmlInterval.cartesian;
-            if (typeof cartesian !== 'undefined') {
-                return cartesian;
+            var unitCartesian = czmlInterval.unitCartesian;
+            if (typeof unitCartesian !== 'undefined') {
+                return unitCartesian;
             }
-            var spherical = czmlInterval.spherical;
-            if (typeof spherical !== 'undefined') {
-                scratchSpherical.clock = spherical[0];
-                scratchSpherical.clone = spherical[1];
-                scratchSpherical.magnitude = spherical[2];
-                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
-                return [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+
+            var unitSpherical = czmlInterval.unitSpherical;
+            if (typeof unitSpherical !== 'undefined') {
+                var len = unitSpherical.length;
+                if (len === 2) {
+                    scratchSpherical.clock = unitSpherical[0];
+                    scratchSpherical.cone = unitSpherical[1];
+                    Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+                    unitCartesian = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+                } else {
+                    var sphericalIt = 0;
+                    unitCartesian = new Array((len / 3) * 4);
+                    for ( var i = 0; i < len; i += 4) {
+                        unitCartesian[i] = unitSpherical[sphericalIt++];
+
+                        scratchSpherical.clock = unitSpherical[sphericalIt++];
+                        scratchSpherical.cone = unitSpherical[sphericalIt++];
+                        Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+                        unitCartesian[i + 1] = scratchCartesian.x;
+                        unitCartesian[i + 2] = scratchCartesian.y;
+                        unitCartesian[i + 3] = scratchCartesian.z;
+                    }
+                }
             }
-            return undefined;
+            return unitCartesian;
         },
 
         /**
