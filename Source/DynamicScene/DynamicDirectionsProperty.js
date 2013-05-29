@@ -1,13 +1,11 @@
 /*global define*/
 define([
-        '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Spherical',
         '../Core/Iso8601'
     ], function(
-        JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
