@@ -125,6 +125,7 @@ define(['../createCommand',
 
         /**
          * Gets an Observable whose value is the duration in milliseconds of the flight to home position.
+         * @type Observable
          */
         this.flightDuration = knockout.observable(flightDuration);
 
