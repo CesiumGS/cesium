@@ -557,4 +557,26 @@ defineSuite([
         expect(camera.direction).toEqual(startDirection);
         expect(camera.up).toEqual(startUp);
     });
+
+    it('creates an animation with 0 duration', function() {
+        var destination = new Cartesian3(1e9, 1e9, 1e9);
+        var duration = 0;
+        var onComplete = function() {
+            return true;
+        };
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : destination,
+            duration : duration,
+            onComplete : onComplete
+        });
+
+        expect(flight.duration).toEqual(duration);
+        expect(flight.onComplete).not.toEqual(onComplete);
+        expect(typeof flight.onUpdate).toEqual('undefined');
+        expect(frameState.camera.position).not.toEqual(destination);
+        flight.onComplete();
+        expect(frameState.camera.position).toEqual(destination);
+    });
+
 });
