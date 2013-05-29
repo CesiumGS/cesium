@@ -51,7 +51,7 @@ define(['../createCommand',
         if (mode === SceneMode.SCENE2D) {
             description = {
                     destination: Extent.MAX_VALUE,
-                    duration: flightDuration
+                    duration: flightDuration()
                 };
             flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
@@ -59,7 +59,7 @@ define(['../createCommand',
             var defaultCamera = new Camera(canvas);
             description = {
                     destination: defaultCamera.position,
-                    duration: flightDuration,
+                    duration: flightDuration(),
                     up: defaultCamera.up,
                     direction: defaultCamera.direction
             };
@@ -74,7 +74,7 @@ define(['../createCommand',
 
             description = {
                     destination: position,
-                    duration: flightDuration,
+                    duration: flightDuration(),
                     up: up,
                     direction: direction
             };
@@ -92,7 +92,7 @@ define(['../createCommand',
      * @param {Scene} scene The Scene instance to use.
      * @param {SceneTransitioner} [transitioner] The SceneTransitioner instance to use.
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
-     * @param {Number} [flightDuration] The duration of the camera flight (in ms)
+     * @param {Number} [flightDuration] The duration of the camera flight in milliseconds
      *
      * @exception {Scene} scene is required.
      */
@@ -123,14 +123,17 @@ define(['../createCommand',
          */
         this.transitioner = transitioner;
 
-        this.flightDuration = flightDuration;
+        /**
+         * Gets an Observable whose value is the duration in milliseconds of the flight to home position.
+         */
+        this.flightDuration = knockout.observable(flightDuration);
 
         /**
          * The command for switching to home view.
          * @type Command
          */
         this.command = createCommand(function() {
-            viewHome(that.scene, that.ellipsoid, that.transitioner, flightDuration);
+            viewHome(that.scene, that.ellipsoid, that.transitioner, that.flightDuration);
         });
 
         /**
