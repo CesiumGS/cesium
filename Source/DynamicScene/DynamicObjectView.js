@@ -9,6 +9,7 @@ define([
         '../Core/Cartographic',
         '../Core/Quaternion',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/Transforms',
         '../Scene/CameraColumbusViewMode',
@@ -23,6 +24,7 @@ define([
          Cartographic,
          Quaternion,
          Matrix3,
+         Matrix4,
          Ellipsoid,
          Transforms,
          CameraColumbusViewMode,
@@ -81,7 +83,51 @@ define([
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         if (typeof cartesian !== 'undefined') {
-            camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            //if (that.referenceFrameType === ReferenceFrameType.EAST_NORTH_UP) {
+            //    camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            //} else if (that.referenceFrameType === ReferenceFrameType.LOCAL_VERTICAL_LOCAL_HORIZONTAL) {
+                var deltaTime = time.addSeconds(0.001);
+                var deltaCartesian = positionProperty.getValueCartesian(deltaTime);
+                if (typeof deltaCartesian !== 'undefined') {
+                    var toInertial = Transforms.computeFixedToIcrfMatrix(time);
+                    var toFixed = Transforms.computeIcrfToFixedMatrix(time);
+
+
+                    // Z along the position
+                    var zBasis = new Cartesian3();
+                    Cartesian3.normalize(cartesian, zBasis);
+                    Cartesian3.normalize(deltaCartesian, deltaCartesian);
+
+                    Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+                    Matrix3.multiplyByVector(toInertial, deltaCartesian, deltaCartesian);
+
+                    // Y is along the angular momentum vector (e.g. "orbit normal")
+                    var yBasis = Cartesian3.cross(zBasis, deltaCartesian);
+
+                    //Cartesian3.normalize(zBasis, zBasis);
+                    Cartesian3.normalize(yBasis, yBasis);
+
+                    // X is along the cross of y and z (right handed basis / in the direction of motion)
+                    var xBasis = Cartesian3.cross(yBasis, zBasis);
+
+                    Cartesian3.normalize(xBasis, xBasis);
+
+                    Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
+                    Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
+                    Matrix3.multiplyByVector(toFixed, zBasis, zBasis);
+
+                    Cartesian3.normalize(xBasis, xBasis);
+                    Cartesian3.normalize(yBasis, yBasis);
+                    Cartesian3.normalize(zBasis, zBasis);
+
+                    camera.transform = new Matrix4(
+                            xBasis.x, yBasis.x, zBasis.x, cartesian.x,
+                            xBasis.y, yBasis.y, zBasis.y, cartesian.y,
+                            xBasis.z, yBasis.z, zBasis.z, cartesian.z,
+                            0.0,       0.0,         0.0,      1.0);
+                }
+            //}
+
             that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
             var position = camera.position;
