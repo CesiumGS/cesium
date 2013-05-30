@@ -14,12 +14,11 @@ define([
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
-        var va = context.createVertexArray();
-        va.addAttribute({
+        var va = context.createVertexArray([{
             index : sp.getVertexAttributes().position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

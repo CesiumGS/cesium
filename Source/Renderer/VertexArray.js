@@ -11,44 +11,7 @@ define([
         ComponentDatatype) {
     "use strict";
 
-    /**
-     * DOC_TBA
-     *
-     * @alias VertexArray
-     *
-     * @internalConstructor
-     *
-     * @see {@link Context#createVertexArray}
-     * @see {@link Context#createVertexArrayFromMesh}
-     */
-    var VertexArray = function(gl, attributes, indexBuffer) {
-        this._gl = gl;
-        this._attributes = [];
-        this._indexBuffer = indexBuffer;
-
-        if (attributes) {
-            for ( var i = 0; i < attributes.length; ++i) {
-                try {
-                    this._addAttribute(attributes[i], i);
-                } catch (e) {
-                    throw new DeveloperError(e.message);
-                }
-            }
-        }
-
-        // Verify all attribute names are unique
-        var uniqueIndices = {};
-        for ( var j = 0; j < this._attributes.length; ++j) {
-            var index = this._attributes[j].index;
-            if (uniqueIndices[index]) {
-                throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
-            }
-
-            uniqueIndices[index] = true;
-        }
-    };
-
-    VertexArray.prototype._addAttribute = function(attribute, index) {
+    function addAttribute(attributes, attribute, index) {
         if (!attribute.vertexBuffer && !attribute.value) {
             throw new DeveloperError('attribute must have a vertexBuffer or a value.');
         }
@@ -135,7 +98,67 @@ define([
             };
         }
 
-        this._attributes.push(attr);
+        attributes.push(attr);
+    }
+
+    function bind(gl, attributes, indexBuffer) {
+        for ( var i = 0; i < attributes.length; ++i) {
+            var attribute = attributes[i];
+            if (attribute.enabled) {
+                attribute.vertexAttrib(gl);
+            }
+        }
+
+        if (typeof indexBuffer !== 'undefined') {
+            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer._getBuffer());
+        }
+    }
+
+    /**
+     * DOC_TBA
+     *
+     * @alias VertexArray
+     *
+     * @internalConstructor
+     *
+     * @see {@link Context#createVertexArray}
+     * @see {@link Context#createVertexArrayFromMesh}
+     */
+    var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
+        var vaAttributes = [];
+
+        if (typeof attributes !== 'undefined') {
+            for ( var i = 0; i < attributes.length; ++i) {
+                addAttribute(vaAttributes, attributes[i], i);
+            }
+        }
+
+        // Verify all attribute names are unique
+        var uniqueIndices = {};
+        for ( var j = 0; j < vaAttributes.length; ++j) {
+            var index = vaAttributes[j].index;
+            if (uniqueIndices[index]) {
+                throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
+            }
+
+            uniqueIndices[index] = true;
+        }
+
+        var vao;
+
+        // Setup VAO if extension is supported
+        if (vertexArrayObject !== null) {
+            vao = vertexArrayObject.createVertexArrayOES();
+            vertexArrayObject.bindVertexArrayOES(vao);
+            bind(gl, vaAttributes, indexBuffer);
+            vertexArrayObject.bindVertexArrayOES(null);
+        }
+
+        this._gl = gl;
+        this._vaoExtension = vertexArrayObject;
+        this._vao = vao;
+        this._attributes = vaAttributes;
+        this._indexBuffer = indexBuffer;
     };
 
     /**
@@ -172,64 +195,6 @@ define([
      *
      * @memberof VertexArray
      *
-     * @exception {DeveloperError} Attribute must have a vertexBuffer.
-     * @exception {DeveloperError} Attribute must have a componentsPerAttribute.
-     * @exception {DeveloperError} Attribute must have a valid componentDatatype or not specify it.
-     * @exception {DeveloperError} Attribute must have a strideInBytes less than or equal to 255 or not specify it.
-     * @exception {DeveloperError} Index is already in use.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.addAttribute = function(attribute) {
-        if (attribute) {
-            var attributes = this._attributes;
-            var index = defaultValue(attribute.index, attributes.length);
-            for ( var i = 0; i < attributes.length; ++i) {
-                if (index === attributes[i].index) {
-                    throw new DeveloperError('Index ' + index + ' is already in use.');
-                }
-            }
-
-            try {
-                this._addAttribute(attribute, index);
-            } catch (e) {
-                throw new DeveloperError(e.message);
-            }
-        }
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @return {Boolean} True if the attribute was removed; false if the attribute was not found in the vertex array.
-     *
-     * @exception {DeveloperError} Attribute must have an index.
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.removeAttribute = function(attribute) {
-        if (attribute) {
-            if (typeof attribute.index === 'undefined') {
-                throw new DeveloperError('Attribute must have an index.');
-            }
-
-            var attributes = this._attributes;
-            for ( var i = 0; i < attributes.length; ++i) {
-                if (attributes[i].index === attribute.index) {
-                    attributes.splice(i, 1);
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
      * @return {Buffer} DOC_TBA.
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
@@ -237,46 +202,30 @@ define([
         return this._indexBuffer;
     };
 
-    /**
-     * DOC_TBA
-     *
-     * @memberof VertexArray
-     *
-     * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
-     */
-    VertexArray.prototype.setIndexBuffer = function(indexBuffer) {
-        this._indexBuffer = indexBuffer;
-    };
-
     VertexArray.prototype._bind = function() {
-        var attributes = this._attributes;
-        var gl = this._gl;
-
-        // TODO:  Performance: sort by vertex buffer?
-        for ( var i = 0; i < attributes.length; ++i) {
-            var attribute = attributes[i];
-            if (attribute.enabled) {
-                attribute.vertexAttrib(gl);
-            }
-        }
-
-        if (this._indexBuffer) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer._getBuffer());
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.bindVertexArrayOES(this._vao);
+        } else {
+            bind(this._gl, this._attributes, this._indexBuffer);
         }
     };
 
     VertexArray.prototype._unBind = function() {
-        var attributes = this._attributes;
-        var gl = this._gl;
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.bindVertexArrayOES(null);
+        } else {
+            var attributes = this._attributes;
+            var gl = this._gl;
 
-        for ( var i = 0; i < attributes.length; ++i) {
-            var attribute = attributes[i];
-            if (attribute.enabled) {
-                attribute.disableVertexAttribArray(gl);
+            for ( var i = 0; i < attributes.length; ++i) {
+                var attribute = attributes[i];
+                if (attribute.enabled) {
+                    attribute.disableVertexAttribArray(gl);
+                }
             }
-        }
-        if (this._indexBuffer) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            if (this._indexBuffer) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            }
         }
     };
 
@@ -340,8 +289,10 @@ define([
      * // buffers and its index buffer.
      * var vertexBuffer = context.createVertexBuffer(new Float32Array([0, 0, 0]),
      *     BufferUsage.STATIC_DRAW);
-     * var vertexArray = context.createVertexArray();
-     * vertexArray.addAttribute({ vertexBuffer : vertexBuffer, componentsPerAttribute : 3 });
+     * var vertexArray = context.createVertexArray({
+     *     vertexBuffer : vertexBuffer,
+     *     componentsPerAttribute : 3
+     * });
      * // ...
      * vertexArray = vertexArray.destroy();
      * // Calling vertexBuffer.destroy() would throw DeveloperError at this point.
@@ -358,6 +309,10 @@ define([
         var indexBuffer = this._indexBuffer;
         if (indexBuffer && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
             indexBuffer.destroy();
+        }
+
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.deleteVertexArrayOES(this._vao);
         }
 
         return destroyObject(this);
