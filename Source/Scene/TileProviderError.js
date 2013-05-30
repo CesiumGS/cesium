@@ -1,14 +1,8 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/loadImage',
-        '../Core/DeveloperError',
-        '../Core/throttleRequestByServer'
+        '../Core/defaultValue'
     ], function(
-        defaultValue,
-        loadImage,
-        DeveloperError,
-        throttleRequestByServer) {
+        defaultValue) {
     "use strict";
 
     /**

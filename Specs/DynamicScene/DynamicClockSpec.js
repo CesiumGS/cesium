@@ -1,20 +1,18 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicClock',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Iso8601',
-             'Core/TimeInterval',
-             'Core/ClockRange',
-             'Core/ClockStep'
-            ], function(
-              DynamicClock,
-              DynamicObject,
-              JulianDate,
-              Iso8601,
-              TimeInterval,
-              ClockRange,
-              ClockStep) {
+         'DynamicScene/DynamicClock',
+         'DynamicScene/DynamicObject',
+         'Core/JulianDate',
+         'Core/TimeInterval',
+         'Core/ClockRange',
+         'Core/ClockStep'
+     ], function(
+         DynamicClock,
+         DynamicObject,
+         JulianDate,
+         TimeInterval,
+         ClockRange,
+         ClockStep) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

@@ -1,12 +1,9 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/HeightmapTessellator',
         '../Core/Math',
-        '../Core/Occluder',
         '../Core/TaskProcessor',
         './GeographicTilingScheme',
         './TerrainMesh',
@@ -14,12 +11,9 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        BoundingSphere,
-        Cartesian3,
         DeveloperError,
         HeightmapTessellator,
         CesiumMath,
-        Occluder,
         TaskProcessor,
         GeographicTilingScheme,
         TerrainMesh,

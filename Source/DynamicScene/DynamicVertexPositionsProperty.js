@@ -1,24 +1,20 @@
 /*global define*/
 define([
-        '../Core/JulianDate',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Iso8601',
         '../Core/Ellipsoid',
-        './ReferenceProperty',
-        './DynamicPositionProperty'
+        './ReferenceProperty'
     ], function(
-        JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
         Cartographic,
         Iso8601,
         Ellipsoid,
-        ReferenceProperty,
-        DynamicPositionProperty) {
+        ReferenceProperty) {
     "use strict";
 
     var wgs84 = Ellipsoid.WGS84;

@@ -5,6 +5,9 @@ var load = Main.global.load;
 
 load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
 
+/*global window:true*/
+var window = window || {};
+
 var jsHintPath = attributes.get('jshintpath');
 load(jsHintPath); /*global JSHINT*/
 
