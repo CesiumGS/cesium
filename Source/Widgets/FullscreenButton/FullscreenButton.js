@@ -48,23 +48,30 @@ define(['./FullscreenButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof FullscreenButton
-     * @return {Element} The parent container.
-     */
-    FullscreenButton.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof FullscreenButton
-     * @return {FullscreenButtonViewModel} The view model being used.
-     */
-    FullscreenButton.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(FullscreenButton.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof FullscreenButton.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model being used.
+         *
+         * @memberof FullscreenButton.prototype
+         * @type {FullscreenButtonViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof FullscreenButton
