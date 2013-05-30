@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/VisualizerCollection',
-             'Core/JulianDate',
-             'DynamicScene/CzmlDefaults',
-             'Scene/Scene',
-             'Specs/createScene',
-             'Specs/destroyScene'
-            ], function(
-              VisualizerCollection,
-              JulianDate,
-              CzmlDefaults,
-              Scene,
-              createScene,
-              destroyScene) {
+         'DynamicScene/VisualizerCollection',
+         'Core/JulianDate',
+         'DynamicScene/CzmlDefaults',
+         'Specs/createScene',
+         'Specs/destroyScene'
+     ], function(
+         VisualizerCollection,
+         JulianDate,
+         CzmlDefaults,
+         createScene,
+         destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

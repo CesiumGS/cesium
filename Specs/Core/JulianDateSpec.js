@@ -544,6 +544,30 @@ function(JulianDate,
         expect(julianDate).toEqual(expectedDate);
     });
 
+    it('Construct from an ISO8601 local calendar date with UTC offset', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 10, 10, 12, 0, 0)));
+        var julianDate = JulianDate.fromIso8601('2008-11-10T14:00:00+02');
+        expect(julianDate).toEqual(expectedDate);
+    });
+
+    it('Construct from an ISO8601 local calendar date with UTC offset in extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 10, 10, 11, 30, 0)));
+        var julianDate = JulianDate.fromIso8601('2008-11-10T14:00:00+02:30');
+        expect(julianDate).toEqual(expectedDate);
+    });
+
+    it('Construct from an ISO8601 local calendar date with zero UTC offset in extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 10, 10, 14, 0, 0)));
+        var julianDate = JulianDate.fromIso8601('2008-11-10T14:00:00+00:00');
+        expect(julianDate).toEqual(expectedDate);
+    });
+
+    it('Construct from an ISO8601 local calendar date with zero UTC offset in extended format', function() {
+        var expectedDate = JulianDate.fromDate(new Date(Date.UTC(2008, 10, 10, 14, 0, 0)));
+        var julianDate = JulianDate.fromIso8601('2008-11-10T14:00:00+00');
+        expect(julianDate).toEqual(expectedDate);
+    });
+
     it('Fails to construct an ISO8601 ordinal date with day less than 1', function() {
         expect(function() {
             return JulianDate.fromIso8601('2009-000');

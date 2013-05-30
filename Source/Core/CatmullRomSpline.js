@@ -4,15 +4,12 @@ define([
         './DeveloperError',
         './Matrix4',
         './Cartesian3',
-        './Cartesian4',
         './HermiteSpline'
-    ],
-    function(
+    ], function(
         defaultValue,
         DeveloperError,
         Matrix4,
         Cartesian3,
-        Cartesian4,
         HermiteSpline) {
     "use strict";
 

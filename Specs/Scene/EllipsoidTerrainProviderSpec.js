@@ -1,18 +1,10 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/EllipsoidTerrainProvider',
-         'Scene/GeographicTilingScheme',
-         'Scene/TileState',
-         'Core/Extent',
-         'Core/Math',
          'Specs/createContext',
          'Specs/destroyContext'
      ], function(
          EllipsoidTerrainProvider,
-         GeographicTilingScheme,
-         TileState,
-         Extent,
-         CesiumMath,
          createContext,
          destroyContext) {
     "use strict";

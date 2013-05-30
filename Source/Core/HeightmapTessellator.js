@@ -2,25 +2,17 @@
 define([
         './defaultValue',
         './freezeObject',
-        './getImagePixels',
         './DeveloperError',
         './Cartesian3',
-        './ComponentDatatype',
         './Ellipsoid',
-        './Extent',
-        './Math',
-        './PrimitiveType'
+        './Math'
     ], function(
         defaultValue,
         freezeObject,
-        getImagePixels,
         DeveloperError,
         Cartesian3,
-        ComponentDatatype,
         Ellipsoid,
-        Extent,
-        CesiumMath,
-        PrimitiveType) {
+        CesiumMath) {
     "use strict";
 
     /**
