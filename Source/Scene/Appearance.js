@@ -60,7 +60,7 @@ define([
     Appearance.CLOSED_TRANSLUCENT = freezeObject(new Appearance({
         renderState : {
             cull : {
-                enabled : true,
+                //enabled : true,
                 face : CullFace.BACK
             },
             depthTest : {

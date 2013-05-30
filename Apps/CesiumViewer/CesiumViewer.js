@@ -106,8 +106,10 @@ define([
             center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
             semiMinorAxis : 500000.0,
             semiMajorAxis : 1000000.0,
-            bearing : CesiumMath.PI_OVER_FOUR,
-            height : 100000.0,
+            //bearing : CesiumMath.PI_OVER_FOUR,
+            height : 1000000.0,
+            //granularity : 0.50,
+            //granularity : CesiumMath.PI_OVER_FOUR,
             pickData : 'mesh4'
         });
 

@@ -13,8 +13,10 @@ define([
         './GeometryIndices',
         './Math',
         './Matrix2',
+        './Matrix3',
         './Matrix4',
         './PrimitiveType',
+        './Quaternion',
         './VertexFormat'
     ], function(
         defaultValue,
@@ -30,10 +32,22 @@ define([
         GeometryIndices,
         CesiumMath,
         Matrix2,
+        Matrix3,
         Matrix4,
         PrimitiveType,
+        Quaternion,
         VertexFormat) {
     "use strict";
+
+    function reflect(position, center, unitVector, result) {
+        var toCenter = Cartesian3.subtract(position, center);
+        Cartesian3.multiplyByScalar(unitVector, Cartesian3.dot(toCenter, unitVector), result);
+        var perp = Cartesian3.subtract(toCenter, result);
+        Cartesian3.negate(perp, perp);
+        Cartesian3.add(perp, result, result);
+        Cartesian3.add(center, result, result);
+        return result;
+    }
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -115,9 +129,24 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        var MAX_ANOMALY_LIMIT = 2.31;
+
+        //var aSqr = semiMajorAxis * semiMajorAxis;
+        //var bSqr = semiMinorAxis * semiMinorAxis;
+        var aSqr = semiMinorAxis * semiMinorAxis;
+        var bSqr = semiMajorAxis * semiMajorAxis;
+        var ab = semiMajorAxis * semiMinorAxis;
+
+        var mag = center.magnitude();
+
+        var unitPos = Cartesian3.normalize(center);
+        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center);
+        Cartesian3.normalize(eastVec, eastVec);
+        var northVec = Cartesian3.cross(unitPos, eastVec);
+
         // The number of points in the first quadrant
-        var numPts = Math.ceil(CesiumMath.PI_OVER_TWO / granularity) + 1;
-        var deltaTheta = CesiumMath.PI_OVER_TWO / (numPts - 1);
+        var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
+        var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
 
         // If the number of points were three, the ellipse
         // would be tessellated like below:
@@ -134,51 +163,63 @@ define([
         // Notice each vertical column contains an odd number of positions.
         // The sum of the first n odd numbers is n^2. Double it for the number of points
         // for the whole ellipse
-        var size = 2 * numPts * numPts;
-
-        // If the ellipsoid contains points on the y axis, remove on of the
-        // central columns of positions because they would be duplicated.
-        var reachedPiOverTwo = false;
-        if (deltaTheta * (numPts - 1) > CesiumMath.PI_OVER_TWO) {
-            size -= 2 * numPts - 1;
-            reachedPiOverTwo = true;
-        }
-
-        var i;
-        var j;
-        var numInterior;
+        //var size = 2 * numPts * numPts;
 
         // Compute the points in the positive x half-space in 2D.
-        var positions = new Array(size * 3);
+        /*var positions = new Array(size * 3);
         positions[0] = semiMajorAxis;
         positions[1] = 0.0;
         positions[2] = height;
         var positionIndex = 3;
+        */
+
+        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(unitPos, bearing));
+        var rotatedNorthVec = Matrix3.multiplyByVector(rotation, northVec);
+        var rotatedEastVec = Matrix3.multiplyByVector(rotation, eastVec);
+        Cartesian3.normalize(rotatedNorthVec, rotatedNorthVec);
+        Cartesian3.normalize(rotatedEastVec, rotatedEastVec);
 
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
 
-        for (i = 1; i < numPts; ++i) {
-            var angle = Math.min(i * deltaTheta, CesiumMath.PI_OVER_TWO);
+        var positions = [];
+        var positionIndex = 0;
 
-            // Compute the position on the ellipse in the first quadrant.
-            position.x = Math.cos(angle) * semiMajorAxis;
-            position.y = Math.sin(angle) * semiMinorAxis;
-            position.z = height;
+        var i;
+        var j;
+        var numInterior;
+        var theta;
 
-            // Reflect the position across the x axis for a point on the ellipse
-            // in the fourth quadrant.
-            reflectedPosition.x =  position.x;
-            reflectedPosition.y = -position.y;
-            reflectedPosition.z =  position.z;
+        for (i = 0, theta = CesiumMath.PI_OVER_TWO; i < numPts && theta > 0; ++i, theta -= deltaTheta) {
+            var azimuth = theta + bearing;
+            var rotAxis = Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth));
+            var tempVec = Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth));
+            Cartesian3.add(rotAxis, tempVec, rotAxis);
+
+            var cosThetaSquared = Math.cos(theta);
+            cosThetaSquared = cosThetaSquared * cosThetaSquared;
+
+            var sinThetaSquared = Math.sin(theta);
+            sinThetaSquared = sinThetaSquared * sinThetaSquared;
+
+            var radius = ab / Math.sqrt(bSqr * cosThetaSquared + aSqr * sinThetaSquared);
+            var angle = radius / mag;
+
+            // Create the quaternion to rotate the position vector to the boundary of the ellipse.
+            var unitQuat = Quaternion.fromAxisAngle(rotAxis, angle);
+            var rotMtx = Matrix3.fromQuaternion(unitQuat);
+
+            Matrix3.multiplyByVector(rotMtx, unitPos, position);
+            Cartesian3.normalize(position, position);
+            Cartesian3.multiplyByScalar(position, mag, position);
+
+            reflect(position, center, rotatedEastVec, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
             positions[positionIndex++] = position.z;
 
-            // Compute the points on the interior of the ellipse, on the line
-            // through the points in the first and fourth quadrants
-            numInterior = 2 * i + 1;
+            numInterior = 2 * i + 2;
             for (j = 1; j < numInterior - 1; ++j) {
                 var t = j / (numInterior - 1);
                 var interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
@@ -192,27 +233,26 @@ define([
             positions[positionIndex++] = reflectedPosition.z;
         }
 
-        var reverseIndex;
-        if (reachedPiOverTwo) {
-            i = numPts - 1;
-            reverseIndex = positionIndex - (numPts * 2 - 1) * 3;
-        } else {
-            i = numPts;
-            reverseIndex = positionIndex;
-        }
+        numPts = i;
+
+        var reverseIndex = positionIndex;
 
         // Reflect the points across the y axis to get the other half of the ellipsoid.
-        for (; i > 0; --i) {
-            numInterior = 2 * i - 1;
+        for (i = numPts; i > 0; --i) {
+            numInterior = 2 * i;
             reverseIndex -= numInterior * 3;
             for (j = 0; j < numInterior; ++j) {
-                var index = reverseIndex  + j * 3;
-                positions[positionIndex++] = -positions[index];
-                positions[positionIndex++] =  positions[index + 1];
-                positions[positionIndex++] =  positions[index + 2];
+                var index = reverseIndex + j * 3;
+                Cartesian3.fromArray(positions, index, position);
+                reflect(position, center, rotatedNorthVec, reflectedPosition);
+
+                positions[positionIndex++] = reflectedPosition.x;
+                positions[positionIndex++] = reflectedPosition.y;
+                positions[positionIndex++] = reflectedPosition.z;
             }
         }
 
+        /*
         var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
@@ -230,11 +270,15 @@ define([
         var normal;
         var tangent;
         var binormal;
+        */
 
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
             position = Cartesian3.fromArray(positions, i, scratchCartesian2);
+            ellipsoid.scaleToGeodeticSurface(position, position);
+            Cartesian3.add(position, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(position), height), position);
 
+            /*
             if (vertexFormat.st) {
                 textureCoordinates[textureCoordIndex++] = (position.x + semiMajorAxis) / (2.0 * semiMajorAxis);
                 textureCoordinates[textureCoordIndex++] = (position.y + semiMinorAxis) / (2.0 * semiMinorAxis);
@@ -245,6 +289,7 @@ define([
 
             var unprojected = projection.unproject(position, scratchCartographic);
             ellipsoid.cartographicToCartesian(unprojected, position);
+            */
 
             if (vertexFormat.position) {
                 positions[i] = position.x;
@@ -252,6 +297,7 @@ define([
                 positions[i + 2] = position.z;
             }
 
+            /*
             if (vertexFormat.normal) {
                 normal = ellipsoid.geodeticSurfaceNormal(position, scratchCartesian3);
 
@@ -278,6 +324,7 @@ define([
                 binormals[i + 1] = binormal.y;
                 binormals[i + 2] = binormal.z;
             }
+            */
         }
 
         var attributes = {};
@@ -290,6 +337,7 @@ define([
             });
         }
 
+        /*
         if (vertexFormat.st) {
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -321,6 +369,7 @@ define([
                 values : binormals
             });
         }
+        */
 
         // The number of triangles in the ellipse on the positive x half-space is:
         //
@@ -332,27 +381,21 @@ define([
         //
         // numTriangles = 2 * (numInteriorTriangles + numExteriorTriangles)
         // numIndices = 3 * numTriangles
-
-        var indicesSize = 12.0 * numPts * numPts;
-        if (reachedPiOverTwo) {
-            indicesSize += 12.0 * (numPts - 1.0);
-        }
-
-        var indices = new Array(indicesSize);
+        //var indices = new Array(indicesSize);
+        var indices = [];
         var indicesIndex = 0;
         var prevIndex;
 
         // Indices for positive x half-space
-        for (i = 0; i < numPts - 1; ++i) {
-            positionIndex = i + 1;
-            positionIndex *= positionIndex;
-            prevIndex = i * i;
+        for (i = 1; i < numPts; ++i) {
+            positionIndex = i * (i + 1);
+            prevIndex = (i - 1) * i;
 
             indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
 
-            numInterior = 2 * i + 1;
+            numInterior = 2 * i;
             for (j = 0; j < numInterior - 1; ++j) {
                 indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = positionIndex;
@@ -368,20 +411,18 @@ define([
             indices[indicesIndex++] = prevIndex;
         }
 
-        // Indices for central column of triangles (if there is one)
-        if (!reachedPiOverTwo) {
-            numInterior = numPts * 2 - 1;
-            ++positionIndex;
-            ++prevIndex;
-            for (i = 0; i < numInterior - 1; ++i) {
-                indices[indicesIndex++] = prevIndex++;
-                indices[indicesIndex++] = positionIndex;
-                indices[indicesIndex++] = prevIndex;
+        // Indices for central column of triangles
+        numInterior = numPts * 2;
+        ++positionIndex;
+        ++prevIndex;
+        for (i = 0; i < numInterior - 1; ++i) {
+            indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
 
-                indices[indicesIndex++] = positionIndex++;
-                indices[indicesIndex++] = positionIndex;
-                indices[indicesIndex++] = prevIndex;
-            }
+            indices[indicesIndex++] = positionIndex++;
+            indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex;
         }
 
         // Reverse the process creating indices for the ellipse on the positive x half-space
@@ -393,7 +434,7 @@ define([
             indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
 
-            numInterior = 2 * (i - 1) + 1;
+            numInterior = 2 * i;
             for (j = 0; j < numInterior - 1; ++j) {
                 indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = positionIndex;
@@ -409,7 +450,7 @@ define([
             indices[indicesIndex++] = prevIndex++;
         }
 
-        indices.length = indicesIndex;
+        //indices.length = indicesIndex;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
