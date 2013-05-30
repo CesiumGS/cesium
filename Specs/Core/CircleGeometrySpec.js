@@ -59,8 +59,8 @@ defineSuite([
             radius : 1.0
         });
 
-        expect(m.attributes.position.values.length).toEqual(3 * 32);
-        expect(m.indexLists[0].values.length).toEqual(3 * 48);
+        expect(m.attributes.position.values.length).toEqual(3 * 24);
+        expect(m.indexLists[0].values.length).toEqual(3 * 34);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -74,11 +74,11 @@ defineSuite([
             radius : 1.0
         });
 
-        expect(m.attributes.position.values.length).toEqual(3 * 32);
-        expect(m.attributes.st.values.length).toEqual(2 * 32);
-        expect(m.attributes.normal.values.length).toEqual(3 * 32);
-        expect(m.attributes.tangent.values.length).toEqual(3 * 32);
-        expect(m.attributes.binormal.values.length).toEqual(3 * 32);
-        expect(m.indexLists[0].values.length).toEqual(3 * 48);
+        expect(m.attributes.position.values.length).toEqual(3 * 24);
+        expect(m.attributes.st.values.length).toEqual(2 * 24);
+        expect(m.attributes.normal.values.length).toEqual(3 * 24);
+        expect(m.attributes.tangent.values.length).toEqual(3 * 24);
+        expect(m.attributes.binormal.values.length).toEqual(3 * 24);
+        expect(m.indexLists[0].values.length).toEqual(3 * 34);
     });
 });
