@@ -11,6 +11,9 @@ Beta Releases
    * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
+   * Streamlined the Widgets layer so that they follow a consistent API.  All public, non-Observable properties have been removed and replaced with equivalent get/set functions.  While this is a fairly large change, most users should not be affected.  If you are affected, the changes are all easy to make.  For example:
+      * homeButton.viewModel; -> homeButton.getViewModel();
+      * cesiumWidget.scene => cesiumWidget.getScene();
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.

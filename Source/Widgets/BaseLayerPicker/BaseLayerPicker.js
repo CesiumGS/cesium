@@ -86,7 +86,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.getviewModel().selectedItem(providerViewModels[0]);
+     * baseLayerPicker.getViewModel().selectedItem(providerViewModels[0]);
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
