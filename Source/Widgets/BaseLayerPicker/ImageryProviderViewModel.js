@@ -47,19 +47,19 @@ define(['../createCommand',
         }
 
         /**
-         * Gets a writable observable representing the name of this provider.
+         * Gets an Observable representing the name of this provider.
          * @type Observable
          */
         this.name = description.name;
 
         /**
-         * Gets a writable observable representing the tooltip to show when the item is moused over.
+         * Gets an Observable representing the tooltip to show when the item is moused over.
          * @type Observable
          */
         this.tooltip = description.tooltip;
 
         /**
-         * Gets a writable observable representing the icon associated with this layer.
+         * Gets an Observable representing the icon associated with this layer.
          * @type Observable
          */
         this.iconUrl = description.iconUrl;

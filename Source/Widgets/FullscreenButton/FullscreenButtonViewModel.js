@@ -1,11 +1,15 @@
 /*global define*/
 define(['../createCommand',
         '../../Core/defaultValue',
+        '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Core/Fullscreen',
         '../../ThirdParty/knockout'
         ], function(
             createCommand,
             defaultValue,
+            destroyObject,
+            DeveloperError,
             Fullscreen,
             knockout) {
     "use strict";
@@ -31,7 +35,7 @@ define(['../createCommand',
         });
 
         /**
-         * Indicates if fullscreen functionality is possible.
+         * Gets an Observable indicating if fullscreen functionality should be available.
          * @type Observable
          *
          * @see Fullscreen.isFullscreenEnabled
@@ -39,25 +43,25 @@ define(['../createCommand',
         this.isFullscreenEnabled = isFullscreenEnabled;
 
         /**
-         * Indicates if fullscreen functionality is currently toggled.
+         * Gets an Observable indicating if fullscreen mode is activated.
          * @type Observable
          */
         this.toggled = isFullscreen;
 
         /**
-         * The command for toggling fullscreen mode.
+         * Toggles fullscreen mode.
          * @type Command
          */
         this.command = createCommand(function() {
             if (Fullscreen.isFullscreen()) {
                 Fullscreen.exitFullscreen();
             } else {
-                Fullscreen.requestFullscreen(that.fullscreenElement());
+                Fullscreen.requestFullscreen(that._fullscreenElement);
             }
         }, isFullscreenEnabled);
 
         /**
-         * The current button tooltip.
+         * Gets a readonly Observable of the current button tooltip.
          * @type Observable
          */
         this.tooltip = knockout.computed(function() {
@@ -67,20 +71,41 @@ define(['../createCommand',
             return isFullscreen() ? 'Exit full screen' : 'Full screen';
         });
 
-        /**
-         * The HTML element to place into fullscreen mode when the
-         * corresponding button is pressed.  By default, the entire page will
-         * enter fullscreen. By specifying another container, only that
-         * container will be in fullscreen.
-         *
-         * @type {Observable}
-         */
-        this.fullscreenElement = knockout.observable(defaultValue(fullscreenElement, document.body));
+        this._fullscreenElement = defaultValue(fullscreenElement, document.body);
 
         this._callback = function() {
             isFullscreen(Fullscreen.isFullscreen());
         };
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
+    };
+
+    /**
+     * Gets the HTML element to place into fullscreen mode when the
+     * corresponding button is pressed.
+     * @type {Element}
+     */
+    FullscreenButtonViewModel.prototype.getFullscreenElement = function() {
+        return this._fullscreenElement;
+    };
+
+    /**
+     * Sets the HTML element to place into fullscreen mode when the
+     * corresponding button is pressed.
+     * @type {Element}
+     */
+    FullscreenButtonViewModel.prototype.setFullscreenElement = function(element) {
+        if (typeof element === 'undefined') {
+            throw new DeveloperError('element is required.');
+        }
+        this._fullscreenElement = element;
+    };
+
+    /**
+     * @memberof FullscreenButtonViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    FullscreenButtonViewModel.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -90,6 +115,7 @@ define(['../createCommand',
      */
     FullscreenButtonViewModel.prototype.destroy = function() {
         document.removeEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
+        destroyObject(this);
     };
 
     return FullscreenButtonViewModel;

@@ -41,8 +41,12 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
     it('Can construct and destroy', function() {
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
+        expect(viewModel.getTransitioner()).toBe(mockTransitioner);
         expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(1);
+        expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
+        expect(viewModel.isDestroyed()).toEqual(true);
+        expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(0);
     });
 
     it('dropDownVisible and toggleDropDown work', function() {

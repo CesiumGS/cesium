@@ -37,26 +37,41 @@ define(['./FullscreenButtonViewModel',
             container = tmp;
         }
 
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof FullscreenButton
-         * @type {FullscreenButtonViewModel}
-         */
-        this.viewModel = new FullscreenButtonViewModel(fullscreenElement);
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof FullscreenButton
-         * @type {Element}
-         */
-        this.container = container;
+        this._container = container;
+        this._viewModel = new FullscreenButtonViewModel(fullscreenElement);
 
         this._element = document.createElement('button');
         this._element.className = 'cesium-fullscreenButton';
         this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": toggled }, click: command, enable: isFullscreenEnabled');
         container.appendChild(this._element);
 
-        knockout.applyBindings(this.viewModel, this._element);
+        knockout.applyBindings(this._viewModel, this._element);
+    };
+
+    /**
+     * Gets the parent container.
+     * @memberof FullscreenButton
+     * @return {Element} The parent container.
+     */
+    FullscreenButton.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * Gets the view model being used.
+     * @memberof FullscreenButton
+     * @return {FullscreenButtonViewModel} The view model being used.
+     */
+    FullscreenButton.prototype.getViewModel = function() {
+        return this._viewModel;
+    };
+
+    /**
+     * @memberof FullscreenButton
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    FullscreenButton.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -65,9 +80,9 @@ define(['./FullscreenButtonViewModel',
      * @memberof FullscreenButton
      */
     FullscreenButton.prototype.destroy = function() {
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
-        this.viewModel.destroy();
+        this._viewModel.destroy();
         container.removeChild(this._element);
         return destroyObject(this);
     };

@@ -142,7 +142,7 @@ define(['../../Core/destroyObject',
     }
 
     function setShuttleRingFromMouseOrTouch(widget, e) {
-        var viewModel = widget.viewModel;
+        var viewModel = widget._viewModel;
         var shuttleRingDragging = viewModel.shuttleRingDragging();
 
         if (shuttleRingDragging && (widgetForDrag !== widget)) {
@@ -203,14 +203,14 @@ define(['../../Core/destroyObject',
     //This is a private class for treating an SVG element like a button.
     //If we ever need a general purpose SVG button, we can make this generic.
     var SvgButton = function(svgElement, viewModel) {
-        this.viewModel = viewModel;
+        this._viewModel = viewModel;
         this.svgElement = svgElement;
         this._enabled = undefined;
         this._toggled = undefined;
 
         var that = this;
         this._clickFunction = function() {
-            var command = that.viewModel.command;
+            var command = that._viewModel.command;
             if (command.canExecute()) {
                 command();
             }
@@ -285,8 +285,8 @@ define(['../../Core/destroyObject',
         var baseWidth = 200;
         var baseHeight = 132;
 
-        var parentWidth = defaultValue(that.container.clientWidth, 0);
-        var parentHeight = defaultValue(that.container.clientHeight, 0);
+        var parentWidth = defaultValue(that._container.clientWidth, 0);
+        var parentHeight = defaultValue(that._container.clientHeight, 0);
 
         var width = parentWidth;
         var height = parentHeight;
@@ -383,19 +383,8 @@ define(['../../Core/destroyObject',
             throw new DeveloperError('viewModel is required.');
         }
 
-        /**
-         * The viewModel
-         * @memberof Animation
-         * @type {AnimationViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the parent container.
-         * @memberof Animation
-         * @type {Element}
-         */
-        this.container = container;
+        this._viewModel = viewModel;
+        this._container = container;
 
         this._centerX = 0;
         this._centerY = 0;
@@ -451,10 +440,10 @@ define(['../../Core/destroyObject',
         var topG = document.createElementNS(svgNS, 'g');
         this._topG = topG;
 
-        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock'), viewModel.playRealtimeViewModel);
-        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse'), viewModel.playReverseViewModel);
-        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay'), viewModel.playForwardViewModel);
-        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause'), viewModel.pauseViewModel);
+        this._realtimeSVG = new SvgButton(wingButton(3, 4, '#animation_pathClock'), viewModel.getPlayRealtimeViewModel());
+        this._playReverseSVG = new SvgButton(rectButton(44, 99, '#animation_pathPlayReverse'), viewModel.getPlayReverseViewModel());
+        this._playForwardSVG = new SvgButton(rectButton(124, 99, '#animation_pathPlay'), viewModel.getPlayForwardViewModel());
+        this._pauseSVG = new SvgButton(rectButton(84, 99, '#animation_pathPause'), viewModel.getPauseViewModel());
 
         var buttonsG = document.createElementNS(svgNS, 'g');
         buttonsG.appendChild(this._realtimeSVG.svgElement);
@@ -590,7 +579,7 @@ define(['../../Core/destroyObject',
         var statusNode = this._knobStatus.childNodes[0];
         var isPaused;
         this._subscriptions = [//
-        subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
+        subscribeAndEvaluate(viewModel.getPauseViewModel().toggled, function(value) {
             if (isPaused !== value) {
                 isPaused = value;
                 if (isPaused) {
@@ -628,6 +617,32 @@ define(['../../Core/destroyObject',
     };
 
     /**
+     * Gets the parent container.
+     * @memberof Animation
+     * @return {Element} The parent container.
+     */
+    Animation.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * Gets the view model being used.
+     * @memberof Animation
+     * @return {AnimationViewModel} The view model being used.
+     */
+    Animation.prototype.getViewModel = function() {
+        return this._viewModel;
+    };
+
+    /**
+     * @memberof Animation
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    Animation.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Destroys the animation widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof Animation
@@ -648,8 +663,8 @@ define(['../../Core/destroyObject',
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
         this._knobOuter.removeEventListener('touchstart', mouseCallback, true);
 
-        this.container.removeChild(this._svgNode);
-        this.container.removeChild(this._theme);
+        this._container.removeChild(this._svgNode);
+        this._container.removeChild(this._theme);
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
@@ -661,15 +676,6 @@ define(['../../Core/destroyObject',
         }
 
         return destroyObject(this);
-    };
-
-    /**
-     * @memberof Animation
-     *
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    Animation.prototype.isDestroyed = function() {
-        return false;
     };
 
     /**

@@ -22,8 +22,8 @@ define([
      */
     var ClockViewModel = function(clock) {
         clock = defaultValue(clock, new Clock());
-        this.clock = clock;
-        this.clock.onTick.addEventListener(this.synchronize, this);
+        this._clock = clock;
+        this._clock.onTick.addEventListener(this.synchronize, this);
 
         var startTime = knockout.observable(clock.startTime);
         startTime.equalityComparer = JulianDate.equals;
@@ -145,13 +145,21 @@ define([
     };
 
     /**
+     * Gets the underlying Clock.
+     * @returns {Clock} The underlying clock.
+     */
+    ClockViewModel.prototype.getClock = function() {
+        return this._clock;
+    };
+
+    /**
      * Updates the view model with the contents of the underlying clock.
      * Can be called to force an update of the viewModel if the underlying
      * clock has changed and <code>Clock.tick</code> has not yet been called.
      * @memberof ClockViewModel
      */
      ClockViewModel.prototype.synchronize = function() {
-        var clock = this.clock;
+        var clock = this._clock;
 
         var startTime = clock.startTime;
         var stopTime = clock.stopTime;

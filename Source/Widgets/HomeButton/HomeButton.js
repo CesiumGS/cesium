@@ -37,33 +37,41 @@ define(['./HomeButtonViewModel',
             container = tmp;
         }
 
-        /**
-         * Gets the parent container.
-         * @memberof HomeButton
-         * @type {Element}
-         */
-        this.container = container;
-
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof HomeButton
-         * @type {HomeButtonViewModel}
-         */
-        this.viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof HomeButton
-         * @type {Element}
-         */
-        this.container = container;
+        this._container = container;
+        this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
 
         this._element = document.createElement('span');
         this._element.className = 'cesium-homeButton';
         this._element.setAttribute('data-bind', 'attr: { title: tooltip }, click: command');
         container.appendChild(this._element);
 
-        knockout.applyBindings(this.viewModel, this._element);
+        knockout.applyBindings(this._viewModel, this._element);
+    };
+
+    /**
+     * Gets the parent container.
+     * @memberof HomeButton
+     * @return {Element} The parent container.
+     */
+    HomeButton.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * Gets the view model being used.
+     * @memberof HomeButton
+     * @return {HomeButtonViewModel} The view model being used.
+     */
+    HomeButton.prototype.getViewModel = function() {
+        return this._viewModel;
+    };
+
+    /**
+     * @memberof HomeButton
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    HomeButton.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -72,7 +80,7 @@ define(['./HomeButtonViewModel',
      * @memberof HomeButton
      */
     HomeButton.prototype.destroy = function() {
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
         return destroyObject(this);

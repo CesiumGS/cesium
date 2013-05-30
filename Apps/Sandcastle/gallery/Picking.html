@@ -56,7 +56,7 @@ require([
     }
 
     function cleanup() {
-        widget.scene.getPrimitives().removeAll();
+        widget.getScene().getPrimitives().removeAll();
         handler = handler && handler.destroy();
     }
 
@@ -387,7 +387,7 @@ require([
                 Cesium.Math.toDegrees(e.east).toFixed(2) + ', ' +
                 Cesium.Math.toDegrees(e.north).toFixed(2) + ')');
             label.setScale(0.7);
-            label.setPosition(widget.centralBody.getEllipsoid().cartographicToCartesian(e.getCenter()));
+            label.setPosition(widget.getCentralBody().getEllipsoid().cartographicToCartesian(e.getCenter()));
             label.setHorizontalOrigin( Cesium.HorizontalOrigin.CENTER );
         };
         var drawExtentHelper = new DrawExtentHelper(scene, myHandler);
@@ -395,8 +395,8 @@ require([
     }
 
     function createButtons(widget) {
-        var ellipsoid = widget.centralBody.getEllipsoid();
-        var scene = widget.scene;
+        var ellipsoid = widget.getCentralBody().getEllipsoid();
+        var scene = widget.getScene();
 
         new Button({
             label: 'Show Cartographic Position on Mouse Over',
@@ -456,7 +456,7 @@ require([
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget);
-    pickCartographicPosition(widget.scene, widget.centralBody.getEllipsoid());
+    pickCartographicPosition(widget.getScene(), widget.getCentralBody().getEllipsoid());
 
     Sandcastle.finishedLoading();
 });

@@ -43,7 +43,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         var array = [];
         var imageryLayers = new ImageryLayerCollection();
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, array);
-        expect(viewModel.imageryLayers).toBe(imageryLayers);
+        expect(viewModel.getImageryLayers()).toBe(imageryLayers);
         expect(viewModel.imageryProviderViewModels()).toBe(array);
     });
 

@@ -86,7 +86,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+     * baseLayerPicker.getviewModel().selectedItem(providerViewModels[0]);
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
@@ -106,21 +106,8 @@ define(['./BaseLayerPickerViewModel',
         }
 
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
-
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof BaseLayerPicker
-         * @type {SeneModeViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof BaseLayerPicker
-         * @type {Element}
-         */
-        this.container = container;
-
+        this._viewModel = viewModel;
+        this._container = container;
         this._element = document.createElement('img');
 
         var element = this._element;
@@ -173,6 +160,32 @@ define(['./BaseLayerPickerViewModel',
     };
 
     /**
+     * Gets the parent container.
+     * @memberof BaseLayerPicker
+     * @return {Element} The parent container.
+     */
+    BaseLayerPicker.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * Gets the view model being used.
+     * @memberof BaseLayerPicker
+     * @return {BaseLayerPickerViewModel} The view model being used.
+     */
+    BaseLayerPicker.prototype.getViewModel = function() {
+        return this._viewModel;
+    };
+
+    /**
+     * @memberof BaseLayerPicker
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    BaseLayerPicker.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof BaseLayerPicker
@@ -180,7 +193,7 @@ define(['./BaseLayerPickerViewModel',
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown);
         document.removeEventListener('touchstart', this._closeDropDown);
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
         container.removeChild(this._choices);

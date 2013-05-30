@@ -150,61 +150,14 @@ define(['../../Core/buildModuleUrl',
             centralBody.terrainProvider = options.terrainProvider;
         }
 
-        /**
-         * Gets the parent container.
-         * @memberof CesiumWidget
-         * @type {Element}
-         */
-        this.container = container;
-
-        /**
-         * Gets the widget DOM element, which contains the canvas and Cesium logo.
-         * @memberof CesiumWidget
-         * @type {Element}
-         */
-        this.element = widgetNode;
-
-        /**
-         * Gets the canvas.
-         * @memberof CesiumWidget
-         * @type {Canvas}
-         */
-        this.canvas = canvas;
-
-        /**
-         * Gets the Cesium logo.
-         * @memberof CesiumWidget
-         * @type {Element}
-         */
-        this.cesiumLogo = cesiumLogo;
-
-        /**
-         * Gets the scene.
-         * @memberof CesiumWidget
-         * @type {Scene}
-         */
-        this.scene = scene;
-
-        /**
-         * Gets the central body.
-         * @memberof CesiumWidget
-         * @type {CentralBody}
-         */
-        this.centralBody = centralBody;
-
-        /**
-         * Gets the clock view model.
-         * @memberof CesiumWidget
-         * @type {Clock}
-         */
-        this.clock = defaultValue(options.clock, new Clock());
-
-        /**
-         * Gets the scene transitioner.
-         * @memberof CesiumWidget
-         * @type {SceneTransitioner}
-         */
-        this.transitioner = new SceneTransitioner(scene, _ellipsoid);
+        this._element = widgetNode;
+        this._container = container;
+        this._canvas = canvas;
+        this._cesiumLogo = cesiumLogo;
+        this._scene = scene;
+        this._centralBody = centralBody;
+        this._clock = defaultValue(options.clock, new Clock());
+        this._transitioner = new SceneTransitioner(scene, _ellipsoid);
 
         /**
          * Gets the screen space event handler.
@@ -242,6 +195,69 @@ define(['../../Core/buildModuleUrl',
     };
 
     /**
+     * Gets the parent container.
+     * @memberof CesiumWidget
+     * @returns {Element} The parent container
+     */
+    CesiumWidget.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * Gets the canvas.
+     * @memberof CesiumWidget
+     * @returns {Canvas} The canvas.
+     */
+    CesiumWidget.prototype.getCanvas = function() {
+        return this._canvas;
+    };
+
+    /**
+     * Gets the Cesium logo element.
+     * @memberof CesiumWidget
+     * @returns {Element} The logo element.
+     */
+    CesiumWidget.prototype.getLogo = function() {
+        return this._cesiumLogo;
+    };
+
+    /**
+     * Gets the scene.
+     * @memberof CesiumWidget
+     * @returns {Scene} The scene.
+     */
+    CesiumWidget.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    /**
+     * Gets the primary central body.
+     * @memberof CesiumWidget
+     * @returns {CentralBody} The primary central body.
+     */
+    CesiumWidget.prototype.getCentralBody = function() {
+        return this._centralBody;
+    };
+
+    /**
+     * Gets the clock.
+     * @memberof CesiumWidget
+     * @returns {Clock} the clock
+     */
+    CesiumWidget.prototype.getClock = function() {
+        return this._clock;
+    };
+
+    /**
+     * Gets the scene transitioner.
+     * @memberof CesiumWidget
+     * @returns {SceneTransitioner} The scene transitioner.
+     */
+    CesiumWidget.prototype.getTransitioner = function() {
+        return this._transitioner;
+    };
+
+    /**
      * @memberof CesiumWidget
      *
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
@@ -257,7 +273,7 @@ define(['../../Core/buildModuleUrl',
      */
     CesiumWidget.prototype.destroy = function() {
         window.removeEventListener('resize', this._resizeCallback, false);
-        this.container.removeChild(this.element);
+        this._container.removeChild(this._element);
         this._isDestroyed = true;
         destroyObject(this);
     };
@@ -268,17 +284,17 @@ define(['../../Core/buildModuleUrl',
      * automatically on window resize.
      */
     CesiumWidget.prototype.resize = function() {
-        var width = this.canvas.clientWidth;
-        var height = this.canvas.clientHeight;
+        var width = this._canvas.clientWidth;
+        var height = this._canvas.clientHeight;
 
-        if (this.canvas.width === width && this.canvas.height === height) {
+        if (this._canvas.width === width && this._canvas.height === height) {
             return;
         }
 
-        this.canvas.width = width;
-        this.canvas.height = height;
+        this._canvas.width = width;
+        this._canvas.height = height;
 
-        var frustum = this.scene.getCamera().frustum;
+        var frustum = this._scene.getCamera().frustum;
         if (typeof frustum.aspectRatio !== 'undefined') {
             frustum.aspectRatio = width / height;
         } else {
@@ -297,9 +313,9 @@ define(['../../Core/buildModuleUrl',
             this._needResize = false;
         }
 
-        var currentTime = this.clock.tick();
-        this.scene.initializeFrame();
-        this.scene.render(currentTime);
+        var currentTime = this._clock.tick();
+        this._scene.initializeFrame();
+        this._scene.render(currentTime);
     };
 
     return CesiumWidget;

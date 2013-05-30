@@ -36,26 +36,22 @@ define([
         var dropDownVisible = knockout.observable(false);
         var selectedViewModel = knockout.observable();
 
-        /**
-         * Gets the ImageryLayerCollection.
-         * @type ImageryLayerCollection
-         */
-        this.imageryLayers = imageryLayers;
+        this._imageryLayers = imageryLayers;
 
         /**
-         * Gets the observable array of ImageryProviderViewModel instances available for selection.
+         * Gets an Observable array of ImageryProviderViewModel instances available for selection.
          * @type Observable
          */
         this.imageryProviderViewModels = knockout.observableArray(imageryProviderViewModels);
 
         /**
-         * Gets or sets whether the imagery selection dropDown is currently visible.
+         * Gets an Observable whose value indicates if the imagery selection dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
 
         /**
-         * Command to toggle dropDown visibility.
+         * Toggles dropDown visibility.
          * @type Command
         */
         this.toggleDropDown = createCommand(function() {
@@ -63,7 +59,7 @@ define([
         });
 
         /**
-         * Gets the name of the currently selected item.
+         * Gets a readonly Observable for the the name of the currently selected item.
          * @type Observable
         */
         this.selectedName = knockout.computed(function() {
@@ -72,7 +68,7 @@ define([
         });
 
         /**
-         * Gets the image url of the currently selected item.
+         * Gets a readonly Observable for the image url of the currently selected item.
          * @type Observable
         */
         this.selectedIconUrl = knockout.computed(function() {
@@ -81,7 +77,7 @@ define([
         });
 
         /**
-         * Gets a writable observable for the currently selected item.
+         * Gets an Observable for the currently selected item.
          * @type Observable
         */
         this.selectedItem = knockout.computed({
@@ -100,6 +96,14 @@ define([
                 dropDownVisible(false);
             }
         });
+    };
+
+    /**
+     * Gets the imagery layers collection being used.
+     * @type ImageryLayerCollection
+     */
+    BaseLayerPickerViewModel.prototype.getImageryLayers = function() {
+        return this._imageryLayers;
     };
 
     return BaseLayerPickerViewModel;

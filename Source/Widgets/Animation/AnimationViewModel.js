@@ -114,7 +114,7 @@ define([
          * The ClockViewModel instance to use.
          * @type ClockViewModel
          */
-        this.clockViewModel = clockViewModel;
+        this._clockViewModel = clockViewModel;
 
         /**
          * Indicates if the shuttle ring is currently being dragged.
@@ -129,7 +129,7 @@ define([
         this._timeFormatter = knockout.observable(AnimationViewModel.defaultTimeFormatter);
 
         this._canAnimate = knockout.computed(function() {
-            var clockViewModel = that.clockViewModel;
+            var clockViewModel = that._clockViewModel;
             var clockRange = clockViewModel.clockRange();
 
             if (that.shuttleRingDragging() || clockRange === ClockRange.UNBOUNDED) {
@@ -157,7 +157,7 @@ define([
         });
 
         this._isSystemTimeAvailable = knockout.computed(function() {
-            var clockViewModel = that.clockViewModel;
+            var clockViewModel = that._clockViewModel;
             var clockRange = clockViewModel.clockRange();
             if (clockRange === ClockRange.UNBOUNDED) {
                 return true;
@@ -170,7 +170,7 @@ define([
         });
 
         this._isAnimatingObs = knockout.computed(function() {
-            return that.clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+            return that._clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
         });
 
         /**
@@ -178,7 +178,7 @@ define([
          * @type Observable
          */
         this.timeLabel = knockout.computed(function() {
-            return that._timeFormatter()(that.clockViewModel.currentTime(), that);
+            return that._timeFormatter()(that._clockViewModel.currentTime(), that);
         });
 
         /**
@@ -186,7 +186,7 @@ define([
          * @type Observable
          */
         this.dateLabel = knockout.computed(function() {
-            return that._dateFormatter()(that.clockViewModel.currentTime(), that);
+            return that._dateFormatter()(that._clockViewModel.currentTime(), that);
         });
 
         /**
@@ -194,7 +194,7 @@ define([
          * @type Observable
          */
         this.multiplierLabel = knockout.computed(function() {
-            var clockViewModel = that.clockViewModel;
+            var clockViewModel = that._clockViewModel;
             if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
             }
@@ -210,17 +210,13 @@ define([
             return multiplier.toFixed(3).replace(/0{0,3}$/, "") + 'x';
         });
 
-        /**
-         * The pause toggle button.
-         * @type ToggleButtonViewModel
-         */
-        this.pauseViewModel = new ToggleButtonViewModel({
+        this._pauseViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
                 return !that._isAnimatingObs();
             }),
             tooltip : knockout.observable('Pause'),
             command : createCommand(function() {
-                var clockViewModel = that.clockViewModel;
+                var clockViewModel = that._clockViewModel;
                 if (clockViewModel.shouldAnimate()) {
                     cancelRealtime(clockViewModel);
                     clockViewModel.shouldAnimate(false);
@@ -230,17 +226,13 @@ define([
             })
         });
 
-        /**
-         * The reverse toggle button.
-         * @type ToggleButtonViewModel
-         */
-        this.playReverseViewModel = new ToggleButtonViewModel({
+        this._playReverseViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
                 return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
             }),
             tooltip : knockout.observable('Play Reverse'),
             command : createCommand(function() {
-                var clockViewModel = that.clockViewModel;
+                var clockViewModel = that._clockViewModel;
                 cancelRealtime(clockViewModel);
                 var multiplier = clockViewModel.multiplier();
                 if (multiplier > 0) {
@@ -250,17 +242,13 @@ define([
             })
         });
 
-        /**
-         * The play toggle button.
-         * @type ToggleButtonViewModel
-         */
-        this.playForwardViewModel = new ToggleButtonViewModel({
+        this._playForwardViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
                 return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
             }),
             tooltip : knockout.observable('Play Forward'),
             command : createCommand(function() {
-                var clockViewModel = that.clockViewModel;
+                var clockViewModel = that._clockViewModel;
                 cancelRealtime(clockViewModel);
                 var multiplier = clockViewModel.multiplier();
                 if (multiplier < 0) {
@@ -270,11 +258,7 @@ define([
             })
         });
 
-        /**
-         * The realtime toggle button.
-         * @type ToggleButtonViewModel
-         */
-        this.playRealtimeViewModel = new ToggleButtonViewModel({
+        this._playRealtimeViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
                 return clockViewModel.shouldAnimate() && clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
             }),
@@ -285,7 +269,7 @@ define([
                 return 'Current time not in range';
             }),
             command : createCommand(function() {
-                var clockViewModel = that.clockViewModel;
+                var clockViewModel = that._clockViewModel;
                 clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
                 clockViewModel.multiplier(1.0);
                 clockViewModel.shouldAnimate(true);
@@ -295,7 +279,7 @@ define([
         });
 
         /**
-         * A boolean observable indicating if dragging the shuttle ring should cause the multiplier
+         * Gets an Observable indicating if dragging the shuttle ring should cause the multiplier
          * to snap to the defined tick values rather than interpolating between them.
          * @type Observable
          * @default false
@@ -303,7 +287,7 @@ define([
         this.snapToTicks = knockout.observable(false);
 
         /**
-         * The current shuttle ring Angle.
+         * Gets an Observable for the current shuttle ring Angle.
          * @type Observable
          */
         this.shuttleRingAngle = knockout.computed({
@@ -314,7 +298,7 @@ define([
                 angle = Math.max(Math.min(angle, maxShuttleRingAngle), -maxShuttleRingAngle);
                 var ticks = that._shuttleRingTicks();
 
-                var clockViewModel = that.clockViewModel;
+                var clockViewModel = that._clockViewModel;
                 clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
                 //If we are at the max angle, simply return the max value in either direction.
@@ -348,11 +332,11 @@ define([
         });
 
         /**
-         * The command to decrease the speed of animation.
+         * Decreases the speed of animation.
          * @type Command
          */
         this.slower = createCommand(function() {
-            var clockViewModel = that.clockViewModel;
+            var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._shuttleRingTicks();
             var multiplier = clockViewModel.multiplier();
@@ -363,11 +347,11 @@ define([
         });
 
         /**
-         * The command to increase the speed of animation.
+         * Increases the speed of animation.
          * @type Command
          */
         this.faster = createCommand(function() {
-            var clockViewModel = that.clockViewModel;
+            var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._shuttleRingTicks();
             var multiplier = clockViewModel.multiplier();
@@ -448,7 +432,7 @@ define([
     AnimationViewModel.defaultTimeFormatter = function(date, viewModel) {
         var gregorianDate = date.toGregorianDate();
         var millisecond = Math.round(gregorianDate.millisecond);
-        if (Math.abs(viewModel.clockViewModel.multiplier()) < 1) {
+        if (Math.abs(viewModel._clockViewModel.multiplier()) < 1) {
             return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
         }
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
@@ -502,6 +486,46 @@ define([
             throw new DeveloperError('timeFormatter must be a function.');
         }
         this._timeFormatter(timeFormatter);
+    };
+
+    /**
+     * Gets the clock view model.
+     * @return ClockViewModel The clock view model.
+     */
+    AnimationViewModel.prototype.getClockViewModel = function() {
+        return this._clockViewModel;
+    };
+
+    /**
+     * Gets the pause toggle button.
+     * @return ToggleButtonViewModel The pause toggle button.
+     */
+    AnimationViewModel.prototype.getPauseViewModel = function() {
+        return this._pauseViewModel;
+    };
+
+    /**
+     * Gets the reverse toggle button.
+     * @return ToggleButtonViewModel The reverse toggle button.
+     */
+    AnimationViewModel.prototype.getPlayReverseViewModel = function() {
+        return this._playReverseViewModel;
+    };
+
+    /**
+     * Gets the play toggle button.
+     * @return ToggleButtonViewModel The play toggle button.
+     */
+    AnimationViewModel.prototype.getPlayForwardViewModel = function() {
+        return this._playForwardViewModel;
+    };
+
+    /**
+     * Gets the realtime toggle button.
+     * @return ToggleButtonViewModel The realtime toggle button.
+     */
+    AnimationViewModel.prototype.getPlayRealtimeViewModel = function() {
+        return this._playRealtimeViewModel;
     };
 
     //Currently exposed for tests.

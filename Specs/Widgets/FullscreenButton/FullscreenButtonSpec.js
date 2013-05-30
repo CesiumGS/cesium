@@ -8,16 +8,18 @@ defineSuite([
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);
-        expect(fullscreenButton.container).toBe(document.body);
-        expect(fullscreenButton.viewModel.fullscreenElement()).toBe(document.body);
+        expect(fullscreenButton.getContainer()).toBe(document.body);
+        expect(fullscreenButton.getViewModel().getFullscreenElement()).toBe(document.body);
+        expect(fullscreenButton.isDestroyed()).toEqual(false);
         fullscreenButton.destroy();
+        expect(fullscreenButton.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');
         var fullscreenButton = new FullscreenButton(document.body, testElement);
-        expect(fullscreenButton.container).toBe(document.body);
-        expect(fullscreenButton.viewModel.fullscreenElement()).toBe(testElement);
+        expect(fullscreenButton.getContainer()).toBe(document.body);
+        expect(fullscreenButton.getViewModel().getFullscreenElement()).toBe(testElement);
         fullscreenButton.destroy();
     });
 
@@ -26,7 +28,7 @@ defineSuite([
         testElement.id = 'testElement';
         document.body.appendChild(testElement);
         var fullscreenButton = new FullscreenButton('testElement');
-        expect(fullscreenButton.container).toBe(testElement);
+        expect(fullscreenButton.getContainer()).toBe(testElement);
         document.body.removeChild(testElement);
         fullscreenButton.destroy();
     });
