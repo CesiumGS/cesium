@@ -100,30 +100,9 @@ define(['../createCommand',
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-        /**
-         * Gets a readonly observable whose value is the scene.
-         * @type Observable
-         */
-        this.scene = knockout.computed(function() {
-            return scene;
-        });
-        /**
-         * Gets a readonly observable whose value is the primary ellipsoid for the scene.
-         * @type Observable
-         */
-        this.ellipsoid = knockout.computed(function() {
-            return ellipsoid;
-        });
-
-        /**
-         * Gets a readonly observable whose value is the scene transitioner being
-         * used by the host application. If a transitioner is assigned, any running
-         * morphs will be completed when the home button is pressed.
-         * @type Observable
-         */
-        this.transitioner = knockout.computed(function() {
-            return transitioner;
-        });
+        this._scene = scene;
+        this._ellipsoid = ellipsoid;
+        this._transitioner = transitioner;
 
         /**
          * Gets the command for switching to home view.
@@ -134,10 +113,36 @@ define(['../createCommand',
         });
 
         /**
-         * Gets a writable observable indicating the current tooltip.
+         * Gets an Observable indicating the current tooltip.
          * @type Observable
          */
         this.tooltip = knockout.observable('View Home');
+    };
+
+    /**
+     * Gets the scene.
+     * @type Observable
+     */
+    HomeButtonViewModel.prototype.getScene = function() {
+        return this._scene;
+    };
+
+    /**
+     * Gets the primary ellipsoid for the scene.
+     * @type Observable
+     */
+    HomeButtonViewModel.prototype.getEllipsoid = function() {
+        return this._ellipsoid;
+    };
+
+    /**
+     * Gets the scene transitioner being used by the host application.
+     * If a transitioner is assigned, any running morphs will be completed
+     * when the home button is pressed.
+     * @type Observable
+     */
+    HomeButtonViewModel.prototype.getTransitioner = function() {
+        return this._transitioner;
     };
 
     return HomeButtonViewModel;

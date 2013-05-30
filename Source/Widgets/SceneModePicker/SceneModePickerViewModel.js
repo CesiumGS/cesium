@@ -1,13 +1,15 @@
 /*global define*/
-define(['../../Core/DeveloperError',
+define(['../createCommand',
+        '../../Core/DeveloperError',
+        '../../Core/destroyObject',
         '../../Scene/SceneMode',
-        '../createCommand',
         '../../ThirdParty/knockout'
         ], function(
-            DeveloperError,
-            SceneMode,
-            createCommand,
-            knockout) {
+                createCommand,
+                DeveloperError,
+                destroyObject,
+                SceneMode,
+                knockout) {
     "use strict";
 
     /**
@@ -37,22 +39,16 @@ define(['../../Core/DeveloperError',
         var tooltip3D = knockout.observable('3D');
         var tooltipColumbusView = knockout.observable('Columbus View');
 
-        /**
-         * Gets a readonly observable whose value is the SceneTransitioner being used.
-         * @type Observable
-        */
-        this.transitioner = knockout.computed(function() {
-            return transitioner;
-        });
+        this._transitioner = transitioner;
 
         /**
-         * Gets a writable observable whose value is the current SceneMode
+         * Gets an Observable whose value is the current SceneMode
          * @type Observable
         */
         this.sceneMode = sceneMode;
 
         /**
-         * Gets a writable observable indicating if the button dropDown is currently visible.
+         * Gets an Observable indicating if the button dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
@@ -93,25 +89,25 @@ define(['../../Core/DeveloperError',
         });
 
         /**
-         * Gets a writable observable for the 2D tooltip.
+         * Gets an Observable for the 2D tooltip.
          * @type Observable
         */
         this.tooltip2D = tooltip2D;
 
         /**
-         * Gets a writable observable for the 3D tooltip.
+         * Gets an Observable for the 3D tooltip.
          * @type Observable
         */
         this.tooltip3D = tooltip3D;
 
         /**
-         * Gets a writable observable for the Columbus View tooltip.
+         * Gets an Observable for the Columbus View tooltip.
          * @type Observable
         */
         this.tooltipColumbusView = tooltipColumbusView;
 
         /**
-         * Gets a readonly observable for the currently selected mode's tooltip.
+         * Gets a readonly Observable for the currently selected mode's tooltip.
          * @type Observable
         */
         this.selectedTooltip = knockout.computed(function() {
@@ -129,8 +125,29 @@ define(['../../Core/DeveloperError',
         this._sceneMode = SceneMode;
     };
 
+    /**
+     * Gets the SceneTransitioner used by the widget.
+     * @returns {SceneTransitioner} The SceneTransitioner used by the widget.
+     */
+    SceneModePickerViewModel.prototype.getTransitioner = function() {
+        return this._transitioner;
+    };
+
+    /**
+     * @memberof SceneModePickerViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    SceneModePickerViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the view model.
+     * @memberof SceneModePickerViewModel
+     */
     SceneModePickerViewModel.prototype.destroy = function() {
-        this.transitioner().onTransitionStart.removeEventListener(this._transitionStart);
+        this._transitioner.onTransitionStart.removeEventListener(this._transitionStart);
+        destroyObject(this);
     };
 
     return SceneModePickerViewModel;

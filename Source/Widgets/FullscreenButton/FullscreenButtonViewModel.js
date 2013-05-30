@@ -31,7 +31,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets a writable observable indicating if fullscreen functionality should be available.
+         * Gets an Observable indicating if fullscreen functionality should be available.
          * @type Observable
          *
          * @see Fullscreen.isFullscreenEnabled
@@ -39,7 +39,7 @@ define(['../createCommand',
         this.isFullscreenEnabled = isFullscreenEnabled;
 
         /**
-         * Gets a writable observable indicating if fullscreen mode is activated.
+         * Gets an Observable indicating if fullscreen mode is activated.
          * @type Observable
          */
         this.toggled = isFullscreen;
@@ -57,7 +57,7 @@ define(['../createCommand',
         }, isFullscreenEnabled);
 
         /**
-         * Gets a readonly observable of the current button tooltip.
+         * Gets a readonly Observable of the current button tooltip.
          * @type Observable
          */
         this.tooltip = knockout.computed(function() {
@@ -68,7 +68,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets a writable observable whose value is the HTML element to place
+         * Gets an Observable whose value is the HTML element to place
          * into fullscreen mode when the corresponding button is pressed.
          * By default, the entire page will enter fullscreen. By specifying
          * another container, only that container will be in fullscreen.

@@ -37,7 +37,7 @@ define([
         var selectedViewModel = knockout.observable();
 
         /**
-         * Gets a readonly observable whose value is the imagery layers collection being used.
+         * Gets a readonly Observable whose value is the imagery layers collection being used.
          * @type ImageryLayerCollection
          */
         this.imageryLayers = knockout.computed(function() {
@@ -45,13 +45,13 @@ define([
         });
 
         /**
-         * Gets a writable observable array of ImageryProviderViewModel instances available for selection.
+         * Gets an Observable array of ImageryProviderViewModel instances available for selection.
          * @type Observable
          */
         this.imageryProviderViewModels = knockout.observableArray(imageryProviderViewModels);
 
         /**
-         * Gets a writable observable whose value indicates if the imagery selection dropDown is currently visible.
+         * Gets an Observable whose value indicates if the imagery selection dropDown is currently visible.
          * @type Observable
         */
         this.dropDownVisible = dropDownVisible;
@@ -65,7 +65,7 @@ define([
         });
 
         /**
-         * Gets a readonly observable for the the name of the currently selected item.
+         * Gets a readonly Observable for the the name of the currently selected item.
          * @type Observable
         */
         this.selectedName = knockout.computed(function() {
@@ -74,7 +74,7 @@ define([
         });
 
         /**
-         * Gets a readonly observable for the image url of the currently selected item.
+         * Gets a readonly Observable for the image url of the currently selected item.
          * @type Observable
         */
         this.selectedIconUrl = knockout.computed(function() {
@@ -83,7 +83,7 @@ define([
         });
 
         /**
-         * Gets a writable observable for the currently selected item.
+         * Gets an Observable for the currently selected item.
          * @type Observable
         */
         this.selectedItem = knockout.computed({

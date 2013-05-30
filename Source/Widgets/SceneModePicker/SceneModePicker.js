@@ -56,20 +56,8 @@ define(['./SceneModePickerViewModel',
 
         var viewModel = new SceneModePickerViewModel(transitioner);
 
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof SceneModePicker
-         * @type {SeneModePickerViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof SceneModePicker
-         * @type {Element}
-         */
-        this.container = container;
-
+        this._viewModel = viewModel;
+        this._container = container;
         this._element = document.createElement('span');
 
         var widgetNode = this._element;
@@ -129,15 +117,41 @@ define(['./SceneModePickerViewModel',
     };
 
     /**
+     * Gets the view model being used.
+     * @memberof SceneModePicker
+     * @returns {SeneModePickerViewModel} The view model being used.
+     */
+    SceneModePicker.prototype.getViewModel = function() {
+        return this._viewModel;
+    };
+
+    /**
+     * Gets the container element for the widget.
+     * @memberof SceneModePicker
+     * @type {Element}
+     */
+    SceneModePicker.prototype.getContainer = function() {
+        return this._container;
+    };
+
+    /**
+     * @memberof SceneModePicker
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    SceneModePicker.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof SceneModePicker
      */
     SceneModePicker.prototype.destroy = function() {
-        this.viewModel.destroy();
+        this._viewModel.destroy();
         document.removeEventListener('mousedown', this._closeDropDown);
         document.removeEventListener('touchstart', this._closeDropDown);
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
         container.removeChild(this._node3D);

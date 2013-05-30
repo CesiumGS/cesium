@@ -28,20 +28,22 @@ defineSuite([
 
     it('constructor sets default values', function() {
         var homeButton = new HomeButton(document.body, scene);
-        expect(homeButton.container).toBe(document.body);
-        expect(homeButton.viewModel.scene()).toBe(scene);
-        expect(homeButton.viewModel.transitioner()).toBeUndefined();
-        expect(homeButton.viewModel.ellipsoid()).toBe(Ellipsoid.WGS84);
+        expect(homeButton.getContainer()).toBe(document.body);
+        expect(homeButton.getViewModel().getScene()).toBe(scene);
+        expect(homeButton.getViewModel().getTransitioner()).toBeUndefined();
+        expect(homeButton.getViewModel().getEllipsoid()).toBe(Ellipsoid.WGS84);
+        expect(homeButton.isDestroyed()).toEqual(false);
         homeButton.destroy();
+        expect(homeButton.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
         var ellipsoid = new Ellipsoid();
         var homeButton = new HomeButton(document.body, scene, transitioner, ellipsoid);
-        expect(homeButton.container).toBe(document.body);
-        expect(homeButton.viewModel.scene()).toBe(scene);
-        expect(homeButton.viewModel.transitioner()).toBe(transitioner);
-        expect(homeButton.viewModel.ellipsoid()).toBe(ellipsoid);
+        expect(homeButton.getContainer()).toBe(document.body);
+        expect(homeButton.getViewModel().getScene()).toBe(scene);
+        expect(homeButton.getViewModel().getTransitioner()).toBe(transitioner);
+        expect(homeButton.getViewModel().getEllipsoid()).toBe(ellipsoid);
         homeButton.destroy();
     });
 
@@ -50,7 +52,7 @@ defineSuite([
         testElement.id = 'testElement';
         document.body.appendChild(testElement);
         var homeButton = new HomeButton('testElement', scene);
-        expect(homeButton.container).toBe(testElement);
+        expect(homeButton.getContainer()).toBe(testElement);
         document.body.removeChild(testElement);
         homeButton.destroy();
     });

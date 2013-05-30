@@ -295,7 +295,7 @@ define([
         });
 
         /**
-         * Gets a writable observable indicating if dragging the shuttle ring should cause the multiplier
+         * Gets an Observable indicating if dragging the shuttle ring should cause the multiplier
          * to snap to the defined tick values rather than interpolating between them.
          * @type Observable
          * @default false
@@ -303,7 +303,7 @@ define([
         this.snapToTicks = knockout.observable(false);
 
         /**
-         * Gets a writable observable for the current shuttle ring Angle.
+         * Gets an Observable for the current shuttle ring Angle.
          * @type Observable
          */
         this.shuttleRingAngle = knockout.computed({

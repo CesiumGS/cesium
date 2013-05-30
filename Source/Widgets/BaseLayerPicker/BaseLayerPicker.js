@@ -108,7 +108,7 @@ define(['./BaseLayerPickerViewModel',
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
 
         /**
-         * Gets the viewModel being used by the widget.
+         * Gets the view model being used.
          * @memberof BaseLayerPicker
          * @type {SeneModeViewModel}
          */

@@ -45,7 +45,7 @@ define(['./FullscreenButtonViewModel',
         this.container = container;
 
         /**
-         * Gets the viewModel being used by the widget.
+         * Gets the view model being used.
          * @memberof FullscreenButton
          * @type {FullscreenButtonViewModel}
          */
