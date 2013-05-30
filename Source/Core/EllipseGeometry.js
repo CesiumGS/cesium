@@ -39,13 +39,28 @@ define([
         VertexFormat) {
     "use strict";
 
-    function reflect(position, center, unitVector, result) {
-        var toCenter = Cartesian3.subtract(position, center);
-        Cartesian3.multiplyByScalar(unitVector, Cartesian3.dot(toCenter, unitVector), result);
-        var perp = Cartesian3.subtract(toCenter, result);
-        Cartesian3.negate(perp, perp);
-        Cartesian3.add(perp, result, result);
-        Cartesian3.add(center, result, result);
+    function pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
+        var azimuth = theta + bearing;
+        var rotAxis = Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth));
+        var tempVec = Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth));
+        Cartesian3.add(rotAxis, tempVec, rotAxis);
+
+        var cosThetaSquared = Math.cos(theta);
+        cosThetaSquared = cosThetaSquared * cosThetaSquared;
+
+        var sinThetaSquared = Math.sin(theta);
+        sinThetaSquared = sinThetaSquared * sinThetaSquared;
+
+        var radius = ab / Math.sqrt(bSqr * cosThetaSquared + aSqr * sinThetaSquared);
+        var angle = radius / mag;
+
+        // Create the quaternion to rotate the position vector to the boundary of the ellipse.
+        var unitQuat = Quaternion.fromAxisAngle(rotAxis, angle);
+        var rotMtx = Matrix3.fromQuaternion(unitQuat);
+
+        Matrix3.multiplyByVector(rotMtx, unitPos, result);
+        Cartesian3.normalize(result, result);
+        Cartesian3.multiplyByScalar(result, mag, result);
         return result;
     }
 
@@ -53,8 +68,6 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
-    var scratchCartographic = new Cartographic();
-    var scratchMatrix2 = new Matrix2();
 
     /**
      * Computes vertices and indices for an ellipse on the ellipsoid.
@@ -180,33 +193,14 @@ define([
 
         var i;
         var j;
-        var numInterior;
         var theta;
+        var numInterior;
+        var t;
+        var interiorPosition;
 
         for (i = 0, theta = CesiumMath.PI_OVER_TWO; i < numPts && theta > 0; ++i, theta -= deltaTheta) {
-            var azimuth = theta + bearing;
-            var rotAxis = Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth));
-            var tempVec = Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth));
-            Cartesian3.add(rotAxis, tempVec, rotAxis);
-
-            var cosThetaSquared = Math.cos(theta);
-            cosThetaSquared = cosThetaSquared * cosThetaSquared;
-
-            var sinThetaSquared = Math.sin(theta);
-            sinThetaSquared = sinThetaSquared * sinThetaSquared;
-
-            var radius = ab / Math.sqrt(bSqr * cosThetaSquared + aSqr * sinThetaSquared);
-            var angle = radius / mag;
-
-            // Create the quaternion to rotate the position vector to the boundary of the ellipse.
-            var unitQuat = Quaternion.fromAxisAngle(rotAxis, angle);
-            var rotMtx = Matrix3.fromQuaternion(unitQuat);
-
-            Matrix3.multiplyByVector(rotMtx, unitPos, position);
-            Cartesian3.normalize(position, position);
-            Cartesian3.multiplyByScalar(position, mag, position);
-
-            reflect(position, center, rotatedEastVec, reflectedPosition);
+            pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid(Math.PI - theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
@@ -214,8 +208,8 @@ define([
 
             numInterior = 2 * i + 2;
             for (j = 1; j < numInterior - 1; ++j) {
-                var t = j / (numInterior - 1);
-                var interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
+                t = j / (numInterior - 1);
+                interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
                 positions[positionIndex++] = interiorPosition.x;
                 positions[positionIndex++] = interiorPosition.y;
                 positions[positionIndex++] = interiorPosition.z;
@@ -227,21 +221,29 @@ define([
         }
 
         numPts = i;
-        var reverseIndex = positionIndex;
 
-        // Reflect the points across the north axis to get the other half of the ellipsoid.
         for (i = numPts; i > 0; --i) {
-            numInterior = 2 * i;
-            reverseIndex -= numInterior * 3;
-            for (j = 0; j < numInterior; ++j) {
-                var index = reverseIndex + j * 3;
-                Cartesian3.fromArray(positions, index, position);
-                reflect(position, center, rotatedNorthVec, reflectedPosition);
+            theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
-                positions[positionIndex++] = reflectedPosition.x;
-                positions[positionIndex++] = reflectedPosition.y;
-                positions[positionIndex++] = reflectedPosition.z;
+            pointOnEllipsoid(-theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid( theta + Math.PI, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
+
+            numInterior = 2 * (i - 1) + 2;
+            for (j = 1; j < numInterior - 1; ++j) {
+                t = j / (numInterior - 1);
+                interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
+                positions[positionIndex++] = interiorPosition.x;
+                positions[positionIndex++] = interiorPosition.y;
+                positions[positionIndex++] = interiorPosition.z;
             }
+
+            positions[positionIndex++] = reflectedPosition.x;
+            positions[positionIndex++] = reflectedPosition.y;
+            positions[positionIndex++] = reflectedPosition.z;
         }
 
         // The original length may have been an over-estimate
