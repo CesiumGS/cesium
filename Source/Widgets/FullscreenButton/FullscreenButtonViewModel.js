@@ -49,7 +49,7 @@ define(['../createCommand',
         this.toggled = isFullscreen;
 
         /**
-         * Gets the command for toggling fullscreen mode.
+         * Toggles fullscreen mode.
          * @type Command
          */
         this.command = createCommand(function() {

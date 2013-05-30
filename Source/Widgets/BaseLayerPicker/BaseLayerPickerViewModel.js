@@ -51,7 +51,7 @@ define([
         this.dropDownVisible = dropDownVisible;
 
         /**
-         * Gets the command to toggle dropDown visibility.
+         * Toggles dropDown visibility.
          * @type Command
         */
         this.toggleDropDown = createCommand(function() {

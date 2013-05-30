@@ -332,7 +332,7 @@ define([
         });
 
         /**
-         * Gets the command to decrease the speed of animation.
+         * Decreases the speed of animation.
          * @type Command
          */
         this.slower = createCommand(function() {
@@ -347,7 +347,7 @@ define([
         });
 
         /**
-         * Gets the command to increase the speed of animation.
+         * Increases the speed of animation.
          * @type Command
          */
         this.faster = createCommand(function() {

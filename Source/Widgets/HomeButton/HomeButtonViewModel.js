@@ -105,7 +105,7 @@ define(['../createCommand',
         this._transitioner = transitioner;
 
         /**
-         * Gets the command for switching to home view.
+         * Flies to the home view of the current scene.
          * @type Command
          */
         this.command = createCommand(function() {

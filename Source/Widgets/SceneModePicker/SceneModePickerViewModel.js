@@ -54,7 +54,7 @@ define(['../createCommand',
         this.dropDownVisible = dropDownVisible;
 
         /**
-         * Gets the command to toggle dropDown visibility.
+         * Toggles dropDown visibility.
          * @type Command
         */
         this.toggleDropDown = createCommand(function() {
@@ -62,7 +62,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets the command to morph to 2D.
+         * Morphs to 2D.
          * @type Command
         */
         this.morphTo2D = createCommand(function() {
@@ -71,7 +71,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets the command to morph to 3D.
+         * Morphs to 3D.
          * @type Command
         */
         this.morphTo3D = createCommand(function() {
@@ -80,7 +80,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets the command to morph to Columbus View.
+         * Morphs to Columbus View.
          * @type Command
         */
         this.morphToColumbusView = createCommand(function() {
