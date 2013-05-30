@@ -131,8 +131,6 @@ define([
 
         var MAX_ANOMALY_LIMIT = 2.31;
 
-        //var aSqr = semiMajorAxis * semiMajorAxis;
-        //var bSqr = semiMinorAxis * semiMinorAxis;
         var aSqr = semiMinorAxis * semiMinorAxis;
         var bSqr = semiMajorAxis * semiMajorAxis;
         var ab = semiMajorAxis * semiMinorAxis;
@@ -156,22 +154,20 @@ define([
         //     *---*---*---*
         //   / | \ | \ | \ | \
         // *---*---*---*---*---*
+        // | \ | \ | \ | \ | \ |
+        // *---*---*---*---*---*
         //   \ | \ | \ | \ | /
         //     *---*---*---*
         //       \ | \ | /
         //         *---*
-        // Notice each vertical column contains an odd number of positions.
-        // The sum of the first n odd numbers is n^2. Double it for the number of points
-        // for the whole ellipse
-        //var size = 2 * numPts * numPts;
+        // Notice each vertical column contains an even number of positions.
+        // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
+        // for the whole ellipse. Note: this is just an estimate and may actually be less depending
+        // on the number of iterations before the angle reaches pi/2.
+        var size = 2 * numPts * (numPts + 1);
 
-        // Compute the points in the positive x half-space in 2D.
-        /*var positions = new Array(size * 3);
-        positions[0] = semiMajorAxis;
-        positions[1] = 0.0;
-        positions[2] = height;
-        var positionIndex = 3;
-        */
+        var positions = new Array(size * 3);
+        var positionIndex = 0;
 
         var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(unitPos, bearing));
         var rotatedNorthVec = Matrix3.multiplyByVector(rotation, northVec);
@@ -181,9 +177,6 @@ define([
 
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
-
-        var positions = [];
-        var positionIndex = 0;
 
         var i;
         var j;
@@ -234,10 +227,9 @@ define([
         }
 
         numPts = i;
-
         var reverseIndex = positionIndex;
 
-        // Reflect the points across the y axis to get the other half of the ellipsoid.
+        // Reflect the points across the north axis to get the other half of the ellipsoid.
         for (i = numPts; i > 0; --i) {
             numInterior = 2 * i;
             reverseIndex -= numInterior * 3;
@@ -251,6 +243,9 @@ define([
                 positions[positionIndex++] = reflectedPosition.z;
             }
         }
+
+        // The original length may have been an over-estimate
+        positions.length = positionIndex;
 
         /*
         var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
@@ -371,22 +366,21 @@ define([
         }
         */
 
-        // The number of triangles in the ellipse on the positive x half-space is:
+        // The number of triangles in the ellipse on the positive x half-space and for
+        // the column of triangles in the middle is:
         //
-        // numInteriorTriangles = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
-        //                      = 4 * ((n * ( n + 1)) / 2)
-        // numExteriorTriangles = 2 * n
+        // numTriangles = 4 + 8 + 12 + ... = 4 + (4 + 4) + (4 + 4 + 4) + ... = 4 * (1 + 2 + 3 + ...)
+        //              = 4 * ((n * ( n + 1)) / 2)
+        // numColumnTriangles = 2 * 2 * n
+        // total = 2 * numTrangles + numcolumnTriangles
         //
-        // Substitute (numPts - 1.0) for n above and then:
-        //
-        // numTriangles = 2 * (numInteriorTriangles + numExteriorTriangles)
-        // numIndices = 3 * numTriangles
-        //var indices = new Array(indicesSize);
-        var indices = [];
+        // Substitute (numPts - 1.0) for n above
+        var indicesSize = 2 * numPts * (numPts + 1);
+        var indices = new Array(indicesSize);
         var indicesIndex = 0;
         var prevIndex;
 
-        // Indices for positive x half-space
+        // Indices triangles to the 'left' of the north vector
         for (i = 1; i < numPts; ++i) {
             positionIndex = i * (i + 1);
             prevIndex = (i - 1) * i;
@@ -425,8 +419,7 @@ define([
             indices[indicesIndex++] = prevIndex;
         }
 
-        // Reverse the process creating indices for the ellipse on the positive x half-space
-        // to create the part of the ellipse reflected on the y axis.
+        // Reverse the process creating indices to the 'right' of the north vector
         ++prevIndex;
         ++positionIndex;
         for (i = numPts - 1; i > 0; --i) {
@@ -450,7 +443,7 @@ define([
             indices[indicesIndex++] = prevIndex++;
         }
 
-        //indices.length = indicesIndex;
+        indices.length = indicesIndex;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
