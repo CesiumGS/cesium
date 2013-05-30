@@ -16,6 +16,7 @@ Beta Releases
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
+* Added support for [OES_vertex_array_object](http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/), which improves rendering performance.
 * Added support for floating-point textures.
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
