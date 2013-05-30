@@ -2065,8 +2065,9 @@ define([
 
         var offset = command.offset;
         var count = command.count;
+        var hasIndexBuffer = (typeof indexBuffer !== 'undefined');
 
-        if (indexBuffer) {
+        if (hasIndexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
             count = count || indexBuffer.getNumberOfIndices();
         } else {
@@ -2084,7 +2085,7 @@ define([
 
             va._bind();
 
-            if (indexBuffer) {
+            if (hasIndexBuffer) {
                 this._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
                 this._gl.drawArrays(primitiveType, offset, count);
@@ -2151,15 +2152,15 @@ define([
 
     //////////////////////////////////////////////////////////////////////////////////////////
 
-    Context.prototype._interleaveAttributes = function(attributes) {
-        function computeNumberOfVertices(attribute) {
-            return attribute.values.length / attribute.componentsPerAttribute;
-        }
+    function computeNumberOfVertices(attribute) {
+        return attribute.values.length / attribute.componentsPerAttribute;
+    }
 
-        function computeAttributeSizeInBytes(attribute) {
-            return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
-        }
+    function computeAttributeSizeInBytes(attribute) {
+        return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
+    }
 
+    function interleaveAttributes(attributes) {
         var j;
         var name;
         var attribute;
@@ -2266,73 +2267,6 @@ define([
 
         // No attributes to interleave.
         return undefined;
-    };
-
-    function createVertexArrayAttributes(context, creationArguments) {
-        var ca = creationArguments || {};
-        var mesh = ca.mesh || {};
-        var attributeIndices = ca.attributeIndices || {};
-        var bufferUsage = ca.bufferUsage || BufferUsage.DYNAMIC_DRAW;
-        var interleave = ca.vertexLayout && (ca.vertexLayout === VertexLayout.INTERLEAVED);
-
-        var name;
-        var attribute;
-        var vaAttributes = [];
-        var attributes = mesh.attributes;
-
-        if (interleave) {
-            // Use a single vertex buffer with interleaved vertices.
-            var interleavedAttributes = context._interleaveAttributes(attributes);
-            if (interleavedAttributes) {
-                var vertexBuffer = context.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
-                var offsetsInBytes = interleavedAttributes.offsetsInBytes;
-                var strideInBytes = interleavedAttributes.vertexSizeInBytes;
-
-                for (name in attributes) {
-                    if (attributes.hasOwnProperty(name)) {
-                        attribute = attributes[name];
-
-                        if (attribute.values) {
-                            // Common case: per-vertex attributes
-                            vaAttributes.push({
-                                index : attributeIndices[name],
-                                vertexBuffer : vertexBuffer,
-                                componentDatatype : attribute.componentDatatype,
-                                componentsPerAttribute : attribute.componentsPerAttribute,
-                                normalize : attribute.normalize,
-                                offsetInBytes : offsetsInBytes[name],
-                                strideInBytes : strideInBytes
-                            });
-                        } else {
-                            // Constant attribute for all vertices
-                            vaAttributes.push({
-                                index : attributeIndices[name],
-                                value : attribute.value,
-                                componentDatatype : attribute.componentDatatype,
-                                normalize : attribute.normalize
-                            });
-                        }
-                    }
-                }
-            }
-        } else {
-            // One vertex buffer per attribute.
-            for (name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
-                    attribute = attributes[name];
-                    vaAttributes.push({
-                        index : attributeIndices[name],
-                        vertexBuffer : attribute.values ? context.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
-                        value : attribute.value ? attribute.value : undefined,
-                        componentDatatype : attribute.componentDatatype,
-                        componentsPerAttribute : attribute.componentsPerAttribute,
-                        normalize : attribute.normalize
-                    });
-                }
-            }
-        }
-
-        return context.createVertexArray(vaAttributes);
     }
 
     /**
@@ -2395,9 +2329,10 @@ define([
      * va = va.destroy();
      */
     Context.prototype.createVertexArrayFromMesh = function(creationArguments) {
-        var ca = creationArguments || {};
-        var mesh = ca.mesh || {};
-        var bufferUsage = ca.bufferUsage || BufferUsage.DYNAMIC_DRAW;
+        var ca = defaultValue(creationArguments, defaultValue.EMPTY_OBJECT);
+        var mesh = defaultValue(ca.mesh, defaultValue.EMPTY_OBJECT);
+
+        var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
         var indexLists;
 
         if (mesh.indexLists) {
@@ -2407,13 +2342,72 @@ define([
             }
         }
 
-        var va = createVertexArrayAttributes(this, creationArguments);
+        var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
+        var interleave = ca.vertexLayout && (ca.vertexLayout === VertexLayout.INTERLEAVED);
 
-        if (indexLists) {
-            va.setIndexBuffer(this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT));
+        var name;
+        var attribute;
+        var vaAttributes = [];
+        var attributes = mesh.attributes;
+
+        if (interleave) {
+            // Use a single vertex buffer with interleaved vertices.
+            var interleavedAttributes = interleaveAttributes(attributes);
+            if (interleavedAttributes) {
+                var vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
+                var offsetsInBytes = interleavedAttributes.offsetsInBytes;
+                var strideInBytes = interleavedAttributes.vertexSizeInBytes;
+
+                for (name in attributes) {
+                    if (attributes.hasOwnProperty(name)) {
+                        attribute = attributes[name];
+
+                        if (attribute.values) {
+                            // Common case: per-vertex attributes
+                            vaAttributes.push({
+                                index : attributeIndices[name],
+                                vertexBuffer : vertexBuffer,
+                                componentDatatype : attribute.componentDatatype,
+                                componentsPerAttribute : attribute.componentsPerAttribute,
+                                normalize : attribute.normalize,
+                                offsetInBytes : offsetsInBytes[name],
+                                strideInBytes : strideInBytes
+                            });
+                        } else {
+                            // Constant attribute for all vertices
+                            vaAttributes.push({
+                                index : attributeIndices[name],
+                                value : attribute.value,
+                                componentDatatype : attribute.componentDatatype,
+                                normalize : attribute.normalize
+                            });
+                        }
+                    }
+                }
+            }
+        } else {
+            // One vertex buffer per attribute.
+            for (name in attributes) {
+                if (attributes.hasOwnProperty(name)) {
+                    attribute = attributes[name];
+                    vaAttributes.push({
+                        index : attributeIndices[name],
+                        vertexBuffer : attribute.values ? this.createVertexBuffer(attribute.componentDatatype.toTypedArray(attribute.values), bufferUsage) : undefined,
+                        value : attribute.value ? attribute.value : undefined,
+                        componentDatatype : attribute.componentDatatype,
+                        componentsPerAttribute : attribute.componentsPerAttribute,
+                        normalize : attribute.normalize
+                    });
+                }
+            }
         }
 
-        return va;
+        var indexBuffer;
+        if (typeof indexLists !== 'undefined') {
+            indexBuffer = this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+        }
+
+        return this.createVertexArray(vaAttributes, indexBuffer);
     };
 
     /**
