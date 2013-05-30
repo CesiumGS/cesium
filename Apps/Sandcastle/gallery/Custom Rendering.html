@@ -321,9 +321,9 @@ require([
     Box2.prototype.destroy = Box.prototype.destroy;
 
     function createButtons(widget) {
-        var scene = widget.scene;
-        var centralBody = widget.centralBody;
-        var ellipsoid = widget.centralBody.getEllipsoid();
+        var scene = widget.getScene();
+        var centralBody = widget.getCentralBody();
+        var ellipsoid = widget.getCentralBody().getEllipsoid();
         var primitives = scene.getPrimitives();
         var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
 
@@ -379,7 +379,7 @@ require([
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createButtons(widget);
-    renderBox(widget.scene);
+    renderBox(widget.getScene());
 
     Sandcastle.finishedLoading();
 });</script>

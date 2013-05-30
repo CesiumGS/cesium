@@ -1,11 +1,15 @@
 /*global define*/
 define(['../createCommand',
         '../../Core/defaultValue',
+        '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Core/Fullscreen',
         '../../ThirdParty/knockout'
         ], function(
             createCommand,
             defaultValue,
+            destroyObject,
+            DeveloperError,
             Fullscreen,
             knockout) {
     "use strict";
@@ -52,7 +56,7 @@ define(['../createCommand',
             if (Fullscreen.isFullscreen()) {
                 Fullscreen.exitFullscreen();
             } else {
-                Fullscreen.requestFullscreen(that.fullscreenElement());
+                Fullscreen.requestFullscreen(that._fullscreenElement);
             }
         }, isFullscreenEnabled);
 
@@ -67,20 +71,41 @@ define(['../createCommand',
             return isFullscreen() ? 'Exit full screen' : 'Full screen';
         });
 
-        /**
-         * Gets an Observable whose value is the HTML element to place
-         * into fullscreen mode when the corresponding button is pressed.
-         * By default, the entire page will enter fullscreen. By specifying
-         * another container, only that container will be in fullscreen.
-         *
-         * @type {Observable}
-         */
-        this.fullscreenElement = knockout.observable(defaultValue(fullscreenElement, document.body));
+        this._fullscreenElement = defaultValue(fullscreenElement, document.body);
 
         this._callback = function() {
             isFullscreen(Fullscreen.isFullscreen());
         };
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
+    };
+
+    /**
+     * Gets the HTML element to place into fullscreen mode when the
+     * corresponding button is pressed.
+     * @type {Element}
+     */
+    FullscreenButtonViewModel.prototype.getFullscreenElement = function() {
+        return this._fullscreenElement;
+    };
+
+    /**
+     * Sets the HTML element to place into fullscreen mode when the
+     * corresponding button is pressed.
+     * @type {Element}
+     */
+    FullscreenButtonViewModel.prototype.setFullscreenElement = function(element) {
+        if (typeof element === 'undefined') {
+            throw new DeveloperError('element is required.');
+        }
+        this._fullscreenElement = element;
+    };
+
+    /**
+     * @memberof FullscreenButtonViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    FullscreenButtonViewModel.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -90,6 +115,7 @@ define(['../createCommand',
      */
     FullscreenButtonViewModel.prototype.destroy = function() {
         document.removeEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
+        destroyObject(this);
     };
 
     return FullscreenButtonViewModel;

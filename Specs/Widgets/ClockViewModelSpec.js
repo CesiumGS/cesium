@@ -16,7 +16,7 @@ defineSuite([
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();
-        expect(clockViewModel.clock).toBeDefined();
+        expect(clockViewModel.getClock()).toBeDefined();
     });
 
     it('constructor sets expected properties', function() {
@@ -30,7 +30,7 @@ defineSuite([
         clock.shouldAnimate = false;
 
         var clockViewModel = new ClockViewModel(clock);
-        expect(clockViewModel.clock).toBe(clock);
+        expect(clockViewModel.getClock()).toBe(clock);
         expect(clockViewModel.startTime()).toEqual(clock.startTime);
         expect(clockViewModel.stopTime()).toEqual(clock.stopTime);
         expect(clockViewModel.currentTime()).toEqual(clock.currentTime);
@@ -52,7 +52,7 @@ defineSuite([
         clock.shouldAnimate = false;
 
         var clockViewModel = new ClockViewModel(clock);
-        expect(clockViewModel.clock).toBe(clock);
+        expect(clockViewModel.getClock()).toBe(clock);
         expect(clockViewModel.startTime()).toEqual(clock.startTime);
         expect(clockViewModel.stopTime()).toEqual(clock.stopTime);
         expect(clockViewModel.currentTime()).toEqual(clock.currentTime);

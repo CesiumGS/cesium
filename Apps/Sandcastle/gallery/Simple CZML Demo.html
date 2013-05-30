@@ -137,7 +137,7 @@ require([
 
         // Zoom in a little closer...
         var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
-        widget.scene.getCamera().controller.viewExtent(extent);
+        widget.getScene().getCamera().controller.viewExtent(extent);
     }
 
     function createButtons(widget) {

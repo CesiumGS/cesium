@@ -487,7 +487,7 @@ require([
     }
 
     function createButtons(widget) {
-        var scene = widget.scene;
+        var scene = widget.getScene();
         var primitives = scene.getPrimitives();
 
         var commonMaterialMenu = new DropDownMenu({ style: "display: none;"});
@@ -832,9 +832,9 @@ require([
     }
 
     function createPrimitives(widget) {
-        var scene = widget.scene;
+        var scene = widget.getScene();
         var primitives = scene.getPrimitives();
-        var ellipsoid = widget.centralBody.getEllipsoid();
+        var ellipsoid = widget.getCentralBody().getEllipsoid();
 
         polygon = new Cesium.Polygon();
         polygon.configureExtent(new Cesium.Extent(

@@ -15,38 +15,38 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     function verifyPausedState(viewModel) {
-        expect(viewModel.pauseViewModel.toggled()).toEqual(true);
-        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+        expect(viewModel.getPauseViewModel().toggled()).toEqual(true);
+        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
     }
 
     function verifyForwardState(viewModel) {
-        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playForwardViewModel.toggled()).toEqual(true);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(true);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
     }
 
     function verifyReverseState(viewModel) {
-        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playReverseViewModel.toggled()).toEqual(true);
-        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(true);
+        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
     }
 
     function verifyRealtimeState(viewModel) {
-        expect(viewModel.pauseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playReverseViewModel.toggled()).toEqual(false);
-        expect(viewModel.playForwardViewModel.toggled()).toEqual(false);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(true);
+        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(true);
         expect(viewModel.shuttleRingAngle()).toEqual(AnimationViewModel._realtimeShuttleRingAngle);
     }
 
     it('constructor sets expected properties', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
-        expect(animationViewModel.clockViewModel).toBe(clockViewModel);
+        expect(animationViewModel.getClockViewModel()).toBe(clockViewModel);
     });
 
     it('setTimeFormatter overrides the default formatter', function() {
@@ -221,18 +221,18 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Toggling paused restores state when animating forward
-        viewModel.pauseViewModel.command();
+        viewModel.getPauseViewModel().command();
 
         verifyForwardState(viewModel);
 
         //Executing paused command restores paused state
-        viewModel.pauseViewModel.command();
+        viewModel.getPauseViewModel().command();
 
         verifyPausedState(viewModel);
 
         //Setting the multiplier to negative and unpausing animates backward
         clockViewModel.multiplier(-1);
-        viewModel.pauseViewModel.command();
+        viewModel.getPauseViewModel().command();
 
         verifyReverseState(viewModel);
     });
@@ -242,7 +242,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = -100;
         clockViewModel.multiplier(multiplier);
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
         expect(clockViewModel.multiplier()).toEqual(-multiplier);
     });
 
@@ -251,7 +251,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = 100;
         clockViewModel.multiplier(multiplier);
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
         expect(clockViewModel.multiplier()).toEqual(-multiplier);
     });
 
@@ -271,7 +271,7 @@ defineSuite([
         //Play in reverse while clamped
         clockViewModel.multiplier(-1);
         clockViewModel.clockRange(ClockRange.CLAMPED);
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
 
         verifyReverseState(viewModel);
 
@@ -284,7 +284,7 @@ defineSuite([
         //Animate in reverse again.
         clockViewModel.currentTime(centerTime);
         clockViewModel.clockRange(ClockRange.LOOP_STOP);
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
 
         verifyReverseState(viewModel);
 
@@ -295,12 +295,12 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Reversing in start state while bounded should have no effect
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
         verifyPausedState(viewModel);
 
         //Set to unbounded and reversing should be okay
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
         verifyReverseState(viewModel);
     });
 
@@ -319,7 +319,7 @@ defineSuite([
 
         //Play forward while clamped
         clockViewModel.currentTime(centerTime);
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
         verifyForwardState(viewModel);
 
         //Set current time to stop time, which won't stop while dragging
@@ -333,7 +333,7 @@ defineSuite([
 
         //Do the same thing with start time
         clockViewModel.currentTime(centerTime);
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
         verifyReverseState(viewModel);
 
         viewModel.shuttleRingDragging(true);
@@ -362,7 +362,7 @@ defineSuite([
         //Play forward while clamped
         clockViewModel.multiplier(1);
         clockViewModel.clockRange(ClockRange.CLAMPED);
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
 
         verifyForwardState(viewModel);
 
@@ -373,12 +373,12 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Playing in stop state while bounded should have no effect
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
         verifyPausedState(viewModel);
 
         //Set to unbounded and playing should be okay
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
         verifyForwardState(viewModel);
     });
 
@@ -439,36 +439,36 @@ defineSuite([
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
         clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
-        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
-        expect(viewModel.playRealtimeViewModel.tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
+        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
 
         //CLAMPED but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange(ClockRange.CLAMPED);
         clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
-        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(false);
-        expect(viewModel.playRealtimeViewModel.tooltip()).toEqual('Current time not in range');
+        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Current time not in range');
 
         //CLAMPED but available when start/stop time includes realtime
         clockViewModel.clockRange(ClockRange.CLAMPED);
         clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(60));
-        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
-        expect(viewModel.playRealtimeViewModel.tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
+        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
 
         //LOOP_STOP but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange(ClockRange.LOOP_STOP);
         clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(-30));
-        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(false);
-        expect(viewModel.playRealtimeViewModel.tooltip()).toEqual('Current time not in range');
+        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Current time not in range');
 
         //LOOP_STOP but available when start/stop time includes realtime
         clockViewModel.clockRange(ClockRange.LOOP_STOP);
         clockViewModel.startTime(clockViewModel.systemTime().addSeconds(-60));
         clockViewModel.stopTime(clockViewModel.systemTime().addSeconds(60));
-        expect(viewModel.playRealtimeViewModel.command.canExecute()).toEqual(true);
-        expect(viewModel.playRealtimeViewModel.tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
+        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
     });
 
     it('User action breaks out of realtime mode', function() {
@@ -477,32 +477,32 @@ defineSuite([
         clockViewModel.clockStep(ClockStep.TICK_DEPENDENT);
         clockViewModel.clockRange(ClockRange.UNBOUNDED);
 
-        viewModel.playRealtimeViewModel.command();
+        viewModel.getPlayRealtimeViewModel().command();
         verifyRealtimeState(viewModel);
         expect(clockViewModel.multiplier()).toEqual(1);
 
         //Pausing breaks realtime state
-        viewModel.pauseViewModel.command();
+        viewModel.getPauseViewModel().command();
         verifyPausedState(viewModel);
         expect(clockViewModel.multiplier()).toEqual(1);
 
-        viewModel.playRealtimeViewModel.command();
+        viewModel.getPlayRealtimeViewModel().command();
         verifyRealtimeState(viewModel);
 
         //Reverse breaks realtime state
-        viewModel.playReverseViewModel.command();
+        viewModel.getPlayReverseViewModel().command();
         verifyReverseState(viewModel);
         expect(clockViewModel.multiplier()).toEqual(-1);
 
-        viewModel.playRealtimeViewModel.command();
+        viewModel.getPlayRealtimeViewModel().command();
         verifyRealtimeState(viewModel);
 
         //Play breaks realtime state
-        viewModel.playForwardViewModel.command();
+        viewModel.getPlayForwardViewModel().command();
         verifyForwardState(viewModel);
         expect(clockViewModel.multiplier()).toEqual(1);
 
-        viewModel.playRealtimeViewModel.command();
+        viewModel.getPlayRealtimeViewModel().command();
         verifyRealtimeState(viewModel);
 
         //Shuttle ring change breaks realtime state
@@ -514,14 +514,14 @@ defineSuite([
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
-        viewModel.playRealtimeViewModel.command();
+        viewModel.getPlayRealtimeViewModel().command();
         verifyRealtimeState(viewModel);
 
         clockViewModel.shouldAnimate(false);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
 
         clockViewModel.shouldAnimate(true);
-        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(true);
+        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(true);
     });
 
     it('Shuttle ring angles set expected multipliers', function() {

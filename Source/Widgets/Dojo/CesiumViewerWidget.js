@@ -972,9 +972,9 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 animationViewModel = new AnimationViewModel(clockViewModel);
             }
             this.animationViewModel = animationViewModel;
-            this.clockViewModel = animationViewModel.clockViewModel;
+            this.clockViewModel = animationViewModel.getClockViewModel();
 
-            this.clock = this.clockViewModel.clock;
+            this.clock = this.clockViewModel.getClock();
             var clock = this.clock;
 
             this.animation = new Animation(this.animationContainer, animationViewModel);
@@ -988,7 +988,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);
             this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
-            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+            this.baseLayerPicker.getViewModel().selectedItem(providerViewModels[0]);
 
             if (typeof endUserOptions.source !== 'undefined') {
                 this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
@@ -1010,7 +1010,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
 
             var homeButton = new HomeButton(this.homeButtonContainer, scene, transitioner, ellipsoid);
             this.homeButton = homeButton;
-            homeButton.viewModel.command.beforeExecute.addEventListener(function() {
+            homeButton.getViewModel().command.beforeExecute.addEventListener(function() {
                 that._viewFromTo = undefined;
             });
 
@@ -1035,7 +1035,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            this.homeButton.viewModel.command();
+            this.homeButton.getViewModel().command();
         },
 
         /**

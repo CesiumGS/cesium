@@ -10,14 +10,16 @@ defineSuite([
 
     it('constructor sets default values', function() {
         var viewModel = new FullscreenButtonViewModel();
-        expect(viewModel.fullscreenElement()).toBe(document.body);
+        expect(viewModel.getFullscreenElement()).toBe(document.body);
+        expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
+        expect(viewModel.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');
         var viewModel = new FullscreenButtonViewModel(testElement);
-        expect(viewModel.fullscreenElement()).toBe(testElement);
+        expect(viewModel.getFullscreenElement()).toBe(testElement);
         viewModel.destroy();
     });
 
@@ -27,5 +29,13 @@ defineSuite([
         viewModel.isFullscreenEnabled(false);
         expect(viewModel.isFullscreenEnabled()).toEqual(false);
         viewModel.destroy();
+    });
+
+    it('can get and set fullscreenElement', function() {
+        var testElement = document.createElement('span');
+        var viewModel = new FullscreenButtonViewModel();
+        expect(viewModel.getFullscreenElement()).toNotBe(testElement);
+        viewModel.setFullscreenElement(testElement);
+        expect(viewModel.getFullscreenElement()).toBe(testElement);
     });
 });
