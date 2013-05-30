@@ -34,7 +34,7 @@ define([
         });
         widget.placeAt('cesiumContainer');
         widget.startup();
-        widget.fullscreen.getViewModel().fullscreenElement(document.body);
+        widget.fullscreen.getViewModel().setFullscreenElement(document.body);
 
         domClass.remove(win.body(), 'loading');
     });
