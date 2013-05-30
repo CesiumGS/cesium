@@ -6,11 +6,9 @@ defineSuite([
              'Specs/MockProperty',
              'DynamicScene/DynamicPoint',
              'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
              'Core/JulianDate',
              'Core/Cartesian3',
              'Core/Color',
-             'Scene/Scene',
              'Scene/BillboardCollection'
             ], function(
               DynamicPointVisualizer,
@@ -19,11 +17,9 @@ defineSuite([
               MockProperty,
               DynamicPoint,
               DynamicObjectCollection,
-              DynamicObject,
               JulianDate,
               Cartesian3,
               Color,
-              Scene,
               BillboardCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

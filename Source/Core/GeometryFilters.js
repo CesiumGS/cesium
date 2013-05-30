@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './DeveloperError',
         './Cartesian3',
+        './Cartesian2',
         './EncodedCartesian3',
         './Matrix3',
         './Matrix4',
@@ -18,6 +19,7 @@ define([
         defaultValue,
         DeveloperError,
         Cartesian3,
+        Cartesian2,
         EncodedCartesian3,
         Matrix3,
         Matrix4,
@@ -854,14 +856,14 @@ define([
      * @exception {DeveloperError} mesh.attributes.position.values.length must be a multiple of 3
      *
      * @example
-     * mesh = GeometryFilters.computeNormals(mesh);
+     * mesh = GeometryFilters.computeNormal(mesh);
      *
      */
     var normal = new Cartesian3();
     var v0 = new Cartesian3();
     var v1 = new Cartesian3();
     var v2 = new Cartesian3();
-    GeometryFilters.computeNormals = function(mesh) {
+    GeometryFilters.computeNormal = function(mesh) {
         if (typeof mesh === 'undefined') {
             throw new DeveloperError('mesh is required.');
         }
@@ -986,6 +988,166 @@ define([
         }
 
         return mesh;
+    };
+
+    /**
+     * Computes the tangent and binormal of all vertices in a geometry
+     * This assumes a counter-clockwise vertex winding order.
+     *
+     * Based on: Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software 3D Graphics Library, 2001. http://www.terathon.com/code/tangent.html
+     *
+     * @param {Geometry} geometry The geometry for which to calculate tangents and binormals, which is modified in place.
+     * @param {Object} geometry.attributes.position The vertices of the geometry
+     * @param {Object} geometry.attributes.normal The normals of the vertices
+     * @param {Object} geometry.attributes.st The texture coordinates
+     *
+     * @returns The modified <code>geometry</code> argument.
+     *
+     * @exception {DeveloperError} geometry.attributes.position.values is required
+     * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry.attributes.normal.values is required
+     * @exception {DeveloperError} geometry.attributes.normal.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry.attributes.st.values is required
+     * @exception {DeveloperError} geometry.attributes.st.values.length must be a multiple of 2
+     *
+     * @example
+     * geometry = GeometryFilters.computeTangentAndBinormal(geometry);
+     *
+     */
+    var normalScratch = new Cartesian3();
+    var normalScale = new Cartesian3();
+    var tScratch = new Cartesian3();
+    GeometryFilters.computeTangentAndBinormal = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+        var attributes = geometry.attributes;
+        if (typeof attributes === 'undefined' || typeof attributes.position === 'undefined' ||
+                typeof attributes.position.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.position.values is required');
+        }
+        var vertices = geometry.attributes.position.values;
+        if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
+            throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
+        }
+        if (typeof attributes.normal === 'undefined' ||
+                typeof attributes.normal.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.normal.values is required');
+        }
+        var normals = geometry.attributes.normal.values;
+        if (geometry.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
+            throw new DeveloperError('geometry.attributes.normals.values.length must be a multiple of 3');
+        }
+        if (typeof attributes.st === 'undefined' ||
+                typeof attributes.st.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.st.values is required');
+        }
+        var st = geometry.attributes.st.values;
+        if (geometry.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
+            throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
+        }
+
+        var indexLists = geometry.indexLists;
+        if (typeof indexLists === 'undefined') {
+            return geometry;
+        }
+
+        var length = indexLists.length;
+        for (var k = 0; k < length; k++) {
+            var indices = indexLists[k].values;
+            if (indexLists[k].primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+                    indices.length < 2 || indices.length % 3 !== 0) {
+                continue;
+            }
+
+            var numVertices = geometry.attributes.position.values.length/3;
+            var numIndices = indices.length;
+            var tan1 = new Array(numVertices*3);
+
+            for (var i = 0; i < tan1.length; i++) {
+                tan1[i] = 0;
+            }
+
+            var i03;
+            var i13;
+            var i23;
+            for (i = 0; i < numIndices; i+=3) {
+                var i0 = indices[i];
+                var i1 = indices[i+1];
+                var i2 = indices[i+2];
+                i03 = i0*3;
+                i13 = i1*3;
+                i23 = i2*3;
+                var i02 = i0*2;
+                var i12 = i1*2;
+                var i22 = i2*2;
+
+                var ux = vertices[i03];
+                var uy = vertices[i03+1];
+                var uz = vertices[i03+2];
+
+                var wx = st[i02];
+                var wy = st[i02+1];
+                var t1 = st[i12+1] - wy;
+                var t2 = st[i22+1] - wy;
+
+                var r = 1.0/((st[i12] - wx) * t2 - (st[i22] - wx) * t1);
+                var sdirx = (t2 * (vertices[i13] - ux) - t1 * (vertices[i23] - ux)) * r;
+                var sdiry = (t2 * (vertices[i13+1] - uy) - t1 * (vertices[i23+1] - uy)) * r;
+                var sdirz = (t2 * (vertices[i13+2] - uz) - t1 * (vertices[i23+2] - uz)) * r;
+
+                tan1[i03] += sdirx;
+                tan1[i03+1] += sdiry;
+                tan1[i03+2] += sdirz;
+
+                tan1[i13] += sdirx;
+                tan1[i13+1] += sdiry;
+                tan1[i13+2] += sdirz;
+
+                tan1[i23] += sdirx;
+                tan1[i23+1] += sdiry;
+                tan1[i23+2] += sdirz;
+            }
+            var binormalValues = new Array(numVertices * 3);
+            var tangentValues = new Array(numVertices * 3);
+            for (i = 0; i < numVertices; i++) {
+                i03 = i*3;
+                i13 = i03+1;
+                i23 = i03+2;
+
+                var n = Cartesian3.fromArray(normals, i03, normalScratch);
+                var t = Cartesian3.fromArray(tan1, i03, tScratch);
+                var scalar = n.dot(t);
+                n.multiplyByScalar(scalar, normalScale);
+                t.subtract(normalScale, t).normalize(t);
+                tangentValues[i03] = t.x;
+                tangentValues[i13] = t.y;
+                tangentValues[i23] = t.z;
+                n.cross(t, t).normalize(t);
+                binormalValues[i03] = t.x;
+                binormalValues[i13] = t.y;
+                binormalValues[i23] = t.z;
+            }
+            if (typeof geometry.attributes.tangent === 'undefined') {
+                geometry.attributes.tangent = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: tangentValues
+                });
+            } else {
+                geometry.attributes.tangent.values = tangentValues;
+            }
+            if (typeof geometry.attributes.binormal === 'undefined') {
+                geometry.attributes.binormal = new GeometryAttribute({
+                        componentDatatype: ComponentDatatype.FLOAT,
+                        componentsPerAttribute: 3,
+                        values: binormalValues
+                });
+            } else {
+                geometry.attributes.binormal.values = binormalValues;
+            }
+        }
+        return geometry;
     };
 
     return GeometryFilters;

@@ -6,10 +6,8 @@ defineSuite([
          'Specs/createCamera',
          'Specs/createFrameState',
          'Specs/frameState',
-         'Specs/pick',
          'Specs/render',
          'Core/BoundingRectangle',
-         'Core/Cartesian3',
          'Core/Color',
          'Renderer/ClearCommand',
          'Scene/Material'
@@ -20,10 +18,8 @@ defineSuite([
          createCamera,
          createFrameState,
          frameState,
-         pick,
          render,
          BoundingRectangle,
-         Cartesian3,
          Color,
          ClearCommand,
          Material) {

@@ -253,7 +253,7 @@ define([
 
         property = dynamicPolyline.outlineWidth;
         if (typeof property !== 'undefined') {
-            uniforms.outlineWidth = property.getValue(time, uniforms.outlineWidth);
+            uniforms.outlineWidth = property.getValue(time);
         }
 
         property = dynamicPolyline.width;

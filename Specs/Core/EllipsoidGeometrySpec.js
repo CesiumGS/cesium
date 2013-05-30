@@ -70,7 +70,7 @@ defineSuite([
             expect(position.magnitude()).toEqualEpsilon(1.0, CesiumMath.EPSILON10);
             expect(normal).toEqualEpsilon(position.normalize(), CesiumMath.EPSILON10);
             expect(Cartesian3.dot(Cartesian3.UNIT_Z, tangent)).not.toBeLessThan(0.0);
-            expect(binormal).toEqualEpsilon(Cartesian3.cross(tangent, normal), CesiumMath.EPSILON10);
+            expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent), CesiumMath.EPSILON10);
         }
     });
 

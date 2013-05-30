@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
+define(function() {
     "use strict";
 
     var _supportsFullscreen;

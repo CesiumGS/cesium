@@ -1,7 +1,6 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoundingSphere',
-         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Cartographic',
@@ -14,7 +13,6 @@ defineSuite([
          'Core/Matrix4'
      ], function(
          BoundingSphere,
-         Cartesian2,
          Cartesian3,
          Cartesian4,
          Cartographic,
@@ -285,6 +283,15 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var expected = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
         expect(BoundingSphere.fromExtent3D(extent, ellipsoid)).toEqual(expected);
+    });
+
+    it('fromExtent3D with height', function() {
+        var extent = new Extent(0.1, -0.3, 0.2, -0.4);
+        var height = 100000.0;
+        var ellipsoid = Ellipsoid.WGS84;
+        var points = extent.subsample(ellipsoid, height);
+        var expected = BoundingSphere.fromPoints(points);
+        expect(BoundingSphere.fromExtent3D(extent, ellipsoid, height)).toEqual(expected);
     });
 
     it('fromCornerPoints', function() {

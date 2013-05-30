@@ -16,7 +16,7 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     
     vec2 st = materialInput.st;
     
-    float base = 1.0 - abs(dFdx(st.s)) * 10.0;
+    float base = 1.0 - abs(fwidth(st.s)) * 10.0;
     vec2 center = vec2(1.0, 0.5);
     float ptOnUpperLine = getPointOnLine(vec2(base, 1.0), center, st.s);
     float ptOnLowerLine = getPointOnLine(vec2(base, 0.0), center, st.s);

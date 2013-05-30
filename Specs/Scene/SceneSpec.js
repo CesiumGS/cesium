@@ -1,6 +1,5 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Scene',
          'Core/Color',
          'Core/Cartesian3',
          'Core/BoundingSphere',
@@ -8,8 +7,7 @@ defineSuite([
          'Renderer/CommandLists',
          'Specs/createScene',
          'Specs/destroyScene'
-     ], function(
-         Scene,
+     ], 'Scene/Scene', function(
          Color,
          Cartesian3,
          BoundingSphere,

@@ -4,7 +4,6 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/PrimitiveType',
-         'Core/Cartesian2',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/PixelFormat'
@@ -13,7 +12,6 @@ defineSuite([
          createContext,
          destroyContext,
          PrimitiveType,
-         Cartesian2,
          BufferUsage,
          ClearCommand,
          PixelFormat) {

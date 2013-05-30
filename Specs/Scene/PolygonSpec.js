@@ -178,18 +178,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('configures extent', function() {
-        var extent = new Extent(
-            0.0,
-            0.0,
-            CesiumMath.toRadians(10.0),
-            CesiumMath.toRadians(10.0)
-        );
-
-        polygon.configureExtent(extent);
-        expect(polygon.getPositions()).not.toBeDefined();
-    });
-
     it('gets the default color', function() {
         expect(polygon.material.uniforms.color).toEqual({
             red : 1.0,
@@ -214,32 +202,6 @@ defineSuite([
     it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
         polygon = createPolygon();
-        polygon.material.uniforms.color = {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-    });
-
-    it('renders extent', function() {
-        // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.ellipsoid = ellipsoid;
-        polygon.granularity = CesiumMath.toRadians(20.0);
-        polygon.configureExtent(new Extent(
-            0.0,
-            0.0,
-            CesiumMath.toRadians(10.0),
-            CesiumMath.toRadians(10.0)
-        ));
         polygon.material.uniforms.color = {
             red : 1.0,
             green : 0.0,
@@ -308,21 +270,6 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.configureFromPolygonHierarchy(hierarchy);
-
-        expect(render(context, frameState, polygon)).toEqual(0);
-    });
-
-    it('does not render with empty extent', function() {
-        var extent = new Extent(
-            0.0,
-            0.0,
-            0.0,
-            0.0
-        );
-
-        polygon = new Polygon();
-        polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
-        polygon.configureExtent(extent);
 
         expect(render(context, frameState, polygon)).toEqual(0);
     });
@@ -397,57 +344,6 @@ defineSuite([
 
     it('test 2D bounding sphere from positions', function() {
         test2DBoundingSphereFromPositions(SceneMode.SCENE2D);
-    });
-
-    it('test 3D bounding sphere from extent', function() {
-        var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var extent = new Extent(
-                0.0,
-                0.0,
-                CesiumMath.toRadians(10.0),
-                CesiumMath.toRadians(10.0));
-
-        var polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.configureExtent(extent);
-
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent, ellipsoid));
-    });
-
-    function test2DBoundingSphereFromExtent(testMode) {
-        var projection = frameState.scene2D.projection;
-        var ellipsoid = projection.getEllipsoid();
-        var extent = new Extent(
-                0.0,
-                0.0,
-                CesiumMath.toRadians(10.0),
-                CesiumMath.toRadians(10.0));
-
-        var polygon = new Polygon();
-        polygon.ellipsoid = ellipsoid;
-        polygon.configureExtent(extent);
-
-        var mode = frameState.mode;
-        frameState.mode = testMode;
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        frameState.mode = mode;
-
-        var sphere = BoundingSphere.fromExtent2D(extent, projection);
-        sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume).toEqualEpsilon(sphere, CesiumMath.EPSILON9);
-    }
-
-    it('test 2D bounding sphere from extent', function() {
-        test2DBoundingSphereFromExtent(SceneMode.COLUMBUS_VIEW);
-    });
-
-    it('test 2D bounding sphere from extent', function() {
-        test2DBoundingSphereFromExtent(SceneMode.SCENE2D);
     });
 
     it('isDestroyed', function() {

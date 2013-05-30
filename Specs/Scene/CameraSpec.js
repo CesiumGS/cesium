@@ -1,30 +1,16 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/Camera',
-         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
-         'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/GeographicProjection',
-         'Core/Extent',
          'Core/Math',
-         'Core/Matrix4',
-         'Scene/OrthographicFrustum',
-         'Scene/PerspectiveFrustum'
+         'Core/Matrix4'
      ], function(
          Camera,
-         Cartesian2,
          Cartesian3,
          Cartesian4,
-         Cartographic,
-         Ellipsoid,
-         GeographicProjection,
-         Extent,
          CesiumMath,
-         Matrix4,
-         OrthographicFrustum,
-         PerspectiveFrustum) {
+         Matrix4) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

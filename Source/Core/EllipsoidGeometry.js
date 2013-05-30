@@ -262,8 +262,8 @@ define([
 
             for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
-                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                Cartesian3.cross(tangent, normal, binormal);
+                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
 
                 if (vertexFormat.normal) {
                     normals[j] = normal.x;
@@ -343,8 +343,6 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 

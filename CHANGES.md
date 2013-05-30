@@ -10,17 +10,23 @@ Beta Releases
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
       * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Replaced `ExtentTessletaor` with `ExtentGeometry`.
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryFilters`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.    
+   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
+   * Removed `Polygon.configureExtent`.
+   * Added `height` parameter to `BoundingSphere.fromExtent3D`.
+   * Added `height` parameter to `Extent.subsample`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added `GeometryFilters.combine` to combine meshes for better batching.
-* Added `GeometryFilters.computeNormals` to find the normals of vertices in a mesh.
+* Added `GeometryFilters.computeNormal` to find the normals of vertices in a mesh.
+* Added `GeometryFilters.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added `WallGeometry` and `PolygonGeometry`.
 * Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 
 ### b17 - 2013-06-03
@@ -30,21 +36,25 @@ Beta Releases
    * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
+* Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
 * Added support for floating-point textures.
-* Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
 * Added `IntersectionTests.trianglePlaneIntersection`.
-* Fixed polygon crossing International Date Line for 2D and Columbus view. [#99](https://github.com/AnalyticalGraphicsInc/cesium/issues/99).
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
 * Added sun visualization. See `Sun` and `Scene.sun`.
 * Added a new `HomeButton` widget for returning to the default view of the current scene mode.
 * Added `Command.beforeExecute` and `Command.afterExecute` events to enable additional processing when a command is executed.
 * Added rotation parameter to `Polygon.configureExtent`.
 * Added camera flight to extents.  See new methods `CameraController.getExtentCameraCoordinates` and `CameraFlightPath.createAnimationExtent`.
+* Improved the load ordering of terrain and imagery tiles, so that relevant detail is now more likely to be loaded first.
+* Improved appearance of the Polyline arrow material.
+* Fixed polyline clipping artifact. [#728](https://github.com/AnalyticalGraphicsInc/cesium/issues/728).
+* Fixed polygon crossing International Date Line for 2D and Columbus view. [#99](https://github.com/AnalyticalGraphicsInc/cesium/issues/99).
 * Fixed issue for camera flights when `frameState.mode === SceneMode.MORPHING`
+* Fixed ISO8601 date parsing when UTC offset is specified in the extended format, such as `2008-11-10T14:00:00+02:30`.
 
 ### b16 - 2013-05-01
 
