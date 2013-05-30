@@ -12,7 +12,7 @@ Beta Releases
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
    * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
-   * Streamlined the Widgets layer so that they follow a consistent API.  All public, non-Observable properties have been removed and replaced with equivalent get/set functions.  While this is a fairly large change, most users should not be affected.  If you are affected, the changes are all easy to make.  For example:
+   * Changed all widgets so that they now have an API consistent with the rest of Cesium.  All public, non-Observable properties have been removed and replaced with equivalent get/set functions.  While this is a fairly large change, most users should not be affected.  If you are affected, the changes are all easy to make.  For example:
       * homeButton.viewModel; -> homeButton.getViewModel();
       * cesiumWidget.scene => cesiumWidget.getScene();
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
