@@ -59,11 +59,10 @@ defineSuite([
             });
             sp.getAllUniforms().u_texture.value = cm;
 
-            var va = context.createVertexArray();
-            va.addAttribute({
+            var va = context.createVertexArray([{
                 vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
-            });
+            }]);
 
             var da = {
                 primitiveType : PrimitiveType.POINTS,

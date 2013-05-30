@@ -5,7 +5,6 @@ define([
         'Core/defaultValue',
         'Core/JulianDate',
         'Scene/Camera',
-        'Scene/SceneMode',
         'Scene/FrameState'
     ], function(
         Ellipsoid,
@@ -13,7 +12,6 @@ define([
         defaultValue,
         JulianDate,
         Camera,
-        SceneMode,
         FrameState) {
     "use strict";
 

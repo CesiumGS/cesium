@@ -3,20 +3,18 @@ define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
-        '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
         '../Scene/Material'
-       ], function(
-         defaultValue,
-         DeveloperError,
-         destroyObject,
-         Color,
-         Matrix3,
-         Matrix4,
-         EllipsoidPrimitive,
-         Material) {
+    ], function(
+        defaultValue,
+        DeveloperError,
+        destroyObject,
+        Matrix3,
+        Matrix4,
+        EllipsoidPrimitive,
+        Material) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();

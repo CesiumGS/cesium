@@ -6,7 +6,6 @@ define([
         '../Core/TimeInterval',
         '../Core/DeveloperError',
         './DynamicObject',
-        './DynamicObjectCollection',
         './CzmlDefaults'
     ], function(
         defaultValue,
@@ -15,7 +14,6 @@ define([
         TimeInterval,
         DeveloperError,
         DynamicObject,
-        DynamicObjectCollection,
         CzmlDefaults) {
     "use strict";
 
