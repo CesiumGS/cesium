@@ -175,7 +175,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             terrainProvider : provider
         });
-        expect(viewer.cesiumWidget.centralBody.terrainProvider).toBe(provider);
+        expect(viewer.cesiumWidget.getCentralBody().terrainProvider).toBe(provider);
         viewer.destroy();
     });
 
@@ -184,7 +184,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             fullscreenElement : testElement
         });
-        expect(viewer.fullscreenButton.viewModel.fullscreenElement()).toBe(testElement);
+        expect(viewer.fullscreenButton.getViewModel().getFullscreenElement()).toBe(testElement);
         viewer.destroy();
     });
 
@@ -192,7 +192,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
-        expect(viewer.cesiumWidget.scene.mode).toBe(SceneMode.SCENE2D);
+        expect(viewer.cesiumWidget.getScene().mode).toBe(SceneMode.SCENE2D);
         viewer.destroy();
     });
 
@@ -215,9 +215,9 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.cesiumWidget.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.cesiumWidget.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem()).toBe(testProviderViewModel);
+        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.baseLayerPicker.getViewModel().selectedItem()).toBe(testProviderViewModel);
         viewer.destroy();
     });
 
@@ -226,10 +226,10 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.cesiumWidget.centralBody.getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.cesiumWidget.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.viewModel.selectedItem()).toBe(testProviderViewModel);
-        expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels()).toBe(models);
+        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.baseLayerPicker.getViewModel().selectedItem()).toBe(testProviderViewModel);
+        expect(viewer.baseLayerPicker.getViewModel().imageryProviderViewModels()).toBe(models);
         viewer.destroy();
     });
 

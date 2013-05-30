@@ -36,10 +36,11 @@ define(['../../Core/Cartesian2',
                 Timeline) {
     "use strict";
 
-    function setLogoOffset(widget, logoOffsetX, logoOffsetY) {
-        var logoOffset = widget.centralBody.logoOffset;
+    function setLogoOffset(centralBody, logoOffsetX, logoOffsetY) {
+        var logoOffset = centralBody.logoOffset;
         if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
-            widget.centralBody.logoOffset = new Cartesian2(logoOffsetX, logoOffsetY);
+            centralBody.logoOffset.x = logoOffsetX;
+            centralBody.logoOffset.y = logoOffsetY;
         }
     }
 
@@ -106,17 +107,17 @@ define(['../../Core/Cartesian2',
 
         //Subscribe for resize events and set the initial size.
         this._resizeCallback = function() {
-            setLogoOffset(cesiumWidget, cesiumWidget.cesiumLogo.offsetWidth + cesiumWidget.cesiumLogo.offsetLeft + 10, 28);
+            setLogoOffset(cesiumWidget.getCentralBody(), cesiumWidget.getLogo().offsetWidth + cesiumWidget.getLogo().offsetLeft + 10, 28);
         };
         window.addEventListener('resize', this._resizeCallback, false);
         this._resizeCallback();
 
-        var clock = cesiumWidget.clock;
+        var clock = cesiumWidget.getClock();
 
         //Data source display
-        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
+        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.getScene());
         this._dataSourceDisplay = dataSourceDisplay;
-        cesiumWidget.clock.onTick.addEventListener(this._onTick, this);
+        clock.onTick.addEventListener(this._onTick, this);
 
         var toolbar = document.createElement('div');
         this._toolbar = toolbar;
@@ -129,7 +130,7 @@ define(['../../Core/Cartesian2',
             var homeButtonContainer = document.createElement('div');
             homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
             toolbar.appendChild(homeButtonContainer);
-            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.centralBody.ellipsoid);
+            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.getScene(), cesiumWidget.getTransitioner(), cesiumWidget.getCentralBody().getEllipsoid());
         }
 
         //SceneModePicker
@@ -138,7 +139,7 @@ define(['../../Core/Cartesian2',
             var sceneModePickerContainer = document.createElement('div');
             sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
             toolbar.appendChild(sceneModePickerContainer);
-            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.transitioner);
+            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.getTransitioner());
         }
 
         //BaseLayerPicker
@@ -148,8 +149,8 @@ define(['../../Core/Cartesian2',
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
-            baseLayerPicker.viewModel.selectedItem(defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]));
+            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.getCentralBody().getImageryLayers(), providerViewModels);
+            baseLayerPicker.getViewModel().selectedItem(defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]));
         }
 
         //Animation
@@ -259,7 +260,7 @@ define(['../../Core/Cartesian2',
                 if (firstTime) {
                     var dataClock = czmlSource.getClock();
                     if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.cesiumWidget.clock);
+                        dataClock.clone(viewer.cesiumWidget.getClock());
                         viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                     }
                 }
@@ -389,7 +390,7 @@ define(['../../Core/Cartesian2',
         }
 
         if (typeof this.animation !== 'undefined') {
-            this.container.removeChild(this.animation.container);
+            this.container.removeChild(this.animation.getContainer());
             this.animation = this.animation.destroy();
         }
 
@@ -400,11 +401,11 @@ define(['../../Core/Cartesian2',
         }
 
         if (typeof this.fullscreenButton !== 'undefined') {
-            this.container.removeChild(this.fullscreenButton.container);
+            this.container.removeChild(this.fullscreenButton.getContainer());
             this.fullscreenButton = this.fullscreenButton.destroy();
         }
 
-        this.cesiumWidget.clock.onTick.removeEventListener(this._onTick, this);
+        this.cesiumWidget.getClock().onTick.removeEventListener(this._onTick, this);
         this.cesiumWidget = this.cesiumWidget.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);

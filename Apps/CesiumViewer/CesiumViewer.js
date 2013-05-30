@@ -48,7 +48,7 @@ define(['dojo/_base/window',
     }
 
     function initViewFromTo(dynamicObject) {
-        viewFromTo = new DynamicObjectView(dynamicObject, scene, viewer.cesiumWidget.ellipsoid);
+        viewFromTo = new DynamicObjectView(dynamicObject, scene, viewer.cesiumWidget.getEllipsoid());
     }
 
     function cancelViewFromTo() {
@@ -62,10 +62,10 @@ define(['dojo/_base/window',
 
         var container = document.getElementById('cesiumContainer');
         viewer = new Viewer(container);
-        scene = viewer.cesiumWidget.scene;
+        scene = viewer.cesiumWidget.getScene();
         viewer.enableDragAndDrop(document.body, onError);
-        viewer.cesiumWidget.clock.onTick.addEventListener(onTick);
-        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(cancelViewFromTo);
+        viewer.cesiumWidget.getClock().onTick.addEventListener(onTick);
+        viewer.homeButton.getViewModel().command.beforeExecute.addEventListener(cancelViewFromTo);
         viewer.cesiumWidget.screenSpaceEventHandler.setInputAction(onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
 
         /*
@@ -95,7 +95,7 @@ define(['dojo/_base/window',
 
                 var dataClock = source.getClock();
                 if (typeof dataClock !== 'undefined') {
-                    dataClock.clone(viewer.cesiumWidget.clock);
+                    dataClock.clone(viewer.cesiumWidget.getClock());
                     viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                 }
 

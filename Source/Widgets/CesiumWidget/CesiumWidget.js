@@ -168,10 +168,10 @@ define(['../../Core/buildModuleUrl',
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
-                this.transitioner.to2D();
+                this._transitioner.to2D();
             }
             if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                this.transitioner.toColumbusView();
+                this._transitioner.toColumbusView();
             }
         }
 
