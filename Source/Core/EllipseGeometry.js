@@ -2,17 +2,13 @@
 define([
         './defaultValue',
         './BoundingSphere',
-        './Cartesian2',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
         './DeveloperError',
         './Ellipsoid',
-        './GeographicProjection',
         './GeometryAttribute',
         './GeometryIndices',
         './Math',
-        './Matrix2',
         './Matrix3',
         './Matrix4',
         './PrimitiveType',
@@ -21,17 +17,13 @@ define([
     ], function(
         defaultValue,
         BoundingSphere,
-        Cartesian2,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
         DeveloperError,
         Ellipsoid,
-        GeographicProjection,
         GeometryAttribute,
         GeometryIndices,
         CesiumMath,
-        Matrix2,
         Matrix3,
         Matrix4,
         PrimitiveType,
@@ -39,10 +31,16 @@ define([
         VertexFormat) {
     "use strict";
 
+    var rotAxis = new Cartesian3();
+    var tempVec = new Cartesian3();
+    var unitQuat = new Quaternion();
+    var rotMtx = new Matrix3();
+
     function pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
         var azimuth = theta + bearing;
-        var rotAxis = Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth));
-        var tempVec = Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth));
+
+        Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth), rotAxis);
+        Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth), tempVec);
         Cartesian3.add(rotAxis, tempVec, rotAxis);
 
         var cosThetaSquared = Math.cos(theta);
@@ -55,8 +53,8 @@ define([
         var angle = radius / mag;
 
         // Create the quaternion to rotate the position vector to the boundary of the ellipse.
-        var unitQuat = Quaternion.fromAxisAngle(rotAxis, angle);
-        var rotMtx = Matrix3.fromQuaternion(unitQuat);
+        Quaternion.fromAxisAngle(rotAxis, angle, unitQuat);
+        Matrix3.fromQuaternion(unitQuat, rotMtx);
 
         Matrix3.multiplyByVector(rotMtx, unitPos, result);
         Cartesian3.normalize(result, result);
@@ -178,16 +176,8 @@ define([
         // for the whole ellipse. Note: this is just an estimate and may actually be less depending
         // on the number of iterations before the angle reaches pi/2.
         var size = 2 * numPts * (numPts + 1);
-
         var positions = new Array(size * 3);
         var positionIndex = 0;
-
-        var rotation = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(unitPos, bearing));
-        var rotatedNorthVec = Matrix3.multiplyByVector(rotation, northVec);
-        var rotatedEastVec = Matrix3.multiplyByVector(rotation, eastVec);
-        Cartesian3.normalize(rotatedNorthVec, rotatedNorthVec);
-        Cartesian3.normalize(rotatedEastVec, rotatedEastVec);
-
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
 
@@ -198,6 +188,7 @@ define([
         var t;
         var interiorPosition;
 
+        // Compute points in the 'northern' half of the ellipse
         for (i = 0, theta = CesiumMath.PI_OVER_TWO; i < numPts && theta > 0; ++i, theta -= deltaTheta) {
             pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
             pointOnEllipsoid(Math.PI - theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
@@ -220,8 +211,10 @@ define([
             positions[positionIndex++] = reflectedPosition.z;
         }
 
+        // Set numPts if theta reached zero
         numPts = i;
 
+        // Compute points in the 'northern' half of the ellipse
         for (i = numPts; i > 0; --i) {
             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
