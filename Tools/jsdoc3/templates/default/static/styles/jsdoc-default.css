@@ -2,9 +2,17 @@ body
 {
     font-size: 0.75em;
     font-family: Arial, Geneva, sans serif;
-    padding: 15px 0;
+    margin: 0;
     color: #000;
     height: 100%;
+    background-color:transparent;
+}
+
+div.show-bkgd {
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
     background-attachment: fixed !important;
     background-repeat: no-repeat;
     background-repeat: no-repeat;
@@ -15,6 +23,10 @@ body
     background: -o-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* Opera 11.10+ */
     background: -ms-linear-gradient(top,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* IE10+ */
     background: linear-gradient(to bottom,  #67addf 3%,#ffffff 50%,#5c8727 100%); /* W3C */
+}
+
+.hide {
+    display: none;
 }
 
 div.hr {
@@ -56,7 +68,6 @@ header
     float: left;
     width: 70%;
     min-width: 300px;
-    max-width: 850px;
 }
 
 .embedded #main {
@@ -69,9 +80,29 @@ header
 .popout {
     display: block;
     position: absolute;
-    top: 8px;
+    top: 27px;
     right: 10px;
     font-size: 12pt;
+    height: 12px;
+    width: 12px;
+    background: url('../icons/popout.png') bottom;
+}
+.popout:hover {
+    background-position: 0 0;
+}
+
+.back {
+    display: block;
+    position: absolute;
+    height: 12px;
+    width: 12px;
+    top: 27px;
+    left: 35px;
+    font-size: 12pt;
+    background: url('../icons/home.png') bottom;
+}
+.back:hover {
+    background-position: 0 0;
 }
 
 section
@@ -120,7 +151,7 @@ div.menu
 
 #mainIndex div.menu {
     border-radius: 15px;
-    margin: 5px;
+    margin: 25px;
     padding: 15px;
 }
 
@@ -306,17 +337,17 @@ footer {
 
 .page-title
 {
+    text-align: center;
     font-size: 2em;
     font-weight: bold;
     letter-spacing: 2px;
     line-height: 1em;
     position: relative;
     left: 10px;
-    margin: -30px 0 15px 10px;
     -moz-border-radius: 15px;
     -webkit-border-radius: 15px;
     border-radius: 15px;
-    padding: 25px 15px 15px 15px;
+    padding: 15px;
     background-color: #FFFFFF;
     background-color: rgba(255, 255, 255, 1.0);
     -moz-box-shadow: 0px 0px 10px #B2CCF0;
@@ -519,4 +550,14 @@ h6
     .colorSwath {
         display: none;
     }
+}
+
+.permalink:link, .permalink:active, .permalink:visited  {
+    text-decoration: none;
+    color: #A35A00;
+}
+
+.permalink:hover {
+    text-decoration: none;
+    border-bottom: 1px solid #A35A00;
 }

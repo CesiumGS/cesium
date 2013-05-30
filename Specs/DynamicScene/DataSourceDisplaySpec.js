@@ -1,21 +1,18 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/DataSourceDisplay',
-             'Core/Event',
-             'Core/Iso8601',
-             'Core/JulianDate',
-             'DynamicScene/DynamicObjectCollection',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'Specs/MockDataSource'
-            ], function(
-                    DataSourceDisplay,
-                    Event,
-                    Iso8601,
-                    JulianDate,
-                    DynamicObjectCollection,
-                    createScene,
-                    destroyScene,
-                    MockDataSource) {
+defineSuite([
+         'DynamicScene/DataSourceDisplay',
+         'Core/Iso8601',
+         'Core/JulianDate',
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/MockDataSource'
+     ], function(
+         DataSourceDisplay,
+         Iso8601,
+         JulianDate,
+         createScene,
+         destroyScene,
+         MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -92,7 +89,7 @@ defineSuite(['DynamicScene/DataSourceDisplay',
         expect(display.isDestroyed()).toEqual(true);
     });
 
-    it('update identifies temporarl/non-time-varying sources and updates them accordingly', function() {
+    it('update identifies time-varying/non-time-varying sources and updates them accordingly', function() {
         var staticSource = new MockDataSource();
         var dynamicSource = new MockDataSource();
         dynamicSource.isTimeVarying = true;

@@ -20,11 +20,11 @@ defineSuite(['DynamicScene/CzmlDataSource',
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var staticCzml = {
-            'id' : 'test',
-            'billboard' : {
-                'show' : true
-            }
-        };
+        'id' : 'test',
+        'billboard' : {
+            'show' : true
+        }
+    };
 
     var dynamicCzml = {
         id : 'test',

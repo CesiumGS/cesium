@@ -122,7 +122,7 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
-	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
 
 	<!-- properties controlling documentation source-->
 	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />

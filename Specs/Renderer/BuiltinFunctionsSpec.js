@@ -5,11 +5,7 @@ defineSuite([
          'Specs/createCamera',
          'Specs/createFrameState',
          'Core/BoundingRectangle',
-         'Core/Color',
-         'Core/Math',
-         'Core/Matrix4',
          'Core/PrimitiveType',
-         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
          'Renderer/BufferUsage',
@@ -20,11 +16,7 @@ defineSuite([
          createCamera,
          createFrameState,
          BoundingRectangle,
-         Color,
-         CesiumMath,
-         Matrix4,
          PrimitiveType,
-         Cartesian2,
          Cartesian3,
          EncodedCartesian3,
          BufferUsage,
@@ -46,12 +38,11 @@ defineSuite([
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
-        var va = context.createVertexArray();
-        va.addAttribute({
+        var va = context.createVertexArray([{
             index : sp.getVertexAttributes().position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

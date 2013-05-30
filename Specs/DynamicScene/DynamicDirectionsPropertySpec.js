@@ -1,22 +1,14 @@
 /*global defineSuite*/
 defineSuite([
          'DynamicScene/DynamicDirectionsProperty',
-         'DynamicScene/DynamicObjectCollection',
-         'DynamicScene/processCzml',
-         'DynamicScene/CzmlDefaults',
          'Core/JulianDate',
          'Core/Cartesian3',
-         'Core/Spherical',
-         'Core/Math'
+         'Core/Spherical'
      ], function(
           DynamicDirectionsProperty,
-          DynamicObjectCollection,
-          processCzml,
-          CzmlDefaults,
           JulianDate,
           Cartesian3,
-          Spherical,
-          CesiumMath) {
+          Spherical) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

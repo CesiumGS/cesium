@@ -5,7 +5,6 @@ define([
         './Cartesian3',
         './Cartographic',
         './Matrix3',
-        './Plane',
         './QuadraticRealPolynomial',
         './QuarticRealPolynomial'
     ],
@@ -15,7 +14,6 @@ define([
         Cartesian3,
         Cartographic,
         Matrix3,
-        Plane,
         QuadraticRealPolynomial,
         QuarticRealPolynomial) {
     "use strict";
