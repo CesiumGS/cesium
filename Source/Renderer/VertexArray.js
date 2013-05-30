@@ -21,10 +21,13 @@ define([
      * @see {@link Context#createVertexArray}
      * @see {@link Context#createVertexArrayFromMesh}
      */
-    var VertexArray = function(gl, attributes, indexBuffer) {
+    var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
         this._gl = gl;
+        this._vaoExtension = vertexArrayObject;
+        this._vao = vertexArrayObject ? vertexArrayObject.createVertexArrayOES() : undefined;
         this._attributes = [];
         this._indexBuffer = indexBuffer;
+        this._dirty = true;
 
         if (attributes) {
             for ( var i = 0; i < attributes.length; ++i) {
@@ -136,6 +139,7 @@ define([
         }
 
         this._attributes.push(attr);
+        this._dirty = true;
     };
 
     /**
@@ -189,11 +193,7 @@ define([
                 }
             }
 
-            try {
-                this._addAttribute(attribute, index);
-            } catch (e) {
-                throw new DeveloperError(e.message);
-            }
+            this._addAttribute(attribute, index);
         }
     };
 
@@ -208,7 +208,7 @@ define([
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.removeAttribute = function(attribute) {
-        if (attribute) {
+        if (typeof attribute !== 'undefined') {
             if (typeof attribute.index === 'undefined') {
                 throw new DeveloperError('Attribute must have an index.');
             }
@@ -220,6 +220,8 @@ define([
                     return true;
                 }
             }
+
+            this._dirty = true;
         }
 
         return false;
@@ -249,34 +251,47 @@ define([
     };
 
     VertexArray.prototype._bind = function() {
-        var attributes = this._attributes;
-        var gl = this._gl;
-
-        // TODO:  Performance: sort by vertex buffer?
-        for ( var i = 0; i < attributes.length; ++i) {
-            var attribute = attributes[i];
-            if (attribute.enabled) {
-                attribute.vertexAttrib(gl);
-            }
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.bindVertexArrayOES(this._vao);
         }
 
-        if (this._indexBuffer) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer._getBuffer());
+        // VAO is not supported or our VAO needs to be updated.
+        if ((typeof this._vao === 'undefined') || this._dirty) {
+// TODO: recreate VAO?
+            this._dirty = false;
+
+            var attributes = this._attributes;
+            var gl = this._gl;
+
+            for ( var i = 0; i < attributes.length; ++i) {
+                var attribute = attributes[i];
+                if (attribute.enabled) {
+                    attribute.vertexAttrib(gl);
+                }
+            }
+
+            if (typeof this._indexBuffer !== 'undefined') {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this._indexBuffer._getBuffer());
+            }
         }
     };
 
     VertexArray.prototype._unBind = function() {
-        var attributes = this._attributes;
-        var gl = this._gl;
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.bindVertexArrayOES(null);
+        } else {
+            var attributes = this._attributes;
+            var gl = this._gl;
 
-        for ( var i = 0; i < attributes.length; ++i) {
-            var attribute = attributes[i];
-            if (attribute.enabled) {
-                attribute.disableVertexAttribArray(gl);
+            for ( var i = 0; i < attributes.length; ++i) {
+                var attribute = attributes[i];
+                if (attribute.enabled) {
+                    attribute.disableVertexAttribArray(gl);
+                }
             }
-        }
-        if (this._indexBuffer) {
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            if (this._indexBuffer) {
+                gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+            }
         }
     };
 
@@ -358,6 +373,10 @@ define([
         var indexBuffer = this._indexBuffer;
         if (indexBuffer && !indexBuffer.isDestroyed() && indexBuffer.getVertexArrayDestroyable()) {
             indexBuffer.destroy();
+        }
+
+        if (typeof this._vao !== 'undefined') {
+            this._vaoExtension.deleteVertexArrayOES(this._vao);
         }
 
         return destroyObject(this);

@@ -225,6 +225,7 @@ define([
         var textureFilterAnisotropic = gl.getExtension('EXT_texture_filter_anisotropic') || gl.getExtension('WEBKIT_EXT_texture_filter_anisotropic') || gl.getExtension('MOZ_EXT_texture_filter_anisotropic');
         this._textureFilterAnisotropic = textureFilterAnisotropic;
         this._maximumTextureFilterAnisotropy = textureFilterAnisotropic ? gl.getParameter(textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 1.0;
+        this._vertexArrayObject = gl.getExtension('OES_vertex_array_object');
 
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
@@ -738,6 +739,21 @@ define([
     };
 
     /**
+     * Returns <code>true</code> if the OES_vertex_array_object extension is supported.  This
+     * extension can improve performance by reducing the overhead of switching vertex arrays.
+     * When enabled, this extension is automatically used by {@link VertexArray}.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if OES_vertex_array_object is supported; otherwise, <code>false</code>.
+     *
+     * @see <a href='http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/'>OES_vertex_array_object</a>
+     */
+    Context.prototype.getVertexArrayObject = function() {
+        return !!this._vertexArrayObject;
+    };
+
+    /**
      * DOC_TBA
      *
      * @memberof Context
@@ -1176,7 +1192,7 @@ define([
      * var va = context.createVertexArray(attributes);
      */
     Context.prototype.createVertexArray = function(attributes, indexBuffer) {
-        return new VertexArray(this._gl, attributes, indexBuffer);
+        return new VertexArray(this._gl, this._vertexArrayObject, attributes, indexBuffer);
     };
 
     /**
