@@ -2,9 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/destroyObject',
         '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/PolylinePipeline',
         '../Core/Matrix4',
@@ -12,9 +10,7 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
-        destroyObject,
         BoundingSphere,
-        Cartesian3,
         Color,
         PolylinePipeline,
         Matrix4,

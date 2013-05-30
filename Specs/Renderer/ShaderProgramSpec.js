@@ -428,12 +428,11 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             index : sp.getVertexAttributes().position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

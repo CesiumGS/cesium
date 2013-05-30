@@ -12,7 +12,6 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Cartographic',
         '../Core/ComponentDatatype',
         '../Core/GeometryFilters',
         '../Core/PrimitiveType',
@@ -47,7 +46,6 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
-        Cartographic,
         ComponentDatatype,
         GeometryFilters,
         PrimitiveType,
@@ -725,7 +723,7 @@ define([
 
                 command.boundingVolume = boundingVolume;
                 command.primitiveType = PrimitiveType.TRIANGLES;
-                command.shaderProgram = this._sp,
+                command.shaderProgram = this._sp;
                 command.uniformMap = this._drawUniforms;
                 command.vertexArray = vas[i];
                 command.renderState = this._rs;
@@ -760,7 +758,7 @@ define([
 
                 command.boundingVolume = boundingVolume;
                 command.primitiveType = PrimitiveType.TRIANGLES;
-                command.shaderProgram = this._spPick,
+                command.shaderProgram = this._spPick;
                 command.uniformMap = this._pickUniforms;
                 command.vertexArray = vas[j];
                 command.renderState = this._rs;

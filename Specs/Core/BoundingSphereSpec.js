@@ -1,7 +1,6 @@
 /*global defineSuite*/
 defineSuite([
          'Core/BoundingSphere',
-         'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
          'Core/Cartographic',
@@ -14,7 +13,6 @@ defineSuite([
          'Core/Matrix4'
      ], function(
          BoundingSphere,
-         Cartesian2,
          Cartesian3,
          Cartesian4,
          Cartographic,
