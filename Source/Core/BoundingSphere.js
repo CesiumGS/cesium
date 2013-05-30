@@ -2,26 +2,22 @@
 define([
         './defaultValue',
         './DeveloperError',
-        './Cartesian2',
         './Cartesian3',
         './Cartesian4',
         './Cartographic',
         './Ellipsoid',
         './GeographicProjection',
-        './Extent',
         './Intersect',
         './Interval',
         './Matrix4'
     ], function(
         defaultValue,
         DeveloperError,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
         Ellipsoid,
         GeographicProjection,
-        Extent,
         Intersect,
         Interval,
         Matrix4) {

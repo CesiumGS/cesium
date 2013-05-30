@@ -2,18 +2,12 @@
 define([
         './defaultValue',
         './DeveloperError',
-        './Math',
         './Cartesian3',
-        './Visibility',
-        './Ellipsoid',
         './BoundingSphere'
     ], function(
         defaultValue,
         DeveloperError,
-        CesiumMath,
         Cartesian3,
-        Visibility,
-        Ellipsoid,
         BoundingSphere) {
     "use strict";
 
