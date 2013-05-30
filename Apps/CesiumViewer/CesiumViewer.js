@@ -48,7 +48,7 @@ define(['dojo/_base/window',
     }
 
     function initViewFromTo(dynamicObject) {
-        viewFromTo = new DynamicObjectView(dynamicObject, scene, viewer.cesiumWidget.getEllipsoid());
+        viewFromTo = new DynamicObjectView(dynamicObject, scene, viewer.getCentralBody().getEllipsoid());
     }
 
     function cancelViewFromTo() {
@@ -62,11 +62,11 @@ define(['dojo/_base/window',
 
         var container = document.getElementById('cesiumContainer');
         viewer = new Viewer(container);
-        scene = viewer.cesiumWidget.getScene();
+        scene = viewer.getScene();
         viewer.enableDragAndDrop(document.body, onError);
-        viewer.cesiumWidget.getClock().onTick.addEventListener(onTick);
-        viewer.homeButton.getViewModel().command.beforeExecute.addEventListener(cancelViewFromTo);
-        viewer.cesiumWidget.screenSpaceEventHandler.setInputAction(onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.getClock().onTick.addEventListener(onTick);
+        viewer.getHomeButton().getViewModel().command.beforeExecute.addEventListener(cancelViewFromTo);
+        viewer.getScreenSpaceEventHandler().setInputAction(onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
 
         /*
          * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -91,12 +91,12 @@ define(['dojo/_base/window',
         if (typeof endUserOptions.source !== 'undefined') {
             var source = new CzmlDataSource();
             source.loadUrl(endUserOptions.source).then(function() {
-                viewer.dataSources.add(source);
+                viewer.getDataSources().add(source);
 
                 var dataClock = source.getClock();
                 if (typeof dataClock !== 'undefined') {
-                    dataClock.clone(viewer.cesiumWidget.getClock());
-                    viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                    dataClock.clone(viewer.getClock());
+                    viewer.getTimeline().zoomTo(dataClock.startTime, dataClock.stopTime);
                 }
 
                 if (typeof endUserOptions.lookAt !== 'undefined') {
@@ -118,7 +118,7 @@ define(['dojo/_base/window',
         if (typeof theme !== 'undefined') {
             if (endUserOptions.theme === 'lighter') {
                 document.body.classList.add('cesium-lighter');
-                viewer.animation.applyThemeChanges();
+                viewer.getAnimation().applyThemeChanges();
             } else {
                 window.alert('Unknown theme: ' + theme);
             }

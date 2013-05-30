@@ -116,9 +116,9 @@ define(['../../Core/buildModuleUrl',
         var scene = new Scene(canvas);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var _ellipsoid = Ellipsoid.WGS84;
+        var ellipsoid = Ellipsoid.WGS84;
 
-        var centralBody = new CentralBody(_ellipsoid);
+        var centralBody = new CentralBody(ellipsoid);
         centralBody.logoOffset = new Cartesian2(125, 0);
         scene.getPrimitives().setCentralBody(centralBody);
 
@@ -130,7 +130,7 @@ define(['../../Core/buildModuleUrl',
             positiveZ : getDefaultSkyBoxUrl('pz'),
             negativeZ : getDefaultSkyBoxUrl('mz')
         });
-        scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
+        scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
         scene.sun = new Sun();
 
         //Set the base imagery layer
@@ -157,14 +157,8 @@ define(['../../Core/buildModuleUrl',
         this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
-        this._transitioner = new SceneTransitioner(scene, _ellipsoid);
-
-        /**
-         * Gets the screen space event handler.
-         * @memberof CesiumWidget
-         * @type {ScreenSpaceEventHandler}
-         */
-        this.screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
+        this._transitioner = new SceneTransitioner(scene, ellipsoid);
+        this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
@@ -258,8 +252,16 @@ define(['../../Core/buildModuleUrl',
     };
 
     /**
+     * Gets the screen space event handler.
      * @memberof CesiumWidget
-     *
+     * @returns {ScreenSpaceEventHandler}
+     */
+    CesiumWidget.prototype.getScreenSpaceEventHandler = function() {
+        return this._screenSpaceEventHandler;
+    };
+
+    /**
+     * @memberof CesiumWidget
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {

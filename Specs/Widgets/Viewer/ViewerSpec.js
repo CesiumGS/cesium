@@ -9,6 +9,7 @@ defineSuite(['Widgets/Viewer/Viewer',
              'Widgets/SceneModePicker/SceneModePicker',
              'Widgets/Timeline/Timeline',
              'Core/TimeInterval',
+             'DynamicScene/DataSourceDisplay',
              'DynamicScene/DataSourceCollection',
              'Scene/EllipsoidTerrainProvider',
              'Scene/SceneMode'
@@ -23,6 +24,7 @@ defineSuite(['Widgets/Viewer/Viewer',
                     SceneModePicker,
                     Timeline,
                     TimeInterval,
+                    DataSourceDisplay,
                     DataSourceCollection,
                     EllipsoidTerrainProvider,
                     SceneMode) {
@@ -62,21 +64,22 @@ defineSuite(['Widgets/Viewer/Viewer',
 
     it('constructor sets default values', function() {
         var viewer = new Viewer(container);
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
-        expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getDataSourceDisplay()).toBeInstanceOf(DataSourceDisplay);
+        expect(viewer.getDataSources()).toBeInstanceOf(DataSourceCollection);
         viewer.destroy();
     });
 
     it('constructor works with container id string', function() {
         var viewer = new Viewer('container');
-        expect(viewer.container).toBe(container);
+        expect(viewer.getContainer()).toBe(container);
         viewer.destroy();
     });
 
@@ -84,14 +87,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             homeButton : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeUndefined();
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeUndefined();
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
         viewer.destroy();
     });
 
@@ -99,14 +102,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             sceneModePicker : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeUndefined();
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeUndefined();
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
         viewer.destroy();
     });
 
@@ -114,14 +117,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             baseLayerPicker : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeUndefined();
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeUndefined();
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
         viewer.destroy();
     });
 
@@ -129,14 +132,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             animation : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeUndefined();
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeUndefined();
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
         viewer.destroy();
     });
 
@@ -144,14 +147,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             timeline : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeUndefined();
-        expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeUndefined();
+        expect(viewer.getFullscreenButton()).toBeInstanceOf(FullscreenButton);
         viewer.destroy();
     });
 
@@ -159,14 +162,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             fullscreenButton : false
         });
-        expect(viewer.container).toBe(container);
-        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
-        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
-        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
-        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
-        expect(viewer.animation).toBeInstanceOf(Animation);
-        expect(viewer.timeline).toBeInstanceOf(Timeline);
-        expect(viewer.fullscreenButton).toBeUndefined();
+        expect(viewer.getContainer()).toBe(container);
+        expect(viewer.getCesiumWidget()).toBeInstanceOf(CesiumWidget);
+        expect(viewer.getHomeButton()).toBeInstanceOf(HomeButton);
+        expect(viewer.getSceneModePicker()).toBeInstanceOf(SceneModePicker);
+        expect(viewer.getBaseLayerPicker()).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.getAnimation()).toBeInstanceOf(Animation);
+        expect(viewer.getTimeline()).toBeInstanceOf(Timeline);
+        expect(viewer.getFullscreenButton()).toBeUndefined();
         viewer.destroy();
     });
 
@@ -175,7 +178,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             terrainProvider : provider
         });
-        expect(viewer.cesiumWidget.getCentralBody().terrainProvider).toBe(provider);
+        expect(viewer.getCentralBody().terrainProvider).toBe(provider);
         viewer.destroy();
     });
 
@@ -184,7 +187,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             fullscreenElement : testElement
         });
-        expect(viewer.fullscreenButton.getViewModel().getFullscreenElement()).toBe(testElement);
+        expect(viewer.getFullscreenButton().getViewModel().getFullscreenElement()).toBe(testElement);
         viewer.destroy();
     });
 
@@ -192,7 +195,7 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             sceneMode : SceneMode.SCENE2D
         });
-        expect(viewer.cesiumWidget.getScene().mode).toBe(SceneMode.SCENE2D);
+        expect(viewer.getScene().mode).toBe(SceneMode.SCENE2D);
         viewer.destroy();
     });
 
@@ -215,9 +218,9 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
         });
-        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.getViewModel().selectedItem()).toBe(testProviderViewModel);
+        expect(viewer.getCentralBody().getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.getBaseLayerPicker().getViewModel().selectedItem()).toBe(testProviderViewModel);
         viewer.destroy();
     });
 
@@ -226,10 +229,10 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container, {
             imageryProviderViewModels : models
         });
-        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().getLength()).toEqual(1);
-        expect(viewer.cesiumWidget.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
-        expect(viewer.baseLayerPicker.getViewModel().selectedItem()).toBe(testProviderViewModel);
-        expect(viewer.baseLayerPicker.getViewModel().imageryProviderViewModels()).toBe(models);
+        expect(viewer.getCentralBody().getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.getCentralBody().getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
+        expect(viewer.getBaseLayerPicker().getViewModel().selectedItem()).toBe(testProviderViewModel);
+        expect(viewer.getBaseLayerPicker().getViewModel().imageryProviderViewModels()).toBe(models);
         viewer.destroy();
     });
 
@@ -262,9 +265,9 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container);
         viewer.handleDrop(mockEvent);
         waitsFor(function() {
-            var result = viewer.dataSources.getLength() === 1;
+            var result = viewer.getDataSources().getLength() === 1;
             if (result) {
-                var dataSource = viewer.dataSources.get(0);
+                var dataSource = viewer.getDataSources().get(0);
                 var interval = TimeInterval.fromIso8601(czml1.availability);
                 expect(dataSource.getDynamicObjectCollection().getObject('test')).toBeDefined();
                 expect(dataSource.getClock().startTime).toEqual(interval.start);
@@ -291,10 +294,10 @@ defineSuite(['Widgets/Viewer/Viewer',
         var viewer = new Viewer(container);
         viewer.handleDrop(mockEvent);
         waitsFor(function() {
-            var result = viewer.dataSources.getLength() === 2;
+            var result = viewer.getDataSources().getLength() === 2;
             if (result) {
-                var source1 = viewer.dataSources.get(0);
-                var source2 = viewer.dataSources.get(1);
+                var source1 = viewer.getDataSources().get(0);
+                var source2 = viewer.getDataSources().get(1);
                 expect(source1.getDynamicObjectCollection().getObject('test')).toBeDefined();
                 expect(source2.getDynamicObjectCollection().getObject('test2')).toBeDefined();
                 //Interval of first file should be used.
