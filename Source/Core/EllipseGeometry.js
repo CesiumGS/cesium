@@ -246,8 +246,8 @@ define([
 
         // The original length may have been an over-estimate
         positions.length = positionIndex;
+        size = positions.length / 3;
 
-        /*
         var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
@@ -255,36 +255,24 @@ define([
 
         var textureCoordIndex = 0;
 
-        // Rotate/translate the positions in the xy-plane and un-project to the ellipsoid in 3D.
-        // Compute the texture coordinates, normals, tangents, and binormals at the same times.
-        var projection = new GeographicProjection(ellipsoid);
-        var centerCart = ellipsoid.cartesianToCartographic(center, scratchCartographic);
-        var projectedCenter = projection.project(centerCart, scratchCartesian1);
-        var rotation = Matrix2.fromRotation(bearing, scratchMatrix2);
-
+        // Raise positions to a height above the ellipsoid and compute the
+        // texture coordinates, normals, tangents, and binormals.
         var normal;
         var tangent;
         var binormal;
-        */
 
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
             position = Cartesian3.fromArray(positions, i, scratchCartesian2);
-            ellipsoid.scaleToGeodeticSurface(position, position);
-            Cartesian3.add(position, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(position), height), position);
 
-            /*
             if (vertexFormat.st) {
-                textureCoordinates[textureCoordIndex++] = (position.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                textureCoordinates[textureCoordIndex++] = (position.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                var relativeToCenter = Cartesian3.subtract(position, center);
+                textureCoordinates[textureCoordIndex++] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                textureCoordinates[textureCoordIndex++] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
             }
 
-            Matrix2.multiplyByVector(rotation, position, position);
-            Cartesian2.add(projectedCenter, position, position);
-
-            var unprojected = projection.unproject(position, scratchCartographic);
-            ellipsoid.cartographicToCartesian(unprojected, position);
-            */
+            ellipsoid.scaleToGeodeticSurface(position, position);
+            Cartesian3.add(position, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(position), height), position);
 
             if (vertexFormat.position) {
                 positions[i] = position.x;
@@ -292,7 +280,6 @@ define([
                 positions[i + 2] = position.z;
             }
 
-            /*
             if (vertexFormat.normal) {
                 normal = ellipsoid.geodeticSurfaceNormal(position, scratchCartesian3);
 
@@ -319,7 +306,6 @@ define([
                 binormals[i + 1] = binormal.y;
                 binormals[i + 2] = binormal.z;
             }
-            */
         }
 
         var attributes = {};
@@ -332,7 +318,6 @@ define([
             });
         }
 
-        /*
         if (vertexFormat.st) {
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -364,7 +349,6 @@ define([
                 values : binormals
             });
         }
-        */
 
         // The number of triangles in the ellipse on the positive x half-space and for
         // the column of triangles in the middle is:

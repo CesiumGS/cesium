@@ -108,8 +108,6 @@ define([
             semiMajorAxis : 1000000.0,
             //bearing : CesiumMath.PI_OVER_FOUR,
             height : 1000000.0,
-            //granularity : 0.50,
-            //granularity : CesiumMath.PI_OVER_FOUR,
             pickData : 'mesh4'
         });
 
