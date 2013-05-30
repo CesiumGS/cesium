@@ -11,6 +11,7 @@ Beta Releases
    * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
+   * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
    * Streamlined the Widgets layer so that they follow a consistent API.  All public, non-Observable properties have been removed and replaced with equivalent get/set functions.  While this is a fairly large change, most users should not be affected.  If you are affected, the changes are all easy to make.  For example:
       * homeButton.viewModel; -> homeButton.getViewModel();
       * cesiumWidget.scene => cesiumWidget.getScene();
@@ -19,6 +20,7 @@ Beta Releases
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
+* Added support for [OES_vertex_array_object](http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/), which improves rendering performance.
 * Added support for floating-point textures.
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
