@@ -1,30 +1,24 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPathVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'Specs/MockProperty',
-             'DynamicScene/DynamicPath',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-              DynamicPathVisualizer,
-              createScene,
-              destroyScene,
-              MockProperty,
-              DynamicPath,
-              DynamicObjectCollection,
-              DynamicObject,
-              JulianDate,
-              Cartesian2,
-              Cartesian3,
-              Color,
-              Scene) {
+         'DynamicScene/DynamicPathVisualizer',
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/MockProperty',
+         'Core/Cartesian3',
+         'Core/Color',
+         'Core/JulianDate',
+         'DynamicScene/DynamicObjectCollection',
+         'DynamicScene/DynamicPath'
+     ], function(
+         DynamicPathVisualizer,
+         createScene,
+         destroyScene,
+         MockProperty,
+         Cartesian3,
+         Color,
+         JulianDate,
+         DynamicObjectCollection,
+         DynamicPath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

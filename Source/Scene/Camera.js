@@ -6,7 +6,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Matrix4',
-        '../Core/Ray',
         './CameraController',
         './PerspectiveFrustum'
     ], function(
@@ -16,7 +15,6 @@ define([
         Cartesian3,
         Cartesian4,
         Matrix4,
-        Ray,
         CameraController,
         PerspectiveFrustum) {
     "use strict";

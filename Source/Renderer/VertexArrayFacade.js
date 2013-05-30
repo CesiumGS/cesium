@@ -499,11 +499,11 @@ define([
         var allBuffers = this._allBuffers;
 
         for (var i = 0, len = allBuffers.length; i < len; ++i) {
-            subCommit(this, allBuffers[i], offsetInVertices, lengthInVertices);
+            subCommit(allBuffers[i], offsetInVertices, lengthInVertices);
         }
     };
 
-    function subCommit(vertexArrayFacade, buffer, offsetInVertices, lengthInVertices) {
+    function subCommit(buffer, offsetInVertices, lengthInVertices) {
         if (buffer.needsCommit && (buffer.vertexSizeInBytes > 0)) {
             var byteOffset = buffer.vertexSizeInBytes * offsetInVertices;
             var byteLength = buffer.vertexSizeInBytes * lengthInVertices;

@@ -4,7 +4,6 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/PrimitiveType',
-         'Core/Cartesian2',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/PixelFormat'
@@ -13,7 +12,6 @@ defineSuite([
          createContext,
          destroyContext,
          PrimitiveType,
-         Cartesian2,
          BufferUsage,
          ClearCommand,
          PixelFormat) {
@@ -83,12 +81,11 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = texture;
 
-        var va = context.createVertexArray();
-        va.addAttribute({
+        var va = context.createVertexArray([{
             index : sp.getVertexAttributes().position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

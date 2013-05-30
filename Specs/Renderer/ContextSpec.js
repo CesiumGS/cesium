@@ -170,7 +170,7 @@ defineSuite([
         expect(context.getFloatingPointTexture()).toBeDefined();
     });
 
-    it('gets texture filter anisotropic', function() {
+    it('gets texture filter anisotropic extension', function() {
         expect(context.getTextureFilterAnisotropic()).toBeDefined();
     });
 
@@ -180,6 +180,10 @@ defineSuite([
         } else {
             expect(context.getMaximumTextureFilterAnisotropy()).toEqual(1.0);
         }
+    });
+
+    it('gets vertex array object extension', function() {
+        expect(context.getVertexArrayObject()).toBeDefined();
     });
 
     it('sets shader program validation', function() {

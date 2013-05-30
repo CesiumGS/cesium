@@ -6,7 +6,6 @@ defineSuite([
          'Specs/createScene',
          'Specs/destroyScene',
          'Core/Cartesian3',
-         'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
          Sun,
@@ -15,7 +14,6 @@ defineSuite([
          createScene,
          destroyScene,
          Cartesian3,
-         ClearCommand,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
