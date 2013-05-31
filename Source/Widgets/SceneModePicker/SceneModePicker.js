@@ -116,23 +116,30 @@ define(['./SceneModePickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    /**
-     * Gets the view model being used.
-     * @memberof SceneModePicker
-     * @returns {SeneModePickerViewModel} The view model being used.
-     */
-    SceneModePicker.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
-
-    /**
-     * Gets the container element for the widget.
-     * @memberof SceneModePicker
-     * @type {Element}
-     */
-    SceneModePicker.prototype.getContainer = function() {
-        return this._container;
-    };
+    Object.defineProperties(SceneModePicker.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof SceneModePicker.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model being used.
+         *
+         * @memberof SceneModePicker.prototype
+         * @type {SceneModePickerViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof SceneModePicker

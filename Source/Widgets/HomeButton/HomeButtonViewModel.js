@@ -119,6 +119,22 @@ define(['../createCommand',
         this.tooltip = knockout.observable('View Home');
     };
 
+    Object.defineProperties(HomeButtonViewModel.prototype, {
+        /**
+         * Gets the scene transitioner being used by the host application.
+         * If a transitioner is assigned, any running morphs will be completed
+         * when the home button is pressed.
+         *
+         * @memberof HomeButtonViewModel.prototype
+         * @type {SceneTransitioner}
+         */
+        transitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
+    });
+
     /**
      * Gets the scene.
      * @type Observable
@@ -133,16 +149,6 @@ define(['../createCommand',
      */
     HomeButtonViewModel.prototype.getEllipsoid = function() {
         return this._ellipsoid;
-    };
-
-    /**
-     * Gets the scene transitioner being used by the host application.
-     * If a transitioner is assigned, any running morphs will be completed
-     * when the home button is pressed.
-     * @type Observable
-     */
-    HomeButtonViewModel.prototype.getTransitioner = function() {
-        return this._transitioner;
     };
 
     return HomeButtonViewModel;

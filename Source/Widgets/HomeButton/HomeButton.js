@@ -48,23 +48,30 @@ define(['./HomeButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof HomeButton
-     * @return {Element} The parent container.
-     */
-    HomeButton.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof HomeButton
-     * @return {HomeButtonViewModel} The view model being used.
-     */
-    HomeButton.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(HomeButton.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof HomeButton.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model being used.
+         *
+         * @memberof HomeButton.prototype
+         * @type {HomeButtonViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof HomeButton

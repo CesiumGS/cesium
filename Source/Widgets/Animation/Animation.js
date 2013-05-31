@@ -616,23 +616,30 @@ define(['../../Core/destroyObject',
         resize(this);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof Animation
-     * @return {Element} The parent container.
-     */
-    Animation.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof Animation
-     * @return {AnimationViewModel} The view model being used.
-     */
-    Animation.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(Animation.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof Animation.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model being used.
+         *
+         * @memberof Animation.prototype
+         * @type {AnimationViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof Animation

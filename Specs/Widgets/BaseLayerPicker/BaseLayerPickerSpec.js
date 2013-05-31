@@ -17,8 +17,8 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
         var layers = new ImageryLayerCollection();
 
         var widget = new BaseLayerPicker('testContainer', layers);
-        expect(widget.getContainer()).toBe(container);
-        expect(widget.getViewModel().getImageryLayers()).toBe(layers);
+        expect(widget.container).toBe(container);
+        expect(widget.viewModel.getImageryLayers()).toBe(layers);
         expect(widget.isDestroyed()).toEqual(false);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
@@ -33,13 +33,13 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
 
         var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible(true);
         EventHelper.fireMouseDown(document.body);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible()).toEqual(false);
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible(true);
         EventHelper.fireMouseDown(container);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible()).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
@@ -52,15 +52,15 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
 
         var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible(true);
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible(true);
         EventHelper.fireTouchStart(document.body);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible()).toEqual(false);
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible(true);
         EventHelper.fireTouchStart(container);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible()).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);

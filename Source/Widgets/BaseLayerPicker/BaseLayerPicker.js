@@ -86,7 +86,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.getViewModel().selectedItem(providerViewModels[0]);
+     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
@@ -158,23 +158,30 @@ define(['./BaseLayerPickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof BaseLayerPicker
-     * @return {Element} The parent container.
-     */
-    BaseLayerPicker.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof BaseLayerPicker
-     * @return {BaseLayerPickerViewModel} The view model being used.
-     */
-    BaseLayerPicker.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(BaseLayerPicker.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof BaseLayerPicker.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model being used.
+         *
+         * @memberof BaseLayerPicker.prototype
+         * @type {BaseLayerPickerViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof BaseLayerPicker

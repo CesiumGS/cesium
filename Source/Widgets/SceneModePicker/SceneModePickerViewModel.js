@@ -125,13 +125,19 @@ define(['../createCommand',
         this._sceneMode = SceneMode;
     };
 
-    /**
-     * Gets the SceneTransitioner used by the widget.
-     * @returns {SceneTransitioner} The SceneTransitioner used by the widget.
-     */
-    SceneModePickerViewModel.prototype.getTransitioner = function() {
-        return this._transitioner;
-    };
+    Object.defineProperties(SceneModePickerViewModel.prototype, {
+        /**
+         * Gets the scene transitioner.
+         *
+         * @memberof SceneModePickerViewModel.prototype
+         * @type {SceneTransitioner}
+         */
+        transitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
+    });
 
     /**
      * @memberof SceneModePickerViewModel

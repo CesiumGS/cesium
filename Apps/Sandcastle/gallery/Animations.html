@@ -68,8 +68,8 @@ require([
     }
 
     function createPrimitives(widget) {
-        var ellipsoid = widget.getCentralBody().getEllipsoid();
-        var scene = widget.getScene();
+        var ellipsoid = widget.centralBody.getEllipsoid();
+        var scene = widget.scene;
         var primitives = scene.getPrimitives();
 
         polygon = new Cesium.Polygon();
@@ -144,7 +144,7 @@ require([
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
     createPrimitives(widget);
-    createButtons(widget.getScene());
+    createButtons(widget.scene);
 
     Sandcastle.finishedLoading();
 });
