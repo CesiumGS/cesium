@@ -111,14 +111,15 @@ define([
         });
 
         var mesh4 = new EllipseGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
+            vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             ellipsoid : ellipsoid,
             center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
             semiMinorAxis : 500000.0,
             semiMajorAxis : 1000000.0,
             bearing : CesiumMath.PI_OVER_FOUR,
             height : 1000000.0,
-            pickData : 'mesh4'
+            pickData : 'mesh4',
+            color : Color.LIME
         });
 
         var primitive = new Primitive({

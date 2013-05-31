@@ -82,6 +82,7 @@ define([
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} center is required.
@@ -463,6 +464,13 @@ define([
          * @see Transforms.eastNorthUpToFixedFrame
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+        * The color of the geometry when a per-geometry color appearance is used.
+        *
+        * @type Color
+        */
+        this.color = options.color;
 
         /**
          * DOC_TBA
