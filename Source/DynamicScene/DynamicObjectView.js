@@ -78,6 +78,13 @@ define([
     }
 
     var update3DTransform;
+    var update3DMatrix3Scratch1 = new Matrix3();
+    var update3DMatrix3Scratch2 = new Matrix3();
+    var update3DMatrix3Scratch3 = new Matrix3();
+    var update3DCartesian3Scratch1 = new Cartesian3();
+    var update3DCartesian3Scratch2 = new Cartesian3();
+    var update3DCartesian3Scratch3 = new Cartesian3();
+
     function update3D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
         update3DController(that, camera, objectChanged, offset);
 
@@ -86,15 +93,15 @@ define([
             var failed = false;
 
             var deltaTime = time.addSeconds(1.0);
-            var deltaCartesian = positionProperty.getValueCartesian(deltaTime);
+            var deltaCartesian = positionProperty.getValueCartesian(deltaTime, update3DCartesian3Scratch1);
             if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
-                var toInertial = Transforms.computeFixedToIcrfMatrix(time);
-                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime);
-                var toFixed = Transforms.computeIcrfToFixedMatrix(time);
+                var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
+                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
+                var toFixed = Transforms.computeIcrfToFixedMatrix(time, update3DMatrix3Scratch3);
 
 
                 // Z along the position
-                var zBasis = new Cartesian3();
+                var zBasis = update3DCartesian3Scratch2;
                 Cartesian3.normalize(cartesian, zBasis);
                 Cartesian3.normalize(deltaCartesian, deltaCartesian);
 
@@ -102,14 +109,10 @@ define([
                 Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
 
                 // Y is along the angular momentum vector (e.g. "orbit normal")
-                var yBasis = Cartesian3.cross(zBasis, deltaCartesian);
+                var yBasis = Cartesian3.cross(zBasis, deltaCartesian, update3DCartesian3Scratch3);
                 if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
-                    Cartesian3.normalize(zBasis, zBasis);
-                    Cartesian3.normalize(yBasis, yBasis);
-
                     // X is along the cross of y and z (right handed basis / in the direction of motion)
-                    var xBasis = Cartesian3.cross(yBasis, zBasis);
-                    Cartesian3.normalize(xBasis, xBasis);
+                    var xBasis = Cartesian3.cross(yBasis, zBasis, update3DCartesian3Scratch1);
 
                     Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
                     Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
