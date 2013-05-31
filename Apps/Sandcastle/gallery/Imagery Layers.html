@@ -27,7 +27,7 @@ require(['Cesium'], function(Cesium) {
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
 
-    var layers = widget.getCentralBody().getImageryLayers();
+    var layers = widget.centralBody.getImageryLayers();
     layers.removeAll();
     layers.addImageryProvider(new Cesium.ArcGisMapServerImageryProvider({
         url : 'http://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',

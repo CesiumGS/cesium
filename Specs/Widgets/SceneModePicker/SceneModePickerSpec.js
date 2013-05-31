@@ -1,15 +1,16 @@
 /*global defineSuite*/
-defineSuite(['Widgets/SceneModePicker/SceneModePicker',
-             'Scene/SceneTransitioner',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'Specs/EventHelper'
-            ], function(
-              SceneModePicker,
-              SceneTransitioner,
-              createScene,
-              destroyScene,
-              EventHelper) {
+defineSuite([
+         'Widgets/SceneModePicker/SceneModePicker',
+         'Scene/SceneTransitioner',
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/EventHelper'
+     ], function(
+         SceneModePicker,
+         SceneTransitioner,
+         createScene,
+         destroyScene,
+         EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -21,7 +22,7 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
         document.body.appendChild(container);
 
         var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
-        expect(widget.getContainer()).toBe(container);
+        expect(widget.container).toBe(container);
         expect(widget.isDestroyed()).toEqual(false);
 
         widget.destroy();
@@ -40,13 +41,13 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(document.body);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(container);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
@@ -62,15 +63,13 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
 
-        widget.getViewModel().dropDownVisible(true);
-
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(document.body);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.getViewModel().dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(container);
-        expect(widget.getViewModel().dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
