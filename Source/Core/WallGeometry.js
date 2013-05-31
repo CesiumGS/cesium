@@ -28,7 +28,11 @@ define([
     "use strict";
 
     var scratchCartographic = new Cartographic();
-    var scratchCartesian3Position = new Cartesian3();
+    var scratchCartesian3Position1 = new Cartesian3();
+    var scratchCartesian3Position2 = new Cartesian3();
+    var scratchBinormal = new Cartesian3();
+    var scratchTangent = new Cartesian3();
+    var scratchNormal = new Cartesian3();
 
     /**
      * Creates a wall, which is similar to a KML line string. A wall is defined by a series of points,
@@ -99,12 +103,24 @@ define([
         }
 
         var i;
-        var j;
+        var size = wallPositions.length * 2;
+
+        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
+        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
+
+        var positionIndex = 0;
+        var normalIndex = 0;
+        var tangentIndex = 0;
+        var binormalIndex = 0;
+        var textureCoordIndex = 0;
 
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
-        var positions = new Array(wallPositions.length * 6);
-        for (i = 0, j = 0; i < wallPositions.length; ++i) {
+        var length = wallPositions.length;
+        for (i = 0; i < length; ++i) {
             var c = ellipsoid.cartesianToCartographic(wallPositions[i], scratchCartographic);
             var origHeight = c.height;
             c.height = 0.0;
@@ -123,22 +139,64 @@ define([
                 c.height += terrainHeight;
             }
 
-            var v = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position);
-
-            // insert the lower point
-            positions[j++] = v.x;
-            positions[j++] = v.y;
-            positions[j++] = v.z;
+            var bottomPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position1);
 
             // get the original height back, or set the top value
             c.height = (top === undefined) ? origHeight : top;
             c.height += terrainHeight;
-            v = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position);
+            var topPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position2);
 
-            // insert the upper point
-            positions[j++] = v.x;
-            positions[j++] = v.y;
-            positions[j++] = v.z;
+            if (vertexFormat.position) {
+                // insert the lower point
+                positions[positionIndex++] = bottomPosition.x;
+                positions[positionIndex++] = bottomPosition.y;
+                positions[positionIndex++] = bottomPosition.z;
+
+                // insert the upper point
+                positions[positionIndex++] = topPosition.x;
+                positions[positionIndex++] = topPosition.y;
+                positions[positionIndex++] = topPosition.z;
+            }
+
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                var fromPrevious = (i === 0) ? Cartesian3.ZERO : Cartesian3.subtract(wallPositions[i], wallPositions[i - 1], scratchCartesian3Position1);
+                var toNext = (i === length - 1) ? Cartesian3.ZERO : Cartesian3.subtract(wallPositions[i + 1], wallPositions[i], scratchCartesian3Position2);
+
+                var tangent = Cartesian3.add(fromPrevious, toNext, scratchTangent);
+                var binormal = Cartesian3.subtract(topPosition, bottomPosition, scratchBinormal);
+
+                if (vertexFormat.normal) {
+                    var normal = Cartesian3.cross(tangent, binormal, scratchNormal);
+                    Cartesian3.normalize(normal, normal);
+                    normals[normalIndex++] = normal.x;
+                    normals[normalIndex++] = normal.y;
+                    normals[normalIndex++] = normal.z;
+                }
+
+                if (vertexFormat.tangent) {
+                    Cartesian3.normalize(tangent, tangent);
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    Cartesian3.normalize(binormal, binormal);
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                }
+            }
+
+            if (vertexFormat.st) {
+                var s = i / (length - 1);
+
+                textureCoordinates[textureCoordIndex++] = s;
+                textureCoordinates[textureCoordIndex++] = 0.0;
+
+                textureCoordinates[textureCoordIndex++] = s;
+                textureCoordinates[textureCoordIndex++] = 1.0;
+            }
         }
 
         var attributes = {};
@@ -148,6 +206,38 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : positions
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormals
+            });
+        }
+
+        if (vertexFormat.st) {
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
             });
         }
 
@@ -166,10 +256,10 @@ define([
         //    C (i)    D (i+2) F
         //
 
-        var size = positions.length / 3 - 2;
+        size -= 2;
         var indices = new Array(size * 3);
 
-        j = 0;
+        var j = 0;
         for (i = 0; i < size; i += 2) {
             // first do A C B
             indices[j++] = i + 1;
