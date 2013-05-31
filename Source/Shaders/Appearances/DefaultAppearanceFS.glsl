@@ -1,7 +1,7 @@
+varying vec3 v_positionEC;
 varying vec3 v_normalEC;
 varying vec3 v_tangentEC;
 varying vec3 v_binormalEC;
-varying vec3 v_positionEC;
 varying vec2 v_st;
 
 void main()

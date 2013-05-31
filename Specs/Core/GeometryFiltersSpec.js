@@ -1149,7 +1149,9 @@ defineSuite([
 
     it ('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for an EllipsoidGeometry', function() {
         var mesh = new EllipsoidGeometry();
-        var expected = new EllipsoidGeometry({vertexFormat: new VertexFormat({tangent: true, binormal: true})});
+        var expected = new EllipsoidGeometry({
+            vertexFormat: VertexFormat.ALL
+        });
 
         mesh = GeometryFilters.computeTangentAndBinormal(mesh);
         expect(mesh.attributes.tangent.values.slice(1000,1200)).toEqualEpsilon(expected.attributes.tangent.values.slice(1000,1200), CesiumMath.EPSILON1);

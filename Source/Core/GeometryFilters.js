@@ -994,7 +994,7 @@ define([
      * Computes the tangent and binormal of all vertices in a geometry
      * This assumes a counter-clockwise vertex winding order.
      *
-     * Based on: Lengyel, Eric. “Computing Tangent Space Basis Vectors for an Arbitrary Mesh”. Terathon Software 3D Graphics Library, 2001. http://www.terathon.com/code/tangent.html
+     * Based on: Lengyel, Eric. <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors for an Arbitrary Mesh</a>. Terathon Software 3D Graphics Library, 2001.
      *
      * @param {Geometry} geometry The geometry for which to calculate tangents and binormals, which is modified in place.
      * @param {Object} geometry.attributes.position The vertices of the geometry
@@ -1012,7 +1012,6 @@ define([
      *
      * @example
      * geometry = GeometryFilters.computeTangentAndBinormal(geometry);
-     *
      */
     var normalScratch = new Cartesian3();
     var normalScale = new Cartesian3();

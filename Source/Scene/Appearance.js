@@ -5,8 +5,10 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         './Material',
-        '../Shaders/DefaultAppearanceVS',
-        '../Shaders/DefaultAppearanceFS'
+        '../Shaders/Appearances/DefaultAppearanceVS',
+        '../Shaders/Appearances/DefaultAppearanceFS',
+        '../Shaders/Appearances/PerGeometryColorAppearanceVS',
+        '../Shaders/Appearances/PerGeometryColorAppearanceFS'
     ], function(
         defaultValue,
         freezeObject,
@@ -14,7 +16,9 @@ define([
         BlendingState,
         Material,
         DefaultAppearanceVS,
-        DefaultAppearanceFS) {
+        DefaultAppearanceFS,
+        PerGeometryColorAppearanceVS,
+        PerGeometryColorDefaultAppearanceFS) {
     "use strict";
 
     /**
@@ -58,6 +62,25 @@ define([
      * DOC_TBA
      */
     Appearance.CLOSED_TRANSLUCENT = freezeObject(new Appearance({
+        renderState : {
+            cull : {
+                enabled : true,
+                face : CullFace.BACK
+            },
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND
+        }
+    }));
+
+    /**
+     * DOC_TBA
+     */
+    Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT = freezeObject(new Appearance({
+        vertexShaderSource : PerGeometryColorAppearanceVS,
+        fragmentShaderSource : PerGeometryColorDefaultAppearanceFS,
         renderState : {
             cull : {
                 enabled : true,
