@@ -1,32 +1,28 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPolygonVisualizer',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'Specs/MockProperty',
-             'DynamicScene/DynamicEllipse',
-             'DynamicScene/DynamicPolygon',
-             'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Scene/Material',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Scene/Scene'
-            ], function(
-              DynamicPolygonVisualizer,
-              createScene,
-              destroyScene,
-              MockProperty,
-              DynamicEllipse,
-              DynamicPolygon,
-              DynamicObjectCollection,
-              DynamicObject,
-              JulianDate,
-              Material,
-              Cartesian3,
-              Color,
-              Scene) {
+         'DynamicScene/DynamicPolygonVisualizer',
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/MockProperty',
+         'Core/Cartesian3',
+         'Core/Color',
+         'Core/JulianDate',
+         'DynamicScene/DynamicEllipse',
+         'DynamicScene/DynamicPolygon',
+         'DynamicScene/DynamicObjectCollection',
+         'Scene/Material'
+     ], function(
+         DynamicPolygonVisualizer,
+         createScene,
+         destroyScene,
+         MockProperty,
+         Cartesian3,
+         Color,
+         JulianDate,
+         DynamicEllipse,
+         DynamicPolygon,
+         DynamicObjectCollection,
+         Material) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

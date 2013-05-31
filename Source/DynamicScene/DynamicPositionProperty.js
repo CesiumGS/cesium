@@ -1,7 +1,5 @@
 /*global define*/
 define([
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Iso8601',
@@ -14,8 +12,6 @@ define([
         './CzmlPosition',
         './DynamicProperty'
     ], function(
-        Cartesian3,
-        Cartographic,
         DeveloperError,
         Ellipsoid,
         Iso8601,

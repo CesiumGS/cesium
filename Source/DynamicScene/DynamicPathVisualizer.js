@@ -175,7 +175,7 @@ define([
 
         property = dynamicPath.outlineWidth;
         if (typeof property !== 'undefined') {
-            uniforms.outlineWidth = property.getValue(time, uniforms.outlineWidth);
+            uniforms.outlineWidth = property.getValue(time);
         }
 
         property = dynamicPath.width;

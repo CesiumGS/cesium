@@ -4,17 +4,15 @@ define([
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Event',
         '../Scene/BillboardCollection',
         '../Renderer/TextureAtlasBuilder'
-       ], function(
-         Color,
-         defaultValue,
-         destroyObject,
-         DeveloperError,
-         Event,
-         BillboardCollection,
-         TextureAtlasBuilder) {
+    ], function(
+        Color,
+        defaultValue,
+        destroyObject,
+        DeveloperError,
+        BillboardCollection,
+        TextureAtlasBuilder) {
     "use strict";
 
     /**

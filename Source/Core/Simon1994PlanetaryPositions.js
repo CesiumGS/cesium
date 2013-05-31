@@ -5,18 +5,15 @@ define(['./Cartesian3',
         './Math',
         './Matrix3',
         './TimeConstants',
-        './TimeStandard',
-        './Transforms'
-    ],
-    function(
+        './TimeStandard'
+    ], function(
         Cartesian3,
         DeveloperError,
         JulianDate,
         CesiumMath,
         Matrix3,
         TimeConstants,
-        TimeStandard,
-        Transforms) {
+        TimeStandard) {
     "use strict";
 
     /**

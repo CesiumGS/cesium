@@ -194,11 +194,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -261,11 +260,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -315,11 +313,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = context.getDefaultCubeMap();
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -398,11 +395,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -490,11 +486,10 @@ defineSuite([
             });
             sp.getAllUniforms().u_texture.value = cubeMap;
 
-            va = context.createVertexArray();
-            va.addAttribute({
+            va = context.createVertexArray([{
                 vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
                 componentsPerAttribute : 4
-            });
+            }]);
 
             var da = {
                 primitiveType : PrimitiveType.POINTS,
@@ -566,11 +561,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_texture.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -625,11 +619,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -714,11 +707,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -767,11 +759,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         var da = {
             primitiveType : PrimitiveType.POINTS,
@@ -826,11 +817,10 @@ defineSuite([
         sp.getAllUniforms().u_cubeMap.value = cubeMap;
         sp.getAllUniforms().u_texture.value = texture;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,
@@ -868,11 +858,10 @@ defineSuite([
         });
         sp.getAllUniforms().u_cubeMap.value = cubeMap;
 
-        va = context.createVertexArray();
-        va.addAttribute({
+        va = context.createVertexArray([{
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         context.draw({
             primitiveType : PrimitiveType.POINTS,

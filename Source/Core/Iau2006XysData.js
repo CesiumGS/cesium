@@ -36,7 +36,7 @@ define([
     var Iau2006XysData = function Iau2006XysData(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
-        this._xysFileUrlTemplate = defaultValue(description.xysFileUrlTemplate, buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'));
+        this._xysFileUrlTemplate = description.xysFileUrlTemplate;
         this._interpolationOrder = defaultValue(description.interpolationOrder, 9);
         this._sampleZeroJulianEphemerisDate = defaultValue(description.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
@@ -236,7 +236,14 @@ define([
 
         xysData._chunkDownloadsInProgress[chunkIndex] = deferred;
 
-        var chunkUrl = xysData._xysFileUrlTemplate.replace('{0}', chunkIndex);
+        var chunkUrl;
+        var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
+        if (typeof xysFileUrlTemplate !== 'undefined') {
+            chunkUrl = xysFileUrlTemplate.replace('{0}', chunkIndex);
+        } else {
+            chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
+        }
+
         when(loadJson(chunkUrl), function(chunk) {
             xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
