@@ -40,13 +40,13 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(document.body);
-        expect(widget.viewModel.dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(container);
-        expect(widget.viewModel.dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
@@ -62,15 +62,13 @@ defineSuite(['Widgets/SceneModePicker/SceneModePicker',
 
         var widget = new SceneModePicker('testContainer', new SceneTransitioner(scene));
 
-        widget.viewModel.dropDownVisible(true);
-
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(document.body);
-        expect(widget.viewModel.dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(container);
-        expect(widget.viewModel.dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);

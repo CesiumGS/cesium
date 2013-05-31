@@ -28,22 +28,24 @@ defineSuite([
 
     it('constructor sets default values', function() {
         var viewModel = new HomeButtonViewModel(scene);
-        expect(viewModel.getScene()).toBe(scene);
+        expect(viewModel.scene).toBe(scene);
         expect(viewModel.transitioner).toBeUndefined();
-        expect(viewModel.getEllipsoid()).toBe(Ellipsoid.WGS84);
+        expect(viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
     });
 
     it('constructor sets expected values', function() {
         var ellipsoid = new Ellipsoid();
         var viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
-        expect(viewModel.getScene()).toBe(scene);
+        expect(viewModel.scene).toBe(scene);
         expect(viewModel.transitioner).toBe(transitioner);
-        expect(viewModel.getEllipsoid()).toBe(ellipsoid);
+        expect(viewModel.ellipsoid).toBe(ellipsoid);
     });
 
     it('throws if scene is undefined', function() {
+        var ellipsoid = new Ellipsoid();
+        var viewModel = new HomeButtonViewModel(undefined, transitioner, ellipsoid);
         expect(function() {
-            return new HomeButtonViewModel(undefined);
+            viewModel.command();
         }).toThrow();
     });
 
