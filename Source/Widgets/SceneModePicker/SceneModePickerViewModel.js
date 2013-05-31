@@ -163,7 +163,7 @@ define(['../createCommand',
             get : function() {
                 return this._morphToColumbusView;
             }
-        },
+        }
     });
 
     /**
