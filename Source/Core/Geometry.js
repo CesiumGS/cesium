@@ -39,6 +39,13 @@ define([
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
+         * The color of the geometry when a per-geometry color appearance is used.
+         *
+         * @type Color
+         */
+        this.color = options.color;
+
+        /**
          * DOC_TBA
          */
         this.pickData = options.pickData;
