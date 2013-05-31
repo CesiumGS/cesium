@@ -365,23 +365,24 @@ define([
             prevIndex = (i - 1) * i;
 
             indices[indicesIndex++] = positionIndex++;
-            indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
 
             numInterior = 2 * i;
             for (j = 0; j < numInterior - 1; ++j) {
-                indices[indicesIndex++] = prevIndex++;
+
                 indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = prevIndex;
 
                 indices[indicesIndex++] = positionIndex++;
-                indices[indicesIndex++] = positionIndex;
                 indices[indicesIndex++] = prevIndex;
+                indices[indicesIndex++] = positionIndex;
             }
 
             indices[indicesIndex++] = positionIndex++;
-            indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
         }
 
         // Indices for central column of triangles
@@ -389,13 +390,13 @@ define([
         ++positionIndex;
         ++prevIndex;
         for (i = 0; i < numInterior - 1; ++i) {
-            indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = positionIndex;
+            indices[indicesIndex++] = prevIndex++;
             indices[indicesIndex++] = prevIndex;
 
             indices[indicesIndex++] = positionIndex++;
-            indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
         }
 
         // Reverse the process creating indices to the 'right' of the north vector
@@ -403,23 +404,23 @@ define([
         ++positionIndex;
         for (i = numPts - 1; i > 0; --i) {
             indices[indicesIndex++] = prevIndex++;
-            indices[indicesIndex++] = positionIndex;
             indices[indicesIndex++] = prevIndex;
+            indices[indicesIndex++] = positionIndex;
 
             numInterior = 2 * i;
             for (j = 0; j < numInterior - 1; ++j) {
-                indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = positionIndex;
+                indices[indicesIndex++] = prevIndex++;
                 indices[indicesIndex++] = prevIndex;
 
                 indices[indicesIndex++] = positionIndex++;
-                indices[indicesIndex++] = positionIndex;
                 indices[indicesIndex++] = prevIndex;
+                indices[indicesIndex++] = positionIndex;
             }
 
             indices[indicesIndex++] = prevIndex++;
-            indices[indicesIndex++] = positionIndex++;
             indices[indicesIndex++] = prevIndex++;
+            indices[indicesIndex++] = positionIndex++;
         }
 
         indices.length = indicesIndex;
