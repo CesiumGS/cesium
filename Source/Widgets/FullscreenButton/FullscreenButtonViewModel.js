@@ -25,8 +25,8 @@ define(['../createCommand',
         var that = this;
 
         /**
-         * Gets an Observable indicating if fullscreen mode is activated.
-         * @type Observable
+         * Gets or sets whether fullscreen mode is activated.  This property is observable.
+         * @type Boolean
          */
         this.toggled = Fullscreen.isFullscreen();
 
@@ -35,11 +35,12 @@ define(['../createCommand',
         var tmp = knockout.observable(Fullscreen.isFullscreenEnabled());
 
         /**
-         * Gets an Observable indicating if fullscreen functionality should be available.
-         * @type Observable
+         * Gets or sets whether fullscreen functionality should be enabled.  This property is observable.
+         * @type Boolean
          *
          * @see Fullscreen.isFullscreenEnabled
          */
+        this.isFullscreenEnabled = undefined;
         knockout.defineProperty(this, 'isFullscreenEnabled', {
             get : function() {
                 return tmp();
@@ -50,9 +51,10 @@ define(['../createCommand',
         });
 
         /**
-         * Gets a readonly Observable of the current button tooltip.
-         * @type Observable
+         * Gets the current button tooltip.  This property is observable.
+         * @type String
          */
+        this.tooltip = undefined;
         knockout.defineProperty(this, 'tooltip', function() {
             if (!this.isFullscreenEnabled) {
                 return 'Full screen unavailable';
@@ -99,6 +101,7 @@ define(['../createCommand',
 
         /**
          * Toggles fullscreen mode.
+         * @memberof FullscreenButtonViewModel.prototype
          * @type Command
          */
         command : {

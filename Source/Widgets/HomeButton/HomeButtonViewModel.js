@@ -109,7 +109,7 @@ define(['../createCommand',
         });
 
         /**
-         * Gets or sets the tooltip.  This is an observable property.
+         * Gets or sets the tooltip.  This property is observable.
          *
          * @type String
          */
@@ -120,7 +120,7 @@ define(['../createCommand',
 
     Object.defineProperties(HomeButtonViewModel.prototype, {
         /**
-         * Gets or sets the scene transitioner being used by the scene.
+         * Gets the scene transitioner being used by the scene.
          * If a transitioner is assigned, any running morphs will be completed
          * when the home button is pressed.  The transitioner must be using
          * the same Scene instance as the scene property.
@@ -135,7 +135,7 @@ define(['../createCommand',
         },
 
         /**
-         * Gets or sets the scene to control.
+         * Gets the scene to control.
          *
          * @memberof HomeButtonViewModel.prototype
          * @type {Scene}
@@ -147,7 +147,7 @@ define(['../createCommand',
         },
 
         /**
-         * Gets or sets the ellipsoid to be viewed when in home position.
+         * Gets the ellipsoid to be viewed when in home position.
          *
          * @memberof HomeButtonViewModel.prototype
          * @type {Ellipsoid}
