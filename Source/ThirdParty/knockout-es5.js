@@ -1,4 +1,5 @@
-/*!
+/**
+ * @license
  * Knockout ES5 plugin - https://github.com/SteveSanderson/knockout-es5
  * Copyright (c) Steve Sanderson
  * MIT license

@@ -1,4 +1,6 @@
-/*! WeakMap shim
+/**
+ * @license
+ * WeakMap shim
  * (The MIT License)
  *
  * Copyright (c) 2012 Brandon Benvie <http://bbenvie.com>
