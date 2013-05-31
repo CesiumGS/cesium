@@ -12,9 +12,9 @@ Beta Releases
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
    * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
-   * Changed all widgets so that they now have an API consistent with the rest of Cesium.  All public, non-Observable properties have been removed and replaced with equivalent get/set functions.  While this is a fairly large change, most users should not be affected.  If you are affected, the changes are all easy to make.  For example:
-      * homeButton.viewModel; -> homeButton.getViewModel();
-      * cesiumWidget.scene => cesiumWidget.getScene();
+   * Changed all widgets to use ECMAScript 5 properties.  All public observable properties now must be accessed and assigned as if they were normal properties, instead of being called as functions.  For example:
+      * clockViewModel.shouldAnimate() -> clockViewModel.shouldAnimate
+      * clockViewModel.shouldAnimate(true); -> clockViewModel.shouldAnimate = true;
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
