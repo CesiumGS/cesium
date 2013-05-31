@@ -118,13 +118,13 @@ function createPrimitives(scene, ellipsoid) {
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.getScreenSpaceEventHandler().setInputAction(function(movement) {
+viewer.screenSpaceEventHandler.setInputAction(function(movement) {
     "use strict";
-    var pickedPrimitive = viewer.getScene().pick(movement.endPosition);
+    var pickedPrimitive = viewer.scene.pick(movement.endPosition);
     Sandcastle.highlight(pickedPrimitive);
 }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-createPrimitives(viewer.getScene(), viewer.getCentralBody().getEllipsoid());
+createPrimitives(viewer.scene, viewer.centralBody.getEllipsoid());
 
 Sandcastle.finishedLoading();
 </script>
