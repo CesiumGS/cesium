@@ -26,13 +26,12 @@
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
-                <include name="server.js" />
+				include name="server.js" />
 			</fileset>
 		</copy>
 
 		<replace file="Build/HelloWorld.html" token="../Build/" value="" />
 		<replace file="Build/index.html" token="../Build/" value="" />
-        <replace file="Build/server.js" token="../Build/" value="" />
 	</target>
 
 	<target name="minify" description="Combines all source files into a single stand-alone, minified script.">
@@ -63,7 +62,7 @@
 				<include name="Documentation/**" />
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
-                <include name="server.js" />
+				<include name="server.js" />
 			</fileset>
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -79,7 +78,7 @@
 			<include name="ThirdParty/**" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
-            <include name="server.js" />
+			<include name="server.js" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
@@ -461,7 +460,6 @@
 			<replacefilter token="Source/" value="" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
-            <include name="server.js" />
 			<include name="*.css" />
 		</replace>
 
@@ -471,7 +469,6 @@
 			<include name="${appStartupScript}" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
-            <include name="server.js" />
 			<include name="*.css" />
 		</replace>
 
