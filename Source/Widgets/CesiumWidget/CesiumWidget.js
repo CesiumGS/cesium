@@ -6,6 +6,7 @@ define([
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
@@ -15,8 +16,8 @@ define([
         '../../Scene/CentralBody',
         '../../Scene/Scene',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/SkyBox',
         '../../Scene/Sun'
     ], function(
         buildModuleUrl,
@@ -25,6 +26,7 @@ define([
         Clock,
         DefaultProxy,
         defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -34,8 +36,8 @@ define([
         CentralBody,
         Scene,
         SceneTransitioner,
-        SkyBox,
         SkyAtmosphere,
+        SkyBox,
         Sun) {
     "use strict";
 
@@ -174,7 +176,7 @@ define([
         requestAnimationFrame(render);
     };
 
-    Object.defineProperties(CesiumWidget.prototype, {
+    defineProperties(CesiumWidget.prototype, {
         /**
          * Gets the parent container.
          * @memberof CesiumWidget.prototype

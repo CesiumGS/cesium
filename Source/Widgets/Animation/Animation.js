@@ -1,15 +1,17 @@
 /*global define*/
 define([
+        '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Color',
-        '../../Core/defaultValue',
         '../../ThirdParty/knockout'
     ], function(
+        defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Color,
-        defaultValue,
         knockout) {
     "use strict";
 
@@ -618,7 +620,7 @@ define([
         resize(this);
     };
 
-    Object.defineProperties(Animation.prototype, {
+    defineProperties(Animation.prototype, {
         /**
          * Gets the parent container.
          *

@@ -1,13 +1,16 @@
 /*global define*/
-define(['./HomeButtonViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './HomeButtonViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-         HomeButtonViewModel,
-         DeveloperError,
-         destroyObject,
-         knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        HomeButtonViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -48,7 +51,7 @@ define(['./HomeButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    Object.defineProperties(HomeButton.prototype, {
+    defineProperties(HomeButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof HomeButton.prototype

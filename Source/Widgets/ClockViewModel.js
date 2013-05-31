@@ -1,12 +1,14 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/Clock',
+        '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/JulianDate',
         '../ThirdParty/knockout'
     ], function(
-        defaultValue,
         Clock,
+        defaultValue,
+        defineProperties,
         JulianDate,
         knockout) {
     "use strict";
@@ -154,7 +156,7 @@ define([
         });
     };
 
-    Object.defineProperties(ClockViewModel.prototype, {
+    defineProperties(ClockViewModel.prototype, {
         /**
          * Gets the underlying Clock.
          * @memberof ClockViewModel.prototype

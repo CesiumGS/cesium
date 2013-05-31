@@ -1,11 +1,13 @@
 /*global define*/
 define([
-        '../createCommand',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
-        createCommand,
+        defineProperties,
         DeveloperError,
+        createCommand,
         knockout) {
     "use strict";
 
@@ -74,7 +76,7 @@ define([
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     };
 
-    Object.defineProperties(ImageryProviderViewModel.prototype, {
+    defineProperties(ImageryProviderViewModel.prototype, {
         /**
          * Gets the Command called to create the imagery provider.
          * @memberof ImageryProviderViewModel.prototype

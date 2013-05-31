@@ -1,13 +1,15 @@
 /*global define*/
 define([
-        './FullscreenButtonViewModel',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
-        FullscreenButtonViewModel,
+        defineProperties,
         DeveloperError,
         destroyObject,
+        FullscreenButtonViewModel,
         knockout) {
     "use strict";
 
@@ -49,7 +51,7 @@ define([
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    Object.defineProperties(FullscreenButton.prototype, {
+    defineProperties(FullscreenButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof FullscreenButton.prototype

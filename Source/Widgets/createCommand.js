@@ -1,13 +1,16 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../ThirdParty/knockout'
-        ], function(
-                defaultValue,
-                DeveloperError,
-                Event,
-                knockout) {
+    ], function(
+        defaultValue,
+        defineProperties,
+        DeveloperError,
+        Event,
+        knockout) {
     "use strict";
 
     /**
@@ -57,7 +60,7 @@ define(['../Core/defaultValue',
         command.canExecute = canExecute;
         knockout.track(command, ['canExecute']);
 
-        Object.defineProperties(command, {
+        defineProperties(command, {
             beforeExecute : {
                 value : beforeExecute
             },

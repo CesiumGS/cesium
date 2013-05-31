@@ -1,17 +1,19 @@
 /*global define*/
 define([
-        '../createCommand',
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Fullscreen',
+        '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
-        createCommand,
         defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Fullscreen,
+        createCommand,
         knockout) {
     "use strict";
 
@@ -85,7 +87,7 @@ define([
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
     };
 
-    Object.defineProperties(FullscreenButtonViewModel.prototype, {
+    defineProperties(FullscreenButtonViewModel.prototype, {
         /**
          * Gets or sets the HTML element to place into fullscreen mode when the
          * corresponding button is pressed.

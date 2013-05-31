@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defineProperties,
         DeveloperError,
         knockout) {
     "use strict";
@@ -43,7 +45,7 @@ define([
         knockout.track(this, ['toggled', 'tooltip']);
     };
 
-    Object.defineProperties(ToggleButtonViewModel.prototype, {
+    defineProperties(ToggleButtonViewModel.prototype, {
         /**
          * Gets the command which will be executed when the button is toggled.
          * @memberof ToggleButtonViewModel.prototype

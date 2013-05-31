@@ -1,20 +1,22 @@
 /*global define*/
 define([
-        '../createCommand',
-        '../ToggleButtonViewModel',
         '../../Core/binarySearch',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../createCommand',
+        '../ToggleButtonViewModel',
         '../../ThirdParty/sprintf',
         '../../ThirdParty/knockout'
     ], function(
-        createCommand,
-        ToggleButtonViewModel,
         binarySearch,
         ClockStep,
         ClockRange,
+        defineProperties,
         DeveloperError,
+        createCommand,
+        ToggleButtonViewModel,
         sprintf,
         knockout) {
     "use strict";
@@ -397,7 +399,7 @@ define([
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
     };
 
-    Object.defineProperties(AnimationViewModel.prototype, {
+    defineProperties(AnimationViewModel.prototype, {
         /**
          * Gets or sets the array of positive known clock multipliers to associate with the shuttle ring.
          * When setting, these values will have negative equivalents created for them and sets both

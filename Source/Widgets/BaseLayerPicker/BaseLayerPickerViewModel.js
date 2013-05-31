@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
+        defineProperties,
         DeveloperError,
         createCommand,
         knockout) {
@@ -100,7 +102,7 @@ define([
         });
     };
 
-    Object.defineProperties(BaseLayerPickerViewModel.prototype, {
+    defineProperties(BaseLayerPickerViewModel.prototype, {
         /**
          * Gets the command to toggle the visibility of the drop down.
          * @memberof BaseLayerPickerViewModel.prototype

@@ -1,13 +1,15 @@
 /*global define*/
 define([
-        './BaseLayerPickerViewModel',
-        '../../Core/DeveloperError',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
-        BaseLayerPickerViewModel,
-        DeveloperError,
+        defineProperties,
         destroyObject,
+        DeveloperError,
+        BaseLayerPickerViewModel,
         knockout) {
     "use strict";
 
@@ -159,7 +161,7 @@ define([
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    Object.defineProperties(BaseLayerPicker.prototype, {
+    defineProperties(BaseLayerPicker.prototype, {
         /**
          * Gets the parent container.
          * @memberof BaseLayerPicker.prototype
