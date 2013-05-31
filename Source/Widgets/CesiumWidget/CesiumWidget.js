@@ -271,17 +271,20 @@ define(['../../Core/buildModuleUrl',
             get : function() {
                 return this._clock;
             }
+        },
+
+        /**
+         * Gets the screen space event handler.
+         * @memberof CesiumWidget.prototype
+         *
+         * @returns {ScreenSpaceEventHandler}
+         */
+        screenSpaceEventHandler : {
+            get : function() {
+                return this._screenSpaceEventHandler;
+            }
         }
     });
-
-    /**
-     * Gets the screen space event handler.
-     * @memberof CesiumWidget
-     * @returns {ScreenSpaceEventHandler}
-     */
-    CesiumWidget.prototype.getScreenSpaceEventHandler = function() {
-        return this._screenSpaceEventHandler;
-    };
 
     /**
      * @memberof CesiumWidget
