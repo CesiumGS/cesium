@@ -77,7 +77,7 @@ define([
         }
     }
 
-    var update3DTransform;
+    var update3DTransform = new Matrix4();
     var update3DMatrix3Scratch1 = new Matrix3();
     var update3DMatrix3Scratch2 = new Matrix3();
     var update3DMatrix3Scratch3 = new Matrix3();
@@ -90,15 +90,16 @@ define([
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         if (typeof cartesian !== 'undefined') {
-            var failed = false;
+            var successful = false;
 
-            var deltaTime = time.addSeconds(1.0);
+            // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
+            // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+            var deltaTime = time.addSeconds(0.01);
             var deltaCartesian = positionProperty.getValueCartesian(deltaTime, update3DCartesian3Scratch1);
             if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
-                var toFixed = Transforms.computeIcrfToFixedMatrix(time, update3DMatrix3Scratch3);
-
+                var toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
 
                 // Z along the position
                 var zBasis = update3DCartesian3Scratch2;
@@ -122,19 +123,30 @@ define([
                     Cartesian3.normalize(yBasis, yBasis);
                     Cartesian3.normalize(zBasis, zBasis);
 
-                    camera.transform = new Matrix4(
-                            xBasis.x, yBasis.x, zBasis.x, cartesian.x,
-                            xBasis.y, yBasis.y, zBasis.y, cartesian.y,
-                            xBasis.z, yBasis.z, zBasis.z, cartesian.z,
-                            0.0,       0.0,         0.0,      1.0);
-                } else {
-                    failed = true;
+                    var transform = update3DTransform;
+                    transform[0]  = xBasis.x;
+                    transform[1]  = xBasis.y;
+                    transform[2]  = xBasis.z;
+                    transform[3]  = 0.0;
+                    transform[4]  = yBasis.x;
+                    transform[5]  = yBasis.y;
+                    transform[6]  = yBasis.z;
+                    transform[7]  = 0.0;
+                    transform[8]  = zBasis.x;
+                    transform[9]  = zBasis.y;
+                    transform[10] = zBasis.z;
+                    transform[11] = 0.0;
+                    transform[12]  = cartesian.x;
+                    transform[13]  = cartesian.y;
+                    transform[14] = cartesian.z;
+                    transform[15] = 0.0;
+
+                    camera.transform = transform;
+                    successful = true;
                 }
-            } else {
-                failed = true;
             }
 
-            if (failed) {
+            if (!successful) {
                 camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
             }
 
