@@ -42,10 +42,8 @@ defineSuite([
     });
 
     it('throws if scene is undefined', function() {
-        var ellipsoid = new Ellipsoid();
-        var viewModel = new HomeButtonViewModel(undefined, transitioner, ellipsoid);
         expect(function() {
-            viewModel.command();
+            return new HomeButtonViewModel(undefined);
         }).toThrow();
     });
 

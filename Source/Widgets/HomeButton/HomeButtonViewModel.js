@@ -87,26 +87,25 @@ define(['../createCommand',
      * @alias HomeButtonViewModel
      * @constructor
      *
-     * @param {Scene} [scene] The scene instance to use.
+     * @param {Scene} scene The scene instance to use.
      * @param {SceneTransitioner} [transitioner] The scene transitioner instance to use.
-     * @param {Ellipsoid} [ellipsoid] The ellipsoid to be viewed when in home position.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
+     *
+     * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
         this._scene = scene;
-        this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = ellipsoid;
         this._transitioner = transitioner;
 
-        var that = this;
         this._command = createCommand(function() {
-            var scene = that._scene;
-            var transitioner = that._transitioner;
-            if (typeof scene === 'undefined') {
-                throw new DeveloperError('scene is required');
-            }
-            if (typeof transitioner !== 'undefined' && transitioner.getScene() !== scene) {
-                throw new DeveloperError('scene is required');
-            }
-            viewHome(scene, defaultValue(that._ellipsoid, Ellipsoid.WGS84), transitioner);
+            viewHome(scene, ellipsoid, transitioner);
         });
 
         /**
@@ -132,9 +131,6 @@ define(['../createCommand',
         transitioner : {
             get : function() {
                 return this._transitioner;
-            },
-            set : function(value) {
-                this._transitioner = value;
             }
         },
 
@@ -147,9 +143,6 @@ define(['../createCommand',
         scene : {
             get : function() {
                 return this._scene;
-            },
-            set : function(value) {
-                this._scene = value;
             }
         },
 
@@ -162,9 +155,6 @@ define(['../createCommand',
         ellipsoid : {
             get : function() {
                 return this._ellipsoid;
-            },
-            set : function(value) {
-                this._ellipsoid = value;
             }
         },
         /**

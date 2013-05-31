@@ -50,18 +50,6 @@ define(['../createCommand',
         });
 
         /**
-         * Toggles fullscreen mode.
-         * @type Command
-         */
-        this.command = createCommand(function() {
-            if (Fullscreen.isFullscreen()) {
-                Fullscreen.exitFullscreen();
-            } else {
-                Fullscreen.requestFullscreen(that._fullscreenElement);
-            }
-        }, knockout.getObservable(this, 'isFullscreenEnabled'));
-
-        /**
          * Gets a readonly Observable of the current button tooltip.
          * @type Observable
          */
@@ -71,6 +59,14 @@ define(['../createCommand',
             }
             return this.toggled ? 'Exit full screen' : 'Full screen';
         });
+
+        this._command = createCommand(function() {
+            if (Fullscreen.isFullscreen()) {
+                Fullscreen.exitFullscreen();
+            } else {
+                Fullscreen.requestFullscreen(that._fullscreenElement);
+            }
+        }, knockout.getObservable(this, 'isFullscreenEnabled'));
 
         this._fullscreenElement = defaultValue(fullscreenElement, document.body);
 
@@ -84,19 +80,30 @@ define(['../createCommand',
         /**
          * Gets or sets the HTML element to place into fullscreen mode when the
          * corresponding button is pressed.
-         *
          * @memberof FullscreenButtonViewModel.prototype
          * @type {Element}
+         *
+         * @exception {DeveloperError} value must be a valid HTML Element.
          */
         fullscreenElement : {
             get : function() {
                 return this._fullscreenElement;
             },
-            set : function(element) {
-                if (typeof element === 'undefined') {
-                    throw new DeveloperError('element is required.');
+            set : function(value) {
+                if (!(value instanceof Element)) {
+                    throw new DeveloperError('value must be a valid Element.');
                 }
-                this._fullscreenElement = element;
+                this._fullscreenElement = value;
+            }
+        },
+
+        /**
+         * Toggles fullscreen mode.
+         * @type Command
+         */
+        command : {
+            get : function() {
+                return this._command;
             }
         }
     });

@@ -22,11 +22,11 @@ define(['../createCommand',
      * @exception {DeveloperError} transitioner is required.
      */
     var SceneModePickerViewModel = function(transitioner) {
-        var that = this;
-
         if (typeof transitioner === 'undefined') {
             throw new DeveloperError('transitioner is required.');
         }
+
+        var that = this;
 
         this._transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
@@ -34,7 +34,6 @@ define(['../createCommand',
         };
 
         transitioner.onTransitionStart.addEventListener(this._transitionStart);
-
         this._transitioner = transitioner;
 
         /**
@@ -131,18 +130,6 @@ define(['../createCommand',
         transitioner : {
             get : function() {
                 return this._transitioner;
-            },
-            set : function(value){
-                var transitioner = this._transitioner;
-                if (typeof transitioner !== 'undefined') {
-                    transitioner.onTransitionStart.removeEventListener(this._transitionStart);
-                }
-
-                this._transitioner = value;
-
-                if (typeof value !== 'undefined') {
-                    value.onTransitionStart.addEventListener(this._transitionStart);
-                }
             }
         },
     });
@@ -160,7 +147,7 @@ define(['../createCommand',
      * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
-        this.transitioner = undefined;
+        this._transitioner.onTransitionStart.removeEventListener(this._transitionStart);
         destroyObject(this);
     };
 

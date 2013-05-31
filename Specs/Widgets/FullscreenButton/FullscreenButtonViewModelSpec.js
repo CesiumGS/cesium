@@ -38,4 +38,11 @@ defineSuite([
         viewModel.fullscreenElement = testElement;
         expect(viewModel.fullscreenElement).toBe(testElement);
     });
+
+    it('throws is setting fullscreenElement is not an Element', function() {
+        var viewModel = new FullscreenButtonViewModel();
+        expect(function() {
+            viewModel.fullscreenElement = {};
+        }).toThrow();
+    });
 });
