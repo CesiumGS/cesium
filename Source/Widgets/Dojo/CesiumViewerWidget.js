@@ -968,13 +968,13 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             if (typeof animationViewModel === 'undefined') {
                 var clockViewModel = new ClockViewModel();
                 clockViewModel.owner = this;
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.shouldAnimate = true;
                 animationViewModel = new AnimationViewModel(clockViewModel);
             }
             this.animationViewModel = animationViewModel;
             this.clockViewModel = animationViewModel.getClockViewModel();
 
-            this.clock = this.clockViewModel.getClock();
+            this.clock = this.clockViewModel.clock;
             var clock = this.clock;
 
             this.animation = new Animation(this.animationContainer, animationViewModel);
@@ -988,7 +988,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);
             this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
-            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+            this.baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
 
             if (typeof endUserOptions.source !== 'undefined') {
                 this.loadCzml(endUserOptions.source, endUserOptions.lookAt);

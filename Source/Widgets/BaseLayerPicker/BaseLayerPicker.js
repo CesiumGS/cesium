@@ -132,7 +132,7 @@ define(['./BaseLayerPickerViewModel',
                 css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem},\
                 attr: {title: tooltip},\
                 visible: creationCommand.canExecute,\
-                click: $parent.selectedItem');
+                click: function($data) { $parent.selectedItem = $data }');
         choices.appendChild(provider);
 
         var providerIcon = document.createElement('img');
