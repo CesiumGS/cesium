@@ -83,34 +83,32 @@ define([
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         if (typeof cartesian !== 'undefined') {
-            //if (that.referenceFrameType === ReferenceFrameType.EAST_NORTH_UP) {
-            //    camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
-            //} else if (that.referenceFrameType === ReferenceFrameType.LOCAL_VERTICAL_LOCAL_HORIZONTAL) {
-                var deltaTime = time.addSeconds(1.0);
-                var deltaCartesian = positionProperty.getValueCartesian(deltaTime);
-                if (typeof deltaCartesian !== 'undefined') {
-                    var toInertial = Transforms.computeFixedToIcrfMatrix(time);
-                    var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime);
-                    var toFixed = Transforms.computeIcrfToFixedMatrix(time);
+            var failed = false;
+
+            var deltaTime = time.addSeconds(1.0);
+            var deltaCartesian = positionProperty.getValueCartesian(deltaTime);
+            if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
+                var toInertial = Transforms.computeFixedToIcrfMatrix(time);
+                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime);
+                var toFixed = Transforms.computeIcrfToFixedMatrix(time);
 
 
-                    // Z along the position
-                    var zBasis = new Cartesian3();
-                    Cartesian3.normalize(cartesian, zBasis);
-                    Cartesian3.normalize(deltaCartesian, deltaCartesian);
+                // Z along the position
+                var zBasis = new Cartesian3();
+                Cartesian3.normalize(cartesian, zBasis);
+                Cartesian3.normalize(deltaCartesian, deltaCartesian);
 
-                    Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
-                    Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+                Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+                Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
 
-                    // Y is along the angular momentum vector (e.g. "orbit normal")
-                    var yBasis = Cartesian3.cross(zBasis, deltaCartesian);
-
-                    //Cartesian3.normalize(zBasis, zBasis);
+                // Y is along the angular momentum vector (e.g. "orbit normal")
+                var yBasis = Cartesian3.cross(zBasis, deltaCartesian);
+                if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+                    Cartesian3.normalize(zBasis, zBasis);
                     Cartesian3.normalize(yBasis, yBasis);
 
                     // X is along the cross of y and z (right handed basis / in the direction of motion)
                     var xBasis = Cartesian3.cross(yBasis, zBasis);
-
                     Cartesian3.normalize(xBasis, xBasis);
 
                     Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
@@ -126,8 +124,16 @@ define([
                             xBasis.y, yBasis.y, zBasis.y, cartesian.y,
                             xBasis.z, yBasis.z, zBasis.z, cartesian.z,
                             0.0,       0.0,         0.0,      1.0);
+                } else {
+                    failed = true;
                 }
-            //}
+            } else {
+                failed = true;
+            }
+
+            if (failed) {
+                camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            }
 
             that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
