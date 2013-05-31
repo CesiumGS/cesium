@@ -68,11 +68,13 @@ define([
      * @alias PolygonGeometry
      * @constructor
      *
-     * @param {Array} [positions] an array of positions that defined the corner points of the polygon
-     * @param {polygon hierarchy} [polygonHierarchy] a polygon hierarchy that can include holes
-     * @param {Number} [height=0.0] the height of the polygon,
-     * @param {Object} [pickData] the geometry pick data
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] the ellipsoid to be used as a reference
+     * @param {Array} [options.positions] an array of positions that defined the corner points of the polygon
+     * @param {Object} [options.polygonHierarchy] a polygon hierarchy that can include holes
+     * @param {Number} [options.height=0.0] the height of the polygon,
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] the ellipsoid to be used as a reference
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      * @exception {DeveloperError} At least three positions required

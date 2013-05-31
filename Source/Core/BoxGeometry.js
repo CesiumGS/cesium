@@ -34,6 +34,7 @@ define([
      * @param {Cartesian3} [options.dimensions=new Cartesian3(1.0, 1.0, 1.0)] The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this box.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.

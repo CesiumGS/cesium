@@ -61,19 +61,22 @@ define([
     /**
      * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
-     * @param {Extent} description.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
-     * @param {Number} [description.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [description.surfaceHeight=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [description.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
+     * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Number} [options.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
-     * @exception {DeveloperError} <code>description.extent</code> is required and must have north, south, east and west attributes.
-     * @exception {DeveloperError} <code>description.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>description.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>description.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>description.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>description.extent.north</code> must be greater than <code>extent.south</code>.
-     * @exception {DeveloperError} <code>description.extent.east</code> must be greater than <code>extent.west</code>.
+     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
+     * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
+     * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
      * @exception {DeveloperError} Rotated extent is invalid.
      *
      * @see Extent
