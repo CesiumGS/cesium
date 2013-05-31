@@ -43,10 +43,7 @@ define([
      * @constructor
      *
      * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
-     * @param {String} altitudeMode 'absolute' means the height is treated from the WGS84 ellipsoid.
-     *        'relativeToGround' means they are treated relative to the supplied terrain data.
-     * @param {Array} [terrain] Required if <code>altitudeMode</code> is 'relativeToGround'.
-     *        Has to denote the same points as in positions, with the ground elevation reflecting the terrain elevation.
+     * @param {Array} [terrain] Has to denote the same points as in positions, with the ground elevation reflecting the terrain elevation.
      * @param {Number} [top] The top of the wall. If specified, the top of the wall is treated as this
      *        height, and the information in the positions array is disregarded.
      * @param {Number} [bottom] The bottom of the wall. If specified, the bottom of the wall is treated as
@@ -57,10 +54,8 @@ define([
      * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
-     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
-     * @exception {DeveloperError} positions is required
-     * @exception {DeveloperError} No terrain supplied when required.
-     * @exception {DeveloperError} Coordinates and terrain points don't match in number
+     * @exception {DeveloperError} positions is required.
+     * @exception {DeveloperError} positions and terrain points must have the same length.
      *
      * @example
      *
@@ -74,7 +69,6 @@ define([
      *
      *  // create a wall that spans from ground level to 10000 meters
      *  var wall = new Cesium.WallGeometry({
-     *      altitudeMode : 'absolute',
      *      positions    : ellipsoid.cartographicArrayToCartesianArray(positions)
      *  });
      *
@@ -83,7 +77,6 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
-        var altitudeMode = options.altitudeMode;
         var terrain = options.terrain;
         var top = options.top;
         var bottom = options.bottom;
@@ -94,12 +87,8 @@ define([
             throw new DeveloperError('positions is required.');
         }
 
-        if (altitudeMode === 'relativeToGround' && typeof terrain === 'undefined') {
-            throw new DeveloperError('No terrain supplied when required.');
-        }
-
         if (typeof terrain !== 'undefined' && terrain.length !== wallPositions.length) {
-            throw new DeveloperError('Coordinates and terrain points don\'t match in number');
+            throw new DeveloperError('positions and terrain points must have the same length.');
         }
 
         var i;
