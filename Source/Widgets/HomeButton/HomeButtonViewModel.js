@@ -110,8 +110,8 @@ define(['../createCommand',
         });
 
         /**
-         * Gets or sets the tooltip.
-         * @memberof HomeButtonViewModel
+         * Gets or sets the tooltip.  This is an observable property.
+         *
          * @type String
          */
         this.tooltip = 'View Home';

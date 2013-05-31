@@ -11,7 +11,7 @@ define(['./SceneModePickerViewModel',
     "use strict";
 
     /**
-     * <img src="images/SceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
+     * <img src="images/sceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
      * <p>The SceneModePicker is a single button widget for switching between scene modes;
      * shown to the left in its expanded state. Programatic switching of scene modes will
      * be automatically reflected in the widget as long as the specified SceneTransitioner

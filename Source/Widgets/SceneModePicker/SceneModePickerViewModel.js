@@ -38,31 +38,31 @@ define(['../createCommand',
         this._transitioner = transitioner;
 
         /**
-         * Gets an Observable whose value is the current SceneMode
-         * @type Observable
+         * Gets or sets the current SceneMode.  This property is observable.
+         * @type SceneMode
         */
         this.sceneMode = transitioner.getScene().mode;
 
         /**
-         * Gets an Observable indicating if the button dropDown is currently visible.
-         * @type Observable
+         * Gets or sets whether the button drop-down is currently visible.  This property is observable.
+         * @type Boolean
         */
         this.dropDownVisible = false;
 
         /**
-         * Gets an Observable for the 2D tooltip.
-         * @type Observable
+         * Gets or sets the 2D tooltip.  This property is observable.
+         * @type String
         */
         this.tooltip2D = '2D';
 
         /**
-         * Gets an Observable for the 3D tooltip.
-         * @type Observable
+         * Gets or sets the 3D tooltip.  This property is observable.
+         * @type String
         */
         this.tooltip3D = '3D';
 
         /**
-         * Gets an Observable for the Columbus View tooltip.
+         * Gets or sets the Columbus View tooltip.  This property is observable.
          * @type Observable
         */
         this.tooltipColumbusView = 'Columbus View';
@@ -70,10 +70,10 @@ define(['../createCommand',
         knockout.track(this, ['sceneMode', 'dropDownVisible', 'tooltip2D', 'tooltip3D', 'tooltipColumbusView']);
 
         /**
-         * Gets the current tooltip.
+         * Gets the currently active tooltip.  This property is observable.
          * @type String
-         * @alias selectedTooltip
          */
+        this.selectedTooltip = undefined;
         knockout.defineProperty(this, 'selectedTooltip', function() {
             var mode = that.sceneMode;
             if (mode === SceneMode.SCENE2D) {

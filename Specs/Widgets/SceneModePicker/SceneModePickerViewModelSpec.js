@@ -96,7 +96,7 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
         viewModel.destroy();
     });
 
-    it('selectedToolTip changes on transition', function() {
+    it('selectedTooltip changes on transition', function() {
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
 
