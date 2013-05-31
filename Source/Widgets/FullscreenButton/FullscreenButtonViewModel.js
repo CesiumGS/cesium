@@ -92,10 +92,9 @@ define([
          * @memberof FullscreenButtonViewModel.prototype
          *
          * @type {Element}
-         *
-         * @exception {DeveloperError} value must be a valid HTML Element.
          */
         fullscreenElement : {
+            //TODO:@exception {DeveloperError} value must be a valid HTML Element.
             get : function() {
                 return this._fullscreenElement;
             },

@@ -45,7 +45,7 @@ define([
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var providerViewModels = [];
-     * providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     * providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -57,7 +57,7 @@ define([
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Black Marble',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
@@ -71,7 +71,7 @@ define([
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Disable Streaming Imagery',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
      *      tooltip : 'Uses a single image for the entire world.',
@@ -87,7 +87,7 @@ define([
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+     * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {

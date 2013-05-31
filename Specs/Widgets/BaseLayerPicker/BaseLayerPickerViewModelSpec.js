@@ -1,11 +1,12 @@
 /*global defineSuite*/
-defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
-             'Widgets/BaseLayerPicker/ImageryProviderViewModel',
-             'Scene/ImageryLayerCollection'
-            ], function(
-              BaseLayerPickerViewModel,
-              ImageryProviderViewModel,
-              ImageryLayerCollection) {
+defineSuite([
+         'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
+         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
+         'Scene/ImageryLayerCollection'
+     ], function(
+         BaseLayerPickerViewModel,
+         ImageryProviderViewModel,
+         ImageryLayerCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,7 +16,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel = ImageryProviderViewModel.fromConstants({
+    var testProviderViewModel = new ImageryProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -30,7 +31,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel2 = ImageryProviderViewModel.fromConstants({
+    var testProviderViewModel2 = new ImageryProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',

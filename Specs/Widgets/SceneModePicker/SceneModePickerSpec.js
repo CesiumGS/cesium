@@ -1,15 +1,16 @@
 /*global defineSuite*/
-defineSuite(['Widgets/SceneModePicker/SceneModePicker',
-             'Scene/SceneTransitioner',
-             'Specs/createScene',
-             'Specs/destroyScene',
-             'Specs/EventHelper'
-            ], function(
-              SceneModePicker,
-              SceneTransitioner,
-              createScene,
-              destroyScene,
-              EventHelper) {
+defineSuite([
+         'Widgets/SceneModePicker/SceneModePicker',
+         'Scene/SceneTransitioner',
+         'Specs/createScene',
+         'Specs/destroyScene',
+         'Specs/EventHelper'
+     ], function(
+         SceneModePicker,
+         SceneTransitioner,
+         createScene,
+         destroyScene,
+         EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

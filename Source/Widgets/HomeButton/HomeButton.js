@@ -22,7 +22,7 @@ define(['./HomeButtonViewModel',
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {Scene} scene is required.
+     * @exception {DeveloperError} scene is required.
      */
     var HomeButton = function(container, scene, transitioner, ellipsoid) {
         if (typeof container === 'undefined') {

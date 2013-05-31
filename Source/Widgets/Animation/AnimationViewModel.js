@@ -407,9 +407,9 @@ define([
          * @memberof AnimationViewModel.prototype
          *
          * @type {Array}
-         * @exception {DeveloperError} positiveTicks is required.
          */
         shuttleRingTicks : {
+            //TODO:@exception {DeveloperError} positiveTicks is required.
             get : function() {
                 return this._shuttleRingTicks;
             },
@@ -520,9 +520,9 @@ define([
          * @memberof AnimationViewModel.prototype
          *
          * @type {Function}
-         * @exception {DeveloperError} timeFormatter must be a function.
          */
         dateFormatter : {
+            //TODO:@exception {DeveloperError} dateFormatter must be a function.
             get : function() {
                 return this._dateFormatter;
             },
@@ -541,9 +541,9 @@ define([
          * @memberof AnimationViewModel.prototype
          *
          * @type {Function}
-         * @exception {DeveloperError} timeFormatter must be a function.
          */
         timeFormatter : {
+            //TODO:@exception {DeveloperError} timeFormatter must be a function.
             get : function() {
                 return this._timeFormatter;
             },
