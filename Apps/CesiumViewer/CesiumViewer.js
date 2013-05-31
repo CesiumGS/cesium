@@ -13,6 +13,7 @@ define([
         'Core/Ellipsoid',
         'Core/Extent',
         'Core/ExtentGeometry',
+        'Core/EllipseGeometry',
         'Core/EllipsoidGeometry',
         'Core/PolygonGeometry',
         'Core/BoxGeometry',
@@ -40,6 +41,7 @@ define([
         Ellipsoid,
         Extent,
         ExtentGeometry,
+        EllipseGeometry,
         EllipsoidGeometry,
         PolygonGeometry,
         BoxGeometry,
@@ -93,7 +95,7 @@ define([
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
             pickData : 'mesh2',
             color : Color.AQUAMARINE.clone()
         });
@@ -103,15 +105,28 @@ define([
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
             pickData : 'mesh3',
             color : Color.BLANCHEDALMOND
         });
+
+        var mesh4 = new EllipseGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+            ellipsoid : ellipsoid,
+            center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+            semiMinorAxis : 500000.0,
+            semiMajorAxis : 1000000.0,
+            bearing : CesiumMath.PI_OVER_FOUR,
+            height : 1000000.0,
+            pickData : 'mesh4',
+            color : Color.LIME
+        });
+
         var primitive = new Primitive({
-            geometries : [mesh, mesh2, mesh3],
+            geometries : [mesh, mesh2, mesh3, mesh4],
             appearance : Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT
         });
-        widget.scene.getPrimitives().add(primitive);
+        scene.getPrimitives().add(primitive);
 
         var m = new Material({
             context : widget.scene.getContext(),
@@ -148,22 +163,22 @@ define([
             renderState : rs
         });
 
-        var mesh4 = new EllipsoidGeometry({
+        var mesh5 = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,
             ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    Ellipsoid.WGS84.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
-            pickData : 'mesh4'
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
+            pickData : 'mesh5'
         });
 
         var primitive2 = new Primitive({
-            geometries : mesh4,
+            geometries : mesh5,
             appearance :appearance,
             vertexCacheOptimize : false,
             releaseGeometries : true,
             transformToWorldCoordinates : false
         });
-        widget.scene.getPrimitives().add(primitive2);
+        scene.getPrimitives().add(primitive2);
 
         var polygonGeometry = new PolygonGeometry({
                 polygonHierarchy : {
