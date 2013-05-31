@@ -15,7 +15,7 @@ define(['../createCommand',
     "use strict";
 
     /**
-     * The ViewModel for {@link FullscreenButton}.
+     * The view model for {@link FullscreenButton}.
      * @alias FullscreenButtonViewModel
      * @constructor
      *
@@ -24,34 +24,40 @@ define(['../createCommand',
     var FullscreenButtonViewModel = function(fullscreenElement) {
         var that = this;
 
+        var tmpIsFullscreen = knockout.observable(Fullscreen.isFullscreen());
+        var tmpIsEnabled = knockout.observable(Fullscreen.isFullscreenEnabled());
+
         /**
-         * Gets or sets whether fullscreen mode is activated.  This property is observable.
+         * Gets whether or not fullscreen mode is active.  This property is observable.
+         *
          * @type Boolean
          */
-        this.toggled = Fullscreen.isFullscreen();
-
-        knockout.track(this, ['toggled']);
-
-        var tmp = knockout.observable(Fullscreen.isFullscreenEnabled());
+        this.isFullscreen = undefined;
+        knockout.defineProperty(this, 'isFullscreen', {
+            get : function() {
+                return tmpIsFullscreen();
+            }
+        });
 
         /**
-         * Gets or sets whether fullscreen functionality should be enabled.  This property is observable.
-         * @type Boolean
+         * Gets or sets whether or not fullscreen functionality should be enabled.  This property is observable.
          *
+         * @type Boolean
          * @see Fullscreen.isFullscreenEnabled
          */
         this.isFullscreenEnabled = undefined;
         knockout.defineProperty(this, 'isFullscreenEnabled', {
             get : function() {
-                return tmp();
+                return tmpIsEnabled();
             },
             set : function(value) {
-                tmp(value && Fullscreen.isFullscreenEnabled());
+                tmpIsEnabled(value && Fullscreen.isFullscreenEnabled());
             }
         });
 
         /**
-         * Gets the current button tooltip.  This property is observable.
+         * Gets or sets the tooltip.  This property is observable.
+         *
          * @type String
          */
         this.tooltip = undefined;
@@ -59,7 +65,7 @@ define(['../createCommand',
             if (!this.isFullscreenEnabled) {
                 return 'Full screen unavailable';
             }
-            return this.toggled ? 'Exit full screen' : 'Full screen';
+            return tmpIsFullscreen ? 'Exit full screen' : 'Full screen';
         });
 
         this._command = createCommand(function() {
@@ -73,7 +79,7 @@ define(['../createCommand',
         this._fullscreenElement = defaultValue(fullscreenElement, document.body);
 
         this._callback = function() {
-            that.toggled = Fullscreen.isFullscreen();
+            tmpIsFullscreen(Fullscreen.isFullscreen());
         };
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
     };
@@ -83,6 +89,7 @@ define(['../createCommand',
          * Gets or sets the HTML element to place into fullscreen mode when the
          * corresponding button is pressed.
          * @memberof FullscreenButtonViewModel.prototype
+         *
          * @type {Element}
          *
          * @exception {DeveloperError} value must be a valid HTML Element.
@@ -100,8 +107,9 @@ define(['../createCommand',
         },
 
         /**
-         * Toggles fullscreen mode.
+         * Gets the Command to toggle fullscreen mode.
          * @memberof FullscreenButtonViewModel.prototype
+         *
          * @type Command
          */
         command : {

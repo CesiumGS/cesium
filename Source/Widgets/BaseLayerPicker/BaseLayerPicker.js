@@ -121,17 +121,17 @@ define(['./BaseLayerPickerViewModel',
         var choices = document.createElement('div');
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
-                css: { "cesium-baseLayerPicker-visible" : dropDownVisible(),\
-                       "cesium-baseLayerPicker-hidden" : !dropDownVisible() },\
+                css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
+                       "cesium-baseLayerPicker-hidden" : !dropDownVisible },\
                 foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');
         provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
-                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem()},\
+                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem},\
                 attr: {title: tooltip},\
-                visible: creationCommand.canExecute(),\
+                visible: creationCommand.canExecute,\
                 click: $parent.selectedItem');
         choices.appendChild(provider);
 
@@ -150,7 +150,7 @@ define(['./BaseLayerPickerViewModel',
 
         this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
-                viewModel.dropDownVisible(false);
+                viewModel.dropDownVisible = false;
             }
         };
 
@@ -161,8 +161,8 @@ define(['./BaseLayerPickerViewModel',
     Object.defineProperties(BaseLayerPicker.prototype, {
         /**
          * Gets the parent container.
-         *
          * @memberof BaseLayerPicker.prototype
+         *
          * @type {Element}
          */
         container : {
@@ -171,9 +171,9 @@ define(['./BaseLayerPickerViewModel',
             }
         },
         /**
-         * Gets the view model being used.
-         *
+         * Gets the view model.
          * @memberof BaseLayerPicker.prototype
+         *
          * @type {BaseLayerPickerViewModel}
          */
         viewModel : {

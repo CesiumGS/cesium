@@ -13,7 +13,7 @@ define(['../createCommand',
     "use strict";
 
     /**
-     * The ViewModel for {@link SceneModePicker}.
+     * The view model for {@link SceneModePicker}.
      * @alias SceneModePickerViewModel
      * @constructor
      *
@@ -84,35 +84,19 @@ define(['../createCommand',
             return that.tooltipColumbusView;
         });
 
-        /**
-         * Toggles dropDown visibility.
-         * @type Command
-        */
-        this.toggleDropDown = createCommand(function() {
+        this._toggleDropDown = createCommand(function() {
             that.dropDownVisible = !that.dropDownVisible;
         });
 
-        /**
-         * Morphs to 2D.
-         * @type Command
-        */
-        this.morphTo2D = createCommand(function() {
+        this._morphTo2D = createCommand(function() {
             transitioner.morphTo2D();
         });
 
-        /**
-         * Morphs to 3D.
-         * @type Command
-        */
-        this.morphTo3D = createCommand(function() {
+        this._morphTo3D = createCommand(function() {
             transitioner.morphTo3D();
         });
 
-        /**
-         * Morphs to Columbus View.
-         * @type Command
-        */
-        this.morphToColumbusView = createCommand(function() {
+        this._morphToColumbusView = createCommand(function() {
             transitioner.morphToColumbusView();
         });
 
@@ -123,13 +107,61 @@ define(['../createCommand',
     Object.defineProperties(SceneModePickerViewModel.prototype, {
         /**
          * Gets the scene transitioner.
-         *
          * @memberof SceneModePickerViewModel.prototype
+         *
          * @type {SceneTransitioner}
          */
         transitioner : {
             get : function() {
                 return this._transitioner;
+            }
+        },
+
+        /**
+         * Gets the command to toggle the drop down box.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        toggleDropDown : {
+            get : function() {
+                return this._toggleDropDown;
+            }
+        },
+
+        /**
+         * Gets the command to morph to 2D.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphTo2D : {
+            get : function() {
+                return this._morphTo2D;
+            }
+        },
+
+        /**
+         * Gets the command to morph to 3D.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphTo3D : {
+            get : function() {
+                return this._morphTo3D;
+            }
+        },
+
+        /**
+         * Gets the command to morph to Columbus View.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphToColumbusView : {
+            get : function() {
+                return this._morphToColumbusView;
             }
         },
     });

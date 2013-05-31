@@ -42,7 +42,7 @@ define(['./FullscreenButtonViewModel',
 
         this._element = document.createElement('button');
         this._element.className = 'cesium-fullscreenButton';
-        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": isFullscreen }, click: command, enable: isFullscreenEnabled');
         container.appendChild(this._element);
 
         knockout.applyBindings(this._viewModel, this._element);
@@ -51,8 +51,8 @@ define(['./FullscreenButtonViewModel',
     Object.defineProperties(FullscreenButton.prototype, {
         /**
          * Gets the parent container.
-         *
          * @memberof FullscreenButton.prototype
+         *
          * @type {Element}
          */
         container : {
@@ -61,9 +61,9 @@ define(['./FullscreenButtonViewModel',
             }
         },
         /**
-         * Gets the view model being used.
-         *
+         * Gets the view model.
          * @memberof FullscreenButton.prototype
+         *
          * @type {FullscreenButtonViewModel}
          */
         viewModel : {

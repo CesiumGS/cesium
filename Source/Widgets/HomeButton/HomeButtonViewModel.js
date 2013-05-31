@@ -83,7 +83,7 @@ define(['../createCommand',
     }
 
     /**
-     * The ViewModel for {@link HomeButton}.
+     * The view model for {@link HomeButton}.
      * @alias HomeButtonViewModel
      * @constructor
      *
@@ -124,8 +124,8 @@ define(['../createCommand',
          * If a transitioner is assigned, any running morphs will be completed
          * when the home button is pressed.  The transitioner must be using
          * the same Scene instance as the scene property.
-         *
          * @memberof HomeButtonViewModel.prototype
+         *
          * @type {SceneTransitioner}
          */
         transitioner : {
@@ -136,8 +136,8 @@ define(['../createCommand',
 
         /**
          * Gets the scene to control.
-         *
          * @memberof HomeButtonViewModel.prototype
+         *
          * @type {Scene}
          */
         scene : {
@@ -148,8 +148,8 @@ define(['../createCommand',
 
         /**
          * Gets the ellipsoid to be viewed when in home position.
-         *
          * @memberof HomeButtonViewModel.prototype
+         *
          * @type {Ellipsoid}
          */
         ellipsoid : {
@@ -157,10 +157,11 @@ define(['../createCommand',
                 return this._ellipsoid;
             }
         },
+
         /**
          * Gets the Command that is executed when the button is clicked.
-         *
          * @memberof HomeButtonViewModel.prototype
+         *
          * @type {Command}
          */
         command : {

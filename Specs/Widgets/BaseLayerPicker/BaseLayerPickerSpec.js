@@ -33,13 +33,13 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
 
         var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(document.body);
-        expect(widget.viewModel.dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireMouseDown(container);
-        expect(widget.viewModel.dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);
@@ -52,15 +52,15 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
 
         var widget = new BaseLayerPicker('testContainer', new ImageryLayerCollection());
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(document.body);
-        expect(widget.viewModel.dropDownVisible()).toEqual(false);
+        expect(widget.viewModel.dropDownVisible).toEqual(false);
 
-        widget.viewModel.dropDownVisible(true);
+        widget.viewModel.dropDownVisible = true;
         EventHelper.fireTouchStart(container);
-        expect(widget.viewModel.dropDownVisible()).toEqual(true);
+        expect(widget.viewModel.dropDownVisible).toEqual(true);
 
         widget.destroy();
         document.body.removeChild(container);

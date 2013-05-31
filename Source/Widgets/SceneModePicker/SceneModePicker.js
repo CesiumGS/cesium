@@ -119,8 +119,8 @@ define(['./SceneModePickerViewModel',
     Object.defineProperties(SceneModePicker.prototype, {
         /**
          * Gets the parent container.
-         *
          * @memberof SceneModePicker.prototype
+         *
          * @type {Element}
          */
         container : {
@@ -129,9 +129,9 @@ define(['./SceneModePickerViewModel',
             }
         },
         /**
-         * Gets the view model being used.
-         *
+         * Gets the view model.
          * @memberof SceneModePicker.prototype
+         *
          * @type {SceneModePickerViewModel}
          */
         viewModel : {

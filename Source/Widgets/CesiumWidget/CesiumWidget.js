@@ -176,8 +176,8 @@ define(['../../Core/buildModuleUrl',
     Object.defineProperties(CesiumWidget.prototype, {
         /**
          * Gets the parent container.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {Element}
          */
         container : {
@@ -188,8 +188,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the scene transitioner.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {SceneTransitioner}
          */
         transitioner : {
@@ -200,8 +200,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the canvas.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {Canvas}
          */
         canvas : {
@@ -212,8 +212,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the Cesium logo element.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {Element}
          */
         cesiumLogo : {
@@ -224,8 +224,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the scene.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {Scene}
          */
         scene : {
@@ -236,8 +236,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the primary central body.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {CentralBody}
          */
         centralBody : {
@@ -248,8 +248,8 @@ define(['../../Core/buildModuleUrl',
 
         /**
          * Gets the clock.
-         *
          * @memberof CesiumWidget.prototype
+         *
          * @type {Clock}
          */
         clock : {

@@ -19,9 +19,9 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         var viewModel = new ImageryProviderViewModel(description);
-        expect(viewModel.name).toBe(description.name);
-        expect(viewModel.tooltip).toBe(description.tooltip);
-        expect(viewModel.iconUrl).toBe(description.iconUrl);
+        expect(viewModel.name).toBe(description.name());
+        expect(viewModel.tooltip).toBe(description.tooltip());
+        expect(viewModel.iconUrl).toBe(description.iconUrl());
         expect(viewModel.creationCommand).toBe(description.creationCommand);
     });
 
@@ -88,9 +88,9 @@ defineSuite(['Widgets/BaseLayerPicker/ImageryProviderViewModel',
         };
 
         var viewModel = ImageryProviderViewModel.fromConstants(description);
-        expect(viewModel.name()).toEqual(description.name);
-        expect(viewModel.tooltip()).toEqual(description.tooltip);
-        expect(viewModel.iconUrl()).toEqual(description.iconUrl);
+        expect(viewModel.name).toEqual(description.name);
+        expect(viewModel.tooltip).toEqual(description.tooltip);
+        expect(viewModel.iconUrl).toEqual(description.iconUrl);
         expect(viewModel.creationCommand).toBeDefined();
         viewModel.creationCommand();
         expect(called).toEqual(true);

@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * A ViewModel which exposes a {@link Clock} for user interfaces.
+     * A view model which exposes a {@link Clock} for user interfaces.
      * @alias ClockViewModel
      * @constructor
      *

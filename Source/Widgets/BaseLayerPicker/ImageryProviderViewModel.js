@@ -9,7 +9,7 @@ define(['../createCommand',
     "use strict";
 
     /**
-     * ViewModel that represents each item in the BaseLayerPicker.
+     * view model that represents each item in the BaseLayerPicker.
      *
      * @alias ImageryProviderViewModel
      * @constructor
@@ -47,29 +47,41 @@ define(['../createCommand',
         }
 
         /**
-         * Gets an Observable representing the name of this provider.
-         * @type Observable
+         * Gets the display name.
+         * @type String
          */
         this.name = description.name;
 
         /**
-         * Gets an Observable representing the tooltip to show when the item is moused over.
-         * @type Observable
+         * Gets the tooltip.
+         * @type String
          */
         this.tooltip = description.tooltip;
 
         /**
-         * Gets an Observable representing the icon associated with this layer.
-         * @type Observable
+         * Gets the icon.
+         * @type String
          */
         this.iconUrl = description.iconUrl;
 
+        this._creationCommand = description.creationCommand;
+
+        knockout.track(this, ['name', 'tooltip', 'iconUrl']);
+    };
+
+    Object.defineProperties(ImageryProviderViewModel.prototype, {
         /**
-         * Gets or sets the function called by the widget to create the imagery provider represented by this view model.
+         * Gets the Command called to create the imagery provider.
+         * @memberof ImageryProviderViewModel.prototype
+         *
          * @type Command
          */
-        this.creationCommand = description.creationCommand;
-    };
+        creationCommand : {
+            get : function() {
+                return this._creationCommand;
+            }
+        }
+    });
 
     /**
      * Creates an instance from constant, non-observable values.

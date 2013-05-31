@@ -51,8 +51,8 @@ define(['./HomeButtonViewModel',
     Object.defineProperties(HomeButton.prototype, {
         /**
          * Gets the parent container.
-         *
          * @memberof HomeButton.prototype
+         *
          * @type {Element}
          */
         container : {
@@ -61,9 +61,9 @@ define(['./HomeButtonViewModel',
             }
         },
         /**
-         * Gets the view model being used.
-         *
+         * Gets the view model.
          * @memberof HomeButton.prototype
+         *
          * @type {HomeButtonViewModel}
          */
         viewModel : {

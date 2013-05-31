@@ -93,7 +93,7 @@ define([
     }
 
     /**
-     * The ViewModel for the {@link Animation} widget.
+     * The view model for the {@link Animation} widget.
      * @alias AnimationViewModel
      * @constructor
      *
