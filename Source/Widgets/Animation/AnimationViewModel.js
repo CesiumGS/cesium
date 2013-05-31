@@ -24,15 +24,15 @@ define([
     var maxShuttleRingAngle = 105;
 
     function cancelRealtime(clockViewModel) {
-        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
-            clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-            clockViewModel.multiplier(1);
+        if (clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK) {
+            clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clockViewModel.multiplier = 1;
         }
     }
 
     function unpause(clockViewModel) {
         cancelRealtime(clockViewModel);
-        clockViewModel.shouldAnimate(true);
+        clockViewModel.shouldAnimate = true;
     }
 
     function numberComparator(left, right) {
@@ -67,7 +67,7 @@ define([
     }
 
     function multiplierToAngle(multiplier, shuttleRingTicks, clockViewModel) {
-        if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
+        if (clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK) {
             return realtimeShuttleRingAngle;
         }
 
@@ -130,47 +130,47 @@ define([
 
         this._canAnimate = knockout.computed(function() {
             var clockViewModel = that._clockViewModel;
-            var clockRange = clockViewModel.clockRange();
+            var clockRange = clockViewModel.clockRange;
 
             if (that.shuttleRingDragging() || clockRange === ClockRange.UNBOUNDED) {
                 return true;
             }
 
-            var multiplier = clockViewModel.multiplier();
-            var currentTime = clockViewModel.currentTime();
-            var startTime = clockViewModel.startTime();
+            var multiplier = clockViewModel.multiplier;
+            var currentTime = clockViewModel.currentTime;
+            var startTime = clockViewModel.startTime;
 
             var result = false;
             if (clockRange === ClockRange.LOOP_STOP) {
                 result = currentTime.greaterThan(startTime) || (currentTime.equals(startTime) && multiplier > 0);
             } else {
-                var stopTime = clockViewModel.stopTime();
+                var stopTime = clockViewModel.stopTime;
                 result = (currentTime.greaterThan(startTime) && currentTime.lessThan(stopTime)) || //
                          (currentTime.equals(startTime) && multiplier > 0) || //
                          (currentTime.equals(stopTime) && multiplier < 0);
             }
 
             if (!result) {
-                clockViewModel.shouldAnimate(false);
+                clockViewModel.shouldAnimate = false;
             }
             return result;
         });
 
         this._isSystemTimeAvailable = knockout.computed(function() {
             var clockViewModel = that._clockViewModel;
-            var clockRange = clockViewModel.clockRange();
+            var clockRange = clockViewModel.clockRange;
             if (clockRange === ClockRange.UNBOUNDED) {
                 return true;
             }
 
-            var systemTime = clockViewModel.systemTime();
-            var startTime = clockViewModel.startTime();
-            var stopTime = clockViewModel.stopTime();
+            var systemTime = clockViewModel.systemTime;
+            var startTime = clockViewModel.startTime;
+            var stopTime = clockViewModel.stopTime;
             return systemTime.greaterThanOrEquals(startTime) && systemTime.lessThanOrEquals(stopTime);
         });
 
         this._isAnimatingObs = knockout.computed(function() {
-            return that._clockViewModel.shouldAnimate() && (that._canAnimate() || that.shuttleRingDragging());
+            return that._clockViewModel.shouldAnimate && (that._canAnimate() || that.shuttleRingDragging());
         });
 
         /**
@@ -178,7 +178,7 @@ define([
          * @type Observable
          */
         this.timeLabel = knockout.computed(function() {
-            return that._timeFormatter()(that._clockViewModel.currentTime(), that);
+            return that._timeFormatter()(that._clockViewModel.currentTime, that);
         });
 
         /**
@@ -186,7 +186,7 @@ define([
          * @type Observable
          */
         this.dateLabel = knockout.computed(function() {
-            return that._dateFormatter()(that._clockViewModel.currentTime(), that);
+            return that._dateFormatter()(that._clockViewModel.currentTime, that);
         });
 
         /**
@@ -195,11 +195,11 @@ define([
          */
         this.multiplierLabel = knockout.computed(function() {
             var clockViewModel = that._clockViewModel;
-            if (clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK) {
+            if (clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK) {
                 return 'Today';
             }
 
-            var multiplier = clockViewModel.multiplier();
+            var multiplier = clockViewModel.multiplier;
 
             //If it's a whole number, just return it.
             if (multiplier % 1 === 0) {
@@ -217,9 +217,9 @@ define([
             tooltip : knockout.observable('Pause'),
             command : createCommand(function() {
                 var clockViewModel = that._clockViewModel;
-                if (clockViewModel.shouldAnimate()) {
+                if (clockViewModel.shouldAnimate) {
                     cancelRealtime(clockViewModel);
-                    clockViewModel.shouldAnimate(false);
+                    clockViewModel.shouldAnimate = false;
                 } else if (that._canAnimate()) {
                     unpause(clockViewModel);
                 }
@@ -228,39 +228,39 @@ define([
 
         this._playReverseViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
-                return that._isAnimatingObs() && (clockViewModel.multiplier() < 0);
+                return that._isAnimatingObs() && (clockViewModel.multiplier < 0);
             }),
             tooltip : knockout.observable('Play Reverse'),
             command : createCommand(function() {
                 var clockViewModel = that._clockViewModel;
                 cancelRealtime(clockViewModel);
-                var multiplier = clockViewModel.multiplier();
+                var multiplier = clockViewModel.multiplier;
                 if (multiplier > 0) {
-                    clockViewModel.multiplier(-multiplier);
+                    clockViewModel.multiplier = -multiplier;
                 }
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.shouldAnimate = true;
             })
         });
 
         this._playForwardViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
-                return that._isAnimatingObs() && clockViewModel.multiplier() > 0 && clockViewModel.clockStep() !== ClockStep.SYSTEM_CLOCK;
+                return that._isAnimatingObs() && clockViewModel.multiplier > 0 && clockViewModel.clockStep !== ClockStep.SYSTEM_CLOCK;
             }),
             tooltip : knockout.observable('Play Forward'),
             command : createCommand(function() {
                 var clockViewModel = that._clockViewModel;
                 cancelRealtime(clockViewModel);
-                var multiplier = clockViewModel.multiplier();
+                var multiplier = clockViewModel.multiplier;
                 if (multiplier < 0) {
-                    clockViewModel.multiplier(-multiplier);
+                    clockViewModel.multiplier = -multiplier;
                 }
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.shouldAnimate = true;
             })
         });
 
         this._playRealtimeViewModel = new ToggleButtonViewModel({
             toggled : knockout.computed(function() {
-                return clockViewModel.shouldAnimate() && clockViewModel.clockStep() === ClockStep.SYSTEM_CLOCK;
+                return clockViewModel.shouldAnimate && clockViewModel.clockStep === ClockStep.SYSTEM_CLOCK;
             }),
             tooltip : knockout.computed(function() {
                 if (that._isSystemTimeAvailable()) {
@@ -270,9 +270,9 @@ define([
             }),
             command : createCommand(function() {
                 var clockViewModel = that._clockViewModel;
-                clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK);
-                clockViewModel.multiplier(1.0);
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
+                clockViewModel.multiplier = 1.0;
+                clockViewModel.shouldAnimate = true;
             }, knockout.computed(function() {
                 return that._isSystemTimeAvailable();
             }))
@@ -292,18 +292,18 @@ define([
          */
         this.shuttleRingAngle = knockout.computed({
             read : function() {
-                return multiplierToAngle(clockViewModel.multiplier(), that._shuttleRingTicks(), clockViewModel);
+                return multiplierToAngle(clockViewModel.multiplier, that._shuttleRingTicks(), clockViewModel);
             },
             write : function(angle) {
                 angle = Math.max(Math.min(angle, maxShuttleRingAngle), -maxShuttleRingAngle);
                 var ticks = that._shuttleRingTicks();
 
                 var clockViewModel = that._clockViewModel;
-                clockViewModel.clockStep(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
+                clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 
                 //If we are at the max angle, simply return the max value in either direction.
                 if (Math.abs(angle) === maxShuttleRingAngle) {
-                    clockViewModel.multiplier(angle > 0 ? ticks[ticks.length - 1] : ticks[0]);
+                    clockViewModel.multiplier = angle > 0 ? ticks[ticks.length - 1] : ticks[0];
                     return;
                 }
 
@@ -327,7 +327,7 @@ define([
                         }
                     }
                 }
-                clockViewModel.multiplier(multiplier);
+                clockViewModel.multiplier = multiplier;
             }
         });
 
@@ -339,10 +339,10 @@ define([
             var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._shuttleRingTicks();
-            var multiplier = clockViewModel.multiplier();
+            var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
             if (index >= 0) {
-                clockViewModel.multiplier(shuttleRingTicks[index]);
+                clockViewModel.multiplier = shuttleRingTicks[index];
             }
         });
 
@@ -354,10 +354,10 @@ define([
             var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
             var shuttleRingTicks = that._shuttleRingTicks();
-            var multiplier = clockViewModel.multiplier();
+            var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;
             if (index < shuttleRingTicks.length) {
-                clockViewModel.multiplier(shuttleRingTicks[index]);
+                clockViewModel.multiplier = shuttleRingTicks[index];
             }
         });
     };
@@ -432,7 +432,7 @@ define([
     AnimationViewModel.defaultTimeFormatter = function(date, viewModel) {
         var gregorianDate = date.toGregorianDate();
         var millisecond = Math.round(gregorianDate.millisecond);
-        if (Math.abs(viewModel._clockViewModel.multiplier()) < 1) {
+        if (Math.abs(viewModel._clockViewModel.multiplier) < 1) {
             return sprintf("%02d:%02d:%02d.%03d", gregorianDate.hour, gregorianDate.minute, gregorianDate.second, millisecond);
         }
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
