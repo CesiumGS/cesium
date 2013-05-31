@@ -1,5 +1,6 @@
 /*global define*/
-define(['../createCommand',
+define([
+        '../createCommand',
         '../../Core/defaultValue',
         '../../Core/Cartesian3',
         '../../Core/DeveloperError',
@@ -12,20 +13,20 @@ define(['../createCommand',
         '../../Scene/PerspectiveFrustum',
         '../../Scene/SceneMode',
         '../../ThirdParty/knockout'
-        ], function(
-            createCommand,
-            defaultValue,
-            Cartesian3,
-            DeveloperError,
-            Ellipsoid,
-            Extent,
-            CesiumMath,
-            Matrix4,
-            Camera,
-            CameraColumbusViewMode,
-            PerspectiveFrustum,
-            SceneMode,
-            knockout) {
+    ], function(
+        createCommand,
+        defaultValue,
+        Cartesian3,
+        DeveloperError,
+        Ellipsoid,
+        Extent,
+        CesiumMath,
+        Matrix4,
+        Camera,
+        CameraColumbusViewMode,
+        PerspectiveFrustum,
+        SceneMode,
+        knockout) {
     "use strict";
 
     function viewHome(scene, ellipsoid, transitioner) {

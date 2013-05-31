@@ -1,15 +1,16 @@
 /*global define*/
-define(['../createCommand',
+define([
+        '../createCommand',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout'
-        ], function(
-            createCommand,
-            DeveloperError,
-            knockout) {
+    ], function(
+        createCommand,
+        DeveloperError,
+        knockout) {
     "use strict";
 
     /**
-     * view model that represents each item in the BaseLayerPicker.
+     * A view model that represents each item in the BaseLayerPicker.
      *
      * @alias ImageryProviderViewModel
      * @constructor
@@ -29,7 +30,6 @@ define(['../createCommand',
      * @see ImageryProvider
      */
     var ImageryProviderViewModel = function(description) {
-
         if (typeof description.name === 'undefined') {
             throw new DeveloperError('description.name is required.');
         }
@@ -46,25 +46,25 @@ define(['../createCommand',
             throw new DeveloperError('description.creationCommand is required.');
         }
 
+        this._creationCommand = description.creationCommand;
+
         /**
-         * Gets the display name.
+         * Gets the display name.  This property is observable.
          * @type String
          */
         this.name = description.name;
 
         /**
-         * Gets the tooltip.
+         * Gets the tooltip.  This property is observable.
          * @type String
          */
         this.tooltip = description.tooltip;
 
         /**
-         * Gets the icon.
+         * Gets the icon.  This property is observable.
          * @type String
          */
         this.iconUrl = description.iconUrl;
-
-        this._creationCommand = description.creationCommand;
 
         knockout.track(this, ['name', 'tooltip', 'iconUrl']);
     };

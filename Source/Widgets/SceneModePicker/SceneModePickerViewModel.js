@@ -62,7 +62,7 @@ define(['../createCommand',
 
         /**
          * Gets or sets the Columbus View tooltip.  This property is observable.
-         * @type Observable
+         * @type String
         */
         this.tooltipColumbusView = 'Columbus View';
 

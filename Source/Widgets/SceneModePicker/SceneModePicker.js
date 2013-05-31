@@ -128,6 +128,7 @@ define(['./SceneModePickerViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof SceneModePicker.prototype
@@ -150,7 +151,7 @@ define(['./SceneModePickerViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof SceneModePicker
      */

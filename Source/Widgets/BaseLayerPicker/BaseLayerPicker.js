@@ -1,13 +1,14 @@
 /*global define*/
-define(['./BaseLayerPickerViewModel',
+define([
+        './BaseLayerPickerViewModel',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../ThirdParty/knockout'
-        ], function(
-            BaseLayerPickerViewModel,
-            DeveloperError,
-            destroyObject,
-            knockout) {
+    ], function(
+        BaseLayerPickerViewModel,
+        DeveloperError,
+        destroyObject,
+        knockout) {
     "use strict";
 
     /**
@@ -170,6 +171,7 @@ define(['./BaseLayerPickerViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof BaseLayerPicker.prototype
@@ -192,7 +194,7 @@ define(['./BaseLayerPickerViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof BaseLayerPicker
      */

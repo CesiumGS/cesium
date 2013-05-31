@@ -1,17 +1,18 @@
 /*global define*/
-define(['../createCommand',
+define([
+        '../createCommand',
         '../../Core/defaultValue',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Fullscreen',
         '../../ThirdParty/knockout'
-        ], function(
-            createCommand,
-            defaultValue,
-            destroyObject,
-            DeveloperError,
-            Fullscreen,
-            knockout) {
+    ], function(
+        createCommand,
+        defaultValue,
+        destroyObject,
+        DeveloperError,
+        Fullscreen,
+        knockout) {
     "use strict";
 
     /**

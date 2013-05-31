@@ -756,7 +756,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                     shuttleRingTicks.push(fastestSpeed);
                 }
             }
-            this.animationViewModel.setShuttleRingTicks(shuttleRingTicks);
+            this.animationViewModel.shuttleRingTicks = shuttleRingTicks;
             this.timeline.updateFromClock();
             this.timeline.zoomTo(clock.startTime, clock.stopTime);
         },
@@ -972,7 +972,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 animationViewModel = new AnimationViewModel(clockViewModel);
             }
             this.animationViewModel = animationViewModel;
-            this.clockViewModel = animationViewModel.getClockViewModel();
+            this.clockViewModel = animationViewModel.clockViewModel;
 
             this.clock = this.clockViewModel.clock;
             var clock = this.clock;

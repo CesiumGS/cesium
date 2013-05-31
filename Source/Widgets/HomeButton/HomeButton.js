@@ -60,6 +60,7 @@ define(['./HomeButtonViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof HomeButton.prototype
@@ -82,7 +83,7 @@ define(['./HomeButtonViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof HomeButton
      */

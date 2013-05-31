@@ -39,7 +39,7 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
     // child object properties independently, define your own class for those child objects and put
     // a separate ko.track call into its constructor --- this gives you far more control.
     function track(obj, propertyNames) {
-        if (!obj || typeof obj !== 'object') {
+        if (!obj /*|| typeof obj !== 'object'*/) {
             throw new Error('When calling ko.track, you must pass an object as the first parameter.');
         }
 
@@ -260,7 +260,7 @@ define(['./weakmap', 'exports'], function(weakmap, exports) {
     //     ko.getObservable(model, 'propertyName')
     //       .subscribe(function(newValue) { ... });
     function getObservable(obj, propertyName) {
-        if (!obj || typeof obj !== 'object') {
+        if (!obj /*|| typeof obj !== 'object'*/) {
             return null;
         }
 

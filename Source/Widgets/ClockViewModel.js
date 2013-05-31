@@ -29,7 +29,7 @@ define([
         startTime.equalityComparer = JulianDate.equals;
 
         /**
-         * Gets the current system time.
+         * Gets the current system time.  This property is observable.
          * @type JulianDate
          */
         this.systemTime = knockout.observable(new JulianDate());
@@ -38,8 +38,8 @@ define([
         knockout.track(this, ['systemTime']);
 
         /**
-         * The start time of the clock.
-         * @type Observable
+         * Gets or sets the start time of the clock.  This property is observable.
+         * @type JulianDate
          */
         this.startTime = undefined;
         knockout.defineProperty(this, 'startTime', {
@@ -54,8 +54,8 @@ define([
         stopTime.equalityComparer = JulianDate.equals;
 
         /**
-         * The stop time of the clock.
-         * @type Observable
+         * Gets or sets the stop time of the clock.  This property is observable.
+         * @type JulianDate
          */
         this.stopTime = undefined;
         knockout.defineProperty(this, 'stopTime', {
@@ -70,8 +70,8 @@ define([
         currentTime.equalityComparer = JulianDate.equals;
 
         /**
-         * The current time.
-         * @type Observable
+         * Gets or sets the current time.  This property is observable.
+         * @type JulianDate
          */
         this.currentTime = undefined;
         knockout.defineProperty(this, 'currentTime', {
@@ -84,12 +84,11 @@ define([
 
         var multiplier = knockout.observable(clock.multiplier);
         /**
-         * Determines how much time advances when tick is called, negative values allow for advancing backwards.
+         * Gets or sets how much time advances when tick is called, negative values allow for advancing backwards.
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
-         * elapsed system time since the last call to tick.
-         * Computed observable @type Number
-         * @type Observable
+         * elapsed system time since the last call to tick.  This property is observable.
+         * @type Number
          */
         this.multiplier = undefined;
         knockout.defineProperty(this, 'multiplier', {
@@ -106,7 +105,8 @@ define([
         };
 
         /**
-         * Determines if calls to <code>Clock.tick</code> are frame dependent or system clock dependent.
+         * Gets or sets whether calls to <code>Clock.tick</code> are frame dependent or system clock dependent.
+         * This property is observable.
          * @type ClockStep
          */
         this.clockStep = undefined;
@@ -124,8 +124,8 @@ define([
         };
 
         /**
-         * Determines how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-         * Computed observable @type ClockRange
+         * Gets or sets how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * This property is observable.
          * @type ClockRange
          */
         this.clockRange = undefined;
@@ -141,6 +141,7 @@ define([
 
         /**
          * Gets or sets whether or not <code>Clock.tick</code> should actually advance time.
+         * This property is observable.
          * @type Boolean
          */
         this.shouldAnimate = undefined;
