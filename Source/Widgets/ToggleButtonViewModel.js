@@ -8,7 +8,7 @@ define([
     "use strict";
 
     /**
-     * A ViewModel which exposes the properties of a toggle button.
+     * A view model which exposes the properties of a toggle button.
      * @alias ToggleButtonViewModel
      * @constructor
      *

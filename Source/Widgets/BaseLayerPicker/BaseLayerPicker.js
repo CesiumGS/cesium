@@ -86,7 +86,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.getViewModel().selectedItem(providerViewModels[0]);
+     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
@@ -122,17 +122,17 @@ define(['./BaseLayerPickerViewModel',
         this._choices = choices;
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
-                css: { "cesium-baseLayerPicker-visible" : dropDownVisible(),\
-                       "cesium-baseLayerPicker-hidden" : !dropDownVisible() },\
+                css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
+                       "cesium-baseLayerPicker-hidden" : !dropDownVisible },\
                 foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');
         provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
-                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem()},\
+                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem},\
                 attr: {title: tooltip},\
-                visible: creationCommand.canExecute(),\
+                visible: creationCommand.canExecute,\
                 click: $parent.selectedItem');
         choices.appendChild(provider);
 
@@ -151,7 +151,7 @@ define(['./BaseLayerPickerViewModel',
 
         this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
-                viewModel.dropDownVisible(false);
+                viewModel.dropDownVisible = false;
             }
         };
 
@@ -159,23 +159,30 @@ define(['./BaseLayerPickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof BaseLayerPicker
-     * @return {Element} The parent container.
-     */
-    BaseLayerPicker.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof BaseLayerPicker
-     * @return {BaseLayerPickerViewModel} The view model being used.
-     */
-    BaseLayerPicker.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(BaseLayerPicker.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof BaseLayerPicker.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model.
+         * @memberof BaseLayerPicker.prototype
+         *
+         * @type {BaseLayerPickerViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof BaseLayerPicker

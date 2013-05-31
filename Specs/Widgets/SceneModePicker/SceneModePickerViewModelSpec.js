@@ -41,7 +41,7 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
     it('Can construct and destroy', function() {
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
-        expect(viewModel.getTransitioner()).toBe(mockTransitioner);
+        expect(viewModel.transitioner).toBe(mockTransitioner);
         expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
@@ -52,11 +52,11 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
     it('dropDownVisible and toggleDropDown work', function() {
         var viewModel = new SceneModePickerViewModel(new MockTransitioner());
 
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(false);
         viewModel.toggleDropDown();
-        expect(viewModel.dropDownVisible()).toEqual(true);
-        viewModel.dropDownVisible(false);
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(true);
+        viewModel.dropDownVisible = false;
+        expect(viewModel.dropDownVisible).toEqual(false);
 
         viewModel.destroy();
     });
@@ -64,17 +64,17 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
     it('morphing closes the dropDown', function() {
         var viewModel = new SceneModePickerViewModel(new MockTransitioner());
 
-        viewModel.dropDownVisible(true);
+        viewModel.dropDownVisible = true;
         viewModel.morphTo2D();
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(false);
 
-        viewModel.dropDownVisible(true);
+        viewModel.dropDownVisible = true;
         viewModel.morphTo3D();
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(false);
 
-        viewModel.dropDownVisible(true);
+        viewModel.dropDownVisible = true;
         viewModel.morphToColumbusView();
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(false);
 
         viewModel.destroy();
     });
@@ -96,18 +96,18 @@ defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
         viewModel.destroy();
     });
 
-    it('selectedToolTip changes on transition', function() {
+    it('selectedTooltip changes on transition', function() {
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
 
         viewModel.morphTo2D();
-        expect(viewModel.selectedTooltip()).toEqual(viewModel.tooltip2D());
+        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltip2D);
 
         viewModel.morphTo3D();
-        expect(viewModel.selectedTooltip()).toEqual(viewModel.tooltip3D());
+        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltip3D);
 
         viewModel.morphToColumbusView();
-        expect(viewModel.selectedTooltip()).toEqual(viewModel.tooltipColumbusView());
+        expect(viewModel.selectedTooltip).toEqual(viewModel.tooltipColumbusView);
 
         viewModel.destroy();
     });

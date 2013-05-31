@@ -225,7 +225,7 @@ define(['../../Core/destroyObject',
 
         this._subscriptions = [//
         subscribeAndEvaluate(viewModel.toggled, this.setToggled, this),//
-        subscribeAndEvaluate(viewModel.tooltip, this.setToolTip, this),//
+        subscribeAndEvaluate(viewModel.tooltip, this.setTooltip, this),//
         subscribeAndEvaluate(viewModel.command.canExecute, this.setEnabled, this)];
     };
 
@@ -274,7 +274,7 @@ define(['../../Core/destroyObject',
         }
     };
 
-    SvgButton.prototype.setToolTip = function(tooltip) {
+    SvgButton.prototype.setTooltip = function(tooltip) {
         this.svgElement.getElementsByTagName('title')[0].textContent = tooltip;
     };
 
@@ -342,7 +342,7 @@ define(['../../Core/destroyObject',
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
+     * @param {AnimationViewModel} viewModel The view model used by this widget.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -616,23 +616,30 @@ define(['../../Core/destroyObject',
         resize(this);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof Animation
-     * @return {Element} The parent container.
-     */
-    Animation.prototype.getContainer = function() {
-        return this._container;
-    };
-
-    /**
-     * Gets the view model being used.
-     * @memberof Animation
-     * @return {AnimationViewModel} The view model being used.
-     */
-    Animation.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+    Object.defineProperties(Animation.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof Animation.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+        /**
+         * Gets the view model.
+         *
+         * @memberof Animation.prototype
+         * @type {AnimationViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof Animation

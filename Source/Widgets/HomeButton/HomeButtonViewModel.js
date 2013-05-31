@@ -83,15 +83,15 @@ define(['../createCommand',
     }
 
     /**
-     * The ViewModel for {@link HomeButton}.
+     * The view model for {@link HomeButton}.
      * @alias HomeButtonViewModel
      * @constructor
      *
-     * @param {Scene} scene The Scene instance to use.
-     * @param {SceneTransitioner} [transitioner] The SceneTransitioner instance to use.
-     * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
+     * @param {Scene} scene The scene instance to use.
+     * @param {SceneTransitioner} [transitioner] The scene transitioner instance to use.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to be viewed when in home position.
      *
-     * @exception {Scene} scene is required.
+     * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid) {
         if (typeof scene === 'undefined') {
@@ -104,46 +104,72 @@ define(['../createCommand',
         this._ellipsoid = ellipsoid;
         this._transitioner = transitioner;
 
-        /**
-         * Flies to the home view of the current scene.
-         * @type Command
-         */
-        this.command = createCommand(function() {
+        this._command = createCommand(function() {
             viewHome(scene, ellipsoid, transitioner);
         });
 
         /**
-         * Gets an Observable indicating the current tooltip.
-         * @type Observable
+         * Gets or sets the tooltip.  This property is observable.
+         *
+         * @type String
          */
-        this.tooltip = knockout.observable('View Home');
+        this.tooltip = 'View Home';
+
+        knockout.track(this, ['tooltip']);
     };
 
-    /**
-     * Gets the scene.
-     * @type Observable
-     */
-    HomeButtonViewModel.prototype.getScene = function() {
-        return this._scene;
-    };
+    Object.defineProperties(HomeButtonViewModel.prototype, {
+        /**
+         * Gets the scene transitioner being used by the scene.
+         * If a transitioner is assigned, any running morphs will be completed
+         * when the home button is pressed.  The transitioner must be using
+         * the same Scene instance as the scene property.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {SceneTransitioner}
+         */
+        transitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
 
-    /**
-     * Gets the primary ellipsoid for the scene.
-     * @type Observable
-     */
-    HomeButtonViewModel.prototype.getEllipsoid = function() {
-        return this._ellipsoid;
-    };
+        /**
+         * Gets the scene to control.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
 
-    /**
-     * Gets the scene transitioner being used by the host application.
-     * If a transitioner is assigned, any running morphs will be completed
-     * when the home button is pressed.
-     * @type Observable
-     */
-    HomeButtonViewModel.prototype.getTransitioner = function() {
-        return this._transitioner;
-    };
+        /**
+         * Gets the ellipsoid to be viewed when in home position.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {Ellipsoid}
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Gets the Command that is executed when the button is clicked.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {Command}
+         */
+        command : {
+            get : function() {
+                return this._command;
+            }
+        }
+    });
 
     return HomeButtonViewModel;
 });

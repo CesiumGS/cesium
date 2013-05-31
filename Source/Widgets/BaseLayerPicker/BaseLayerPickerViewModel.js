@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * The ViewModel for {@link BaseLayerPicker}.
+     * The view model for {@link BaseLayerPicker}.
      * @alias BaseLayerPickerViewModel
      * @constructor
      *
@@ -33,58 +33,55 @@ define([
             throw new DeveloperError('imageryProviderViewModels must be an array');
         }
 
-        var dropDownVisible = knockout.observable(false);
-        var selectedViewModel = knockout.observable();
-
         this._imageryLayers = imageryLayers;
 
         /**
          * Gets an Observable array of ImageryProviderViewModel instances available for selection.
          * @type Observable
          */
-        this.imageryProviderViewModels = knockout.observableArray(imageryProviderViewModels);
+        this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
         /**
          * Gets an Observable whose value indicates if the imagery selection dropDown is currently visible.
          * @type Observable
-        */
-        this.dropDownVisible = dropDownVisible;
+         */
+        this.dropDownVisible = false;
+
+        knockout.track(this, ['imageryProviderViewModels', 'dropDownVisible']);
+
+        var that = this;
 
         /**
-         * Toggles dropDown visibility.
-         * @type Command
-        */
-        this.toggleDropDown = createCommand(function() {
-            dropDownVisible(!dropDownVisible());
+         * Gets the image currently selected item name.
+         * @type Observable
+         */
+        this.selectedName = undefined;
+        knockout.defineProperty(this, 'selectedName', function() {
+            var selected = that.selectedItem;
+            return typeof selected !== 'undefined' ? selected.name : undefined;
         });
 
         /**
-         * Gets a readonly Observable for the the name of the currently selected item.
+         * Gets the image url of the currently selected item.
          * @type Observable
-        */
-        this.selectedName = knockout.computed(function() {
-            var selected = selectedViewModel();
-            return typeof selected !== 'undefined' ? selected.name() : undefined;
+         */
+        this.selectedIconUrl = undefined;
+        knockout.defineProperty(this, 'selectedIconUrl', function() {
+            var viewModel = that.selectedItem;
+            return typeof viewModel !== 'undefined' ? viewModel.iconUrl : undefined;
         });
 
         /**
-         * Gets a readonly Observable for the image url of the currently selected item.
+         * Gets or sets the currently selected item.
          * @type Observable
-        */
-        this.selectedIconUrl = knockout.computed(function() {
-            var viewModel = selectedViewModel();
-            return typeof viewModel !== 'undefined' ? viewModel.iconUrl() : undefined;
-        });
-
-        /**
-         * Gets an Observable for the currently selected item.
-         * @type Observable
-        */
-        this.selectedItem = knockout.computed({
-            read : function() {
+         */
+        this.selectedItem = undefined;
+        var selectedViewModel = knockout.observable();
+        knockout.defineProperty(this, 'selectedItem', {
+            get : function() {
                 return selectedViewModel();
             },
-            write : function(value) {
+            set : function(value) {
                 if (imageryLayers.getLength() > 0) {
                     imageryLayers.remove(imageryLayers.get(0));
                 }
@@ -93,10 +90,40 @@ define([
                     imageryLayers.addImageryProvider(newLayer, 0);
                 }
                 selectedViewModel(value);
-                dropDownVisible(false);
+                that.dropDownVisible = false;
             }
         });
+
+        this._toggleDropDown = createCommand(function() {
+            that.dropDownVisible = !that.dropDownVisible;
+        });
     };
+
+    Object.defineProperties(BaseLayerPickerViewModel.prototype, {
+        /**
+         * Gets the command to toggle the visibility of the drop down.
+         * @memberof BaseLayerPickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        toggleDropDown : {
+            get : function() {
+                return this._toggleDropDown;
+            }
+        },
+
+        /**
+         * Gets the imagery layer collection.
+         * @memberof BaseLayerPickerViewModel.prototype
+         *
+         * @type {ImageryLayerCollection}
+         */
+        imageryLayers : {
+            get : function() {
+                return this._imageryLayers;
+            }
+        }
+    });
 
     /**
      * Gets the imagery layers collection being used.

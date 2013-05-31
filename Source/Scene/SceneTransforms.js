@@ -51,8 +51,8 @@ define([
      *
      * @example
      * // Output the window position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.getScene();
-     * var ellipsoid = widget.getCentralBody().getEllipsoid();
+     * var scene = widget.scene;
+     * var ellipsoid = widget.centralBody.getEllipsoid();
      * var position = ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0));
      * var handler = new Cesium.ScreenSpaceEventHandler(scene.getCanvas());
      * handler.setInputAction(function(movement) {

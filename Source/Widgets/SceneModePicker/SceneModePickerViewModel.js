@@ -13,7 +13,7 @@ define(['../createCommand',
     "use strict";
 
     /**
-     * The ViewModel for {@link SceneModePicker}.
+     * The view model for {@link SceneModePicker}.
      * @alias SceneModePickerViewModel
      * @constructor
      *
@@ -26,112 +26,145 @@ define(['../createCommand',
             throw new DeveloperError('transitioner is required.');
         }
 
-        var sceneMode = knockout.observable(transitioner.getScene().mode);
+        var that = this;
 
         this._transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
-            sceneMode(newMode);
+            that.sceneMode = newMode;
+            that.dropDownVisible = false;
         };
 
         transitioner.onTransitionStart.addEventListener(this._transitionStart);
-
-        var dropDownVisible = knockout.observable(false);
-        var tooltip2D = knockout.observable('2D');
-        var tooltip3D = knockout.observable('3D');
-        var tooltipColumbusView = knockout.observable('Columbus View');
-
         this._transitioner = transitioner;
 
         /**
-         * Gets an Observable whose value is the current SceneMode
+         * Gets or sets the current SceneMode.  This property is observable.
+         * @type SceneMode
+        */
+        this.sceneMode = transitioner.getScene().mode;
+
+        /**
+         * Gets or sets whether the button drop-down is currently visible.  This property is observable.
+         * @type Boolean
+        */
+        this.dropDownVisible = false;
+
+        /**
+         * Gets or sets the 2D tooltip.  This property is observable.
+         * @type String
+        */
+        this.tooltip2D = '2D';
+
+        /**
+         * Gets or sets the 3D tooltip.  This property is observable.
+         * @type String
+        */
+        this.tooltip3D = '3D';
+
+        /**
+         * Gets or sets the Columbus View tooltip.  This property is observable.
          * @type Observable
         */
-        this.sceneMode = sceneMode;
+        this.tooltipColumbusView = 'Columbus View';
+
+        knockout.track(this, ['sceneMode', 'dropDownVisible', 'tooltip2D', 'tooltip3D', 'tooltipColumbusView']);
 
         /**
-         * Gets an Observable indicating if the button dropDown is currently visible.
-         * @type Observable
-        */
-        this.dropDownVisible = dropDownVisible;
-
-        /**
-         * Toggles dropDown visibility.
-         * @type Command
-        */
-        this.toggleDropDown = createCommand(function() {
-            dropDownVisible(!dropDownVisible());
-        });
-
-        /**
-         * Morphs to 2D.
-         * @type Command
-        */
-        this.morphTo2D = createCommand(function() {
-            transitioner.morphTo2D();
-            dropDownVisible(false);
-        });
-
-        /**
-         * Morphs to 3D.
-         * @type Command
-        */
-        this.morphTo3D = createCommand(function() {
-            transitioner.morphTo3D();
-            dropDownVisible(false);
-        });
-
-        /**
-         * Morphs to Columbus View.
-         * @type Command
-        */
-        this.morphToColumbusView = createCommand(function() {
-            transitioner.morphToColumbusView();
-            dropDownVisible(false);
-        });
-
-        /**
-         * Gets an Observable for the 2D tooltip.
-         * @type Observable
-        */
-        this.tooltip2D = tooltip2D;
-
-        /**
-         * Gets an Observable for the 3D tooltip.
-         * @type Observable
-        */
-        this.tooltip3D = tooltip3D;
-
-        /**
-         * Gets an Observable for the Columbus View tooltip.
-         * @type Observable
-        */
-        this.tooltipColumbusView = tooltipColumbusView;
-
-        /**
-         * Gets a readonly Observable for the currently selected mode's tooltip.
-         * @type Observable
-        */
-        this.selectedTooltip = knockout.computed(function() {
-            var mode = sceneMode();
+         * Gets the currently active tooltip.  This property is observable.
+         * @type String
+         */
+        this.selectedTooltip = undefined;
+        knockout.defineProperty(this, 'selectedTooltip', function() {
+            var mode = that.sceneMode;
             if (mode === SceneMode.SCENE2D) {
-                return tooltip2D();
+                return that.tooltip2D;
             }
             if (mode === SceneMode.SCENE3D) {
-                return tooltip3D();
+                return that.tooltip3D;
             }
-            return tooltipColumbusView();
+            return that.tooltipColumbusView;
+        });
+
+        this._toggleDropDown = createCommand(function() {
+            that.dropDownVisible = !that.dropDownVisible;
+        });
+
+        this._morphTo2D = createCommand(function() {
+            transitioner.morphTo2D();
+        });
+
+        this._morphTo3D = createCommand(function() {
+            transitioner.morphTo3D();
+        });
+
+        this._morphToColumbusView = createCommand(function() {
+            transitioner.morphToColumbusView();
         });
 
         //Used by knockout
         this._sceneMode = SceneMode;
     };
 
-    /**
-     * Gets the SceneTransitioner used by the widget.
-     * @returns {SceneTransitioner} The SceneTransitioner used by the widget.
-     */
-    SceneModePickerViewModel.prototype.getTransitioner = function() {
-        return this._transitioner;
-    };
+    Object.defineProperties(SceneModePickerViewModel.prototype, {
+        /**
+         * Gets the scene transitioner.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {SceneTransitioner}
+         */
+        transitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
+
+        /**
+         * Gets the command to toggle the drop down box.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        toggleDropDown : {
+            get : function() {
+                return this._toggleDropDown;
+            }
+        },
+
+        /**
+         * Gets the command to morph to 2D.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphTo2D : {
+            get : function() {
+                return this._morphTo2D;
+            }
+        },
+
+        /**
+         * Gets the command to morph to 3D.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphTo3D : {
+            get : function() {
+                return this._morphTo3D;
+            }
+        },
+
+        /**
+         * Gets the command to morph to Columbus View.
+         * @memberof SceneModePickerViewModel.prototype
+         *
+         * @type {Command}
+         */
+        morphToColumbusView : {
+            get : function() {
+                return this._morphToColumbusView;
+            }
+        },
+    });
 
     /**
      * @memberof SceneModePickerViewModel
