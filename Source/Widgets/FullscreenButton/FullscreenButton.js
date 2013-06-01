@@ -1,13 +1,16 @@
 /*global define*/
-define(['./FullscreenButtonViewModel',
+define([
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-         FullscreenButtonViewModel,
-         DeveloperError,
-         destroyObject,
-         knockout) {
+    ], function(
+        defineProperties,
+        DeveloperError,
+        destroyObject,
+        FullscreenButtonViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -48,7 +51,7 @@ define(['./FullscreenButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    Object.defineProperties(FullscreenButton.prototype, {
+    defineProperties(FullscreenButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof FullscreenButton.prototype
@@ -60,6 +63,7 @@ define(['./FullscreenButtonViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof FullscreenButton.prototype
@@ -82,7 +86,7 @@ define(['./FullscreenButtonViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof FullscreenButton
      */

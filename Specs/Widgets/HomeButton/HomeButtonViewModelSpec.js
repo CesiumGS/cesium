@@ -1,16 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'Widgets/HomeButton/HomeButtonViewModel',
-             'Core/Ellipsoid',
-             'Scene/SceneTransitioner',
-             'Specs/createScene',
-             'Specs/destroyScene'
-            ], function(
-              HomeButtonViewModel,
-              Ellipsoid,
-              SceneTransitioner,
-              createScene,
-              destroyScene) {
+         'Widgets/HomeButton/HomeButtonViewModel',
+         'Core/Ellipsoid',
+         'Scene/SceneTransitioner',
+         'Specs/createScene',
+         'Specs/destroyScene'
+     ], function(
+         HomeButtonViewModel,
+         Ellipsoid,
+         SceneTransitioner,
+         createScene,
+         destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

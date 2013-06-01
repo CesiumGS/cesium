@@ -1,11 +1,12 @@
 /*global defineSuite*/
-defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
-             'Scene/ImageryLayerCollection',
-             'Specs/EventHelper'
-            ], function(
-              BaseLayerPicker,
-              ImageryLayerCollection,
-              EventHelper) {
+defineSuite([
+         'Widgets/BaseLayerPicker/BaseLayerPicker',
+         'Scene/ImageryLayerCollection',
+         'Specs/EventHelper'
+     ], function(
+         BaseLayerPicker,
+         ImageryLayerCollection,
+         EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -18,7 +19,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPicker',
 
         var widget = new BaseLayerPicker('testContainer', layers);
         expect(widget.container).toBe(container);
-        expect(widget.viewModel.getImageryLayers()).toBe(layers);
+        expect(widget.viewModel.imageryLayers).toBe(layers);
         expect(widget.isDestroyed()).toEqual(false);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);

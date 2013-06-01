@@ -1,7 +1,8 @@
 /*global define*/
-define(['../createCommand',
-        '../../Core/defaultValue',
+define([
         '../../Core/Cartesian3',
+        '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/Extent',
@@ -11,21 +12,23 @@ define(['../createCommand',
         '../../Scene/CameraColumbusViewMode',
         '../../Scene/PerspectiveFrustum',
         '../../Scene/SceneMode',
+        '../createCommand',
         '../../ThirdParty/knockout'
-        ], function(
-            createCommand,
-            defaultValue,
-            Cartesian3,
-            DeveloperError,
-            Ellipsoid,
-            Extent,
-            CesiumMath,
-            Matrix4,
-            Camera,
-            CameraColumbusViewMode,
-            PerspectiveFrustum,
-            SceneMode,
-            knockout) {
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defineProperties,
+        DeveloperError,
+        Ellipsoid,
+        Extent,
+        CesiumMath,
+        Matrix4,
+        Camera,
+        CameraColumbusViewMode,
+        PerspectiveFrustum,
+        SceneMode,
+        createCommand,
+        knockout) {
     "use strict";
 
     function viewHome(scene, ellipsoid, transitioner) {
@@ -118,7 +121,7 @@ define(['../createCommand',
         knockout.track(this, ['tooltip']);
     };
 
-    Object.defineProperties(HomeButtonViewModel.prototype, {
+    defineProperties(HomeButtonViewModel.prototype, {
         /**
          * Gets the scene transitioner being used by the scene.
          * If a transitioner is assigned, any running morphs will be completed

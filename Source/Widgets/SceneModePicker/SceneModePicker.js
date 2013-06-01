@@ -1,13 +1,16 @@
 /*global define*/
-define(['./SceneModePickerViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './SceneModePickerViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-            SceneModePickerViewModel,
-            DeveloperError,
-            destroyObject,
-            knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        SceneModePickerViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -116,7 +119,7 @@ define(['./SceneModePickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    Object.defineProperties(SceneModePicker.prototype, {
+    defineProperties(SceneModePicker.prototype, {
         /**
          * Gets the parent container.
          * @memberof SceneModePicker.prototype
@@ -128,6 +131,7 @@ define(['./SceneModePickerViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof SceneModePicker.prototype
@@ -150,7 +154,7 @@ define(['./SceneModePickerViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof SceneModePicker
      */

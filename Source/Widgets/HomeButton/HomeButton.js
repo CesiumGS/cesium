@@ -1,13 +1,16 @@
 /*global define*/
-define(['./HomeButtonViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './HomeButtonViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-         HomeButtonViewModel,
-         DeveloperError,
-         destroyObject,
-         knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        HomeButtonViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -22,7 +25,7 @@ define(['./HomeButtonViewModel',
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {Scene} scene is required.
+     * @exception {DeveloperError} scene is required.
      */
     var HomeButton = function(container, scene, transitioner, ellipsoid) {
         if (typeof container === 'undefined') {
@@ -48,7 +51,7 @@ define(['./HomeButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    Object.defineProperties(HomeButton.prototype, {
+    defineProperties(HomeButton.prototype, {
         /**
          * Gets the parent container.
          * @memberof HomeButton.prototype
@@ -60,6 +63,7 @@ define(['./HomeButtonViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof HomeButton.prototype
@@ -82,7 +86,7 @@ define(['./HomeButtonViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof HomeButton
      */

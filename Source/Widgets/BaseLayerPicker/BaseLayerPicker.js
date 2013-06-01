@@ -1,13 +1,16 @@
 /*global define*/
-define(['./BaseLayerPickerViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-            BaseLayerPickerViewModel,
-            DeveloperError,
-            destroyObject,
-            knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        BaseLayerPickerViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -44,7 +47,7 @@ define(['./BaseLayerPickerViewModel',
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var providerViewModels = [];
-     * providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     * providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -56,7 +59,7 @@ define(['./BaseLayerPickerViewModel',
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Black Marble',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
@@ -70,7 +73,7 @@ define(['./BaseLayerPickerViewModel',
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Disable Streaming Imagery',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
      *      tooltip : 'Uses a single image for the entire world.',
@@ -86,7 +89,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+     * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
@@ -159,7 +162,7 @@ define(['./BaseLayerPickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
-    Object.defineProperties(BaseLayerPicker.prototype, {
+    defineProperties(BaseLayerPicker.prototype, {
         /**
          * Gets the parent container.
          * @memberof BaseLayerPicker.prototype
@@ -171,6 +174,7 @@ define(['./BaseLayerPickerViewModel',
                 return this._container;
             }
         },
+
         /**
          * Gets the view model.
          * @memberof BaseLayerPicker.prototype
@@ -193,7 +197,7 @@ define(['./BaseLayerPickerViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof BaseLayerPicker
      */

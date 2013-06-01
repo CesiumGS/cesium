@@ -1,15 +1,16 @@
 /*global defineSuite*/
-defineSuite(['Widgets/CesiumWidget/CesiumWidget',
-             'Core/Clock',
-             'Scene/Scene',
-             'Scene/SceneTransitioner',
-             'Scene/CentralBody',
-             ], function(
-             CesiumWidget,
-             Clock,
-             Scene,
-             SceneTransitioner,
-             CentralBody) {
+defineSuite([
+         'Widgets/CesiumWidget/CesiumWidget',
+         'Core/Clock',
+         'Scene/Scene',
+         'Scene/SceneTransitioner',
+         'Scene/CentralBody'
+     ], function(
+         CesiumWidget,
+         Clock,
+         Scene,
+         SceneTransitioner,
+         CentralBody) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

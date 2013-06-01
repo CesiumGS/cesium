@@ -1,17 +1,20 @@
 /*global define*/
-define(['../createCommand',
+define([
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Fullscreen',
+        '../createCommand',
         '../../ThirdParty/knockout'
-        ], function(
-            createCommand,
-            defaultValue,
-            destroyObject,
-            DeveloperError,
-            Fullscreen,
-            knockout) {
+    ], function(
+        defaultValue,
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        Fullscreen,
+        createCommand,
+        knockout) {
     "use strict";
 
     /**
@@ -84,17 +87,16 @@ define(['../createCommand',
         document.addEventListener(Fullscreen.getFullscreenChangeEventName(), this._callback);
     };
 
-    Object.defineProperties(FullscreenButtonViewModel.prototype, {
+    defineProperties(FullscreenButtonViewModel.prototype, {
         /**
          * Gets or sets the HTML element to place into fullscreen mode when the
          * corresponding button is pressed.
          * @memberof FullscreenButtonViewModel.prototype
          *
          * @type {Element}
-         *
-         * @exception {DeveloperError} value must be a valid HTML Element.
          */
         fullscreenElement : {
+            //TODO:@exception {DeveloperError} value must be a valid HTML Element.
             get : function() {
                 return this._fullscreenElement;
             },

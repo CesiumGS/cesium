@@ -15,38 +15,38 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     function verifyPausedState(viewModel) {
-        expect(viewModel.getPauseViewModel().toggled()).toEqual(true);
-        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
+        expect(viewModel.pauseViewModel.toggled).toEqual(true);
+        expect(viewModel.playReverseViewModel.toggled).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
     }
 
     function verifyForwardState(viewModel) {
-        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(true);
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
+        expect(viewModel.pauseViewModel.toggled).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
     }
 
     function verifyReverseState(viewModel) {
-        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(true);
-        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
+        expect(viewModel.pauseViewModel.toggled).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled).toEqual(true);
+        expect(viewModel.playForwardViewModel.toggled).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
     }
 
     function verifyRealtimeState(viewModel) {
-        expect(viewModel.getPauseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayReverseViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayForwardViewModel().toggled()).toEqual(false);
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(true);
-        expect(viewModel.shuttleRingAngle()).toEqual(AnimationViewModel._realtimeShuttleRingAngle);
+        expect(viewModel.pauseViewModel.toggled).toEqual(false);
+        expect(viewModel.playReverseViewModel.toggled).toEqual(false);
+        expect(viewModel.playForwardViewModel.toggled).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(true);
+        expect(viewModel.shuttleRingAngle).toEqual(AnimationViewModel._realtimeShuttleRingAngle);
     }
 
     it('constructor sets expected properties', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
-        expect(animationViewModel.getClockViewModel()).toBe(clockViewModel);
+        expect(animationViewModel.clockViewModel).toBe(clockViewModel);
     });
 
     it('setTimeFormatter overrides the default formatter', function() {
@@ -58,10 +58,10 @@ defineSuite([
             expect(date).toEqual(clockViewModel.currentTime);
             return expectedString;
         };
-        animationViewModel.setTimeFormatter(myCustomFormatter);
+        animationViewModel.timeFormatter = myCustomFormatter;
 
-        expect(animationViewModel.timeLabel()).toEqual(expectedString);
-        expect(animationViewModel.getTimeFormatter()).toEqual(myCustomFormatter);
+        expect(animationViewModel.timeLabel).toEqual(expectedString);
+        expect(animationViewModel.timeFormatter).toEqual(myCustomFormatter);
     });
 
     it('defaultTimeFormatter produces expected result', function() {
@@ -72,22 +72,22 @@ defineSuite([
 
         clockViewModel.multiplier = 1;
         var expectedResult = '06:07:08 UTC';
-        var result = animationViewModel.getTimeFormatter()(date, animationViewModel);
+        var result = animationViewModel.timeFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier = -1;
         expectedResult = '06:07:08 UTC';
-        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
+        result = animationViewModel.timeFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier = -0.5;
         expectedResult = '06:07:08.890';
-        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
+        result = animationViewModel.timeFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         clockViewModel.multiplier = 0.5;
         expectedResult = '06:07:08.890';
-        result = animationViewModel.getTimeFormatter()(date, animationViewModel);
+        result = animationViewModel.timeFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
     });
 
@@ -100,10 +100,10 @@ defineSuite([
             expect(date).toEqual(clockViewModel.currentTime);
             return expectedString;
         };
-        animationViewModel.setDateFormatter(myCustomFormatter);
+        animationViewModel.dateFormatter = myCustomFormatter;
 
-        expect(animationViewModel.dateLabel()).toEqual(expectedString);
-        expect(animationViewModel.getDateFormatter()).toEqual(myCustomFormatter);
+        expect(animationViewModel.dateLabel).toEqual(expectedString);
+        expect(animationViewModel.dateFormatter).toEqual(myCustomFormatter);
     });
 
     it('defaultDateFormatter produces expected result', function() {
@@ -111,62 +111,62 @@ defineSuite([
 
         var date = JulianDate.fromIso8601('2012-01-05T06:07:08.89Z');
         var expectedResult = 'Jan 5 2012';
-        var result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        var result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-02-05T06:07:08.89Z');
         expectedResult = 'Feb 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-03-05T06:07:08.89Z');
         expectedResult = 'Mar 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-04-05T06:07:08.89Z');
         expectedResult = 'Apr 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-05-05T06:07:08.89Z');
         expectedResult = 'May 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-06-05T06:07:08.89Z');
         expectedResult = 'Jun 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-07-05T06:07:08.89Z');
         expectedResult = 'Jul 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-08-05T06:07:08.89Z');
         expectedResult = 'Aug 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-09-05T06:07:08.89Z');
         expectedResult = 'Sep 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-10-05T06:07:08.89Z');
         expectedResult = 'Oct 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-11-05T06:07:08.89Z');
         expectedResult = 'Nov 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
 
         date = JulianDate.fromIso8601('2012-12-05T06:07:08.89Z');
         expectedResult = 'Dec 5 2012';
-        result = animationViewModel.getDateFormatter()(date, animationViewModel);
+        result = animationViewModel.dateFormatter(date, animationViewModel);
         expect(result).toEqual(expectedResult);
     });
 
@@ -178,31 +178,31 @@ defineSuite([
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.multiplier = 123.1;
         expectedString = '123.1x';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
 
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.multiplier = 123.12;
         expectedString = '123.12x';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
 
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.multiplier = 123.123;
         expectedString = '123.123x';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
 
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.multiplier = 123.1236;
         expectedString = '123.124x';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
 
         clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK;
         expectedString = 'Today';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
 
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.multiplier = 15;
         expectedString = '15x';
-        expect(animationViewModel.multiplierLabel()).toEqual(expectedString);
+        expect(animationViewModel.multiplierLabel).toEqual(expectedString);
     });
 
     it('pause button restores current state', function() {
@@ -221,18 +221,18 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Toggling paused restores state when animating forward
-        viewModel.getPauseViewModel().command();
+        viewModel.pauseViewModel.command();
 
         verifyForwardState(viewModel);
 
         //Executing paused command restores paused state
-        viewModel.getPauseViewModel().command();
+        viewModel.pauseViewModel.command();
 
         verifyPausedState(viewModel);
 
         //Setting the multiplier to negative and unpausing animates backward
         clockViewModel.multiplier = -1;
-        viewModel.getPauseViewModel().command();
+        viewModel.pauseViewModel.command();
 
         verifyReverseState(viewModel);
     });
@@ -242,7 +242,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = -100;
         clockViewModel.multiplier = multiplier;
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
         expect(clockViewModel.multiplier).toEqual(-multiplier);
     });
 
@@ -251,7 +251,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = 100;
         clockViewModel.multiplier = multiplier;
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
         expect(clockViewModel.multiplier).toEqual(-multiplier);
     });
 
@@ -271,7 +271,7 @@ defineSuite([
         //Play in reverse while clamped
         clockViewModel.multiplier = -1;
         clockViewModel.clockRange = ClockRange.CLAMPED;
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
 
         verifyReverseState(viewModel);
 
@@ -284,7 +284,7 @@ defineSuite([
         //Animate in reverse again.
         clockViewModel.currentTime = centerTime;
         clockViewModel.clockRange = ClockRange.LOOP_STOP;
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
 
         verifyReverseState(viewModel);
 
@@ -295,12 +295,12 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Reversing in start state while bounded should have no effect
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
         verifyPausedState(viewModel);
 
         //Set to unbounded and reversing should be okay
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
         verifyReverseState(viewModel);
     });
 
@@ -319,31 +319,30 @@ defineSuite([
 
         //Play forward while clamped
         clockViewModel.currentTime = centerTime;
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
         verifyForwardState(viewModel);
 
         //Set current time to stop time, which won't stop while dragging
-        viewModel.shuttleRingDragging(true);
+        viewModel.shuttleRingDragging = true;
         clockViewModel.currentTime = clockViewModel.stopTime;
         verifyForwardState(viewModel);
 
         //Drag complete stops.
-        viewModel.shuttleRingDragging(false);
+        viewModel.shuttleRingDragging = false;
         verifyPausedState(viewModel);
 
         //Do the same thing with start time
         clockViewModel.currentTime = centerTime;
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
         verifyReverseState(viewModel);
 
-        viewModel.shuttleRingDragging(true);
+        viewModel.shuttleRingDragging = true;
         clockViewModel.currentTime = clockViewModel.startTime;
         verifyReverseState(viewModel);
 
         //Drag complete stops.
-        viewModel.shuttleRingDragging(false);
+        viewModel.shuttleRingDragging = false;
         verifyPausedState(viewModel);
-
     });
 
     it('animating forward pauses with a bounded stopTime', function() {
@@ -362,7 +361,7 @@ defineSuite([
         //Play forward while clamped
         clockViewModel.multiplier = 1;
         clockViewModel.clockRange = ClockRange.CLAMPED;
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
 
         verifyForwardState(viewModel);
 
@@ -373,19 +372,19 @@ defineSuite([
         verifyPausedState(viewModel);
 
         //Playing in stop state while bounded should have no effect
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
         verifyPausedState(viewModel);
 
         //Set to unbounded and playing should be okay
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
         verifyForwardState(viewModel);
     });
 
     it('slower has no effect if at the slowest speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var slowestSpeed = viewModel.getShuttleRingTicks()[0];
+        var slowestSpeed = viewModel.shuttleRingTicks[0];
         clockViewModel.multiplier = slowestSpeed;
         viewModel.slower();
         expect(clockViewModel.multiplier).toEqual(slowestSpeed);
@@ -394,7 +393,7 @@ defineSuite([
     it('faster has no effect if at the faster speed', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var fastestSpeed = viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1];
+        var fastestSpeed = viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1];
         clockViewModel.multiplier = fastestSpeed;
         viewModel.faster();
         expect(clockViewModel.multiplier).toEqual(fastestSpeed);
@@ -405,7 +404,7 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
 
         var i = 0;
-        var multipliers = viewModel.getShuttleRingTicks();
+        var multipliers = viewModel.shuttleRingTicks;
         var length = multipliers.length;
 
         //Start at slowest speed
@@ -439,36 +438,36 @@ defineSuite([
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
         clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
         clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
-        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
-        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
 
         //CLAMPED but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange = ClockRange.CLAMPED;
         clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
         clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
-        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(false);
-        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Current time not in range');
+        expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Current time not in range');
 
         //CLAMPED but available when start/stop time includes realtime
         clockViewModel.clockRange = ClockRange.CLAMPED;
         clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
         clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(60);
-        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
-        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
 
         //LOOP_STOP but unavailable when start/stop time does not include realtime
         clockViewModel.clockRange = ClockRange.LOOP_STOP;
         clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
         clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(-30);
-        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(false);
-        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Current time not in range');
+        expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Current time not in range');
 
         //LOOP_STOP but available when start/stop time includes realtime
         clockViewModel.clockRange = ClockRange.LOOP_STOP;
         clockViewModel.startTime = clockViewModel.systemTime.addSeconds(-60);
         clockViewModel.stopTime = clockViewModel.systemTime.addSeconds(60);
-        expect(viewModel.getPlayRealtimeViewModel().command.canExecute()).toEqual(true);
-        expect(viewModel.getPlayRealtimeViewModel().tooltip()).toEqual('Today (real-time)');
+        expect(viewModel.playRealtimeViewModel.command.canExecute).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.tooltip).toEqual('Today (real-time)');
     });
 
     it('User action breaks out of realtime mode', function() {
@@ -477,36 +476,36 @@ defineSuite([
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
 
-        viewModel.getPlayRealtimeViewModel().command();
+        viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
         expect(clockViewModel.multiplier).toEqual(1);
 
         //Pausing breaks realtime state
-        viewModel.getPauseViewModel().command();
+        viewModel.pauseViewModel.command();
         verifyPausedState(viewModel);
         expect(clockViewModel.multiplier).toEqual(1);
 
-        viewModel.getPlayRealtimeViewModel().command();
+        viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
 
         //Reverse breaks realtime state
-        viewModel.getPlayReverseViewModel().command();
+        viewModel.playReverseViewModel.command();
         verifyReverseState(viewModel);
         expect(clockViewModel.multiplier).toEqual(-1);
 
-        viewModel.getPlayRealtimeViewModel().command();
+        viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
 
         //Play breaks realtime state
-        viewModel.getPlayForwardViewModel().command();
+        viewModel.playForwardViewModel.command();
         verifyForwardState(viewModel);
         expect(clockViewModel.multiplier).toEqual(1);
 
-        viewModel.getPlayRealtimeViewModel().command();
+        viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
 
         //Shuttle ring change breaks realtime state
-        viewModel.shuttleRingAngle(viewModel.shuttleRingAngle() + 1);
+        viewModel.shuttleRingAngle = viewModel.shuttleRingAngle + 1;
         verifyForwardState(viewModel);
     });
 
@@ -514,14 +513,14 @@ defineSuite([
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
-        viewModel.getPlayRealtimeViewModel().command();
+        viewModel.playRealtimeViewModel.command();
         verifyRealtimeState(viewModel);
 
         clockViewModel.shouldAnimate = false;
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(false);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(false);
 
         clockViewModel.shouldAnimate = true;
-        expect(viewModel.getPlayRealtimeViewModel().toggled()).toEqual(true);
+        expect(viewModel.playRealtimeViewModel.toggled).toEqual(true);
     });
 
     it('Shuttle ring angles set expected multipliers', function() {
@@ -529,59 +528,59 @@ defineSuite([
         var viewModel = new AnimationViewModel(clockViewModel);
 
         //Max angle should produce max speed
-        viewModel.shuttleRingAngle(AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier).toEqual(viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1]);
+        viewModel.shuttleRingAngle = AnimationViewModel._maxShuttleRingAngle;
+        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1]);
 
         //Min angle should produce min speed
-        viewModel.shuttleRingAngle(-AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier).toEqual(viewModel.getShuttleRingTicks()[0]);
+        viewModel.shuttleRingAngle = -AnimationViewModel._maxShuttleRingAngle;
+        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[0]);
 
         //AnimationViewModel._realtimeShuttleRingAngle degrees is always 1x
-        viewModel.shuttleRingAngle(AnimationViewModel._realtimeShuttleRingAngle);
+        viewModel.shuttleRingAngle = AnimationViewModel._realtimeShuttleRingAngle;
         expect(clockViewModel.multiplier).toEqual(1);
 
-        viewModel.shuttleRingAngle(-AnimationViewModel._realtimeShuttleRingAngle);
+        viewModel.shuttleRingAngle = -AnimationViewModel._realtimeShuttleRingAngle;
         expect(clockViewModel.multiplier).toEqual(-1);
 
         //For large values, the shuttleRingAngle should always round to the first two digits.
-        viewModel.shuttleRingAngle(45.0);
+        viewModel.shuttleRingAngle = 45.0;
         expect(clockViewModel.multiplier).toEqual(85.0);
 
-        viewModel.shuttleRingAngle(-90.0);
+        viewModel.shuttleRingAngle = -90.0;
         expect(clockViewModel.multiplier).toEqual(-66000.0);
 
-        viewModel.shuttleRingAngle(0.0);
+        viewModel.shuttleRingAngle = 0.0;
         expect(clockViewModel.multiplier).toEqual(0.0);
     });
 
     it('Shuttle ring angles set expected multipliers when snapping to ticks', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        viewModel.snapToTicks(true);
+        viewModel.snapToTicks = true;
 
         //Max angle should produce max speed
-        viewModel.shuttleRingAngle(AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier).toEqual(viewModel.getShuttleRingTicks()[viewModel.getShuttleRingTicks().length - 1]);
+        viewModel.shuttleRingAngle = AnimationViewModel._maxShuttleRingAngle;
+        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1]);
 
         //Min angle should produce min speed
-        viewModel.shuttleRingAngle(-AnimationViewModel._maxShuttleRingAngle);
-        expect(clockViewModel.multiplier).toEqual(viewModel.getShuttleRingTicks()[0]);
+        viewModel.shuttleRingAngle = -AnimationViewModel._maxShuttleRingAngle;
+        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[0]);
 
         //AnimationViewModel._realtimeShuttleRingAngle degrees is always 1x
-        viewModel.shuttleRingAngle(AnimationViewModel._realtimeShuttleRingAngle);
+        viewModel.shuttleRingAngle = AnimationViewModel._realtimeShuttleRingAngle;
         expect(clockViewModel.multiplier).toEqual(1);
 
-        viewModel.shuttleRingAngle(-AnimationViewModel._realtimeShuttleRingAngle);
+        viewModel.shuttleRingAngle = -AnimationViewModel._realtimeShuttleRingAngle;
         expect(clockViewModel.multiplier).toEqual(-1);
 
         //For large values, the shuttleRingAngle should always round to the first two digits.
-        viewModel.shuttleRingAngle(45.0);
+        viewModel.shuttleRingAngle = 45.0;
         expect(clockViewModel.multiplier).toEqual(120.0);
 
-        viewModel.shuttleRingAngle(-90.0);
+        viewModel.shuttleRingAngle = -90.0;
         expect(clockViewModel.multiplier).toEqual(-43200.0);
 
-        viewModel.shuttleRingAngle(0.0);
+        viewModel.shuttleRingAngle = 0.0;
         expect(clockViewModel.multiplier).toEqual(AnimationViewModel.defaultTicks[0]);
     });
 
@@ -591,27 +590,27 @@ defineSuite([
         }).toThrow();
     });
 
-    it('setTimeFormatter throws with non-function', function() {
+    it('setting timeFormatter throws with non-function', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
-            animationViewModel.setTimeFormatter({});
+            animationViewModel.timeFormatter = {};
         }).toThrow();
     });
 
-    it('setDateFormatter throws with non-function', function() {
+    it('setting dateFormatter throws with non-function', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
-            animationViewModel.setDateFormatter({});
+            animationViewModel.dateFormatter = {};
         }).toThrow();
     });
 
-    it('setShuttleRingTicks throws with undefined', function() {
+    it('setting shuttleRingTicks throws with undefined', function() {
         var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
-            animationViewModel.setShuttleRingTicks(undefined);
+            animationViewModel.shuttleRingTicks = undefined;
         }).toThrow();
     });
 });

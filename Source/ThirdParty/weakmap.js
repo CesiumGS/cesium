@@ -1,4 +1,6 @@
-/*! WeakMap shim
+/**
+ * @license
+ * WeakMap shim
  * (The MIT License)
  *
  * Copyright (c) 2012 Brandon Benvie <http://bbenvie.com>
@@ -30,9 +32,17 @@
 
 define(['exports'], function(exports) {
 
+    var definePropertyWorks = (function() {
+        try {
+            return 'x' in Object.defineProperty({}, 'x', {});
+        } catch (e) {
+            return false;
+        }
+    })();
+
 void function(global, undefined_, undefined){
   var getProps = Object.getOwnPropertyNames,
-      defProp  = Object.defineProperty,
+      defProp  = definePropertyWorks ? Object.defineProperty : function(o) { return o; },
       toSource = Function.prototype.toString,
       create   = Object.create,
       hasOwn   = Object.prototype.hasOwnProperty,

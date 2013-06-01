@@ -1,10 +1,12 @@
 /*global define*/
-define(['../../Core/buildModuleUrl',
+define([
+        '../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
@@ -16,8 +18,8 @@ define(['../../Core/buildModuleUrl',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/SkyBox',
         '../../Scene/Sun'
     ], function(
         buildModuleUrl,
@@ -26,6 +28,7 @@ define(['../../Core/buildModuleUrl',
         Clock,
         DefaultProxy,
         defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -37,8 +40,8 @@ define(['../../Core/buildModuleUrl',
         Scene,
         SceneMode,
         SceneTransitioner,
-        SkyBox,
         SkyAtmosphere,
+        SkyBox,
         Sun) {
     "use strict";
 
@@ -188,7 +191,7 @@ define(['../../Core/buildModuleUrl',
         requestAnimationFrame(render);
     };
 
-    Object.defineProperties(CesiumWidget.prototype, {
+    defineProperties(CesiumWidget.prototype, {
         /**
          * Gets the parent container.
          * @memberof CesiumWidget.prototype
@@ -310,6 +313,7 @@ define(['../../Core/buildModuleUrl',
      * Call this function when the widget changes size, to update the canvas
      * size, camera aspect ratio, and viewport size. This function is called
      * automatically on window resize.
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
         var width = this._canvas.clientWidth;
@@ -334,6 +338,7 @@ define(['../../Core/buildModuleUrl',
     /**
      * Forces an update and render of the scene. This function is called
      * automatically.
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
         if (this._needResize) {

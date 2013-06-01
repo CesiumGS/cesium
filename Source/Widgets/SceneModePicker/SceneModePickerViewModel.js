@@ -1,15 +1,18 @@
 /*global define*/
-define(['../createCommand',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
         '../../Scene/SceneMode',
+        '../createCommand',
         '../../ThirdParty/knockout'
-        ], function(
-                createCommand,
-                DeveloperError,
-                destroyObject,
-                SceneMode,
-                knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        SceneMode,
+        createCommand,
+        knockout) {
     "use strict";
 
     /**
@@ -62,7 +65,7 @@ define(['../createCommand',
 
         /**
          * Gets or sets the Columbus View tooltip.  This property is observable.
-         * @type Observable
+         * @type String
         */
         this.tooltipColumbusView = 'Columbus View';
 
@@ -104,7 +107,7 @@ define(['../createCommand',
         this._sceneMode = SceneMode;
     };
 
-    Object.defineProperties(SceneModePickerViewModel.prototype, {
+    defineProperties(SceneModePickerViewModel.prototype, {
         /**
          * Gets the scene transitioner.
          * @memberof SceneModePickerViewModel.prototype
@@ -163,7 +166,7 @@ define(['../createCommand',
             get : function() {
                 return this._morphToColumbusView;
             }
-        },
+        }
     });
 
     /**

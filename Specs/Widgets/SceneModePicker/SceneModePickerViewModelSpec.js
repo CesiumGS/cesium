@@ -1,11 +1,12 @@
 /*global defineSuite*/
-defineSuite(['Widgets/SceneModePicker/SceneModePickerViewModel',
-             'Core/Event',
-             'Scene/SceneMode'
-             ], function(
-              SceneModePickerViewModel,
-              Event,
-              SceneMode) {
+defineSuite([
+         'Widgets/SceneModePicker/SceneModePickerViewModel',
+         'Core/Event',
+         'Scene/SceneMode'
+     ], function(
+         SceneModePickerViewModel,
+         Event,
+         SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
