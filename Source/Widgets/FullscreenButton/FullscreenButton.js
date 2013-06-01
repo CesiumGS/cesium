@@ -1,13 +1,16 @@
 /*global define*/
-define(['./FullscreenButtonViewModel',
+define([
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
+        './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-         FullscreenButtonViewModel,
-         DeveloperError,
-         destroyObject,
-         knockout) {
+    ], function(
+        defineProperties,
+        DeveloperError,
+        destroyObject,
+        FullscreenButtonViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -42,29 +45,37 @@ define(['./FullscreenButtonViewModel',
 
         this._element = document.createElement('button');
         this._element.className = 'cesium-fullscreenButton';
-        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": toggled }, click: command, enable: isFullscreenEnabled');
+        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": isFullscreen }, click: command, enable: isFullscreenEnabled');
         container.appendChild(this._element);
 
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof FullscreenButton
-     * @return {Element} The parent container.
-     */
-    FullscreenButton.prototype.getContainer = function() {
-        return this._container;
-    };
+    defineProperties(FullscreenButton.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof FullscreenButton.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
 
-    /**
-     * Gets the view model being used.
-     * @memberof FullscreenButton
-     * @return {FullscreenButtonViewModel} The view model being used.
-     */
-    FullscreenButton.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+        /**
+         * Gets the view model.
+         * @memberof FullscreenButton.prototype
+         *
+         * @type {FullscreenButtonViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof FullscreenButton
@@ -75,7 +86,7 @@ define(['./FullscreenButtonViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof FullscreenButton
      */

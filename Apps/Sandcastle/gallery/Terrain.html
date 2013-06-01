@@ -207,7 +207,7 @@ require([
 
     var viewer = new Cesium.Viewer('cesiumContainer');
 
-    var scene = viewer.getScene();
+    var scene = viewer.scene;
     var centralBody = scene.getPrimitives().getCentralBody();
     centralBody.depthTestAgainstTerrain = true;
 

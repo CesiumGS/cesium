@@ -76,8 +76,8 @@ require([
     }
 
     function createButtons(viewer, sensors) {
-        var ellipsoid = viewer.getCentralBody().getEllipsoid();
-        var scene = viewer.getScene();
+        var ellipsoid = viewer.centralBody.getEllipsoid();
+        var scene = viewer.scene;
         var primitives = scene.getPrimitives();
         primitives.add(sensors);
 
@@ -109,14 +109,14 @@ require([
         sceneModePicker : false //sensors currently only work in 3D
     });
     
-    viewer.getScreenSpaceEventHandler().setInputAction(function(movement) {
-        var pickedPrimitive = viewer.getScene().pick(movement.endPosition);
+    viewer.screenSpaceEventHandler.setInputAction(function(movement) {
+        var pickedPrimitive = viewer.scene.pick(movement.endPosition);
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
     var sensors = new Cesium.SensorVolumeCollection();
     createButtons(viewer, sensors);
-    addRectangularSensor(sensors, viewer.getCentralBody().getEllipsoid(), viewer.getScene());
+    addRectangularSensor(sensors, viewer.centralBody.getEllipsoid(), viewer.scene);
 
     Sandcastle.finishedLoading();
 });

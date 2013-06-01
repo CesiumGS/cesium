@@ -107,15 +107,15 @@ define(['../../Core/Cartesian2',
 
         //Subscribe for resize events and set the initial size.
         this._resizeCallback = function() {
-            setLogoOffset(cesiumWidget.getCentralBody(), cesiumWidget.getLogo().offsetWidth + cesiumWidget.getLogo().offsetLeft + 10, 28);
+            setLogoOffset(cesiumWidget.centralBody, cesiumWidget.cesiumLogo.offsetWidth + cesiumWidget.cesiumLogo.offsetLeft + 10, 28);
         };
         window.addEventListener('resize', this._resizeCallback, false);
         this._resizeCallback();
 
-        var clock = cesiumWidget.getClock();
+        var clock = cesiumWidget.clock;
 
         //Data source display
-        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.getScene());
+        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
         this._dataSourceDisplay = dataSourceDisplay;
         clock.onTick.addEventListener(this._onTick, this);
 
@@ -130,7 +130,7 @@ define(['../../Core/Cartesian2',
             var homeButtonContainer = document.createElement('div');
             homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
             toolbar.appendChild(homeButtonContainer);
-            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.getScene(), cesiumWidget.getTransitioner(), cesiumWidget.getCentralBody().getEllipsoid());
+            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.centralBody.getEllipsoid());
         }
 
         //SceneModePicker
@@ -139,7 +139,7 @@ define(['../../Core/Cartesian2',
             var sceneModePickerContainer = document.createElement('div');
             sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
             toolbar.appendChild(sceneModePickerContainer);
-            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.getTransitioner());
+            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.transitioner);
         }
 
         //BaseLayerPicker
@@ -149,8 +149,8 @@ define(['../../Core/Cartesian2',
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
-            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.getCentralBody().getImageryLayers(), providerViewModels);
-            baseLayerPicker.getViewModel().selectedItem(defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]));
+            baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
+            baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
         }
 
         //Animation
@@ -197,170 +197,206 @@ define(['../../Core/Cartesian2',
         this._fullscreenButton = fullscreenButton;
     };
 
-    /**
-     * Gets the container element for the widget.
-     * @memberof Viewer
-     * @type {Element}
-     */
-    Viewer.prototype.getContainer = function() {
-        return this._container;
-    };
+    Object.defineProperties(Viewer.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof Viewer.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
 
-    /**
-     * Gets the CesiumWidget instance.
-     * @memberof Viewer
-     * @type {CesiumWidget}
-     */
-    Viewer.prototype.getCesiumWidget = function() {
-        return this._cesiumWidget;
-    };
+        /**
+         * Gets the CesiumWidget instance.
+         * @memberof Viewer
+         * @type {CesiumWidget}
+         */
+        cesiumWidget : {
+            get : function() {
+                return this._cesiumWidget;
+            }
+        },
 
-    /**
-     * Gets the HomeButton instance.
-     * @memberof Viewer
-     * @type {HomeButton}
-     */
-    Viewer.prototype.getHomeButton = function() {
-        return this._homeButton;
-    };
+        /**
+         * Gets the HomeButton instance.
+         * @memberof Viewer
+         * @type {HomeButton}
+         */
+        homeButton : {
+            get : function() {
+                return this._homeButton;
+            }
+        },
 
-    /**
-     * Gets the SceneModePicker instance.
-     * @memberof Viewer
-     * @type {SceneModePicker}
-     */
-    Viewer.prototype.getSceneModePicker = function() {
-        return this._sceneModePicker;
-    };
+        /**
+         * Gets the SceneModePicker instance.
+         * @memberof Viewer
+         * @type {SceneModePicker}
+         */
+        sceneModePicker : {
+            get : function() {
+                return this._sceneModePicker;
+            }
+        },
 
-    /**
-     * Gets the BaseLayerPicker instance.
-     * @memberof Viewer
-     * @type {BaseLayerPicker}
-     */
-    Viewer.prototype.getBaseLayerPicker = function() {
-        return this._baseLayerPicker;
-    };
+        /**
+         * Gets the BaseLayerPicker instance.
+         * @memberof Viewer
+         * @type {BaseLayerPicker}
+         */
+        baseLayerPicker : {
+            get : function() {
+                return this._baseLayerPicker;
+            }
+        },
 
-    /**
-     * Gets the Animation widget instance.
-     * @memberof Viewer
-     * @type {Animation}
-     */
-    Viewer.prototype.getAnimation = function() {
-        return this._animation;
-    };
+        /**
+         * Gets the Animation widget instance.
+         * @memberof Viewer
+         * @type {Animation}
+         */
+        animation : {
+            get : function() {
+                return this._animation;
+            }
+        },
 
-    /**
-     * Gets the Timeline widget instance.
-     * @memberof Viewer
-     * @type {Timeline}
-     */
-    Viewer.prototype.getTimeline = function() {
-        return this._timeline;
-    };
+        /**
+         * Gets the Timeline widget instance.
+         * @memberof Viewer
+         * @type {Timeline}
+         */
+        timeline : {
+            get : function() {
+                return this._timeline;
+            }
+        },
 
-    /**
-     * Gets the FullscreenButton instance.
-     * @memberof Viewer
-     * @type {FullscreenButton}
-     */
-    Viewer.prototype.getFullscreenButton = function() {
-        return this._fullscreenButton;
-    };
+        /**
+         * Gets the FullscreenButton instance.
+         * @memberof Viewer
+         * @type {FullscreenButton}
+         */
+        fullscreenButton : {
+            get : function() {
+                return this._fullscreenButton;
+            }
+        },
 
-    /**
-     * Gets the display instance used for {@link DataSource} visualization.
-     * @memberof Viewer
-     * @type {DataSourceDisplay}
-     */
-    Viewer.prototype.getDataSourceDisplay = function() {
-        return this._dataSourceDisplay;
-    };
+        /**
+         * Gets the display instance used for {@link DataSource} visualization.
+         * @memberof Viewer
+         * @type {DataSourceDisplay}
+         */
+        dataSourceDisplay : {
+            get : function() {
+                return this._dataSourceDisplay;
+            }
+        },
 
-    /**
-     * Gets the set of {@link DataSource} instances to be visualized.
-     * @memberof Viewer
-     * @type {DataSourceCollection}
-     */
-    Viewer.prototype.getDataSources = function() {
-        return this._dataSourceDisplay.getDataSources();
-    };
+        /**
+         * Gets the set of {@link DataSource} instances to be visualized.
+         * @memberof Viewer
+         * @type {DataSourceCollection}
+         */
+        dataSources : {
+            get : function() {
+                return this._dataSourceDisplay.getDataSources();
+            }
+        },
 
-    /**
-     * Gets the canvas.
-     * @memberof Viewer
-     * @returns {Canvas} The canvas.
-     */
-    Viewer.prototype.getCanvas = function() {
-        return this._cesiumWidget.getCanvas();
-    };
+        /**
+         * Gets the canvas.
+         * @memberof Viewer
+         * @returns {Canvas} The canvas.
+         */
+        canvas : {
+            get : function() {
+                return this._cesiumWidget.canvas;
+            }
+        },
 
-    /**
-     * Gets the Cesium logo element.
-     * @memberof Viewer
-     * @returns {Element} The logo element.
-     */
-    Viewer.prototype.getLogo = function() {
-        return this._cesiumWidget.getLogo();
-    };
+        /**
+         * Gets the Cesium logo element.
+         * @memberof Viewer
+         * @returns {Element} The logo element.
+         */
+        logo : {
+            get : function() {
+                return this._cesiumWidget.cesiumLogo;
+            }
+        },
 
-    /**
-     * Gets the scene.
-     * @memberof Viewer
-     * @returns {Scene} The scene.
-     */
-    Viewer.prototype.getScene = function() {
-        return this._cesiumWidget.getScene();
-    };
+        /**
+         * Gets the scene.
+         * @memberof Viewer
+         * @returns {Scene} The scene.
+         */
+        scene : {
+            get : function() {
+                return this._cesiumWidget.scene;
+            }
+        },
 
-    /**
-     * Gets the primary central body.
-     * @memberof Viewer
-     * @returns {CentralBody} The primary central body.
-     */
-    Viewer.prototype.getCentralBody = function() {
-        return this._cesiumWidget.getCentralBody();
-    };
+        /**
+         * Gets the primary central body.
+         * @memberof Viewer
+         * @returns {CentralBody} The primary central body.
+         */
+        centralBody : {
+            get : function() {
+                return this._cesiumWidget.centralBody;
+            }
+        },
 
-    /**
-     * Gets the clock.
-     * @memberof Viewer
-     * @returns {Clock} the clock
-     */
-    Viewer.prototype.getClock = function() {
-        return this._cesiumWidget.getClock();
-    };
+        /**
+         * Gets the clock.
+         * @memberof Viewer
+         * @returns {Clock} the clock
+         */
+        clock : {
+            get : function() {
+                return this._cesiumWidget.clock;
+            }
+        },
 
-    /**
-     * Gets the scene transitioner.
-     * @memberof Viewer
-     * @returns {SceneTransitioner} The scene transitioner.
-     */
-    Viewer.prototype.getTransitioner = function() {
-        return this._cesiumWidget.getTransitioner();
-    };
+        /**
+         * Gets the scene transitioner.
+         * @memberof Viewer
+         * @returns {SceneTransitioner} The scene transitioner.
+         */
+        transitioner : {
+            get : function() {
+                return this._cesiumWidget.transitioner;
+            }
+        },
 
-    /**
-     * Gets the screen space event handler.
-     * @memberof Viewer
-     * @returns {ScreenSpaceEventHandler}
-     */
-    Viewer.prototype.getScreenSpaceEventHandler = function() {
-        return this._cesiumWidget.getScreenSpaceEventHandler();
-    };
+        /**
+         * Gets the screen space event handler.
+         * @memberof Viewer
+         * @returns {ScreenSpaceEventHandler}
+         */
+        screenSpaceEventHandler : {
+            get : function() {
+                return this._cesiumWidget.screenSpaceEventHandler;
+            }
+        },
+    });
 
     function createOnLoadCallback(viewer, source, errorCallback, firstTime) {
         return function(evt) {
             var czmlSource = new CzmlDataSource();
             try {
                 czmlSource.load(JSON.parse(evt.target.result), source);
-                viewer.getDataSources().add(czmlSource);
+                viewer.dataSources.add(czmlSource);
                 if (firstTime) {
                     var dataClock = czmlSource.getClock();
                     if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer._cesiumWidget.getClock());
-                        viewer._timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                        dataClock.clone(viewer.clock);
+                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                     }
                 }
             } catch (error) {
@@ -394,7 +430,7 @@ define(['../../Core/Cartesian2',
      *  event.preventDefault();
      * }
      *
-     * var container = viewer.getContainer();
+     * var container = viewer.container;
      * container.addEventListener('drop', function(event) {
      *   stop(event);
      *   widget.handleDrop(event);
@@ -408,7 +444,7 @@ define(['../../Core/Cartesian2',
             throw new DeveloperError('event is required.');
         }
 
-        var dataSources = this.getDataSources();
+        var dataSources = this.dataSources;
         dataSources.removeAll();
 
         var files = event.dataTransfer.files;
@@ -431,7 +467,7 @@ define(['../../Core/Cartesian2',
      * Enables default drag and drop behavior for loading data into the widget.
      * @memberof Viewer
      *
-     * @param [container=this.getContainer()] The container to serve as the drop target.
+     * @param [container=this.container] The container to serve as the drop target.
      * @param {Function} [errorCallback] A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
      */
     Viewer.prototype.enableDragAndDrop = function(container, errorCallback) {
@@ -489,7 +525,7 @@ define(['../../Core/Cartesian2',
         }
 
         if (typeof this._animation !== 'undefined') {
-            this._container.removeChild(this._animation.getContainer());
+            this._container.removeChild(this._animation.container);
             this._animation = this._animation.destroy();
         }
 
@@ -500,11 +536,11 @@ define(['../../Core/Cartesian2',
         }
 
         if (typeof this._fullscreenButton !== 'undefined') {
-            this._container.removeChild(this._fullscreenButton.getContainer());
+            this._container.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
-        this._cesiumWidget.getClock().onTick.removeEventListener(this._onTick, this);
+        this._cesiumWidget.clock.onTick.removeEventListener(this._onTick, this);
         this._cesiumWidget = this._cesiumWidget.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);

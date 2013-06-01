@@ -1,10 +1,12 @@
 /*global define*/
-define(['../../Core/buildModuleUrl',
+define([
+        '../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
@@ -16,8 +18,8 @@ define(['../../Core/buildModuleUrl',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/SkyBox',
         '../../Scene/Sun'
     ], function(
         buildModuleUrl,
@@ -26,6 +28,7 @@ define(['../../Core/buildModuleUrl',
         Clock,
         DefaultProxy,
         defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
@@ -37,8 +40,8 @@ define(['../../Core/buildModuleUrl',
         Scene,
         SceneMode,
         SceneTransitioner,
-        SkyBox,
         SkyAtmosphere,
+        SkyBox,
         Sun) {
     "use strict";
 
@@ -188,77 +191,103 @@ define(['../../Core/buildModuleUrl',
         requestAnimationFrame(render);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof CesiumWidget
-     * @returns {Element} The parent container
-     */
-    CesiumWidget.prototype.getContainer = function() {
-        return this._container;
-    };
+    defineProperties(CesiumWidget.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
 
-    /**
-     * Gets the canvas.
-     * @memberof CesiumWidget
-     * @returns {Canvas} The canvas.
-     */
-    CesiumWidget.prototype.getCanvas = function() {
-        return this._canvas;
-    };
+        /**
+         * Gets the scene transitioner.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {SceneTransitioner}
+         */
+        transitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
 
-    /**
-     * Gets the Cesium logo element.
-     * @memberof CesiumWidget
-     * @returns {Element} The logo element.
-     */
-    CesiumWidget.prototype.getLogo = function() {
-        return this._cesiumLogo;
-    };
+        /**
+         * Gets the canvas.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Canvas}
+         */
+        canvas : {
+            get : function() {
+                return this._canvas;
+            }
+        },
 
-    /**
-     * Gets the scene.
-     * @memberof CesiumWidget
-     * @returns {Scene} The scene.
-     */
-    CesiumWidget.prototype.getScene = function() {
-        return this._scene;
-    };
+        /**
+         * Gets the Cesium logo element.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Element}
+         */
+        cesiumLogo : {
+            get : function() {
+                return this._cesiumLogo;
+            }
+        },
 
-    /**
-     * Gets the primary central body.
-     * @memberof CesiumWidget
-     * @returns {CentralBody} The primary central body.
-     */
-    CesiumWidget.prototype.getCentralBody = function() {
-        return this._centralBody;
-    };
+        /**
+         * Gets the scene.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
 
-    /**
-     * Gets the clock.
-     * @memberof CesiumWidget
-     * @returns {Clock} the clock
-     */
-    CesiumWidget.prototype.getClock = function() {
-        return this._clock;
-    };
+        /**
+         * Gets the primary central body.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {CentralBody}
+         */
+        centralBody : {
+            get : function() {
+                return this._centralBody;
+            }
+        },
 
-    /**
-     * Gets the scene transitioner.
-     * @memberof CesiumWidget
-     * @returns {SceneTransitioner} The scene transitioner.
-     */
-    CesiumWidget.prototype.getTransitioner = function() {
-        return this._transitioner;
-    };
+        /**
+         * Gets the clock.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Clock}
+         */
+        clock : {
+            get : function() {
+                return this._clock;
+            }
+        },
 
-    /**
-     * Gets the screen space event handler.
-     * @memberof CesiumWidget
-     * @returns {ScreenSpaceEventHandler}
-     */
-    CesiumWidget.prototype.getScreenSpaceEventHandler = function() {
-        return this._screenSpaceEventHandler;
-    };
+        /**
+         * Gets the screen space event handler.
+         * @memberof CesiumWidget.prototype
+         *
+         * @returns {ScreenSpaceEventHandler}
+         */
+        screenSpaceEventHandler : {
+            get : function() {
+                return this._screenSpaceEventHandler;
+            }
+        }
+    });
 
     /**
      * @memberof CesiumWidget
@@ -284,6 +313,7 @@ define(['../../Core/buildModuleUrl',
      * Call this function when the widget changes size, to update the canvas
      * size, camera aspect ratio, and viewport size. This function is called
      * automatically on window resize.
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
         var width = this._canvas.clientWidth;
@@ -308,6 +338,7 @@ define(['../../Core/buildModuleUrl',
     /**
      * Forces an update and render of the scene. This function is called
      * automatically.
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
         if (this._needResize) {

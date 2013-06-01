@@ -28,10 +28,10 @@ defineSuite([
 
     it('constructor sets default values', function() {
         var homeButton = new HomeButton(document.body, scene);
-        expect(homeButton.getContainer()).toBe(document.body);
-        expect(homeButton.getViewModel().getScene()).toBe(scene);
-        expect(homeButton.getViewModel().getTransitioner()).toBeUndefined();
-        expect(homeButton.getViewModel().getEllipsoid()).toBe(Ellipsoid.WGS84);
+        expect(homeButton.container).toBe(document.body);
+        expect(homeButton.viewModel.scene).toBe(scene);
+        expect(homeButton.viewModel.transitioner).toBeUndefined();
+        expect(homeButton.viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
         expect(homeButton.isDestroyed()).toEqual(false);
         homeButton.destroy();
         expect(homeButton.isDestroyed()).toEqual(true);
@@ -40,10 +40,10 @@ defineSuite([
     it('constructor sets expected values', function() {
         var ellipsoid = new Ellipsoid();
         var homeButton = new HomeButton(document.body, scene, transitioner, ellipsoid);
-        expect(homeButton.getContainer()).toBe(document.body);
-        expect(homeButton.getViewModel().getScene()).toBe(scene);
-        expect(homeButton.getViewModel().getTransitioner()).toBe(transitioner);
-        expect(homeButton.getViewModel().getEllipsoid()).toBe(ellipsoid);
+        expect(homeButton.container).toBe(document.body);
+        expect(homeButton.viewModel.scene).toBe(scene);
+        expect(homeButton.viewModel.transitioner).toBe(transitioner);
+        expect(homeButton.viewModel.ellipsoid).toBe(ellipsoid);
         homeButton.destroy();
     });
 
@@ -52,7 +52,7 @@ defineSuite([
         testElement.id = 'testElement';
         document.body.appendChild(testElement);
         var homeButton = new HomeButton('testElement', scene);
-        expect(homeButton.getContainer()).toBe(testElement);
+        expect(homeButton.container).toBe(testElement);
         document.body.removeChild(testElement);
         homeButton.destroy();
     });
@@ -60,12 +60,6 @@ defineSuite([
     it('throws if container is undefined', function() {
         expect(function() {
             return new HomeButton(undefined, scene);
-        }).toThrow();
-    });
-
-    it('throws if scene is undefined', function() {
-        expect(function() {
-            return new HomeButton(document.body, undefined);
         }).toThrow();
     });
 

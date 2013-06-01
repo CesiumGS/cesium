@@ -1,13 +1,16 @@
 /*global define*/
-define(['./HomeButtonViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './HomeButtonViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-         HomeButtonViewModel,
-         DeveloperError,
-         destroyObject,
-         knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        HomeButtonViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -22,7 +25,7 @@ define(['./HomeButtonViewModel',
      * @param {Ellipsoid} [ellipsoid] The Scene's primary ellipsoid.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {Scene} scene is required.
+     * @exception {DeveloperError} scene is required.
      */
     var HomeButton = function(container, scene, transitioner, ellipsoid) {
         if (typeof container === 'undefined') {
@@ -48,23 +51,31 @@ define(['./HomeButtonViewModel',
         knockout.applyBindings(this._viewModel, this._element);
     };
 
-    /**
-     * Gets the parent container.
-     * @memberof HomeButton
-     * @return {Element} The parent container.
-     */
-    HomeButton.prototype.getContainer = function() {
-        return this._container;
-    };
+    defineProperties(HomeButton.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof HomeButton.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
 
-    /**
-     * Gets the view model being used.
-     * @memberof HomeButton
-     * @return {HomeButtonViewModel} The view model being used.
-     */
-    HomeButton.prototype.getViewModel = function() {
-        return this._viewModel;
-    };
+        /**
+         * Gets the view model.
+         * @memberof HomeButton.prototype
+         *
+         * @type {HomeButtonViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
 
     /**
      * @memberof HomeButton
@@ -75,7 +86,7 @@ define(['./HomeButtonViewModel',
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof HomeButton
      */
