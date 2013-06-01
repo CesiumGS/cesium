@@ -205,7 +205,7 @@ defineSuite(['Widgets/Viewer/Viewer',
             }
         };
 
-    var testProviderViewModel = ImageryProviderViewModel.fromConstants({
+    var testProviderViewModel = new ImageryProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
