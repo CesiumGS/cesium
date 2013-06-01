@@ -16,6 +16,7 @@ Beta Releases
       * `clockViewModel.shouldAnimate()` -> `clockViewModel.shouldAnimate`
       * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
    * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
+* Added support for approximating local vertical, local horizontal (LVLH) reference frames when using `DynamicObjectView` in 3D.  The object automatically selects LVLH or EastNorthUp based on the object's velocity. 
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
