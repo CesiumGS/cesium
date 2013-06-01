@@ -160,7 +160,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -228,8 +228,8 @@ define([
     var position;
     var orientation;
     var intersectionColor;
-    DynamicConeVisualizerUsingCustomSensor.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.getContext();
+    function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
+        var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject.cone;
         if (typeof dynamicCone === 'undefined') {
             return;
@@ -253,26 +253,26 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof coneVisualizerIndex !== 'undefined') {
-                cone = this._coneCollection[coneVisualizerIndex];
+                cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
                 cone.show = false;
                 dynamicObject._coneVisualizerIndex = undefined;
-                this._unusedIndexes.push(coneVisualizerIndex);
+                dynamicConeVisualizerUsingCustomSensor._unusedIndexes.push(coneVisualizerIndex);
             }
             return;
         }
 
         if (typeof coneVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicConeVisualizerUsingCustomSensor._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 coneVisualizerIndex = unusedIndexes.pop();
-                cone = this._coneCollection[coneVisualizerIndex];
+                cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
             } else {
-                coneVisualizerIndex = this._coneCollection.length;
+                coneVisualizerIndex = dynamicConeVisualizerUsingCustomSensor._coneCollection.length;
                 cone = new CustomSensorVolume();
                 cone._directionsScratch = [];
-                this._coneCollection.push(cone);
-                this._primitives.add(cone);
+                dynamicConeVisualizerUsingCustomSensor._coneCollection.push(cone);
+                dynamicConeVisualizerUsingCustomSensor._primitives.add(cone);
             }
             dynamicObject._coneVisualizerIndex = coneVisualizerIndex;
             cone.dynamicObject = dynamicObject;
@@ -283,7 +283,7 @@ define([
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
         } else {
-            cone = this._coneCollection[coneVisualizerIndex];
+            cone = dynamicConeVisualizerUsingCustomSensor._coneCollection[coneVisualizerIndex];
         }
 
         cone.show = true;
@@ -368,7 +368,7 @@ define([
                 cone.intersectionColor = intersectionColor;
             }
         }
-    };
+    }
 
     DynamicConeVisualizerUsingCustomSensor.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisConeCollection = this._coneCollection;
