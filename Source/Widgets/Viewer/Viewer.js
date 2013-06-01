@@ -96,10 +96,14 @@ define(['../../Core/Cartesian2',
             container = tmp;
         }
 
+        var viewerContainer = document.createElement('div');
+        viewerContainer.className = 'cesium-viewer';
+        container.appendChild(viewerContainer);
+
         //Cesium widget
         var cesiumWidgetContainer = document.createElement('div');
-        cesiumWidgetContainer.className = 'cesium-viewer-node';
-        container.appendChild(cesiumWidgetContainer);
+        cesiumWidgetContainer.className = 'cesium-viewer-cesiumWidgetContainer';
+        viewerContainer.appendChild(cesiumWidgetContainer);
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
             sceneMode : options.sceneMode
@@ -120,9 +124,8 @@ define(['../../Core/Cartesian2',
         clock.onTick.addEventListener(this._onTick, this);
 
         var toolbar = document.createElement('div');
-        this._toolbar = toolbar;
         toolbar.className = 'cesium-viewer-toolbar';
-        container.appendChild(toolbar);
+        viewerContainer.appendChild(toolbar);
 
         //HomeButton
         var homeButton;
@@ -159,7 +162,7 @@ define(['../../Core/Cartesian2',
             var clockViewModel = new ClockViewModel(clock);
             var animationContainer = document.createElement('div');
             animationContainer.className = 'cesium-viewer-animationContainer';
-            container.appendChild(animationContainer);
+            viewerContainer.appendChild(animationContainer);
             animation = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
         }
 
@@ -168,7 +171,7 @@ define(['../../Core/Cartesian2',
         if (typeof options.timeline === 'undefined' || options.timeline !== false) {
             var timelineContainer = document.createElement('div');
             timelineContainer.className = 'cesium-viewer-timelineContainer';
-            container.appendChild(timelineContainer);
+            viewerContainer.appendChild(timelineContainer);
             timeline = new Timeline(timelineContainer, clock);
             timeline.addEventListener('settime', onTimelineScrubfunction, false);
             timeline.zoomTo(clock.startTime, clock.stopTime);
@@ -179,7 +182,7 @@ define(['../../Core/Cartesian2',
         if (typeof options.fullscreenButton === 'undefined' || options.fullscreenButton !== false) {
             var fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
-            container.appendChild(fullscreenContainer);
+            viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
         }
 
@@ -188,7 +191,9 @@ define(['../../Core/Cartesian2',
         this._dropContainer = undefined;
 
         this._container = container;
+        this._viewerContainer = viewerContainer;
         this._cesiumWidget = cesiumWidget;
+        this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
         this._baseLayerPicker = baseLayerPicker;
@@ -510,7 +515,8 @@ define(['../../Core/Cartesian2',
      */
     Viewer.prototype.destroy = function() {
         this.disableDragAndDrop();
-        this._container.removeChild(this._toolbar);
+        this._container.removeChild(this._viewerContainer);
+        this._viewerContainer.removeChild(this._toolbar);
 
         if (typeof this._homeButton !== 'undefined') {
             this._homeButton = this._homeButton.destroy();
@@ -525,18 +531,18 @@ define(['../../Core/Cartesian2',
         }
 
         if (typeof this._animation !== 'undefined') {
-            this._container.removeChild(this._animation.container);
+            this._viewerContainer.removeChild(this._animation.container);
             this._animation = this._animation.destroy();
         }
 
         if (typeof this._timeline !== 'undefined') {
             this._timeline.removeEventListener('settime', onTimelineScrubfunction, false);
-            this._container.removeChild(this._timeline.container);
+            this._viewerContainer.removeChild(this._timeline.container);
             this._timeline = this._timeline.destroy();
         }
 
         if (typeof this._fullscreenButton !== 'undefined') {
-            this._container.removeChild(this._fullscreenButton.container);
+            this._viewerContainer.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
