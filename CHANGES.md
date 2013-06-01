@@ -37,6 +37,7 @@ Beta Releases
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
    * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
+* Added support for approximating local vertical, local horizontal (LVLH) reference frames when using `DynamicObjectView` in 3D.  The object automatically selects LVLH or EastNorthUp based on the object's velocity. 
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
