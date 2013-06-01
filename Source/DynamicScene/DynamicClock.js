@@ -2,16 +2,12 @@
 define([
         '../Core/TimeInterval',
         '../Core/Iso8601',
-        '../Core/defaultValue',
-        '../Core/Clock',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/JulianDate'
     ], function(
         TimeInterval,
         Iso8601,
-        defaultValue,
-        Clock,
         ClockRange,
         ClockStep,
         JulianDate) {

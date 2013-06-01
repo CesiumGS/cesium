@@ -1,12 +1,9 @@
 /*global define*/
 define([
         './DeveloperError',
-        './Math',
         './QuadraticRealPolynomial'
-    ],
-    function(
+    ], function(
         DeveloperError,
-        CesiumMath,
         QuadraticRealPolynomial) {
     "use strict";
 

@@ -481,7 +481,7 @@ define([
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
                 dashCount = time.split(':').length - 1;
-                if (dashCount > 0 && dashCount !== 2) {
+                if (dashCount > 0 && dashCount !== 2 && dashCount !== 3) {
                     throw new DeveloperError(iso8601ErrorMessage);
                 }
 

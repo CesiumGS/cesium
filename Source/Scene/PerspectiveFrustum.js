@@ -1,17 +1,9 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/destroyObject',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Matrix4',
         '../Scene/PerspectiveOffCenterFrustum'
     ], function(
         DeveloperError,
-        destroyObject,
-        Cartesian3,
-        Cartesian4,
-        Matrix4,
         PerspectiveOffCenterFrustum) {
     "use strict";
 

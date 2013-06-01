@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'Widgets/Animation/AnimationViewModel',
-             'Widgets/ClockViewModel',
-             'Core/JulianDate',
-             'Core/ClockStep',
-             'Core/ClockRange',
-             'Core/Math'
-            ], function(
-              AnimationViewModel,
-              ClockViewModel,
-              JulianDate,
-              ClockStep,
-              ClockRange,
-              CesiumMath) {
+         'Widgets/Animation/AnimationViewModel',
+         'Widgets/ClockViewModel',
+         'Core/JulianDate',
+         'Core/ClockStep',
+         'Core/ClockRange'
+     ], function(
+         AnimationViewModel,
+         ClockViewModel,
+         JulianDate,
+         ClockStep,
+         ClockRange) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -239,7 +237,7 @@ defineSuite([
         verifyReverseState(viewModel);
     });
 
-    it('animating forwards negates the multiplier if it is positive', function() {
+    it('animating forwards negates the multiplier if it is negative', function() {
         var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = -100;
@@ -510,6 +508,20 @@ defineSuite([
         //Shuttle ring change breaks realtime state
         viewModel.shuttleRingAngle(viewModel.shuttleRingAngle() + 1);
         verifyForwardState(viewModel);
+    });
+
+    it('real time mode toggles only if shouldAnimate is true', function() {
+        var clockViewModel = new ClockViewModel();
+        var viewModel = new AnimationViewModel(clockViewModel);
+
+        viewModel.playRealtimeViewModel.command();
+        verifyRealtimeState(viewModel);
+
+        clockViewModel.shouldAnimate(false);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(false);
+
+        clockViewModel.shouldAnimate(true);
+        expect(viewModel.playRealtimeViewModel.toggled()).toEqual(true);
     });
 
     it('Shuttle ring angles set expected multipliers', function() {

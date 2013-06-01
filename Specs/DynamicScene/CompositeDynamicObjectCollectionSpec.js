@@ -5,11 +5,6 @@ defineSuite([
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
-         'DynamicScene/DynamicObject',
-         'DynamicScene/DynamicBillboard',
-         'DynamicScene/DynamicPoint',
-         'DynamicScene/DynamicPolyline',
-         'DynamicScene/DynamicLabel',
          'DynamicScene/processCzml',
          'DynamicScene/CzmlDefaults',
          'Scene/HorizontalOrigin'
@@ -19,11 +14,6 @@ defineSuite([
          JulianDate,
          Iso8601,
          TimeInterval,
-         DynamicObject,
-         DynamicBillboard,
-         DynamicPoint,
-         DynamicPolyline,
-         DynamicLabel,
          processCzml,
          CzmlDefaults,
          HorizontalOrigin) {

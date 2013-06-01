@@ -1,13 +1,9 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/DeveloperError',
-        './TerrainState',
         '../ThirdParty/when'
     ], function(
-        defaultValue,
         DeveloperError,
-        TerrainState,
         when) {
     "use strict";
 

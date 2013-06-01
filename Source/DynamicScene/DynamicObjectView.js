@@ -9,6 +9,7 @@ define([
         '../Core/Cartographic',
         '../Core/Quaternion',
         '../Core/Matrix3',
+        '../Core/Matrix4',
         '../Core/Ellipsoid',
         '../Core/Transforms',
         '../Scene/CameraColumbusViewMode',
@@ -23,6 +24,7 @@ define([
          Cartographic,
          Quaternion,
          Matrix3,
+         Matrix4,
          Ellipsoid,
          Transforms,
          CameraColumbusViewMode,
@@ -75,13 +77,79 @@ define([
         }
     }
 
-    var update3DTransform;
+    var update3DTransform = new Matrix4();
+    var update3DMatrix3Scratch1 = new Matrix3();
+    var update3DMatrix3Scratch2 = new Matrix3();
+    var update3DMatrix3Scratch3 = new Matrix3();
+    var update3DCartesian3Scratch1 = new Cartesian3();
+    var update3DCartesian3Scratch2 = new Cartesian3();
+    var update3DCartesian3Scratch3 = new Cartesian3();
+
     function update3D(that, camera, objectChanged, offset, positionProperty, time, ellipsoid) {
         update3DController(that, camera, objectChanged, offset);
 
         var cartesian = positionProperty.getValueCartesian(time, that._lastCartesian);
         if (typeof cartesian !== 'undefined') {
-            camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            var successful = false;
+
+            // The time delta was determined based on how fast satellites move compared to vehicles near the surface.
+            // Slower moving vehicles will most likely default to east-north-up, while faster ones will be LVLH.
+            var deltaTime = time.addSeconds(0.01);
+            var deltaCartesian = positionProperty.getValueCartesian(deltaTime, update3DCartesian3Scratch1);
+            if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
+                var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
+                var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
+                var toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+
+                // Z along the position
+                var zBasis = update3DCartesian3Scratch2;
+                Cartesian3.normalize(cartesian, zBasis);
+                Cartesian3.normalize(deltaCartesian, deltaCartesian);
+
+                Matrix3.multiplyByVector(toInertial, zBasis, zBasis);
+                Matrix3.multiplyByVector(toInertialDelta, deltaCartesian, deltaCartesian);
+
+                // Y is along the angular momentum vector (e.g. "orbit normal")
+                var yBasis = Cartesian3.cross(zBasis, deltaCartesian, update3DCartesian3Scratch3);
+                if (!Cartesian3.equalsEpsilon(yBasis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+                    // X is along the cross of y and z (right handed basis / in the direction of motion)
+                    var xBasis = Cartesian3.cross(yBasis, zBasis, update3DCartesian3Scratch1);
+
+                    Matrix3.multiplyByVector(toFixed, xBasis, xBasis);
+                    Matrix3.multiplyByVector(toFixed, yBasis, yBasis);
+                    Matrix3.multiplyByVector(toFixed, zBasis, zBasis);
+
+                    Cartesian3.normalize(xBasis, xBasis);
+                    Cartesian3.normalize(yBasis, yBasis);
+                    Cartesian3.normalize(zBasis, zBasis);
+
+                    var transform = update3DTransform;
+                    transform[0]  = xBasis.x;
+                    transform[1]  = xBasis.y;
+                    transform[2]  = xBasis.z;
+                    transform[3]  = 0.0;
+                    transform[4]  = yBasis.x;
+                    transform[5]  = yBasis.y;
+                    transform[6]  = yBasis.z;
+                    transform[7]  = 0.0;
+                    transform[8]  = zBasis.x;
+                    transform[9]  = zBasis.y;
+                    transform[10] = zBasis.z;
+                    transform[11] = 0.0;
+                    transform[12]  = cartesian.x;
+                    transform[13]  = cartesian.y;
+                    transform[14] = cartesian.z;
+                    transform[15] = 0.0;
+
+                    camera.transform = transform;
+                    successful = true;
+                }
+            }
+
+            if (!successful) {
+                camera.transform = Transforms.eastNorthUpToFixedFrame(cartesian, ellipsoid, update3DTransform);
+            }
+
             that._screenSpaceCameraController.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
             var position = camera.position;

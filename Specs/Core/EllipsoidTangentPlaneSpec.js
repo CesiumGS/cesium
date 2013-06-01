@@ -3,14 +3,12 @@ defineSuite([
          'Core/EllipsoidTangentPlane',
          'Core/Ellipsoid',
          'Core/Cartesian2',
-         'Core/Cartesian3',
-         'Core/Math'
+         'Core/Cartesian3'
      ], function(
          EllipsoidTangentPlane,
          Ellipsoid,
          Cartesian2,
-         Cartesian3,
-         CesiumMath) {
+         Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
