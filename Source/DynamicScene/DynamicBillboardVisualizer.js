@@ -133,7 +133,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -197,7 +197,7 @@ define([
     var color;
     var eyeOffset;
     var pixelOffset;
-    DynamicBillboardVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    function updateObject(dynamicBillboardVisualizer, time, dynamicObject) {
         var dynamicBillboard = dynamicObject.billboard;
         if (typeof dynamicBillboard === 'undefined') {
             return;
@@ -221,26 +221,26 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof billboardVisualizerIndex !== 'undefined') {
-                billboard = this._billboardCollection.get(billboardVisualizerIndex);
+                billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
                 billboard.setShow(false);
                 billboard.setImageIndex(-1);
                 billboard._visualizerUrl = undefined;
                 billboard._visualizerTextureAvailable = false;
                 dynamicObject._billboardVisualizerIndex = undefined;
-                this._unusedIndexes.push(billboardVisualizerIndex);
+                dynamicBillboardVisualizer._unusedIndexes.push(billboardVisualizerIndex);
             }
             return;
         }
 
         if (typeof billboardVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicBillboardVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 billboardVisualizerIndex = unusedIndexes.pop();
-                billboard = this._billboardCollection.get(billboardVisualizerIndex);
+                billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
             } else {
-                billboardVisualizerIndex = this._billboardCollection.getLength();
-                billboard = this._billboardCollection.add();
+                billboardVisualizerIndex = dynamicBillboardVisualizer._billboardCollection.getLength();
+                billboard = dynamicBillboardVisualizer._billboardCollection.add();
             }
             dynamicObject._billboardVisualizerIndex = billboardVisualizerIndex;
             billboard.dynamicObject = dynamicObject;
@@ -255,14 +255,14 @@ define([
             billboard.setHorizontalOrigin(HorizontalOrigin.CENTER);
             billboard.setVerticalOrigin(VerticalOrigin.CENTER);
         } else {
-            billboard = this._billboardCollection.get(billboardVisualizerIndex);
+            billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }
 
         var textureValue = textureProperty.getValue(time);
         if (textureValue !== billboard._visualizerUrl) {
             billboard._visualizerUrl = textureValue;
             billboard._visualizerTextureAvailable = false;
-            this._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(dynamicObject, this._billboardCollection, textureValue));
+            dynamicBillboardVisualizer._textureAtlasBuilder.addTextureFromUrl(textureValue, textureReady(dynamicObject, dynamicBillboardVisualizer._billboardCollection, textureValue));
         }
 
         billboard.setShow(billboard._visualizerTextureAvailable);
@@ -323,7 +323,7 @@ define([
                 billboard.setVerticalOrigin(verticalOrigin);
             }
         }
-    };
+    }
 
     DynamicBillboardVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisBillboardCollection = this._billboardCollection;
