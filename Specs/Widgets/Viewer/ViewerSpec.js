@@ -74,6 +74,10 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
         expect(viewer.dataSourceDisplay).toBeInstanceOf(DataSourceDisplay);
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
+        expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
+        expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
+        expect(viewer.transitioner).toBe(viewer.cesiumWidget.transitioner);
+        expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
         viewer.destroy();
     });
 

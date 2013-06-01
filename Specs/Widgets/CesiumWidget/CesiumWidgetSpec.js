@@ -2,12 +2,14 @@
 defineSuite([
          'Widgets/CesiumWidget/CesiumWidget',
          'Core/Clock',
+         'Core/ScreenSpaceEventHandler',
          'Scene/Scene',
          'Scene/SceneTransitioner',
          'Scene/CentralBody'
      ], function(
          CesiumWidget,
          Clock,
+         ScreenSpaceEventHandler,
          Scene,
          SceneTransitioner,
          CentralBody) {
@@ -24,6 +26,7 @@ defineSuite([
         expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.transitioner).toBeInstanceOf(SceneTransitioner);
+        expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
     });

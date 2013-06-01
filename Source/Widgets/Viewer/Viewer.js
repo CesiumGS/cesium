@@ -215,7 +215,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the CesiumWidget instance.
+         * Gets the CesiumWidget.
          * @memberof Viewer
          * @type {CesiumWidget}
          */
@@ -226,7 +226,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the HomeButton instance.
+         * Gets the HomeButton.
          * @memberof Viewer
          * @type {HomeButton}
          */
@@ -237,7 +237,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the SceneModePicker instance.
+         * Gets the SceneModePicker.
          * @memberof Viewer
          * @type {SceneModePicker}
          */
@@ -248,7 +248,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the BaseLayerPicker instance.
+         * Gets the BaseLayerPicker.
          * @memberof Viewer
          * @type {BaseLayerPicker}
          */
@@ -259,7 +259,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the Animation widget instance.
+         * Gets the Animation widget.
          * @memberof Viewer
          * @type {Animation}
          */
@@ -270,7 +270,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the Timeline widget instance.
+         * Gets the Timeline widget.
          * @memberof Viewer
          * @type {Timeline}
          */
@@ -281,7 +281,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the FullscreenButton instance.
+         * Gets the FullscreenButton.
          * @memberof Viewer
          * @type {FullscreenButton}
          */
@@ -292,7 +292,7 @@ define(['../../Core/Cartesian2',
         },
 
         /**
-         * Gets the display instance used for {@link DataSource} visualization.
+         * Gets the display used for {@link DataSource} visualization.
          * @memberof Viewer
          * @type {DataSourceDisplay}
          */
@@ -329,7 +329,7 @@ define(['../../Core/Cartesian2',
          * @memberof Viewer
          * @returns {Element} The logo element.
          */
-        logo : {
+        cesiumLogo : {
             get : function() {
                 return this._cesiumWidget.cesiumLogo;
             }
