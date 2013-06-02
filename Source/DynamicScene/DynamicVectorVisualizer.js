@@ -106,7 +106,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -169,7 +169,7 @@ define([
         return destroyObject(this);
     };
 
-    DynamicVectorVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    function updateObject(dynamicVectorVisualizer, time, dynamicObject) {
         var dynamicVector = dynamicObject.vector;
         if (typeof dynamicVector === 'undefined') {
             return;
@@ -187,23 +187,23 @@ define([
            (typeof directionProperty === 'undefined' || typeof positionProperty === 'undefined' || typeof lengthProperty === 'undefined')) {
             //Remove the existing primitive if we have one
             if (typeof vectorVisualizerIndex !== 'undefined') {
-                polyline = this._polylineCollection.get(vectorVisualizerIndex);
+                polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
                 polyline.setShow(false);
                 dynamicObject._vectorVisualizerIndex = undefined;
-                this._unusedIndexes.push(vectorVisualizerIndex);
+                dynamicVectorVisualizer._unusedIndexes.push(vectorVisualizerIndex);
             }
             return;
         }
 
         var uniforms;
         if (typeof vectorVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicVectorVisualizer._unusedIndexes;
             if (unusedIndexes.length > 0) {
                 vectorVisualizerIndex = unusedIndexes.pop();
-                polyline = this._polylineCollection.get(vectorVisualizerIndex);
+                polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
             } else {
-                vectorVisualizerIndex = this._polylineCollection.getLength();
-                polyline = this._polylineCollection.add();
+                vectorVisualizerIndex = dynamicVectorVisualizer._polylineCollection.getLength();
+                polyline = dynamicVectorVisualizer._polylineCollection.add();
                 polyline._visualizerPositions = [new Cartesian3(), new Cartesian3()];
             }
             dynamicObject._vectorVisualizerIndex = vectorVisualizerIndex;
@@ -213,13 +213,13 @@ define([
             polyline.setWidth(1);
             var material = polyline.getMaterial();
             if (typeof material === 'undefined' || (material.type !== Material.PolylineArrowType)) {
-                material = Material.fromType(this._scene.getContext(), Material.PolylineArrowType);
+                material = Material.fromType(dynamicVectorVisualizer._scene.getContext(), Material.PolylineArrowType);
                 polyline.setMaterial(material);
             }
             uniforms = material.uniforms;
             Color.clone(Color.WHITE, uniforms.color);
         } else {
-            polyline = this._polylineCollection.get(vectorVisualizerIndex);
+            polyline = dynamicVectorVisualizer._polylineCollection.get(vectorVisualizerIndex);
             uniforms = polyline.getMaterial().uniforms;
         }
 
@@ -246,7 +246,7 @@ define([
                 polyline.setWidth(width);
             }
         }
-    };
+    }
 
     DynamicVectorVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisPolylineCollection = this._polylineCollection;
