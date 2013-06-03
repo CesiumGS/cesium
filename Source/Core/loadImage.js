@@ -50,6 +50,9 @@ define([
         allowCrossOrigin = defaultValue(allowCrossOrigin, true);
 
         return when(url, function(url) {
+            if (typeof url === 'undefined') {
+                return undefined;
+            }
             var crossOrigin;
 
             // data URIs can't have allowCrossOrigin set.

@@ -1,12 +1,14 @@
-/*global define*/
+/*global define,Blob*/
 define([
         '../Core/defaultValue',
+        '../Core/loadArrayBuffer',
         '../Core/loadImage',
         '../Core/getImagePixels',
         '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        loadArrayBuffer,
         loadImage,
         getImagePixels,
         DeveloperError,
@@ -26,6 +28,9 @@ define([
      * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
+     * @param {Boolean} [description.checkSizeIfPossible=true] Whether or not the size of the image should be checked
+     *                  against the missing tile's size before checking individual pixels, if possible.  This is generally
+     *                  only possible when tiles are downloaded as ArrayBuffers instead of as images.
      *
      * @exception {DeveloperError} <code>description.missingImageUrl</code> is required.
      * @exception {DeveloperError} <code>pixelsToCheck</code> is required.
@@ -43,35 +48,47 @@ define([
 
         this._pixelsToCheck = description.pixelsToCheck;
         this._missingImagePixels = undefined;
+        this._missingImageByteLength = undefined;
+        this._checkSizeIfPossible = defaultValue(description.checkSizeIfPossible, true);
         this._isReady = false;
 
         var that = this;
 
-        function success(image) {
-            var pixels = getImagePixels(image);
+        function success(buffer) {
+            that._missingImageByteLength = buffer.byteLength;
+            var blob = new Blob([buffer], {type:"image/jpeg"});
+            var blobUrl = window.URL.createObjectURL(blob);
 
-            if (description.disableCheckIfAllPixelsAreTransparent) {
-                var allAreTransparent = true;
-                var width = image.width;
+            when(loadImage(blobUrl), function(image) {
+                window.URL.revokeObjectURL(blobUrl);
 
-                var pixelsToCheck = description.pixelsToCheck;
-                for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
-                    var pos = pixelsToCheck[i];
-                    var index = pos.x * 4 + pos.y * width;
-                    var alpha = pixels[index + 3];
+                var pixels = getImagePixels(image);
 
-                    if (alpha > 0) {
-                        allAreTransparent = false;
+                if (description.disableCheckIfAllPixelsAreTransparent) {
+                    var allAreTransparent = true;
+                    var width = image.width;
+
+                    var pixelsToCheck = description.pixelsToCheck;
+                    for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
+                        var pos = pixelsToCheck[i];
+                        var index = pos.x * 4 + pos.y * width;
+                        var alpha = pixels[index + 3];
+
+                        if (alpha > 0) {
+                            allAreTransparent = false;
+                        }
+                    }
+
+                    if (allAreTransparent) {
+                        pixels = undefined;
                     }
                 }
 
-                if (allAreTransparent) {
-                    pixels = undefined;
-                }
-            }
-
-            that._missingImagePixels = pixels;
-            that._isReady = true;
+                that._missingImagePixels = pixels;
+                that._isReady = true;
+            }, function(e) {
+                window.URL.revokeObjectURL(blobUrl);
+            });
         }
 
         function failure() {
@@ -81,7 +98,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImage(description.missingImageUrl), success, failure);
+        when(loadArrayBuffer(description.missingImageUrl), success, failure);
     };
 
     /**
@@ -112,6 +129,12 @@ define([
         // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
         if (typeof missingImagePixels === 'undefined') {
             return false;
+        }
+
+        if (this._checkSizeIfPossible && typeof image.bufferByteLength !== 'undefined') {
+            if (image.bufferByteLength !== this._missingImageByteLength) {
+                return false;
+            }
         }
 
         var pixels = getImagePixels(image);

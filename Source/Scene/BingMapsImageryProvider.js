@@ -1,7 +1,10 @@
-/*global define*/
+/*global define,Blob*/
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
+        '../Core/loadArrayBuffer',
+        '../Core/loadImage',
+        '../Core/throttleRequestByServer',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -14,6 +17,9 @@ define([
     ], function(
         defaultValue,
         jsonp,
+        loadArrayBuffer,
+        loadImage,
+        throttleRequestByServer,
         Cartesian2,
         DeveloperError,
         Event,
@@ -350,7 +356,7 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(url);
+        return ImageryProvider.loadImageViaBlob(url, this._tileDiscardPolicy);
     };
 
     /**

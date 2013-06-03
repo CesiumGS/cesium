@@ -1,12 +1,16 @@
-/*global define*/
+/*global define,Blob*/
 define([
+        '../Core/loadArrayBuffer',
         '../Core/loadImage',
         '../Core/DeveloperError',
-        '../Core/throttleRequestByServer'
+        '../Core/throttleRequestByServer',
+        '../ThirdParty/when'
     ], function(
+        loadArrayBuffer,
         loadImage,
         DeveloperError,
-        throttleRequestByServer) {
+        throttleRequestByServer,
+        when) {
     "use strict";
 
     /**
@@ -195,6 +199,42 @@ define([
      */
     ImageryProvider.loadImage = function(url) {
         return throttleRequestByServer(url, loadImage);
+    };
+
+    /**
+     * Loads an image from a given URL.  If the server referenced by the URL already has
+     * too many requests pending, this function will instead return undefined, indicating
+     * that the request should be retried later.
+     *
+     * @memberof ImageryProvider
+     *
+     * @param url {String} The URL of the image.
+     * @returns {Promise} A promise for the image that will resolve when the image is available, or
+     *          undefined if there are too many active requests to the server, and the request
+     *          should be retried later.  The resolved image may be either an
+     *          Image or a Canvas DOM object.
+     */
+    ImageryProvider.loadImageViaBlob = function(url, discardPolicy) {
+        var downloadPromise = throttleRequestByServer(url, loadArrayBuffer);
+        if (typeof downloadPromise === 'undefined') {
+            return undefined;
+        }
+        var blobUrl;
+        var blobBuffer;
+        var urlPromise = when(downloadPromise, function(buffer) {
+            blobBuffer = buffer;
+            var blob = new Blob([buffer], {type:"image/jpeg"});
+            blobUrl = window.URL.createObjectURL(blob);
+            return url;
+        });
+        var loadPromise = loadImage(urlPromise);
+        when(loadPromise, function(image) {
+            image.bufferByteLength = blobBuffer.byteLength;
+            window.URL.revokeObjectURL(blobUrl);
+        }, function() {
+            window.URL.revokeObjectURL(blobUrl);
+        });
+        return loadPromise;
     };
 
     return ImageryProvider;
