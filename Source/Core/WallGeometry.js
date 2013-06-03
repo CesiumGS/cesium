@@ -94,11 +94,11 @@ define([
         var i;
         var size = wallPositions.length * 2;
 
-        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
+        var positions = vertexFormat.position ? new Array(size * 3) : undefined;
+        var normals = vertexFormat.normal ? new Array(size * 3) : undefined;
+        var tangents = vertexFormat.tangent ? new Array(size * 3) : undefined;
+        var binormals = vertexFormat.binormal ? new Array(size * 3) : undefined;
+        var textureCoordinates = vertexFormat.st ? new Array(size * 2) : undefined;
 
         var positionIndex = 0;
         var normalIndex = 0;
