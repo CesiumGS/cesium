@@ -85,45 +85,6 @@ define([
         return result;
     }
 
-    var appendTextureCoordinatesOrigin = new Cartesian2();
-    var appendTextureCoordinatesCartesian2 = new Cartesian2();
-    var appendTextureCoordinatesCartesian3 = new Cartesian3();
-    var appendTextureCoordinatesQuaternion = new Quaternion();
-    var appendTextureCoordinatesMatrix3 = new Matrix3();
-
-    function appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, angle) {
-        var origin = appendTextureCoordinatesOrigin;
-        origin.x = boundingRectangle.x;
-        origin.y = boundingRectangle.y;
-
-        var positions = mesh.attributes.position.values;
-        var length = positions.length;
-
-        var textureCoordinates = new Float32Array(2 * (length / 3));
-        var j = 0;
-
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
-
-        for ( var i = 0; i < length; i += 3) {
-            var p = Cartesian3.fromArray(positions, i, appendTextureCoordinatesCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
-            st.subtract(origin, st);
-
-            textureCoordinates[j++] = st.x / boundingRectangle.width;
-            textureCoordinates[j++] = st.y / boundingRectangle.height;
-        }
-
-        mesh.attributes.st = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2,
-            values : textureCoordinates
-        });
-
-        return mesh;
-    }
-
     var createMeshFromPositionsPositions = [];
 
     function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
@@ -153,6 +114,16 @@ define([
     }
 
     var scratchBoundingRectangle = new BoundingRectangle();
+    var scratchPosition = new Cartesian3();
+    var scratchNormal = new Cartesian3();
+    var scratchTangent = new Cartesian3();
+    var scratchBinormal = new Cartesian3();
+
+    var appendTextureCoordinatesOrigin = new Cartesian2();
+    var appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var appendTextureCoordinatesCartesian3 = new Cartesian3();
+    var appendTextureCoordinatesQuaternion = new Quaternion();
+    var appendTextureCoordinatesMatrix3 = new Matrix3();
 
     /**
      * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
@@ -318,14 +289,112 @@ define([
             attributes.position = mesh.attributes.position;
         }
 
-        if (vertexFormat.st) {
+
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
             var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
-            mesh = appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, stRotation);
-            attributes.st = mesh.attributes.st;
+
+            var origin = appendTextureCoordinatesOrigin;
+            origin.x = boundingRectangle.x;
+            origin.y = boundingRectangle.y;
+
+            var flatPositions = mesh.attributes.position.values;
+            var length = flatPositions.length;
+
+            var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
+            var normals = vertexFormat.normal ? new Array(length) : undefined;
+            var tangents = vertexFormat.tangent ? new Array(length) : undefined;
+            var binormals = vertexFormat.binormal ? new Array(length) : undefined;
+
+            var textureCoordIndex = 0;
+            var normalIndex = 0;
+            var tangentIndex = 0;
+            var binormalIndex = 0;
+
+            var normal = scratchNormal;
+            var tangent = scratchTangent;
+
+            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
+            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+
+            for (i = 0; i < length; i += 3) {
+                var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
+
+                if (vertexFormat.st) {
+                    var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
+                    var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
+                    Cartesian2.subtract(st, origin, st);
+
+                    textureCoordinates[textureCoordIndex++] = st.x / boundingRectangle.width;
+                    textureCoordinates[textureCoordIndex++] = st.y / boundingRectangle.height;
+                }
+
+                if (vertexFormat.normal) {
+                    normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+
+                    normals[normalIndex++] = normal.x;
+                    normals[normalIndex++] = normal.y;
+                    normals[normalIndex++] = normal.z;
+                }
+
+                if (vertexFormat.tangent) {
+                    ellipsoid.geodeticSurfaceNormal(position, normal);
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    Cartesian3.normalize(tangent, tangent);
+
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    ellipsoid.geodeticSurfaceNormal(position, normal);
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    var binormal = Cartesian3.cross(tangent, normal, scratchBinormal);
+                    Cartesian3.normalize(binormal, binormal);
+
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                }
+            }
+
+            if (vertexFormat.st) {
+                attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : textureCoordinates
+                });
+            }
+
+            if (vertexFormat.normal) {
+                attributes.normal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : normals
+                });
+            }
+
+            if (vertexFormat.tangent) {
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : tangents
+                });
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : binormals
+                });
+            }
         }
 
         /**
