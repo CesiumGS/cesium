@@ -7,11 +7,14 @@ define([
         './ComponentDatatype',
         './DeveloperError',
         './Ellipsoid',
+        './EllipsoidTangentPlane',
         './GeometryAttribute',
         './GeometryIndices',
         './Matrix4',
+        './PolygonPipeline',
         './PrimitiveType',
-        './VertexFormat'
+        './VertexFormat',
+        './WindingOrder'
     ], function(
         defaultValue,
         BoundingSphere,
@@ -20,11 +23,14 @@ define([
         ComponentDatatype,
         DeveloperError,
         Ellipsoid,
+        EllipsoidTangentPlane,
         GeometryAttribute,
         GeometryIndices,
         Matrix4,
+        PolygonPipeline,
         PrimitiveType,
-        VertexFormat) {
+        VertexFormat,
+        WindingOrder) {
     "use strict";
 
     var scratchCartographic = new Cartographic();
@@ -89,6 +95,17 @@ define([
 
         if (typeof terrain !== 'undefined' && terrain.length !== wallPositions.length) {
             throw new DeveloperError('positions and terrain points must have the same length.');
+        }
+
+        wallPositions = PolygonPipeline.cleanUp(wallPositions);
+        if (wallPositions.length >= 3) {
+            // Order positions counter-clockwise
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(wallPositions, ellipsoid);
+            var positions2D = tangentPlane.projectPointsOntoPlane(wallPositions);
+
+            if (PolygonPipeline.computeWindingOrder2D(positions2D) === WindingOrder.CLOCKWISE) {
+                wallPositions.reverse();
+            }
         }
 
         var i;
