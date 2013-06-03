@@ -22,6 +22,8 @@ define([
         'Core/Transforms',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
+        'Core/WallGeometry',
+        'Renderer/BlendingState',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/Material',
@@ -50,6 +52,8 @@ define([
         Transforms,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
+        WallGeometry,
+        BlendingState,
         Primitive,
         Appearance,
         Material,
@@ -219,6 +223,30 @@ define([
         widget.scene.getPrimitives().add(new Primitive({
             geometries : polygonGeometry,
             appearance : Appearance.CLOSED_TRANSLUCENT
+        }));
+
+        var wall = new WallGeometry({
+            positions    : ellipsoid.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
+                Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
+                Cartographic.fromDegrees(-120.0, 38.0, 100000.0),
+                Cartographic.fromDegrees(-120.0, 37.0, 100000.0),
+                Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
+            ]),
+            pickData : 'wall'
+        });
+        var wallAppearance = new Appearance({
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                depthMask : false,
+                blending : BlendingState.ALPHA_BLEND
+            }
+        });
+        widget.scene.getPrimitives().add(new Primitive({
+            geometries : wall,
+            appearance : wallAppearance
         }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
