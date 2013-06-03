@@ -8,7 +8,9 @@ define([
         '../Shaders/Appearances/DefaultAppearanceVS',
         '../Shaders/Appearances/DefaultAppearanceFS',
         '../Shaders/Appearances/PerGeometryColorAppearanceVS',
-        '../Shaders/Appearances/PerGeometryColorAppearanceFS'
+        '../Shaders/Appearances/PerGeometryColorAppearanceFS',
+        '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
+        '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
         freezeObject,
@@ -18,7 +20,9 @@ define([
         DefaultAppearanceVS,
         DefaultAppearanceFS,
         PerGeometryColorAppearanceVS,
-        PerGeometryColorDefaultAppearanceFS) {
+        PerGeometryColorDefaultAppearanceFS,
+        EllipsoidSurfaceAppearanceVS,
+        EllipsoidSurfaceAppearanceFS) {
     "use strict";
 
     /**
@@ -81,6 +85,25 @@ define([
     Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT = freezeObject(new Appearance({
         vertexShaderSource : PerGeometryColorAppearanceVS,
         fragmentShaderSource : PerGeometryColorDefaultAppearanceFS,
+        renderState : {
+            cull : {
+                enabled : true,
+                face : CullFace.BACK
+            },
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND
+        }
+    }));
+
+    /**
+     * DOC_TBA
+     */
+    Appearance.ELLIPSOID_SURFACE = /*freezeObject*/(new Appearance({
+        vertexShaderSource : EllipsoidSurfaceAppearanceVS,
+        fragmentShaderSource : EllipsoidSurfaceAppearanceFS,
         renderState : {
             cull : {
                 enabled : true,

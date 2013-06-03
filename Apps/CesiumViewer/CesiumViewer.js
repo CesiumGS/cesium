@@ -181,44 +181,59 @@ define([
         scene.getPrimitives().add(primitive2);
 
         var polygonGeometry = new PolygonGeometry({
-                polygonHierarchy : {
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+/*
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-72.0, 40.0),
+                Cartographic.fromDegrees(-70.0, 35.0),
+                Cartographic.fromDegrees(-75.0, 30.0),
+                Cartographic.fromDegrees(-70.0, 30.0),
+                Cartographic.fromDegrees(-68.0, 40.0)
+            ]),
+*/
+
+            polygonHierarchy : {
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cartographic.fromDegrees(-109.0, 30.0),
+                    Cartographic.fromDegrees(-95.0, 30.0),
+                    Cartographic.fromDegrees(-95.0, 40.0),
+                    Cartographic.fromDegrees(-109.0, 40.0)
+                ]),
+                holes : [{
                     positions : ellipsoid.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(-109.0, 30.0),
-                        Cartographic.fromDegrees(-95.0, 30.0),
-                        Cartographic.fromDegrees(-95.0, 40.0),
-                        Cartographic.fromDegrees(-109.0, 40.0)
+                        Cartographic.fromDegrees(-107.0, 31.0),
+                        Cartographic.fromDegrees(-107.0, 39.0),
+                        Cartographic.fromDegrees(-97.0, 39.0),
+                        Cartographic.fromDegrees(-97.0, 31.0)
                     ]),
                     holes : [{
                         positions : ellipsoid.cartographicArrayToCartesianArray([
-                            Cartographic.fromDegrees(-107.0, 31.0),
-                            Cartographic.fromDegrees(-107.0, 39.0),
-                            Cartographic.fromDegrees(-97.0, 39.0),
-                            Cartographic.fromDegrees(-97.0, 31.0)
-                        ]),
+                            Cartographic.fromDegrees(-105.0, 33.0),
+                            Cartographic.fromDegrees(-99.0, 33.0),
+                            Cartographic.fromDegrees(-99.0, 37.0),
+                            Cartographic.fromDegrees(-105.0, 37.0)
+                            ]),
                         holes : [{
                             positions : ellipsoid.cartographicArrayToCartesianArray([
-                                Cartographic.fromDegrees(-105.0, 33.0),
-                                Cartographic.fromDegrees(-99.0, 33.0),
-                                Cartographic.fromDegrees(-99.0, 37.0),
-                                Cartographic.fromDegrees(-105.0, 37.0)
-                                ]),
-                            holes : [{
-                                positions : ellipsoid.cartographicArrayToCartesianArray([
-                                    Cartographic.fromDegrees(-103.0, 34.0),
-                                    Cartographic.fromDegrees(-101.0, 34.0),
-                                    Cartographic.fromDegrees(-101.0, 36.0),
-                                    Cartographic.fromDegrees(-103.0, 36.0)
-                                ])
-                            }]
+                                Cartographic.fromDegrees(-103.0, 34.0),
+                                Cartographic.fromDegrees(-101.0, 34.0),
+                                Cartographic.fromDegrees(-101.0, 36.0),
+                                Cartographic.fromDegrees(-103.0, 36.0)
+                            ])
                         }]
                     }]
-                },
-                pickData : 'polygon3'
-            });
+                }]
+            },
+            pickData : 'polygon3',
+            stRotation : 0.523598776
+        });
+
+        var a = Appearance.ELLIPSOID_SURFACE;
+        a.material = Material.fromType(scene.getContext(), 'Stripe');
 
         widget.scene.getPrimitives().add(new Primitive({
             geometries : polygonGeometry,
-            appearance : Appearance.CLOSED_TRANSLUCENT
+            appearance : Appearance.ELLIPSOID_SURFACE
         }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
