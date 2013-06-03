@@ -1,18 +1,10 @@
 /*global define,Blob*/
 define([
-        './defaultValue',
-        './DeveloperError',
-        './RequestErrorEvent',
-        './isCrossOriginUrl',
-        './loadImage',
-        '../ThirdParty/when'
+        './loadBlob',
+        './loadImage'
     ], function(
-        defaultValue,
-        DeveloperError,
-        RequestErrorEvent,
-        isCrossOriginUrl,
-        loadImage,
-        when) {
+        loadBlob,
+        loadImage) {
     "use strict";
 
     /**
@@ -48,50 +40,27 @@ define([
      *     // images is an array containing all the loaded images
      * });
      */
-    var loadImageViaBlob = function(url, allowCrossOrigin) {
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
-        }
+    var loadImageViaBlob = function(url) {
+        return loadBlob(url).then(function(blob){
+            var blobUrl = window.URL.createObjectURL(blob);
 
-        return when(url, function(url) {
-            if (typeof url === 'undefined') {
-                return undefined;
-            }
+            return loadImage(blobUrl, false).then(function(image) {
+                image.blob = blob;
+                window.URL.revokeObjectURL(blobUrl);
+                return image;
+            }, function(e) {
+                window.URL.revokeObjectURL(blobUrl);
+                return e;
+            });
 
-            var xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
-            xhr.responseType = 'arraybuffer';
-
-            var deferred = when.defer();
-            var promise = deferred.promise;
-
-            var blobUrl;
-            xhr.onload = function(e) {
-                if (xhr.status === 200) {
-                    var blob = new Blob([xhr.response], {type:xhr.getResponseHeader('Content-Type')});
-                    blobUrl = window.URL.createObjectURL(blob);
-
-                    when(promise, function(image) {
-                        image.xhr = xhr;
-                        window.URL.revokeObjectURL(blobUrl);
-                    }, function() {
-                        window.URL.revokeObjectURL(blobUrl);
-                    });
-
-                    loadImage.createImage(url, true, deferred);
-                } else {
-                    deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
-                }
-            };
-            xhr.onerror = function(e) {
-                deferred.reject(new RequestErrorEvent());
-            };
-
-            xhr.send();
-
-            return promise;
         });
     };
 
-    return loadImageViaBlob;
+    var xhrBlobSupported = (function() {
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        return xhr.responseType === 'blob';
+    })();
+
+    return xhrBlobSupported ? loadImageViaBlob : loadImage;
 });
