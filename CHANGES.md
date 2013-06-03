@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b18 - ?
+
+* Breaking changes:
+   * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passes as its first parameter.
+* Improved the performance of "missing tile" checking, especially for Bing imagery.
+
 ### b17 - 2013-06-03
 
 * Breaking changes:
