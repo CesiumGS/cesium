@@ -1,13 +1,19 @@
 /*global define*/
 define([
         './DeveloperError',
+        './Cartesian2',
+        './Cartesian3',
         './Cartesian4',
+        './Quaternion',
         './Ellipsoid',
+        './Matrix3',
         './Matrix4',
+        './Math',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './BoundingRectangle',
         './GeometryAttribute',
         './GeometryIndices',
         './PolygonPipeline',
@@ -15,16 +21,23 @@ define([
         './WindingOrder',
         './GeometryFilters',
         './Queue',
-        './Intersect'
+        './Intersect',
+        './VertexFormat'
     ], function(
         DeveloperError,
+        Cartesian2,
+        Cartesian3,
         Cartesian4,
+        Quaternion,
         Ellipsoid,
+        Matrix3,
         Matrix4,
+        CesiumMath,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        BoundingRectangle,
         GeometryAttribute,
         GeometryIndices,
         PolygonPipeline,
@@ -32,10 +45,90 @@ define([
         WindingOrder,
         GeometryFilters,
         Queue,
-        Intersect) {
+        Intersect,
+        VertexFormat) {
     "use strict";
 
-    function createMeshFromPositions(ellipsoid, positions, boundingSphere, outerPositions) {
+    var computeBoundingRectangleCartesian2 = new Cartesian2();
+    var computeBoundingRectangleCartesian3 = new Cartesian3();
+    var computeBoundingRectangleQuaternion = new Quaternion();
+    var computeBoundingRectangleMatrix3 = new Matrix3();
+
+    function computeBoundingRectangle(tangentPlane, positions, angle, result) {
+        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
+        var textureMatrix = Matrix3.fromQuaternion(rotation,computeBoundingRectangleMatrix3);
+
+        var minX = Number.POSITIVE_INFINITY;
+        var maxX = Number.NEGATIVE_INFINITY;
+        var minY = Number.POSITIVE_INFINITY;
+        var maxY = Number.NEGATIVE_INFINITY;
+
+        var length = positions.length;
+        for ( var i = 0; i < length; ++i) {
+            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
+            Matrix3.multiplyByVector(textureMatrix, p, p);
+            var st = tangentPlane.projectPointOntoPlane(p, computeBoundingRectangleCartesian2);
+
+            if (typeof st !== 'undefined') {
+                minX = Math.min(minX, st.x);
+                maxX = Math.max(maxX, st.x);
+
+                minY = Math.min(minY, st.y);
+                maxY = Math.max(maxY, st.y);
+            }
+        }
+
+        if (typeof result === 'undefined') {
+            result = new BoundingRectangle();
+        }
+
+        result.x = minX;
+        result.y = minY;
+        result.width = maxX - minX;
+        result.height = maxY - minY;
+        return result;
+    }
+
+    var appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var appendTextureCoordinatesCartesian3 = new Cartesian3();
+    var appendTextureCoordinatesQuaternion = new Quaternion();
+    var appendTextureCoordinatesMatrix3 = new Matrix3();
+
+    function appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, angle) {
+        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
+
+        var positions = mesh.attributes.position.values;
+        var length = positions.length;
+
+        var textureCoordinates = new Float32Array(2 * (length / 3));
+        var j = 0;
+
+        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+
+        for ( var i = 0; i < length; i += 3) {
+            var p = appendTextureCoordinatesCartesian3;
+            p.x = positions[i];
+            p.y = positions[i + 1];
+            p.z = positions[i + 2];
+            Matrix3.multiplyByVector(textureMatrix, p, p);
+            var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
+            st.subtract(origin, st);
+
+            textureCoordinates[j++] = st.x / boundingRectangle.width;
+            textureCoordinates[j++] = st.y / boundingRectangle.height;
+        }
+
+        mesh.attributes.st = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 2,
+            values : textureCoordinates
+        });
+
+        return mesh;
+    }
+
+    function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -56,10 +149,10 @@ define([
         if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
             indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
         }
-        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices);
-
-        return mesh;
+        return PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
     }
+
+    var scratchBoundingRectangle = new BoundingRectangle();
 
     /**
      * Creates a PolygonGeometry. The polygon itself is either defined by an array of Cartesian points,
@@ -68,10 +161,13 @@ define([
      * @alias PolygonGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] an array of positions that defined the corner points of the polygon
-     * @param {Object} [options.polygonHierarchy] a polygon hierarchy that can include holes
-     * @param {Number} [options.height=0.0] the height of the polygon,
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] the ellipsoid to be used as a reference
+     * @param {Array} [options.positions] An array of positions that defined the corner points of the polygon.
+     * @param {Object} [options.polygonHierarchy] A polygon hierarchy that can include holes.
+     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
      * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
@@ -134,7 +230,10 @@ define([
     var PolygonGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var stRotation = defaultValue(options.stRotation, 0.0);
 
         var meshes = [];
         var mesh;
@@ -143,12 +242,15 @@ define([
         var positions;
         var polygonHierarchy;
 
+        var outerPositions;
+
         if (typeof options.positions !== 'undefined') {
             // create from positions
             positions = options.positions;
+            outerPositions = options.positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere);
+            mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
             }
@@ -181,7 +283,7 @@ define([
                         holes.push(hole.positions);
 
                         var numGrandchildren = 0;
-                        if (hole.holes) {
+                        if (typeof hole.holes !== 'undefined') {
                             numGrandchildren = hole.holes.length;
                         }
 
@@ -196,14 +298,14 @@ define([
 
             polygonHierarchy = polygons;
 
-            var outerPositions =  polygonHierarchy[0];
+            outerPositions =  polygonHierarchy[0];
             // The bounding volume is just around the boundary points, so there could be cases for
             // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
             // volume doesn't cover the polygon.
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere);
+                mesh = createMeshFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
                 if (typeof mesh !== 'undefined') {
                     meshes.push(mesh);
                 }
@@ -223,6 +325,21 @@ define([
             componentsPerAttribute : 3,
             values : mesh.attributes.position.values
         });
+
+        if (vertexFormat.st) {
+            // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
+            // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
+            var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
+            var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
+            var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
+            mesh = appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, stRotation);
+
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : mesh.attributes.st.values
+            });
+        }
 
         indexLists.push(
             new GeometryIndices({
