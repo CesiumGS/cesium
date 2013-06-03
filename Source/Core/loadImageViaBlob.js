@@ -8,14 +8,16 @@ define([
     "use strict";
 
     /**
-     * Asynchronously loads the given image URL by first downloading it using
+     * Asynchronously loads the given image URL by first downloading it as a blob using
      * XMLHttpRequest and then loading the image from the buffer via a blob URL.
      * This allows access to more information that is not accessible via normal
-     * Image-based downloading, such as response headers.  This function
+     * Image-based downloading, such as the size of the response.  This function
      * returns a promise that will resolve to
      * an {@link Image} once loaded, or reject if the image failed to load.  The
-     * returned image will have a "xhr" property with the XMLHttpRequest
-     * that was used to download the buffer.
+     * returned image will have a "blob" property with the Blob itself.  If the browser
+     * does not support an XMLHttpRequests with a responseType of 'blob', this function
+     * is equivalent to calling {@link loadImage}, and the extra blob property will not
+     * be present.
      *
      * @exports loadImageViaBlob
      *
@@ -29,7 +31,7 @@ define([
      * @example
      * // load a single image asynchronously
      * loadImageViaBlob('some/image/url.png').then(function(image) {
-     *     var xhr = image.xhr;
+     *     var blob = image.blob;
      *     // use the loaded image or XHR
      * }, function() {
      *     // an error occurred
@@ -57,9 +59,13 @@ define([
     };
 
     var xhrBlobSupported = (function() {
-        var xhr = new XMLHttpRequest();
-        xhr.responseType = 'blob';
-        return xhr.responseType === 'blob';
+        try {
+            var xhr = new XMLHttpRequest();
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
+        } catch(e) {
+            return false;
+        }
     })();
 
     return xhrBlobSupported ? loadImageViaBlob : loadImage;
