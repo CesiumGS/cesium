@@ -49,10 +49,10 @@ define([
     DynamicMaterialProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, sourceUri) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], constrainedInterval, sourceUri);
+                addCzmlInterval(this, czmlIntervals[i], constrainedInterval, sourceUri);
             }
         } else {
-            this._addCzmlInterval(czmlIntervals, constrainedInterval, sourceUri);
+            addCzmlInterval(this, czmlIntervals, constrainedInterval, sourceUri);
         }
     };
 
@@ -74,7 +74,7 @@ define([
         return existingMaterial;
     };
 
-    DynamicMaterialProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, sourceUri) {
+    function addCzmlInterval(dynamicMaterialProperty, czmlInterval, constrainedInterval, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -87,7 +87,7 @@ define([
         }
 
         //See if we already have data at that interval.
-        var thisIntervals = this._intervals;
+        var thisIntervals = dynamicMaterialProperty._intervals;
         var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
         var foundMaterial = false;
         var existingMaterial;
@@ -119,7 +119,7 @@ define([
         if (foundMaterial) {
             existingMaterial.processCzmlIntervals(czmlInterval, sourceUri);
         }
-    };
+    }
 
     return DynamicMaterialProperty;
 });
