@@ -26,7 +26,7 @@
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
-				include name="server.js" />
+				<include name="server.js" />
 			</fileset>
 		</copy>
 
