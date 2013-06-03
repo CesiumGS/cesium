@@ -289,7 +289,6 @@ define([
             attributes.position = mesh.attributes.position;
         }
 
-
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
