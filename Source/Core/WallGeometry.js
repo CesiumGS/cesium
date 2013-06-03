@@ -39,8 +39,10 @@ define([
      *        height, and the information in the positions array is disregarded
      * @param {Number} [bottom] optional, the bottom of the wall. if specified, the bottom of the wall is treated as
      *        this height. otherwise its treated as 'ground' (the WGS84 ellipsoid height 0)
-     * @param {Object} [pickData] the geometry pick data
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] ellispoid for coordinate manipulation
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      * @exception {DeveloperError} positions is required
@@ -198,6 +200,13 @@ define([
          * @type Matrix4
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * The color of the geometry when a per-geometry color appearance is used.
+         *
+         * @type Color
+         */
+        this.color = options.color;
 
         /**
          * DOC_TBA

@@ -78,6 +78,67 @@ define([
         this._commandLists = new CommandLists();
     };
 
+    function hasPerGeometryColor(geometries) {
+        var perGeometryColor = false;
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            if (typeof geometries[i].color !== 'undefined') {
+                perGeometryColor = true;
+                break;
+            }
+        }
+
+        return perGeometryColor;
+    }
+
+    function addColorAttribute(primitive, geometries, context) {
+        var length = geometries.length;
+
+        for (var i = 0; i < length; ++i) {
+            var geometry = geometries[i];
+            var attributes = geometry.attributes;
+            var positionAttr = attributes.position;
+            var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
+
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                normalize : true,
+                values : new Uint8Array(numberOfComponents)
+            });
+
+            var color = geometry.color;
+
+            if (typeof color !== 'undefined') {
+                var red = Color.floatToByte(color.red);
+                var green = Color.floatToByte(color.green);
+                var blue = Color.floatToByte(color.blue);
+                var alpha = Color.floatToByte(color.alpha);
+                var values = attributes.color.values;
+
+                for (var j = 0; j < numberOfComponents; j += 4) {
+                    values[j] = red;
+                    values[j + 1] = green;
+                    values[j + 2] = blue;
+                    values[j + 3] = alpha;
+                }
+            }
+        }
+    }
+
+    function isPickable(geometries) {
+        var pickable = false;
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            if (typeof geometries[i].pickData !== 'undefined') {
+                pickable = true;
+                break;
+            }
+        }
+
+        return pickable;
+    }
+
     function addPickColorAttribute(primitive, geometries, context) {
         var length = geometries.length;
 
@@ -222,8 +283,13 @@ define([
     }
 
     function geometryPipeline(primitive, geometries, context) {
+        // Add color attribute if any geometries have per-geometry color
+        if (hasPerGeometryColor(geometries)) {
+            addColorAttribute(primitive, geometries, context);
+        }
+
         // Add pickColor attribute if any geometries are pickable
-        if (Geometry.isPickable(geometries)) {
+        if (isPickable(geometries)) {
             addPickColorAttribute(primitive, geometries, context);
         }
 
@@ -301,7 +367,7 @@ define([
             var rs = context.createRenderState(appearance.renderState);
             var pickRS;
 
-            if (Geometry.isPickable(geometries)) {
+            if (isPickable(geometries)) {
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
                 pickRS = rs;
             } else {

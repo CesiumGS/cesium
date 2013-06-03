@@ -124,6 +124,7 @@ define([
      * @param {Number} [options.numberOfPartitions=32] The number of times to partition the ellipsoid in a plane formed by two radii in a single quadrant.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
@@ -345,6 +346,13 @@ define([
          * @type Matrix4
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * The color of the geometry when a per-geometry color appearance is used.
+         *
+         * @type Color
+         */
+        this.color = options.color;
 
         /**
          * DOC_TBA
