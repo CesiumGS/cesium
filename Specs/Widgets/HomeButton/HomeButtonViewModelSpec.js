@@ -29,7 +29,7 @@ defineSuite([
     it('constructor sets default values', function() {
         var viewModel = new HomeButtonViewModel(scene);
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.transitioner).toBeUndefined();
+        expect(viewModel.sceneTransitioner).toBeUndefined();
         expect(viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
     });
 
@@ -37,7 +37,7 @@ defineSuite([
         var ellipsoid = new Ellipsoid();
         var viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
         expect(viewModel.scene).toBe(scene);
-        expect(viewModel.transitioner).toBe(transitioner);
+        expect(viewModel.sceneTransitioner).toBe(transitioner);
         expect(viewModel.ellipsoid).toBe(ellipsoid);
     });
 

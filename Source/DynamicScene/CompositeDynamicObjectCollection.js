@@ -136,7 +136,7 @@ define([
             thisCollections = this._collections = collections;
 
             //Clear all existing objects and rebuild the collection.
-            this._clearObjects();
+            clearObjects(this);
             var thisMergeFunctions = this.mergeFunctions;
             for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
                 collection = thisCollections[iCollection];
@@ -203,14 +203,14 @@ define([
         return obj;
     }
 
-    CompositeDynamicObjectCollection.prototype._clearObjects = function() {
-        var removedObjects = this._array;
-        this._hash = {};
-        this._array = [];
+    function clearObjects(compositeDynamicObjectCollection) {
+        var removedObjects = compositeDynamicObjectCollection._array;
+        compositeDynamicObjectCollection._hash = {};
+        compositeDynamicObjectCollection._array = [];
         if (removedObjects.length > 0) {
-            this.objectsRemoved.raiseEvent(this, removedObjects);
+            compositeDynamicObjectCollection.objectsRemoved.raiseEvent(compositeDynamicObjectCollection, removedObjects);
         }
-    };
+    }
 
     CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this.mergeFunctions;

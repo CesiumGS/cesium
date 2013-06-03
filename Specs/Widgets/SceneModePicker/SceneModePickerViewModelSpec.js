@@ -42,7 +42,7 @@ defineSuite([
     it('Can construct and destroy', function() {
         var mockTransitioner = new MockTransitioner();
         var viewModel = new SceneModePickerViewModel(mockTransitioner);
-        expect(viewModel.transitioner).toBe(mockTransitioner);
+        expect(viewModel.sceneTransitioner).toBe(mockTransitioner);
         expect(mockTransitioner.onTransitionStart.getNumberOfListeners()).toEqual(1);
         expect(viewModel.isDestroyed()).toEqual(false);
         viewModel.destroy();
