@@ -2,12 +2,14 @@
 define([
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
+        '../Core/loadImageViaBlob',
         '../Core/DeveloperError',
         '../Core/throttleRequestByServer',
         '../ThirdParty/when'
     ], function(
         loadArrayBuffer,
         loadImage,
+        loadImageViaBlob,
         DeveloperError,
         throttleRequestByServer,
         when) {
@@ -215,26 +217,7 @@ define([
      *          Image or a Canvas DOM object.
      */
     ImageryProvider.loadImageViaBlob = function(url, discardPolicy) {
-        var downloadPromise = throttleRequestByServer(url, loadArrayBuffer);
-        if (typeof downloadPromise === 'undefined') {
-            return undefined;
-        }
-        var blobUrl;
-        var blobBuffer;
-        var urlPromise = when(downloadPromise, function(buffer) {
-            blobBuffer = buffer;
-            var blob = new Blob([buffer], {type:"image/jpeg"});
-            blobUrl = window.URL.createObjectURL(blob);
-            return url;
-        });
-        var loadPromise = loadImage(urlPromise);
-        when(loadPromise, function(image) {
-            image.bufferByteLength = blobBuffer.byteLength;
-            window.URL.revokeObjectURL(blobUrl);
-        }, function() {
-            window.URL.revokeObjectURL(blobUrl);
-        });
-        return loadPromise;
+        return throttleRequestByServer(url, loadImageViaBlob);
     };
 
     return ImageryProvider;

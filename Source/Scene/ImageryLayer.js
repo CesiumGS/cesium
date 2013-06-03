@@ -625,6 +625,9 @@ define([
                     imagery.state = ImageryState.INVALID;
                     return;
                 }
+                if (typeof imagery.image.xhr !== 'undefined') {
+                    imagery.image.xhr = undefined;
+                }
             }
         }
 

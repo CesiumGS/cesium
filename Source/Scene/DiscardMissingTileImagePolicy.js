@@ -131,8 +131,8 @@ define([
             return false;
         }
 
-        if (this._checkSizeIfPossible && typeof image.bufferByteLength !== 'undefined') {
-            if (image.bufferByteLength !== this._missingImageByteLength) {
+        if (this._checkSizeIfPossible && typeof image.xhr !== 'undefined') {
+            if (image.xhr.response.byteLength !== this._missingImageByteLength) {
                 return false;
             }
         }

@@ -2,12 +2,14 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './RequestErrorEvent',
         './isCrossOriginUrl',
         './loadImage',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         DeveloperError,
+        RequestErrorEvent,
         isCrossOriginUrl,
         loadImage,
         when) {
@@ -23,7 +25,7 @@ define([
      * returned image will have a "xhr" property with the XMLHttpRequest
      * that was used to download the buffer.
      *
-     * @exports loadImage
+     * @exports loadImageViaBlob
      *
      * @param {String|Promise} url The source of the image, or a promise for the URL.
      *
@@ -42,7 +44,7 @@ define([
      * });
      *
      * // load several images in parallel
-     * when.all([loadImage('image1.png'), loadImage('image2.png')]).then(function(images) {
+     * when.all([loadImageViaBlob('image1.png'), loadImageViaBlob('image2.png')]).then(function(images) {
      *     // images is an array containing all the loaded images
      * });
      */
@@ -61,21 +63,33 @@ define([
             xhr.responseType = 'arraybuffer';
 
             var deferred = when.defer();
+            var promise = deferred.promise;
 
             var blobUrl;
             xhr.onload = function(e) {
                 if (xhr.status === 200) {
                     var blob = new Blob([xhr.response], {type:xhr.getResponseHeader('Content-Type')});
                     blobUrl = window.URL.createObjectURL(blob);
+
+                    when(promise, function(image) {
+                        image.xhr = xhr;
+                        window.URL.revokeObjectURL(blobUrl);
+                    }, function() {
+                        window.URL.revokeObjectURL(blobUrl);
+                    });
+
                     loadImage.createImage(url, true, deferred);
                 } else {
                     deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
                 }
             };
+            xhr.onerror = function(e) {
+                deferred.reject(new RequestErrorEvent());
+            };
 
             xhr.send();
 
-            return deferred.promise;
+            return promise;
         });
     };
 
