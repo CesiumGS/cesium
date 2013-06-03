@@ -11,6 +11,7 @@ define([
         './GeometryAttribute',
         './GeometryIndices',
         './Matrix4',
+        './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType',
         './VertexFormat',
@@ -27,6 +28,7 @@ define([
         GeometryAttribute,
         GeometryIndices,
         Matrix4,
+        PolylinePipeline,
         PolygonPipeline,
         PrimitiveType,
         VertexFormat,
@@ -97,7 +99,7 @@ define([
             throw new DeveloperError('positions and terrain points must have the same length.');
         }
 
-        wallPositions = PolygonPipeline.cleanUp(wallPositions);
+        wallPositions = PolylinePipeline.cleanUp(wallPositions, false);
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise
             var tangentPlane = EllipsoidTangentPlane.fromPoints(wallPositions, ellipsoid);

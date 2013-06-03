@@ -23,7 +23,6 @@ define([
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
-        'Renderer/BlendingState',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/ClosedTranslucentAppearance',
@@ -56,7 +55,6 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         WallGeometry,
-        BlendingState,
         Primitive,
         Appearance,
         ClosedTranslucentAppearance,
@@ -245,6 +243,7 @@ define([
         }));
 
         var wall = new WallGeometry({
+            vertexFormat : VertexFormat.ALL,
             positions    : ellipsoid.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
                 Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
@@ -254,18 +253,16 @@ define([
             ]),
             pickData : 'wall'
         });
-        var wallAppearance = new Appearance({
-            renderState : {
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                blending : BlendingState.ALPHA_BLEND
-            }
-        });
         widget.scene.getPrimitives().add(new Primitive({
             geometries : wall,
-            appearance : wallAppearance
+            appearance : new Appearance({
+                material : Material.fromType(scene.getContext(), 'Wood'),
+                renderState : {
+                    depthTest : {
+                        enabled : true
+                    }
+                }
+            })
         }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
