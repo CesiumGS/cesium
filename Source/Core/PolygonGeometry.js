@@ -52,7 +52,7 @@ define([
 
     function computeBoundingRectangle(tangentPlane, positions, angle, result) {
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation,computeBoundingRectangleMatrix3);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
 
         var minX = Number.POSITIVE_INFINITY;
         var maxX = Number.NEGATIVE_INFINITY;
@@ -85,13 +85,16 @@ define([
         return result;
     }
 
+    var appendTextureCoordinatesOrigin = new Cartesian2();
     var appendTextureCoordinatesCartesian2 = new Cartesian2();
     var appendTextureCoordinatesCartesian3 = new Cartesian3();
     var appendTextureCoordinatesQuaternion = new Quaternion();
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
     function appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, angle) {
-        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
+        var origin = appendTextureCoordinatesOrigin;
+        origin.x = boundingRectangle.x;
+        origin.y = boundingRectangle.y;
 
         var positions = mesh.attributes.position.values;
         var length = positions.length;
@@ -239,7 +242,7 @@ define([
 
         var outerPositions;
 
-        if (typeof options.positions !== 'undefined') {
+        if (typeof positions !== 'undefined') {
             // create from positions
             outerPositions = positions;
 
@@ -279,7 +282,7 @@ define([
                             numGrandchildren = hole.holes.length;
                         }
 
-                        for ( var j = 0; j < numGrandchildren; j++) {
+                        for (var j = 0; j < numGrandchildren; j++) {
                             queue.enqueue(hole.holes[j]);
                         }
                     }
@@ -316,22 +319,13 @@ define([
         }
 
         if (vertexFormat.st) {
-            attributes.st = mesh.attributes.st;
-        }
-
-        if (vertexFormat.st) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
             var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
             mesh = appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, stRotation);
-
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : mesh.attributes.st.values
-            });
+            attributes.st = mesh.attributes.st;
         }
 
         /**
