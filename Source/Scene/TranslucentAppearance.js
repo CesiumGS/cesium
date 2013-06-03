@@ -1,12 +1,16 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Renderer/BlendingState',
         './Material',
+        './Appearance',
         '../Shaders/Appearances/DefaultAppearanceVS',
         '../Shaders/Appearances/DefaultAppearanceFS'
     ], function(
         defaultValue,
+        BlendingState,
         Material,
+        Appearance,
         DefaultAppearanceVS,
         DefaultAppearanceFS) {
     "use strict";
@@ -14,7 +18,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Appearance = function(options) {
+    var TranslucentAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -35,18 +39,19 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {});
+        this.renderState = defaultValue(options.renderState, {
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND
+        });
     };
 
     /**
      * DOC_TBA
      */
-    Appearance.prototype.getFragmentShaderSource = function() {
-        return '#line 0\n' +
-            this.material.shaderSource +
-            '#line 0\n' +
-            this.fragmentShaderSource;
-    };
+    TranslucentAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
-    return Appearance;
+    return TranslucentAppearance;
 });

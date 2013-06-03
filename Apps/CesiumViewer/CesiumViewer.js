@@ -24,6 +24,9 @@ define([
         'Core/ScreenSpaceEventType',
         'Scene/Primitive',
         'Scene/Appearance',
+        'Scene/ClosedTranslucentAppearance',
+        'Scene/PerGeometryColorClosedTranslucentAppearance',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Widgets/Dojo/checkForChromeFrame',
         'Widgets/Dojo/CesiumViewerWidget'
@@ -52,6 +55,9 @@ define([
         ScreenSpaceEventType,
         Primitive,
         Appearance,
+        ClosedTranslucentAppearance,
+        PerGeometryColorClosedTranslucentAppearance,
+        EllipsoidSurfaceAppearance,
         Material,
         checkForChromeFrame,
         CesiumViewerWidget) {
@@ -124,7 +130,7 @@ define([
 
         var primitive = new Primitive({
             geometries : [mesh, mesh2, mesh3, mesh4],
-            appearance : Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT
+            appearance : new PerGeometryColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
 
@@ -191,7 +197,6 @@ define([
                 Cartographic.fromDegrees(-68.0, 40.0)
             ]),
 */
-
             polygonHierarchy : {
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-109.0, 30.0),
@@ -228,12 +233,11 @@ define([
             stRotation : 0.523598776
         });
 
-        var a = Appearance.ELLIPSOID_SURFACE;
-        a.material = Material.fromType(scene.getContext(), 'Stripe');
-
         widget.scene.getPrimitives().add(new Primitive({
             geometries : polygonGeometry,
-            appearance : Appearance.ELLIPSOID_SURFACE
+            appearance : new EllipsoidSurfaceAppearance({
+                material : Material.fromType(scene.getContext(), 'Stripe')
+            })
         }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
