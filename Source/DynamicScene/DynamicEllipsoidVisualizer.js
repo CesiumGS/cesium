@@ -108,7 +108,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -175,8 +175,8 @@ define([
 
     var position;
     var orientation;
-    DynamicEllipsoidVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.getContext();
+    function updateObject(dynamicEllipsoidVisualizer, time, dynamicObject) {
+        var context = dynamicEllipsoidVisualizer._scene.getContext();
         var dynamicEllipsoid = dynamicObject.ellipsoid;
         if (typeof dynamicEllipsoid === 'undefined') {
             return;
@@ -205,33 +205,33 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof ellipsoidVisualizerIndex !== 'undefined') {
-                ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
+                ellipsoid = dynamicEllipsoidVisualizer._ellipsoidCollection[ellipsoidVisualizerIndex];
                 ellipsoid.show = false;
                 dynamicObject._ellipsoidVisualizerIndex = undefined;
-                this._unusedIndexes.push(ellipsoidVisualizerIndex);
+                dynamicEllipsoidVisualizer._unusedIndexes.push(ellipsoidVisualizerIndex);
             }
             return;
         }
 
         if (typeof ellipsoidVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicEllipsoidVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 ellipsoidVisualizerIndex = unusedIndexes.pop();
-                ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
+                ellipsoid = dynamicEllipsoidVisualizer._ellipsoidCollection[ellipsoidVisualizerIndex];
             } else {
-                ellipsoidVisualizerIndex = this._ellipsoidCollection.length;
+                ellipsoidVisualizerIndex = dynamicEllipsoidVisualizer._ellipsoidCollection.length;
                 ellipsoid = new EllipsoidPrimitive();
 
-                this._ellipsoidCollection.push(ellipsoid);
-                this._primitives.add(ellipsoid);
+                dynamicEllipsoidVisualizer._ellipsoidCollection.push(ellipsoid);
+                dynamicEllipsoidVisualizer._primitives.add(ellipsoid);
             }
             dynamicObject._ellipsoidVisualizerIndex = ellipsoidVisualizerIndex;
             ellipsoid.dynamicObject = dynamicObject;
 
             ellipsoid.material = Material.fromType(context, Material.ColorType);
         } else {
-            ellipsoid = this._ellipsoidCollection[ellipsoidVisualizerIndex];
+            ellipsoid = dynamicEllipsoidVisualizer._ellipsoidCollection[ellipsoidVisualizerIndex];
         }
 
         ellipsoid.show = true;
@@ -254,7 +254,7 @@ define([
         if (typeof material !== 'undefined') {
             ellipsoid.material = material.getValue(time, context, ellipsoid.material);
         }
-    };
+    }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisEllipsoidCollection = this._ellipsoidCollection;
