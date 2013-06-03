@@ -2,6 +2,7 @@
 define(['../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceDisplay',
@@ -19,6 +20,7 @@ define(['../../Core/Cartesian2',
                 Cartesian2,
                 defaultValue,
                 DeveloperError,
+                defineProperties,
                 destroyObject,
                 ScreenSpaceEventType,
                 DataSourceDisplay,
@@ -196,7 +198,7 @@ define(['../../Core/Cartesian2',
         this._fullscreenButton = fullscreenButton;
     };
 
-    Object.defineProperties(Viewer.prototype, {
+    defineProperties(Viewer.prototype, {
         /**
          * Gets the parent container.
          * @memberof Viewer.prototype

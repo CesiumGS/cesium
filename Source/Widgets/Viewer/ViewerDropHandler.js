@@ -1,12 +1,14 @@
 /*global define*/
 define(['../../Core/defaultValue',
         '../../Core/DeveloperError',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/Event',
         '../../DynamicScene/CzmlDataSource'
         ], function(
                 defaultValue,
                 DeveloperError,
+                defineProperties,
                 destroyObject,
                 Event,
                 CzmlDataSource) {
@@ -77,7 +79,7 @@ define(['../../Core/defaultValue',
         subscribe(this);
     };
 
-    Object.defineProperties(ViewerDropHandler.prototype, {
+    defineProperties(ViewerDropHandler.prototype, {
         /**
          * Gets or sets the element to serve as the drop target.
          * @memberof ViewerDropHandler.prototype

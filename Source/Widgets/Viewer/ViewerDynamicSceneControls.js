@@ -1,6 +1,7 @@
 /*global define*/
 define(['../../Core/defaultValue',
         '../../Core/DeveloperError',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/Event',
         '../../Core/ScreenSpaceEventType',
@@ -8,6 +9,7 @@ define(['../../Core/defaultValue',
         ], function(
                 defaultValue,
                 DeveloperError,
+                defineProperties,
                 destroyObject,
                 Event,
                 ScreenSpaceEventType,
@@ -48,7 +50,7 @@ define(['../../Core/defaultValue',
         this._viewer = viewer;
     };
 
-    Object.defineProperties(ViewerDynamicSceneControls.prototype, {
+    defineProperties(ViewerDynamicSceneControls.prototype, {
         /**
          * Gets the viewer instance being used.
          * @memberof ViewerDynamicSceneControls.prototype
