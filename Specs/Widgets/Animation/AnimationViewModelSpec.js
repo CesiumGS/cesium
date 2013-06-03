@@ -607,6 +607,17 @@ defineSuite([
         }).toThrow();
     });
 
+    it('returns a copy of shuttleRingTicks when getting', function() {
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        var originalTicks = [0.0, 1.0, 2.0];
+        animationViewModel.setShuttleRingTicks(originalTicks);
+
+        var ticks = animationViewModel.getShuttleRingTicks(ticks);
+        ticks.push(99);
+        ticks[0] = -99;
+        expect(animationViewModel.getShuttleRingTicks()).toEqual(originalTicks);
+    });
+
     it('sorts shuttleRingTicks when setting', function() {
         var animationViewModel = new AnimationViewModel(clockViewModel);
         var ticks = [4.0, 0.0, 8.0, 2.0];
