@@ -195,7 +195,7 @@ define([
          *
          * @type {SceneTransitioner}
          */
-        transitioner : {
+        sceneTransitioner : {
             get : function() {
                 return this._transitioner;
             }
