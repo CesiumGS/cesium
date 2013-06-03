@@ -1,4 +1,4 @@
-/*global define,Blob*/
+/*global define*/
 define([
         '../Core/loadArrayBuffer',
         '../Core/loadImage',
