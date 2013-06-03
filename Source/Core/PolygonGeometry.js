@@ -103,10 +103,7 @@ define([
         var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
         for ( var i = 0; i < length; i += 3) {
-            var p = appendTextureCoordinatesCartesian3;
-            p.x = positions[i];
-            p.y = positions[i + 1];
-            p.z = positions[i + 2];
+            var p = Cartesian3.fromArray(positions, i, appendTextureCoordinatesCartesian3);
             Matrix3.multiplyByVector(textureMatrix, p, p);
             var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
             st.subtract(origin, st);

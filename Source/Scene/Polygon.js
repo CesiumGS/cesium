@@ -464,7 +464,6 @@ define([
         var minY = Number.POSITIVE_INFINITY;
         var maxY = Number.NEGATIVE_INFINITY;
 
-
         var length = positions.length;
         for ( var i = 0; i < length; ++i) {
             var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
