@@ -156,7 +156,7 @@ function pretreat(code, sourceFile) {
         .replace(/»/g, '*/')
 
         // support for unqualified links to methods
-        .replace(/@link\s#([A-z_0-9]*)/, "@link "+sourceFileName+"#$1");
+        .replace(/@link\s#([A-z_0-9]*)/, "@link "+sourceFileName+"#$1|$1");
 }
 
 var tkn = { NAMEDFUNCTIONSTATEMENT: -1001 };
