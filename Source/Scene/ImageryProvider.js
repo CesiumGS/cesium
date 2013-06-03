@@ -199,25 +199,11 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(url) {
+    ImageryProvider.loadImage = function(imageryProvider, url) {
+        if (typeof imageryProvider.getTileDiscardPolicy() !== 'undefined') {
+            return throttleRequestByServer(url, loadImageViaBlob);
+        }
         return throttleRequestByServer(url, loadImage);
-    };
-
-    /**
-     * Loads an image from a given URL.  If the server referenced by the URL already has
-     * too many requests pending, this function will instead return undefined, indicating
-     * that the request should be retried later.
-     *
-     * @memberof ImageryProvider
-     *
-     * @param url {String} The URL of the image.
-     * @returns {Promise} A promise for the image that will resolve when the image is available, or
-     *          undefined if there are too many active requests to the server, and the request
-     *          should be retried later.  The resolved image may be either an
-     *          Image or a Canvas DOM object.
-     */
-    ImageryProvider.loadImageViaBlob = function(url, discardPolicy) {
-        return throttleRequestByServer(url, loadImageViaBlob);
     };
 
     return ImageryProvider;
