@@ -14,6 +14,11 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var clockViewModel;
+    beforeEach(function() {
+        clockViewModel = new ClockViewModel();
+    });
+
     function verifyPausedState(viewModel) {
         expect(viewModel.pauseViewModel.toggled).toEqual(true);
         expect(viewModel.playReverseViewModel.toggled).toEqual(false);
@@ -44,13 +49,11 @@ defineSuite([
     }
 
     it('constructor sets expected properties', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(animationViewModel.clockViewModel).toBe(clockViewModel);
     });
 
     it('setTimeFormatter overrides the default formatter', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
 
         var expectedString = 'My Time';
@@ -65,7 +68,6 @@ defineSuite([
     });
 
     it('defaultTimeFormatter produces expected result', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
 
         var date = JulianDate.fromIso8601('2012-03-05T06:07:08.89Z');
@@ -92,7 +94,6 @@ defineSuite([
     });
 
     it('setDateFormatter overrides the default formatter', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
 
         var expectedString = 'My Date';
@@ -171,7 +172,6 @@ defineSuite([
     });
 
     it('correctly formats speed label', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         var expectedString;
 
@@ -206,7 +206,6 @@ defineSuite([
     });
 
     it('pause button restores current state', function() {
-        var clockViewModel = new ClockViewModel();
         clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
         clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
         clockViewModel.currentTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
@@ -238,7 +237,6 @@ defineSuite([
     });
 
     it('animating forwards negates the multiplier if it is negative', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = -100;
         clockViewModel.multiplier = multiplier;
@@ -247,7 +245,6 @@ defineSuite([
     });
 
     it('animating backwards negates the multiplier if it is positive', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         var multiplier = 100;
         clockViewModel.multiplier = multiplier;
@@ -258,7 +255,6 @@ defineSuite([
     it('animating backwards pauses with a bounded startTime', function() {
         var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
 
-        var clockViewModel = new ClockViewModel();
         clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
         clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
@@ -307,7 +303,6 @@ defineSuite([
     it('dragging shuttle ring does not pause with bounded start or stop Time', function() {
         var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
 
-        var clockViewModel = new ClockViewModel();
         clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
         clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
@@ -348,7 +343,6 @@ defineSuite([
     it('animating forward pauses with a bounded stopTime', function() {
         var centerTime = JulianDate.fromIso8601("2012-01-01T12:00:00");
 
-        var clockViewModel = new ClockViewModel();
         clockViewModel.startTime = JulianDate.fromIso8601("2012-01-01T00:00:00");
         clockViewModel.stopTime = JulianDate.fromIso8601("2012-01-02T00:00:00");
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
@@ -382,29 +376,28 @@ defineSuite([
     });
 
     it('slower has no effect if at the slowest speed', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var slowestSpeed = viewModel.shuttleRingTicks[0];
-        clockViewModel.multiplier = slowestSpeed;
+        viewModel.setShuttleRingTicks([0.0, 1.0, 2.0]);
+        var slowestMultiplier = -2;
+        clockViewModel.multiplier = slowestMultiplier;
         viewModel.slower();
-        expect(clockViewModel.multiplier).toEqual(slowestSpeed);
+        expect(clockViewModel.multiplier).toEqual(slowestMultiplier);
     });
 
     it('faster has no effect if at the faster speed', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
-        var fastestSpeed = viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1];
-        clockViewModel.multiplier = fastestSpeed;
+        viewModel.setShuttleRingTicks([0.0, 1.0, 2.0]);
+        var fastestMultiplier = 2;
+        clockViewModel.multiplier = fastestMultiplier;
         viewModel.faster();
-        expect(clockViewModel.multiplier).toEqual(fastestSpeed);
+        expect(clockViewModel.multiplier).toEqual(fastestMultiplier);
     });
 
     it('slower and faster cycle through defined multipliers', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
         var i = 0;
-        var multipliers = viewModel.shuttleRingTicks;
+        var multipliers = viewModel.getShuttleRingTicks();
         var length = multipliers.length;
 
         //Start at slowest speed
@@ -430,7 +423,6 @@ defineSuite([
     });
 
     it('Realtime canExecute and tooltip depends on clock settings', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
         //UNBOUNDED but available when start/stop time does not include realtime
@@ -471,7 +463,6 @@ defineSuite([
     });
 
     it('User action breaks out of realtime mode', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         clockViewModel.clockStep = ClockStep.TICK_DEPENDENT;
         clockViewModel.clockRange = ClockRange.UNBOUNDED;
@@ -510,7 +501,6 @@ defineSuite([
     });
 
     it('real time mode toggles only if shouldAnimate is true', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
 
         viewModel.playRealtimeViewModel.command();
@@ -524,16 +514,19 @@ defineSuite([
     });
 
     it('Shuttle ring angles set expected multipliers', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
+
+        var shuttleRingTicks = viewModel.getShuttleRingTicks();
+        var maxMultiplier = shuttleRingTicks[shuttleRingTicks.length - 1];
+        var minMultiplier = -maxMultiplier;
 
         //Max angle should produce max speed
         viewModel.shuttleRingAngle = AnimationViewModel._maxShuttleRingAngle;
-        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1]);
+        expect(clockViewModel.multiplier).toEqual(maxMultiplier);
 
         //Min angle should produce min speed
         viewModel.shuttleRingAngle = -AnimationViewModel._maxShuttleRingAngle;
-        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[0]);
+        expect(clockViewModel.multiplier).toEqual(minMultiplier);
 
         //AnimationViewModel._realtimeShuttleRingAngle degrees is always 1x
         viewModel.shuttleRingAngle = AnimationViewModel._realtimeShuttleRingAngle;
@@ -554,17 +547,20 @@ defineSuite([
     });
 
     it('Shuttle ring angles set expected multipliers when snapping to ticks', function() {
-        var clockViewModel = new ClockViewModel();
         var viewModel = new AnimationViewModel(clockViewModel);
         viewModel.snapToTicks = true;
 
+        var shuttleRingTicks = viewModel.getShuttleRingTicks();
+        var maxMultiplier = shuttleRingTicks[shuttleRingTicks.length - 1];
+        var minMultiplier = -maxMultiplier;
+
         //Max angle should produce max speed
         viewModel.shuttleRingAngle = AnimationViewModel._maxShuttleRingAngle;
-        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[viewModel.shuttleRingTicks.length - 1]);
+        expect(clockViewModel.multiplier).toEqual(maxMultiplier);
 
         //Min angle should produce min speed
         viewModel.shuttleRingAngle = -AnimationViewModel._maxShuttleRingAngle;
-        expect(clockViewModel.multiplier).toEqual(viewModel.shuttleRingTicks[0]);
+        expect(clockViewModel.multiplier).toEqual(minMultiplier);
 
         //AnimationViewModel._realtimeShuttleRingAngle degrees is always 1x
         viewModel.shuttleRingAngle = AnimationViewModel._realtimeShuttleRingAngle;
@@ -591,7 +587,6 @@ defineSuite([
     });
 
     it('setting timeFormatter throws with non-function', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.timeFormatter = {};
@@ -599,7 +594,6 @@ defineSuite([
     });
 
     it('setting dateFormatter throws with non-function', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
             animationViewModel.dateFormatter = {};
@@ -607,10 +601,28 @@ defineSuite([
     });
 
     it('setting shuttleRingTicks throws with undefined', function() {
-        var clockViewModel = new ClockViewModel();
         var animationViewModel = new AnimationViewModel(clockViewModel);
         expect(function() {
-            animationViewModel.shuttleRingTicks = undefined;
+            animationViewModel.setShuttleRingTicks(undefined);
         }).toThrow();
+    });
+
+    it('returns a copy of shuttleRingTicks when getting', function() {
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        var originalTicks = [0.0, 1.0, 2.0];
+        animationViewModel.setShuttleRingTicks(originalTicks);
+
+        var ticks = animationViewModel.getShuttleRingTicks(ticks);
+        ticks.push(99);
+        ticks[0] = -99;
+        expect(animationViewModel.getShuttleRingTicks()).toEqual(originalTicks);
+    });
+
+    it('sorts shuttleRingTicks when setting', function() {
+        var animationViewModel = new AnimationViewModel(clockViewModel);
+        var ticks = [4.0, 0.0, 8.0, 2.0];
+
+        animationViewModel.setShuttleRingTicks(ticks);
+        expect(animationViewModel.getShuttleRingTicks()).toEqual([0.0, 2.0, 4.0, 8.0]);
     });
 });
