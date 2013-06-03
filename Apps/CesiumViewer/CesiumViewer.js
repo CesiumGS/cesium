@@ -9,7 +9,8 @@ define(['dojo/_base/window',
         'DynamicScene/DynamicObjectView',
         'Scene/PerformanceDisplay',
         'Widgets/Dojo/checkForChromeFrame',
-        'Widgets/Viewer/Viewer'
+        'Widgets/Viewer/Viewer',
+        'Widgets/Viewer/ViewerDropHandler'
         ], function(
                 win,
                 domClass,
@@ -21,15 +22,17 @@ define(['dojo/_base/window',
                 DynamicObjectView,
                 PerformanceDisplay,
                 checkForChromeFrame,
-                Viewer) {
+                Viewer,
+                ViewerDropHandler) {
     "use strict";
     /*global console*/
 
     var viewer;
+    var dropHandler;
     var scene;
     var viewFromTo;
 
-    function onError(viewer, name, error) {
+    function onError(dropHandler, name, error) {
         console.log(error);
         window.alert(error);
     }
@@ -60,10 +63,10 @@ define(['dojo/_base/window',
 
         checkForChromeFrame();
 
-        var container = document.getElementById('cesiumContainer');
-        viewer = new Viewer(container);
+        viewer = new Viewer('cesiumContainer');
+        dropHandler = new ViewerDropHandler(viewer);
+        dropHandler.onError.addEventListener(onError);
         scene = viewer.scene;
-        viewer.enableDragAndDrop(document.body, onError);
         viewer.clock.onTick.addEventListener(onTick);
         viewer.homeButton.viewModel.command.beforeExecute.addEventListener(cancelViewFromTo);
         viewer.screenSpaceEventHandler.setInputAction(onLeftClick, ScreenSpaceEventType.LEFT_CLICK);

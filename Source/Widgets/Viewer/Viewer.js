@@ -4,7 +4,6 @@ define(['../../Core/Cartesian2',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
         '../../Core/ScreenSpaceEventType',
-        '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/DataSourceDisplay',
         '../ClockViewModel',
         '../Animation/Animation',
@@ -22,7 +21,6 @@ define(['../../Core/Cartesian2',
                 DeveloperError,
                 destroyObject,
                 ScreenSpaceEventType,
-                CzmlDataSource,
                 DataSourceDisplay,
                 ClockViewModel,
                 Animation,
@@ -133,7 +131,7 @@ define(['../../Core/Cartesian2',
             var homeButtonContainer = document.createElement('div');
             homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
             toolbar.appendChild(homeButtonContainer);
-            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.transitioner, cesiumWidget.centralBody.getEllipsoid());
+            homeButton = new HomeButton(homeButtonContainer, cesiumWidget.scene, cesiumWidget.sceneTransitioner, cesiumWidget.centralBody.getEllipsoid());
         }
 
         //SceneModePicker
@@ -142,7 +140,7 @@ define(['../../Core/Cartesian2',
             var sceneModePickerContainer = document.createElement('div');
             sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
             toolbar.appendChild(sceneModePickerContainer);
-            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.transitioner);
+            sceneModePicker = new SceneModePicker(sceneModePickerContainer, cesiumWidget.sceneTransitioner);
         }
 
         //BaseLayerPicker
@@ -185,10 +183,6 @@ define(['../../Core/Cartesian2',
             viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
         }
-
-        //Drag and drop
-        this._handleDrop = undefined;
-        this._dropContainer = undefined;
 
         this._container = container;
         this._viewerContainer = viewerContainer;
@@ -373,9 +367,9 @@ define(['../../Core/Cartesian2',
          * @memberof Viewer
          * @returns {SceneTransitioner} The scene transitioner.
          */
-        transitioner : {
+        sceneTransitioner : {
             get : function() {
-                return this._cesiumWidget.transitioner;
+                return this._cesiumWidget.sceneTransitioner;
             }
         },
 
@@ -391,121 +385,12 @@ define(['../../Core/Cartesian2',
         },
     });
 
-    function createOnLoadCallback(viewer, source, errorCallback, firstTime) {
-        return function(evt) {
-            var czmlSource = new CzmlDataSource();
-            try {
-                czmlSource.load(JSON.parse(evt.target.result), source);
-                viewer.dataSources.add(czmlSource);
-                if (firstTime) {
-                    var dataClock = czmlSource.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                    }
-                }
-            } catch (error) {
-                if (typeof errorCallback !== 'undefined') {
-                    errorCallback(viewer, source, error);
-                }
-            }
-        };
-    }
-
-    function createOnErrorCallback(viewer, source, errorCallback) {
-        return function(evt) {
-            errorCallback(viewer, source, evt.target.error);
-        };
-    }
-
     /**
-     * Processes the browser generated drop event.  This method will load any dropped CZML files
-     * onto the globe.  If dropping multiple files, the clock configuration of the first file is used.
      * @memberof Viewer
-     *
-     * @param {MouseEvent} event The browser generated drop event.
-     * @param {Function} [errorCallback] A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
-     *
-     * @exception {DeveloperError} event is required.
-     *
-     * @example
-     * //Implement drag and drop support for the widget container.
-     * function stop(event) {
-     *  event.stopPropagation();
-     *  event.preventDefault();
-     * }
-     *
-     * var container = viewer.container;
-     * container.addEventListener('drop', function(event) {
-     *   stop(event);
-     *   widget.handleDrop(event);
-     * }, false);
-     * container.addEventListener('dragenter', stop, false);
-     * container.addEventListener('dragover', stop, false);
-     * container.addEventListener('dragexit', stop, false);
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
-    Viewer.prototype.handleDrop = function(event, errorCallback) {
-        if (typeof event === 'undefined') {
-            throw new DeveloperError('event is required.');
-        }
-
-        var dataSources = this.dataSources;
-        dataSources.removeAll();
-
-        var files = event.dataTransfer.files;
-        var length = files.length;
-        for ( var i = 0; i < length; i++) {
-            var f = files[i];
-            var reader = new FileReader();
-            reader.onload = createOnLoadCallback(this, f.name, errorCallback, i === 0);
-            reader.onerror = typeof errorCallback !== 'undefined' ? createOnErrorCallback(this, f.name, errorCallback) : undefined;
-            reader.readAsText(f);
-        }
-    };
-
-    function stop(event) {
-        event.stopPropagation();
-        event.preventDefault();
-    }
-
-    /**
-     * Enables default drag and drop behavior for loading data into the widget.
-     * @memberof Viewer
-     *
-     * @param [container=this.container] The container to serve as the drop target.
-     * @param {Function} [errorCallback] A function to be called when any errors are encountered.  It takes three parameters, the widget, the filename, and the error object.
-     */
-    Viewer.prototype.enableDragAndDrop = function(container, errorCallback) {
-        this.disableDragAndDrop();
-
-        var that = this;
-        this._handleDrop = function(event) {
-            stop(event);
-            that.handleDrop(event, errorCallback);
-        };
-
-        container = defaultValue(container, this._container);
-        container.addEventListener('drop', this._handleDrop, false);
-        container.addEventListener('dragenter', stop, false);
-        container.addEventListener('dragover', stop, false);
-        container.addEventListener('dragexit', stop, false);
-        this._dropContainer = container;
-    };
-
-    /**
-     * Disables default drag and drop behavior previously enabled by a call to enableDragAndDrop.
-     * If drag and drop is not enabled, this method does nothing.
-     * @memberof Viewer
-     */
-    Viewer.prototype.disableDragAndDrop = function() {
-        var currentContainer = this._dropContainer;
-        if (typeof currentContainer !== 'undefined') {
-            currentContainer.removeEventListener('drop', this._handleDrop, false);
-            currentContainer.removeEventListener('dragenter', stop, false);
-            currentContainer.removeEventListener('dragover', stop, false);
-            currentContainer.removeEventListener('dragexit', stop, false);
-            this._dropContainer = undefined;
-        }
+    Viewer.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -514,7 +399,6 @@ define(['../../Core/Cartesian2',
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
-        this.disableDragAndDrop();
         this._container.removeChild(this._viewerContainer);
         this._viewerContainer.removeChild(this._toolbar);
 

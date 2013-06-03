@@ -8,7 +8,6 @@ defineSuite(['Widgets/Viewer/Viewer',
              'Widgets/HomeButton/HomeButton',
              'Widgets/SceneModePicker/SceneModePicker',
              'Widgets/Timeline/Timeline',
-             'Core/TimeInterval',
              'DynamicScene/DataSourceDisplay',
              'DynamicScene/DataSourceCollection',
              'Scene/EllipsoidTerrainProvider',
@@ -23,7 +22,6 @@ defineSuite(['Widgets/Viewer/Viewer',
                     HomeButton,
                     SceneModePicker,
                     Timeline,
-                    TimeInterval,
                     DataSourceDisplay,
                     DataSourceCollection,
                     EllipsoidTerrainProvider,
@@ -37,25 +35,6 @@ defineSuite(['Widgets/Viewer/Viewer',
         container.id = 'container';
         container.style.display = 'none';
         document.body.appendChild(container);
-
-        //Impersonate FielReader for drag and drop tests
-        var fakeFileReader = jasmine.createSpyObj('FileReader', ['readAsText']);
-        fakeFileReader.readAsText = function(file) {
-            if (typeof file.czmlString !== 'undefined') {
-                this.onload({
-                    target : {
-                        result : file.czmlString
-                    }
-                });
-            } else {
-                this.onerror({
-                    target : {
-                        error : file.errorMessage
-                    }
-                });
-            }
-        };
-        spyOn(window, 'FileReader').andReturn(fakeFileReader);
     });
 
     afterEach(function(){
@@ -76,9 +55,11 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.dataSources).toBeInstanceOf(DataSourceCollection);
         expect(viewer.canvas).toBe(viewer.cesiumWidget.canvas);
         expect(viewer.cesiumLogo).toBe(viewer.cesiumWidget.cesiumLogo);
-        expect(viewer.transitioner).toBe(viewer.cesiumWidget.transitioner);
+        expect(viewer.sceneTransitioner).toBe(viewer.cesiumWidget.sceneTransitioner);
         expect(viewer.screenSpaceEventHandler).toBe(viewer.cesiumWidget.screenSpaceEventHandler);
+        expect(viewer.isDestroyed()).toEqual(false);
         viewer.destroy();
+        expect(viewer.isDestroyed()).toEqual(true);
     });
 
     it('constructor works with container id string', function() {
@@ -237,168 +218,6 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
-        viewer.destroy();
-    });
-
-    var czml1 = {
-            id : 'test',
-            availability : '2000-01-01/2001-01-01',
-            billboard : {
-                show : true
-            }
-        };
-
-    var czml2 = {
-            id : 'test2',
-            availability : '2000-01-02/2001-01-02',
-            billboard : {
-                show : true
-            }
-        };
-
-    it('handleDrop processes drop event', function() {
-        var mockEvent = {
-            dataTransfer : {
-                files : [{
-                    name : 'czml1',
-                    czmlString : JSON.stringify(czml1)
-                }]
-            }
-        };
-
-        var viewer = new Viewer(container);
-        viewer.handleDrop(mockEvent);
-        waitsFor(function() {
-            var result = viewer.dataSources.getLength() === 1;
-            if (result) {
-                var dataSource = viewer.dataSources.get(0);
-                var interval = TimeInterval.fromIso8601(czml1.availability);
-                expect(dataSource.getDynamicObjectCollection().getObject('test')).toBeDefined();
-                expect(dataSource.getClock().startTime).toEqual(interval.start);
-                expect(dataSource.getClock().stopTime).toEqual(interval.stop);
-                viewer.destroy();
-            }
-            return result;
-        });
-    });
-
-    it('handleDrop processes drop event with multiple files', function() {
-        var mockEvent = {
-            dataTransfer : {
-                files : [{
-                    name : 'czml1',
-                    czmlString : JSON.stringify(czml1)
-                }, {
-                    name : 'czml2',
-                    czmlString : JSON.stringify(czml2)
-                }]
-            }
-        };
-
-        var viewer = new Viewer(container);
-        viewer.handleDrop(mockEvent);
-        waitsFor(function() {
-            var result = viewer.dataSources.getLength() === 2;
-            if (result) {
-                var source1 = viewer.dataSources.get(0);
-                var source2 = viewer.dataSources.get(1);
-                expect(source1.getDynamicObjectCollection().getObject('test')).toBeDefined();
-                expect(source2.getDynamicObjectCollection().getObject('test2')).toBeDefined();
-                //Interval of first file should be used.
-                var interval = TimeInterval.fromIso8601(czml1.availability);
-                expect(source1.getClock().startTime).toEqual(interval.start);
-                expect(source1.getClock().stopTime).toEqual(interval.stop);
-                viewer.destroy();
-            }
-            return result;
-        });
-    });
-
-    it('handleDrop calls error callback on exception', function() {
-        var mockEvent = {
-            dataTransfer : {
-                files : [{
-                    name : 'czml1',
-                    czmlString : 'bad JSON'
-                }]
-            }
-        };
-
-        var viewer = new Viewer(container);
-        var called = false;
-        function onError(viewerArg, source, error) {
-            expect(viewerArg).toBe(viewer);
-            expect(source).toEqual('czml1');
-            expect(error).toBeInstanceOf(SyntaxError);
-            called = true;
-        }
-        viewer.handleDrop(mockEvent, onError);
-        waitsFor(function() {
-            if (called) {
-                viewer.destroy();
-            }
-            return called;
-        });
-    });
-
-    it('handleDrop calls error callback on FileReader error', function() {
-        var mockEvent = {
-            dataTransfer : {
-                files : [{
-                    name : 'czml1',
-                    errorMessage : 'bad JSON'
-                }]
-            }
-        };
-
-        var viewer = new Viewer(container);
-        var called = false;
-        function onError(viewerArg, source, error) {
-            expect(viewerArg).toBe(viewer);
-            expect(source).toEqual(mockEvent.dataTransfer.files[0].name);
-            expect(error).toEqual(mockEvent.dataTransfer.files[0].errorMessage);
-            called = true;
-        }
-        viewer.handleDrop(mockEvent, onError);
-        waitsFor(function() {
-            if (called) {
-                viewer.destroy();
-            }
-            return called;
-        });
-    });
-
-    it('enableDragAndDrop/disableDragAndDrop subscribe to provided container.', function() {
-        var viewer = new Viewer(container);
-
-        var events = {};
-        var mockContainer = {
-            addEventListener : function(name, func, bubble) {
-                events[name] = {
-                    func : func,
-                    bubble : bubble
-                };
-            },
-            removeEventListener : function(name, func, bubble) {
-                var subscribed = events[name];
-                expect(subscribed.func).toBe(func);
-                expect(subscribed.bubble).toEqual(bubble);
-                delete events[name];
-            }
-        };
-
-        viewer.enableDragAndDrop(mockContainer);
-        expect(events.drop).toBeDefined();
-        expect(events.dragenter).toBeDefined();
-        expect(events.dragover).toBeDefined();
-        expect(events.dragexit).toBeDefined();
-
-        viewer.disableDragAndDrop();
-        expect(events.drop).toBeUndefined();
-        expect(events.dragenter).toBeUndefined();
-        expect(events.dragover).toBeUndefined();
-        expect(events.dragexit).toBeUndefined();
-
         viewer.destroy();
     });
 
