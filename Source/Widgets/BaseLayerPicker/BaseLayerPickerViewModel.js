@@ -89,12 +89,21 @@ define([
                 return selectedViewModel();
             },
             write : function(value) {
-                if (imageryLayers.getLength() > 0) {
+                while (imageryLayers.getLength() > 0) {
                     imageryLayers.remove(imageryLayers.get(0));
                 }
-                var newLayer = value.creationCommand();
-                if (typeof newLayer !== 'undefined') {
-                    imageryLayers.addImageryProvider(newLayer, 0);
+                var newLayers = value.creationCommand();
+                if (typeof newLayers !== 'undefined') {
+                    if (!(newLayers instanceof Array)) {
+                        newLayers = [ newLayers ];
+                    }
+                    for (var i = 0; i < newLayers.length; ++i) {
+                        if (newLayers[i] instanceof ImageryLayer) {
+                            imageryLayers.add(newLayers[i], i);
+                        } else {
+                            imageryLayers.addImageryProvider(newLayers[i], i);
+                        }
+                    }
                 }
                 selectedViewModel(value);
                 dropDownVisible(false);
