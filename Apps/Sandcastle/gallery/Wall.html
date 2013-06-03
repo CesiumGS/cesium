@@ -55,21 +55,7 @@ require([
         var ellipsoid = widget.centralBody.getEllipsoid();
         var primitives = scene.getPrimitives();
 
-        var material = Cesium.Material.fromType(undefined, Cesium.Material.ColorType);
-        material.uniforms.color = new Cesium.Color(1.0, 0.0, 0, 0.3);
-        var appearance = new Cesium.Appearance({
-            renderState : {
-                cull : {
-                    enabled : false
-                },
-                depthTest : {
-                    enabled : true
-                },
-                depthMask : false,
-                blending : Cesium.BlendingState.ALPHA_BLEND
-            },
-            material : material
-        });
+        var appearance = new Cesium.TranslucentAppearance();
 
         var positions = [
             Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),

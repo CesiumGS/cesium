@@ -384,6 +384,8 @@ define([
                 pickRS = context.createRenderState(appearanceRS);
             }
 
+            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
+
             for (i = 0; i < length; ++i) {
                 var geometry = finalGeometries[i];
 
@@ -393,7 +395,7 @@ define([
                 command.vertexArray = this._va[i];
                 command.renderState = rs;
                 command.shaderProgram = this._sp;
-                command.uniformMap = appearance.material._uniforms;
+                command.uniformMap = uniforms;
                 command.boundingVolume = geometry.boundingSphere;
                 colorCommands.push(command);
 
@@ -402,7 +404,7 @@ define([
                 pickCommand.vertexArray = this._va[i];
                 pickCommand.renderState = pickRS;
                 pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = appearance.material._uniforms;
+                pickCommand.uniformMap = uniforms;
                 pickCommand.boundingVolume = geometry.boundingSphere;
                 pickCommands.push(pickCommand);
             }
