@@ -54,6 +54,7 @@ define(['../../Core/defaultValue',
         this._viewer = viewer;
         this._clearOnDrop = defaultValue(options.clearOnDrop, true);
 
+        var that = this;
         this._handleDrop = function(event) {
             stop(event);
 
@@ -67,8 +68,8 @@ define(['../../Core/defaultValue',
             for ( var i = 0; i < length; i++) {
                 var f = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(this, f.name, i === 0);
-                reader.onerror = createOnErrorCallback(this, f.name);
+                reader.onload = createOnLoadCallback(that, f.name, i === 0);
+                reader.onerror = createOnErrorCallback(that, f.name);
                 reader.readAsText(f);
             }
         };

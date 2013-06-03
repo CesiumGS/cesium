@@ -4,59 +4,30 @@ define(['dojo/_base/window',
         'dojo/io-query',
         'dojo/parser',
         'dojo/ready',
-        'Core/ScreenSpaceEventType',
         'DynamicScene/CzmlDataSource',
-        'DynamicScene/DynamicObjectView',
         'Scene/PerformanceDisplay',
         'Widgets/Dojo/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
-        'Widgets/Viewer/ViewerDropHandler'
+        'Widgets/Viewer/ViewerDropHandler',
+        'Widgets/Viewer/ViewerDynamicSceneControls'
         ], function(
                 win,
                 domClass,
                 ioQuery,
                 parser,
                 ready,
-                ScreenSpaceEventType,
                 CzmlDataSource,
-                DynamicObjectView,
                 PerformanceDisplay,
                 checkForChromeFrame,
                 Viewer,
-                ViewerDropHandler) {
+                ViewerDropHandler,
+                ViewerDynamicSceneControls) {
     "use strict";
     /*global console*/
 
     var viewer;
     var dropHandler;
-    var scene;
-    var viewFromTo;
-
-    function onError(dropHandler, name, error) {
-        console.log(error);
-        window.alert(error);
-    }
-
-    function onTick(clock) {
-        if (typeof viewFromTo !== 'undefined') {
-            viewFromTo.update(clock.currentTime);
-        }
-    }
-
-    function onLeftClick(e) {
-        var pickedPrimitive = scene.pick(e.position);
-        if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
-            initViewFromTo(pickedPrimitive.dynamicObject);
-        }
-    }
-
-    function initViewFromTo(dynamicObject) {
-        viewFromTo = new DynamicObjectView(dynamicObject, scene, viewer.centralBody.getEllipsoid());
-    }
-
-    function cancelViewFromTo() {
-        viewFromTo = undefined;
-    }
+    var dynamicSceneControls;
 
     ready(function() {
         parser.parse();
@@ -65,11 +36,12 @@ define(['dojo/_base/window',
 
         viewer = new Viewer('cesiumContainer');
         dropHandler = new ViewerDropHandler(viewer);
-        dropHandler.onError.addEventListener(onError);
-        scene = viewer.scene;
-        viewer.clock.onTick.addEventListener(onTick);
-        viewer.homeButton.viewModel.command.beforeExecute.addEventListener(cancelViewFromTo);
-        viewer.screenSpaceEventHandler.setInputAction(onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
+        dropHandler.onError.addEventListener(function(dropHandler, name, error) {
+            console.log(error);
+            window.alert(error);
+        });
+
+        dynamicSceneControls = new ViewerDynamicSceneControls(viewer);
 
         /*
          * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -83,6 +55,7 @@ define(['dojo/_base/window',
             endUserOptions = ioQuery.queryToObject(window.location.search.substring(1));
         }
 
+        var scene = viewer.scene;
         var context = scene.getContext();
         if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);
@@ -105,7 +78,7 @@ define(['dojo/_base/window',
                 if (typeof endUserOptions.lookAt !== 'undefined') {
                     var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
                     if (typeof dynamicObject !== 'undefined') {
-                        initViewFromTo(dynamicObject);
+                        dynamicSceneControls.trackedObject = dynamicObject;
                     } else {
                         window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
                     }
