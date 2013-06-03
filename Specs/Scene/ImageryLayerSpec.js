@@ -63,6 +63,10 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
+        loadBlob.load = function(url, headers, deferred) {
+            return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+        };
+
         var discardPolicy = new CustomDiscardPolicy();
 
         var provider = new WebMapServiceImageryProvider({
