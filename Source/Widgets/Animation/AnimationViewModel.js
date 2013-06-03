@@ -5,10 +5,7 @@ define([
         '../../Core/binarySearch',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
-        '../../Core/Color',
         '../../Core/DeveloperError',
-        '../../Core/JulianDate',
-        '../../Core/defaultValue',
         '../../ThirdParty/sprintf',
         '../../ThirdParty/knockout'
     ], function(
@@ -17,10 +14,7 @@ define([
         binarySearch,
         ClockStep,
         ClockRange,
-        Color,
         DeveloperError,
-        JulianDate,
-        defaultValue,
         sprintf,
         knockout) {
     "use strict";

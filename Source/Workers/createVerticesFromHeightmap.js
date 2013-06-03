@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Extent',
@@ -9,7 +8,6 @@ define([
         './createTaskProcessorWorker'
     ], function(
         BoundingSphere,
-        Cartesian3,
         Ellipsoid,
         EllipsoidalOccluder,
         Extent,

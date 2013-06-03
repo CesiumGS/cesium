@@ -3,14 +3,12 @@ defineSuite([
          'Core/AxisAlignedBoundingBox',
          'Core/Cartesian3',
          'Core/Cartesian4',
-         'Core/Intersect',
-         'Core/Math'
+         'Core/Intersect'
      ], function(
          AxisAlignedBoundingBox,
          Cartesian3,
          Cartesian4,
-         Intersect,
-         CesiumMath) {
+         Intersect) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

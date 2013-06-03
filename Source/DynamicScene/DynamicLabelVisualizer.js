@@ -112,7 +112,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -177,7 +177,7 @@ define([
     var outlineColor;
     var eyeOffset;
     var pixelOffset;
-    DynamicLabelVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    function updateObject(dynamicLabelVisualizer, time, dynamicObject) {
         var dynamicLabel = dynamicObject.label;
         if (typeof dynamicLabel === 'undefined') {
             return;
@@ -201,23 +201,23 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof labelVisualizerIndex !== 'undefined') {
-                label = this._labelCollection.get(labelVisualizerIndex);
+                label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
                 label.setShow(false);
-                this._unusedIndexes.push(labelVisualizerIndex);
+                dynamicLabelVisualizer._unusedIndexes.push(labelVisualizerIndex);
                 dynamicObject._labelVisualizerIndex = undefined;
             }
             return;
         }
 
         if (typeof labelVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicLabelVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 labelVisualizerIndex = unusedIndexes.pop();
-                label = this._labelCollection.get(labelVisualizerIndex);
+                label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
             } else {
-                labelVisualizerIndex = this._labelCollection.getLength();
-                label = this._labelCollection.add();
+                labelVisualizerIndex = dynamicLabelVisualizer._labelCollection.getLength();
+                label = dynamicLabelVisualizer._labelCollection.add();
             }
             dynamicObject._labelVisualizerIndex = labelVisualizerIndex;
             label.dynamicObject = dynamicObject;
@@ -235,7 +235,7 @@ define([
             label.setHorizontalOrigin(HorizontalOrigin.CENTER);
             label.setVerticalOrigin(VerticalOrigin.CENTER);
         } else {
-            label = this._labelCollection.get(labelVisualizerIndex);
+            label = dynamicLabelVisualizer._labelCollection.get(labelVisualizerIndex);
         }
 
         label.setShow(show);
@@ -329,7 +329,7 @@ define([
                 label.setVerticalOrigin(verticalOrigin);
             }
         }
-    };
+    }
 
     DynamicLabelVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisLabelCollection = this._labelCollection;

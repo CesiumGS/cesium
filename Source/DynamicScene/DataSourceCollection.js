@@ -1,16 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/Math'
+        '../Core/Event'
     ], function(
-            DeveloperError,
-            defaultValue,
-            destroyObject,
-            Event,
-            CesiumMath) {
+        DeveloperError,
+        destroyObject,
+        Event) {
     "use strict";
 
     /**

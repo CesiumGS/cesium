@@ -1,8 +1,5 @@
 /*global define*/
 define([
-        '../Core/DeveloperError',
-        '../Core/defaultValue',
-        '../Core/Ellipsoid',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Cartesian2',
@@ -16,9 +13,6 @@ define([
         '../Core/Simon1994PlanetaryPositions',
         '../Scene/SceneMode'
     ], function(
-        DeveloperError,
-        defaultValue,
-        Ellipsoid,
         Matrix3,
         Matrix4,
         Cartesian2,

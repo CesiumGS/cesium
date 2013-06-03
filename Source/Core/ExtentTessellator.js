@@ -2,10 +2,8 @@
 define([
         './clone',
         './defaultValue',
-        './DeveloperError',
         './Math',
         './Ellipsoid',
-        './Extent',
         './Cartesian3',
         './Cartographic',
         './Matrix2',
@@ -15,10 +13,8 @@ define([
     ], function(
         clone,
         defaultValue,
-        DeveloperError,
         CesiumMath,
         Ellipsoid,
-        Extent,
         Cartesian3,
         Cartographic,
         Matrix2,

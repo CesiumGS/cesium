@@ -1,18 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicPolygon',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Color',
-             'Core/Iso8601',
-             'Core/TimeInterval'
-            ], function(
-              DynamicPolygon,
-              DynamicObject,
-              JulianDate,
-              Color,
-              Iso8601,
-              TimeInterval) {
+         'DynamicScene/DynamicPolygon',
+         'DynamicScene/DynamicObject',
+         'Core/Color',
+         'Core/Iso8601',
+         'Core/TimeInterval'
+     ], function(
+         DynamicPolygon,
+         DynamicObject,
+         Color,
+         Iso8601,
+         TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
