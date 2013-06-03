@@ -13,6 +13,7 @@ define([
         './GeometryAttribute',
         './GeometryFilters',
         './Intersect',
+        './Math',
         './Matrix3',
         './Matrix4',
         './PolygonPipeline',
@@ -34,6 +35,7 @@ define([
         GeometryAttribute,
         GeometryFilters,
         Intersect,
+        CesiumMath,
         Matrix3,
         Matrix4,
         PolygonPipeline,
@@ -122,6 +124,8 @@ define([
         return mesh;
     }
 
+    var createMeshFromPositionsPositions = [];
+
     function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
@@ -148,6 +152,7 @@ define([
         return PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
     }
 
+    var scratchBoundingRectangle = new BoundingRectangle();
 
     /**
      * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
@@ -225,6 +230,10 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var stRotation = defaultValue(options.stRotation, 0.0);
+        var height = defaultValue(options.height, 0.0);
+
+        var positions = options.positions;
+        var polygonHierarchy = options.polygonHierarchy;
 
         var meshes = [];
         var mesh;
@@ -235,8 +244,7 @@ define([
 
         if (typeof options.positions !== 'undefined') {
             // create from positions
-            positions = options.positions;
-            outerPositions = options.positions;
+            outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
             mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
