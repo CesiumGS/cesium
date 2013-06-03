@@ -303,7 +303,7 @@ define([
             var flatPositions = mesh.attributes.position.values;
             var length = flatPositions.length;
 
-            var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
+            var textureCoordinates = vertexFormat.st ? new Array(2 * (length / 3)) : undefined;
             var normals = vertexFormat.normal ? new Array(length) : undefined;
             var tangents = vertexFormat.tangent ? new Array(length) : undefined;
             var binormals = vertexFormat.binormal ? new Array(length) : undefined;
@@ -340,7 +340,10 @@ define([
                 }
 
                 if (vertexFormat.tangent) {
-                    ellipsoid.geodeticSurfaceNormal(position, normal);
+                    if (!vertexFormat.normal) {
+                        ellipsoid.geodeticSurfaceNormal(position, normal);
+                    }
+
                     Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                     Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                     Cartesian3.normalize(tangent, tangent);
@@ -351,9 +354,15 @@ define([
                 }
 
                 if (vertexFormat.binormal) {
-                    ellipsoid.geodeticSurfaceNormal(position, normal);
-                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    if (!vertexFormat.normal) {
+                        ellipsoid.geodeticSurfaceNormal(position, normal);
+                    }
+
+                    if (!vertexFormat.tangent) {
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    }
+
                     var binormal = Cartesian3.cross(tangent, normal, scratchBinormal);
                     Cartesian3.normalize(binormal, binormal);
 
