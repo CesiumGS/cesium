@@ -114,7 +114,8 @@ define([
 
         this._clockViewModel = clockViewModel;
 
-        this._shuttleRingTicks = undefined;
+        this._allShuttleRingTicks = [];
+
         this._dateFormatter = AnimationViewModel.defaultDateFormatter;
         this._timeFormatter = AnimationViewModel.defaultTimeFormatter;
 
@@ -134,9 +135,11 @@ define([
          */
         this.snapToTicks = false;
 
-        knockout.track(this, ['_shuttleRingTicks', '_dateFormatter', '_timeFormatter', 'shuttleRingDragging', 'snapToTicks']);
+        knockout.track(this, ['_allShuttleRingTicks', '_dateFormatter', '_timeFormatter', 'shuttleRingDragging', 'snapToTicks']);
 
-        this.shuttleRingTicks = AnimationViewModel.defaultTicks;
+        this._sortedFilteredPositiveTicks = [];
+
+        this.setShuttleRingTicks(AnimationViewModel.defaultTicks);
 
         /**
          * Gets the string representation of the current time.  This property is observable.
@@ -185,11 +188,11 @@ define([
         this.shuttleRingAngle = undefined;
         knockout.defineProperty(this, 'shuttleRingAngle', {
             get : function() {
-                return multiplierToAngle(clockViewModel.multiplier, that._shuttleRingTicks, clockViewModel);
+                return multiplierToAngle(clockViewModel.multiplier, that._allShuttleRingTicks, clockViewModel);
             },
             set : function(angle) {
                 angle = Math.max(Math.min(angle, maxShuttleRingAngle), -maxShuttleRingAngle);
-                var ticks = that._shuttleRingTicks;
+                var ticks = that._allShuttleRingTicks;
 
                 var clockViewModel = that._clockViewModel;
                 clockViewModel.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
@@ -340,7 +343,7 @@ define([
         this._slower = createCommand(function() {
             var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
-            var shuttleRingTicks = that._shuttleRingTicks;
+            var shuttleRingTicks = that._allShuttleRingTicks;
             var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) - 1;
             if (index >= 0) {
@@ -351,7 +354,7 @@ define([
         this._faster = createCommand(function() {
             var clockViewModel = that._clockViewModel;
             cancelRealtime(clockViewModel);
-            var shuttleRingTicks = that._shuttleRingTicks;
+            var shuttleRingTicks = that._allShuttleRingTicks;
             var multiplier = clockViewModel.multiplier;
             var index = getTypicalMultiplierIndex(multiplier, shuttleRingTicks) + 1;
             if (index < shuttleRingTicks.length) {
@@ -399,40 +402,63 @@ define([
         return sprintf("%02d:%02d:%02d UTC", gregorianDate.hour, gregorianDate.minute, gregorianDate.second);
     };
 
-    defineProperties(AnimationViewModel.prototype, {
-        /**
-         * Gets or sets the array of positive known clock multipliers to associate with the shuttle ring.
-         * When setting, these values will have negative equivalents created for them and sets both
-         * the minimum and maximum range of values for the shuttle ring as well as the values that
-         * are snapped to when a single click is made.  The values need not be in order,
-         * as they will be sorted automatically.  This property is observable.
-         * @memberof AnimationViewModel.prototype
-         *
-         * @type {Array}
-         */
-        shuttleRingTicks : {
-            //TODO:@exception {DeveloperError} positiveTicks is required.
-            get : function() {
-                return this._shuttleRingTicks;
-            },
-            set : function(positiveTicks) {
-                if (typeof positiveTicks === 'undefined') {
-                    throw new DeveloperError('positiveTicks is required.');
-                }
+    /**
+     * Gets a copy of the array of positive known clock multipliers to associate with the shuttle ring.
+     *
+     * @memberof AnimationViewModel
+     * @returns The array of known clock multipliers associated with the shuttle ring.
+     */
+    AnimationViewModel.prototype.getShuttleRingTicks = function() {
+        return this._sortedFilteredPositiveTicks.slice(0);
+    };
 
-                var ticks = [];
-                for ( var i = 0, len = positiveTicks.length; i < len; ++i) {
-                    var tick = positiveTicks[i];
-                    ticks.push(tick);
-                    if (tick !== 0) {
-                        ticks.push(-tick);
-                    }
-                }
-                ticks.sort(numberComparator);
-                this._shuttleRingTicks = ticks;
+    /**
+     * Sets the array of positive known clock multipliers to associate with the shuttle ring.
+     * These values will have negative equivalents created for them and sets both the minimum
+     * and maximum range of values for the shuttle ring as well as the values that are snapped
+     * to when a single click is made.  The values need not be in order, as they will be sorted
+     * automatically, and duplicate values will be removed.
+     * @memberof AnimationViewModel
+     *
+     * @param positiveTicks The list of known positive clock multipliers to associate with the shuttle ring.
+     *
+     * @exception {DeveloperError} positiveTicks is required.
+     */
+    AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
+        if (typeof positiveTicks === 'undefined') {
+            throw new DeveloperError('positiveTicks is required.');
+        }
+
+        var i;
+        var len;
+        var tick;
+
+        var hash = {};
+        var sortedFilteredPositiveTicks = this._sortedFilteredPositiveTicks;
+        sortedFilteredPositiveTicks.length = 0;
+        for (i = 0, len = positiveTicks.length; i < len; ++i) {
+            tick = positiveTicks[i];
+            //filter duplicates
+            if (!hash.hasOwnProperty(tick)) {
+                hash[tick] = true;
+                sortedFilteredPositiveTicks.push(tick);
             }
-        },
+        }
+        sortedFilteredPositiveTicks.sort(numberComparator);
 
+        var allTicks = [];
+        for (len = sortedFilteredPositiveTicks.length, i = len - 1; i >= 0; --i) {
+            tick = sortedFilteredPositiveTicks[i];
+            if (tick !== 0) {
+                allTicks.push(-tick);
+            }
+        }
+        Array.prototype.push.apply(allTicks, sortedFilteredPositiveTicks);
+
+        this._allShuttleRingTicks = allTicks;
+    };
+
+    defineProperties(AnimationViewModel.prototype, {
         /**
          * Gets a command that decreases the speed of animation.
          * @memberof AnimationViewModel.prototype
