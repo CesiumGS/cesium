@@ -2,8 +2,8 @@
 defineSuite([
          'Scene/ArcGisMapServerImageryProvider',
          'Core/jsonp',
-         'Core/loadBlob',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Core/DefaultProxy',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/GeographicTilingScheme',
@@ -16,8 +16,8 @@ defineSuite([
      ], function(
          ArcGisMapServerImageryProvider,
          jsonp,
-         loadBlob,
          loadImage,
+         loadWithXhr,
          DefaultProxy,
          DiscardMissingTileImagePolicy,
          GeographicTilingScheme,
@@ -33,7 +33,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadBlob.load = loadBlob.defaultLoad;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -107,11 +107,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -188,11 +188,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -338,11 +338,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
 
                 // Just return any old image.
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {

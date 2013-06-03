@@ -2,21 +2,21 @@
 defineSuite([
          'Scene/DiscardMissingTileImagePolicy',
          'Core/Cartesian2',
-         'Core/loadBlob',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'ThirdParty/when'
      ], function(
          DiscardMissingTileImagePolicy,
          Cartesian2,
-         loadBlob,
          loadImage,
+         loadWithXhr,
          when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadBlob.load = loadBlob.defaultLoadBlob;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     describe('construction', function() {
@@ -50,10 +50,10 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(missingImageUrl);
                 imageDownloaded = true;
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -92,9 +92,9 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(missingImageUrl);
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -135,9 +135,9 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(missingImageUrl);
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -195,8 +195,8 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
-                return loadBlob.defaultLoad('Data/Images/Transparent.png', headers, deferred);
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                return loadWithXhr.defaultLoad('Data/Images/Transparent.png', responseType, headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({

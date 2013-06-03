@@ -5,8 +5,8 @@ defineSuite([
          'Specs/destroyContext',
          'Core/Extent',
          'Core/jsonp',
-         'Core/loadBlob',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Scene/BingMapsImageryProvider',
          'Scene/Imagery',
          'Scene/ImageryState',
@@ -19,8 +19,8 @@ defineSuite([
          destroyContext,
          Extent,
          jsonp,
-         loadBlob,
          loadImage,
+         loadWithXhr,
          BingMapsImageryProvider,
          Imagery,
          ImageryState,
@@ -43,7 +43,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadBlob.load = loadBlob.defaultLoad;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     function CustomDiscardPolicy() {
@@ -63,8 +63,8 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadBlob.load = function(url, headers, deferred) {
-            return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -131,8 +131,8 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
-        loadBlob.load = function(url, headers, deferred) {
-            return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
         };
 
         var provider = new BingMapsImageryProvider({

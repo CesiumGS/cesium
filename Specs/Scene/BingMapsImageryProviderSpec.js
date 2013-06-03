@@ -4,8 +4,8 @@ defineSuite([
          'Core/DefaultProxy',
          'Core/FeatureDetection',
          'Core/jsonp',
-         'Core/loadBlob',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Scene/BingMapsStyle',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/Imagery',
@@ -20,8 +20,8 @@ defineSuite([
          DefaultProxy,
          FeatureDetection,
          jsonp,
-         loadBlob,
          loadImage,
+         loadWithXhr,
          BingMapsStyle,
          DiscardMissingTileImagePolicy,
          Imagery,
@@ -37,7 +37,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadBlob.load = loadBlob.defaultLoad;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -160,11 +160,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
 
                 // Just return any old image.
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -241,11 +241,11 @@ defineSuite([
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
-            loadBlob.load = function(url, headers, deferred) {
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
                 expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
 
                 // Just return any old image.
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -340,15 +340,15 @@ defineSuite([
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
         };
 
-        loadBlob.load = function(url, headers, deferred) {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
             // Succeed after 2 tries
             if (tries === 2) {
                 // valid URL
-                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             }
 
             // invalid URL
-            return loadBlob.defaultLoad(url, headers, deferred);
+            return loadWithXhr.defaultLoad(url, responseType, headers, deferred);
         };
 
         waitsFor(function() {
