@@ -22,6 +22,7 @@ define([
         'Core/Transforms',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
+        'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/ClosedTranslucentAppearance',
@@ -53,6 +54,7 @@ define([
         Transforms,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
+        WallGeometry,
         Primitive,
         Appearance,
         ClosedTranslucentAppearance,
@@ -237,6 +239,29 @@ define([
             geometries : polygonGeometry,
             appearance : new EllipsoidSurfaceAppearance({
                 material : Material.fromType(scene.getContext(), 'Stripe')
+            })
+        }));
+
+        var wall = new WallGeometry({
+            vertexFormat : VertexFormat.ALL,
+            positions    : ellipsoid.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
+                Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
+                Cartographic.fromDegrees(-120.0, 38.0, 100000.0),
+                Cartographic.fromDegrees(-120.0, 37.0, 100000.0),
+                Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
+            ]),
+            pickData : 'wall'
+        });
+        widget.scene.getPrimitives().add(new Primitive({
+            geometries : wall,
+            appearance : new Appearance({
+                material : Material.fromType(scene.getContext(), 'Wood'),
+                renderState : {
+                    depthTest : {
+                        enabled : true
+                    }
+                }
             })
         }));
 
