@@ -1,52 +1,48 @@
 /*global define*/
 define([
-        './DeveloperError',
+        './defaultValue',
+        './BoundingRectangle',
+        './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartesian4',
-        './Quaternion',
+        './ComponentDatatype',
+        './DeveloperError',
         './Ellipsoid',
+        './EllipsoidTangentPlane',
+        './GeometryAttribute',
+        './GeometryFilters',
+        './Intersect',
+        './Math',
         './Matrix3',
         './Matrix4',
-        './Math',
-        './ComponentDatatype',
-        './PrimitiveType',
-        './defaultValue',
-        './BoundingSphere',
-        './BoundingRectangle',
-        './GeometryAttribute',
-        './GeometryIndices',
         './PolygonPipeline',
-        './EllipsoidTangentPlane',
-        './WindingOrder',
-        './GeometryFilters',
+        './Quaternion',
         './Queue',
-        './Intersect',
-        './VertexFormat'
+        './VertexFormat',
+        './WindingOrder'
     ], function(
-        DeveloperError,
+        defaultValue,
+        BoundingRectangle,
+        BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        Quaternion,
+        ComponentDatatype,
+        DeveloperError,
         Ellipsoid,
+        EllipsoidTangentPlane,
+        GeometryAttribute,
+        GeometryFilters,
+        Intersect,
+        CesiumMath,
         Matrix3,
         Matrix4,
-        CesiumMath,
-        ComponentDatatype,
-        PrimitiveType,
-        defaultValue,
-        BoundingSphere,
-        BoundingRectangle,
-        GeometryAttribute,
-        GeometryIndices,
         PolygonPipeline,
-        EllipsoidTangentPlane,
-        WindingOrder,
-        GeometryFilters,
+        Quaternion,
         Queue,
-        Intersect,
-        VertexFormat) {
+        VertexFormat,
+        WindingOrder) {
     "use strict";
 
     var computeBoundingRectangleCartesian2 = new Cartesian2();
@@ -56,7 +52,7 @@ define([
 
     function computeBoundingRectangle(tangentPlane, positions, angle, result) {
         var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation,computeBoundingRectangleMatrix3);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
 
         var minX = Number.POSITIVE_INFINITY;
         var maxX = Number.NEGATIVE_INFINITY;
@@ -89,41 +85,7 @@ define([
         return result;
     }
 
-    var appendTextureCoordinatesCartesian2 = new Cartesian2();
-    var appendTextureCoordinatesCartesian3 = new Cartesian3();
-    var appendTextureCoordinatesQuaternion = new Quaternion();
-    var appendTextureCoordinatesMatrix3 = new Matrix3();
-
-    function appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, angle) {
-        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
-
-        var positions = mesh.attributes.position.values;
-        var length = positions.length;
-
-        var textureCoordinates = new Float32Array(2 * (length / 3));
-        var j = 0;
-
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
-
-        for ( var i = 0; i < length; i += 3) {
-            var p = Cartesian3.fromArray(positions, i, appendTextureCoordinatesCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
-            st.subtract(origin, st);
-
-            textureCoordinates[j++] = st.x / boundingRectangle.width;
-            textureCoordinates[j++] = st.y / boundingRectangle.height;
-        }
-
-        mesh.attributes.st = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2,
-            values : textureCoordinates
-        });
-
-        return mesh;
-    }
+    var createMeshFromPositionsPositions = [];
 
     function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
@@ -133,14 +95,16 @@ define([
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
             positions2D.reverse();
             cleanedPositions.reverse();
         }
+
         var indices = PolygonPipeline.earClip2D(positions2D);
+
         // Checking bounding sphere with plane for quick reject
         var minX = boundingSphere.center.x - boundingSphere.radius;
         if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
@@ -150,10 +114,20 @@ define([
     }
 
     var scratchBoundingRectangle = new BoundingRectangle();
+    var scratchPosition = new Cartesian3();
+    var scratchNormal = new Cartesian3();
+    var scratchTangent = new Cartesian3();
+    var scratchBinormal = new Cartesian3();
+
+    var appendTextureCoordinatesOrigin = new Cartesian2();
+    var appendTextureCoordinatesCartesian2 = new Cartesian2();
+    var appendTextureCoordinatesCartesian3 = new Cartesian3();
+    var appendTextureCoordinatesQuaternion = new Quaternion();
+    var appendTextureCoordinatesMatrix3 = new Matrix3();
 
     /**
-     * Creates a PolygonGeometry. The polygon itself is either defined by an array of Cartesian points,
-     * or a polygon hierarchy.
+     * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
+     * by an array of Cartesian points, or a polygon hierarchy.
      *
      * @alias PolygonGeometry
      * @constructor
@@ -169,60 +143,56 @@ define([
      * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
-     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
-     * @exception {DeveloperError} At least three positions required
-     * @exception {DeveloperError} positions or polygonHierarchy must be supplied
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
      *
      * @example
+     * // create a polygon from points
+     * var geometry = new Cesium.PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
      *
-     *  // create a polygon from points
-     *  var geometry = new Cesium.PolygonGeometry({
-     *      positions : ellipsoid.cartographicArrayToCartesianArray([
-     *          Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *          Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *          Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *          Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *          Cesium.Cartographic.fromDegrees(-68.0, 40.0)
-     *      ]),
-     *      pickData : 'polygon1'
-     *  });
-     *
-     *  // create a nested polygon with holes
-     *  var geometryWithHole = new Cesium.PolygonGeometry({
-     *      polygonHierarchy : {
-     *          positions : ellipsoid.cartographicArrayToCartesianArray([
-     *              Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-     *              Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-     *              Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-     *              Cesium.Cartographic.fromDegrees(-109.0, 40.0)
-     *          ]),
-     *          holes : [{
-     *              positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                  Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-     *                  Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-     *                  Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-     *                  Cesium.Cartographic.fromDegrees(-97.0, 31.0)
-     *              ]),
-     *              holes : [{
-     *                  positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                      Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-     *                      Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-     *                      Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-     *                      Cesium.Cartographic.fromDegrees(-105.0, 37.0)
-     *                      ]),
-     *                  holes : [{
-     *                      positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                          Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-     *                          Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-     *                          Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-     *                          Cesium.Cartographic.fromDegrees(-103.0, 36.0)
-     *                      ])
-     *                  }]
+     * // create a nested polygon with holes
+     * var geometryWithHole = new Cesium.PolygonGeometry({
+     *     polygonHierarchy : {
+     *         positions : ellipsoid.cartographicArrayToCartesianArray([
+     *             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+     *             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+     *             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+     *         ]),
+     *         holes : [{
+     *             positions : ellipsoid.cartographicArrayToCartesianArray([
+     *                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
+     *                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+     *                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
+     *                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+     *             ]),
+     *             holes : [{
+     *                 positions : ellipsoid.cartographicArrayToCartesianArray([
+     *                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
+     *                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
+     *                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
+     *                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+     *                     ]),
+     *                 holes : [{
+     *                     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
+     *                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
+     *                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
+     *                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+     *                     ])
+     *                 }]
      *              }]
-     *          }]
-     *      },
-     *      pickData : 'polygon3'
-     *  });
+     *         }]
+     *     }
+     * });
      */
     var PolygonGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -231,30 +201,29 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var stRotation = defaultValue(options.stRotation, 0.0);
+        var height = defaultValue(options.height, 0.0);
+
+        var positions = options.positions;
+        var polygonHierarchy = options.polygonHierarchy;
 
         var meshes = [];
         var mesh;
         var boundingSphere;
         var i;
-        var positions;
-        var polygonHierarchy;
 
         var outerPositions;
 
-        if (typeof options.positions !== 'undefined') {
+        if (typeof positions !== 'undefined') {
             // create from positions
-            positions = options.positions;
-            outerPositions = options.positions;
+            outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
             mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
             if (typeof mesh !== 'undefined') {
                 meshes.push(mesh);
             }
-        } else if (typeof options.polygonHierarchy !== 'undefined') {
+        } else if (typeof polygonHierarchy !== 'undefined') {
             // create from a polygon hierarchy
-            polygonHierarchy = options.polygonHierarchy;
-
             // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
             var polygons = [];
             var queue = new Queue();
@@ -284,7 +253,7 @@ define([
                             numGrandchildren = hole.holes.length;
                         }
 
-                        for ( var j = 0; j < numGrandchildren; j++) {
+                        for (var j = 0; j < numGrandchildren; j++) {
                             queue.enqueue(hole.holes[j]);
                         }
                     }
@@ -311,38 +280,130 @@ define([
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        var attributes = {};
-        var indexLists = [];
-
         mesh = GeometryFilters.combine(meshes);
-        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, defaultValue(options.height, 0.0), ellipsoid);
+        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, height, ellipsoid);
 
-        attributes.position = new GeometryAttribute({
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3,
-            values : mesh.attributes.position.values
-        });
+        var attributes = {};
 
-        if (vertexFormat.st) {
+        if (vertexFormat.position) {
+            attributes.position = mesh.attributes.position;
+        }
+
+        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
             var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
-            mesh = appendTextureCoordinates(mesh, tangentPlane, boundingRectangle, stRotation);
 
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : mesh.attributes.st.values
-            });
+            var origin = appendTextureCoordinatesOrigin;
+            origin.x = boundingRectangle.x;
+            origin.y = boundingRectangle.y;
+
+            var flatPositions = mesh.attributes.position.values;
+            var length = flatPositions.length;
+
+            var textureCoordinates = vertexFormat.st ? new Array(2 * (length / 3)) : undefined;
+            var normals = vertexFormat.normal ? new Array(length) : undefined;
+            var tangents = vertexFormat.tangent ? new Array(length) : undefined;
+            var binormals = vertexFormat.binormal ? new Array(length) : undefined;
+
+            var textureCoordIndex = 0;
+            var normalIndex = 0;
+            var tangentIndex = 0;
+            var binormalIndex = 0;
+
+            var normal = scratchNormal;
+            var tangent = scratchTangent;
+
+            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
+            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+
+            for (i = 0; i < length; i += 3) {
+                var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
+
+                if (vertexFormat.st) {
+                    var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
+                    var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
+                    Cartesian2.subtract(st, origin, st);
+
+                    textureCoordinates[textureCoordIndex++] = st.x / boundingRectangle.width;
+                    textureCoordinates[textureCoordIndex++] = st.y / boundingRectangle.height;
+                }
+
+                if (vertexFormat.normal) {
+                    normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+
+                    normals[normalIndex++] = normal.x;
+                    normals[normalIndex++] = normal.y;
+                    normals[normalIndex++] = normal.z;
+                }
+
+                if (vertexFormat.tangent) {
+                    if (!vertexFormat.normal) {
+                        ellipsoid.geodeticSurfaceNormal(position, normal);
+                    }
+
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    Cartesian3.normalize(tangent, tangent);
+
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    if (!vertexFormat.normal) {
+                        ellipsoid.geodeticSurfaceNormal(position, normal);
+                    }
+
+                    if (!vertexFormat.tangent) {
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
+                    }
+
+                    var binormal = Cartesian3.cross(tangent, normal, scratchBinormal);
+                    Cartesian3.normalize(binormal, binormal);
+
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                }
+            }
+
+            if (vertexFormat.st) {
+                attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : textureCoordinates
+                });
+            }
+
+            if (vertexFormat.normal) {
+                attributes.normal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : normals
+                });
+            }
+
+            if (vertexFormat.tangent) {
+                attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : tangents
+                });
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormal = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : binormals
+                });
+            }
         }
-
-        indexLists.push(
-            new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : mesh.indexLists[0].values
-        }));
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -357,7 +418,7 @@ define([
          *
          * @type Array
          */
-        this.indexLists = indexLists;
+        this.indexLists = mesh.indexLists;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
