@@ -702,4 +702,17 @@ defineSuite([
             Cartesian3.cross(left, undefined);
         }).toThrow();
     });
+
+    it('fromElements returns a cartesian3 with corrrect coordinates', function(){
+        var cartesian2 = Cartesian3.fromElements(2, 2, 4);
+        var expectedResult = new Cartesian3(2, 2, 4);
+        expect(cartesian2).toEqual(expectedResult);
+    });
+
+    it('fromElements result param returns cartesian3 with correct coordinates', function(){
+        var cartesian3 = new Cartesian3();
+        Cartesian3.fromElements(2, 2, 4, cartesian3);
+        var expectedResult = new Cartesian3(2, 2, 4);
+        expect(cartesian3).toEqual(expectedResult);
+    });
 });

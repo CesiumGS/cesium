@@ -117,7 +117,7 @@ function toLink(longname, content) {
         return content;
     }
     else {
-        return '<a href="'+url+'">'+content+'</a>';
+        return '<a href="'+url+'" target="_self">'+content+'</a>';
     }
 }
 

@@ -1,17 +1,12 @@
 /*global define*/
-define(['../../Core/DeveloperError',
-        '../../Scene/SceneMode',
-        '../../Scene/ImageryLayer',
-        '../../Scene/ImageryProvider',
+define([
+        '../../Core/DeveloperError',
         '../createCommand',
         '../../ThirdParty/knockout'
-        ], function(
-            DeveloperError,
-            SceneMode,
-            ImageryLayer,
-            ImageryProvider,
-            createCommand,
-            knockout) {
+    ], function(
+        DeveloperError,
+        createCommand,
+        knockout) {
     "use strict";
 
     /**

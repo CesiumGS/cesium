@@ -1,11 +1,8 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './Quaternion'
-    ],
-    function (
-        DeveloperError,
-        Quaternion) {
+        './DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     /**

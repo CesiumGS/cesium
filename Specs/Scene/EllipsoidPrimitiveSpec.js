@@ -8,10 +8,7 @@ defineSuite([
          'Specs/pick',
          'Specs/render',
          'Core/Cartesian3',
-         'Core/Cartographic',
          'Core/Matrix4',
-         'Core/Math',
-         'Core/JulianDate',
          'Renderer/ClearCommand',
          'Scene/Material'
      ], function(
@@ -23,10 +20,7 @@ defineSuite([
          pick,
          render,
          Cartesian3,
-         Cartographic,
          Matrix4,
-         CesiumMath,
-         JulianDate,
          ClearCommand,
          Material) {
     "use strict";

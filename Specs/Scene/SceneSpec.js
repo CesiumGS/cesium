@@ -1,11 +1,9 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/Scene',
          'Core/Color',
          'Specs/createScene',
          'Specs/destroyScene'
-     ], function(
-         Scene,
+     ], 'Scene/Scene', function(
          Color,
          createScene,
          destroyScene) {

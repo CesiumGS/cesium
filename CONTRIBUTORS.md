@@ -28,5 +28,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Vignesh Panneerselvam](https://github.com/nobelium)
 * [Ognjen Bubalo](https://github.com/ognjenb)
 * [Ayudh Das](https://github.com/ayudhDas)
+* [You Lu](https://github.com/YouLu)
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.

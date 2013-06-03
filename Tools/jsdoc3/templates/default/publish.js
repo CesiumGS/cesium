@@ -186,7 +186,7 @@
         
         function linkto(longname, linktext) {
             var url = helper.longnameToUrl[longname];
-            return url? '<a href="'+url+'">'+(linktext || longname)+'</a>' : (linktext || longname);
+            return url? '<a href="'+url+'" target="_self">'+(linktext || longname)+'</a>' : (linktext || longname);
         }
         
         function tutoriallink(tutorial) {

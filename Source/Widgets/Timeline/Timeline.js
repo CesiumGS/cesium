@@ -1,20 +1,18 @@
 /*global define*/
 define([
-        './TimelineTrack',
-        './TimelineHighlightRange',
         '../../Core/DeveloperError',
-        '../../Core/Clock',
         '../../Core/ClockRange',
         '../../Core/JulianDate',
+        './TimelineTrack',
+        './TimelineHighlightRange',
         '../../Core/destroyObject'
-    ], function (
-         TimelineTrack,
-         TimelineHighlightRange,
-         DeveloperError,
-         Clock,
-         ClockRange,
-         JulianDate,
-         destroyObject) {
+    ], function(
+        DeveloperError,
+        ClockRange,
+        JulianDate,
+        TimelineTrack,
+        TimelineHighlightRange,
+        destoryObject) {
     "use strict";
 
     var timelineWheelDelta = 1e12;
@@ -675,7 +673,7 @@ define([
      * Return if the widget has been destroyed.
      * @memberof Timeline
      */
-    Timeline.prototype.isDestroyed() {
+    Timeline.prototype.isDestroyed = function() {
         return false;
     }
 
