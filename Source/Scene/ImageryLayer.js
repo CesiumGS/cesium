@@ -625,8 +625,10 @@ define([
                     imagery.state = ImageryState.INVALID;
                     return;
                 }
-                if (typeof imagery.image.xhr !== 'undefined') {
-                    imagery.image.xhr = undefined;
+
+                // No one needs the blob itself anymore, so allow it to be garbage collected.
+                if (typeof imagery.image.blob !== 'undefined') {
+                    imagery.image.blob = undefined;
                 }
             }
         }
