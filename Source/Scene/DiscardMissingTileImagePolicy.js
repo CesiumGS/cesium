@@ -26,9 +26,6 @@ define([
      * @param {Boolean} [description.disableCheckIfAllPixelsAreTransparent=false] If true, the discard check will be disabled
      *                  if all of the pixelsToCheck in the missingImageUrl have an alpha value of 0.  If false, the
      *                  discard check will proceed no matter the values of the pixelsToCheck.
-     * @param {Boolean} [description.checkSizeIfPossible=true] Whether or not the size of the image should be checked
-     *                  against the missing tile's size before checking individual pixels, if possible.  This is generally
-     *                  only possible when tiles are downloaded as ArrayBuffers instead of as images.
      *
      * @exception {DeveloperError} <code>description.missingImageUrl</code> is required.
      * @exception {DeveloperError} <code>pixelsToCheck</code> is required.
@@ -47,7 +44,6 @@ define([
         this._pixelsToCheck = description.pixelsToCheck;
         this._missingImagePixels = undefined;
         this._missingImageByteLength = undefined;
-        this._checkSizeIfPossible = defaultValue(description.checkSizeIfPossible, true);
         this._isReady = false;
 
         var that = this;
@@ -123,10 +119,8 @@ define([
             return false;
         }
 
-        if (this._checkSizeIfPossible && typeof image.blob !== 'undefined') {
-            if (image.blob.size !== this._missingImageByteLength) {
-                return false;
-            }
+        if (typeof image.blob !== 'undefined' && image.blob.size !== this._missingImageByteLength) {
+            return false;
         }
 
         var pixels = getImagePixels(image);

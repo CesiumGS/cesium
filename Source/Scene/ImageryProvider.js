@@ -1,18 +1,14 @@
 /*global define*/
 define([
-        '../Core/loadArrayBuffer',
         '../Core/loadImage',
         '../Core/loadImageViaBlob',
         '../Core/DeveloperError',
-        '../Core/throttleRequestByServer',
-        '../ThirdParty/when'
+        '../Core/throttleRequestByServer'
     ], function(
-        loadArrayBuffer,
         loadImage,
         loadImageViaBlob,
         DeveloperError,
-        throttleRequestByServer,
-        when) {
+        throttleRequestByServer) {
     "use strict";
 
     /**
