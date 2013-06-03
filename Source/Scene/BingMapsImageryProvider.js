@@ -2,9 +2,6 @@
 define([
         '../Core/defaultValue',
         '../Core/jsonp',
-        '../Core/loadArrayBuffer',
-        '../Core/loadImage',
-        '../Core/throttleRequestByServer',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -17,9 +14,6 @@ define([
     ], function(
         defaultValue,
         jsonp,
-        loadArrayBuffer,
-        loadImage,
-        throttleRequestByServer,
         Cartesian2,
         DeveloperError,
         Event,
