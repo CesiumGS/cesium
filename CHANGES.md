@@ -4,6 +4,15 @@ Change Log
 Beta Releases
 -------------
 
+### b18 - 2013-07-01
+
+* Breaking changes:
+   * Changed all widgets to use ECMAScript 5 properties.  All public observable properties now must be accessed and assigned as if they were normal properties, instead of being called as functions.  For example:
+      * `clockViewModel.shouldAnimate()` -> `clockViewModel.shouldAnimate`
+      * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
+   * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
+   * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
+    
 ### b17 - 2013-06-03
 
 * Breaking changes:
