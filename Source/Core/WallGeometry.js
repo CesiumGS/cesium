@@ -99,7 +99,7 @@ define([
             throw new DeveloperError('positions and terrain points must have the same length.');
         }
 
-        wallPositions = PolylinePipeline.cleanUp(wallPositions, false);
+        wallPositions = PolylinePipeline.cleanUp(wallPositions);
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise
             var tangentPlane = EllipsoidTangentPlane.fromPoints(wallPositions, ellipsoid);
