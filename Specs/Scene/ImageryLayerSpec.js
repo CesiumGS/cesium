@@ -5,6 +5,7 @@ defineSuite([
          'Specs/destroyContext',
          'Core/Extent',
          'Core/jsonp',
+         'Core/loadBlob',
          'Core/loadImage',
          'Scene/BingMapsImageryProvider',
          'Scene/Imagery',
@@ -18,6 +19,7 @@ defineSuite([
          destroyContext,
          Extent,
          jsonp,
+         loadBlob,
          loadImage,
          BingMapsImageryProvider,
          Imagery,
@@ -41,6 +43,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadBlob.load = loadBlob.defaultLoad;
     });
 
     function CustomDiscardPolicy() {
@@ -122,6 +125,10 @@ defineSuite([
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        loadBlob.load = function(url, headers, deferred) {
+            return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
         };
 
         var provider = new BingMapsImageryProvider({

@@ -7,6 +7,8 @@ define([
         loadImage) {
     "use strict";
 
+    var dataUriRegex = /^data:/;
+
     /**
      * Asynchronously loads the given image URL by first downloading it as a blob using
      * XMLHttpRequest and then loading the image from the buffer via a blob URL.
@@ -15,9 +17,9 @@ define([
      * returns a promise that will resolve to
      * an {@link Image} once loaded, or reject if the image failed to load.  The
      * returned image will have a "blob" property with the Blob itself.  If the browser
-     * does not support an XMLHttpRequests with a responseType of 'blob', this function
-     * is equivalent to calling {@link loadImage}, and the extra blob property will not
-     * be present.
+     * does not support an XMLHttpRequests with a responseType of 'blob', or if the
+     * provided URI is a data URI, this function is equivalent to calling {@link loadImage},
+     * and the extra blob property will not be present.
      *
      * @exports loadImageViaBlob
      *
@@ -43,6 +45,11 @@ define([
      * });
      */
     var loadImageViaBlob = function(url) {
+
+        if (dataUriRegex.test(url)) {
+            return loadImage(url);
+        }
+
         return loadBlob(url).then(function(blob){
             var blobUrl = window.URL.createObjectURL(blob);
 

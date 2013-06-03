@@ -2,11 +2,13 @@
 defineSuite([
          'Scene/DiscardMissingTileImagePolicy',
          'Core/Cartesian2',
+         'Core/loadBlob',
          'Core/loadImage',
          'ThirdParty/when'
      ], function(
          DiscardMissingTileImagePolicy,
          Cartesian2,
+         loadBlob,
          loadImage,
          when) {
     "use strict";
@@ -14,6 +16,7 @@ defineSuite([
 
     afterEach(function() {
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadBlob.load = loadBlob.defaultLoadBlob;
     });
 
     describe('construction', function() {
@@ -38,11 +41,19 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://made.up.com/missingImage.png';
 
-            var createImageCalled = false;
+            var imageDownloaded = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(missingImageUrl);
-                createImageCalled = true;
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(missingImageUrl);
+                    imageDownloaded = true;
+                }
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadBlob.load = function(url, headers, deferred) {
+                expect(url).toEqual(missingImageUrl);
+                imageDownloaded = true;
+                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -55,7 +66,7 @@ defineSuite([
             }, 'policy to become ready');
 
             runs(function() {
-                expect(createImageCalled).toEqual(true);
+                expect(imageDownloaded).toEqual(true);
             });
         });
     });
@@ -75,8 +86,15 @@ defineSuite([
             });
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(missingImageUrl);
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(missingImageUrl);
+                }
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadBlob.load = function(url, headers, deferred) {
+                expect(url).toEqual(missingImageUrl);
+                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -111,8 +129,15 @@ defineSuite([
             });
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(missingImageUrl);
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(missingImageUrl);
+                }
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
+            };
+
+            loadBlob.load = function(url, headers, deferred) {
+                expect(url).toEqual(missingImageUrl);
+                return loadBlob.defaultLoad('Data/Images/Red16x16.png', headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({
@@ -168,6 +193,10 @@ defineSuite([
         it('throws if called before the policy is ready', function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 return loadImage.defaultCreateImage('Data/Images/Transparent.png', crossOrigin, deferred);
+            };
+
+            loadBlob.load = function(url, headers, deferred) {
+                return loadBlob.defaultLoad('Data/Images/Transparent.png', headers, deferred);
             };
 
             var policy = new DiscardMissingTileImagePolicy({

@@ -1,15 +1,13 @@
 /*global define,Blob*/
 define([
         '../Core/defaultValue',
-        '../Core/loadArrayBuffer',
-        '../Core/loadImage',
+        '../Core/loadImageViaBlob',
         '../Core/getImagePixels',
         '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        loadArrayBuffer,
-        loadImage,
+        loadImageViaBlob,
         getImagePixels,
         DeveloperError,
         when) {
@@ -54,41 +52,35 @@ define([
 
         var that = this;
 
-        function success(buffer) {
-            that._missingImageByteLength = buffer.byteLength;
-            var blob = new Blob([buffer], {type:"image/jpeg"});
-            var blobUrl = window.URL.createObjectURL(blob);
+        function success(image) {
+            if (typeof image.blob !== 'undefined') {
+                that._missingImageByteLength = image.blob.size;
+            }
 
-            when(loadImage(blobUrl), function(image) {
-                window.URL.revokeObjectURL(blobUrl);
+            var pixels = getImagePixels(image);
 
-                var pixels = getImagePixels(image);
+            if (description.disableCheckIfAllPixelsAreTransparent) {
+                var allAreTransparent = true;
+                var width = image.width;
 
-                if (description.disableCheckIfAllPixelsAreTransparent) {
-                    var allAreTransparent = true;
-                    var width = image.width;
+                var pixelsToCheck = description.pixelsToCheck;
+                for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
+                    var pos = pixelsToCheck[i];
+                    var index = pos.x * 4 + pos.y * width;
+                    var alpha = pixels[index + 3];
 
-                    var pixelsToCheck = description.pixelsToCheck;
-                    for (var i = 0, len = pixelsToCheck.length; allAreTransparent && i < len; ++i) {
-                        var pos = pixelsToCheck[i];
-                        var index = pos.x * 4 + pos.y * width;
-                        var alpha = pixels[index + 3];
-
-                        if (alpha > 0) {
-                            allAreTransparent = false;
-                        }
-                    }
-
-                    if (allAreTransparent) {
-                        pixels = undefined;
+                    if (alpha > 0) {
+                        allAreTransparent = false;
                     }
                 }
 
-                that._missingImagePixels = pixels;
-                that._isReady = true;
-            }, function(e) {
-                window.URL.revokeObjectURL(blobUrl);
-            });
+                if (allAreTransparent) {
+                    pixels = undefined;
+                }
+            }
+
+            that._missingImagePixels = pixels;
+            that._isReady = true;
         }
 
         function failure() {
@@ -98,7 +90,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadArrayBuffer(description.missingImageUrl), success, failure);
+        when(loadImageViaBlob(description.missingImageUrl), success, failure);
     };
 
     /**
