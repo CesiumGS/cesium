@@ -64,17 +64,17 @@ require([
 
     function applyAsphaltMaterial(primitive, scene) {
         Sandcastle.declare(applyAsphaltMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Asphalt');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Asphalt');
     }
 
     function applyBlobMaterial(primitive, scene) {
         Sandcastle.declare(applyBlobMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Blob');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Blob');
     }
 
     function applyBrickMaterial(primitive, scene) {
         Sandcastle.declare(applyBrickMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Brick');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Brick');
     }
 
     function applyBumpMapMaterial(primitive, scene) {
@@ -108,17 +108,17 @@ require([
 
     function applyCementMaterial(primitive, scene) {
         Sandcastle.declare(applyCementMaterial);    // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Cement');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Cement');
     }
 
     function applyCheckerboardMaterial(primitive, scene) {
         Sandcastle.declare(applyCheckerboardMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
     }
 
     function applyColorMaterial(primitive, scene) {
         Sandcastle.declare(applyColorMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Color');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Color');
     }
 
     function applyCompositeMaterial1(primitive, scene) {
@@ -188,7 +188,7 @@ require([
 
     function applyDotMaterial(primitive, scene) {
         Sandcastle.declare(applyDotMaterial);   // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Dot');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Dot');
     }
 
     function applyDiffuseMaterial(primitive, scene) {
@@ -237,7 +237,7 @@ require([
 
     function applyFacetMaterial(primitive, scene) {
         Sandcastle.declare(applyFacetMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Facet');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Facet');
     }
 
     function applyWaterMaterial(primitive, scene) {
@@ -309,12 +309,12 @@ require([
 
     function applyGrassMaterial(primitive, scene) {
         Sandcastle.declare(applyGrassMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Grass');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Grass');
     }
 
     function applyGridMaterial(primitive, scene) {
         Sandcastle.declare(applyGridMaterial); // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Grid');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Grid');
     }
 
     function applyImageMaterial(primitive, scene) {
@@ -440,22 +440,22 @@ require([
 
     function applyStripeMaterial(primitive, scene) {
         Sandcastle.declare(applyStripeMaterial);    // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Stripe');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Stripe');
     }
 
     function applyTieDyeMaterial(primitive, scene) {
         Sandcastle.declare(applyTieDyeMaterial);    // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'TieDye');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'TieDye');
     }
 
     function applyWoodMaterial(primitive, scene) {
         Sandcastle.declare(applyWoodMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Wood');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Wood');
     }
 
     function applyErosionMaterial(primitive, scene) {
         Sandcastle.declare(applyErosionMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'Erosion');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'Erosion');
         scene.getAnimations().addProperty(primitive.material.uniforms, 'time', 0.0, 1.0, {
             duration : 1500
         });
@@ -463,25 +463,25 @@ require([
 
     function applyRimLightingMaterial(primitive, scene) {
         Sandcastle.declare(applyRimLightingMaterial);  // For highlighting in Sandcastle.
-        primitive.material = new Cesium.Material.fromType(scene.getContext(), 'RimLighting');
+        primitive.material = Cesium.Material.fromType(scene.getContext(), 'RimLighting');
     }
 
     function applyPolylineArrowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineArrowMaterial);  // For highlighting in Sandcastle.
-        var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineArrow');
+        var material = Cesium.Material.fromType(scene.getContext(), 'PolylineArrow');
         primitive.setMaterial(material);
     }
 
     function applyPolylineGlowMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineGlowMaterial);  // For highlighting in Sandcastle.
-        var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineGlow');
+        var material = Cesium.Material.fromType(scene.getContext(), 'PolylineGlow');
         material.uniforms.innerWidth = primitive.getWidth() / 2.0;
         primitive.setMaterial(material);
     }
 
     function applyPolylineOutlineMaterial(primitive, scene) {
         Sandcastle.declare(applyPolylineOutlineMaterial);  // For highlighting in Sandcastle.
-        var material = new Cesium.Material.fromType(scene.getContext(), 'PolylineOutline');
+        var material = Cesium.Material.fromType(scene.getContext(), 'PolylineOutline');
         material.uniforms.outlineWidth = primitive.getWidth() / 2.0;
         primitive.setMaterial(material);
     }

@@ -1,13 +1,18 @@
 /*global define*/
-define(['../../Core/destroyObject',
+define([
+        '../../Core/defaultValue',
+        '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Color',
-        '../../Core/defaultValue'
+        '../../ThirdParty/knockout'
     ], function(
+        defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Color,
-        defaultValue) {
+        knockout) {
     "use strict";
 
     var svgNS = "http://www.w3.org/2000/svg";
@@ -30,9 +35,9 @@ define(['../../Core/destroyObject',
         return Color.fromCssColorString(window.getComputedStyle(element).getPropertyValue('color'));
     }
 
-    function subscribeAndEvaluate(observable, callback, target) {
-        callback.call(target, observable());
-        return observable.subscribe(callback, target);
+    function subscribeAndEvaluate(owner, observablePropertyName, callback, target) {
+        callback.call(target, owner[observablePropertyName]);
+        return knockout.getObservable(owner, observablePropertyName).subscribe(callback, target);
     }
 
     //Dynamically builds an SVG element from a JSON object.
@@ -142,8 +147,8 @@ define(['../../Core/destroyObject',
     }
 
     function setShuttleRingFromMouseOrTouch(widget, e) {
-        var viewModel = widget.viewModel;
-        var shuttleRingDragging = viewModel.shuttleRingDragging();
+        var viewModel = widget._viewModel;
+        var shuttleRingDragging = viewModel.shuttleRingDragging;
 
         if (shuttleRingDragging && (widgetForDrag !== widget)) {
             return;
@@ -183,11 +188,11 @@ define(['../../Core/destroyObject',
             if (angle > 180) {
                 angle -= 360;
             }
-            var shuttleRingAngle = viewModel.shuttleRingAngle();
+            var shuttleRingAngle = viewModel.shuttleRingAngle;
             if (shuttleRingDragging || (clientX < pointerRect.right && clientX > pointerRect.left && clientY > pointerRect.top && clientY < pointerRect.bottom)) {
                 widgetForDrag = widget;
-                viewModel.shuttleRingDragging(true);
-                viewModel.shuttleRingAngle(angle);
+                viewModel.shuttleRingDragging = true;
+                viewModel.shuttleRingAngle = angle;
             } else if (angle < shuttleRingAngle) {
                 viewModel.slower();
             } else if (angle > shuttleRingAngle) {
@@ -196,22 +201,22 @@ define(['../../Core/destroyObject',
             e.preventDefault();
         } else {
             widgetForDrag = undefined;
-            viewModel.shuttleRingDragging(false);
+            viewModel.shuttleRingDragging = false;
         }
     }
 
     //This is a private class for treating an SVG element like a button.
     //If we ever need a general purpose SVG button, we can make this generic.
     var SvgButton = function(svgElement, viewModel) {
-        this.viewModel = viewModel;
+        this._viewModel = viewModel;
         this.svgElement = svgElement;
         this._enabled = undefined;
         this._toggled = undefined;
 
         var that = this;
         this._clickFunction = function() {
-            var command = that.viewModel.command;
-            if (command.canExecute()) {
+            var command = that._viewModel.command;
+            if (command.canExecute) {
                 command();
             }
         };
@@ -224,9 +229,9 @@ define(['../../Core/destroyObject',
         //to include the binding information directly.
 
         this._subscriptions = [//
-        subscribeAndEvaluate(viewModel.toggled, this.setToggled, this),//
-        subscribeAndEvaluate(viewModel.tooltip, this.setToolTip, this),//
-        subscribeAndEvaluate(viewModel.command.canExecute, this.setEnabled, this)];
+        subscribeAndEvaluate(viewModel, 'toggled', this.setToggled, this),//
+        subscribeAndEvaluate(viewModel, 'tooltip', this.setTooltip, this),//
+        subscribeAndEvaluate(viewModel.command, 'canExecute', this.setEnabled, this)];
     };
 
     SvgButton.prototype.destroy = function() {
@@ -274,7 +279,7 @@ define(['../../Core/destroyObject',
         }
     };
 
-    SvgButton.prototype.setToolTip = function(tooltip) {
+    SvgButton.prototype.setTooltip = function(tooltip) {
         this.svgElement.getElementsByTagName('title')[0].textContent = tooltip;
     };
 
@@ -285,8 +290,8 @@ define(['../../Core/destroyObject',
         var baseWidth = 200;
         var baseHeight = 132;
 
-        var parentWidth = defaultValue(that.container.clientWidth, 0);
-        var parentHeight = defaultValue(that.container.clientHeight, 0);
+        var parentWidth = defaultValue(that._container.clientWidth, 0);
+        var parentHeight = defaultValue(that._container.clientHeight, 0);
 
         var width = parentWidth;
         var height = parentHeight;
@@ -342,7 +347,7 @@ define(['../../Core/destroyObject',
      * @constructor
      *
      * @param {Element|String} container The DOM element or ID that will contain the widget.
-     * @param {AnimationViewModel} viewModel The ViewModel used by this widget.
+     * @param {AnimationViewModel} viewModel The view model used by this widget.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -383,19 +388,8 @@ define(['../../Core/destroyObject',
             throw new DeveloperError('viewModel is required.');
         }
 
-        /**
-         * The viewModel
-         * @memberof Animation
-         * @type {AnimationViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the parent container.
-         * @memberof Animation
-         * @type {Element}
-         */
-        this.container = container;
+        this._viewModel = viewModel;
+        this._container = container;
 
         this._centerX = 0;
         this._centerY = 0;
@@ -406,31 +400,30 @@ define(['../../Core/destroyObject',
         // Firefox requires SVG references to be included directly, not imported from external CSS.
         // Also, CSS minifiers get confused by this being in an external CSS file.
         var cssStyle = document.createElement('style');
-        cssStyle.textContent = //
-        '.cesium-animation-rectButton .cesium-animation-buttonGlow { filter: url(#animation_blurred); }\n' + //
-        '.cesium-animation-rectButton .cesium-animation-buttonMain { fill: url(#animation_buttonNormal); }\n' + //
-        '.cesium-animation-buttonToggled .cesium-animation-buttonMain { fill: url(#animation_buttonToggled); }\n' + //
-        '.cesium-animation-rectButton:hover .cesium-animation-buttonMain { fill: url(#animation_buttonHovered); }\n' + //
-        '.cesium-animation-buttonDisabled .cesium-animation-buttonMain { fill: url(#animation_buttonDisabled); }\n' + //
-        '.cesium-animation-shuttleRingG .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\n' + //
-        '.cesium-animation-shuttleRingG:hover .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\n' + //
-        '.cesium-animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\n' + //
-        '.cesium-animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\n' + //
-        '.cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\n' + //
-        '.cesium-animation-knobInner { fill: url(#animation_knobInner); }\n';
+        cssStyle.textContent = '.cesium-animation-rectButton .cesium-animation-buttonGlow { filter: url(#animation_blurred); }\
+.cesium-animation-rectButton .cesium-animation-buttonMain { fill: url(#animation_buttonNormal); }\
+.cesium-animation-buttonToggled .cesium-animation-buttonMain { fill: url(#animation_buttonToggled); }\
+.cesium-animation-rectButton:hover .cesium-animation-buttonMain { fill: url(#animation_buttonHovered); }\
+.cesium-animation-buttonDisabled .cesium-animation-buttonMain { fill: url(#animation_buttonDisabled); }\
+.cesium-animation-shuttleRingG .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshGradient); }\
+.cesium-animation-shuttleRingG:hover .cesium-animation-shuttleRingSwoosh { fill: url(#animation_shuttleRingSwooshHovered); }\
+.cesium-animation-shuttleRingPointer { fill: url(#animation_shuttleRingPointerGradient); }\
+.cesium-animation-shuttleRingPausePointer { fill: url(#animation_shuttleRingPointerPaused); }\
+.cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\
+.cesium-animation-knobInner { fill: url(#animation_knobInner); }';
 
         document.head.insertBefore(cssStyle, document.head.childNodes[0]);
 
         var themeEle = document.createElement('div');
         themeEle.className = 'cesium-animation-theme';
-        themeEle.innerHTML = '<div class="cesium-animation-themeNormal"></div>' + //
-        '<div class="cesium-animation-themeHover"></div>' + //
-        '<div class="cesium-animation-themeSelect"></div>' + //
-        '<div class="cesium-animation-themeDisabled"></div>' + //
-        '<div class="cesium-animation-themeKnob"></div>' + //
-        '<div class="cesium-animation-themePointer"></div>' + //
-        '<div class="cesium-animation-themeSwoosh"></div>' + //
-        '<div class="cesium-animation-themeSwooshHover"></div>';
+        themeEle.innerHTML = '<div class="cesium-animation-themeNormal"></div>\
+<div class="cesium-animation-themeHover"></div>\
+<div class="cesium-animation-themeSelect"></div>\
+<div class="cesium-animation-themeDisabled"></div>\
+<div class="cesium-animation-themeKnob"></div>\
+<div class="cesium-animation-themePointer"></div>\
+<div class="cesium-animation-themeSwoosh"></div>\
+<div class="cesium-animation-themeSwooshHover"></div>';
 
         this._theme = themeEle;
         this._themeNormal = themeEle.childNodes[0];
@@ -590,7 +583,7 @@ define(['../../Core/destroyObject',
         var statusNode = this._knobStatus.childNodes[0];
         var isPaused;
         this._subscriptions = [//
-        subscribeAndEvaluate(viewModel.pauseViewModel.toggled, function(value) {
+        subscribeAndEvaluate(viewModel.pauseViewModel, 'toggled', function(value) {
             if (isPaused !== value) {
                 isPaused = value;
                 if (isPaused) {
@@ -601,23 +594,23 @@ define(['../../Core/destroyObject',
             }
         }),
 
-        subscribeAndEvaluate(viewModel.shuttleRingAngle, function(value) {
+        subscribeAndEvaluate(viewModel, 'shuttleRingAngle', function(value) {
             setShuttleRingPointer(that._shuttleRingPointer, that._knobOuter, value);
         }),
 
-        subscribeAndEvaluate(viewModel.dateLabel, function(value) {
+        subscribeAndEvaluate(viewModel, 'dateLabel', function(value) {
             if (dateNode.textContent !== value) {
                 dateNode.textContent = value;
             }
         }),
 
-        subscribeAndEvaluate(viewModel.timeLabel, function(value) {
+        subscribeAndEvaluate(viewModel, 'timeLabel', function(value) {
             if (timeNode.textContent !== value) {
                 timeNode.textContent = value;
             }
         }),
 
-        subscribeAndEvaluate(viewModel.multiplierLabel, function(value) {
+        subscribeAndEvaluate(viewModel, 'multiplierLabel', function(value) {
             if (statusNode.textContent !== value) {
                 statusNode.textContent = value;
             }
@@ -625,6 +618,40 @@ define(['../../Core/destroyObject',
 
         this.applyThemeChanges();
         resize(this);
+    };
+
+    defineProperties(Animation.prototype, {
+        /**
+         * Gets the parent container.
+         *
+         * @memberof Animation.prototype
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+
+        /**
+         * Gets the view model.
+         *
+         * @memberof Animation.prototype
+         * @type {AnimationViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
+
+    /**
+     * @memberof Animation
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    Animation.prototype.isDestroyed = function() {
+        return false;
     };
 
     /**
@@ -648,8 +675,8 @@ define(['../../Core/destroyObject',
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
         this._knobOuter.removeEventListener('touchstart', mouseCallback, true);
 
-        this.container.removeChild(this._svgNode);
-        this.container.removeChild(this._theme);
+        this._container.removeChild(this._svgNode);
+        this._container.removeChild(this._theme);
         this._realtimeSVG.destroy();
         this._playReverseSVG.destroy();
         this._playForwardSVG.destroy();
@@ -661,15 +688,6 @@ define(['../../Core/destroyObject',
         }
 
         return destroyObject(this);
-    };
-
-    /**
-     * @memberof Animation
-     *
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    Animation.prototype.isDestroyed = function() {
-        return false;
     };
 
     /**

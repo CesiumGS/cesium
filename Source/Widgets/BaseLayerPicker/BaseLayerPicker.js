@@ -1,13 +1,16 @@
 /*global define*/
-define(['./BaseLayerPickerViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-            BaseLayerPickerViewModel,
-            DeveloperError,
-            destroyObject,
-            knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        BaseLayerPickerViewModel,
+        knockout) {
     "use strict";
 
     /**
@@ -44,7 +47,7 @@ define(['./BaseLayerPickerViewModel',
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var providerViewModels = [];
-     * providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     * providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -56,7 +59,7 @@ define(['./BaseLayerPickerViewModel',
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Black Marble',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
@@ -70,7 +73,7 @@ define(['./BaseLayerPickerViewModel',
      *      }
      *  }));
      *
-     *  providerViewModels.push(ImageryProviderViewModel.fromConstants({
+     *  providerViewModels.push(new ImageryProviderViewModel({
      *      name : 'Disable Streaming Imagery',
      *      iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
      *      tooltip : 'Uses a single image for the entire world.',
@@ -86,7 +89,7 @@ define(['./BaseLayerPickerViewModel',
      * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
-     * baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+     * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
         if (typeof container === 'undefined') {
@@ -106,21 +109,8 @@ define(['./BaseLayerPickerViewModel',
         }
 
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
-
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof BaseLayerPicker
-         * @type {SeneModeViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof BaseLayerPicker
-         * @type {Element}
-         */
-        this.container = container;
-
+        this._viewModel = viewModel;
+        this._container = container;
         this._element = document.createElement('img');
 
         var element = this._element;
@@ -134,18 +124,18 @@ define(['./BaseLayerPickerViewModel',
         var choices = document.createElement('div');
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
-                css: { "cesium-baseLayerPicker-visible" : dropDownVisible(),\
-                       "cesium-baseLayerPicker-hidden" : !dropDownVisible() },\
+                css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
+                       "cesium-baseLayerPicker-hidden" : !dropDownVisible },\
                 foreach: imageryProviderViewModels');
         container.appendChild(choices);
 
         var provider = document.createElement('div');
         provider.className = 'cesium-baseLayerPicker-item';
         provider.setAttribute('data-bind', '\
-                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem()},\
+                css: {"cesium-baseLayerPicker-selectedItem" : $data === $parent.selectedItem},\
                 attr: {title: tooltip},\
-                visible: creationCommand.canExecute(),\
-                click: $parent.selectedItem');
+                visible: creationCommand.canExecute,\
+                click: function($data) { $parent.selectedItem = $data }');
         choices.appendChild(provider);
 
         var providerIcon = document.createElement('img');
@@ -163,7 +153,7 @@ define(['./BaseLayerPickerViewModel',
 
         this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
-                viewModel.dropDownVisible(false);
+                viewModel.dropDownVisible = false;
             }
         };
 
@@ -171,15 +161,49 @@ define(['./BaseLayerPickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
+    defineProperties(BaseLayerPicker.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof BaseLayerPicker.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+
+        /**
+         * Gets the view model.
+         * @memberof BaseLayerPicker.prototype
+         *
+         * @type {BaseLayerPickerViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
+
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * @memberof BaseLayerPicker
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    BaseLayerPicker.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
         document.removeEventListener('mousedown', this._closeDropDown);
         document.removeEventListener('touchstart', this._closeDropDown);
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
         return destroyObject(this);
