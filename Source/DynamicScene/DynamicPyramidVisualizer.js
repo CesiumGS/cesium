@@ -111,7 +111,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -178,8 +178,8 @@ define([
 
     var position;
     var orientation;
-    DynamicPyramidVisualizer.prototype._updateObject = function(time, dynamicObject) {
-        var context = this._scene.getContext();
+    function updateObject(dynamicPyramidVisualizer, time, dynamicObject) {
+        var context = dynamicPyramidVisualizer._scene.getContext();
         var dynamicPyramid = dynamicObject.pyramid;
         if (typeof dynamicPyramid === 'undefined') {
             return;
@@ -208,26 +208,26 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof pyramidVisualizerIndex !== 'undefined') {
-                pyramid = this._pyramidCollection[pyramidVisualizerIndex];
+                pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
                 pyramid.show = false;
                 dynamicObject._pyramidVisualizerIndex = undefined;
-                this._unusedIndexes.push(pyramidVisualizerIndex);
+                dynamicPyramidVisualizer._unusedIndexes.push(pyramidVisualizerIndex);
             }
             return;
         }
 
         if (typeof pyramidVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicPyramidVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 pyramidVisualizerIndex = unusedIndexes.pop();
-                pyramid = this._pyramidCollection[pyramidVisualizerIndex];
+                pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
             } else {
-                pyramidVisualizerIndex = this._pyramidCollection.length;
+                pyramidVisualizerIndex = dynamicPyramidVisualizer._pyramidCollection.length;
                 pyramid = new CustomSensorVolume();
 
-                this._pyramidCollection.push(pyramid);
-                this._primitives.add(pyramid);
+                dynamicPyramidVisualizer._pyramidCollection.push(pyramid);
+                dynamicPyramidVisualizer._primitives.add(pyramid);
             }
             dynamicObject._pyramidVisualizerIndex = pyramidVisualizerIndex;
             pyramid.dynamicObject = dynamicObject;
@@ -238,7 +238,7 @@ define([
             pyramid.intersectionColor = Color.YELLOW;
             pyramid.material = Material.fromType(context, Material.ColorType);
         } else {
-            pyramid = this._pyramidCollection[pyramidVisualizerIndex];
+            pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
         }
 
         pyramid.show = true;
@@ -281,7 +281,7 @@ define([
                 pyramid.radius = radius;
             }
         }
-    };
+    }
 
     DynamicPyramidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisPyramidCollection = this._pyramidCollection;

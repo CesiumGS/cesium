@@ -1,13 +1,16 @@
 /*global define*/
-define(['../Core/defaultValue',
+define([
+        '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
         '../ThirdParty/knockout'
-        ], function(
-                defaultValue,
-                DeveloperError,
-                Event,
-                knockout) {
+    ], function(
+        defaultValue,
+        defineProperties,
+        DeveloperError,
+        Event,
+        knockout) {
     "use strict";
 
     /**
@@ -21,7 +24,7 @@ define(['../Core/defaultValue',
      * @exports createCommand
      *
      * @param {Function} func The function to execute.
-     * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
+     * @param {Boolean|Observable} [canExecute=true] A boolean, or observable, indicating whether the function can currently be executed.
      *
      * @exception {DeveloperError} func is required.
      */
@@ -30,13 +33,13 @@ define(['../Core/defaultValue',
             throw new DeveloperError('func is required.');
         }
 
-        canExecute = defaultValue(canExecute, knockout.observable(true));
+        canExecute = defaultValue(canExecute, true);
 
         var beforeExecute = new Event();
         var afterExecute = new Event();
 
         function command() {
-            if (!canExecute()) {
+            if (!command.canExecute) {
                 throw new DeveloperError('Cannot execute command, canExecute is false.');
             }
 
@@ -55,8 +58,16 @@ define(['../Core/defaultValue',
         }
 
         command.canExecute = canExecute;
-        command.beforeExecute = beforeExecute;
-        command.afterExecute = afterExecute;
+        knockout.track(command, ['canExecute']);
+
+        defineProperties(command, {
+            beforeExecute : {
+                value : beforeExecute
+            },
+            afterExecute : {
+                value : afterExecute
+            }
+        });
 
         return command;
     };
