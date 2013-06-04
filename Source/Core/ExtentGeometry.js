@@ -60,7 +60,6 @@ define([
     var extrudedPosition = new Cartesian3();
     var extrudedNormal = new Cartesian3();
     var extrudedTangent = new Cartesian3();
-    var extrudedBinormal = new Cartesian3();
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
 
@@ -298,14 +297,17 @@ define([
         var binormalIndex = 0;
 
         var size = width * height;
+        var perimeterPositions = 2*width + 2*height - 4;
+        var threePP = 3 * perimeterPositions;
+        var twoPP = 2 * perimeterPositions;
         var sixSize = size * 6;
         var twoSize= size * 2;
         var threeSize = size * 3;
-        var positions = (vertexFormat.position) ? new Array(sixSize) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 4) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(sixSize) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(sixSize) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(sixSize) : undefined;
+        var positions = (vertexFormat.position) ? new Array(threePP*2) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Array(twoPP * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Array(threePP*2) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Array(threePP*2) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Array(threePP*2) : undefined;
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -336,21 +338,31 @@ define([
                 extrudedPosition.z = rSurfaceZ + nZ * minHeight;
 
                 if (vertexFormat.position) {
-                    positions[positionIndex + threeSize ] = extrudedPosition.x;
-                    positions[positionIndex + 1 + threeSize] = extrudedPosition.y;
-                    positions[positionIndex + 2 + threeSize] = extrudedPosition.z;
+                    if(closeBottom || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                        positions[positionIndex + threePP ] = extrudedPosition.x;
+                        positions[positionIndex + 1 + threePP] = extrudedPosition.y;
+                        positions[positionIndex + 2 + threePP] = extrudedPosition.z;
+                    }
 
-                    positions[positionIndex++] = position.x;
-                    positions[positionIndex++] = position.y;
-                    positions[positionIndex++] = position.z;
+                    if (closeTop || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                        positions[positionIndex++] = position.x;
+                        positions[positionIndex++] = position.y;
+                        positions[positionIndex++] = position.z;
+                    }
                 }
 
                 if (vertexFormat.st) {
-                    textureCoordinates[stIndex + twoSize] = (longitude - extent.west) * lonScalar;
-                    textureCoordinates[stIndex + 1 + twoSize] = (latitude - extent.south) * latScalar;
+                    var stLon = (longitude - extent.west) * lonScalar;
+                    var stlat = (latitude - extent.south) * latScalar;
+                    if (closeBottom || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                        textureCoordinates[stIndex + twoPP] = 1 - stlat;
+                        textureCoordinates[stIndex + 1 + twoPP] = 1 - stLon;
+                    }
 
-                    textureCoordinates[stIndex++] = (longitude - extent.west) * lonScalar;
-                    textureCoordinates[stIndex++] = (latitude - extent.south) * latScalar;
+                    if (closeTop || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                        textureCoordinates[stIndex++] = stlat;
+                        textureCoordinates[stIndex++] = stLon;
+                    }
                 }
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -358,46 +370,56 @@ define([
                     Cartesian3.negate(normal, extrudedNormal);
 
                     if (vertexFormat.normal) {
-                        normals[normalIndex + threeSize] = extrudedNormal.x;
-                        normals[normalIndex + 1 + threeSize] = extrudedNormal.y;
-                        normals[normalIndex + 2 + threeSize] = extrudedNormal.z;
+                        if (closeBottom || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            normals[normalIndex + threePP] = extrudedNormal.x;
+                            normals[normalIndex + 1 + threePP] = extrudedNormal.y;
+                            normals[normalIndex + 2 + threePP] = extrudedNormal.z;
+                        }
 
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
+                        if (closeTop || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            normals[normalIndex++] = normal.x;
+                            normals[normalIndex++] = normal.y;
+                            normals[normalIndex++] = normal.z;
+                        }
                     }
 
                     if (vertexFormat.tangent) {
                         Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                        Cartesian3.cross(Cartesian3.UNIT_Z, extrudedNormal, extrudedTangent);
-                        tangents[tangentIndex + threeSize] = extrudedTangent.x;
-                        tangents[tangentIndex + 1 + threeSize] = extrudedTangent.y;
-                        tangents[tangentIndex + 2 + threeSize] = extrudedTangent.z;
+                        Cartesian3.negate(tangent, extrudedTangent);
+                        if (closeBottom || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            tangents[tangentIndex + threePP] = extrudedTangent.x;
+                            tangents[tangentIndex + 1 + threePP] = extrudedTangent.y;
+                            tangents[tangentIndex + 2 + threePP] = extrudedTangent.z;
+                        }
 
-                        tangents[tangentIndex++] = tangent.x;
-                        tangents[tangentIndex++] = tangent.y;
-                        tangents[tangentIndex++] = tangent.z;
+                        if (closeTop || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            tangents[tangentIndex++] = tangent.x;
+                            tangents[tangentIndex++] = tangent.y;
+                            tangents[tangentIndex++] = tangent.z;
+                        }
                     }
 
                     if (vertexFormat.binormal) {
                         Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                         Cartesian3.cross(normal, tangent, binormal);
-                        Cartesian3.cross(Cartesian3.UNIT_Z, extrudedNormal, extrudedTangent);
-                        Cartesian3.cross(extrudedNormal, extrudedTangent, extrudedBinormal);
 
-                        binormals[binormalIndex + threeSize] = extrudedBinormal.x;
-                        binormals[binormalIndex + 1 + threeSize] = extrudedBinormal.y;
-                        binormals[binormalIndex + 2 + threeSize] = extrudedBinormal.z;
+                        if (closeBottom || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            binormals[binormalIndex + threePP] = binormal.x;
+                            binormals[binormalIndex + 1 + threePP] = binormal.y;
+                            binormals[binormalIndex + 2 + threePP] = binormal.z;
+                        }
 
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        if (closeTop || (row === 0) || (row === height-1) || (col === 0) || (col === width - 1)) {
+                            binormals[binormalIndex++] = binormal.x;
+                            binormals[binormalIndex++] = binormal.y;
+                            binormals[binormalIndex++] = binormal.z;
+                        }
                     }
                 }
             }
         }
         var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, bottomBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
         var indices = [];
         var indicesIndex = 0;
         var attributes = {
@@ -415,6 +437,7 @@ define([
         var lowerRight;
         var upperRight;
         var i;
+
         if (closeTop || closeBottom) {
             var index = 0;
             for (i = 0; i < height - 1; ++i) {
@@ -430,14 +453,8 @@ define([
                         indices[indicesIndex++] = lowerRight + size;
                         indices[indicesIndex++] = lowerLeft + size;
                         indices[indicesIndex++] = upperRight + size;
-                    } else {
-                        indices[indicesIndex++] = upperRight;
-                        indices[indicesIndex++] = lowerLeft;
-                        indices[indicesIndex++] = upperLeft;
-                        indices[indicesIndex++] = lowerRight;
-                        indices[indicesIndex++] = lowerLeft;
-                        indices[indicesIndex++] = upperRight;
                     }
+
                     if (closeTop) {
                         indices[indicesIndex++] = upperLeft;
                         indices[indicesIndex++] = lowerLeft;
@@ -445,14 +462,8 @@ define([
                         indices[indicesIndex++] = upperRight;
                         indices[indicesIndex++] = lowerLeft;
                         indices[indicesIndex++] = lowerRight;
-                    } else {
-                        indices[indicesIndex++] = upperLeft + size;
-                        indices[indicesIndex++] = lowerLeft + size;
-                        indices[indicesIndex++] = upperRight + size;
-                        indices[indicesIndex++] = upperRight + size;
-                        indices[indicesIndex++] = lowerLeft + size;
-                        indices[indicesIndex++] = lowerRight + size;
                     }
+
                     ++index;
                 }
                 ++index;
@@ -460,84 +471,38 @@ define([
         }
 
         i = 0;
-        while (i < size) {
+
+        var evenWidth = (width % 2 === 0);
+
+        while (i < perimeterPositions) {
+            upperLeft = i;
+            lowerLeft = upperLeft + perimeterPositions;
             if (i > 0 && i < width) { // north wall
-                upperLeft = i;
-                lowerLeft = upperLeft + size;
                 lowerRight = lowerLeft - 1;
                 upperRight = upperLeft - 1;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                }
-            } else if (i % width === 0 && i < size - width) { // west wall
-                upperLeft = i;
-                lowerLeft = upperLeft + size;
-                lowerRight = lowerLeft + width;
-                upperRight = upperLeft + width;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                }
-            } else if ((i + 1) % width === 0 && i > width - 1) { // east wall
-                upperLeft = i;
-                lowerLeft = upperLeft + size;
-                lowerRight = lowerLeft - width;
-                upperRight = upperLeft - width;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                }
-            } else if (i < size-1 && i >= size - width) { // south wall
-                upperLeft = i;
-                lowerLeft = upperLeft + size;
+            } else if (i >= perimeterPositions - width && i < perimeterPositions - 1) { // south wall
                 lowerRight = lowerLeft + 1;
                 upperRight = upperLeft + 1;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                    indices[indicesIndex++] = upperRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperLeft;
-                    indices[indicesIndex++] = lowerRight;
-                    indices[indicesIndex++] = lowerLeft;
-                    indices[indicesIndex++] = upperRight;
-                }
+            } else if (i === 0) { // west wall: NW corner
+                lowerRight = lowerLeft + width;
+                upperRight = upperLeft + width;
+            } else if (i === perimeterPositions - 1) { // east wall: SE corner
+                lowerRight = lowerLeft - width;
+                upperRight = upperLeft - width;
+            } else if (evenWidth && i % 2 === 0 || !evenWidth && i % 2 !== 0) { // west walll
+                lowerRight = lowerLeft + 2;
+                upperRight = upperLeft + 2;
+            } else { // east wall: if (evenWidth && i % 2 !== 0 || !evenWidth && i % 2 === 0)
+                lowerRight = lowerLeft - 2;
+                upperRight = upperLeft - 2;
             }
+
+            indices[indicesIndex++] = upperLeft;
+            indices[indicesIndex++] = lowerLeft;
+            indices[indicesIndex++] = upperRight;
+            indices[indicesIndex++] = upperRight;
+            indices[indicesIndex++] = lowerLeft;
+            indices[indicesIndex++] = lowerRight;
             i++;
         }
 
