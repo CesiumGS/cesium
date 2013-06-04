@@ -64,153 +64,6 @@ define([
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
 
-
-    /**
-     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
-     *
-     * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
-     * @param {Number} [options.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.minHeight] Lower height of extruded extent
-     * @param {Number} [options.extrudedOptions.maxHeight] Upper height of extruded extent
-     * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
-     * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
-     *
-     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
-     * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
-     * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
-     * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
-     * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} Rotated extent is invalid.
-     *
-     * @see Extent
-     *
-     * @example
-     * var extent = new ExtentGeometry({
-     *     ellipsoid : Ellipsoid.WGS84,
-     *     extent : new Extent(
-     *         CesiumMath.toRadians(-80.0),
-     *         CesiumMath.toRadians(39.0),
-     *         CesiumMath.toRadians(-74.0),
-     *         CesiumMath.toRadians(42.0)
-     *     ),
-     *     granularity : 0.01,
-     *     surfaceHeight : 10000.0
-     * });
-     */
-    var ExtentGeometry = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var attr;
-
-        if (typeof options.extrudedOptions !== 'undefined') {
-            attr = constructExtrudedExtent(options, vertexFormat);
-        } else {
-            attr = constructExtent(options, vertexFormat);
-        }
-
-        var attributes = {};
-
-        if (vertexFormat.position) {
-            attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.positions
-            });
-        }
-
-        if (vertexFormat.st) {
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : attr.textureCoordinates
-            });
-        }
-
-        if (vertexFormat.normal) {
-            attributes.normal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.normals
-            });
-        }
-
-        if (vertexFormat.tangent) {
-            attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.tangents
-            });
-        }
-
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.binormals
-            });
-        }
-
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         */
-        this.attributes = attributes;
-
-        /**
-         * An array of {@link GeometryIndices} defining primitives.
-         *
-         * @type Array
-         */
-        this.indexLists = [
-            new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : attr.indices
-            })
-        ];
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = attr.boundingSphere;
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
-    };
-
     function constructExtent(options, vertexFormat){
         var extent = options.extent;
         if (typeof extent === 'undefined') {
@@ -700,6 +553,155 @@ define([
 
         return attributes;
     }
+
+
+    /**
+     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
+     *
+     * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
+     * @param {Number} [options.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
+     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
+     * @param {Object} [options.extrudedOptions] Extruded options
+     * @param {Number} [options.extrudedOptions.minHeight] Lower height of extruded extent
+     * @param {Number} [options.extrudedOptions.maxHeight] Upper height of extruded extent
+     * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
+     * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
+     * @param {DOC_TBA} [options.pickData] DOC_TBA
+     *
+     * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
+     * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.extent.south</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
+     * @exception {DeveloperError} <code>options.extent.east</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
+     * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
+     * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
+     * @exception {DeveloperError} Rotated extent is invalid.
+     *
+     * @see Extent
+     *
+     * @example
+     * var extent = new ExtentGeometry({
+     *     ellipsoid : Ellipsoid.WGS84,
+     *     extent : new Extent(
+     *         CesiumMath.toRadians(-80.0),
+     *         CesiumMath.toRadians(39.0),
+     *         CesiumMath.toRadians(-74.0),
+     *         CesiumMath.toRadians(42.0)
+     *     ),
+     *     granularity : 0.01,
+     *     surfaceHeight : 10000.0
+     * });
+     */
+    var ExtentGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var attr;
+
+        if (typeof options.extrudedOptions !== 'undefined') {
+            attr = constructExtrudedExtent(options, vertexFormat);
+        } else {
+            attr = constructExtent(options, vertexFormat);
+        }
+
+        var attributes = {};
+
+        if (vertexFormat.position) {
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.positions
+            });
+        }
+
+        if (vertexFormat.st) {
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : attr.textureCoordinates
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.binormals
+            });
+        }
+
+        /**
+         * An object containing {@link GeometryAttribute} properties named after each of the
+         * <code>true</code> values of the {@link VertexFormat} option.
+         *
+         * @type Object
+         */
+        this.attributes = attributes;
+
+        /**
+         * An array of {@link GeometryIndices} defining primitives.
+         *
+         * @type Array
+         */
+        this.indexLists = [
+            new GeometryIndices({
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : attr.indices
+            })
+        ];
+
+        /**
+         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
+         *
+         * @type BoundingSphere
+         */
+        this.boundingSphere = attr.boundingSphere;
+
+        /**
+         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
+         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.
+         *
+         * @type Matrix4
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         */
+        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+
+        /**
+         * The color of the geometry when a per-geometry color appearance is used.
+         *
+         * @type Color
+         */
+        this.color = options.color;
+
+        /**
+         * DOC_TBA
+         */
+        this.pickData = options.pickData;
+    };
+
+
 
     return ExtentGeometry;
 });
