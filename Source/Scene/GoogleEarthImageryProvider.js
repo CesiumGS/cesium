@@ -5,10 +5,12 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Extent',
         './DiscardMissingTileImagePolicy',
         './ImageryProvider',
         './TileProviderError',
         './WebMercatorTilingScheme',
+        './GeographicTilingScheme',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -16,10 +18,12 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
+        Extent,
         DiscardMissingTileImagePolicy,
         ImageryProvider,
         TileProviderError,
         WebMercatorTilingScheme,
+        GeographicTilingScheme,
         when
         ) {
     "use strict";
@@ -31,6 +35,7 @@ define([
      * @constructor
      *
      * @param {String} description.url The url of the Google Earth server hosting the imagery.
+     * @param {String} [description.path] The path of the Google Earth server hosting the imagery 
      * @param {Number} description.channel The channel (id) to be used when requesting data from the server.
      * @param {TileDiscardPolicy} [description.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  If this value is not specified, a default
@@ -75,6 +80,7 @@ define([
         }
 
         this._url = description.url;
+        this._path = defaultValue(description.path, '/default_map');
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
         this._channel = description.channel;
@@ -90,10 +96,7 @@ define([
          */
         this.defaultGamma = 1.3;
 
-        this._tilingScheme = new WebMercatorTilingScheme({
-            numberOfLevelZeroTilesX : 2,
-            numberOfLevelZeroTilesY : 2
-        });
+        this._tilingScheme = undefined;
 
         this._version = undefined;
 
@@ -101,13 +104,13 @@ define([
         this._tileWidth = 256;
         this._tileHeight = 256;
         this._maximumLevel = 23;
-        this._imageUrlTemplate = this._url + '/query?request={request}&channel={channel}&version={version}&x={x}&y={y}&z={zoom}';
+        this._imageUrlTemplate = this._url + this._path + '/query?request={request}&channel={channel}&version={version}&x={x}&y={y}&z={zoom}';
 
         this._errorEvent = new Event();
 
         this._ready = false;
 
-        var metadataUrl = this._url + '/query?request=Json&vars=geeServerDefs&is2d=t';
+        var metadataUrl = this._url + this._path + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var that = this;
         var metadataError;
 
@@ -133,6 +136,19 @@ define([
 
             if(typeof layer === 'undefined') {
               throw new DeveloperError('Could not find layer with channel (id) of ' + that._channel + '.');
+            }
+
+            if(typeof data.projection !== 'undefined' && data.projection === 'flat') {
+              that._tilingScheme = new GeographicTilingScheme({
+                  numberOfLevelZeroTilesX : 2,
+                  numberOfLevelZeroTilesY : 2,
+                  extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
+              });
+            } else {
+              that._tilingScheme = new WebMercatorTilingScheme({
+                  numberOfLevelZeroTilesX : 2,
+                  numberOfLevelZeroTilesY : 2
+              });
             }
 
             that._version = layer.version;
