@@ -388,6 +388,20 @@ define([
                 }
             }
         }
+        var attributes = {
+                indices: [],
+                binormals: binormals,
+                tangents: tangents,
+                normals: normals,
+                textureCoordinates: textureCoordinates,
+                positions: positions
+        };
+
+        if (extrude) {
+            if (!options.extrudedOptions.closeTop && !options.extrudedOptions.closeBottom) {
+                return attributes;
+            }
+        }
 
         var indices = [];
         var index = 0;
@@ -399,33 +413,49 @@ define([
                 var lowerRight = lowerLeft + 1;
                 var upperRight = upperLeft + 1;
                 if (extrude) {
-                    indices[indicesIndex++] = upperRight + size;
-                    indices[indicesIndex++] = lowerLeft + size;
-                    indices[indicesIndex++] = upperLeft + size;
-                    indices[indicesIndex++] = lowerRight + size;
-                    indices[indicesIndex++] = lowerLeft + size;
-                    indices[indicesIndex++] = upperRight + size;
+                    if (options.extrudedOptions.closeBottom) {
+                        indices[indicesIndex++] = upperRight + size;
+                        indices[indicesIndex++] = lowerLeft + size;
+                        indices[indicesIndex++] = upperLeft + size;
+                        indices[indicesIndex++] = lowerRight + size;
+                        indices[indicesIndex++] = lowerLeft + size;
+                        indices[indicesIndex++] = upperRight + size;
+                    } else {
+                        indices[indicesIndex++] = upperRight;
+                        indices[indicesIndex++] = lowerLeft;
+                        indices[indicesIndex++] = upperLeft;
+                        indices[indicesIndex++] = lowerRight;
+                        indices[indicesIndex++] = lowerLeft;
+                        indices[indicesIndex++] = upperRight;
+                    }
+                    if (options.extrudedOptions.closeTop) {
+                        indices[indicesIndex++] = upperLeft;
+                        indices[indicesIndex++] = lowerLeft;
+                        indices[indicesIndex++] = upperRight;
+                        indices[indicesIndex++] = upperRight;
+                        indices[indicesIndex++] = lowerLeft;
+                        indices[indicesIndex++] = lowerRight;
+                    } else {
+                        indices[indicesIndex++] = upperLeft + size;
+                        indices[indicesIndex++] = lowerLeft + size;
+                        indices[indicesIndex++] = upperRight + size;
+                        indices[indicesIndex++] = upperRight + size;
+                        indices[indicesIndex++] = lowerLeft + size;
+                        indices[indicesIndex++] = lowerRight + size;
+                    }
+                } else {
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = lowerRight;
                 }
-
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-
                 ++index;
             }
             ++index;
         }
-        var attributes = {
-                indices: indices,
-                binormals: binormals,
-                tangents: tangents,
-                normals: normals,
-                textureCoordinates: textureCoordinates,
-                positions: positions
-        };
+        attributes.indices = indices;
 
         return attributes;
     }
@@ -439,6 +469,8 @@ define([
         }
 
         options.surfaceHeight = maxHeight;
+        options.extrudedOptions.closeTop = defaultValue(extrudedOptions.closeTop, true);
+        options.extrudedOptions.closeBottom  = defaultValue(extrudedOptions.closeBottom, true);
         var attr = constructExtent(options, vertexFormat, true);
         var extent = options.extent;
         var granularity = defaultValue(options.granularity, 0.1);
@@ -464,6 +496,14 @@ define([
             indices[indicesIndex++] = upperRight;
             indices[indicesIndex++] = lowerLeft;
             indices[indicesIndex++] = lowerRight;
+            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+            }
         }
 
         for (i = 0; i < size - width; i += width) { // west
@@ -477,6 +517,14 @@ define([
             indices[indicesIndex++] = upperRight;
             indices[indicesIndex++] = lowerLeft;
             indices[indicesIndex++] = lowerRight;
+            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+            }
         }
 
         for (i = size - 1; i > width - 1; i -= width) { // east
@@ -490,6 +538,14 @@ define([
             indices[indicesIndex++] = upperRight;
             indices[indicesIndex++] = lowerLeft;
             indices[indicesIndex++] = lowerRight;
+            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+            }
         }
 
         for (i = size - width; i < size-1; i++) { // south
@@ -503,6 +559,14 @@ define([
             indices[indicesIndex++] = upperRight;
             indices[indicesIndex++] = lowerLeft;
             indices[indicesIndex++] = lowerRight;
+            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+            }
         }
 
         return attr;
