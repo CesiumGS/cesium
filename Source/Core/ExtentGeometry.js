@@ -61,6 +61,8 @@ define([
     var extrudedNormal = new Cartesian3();
     var extrudedTangent = new Cartesian3();
     var extrudedBinormal = new Cartesian3();
+    var bottomBoundingSphere = new BoundingSphere();
+    var topBoundingSphere = new BoundingSphere();
 
 
     /**
@@ -182,7 +184,7 @@ define([
          *
          * @type BoundingSphere
          */
-      //  this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid, surfaceHeight);
+        this.boundingSphere = attr.boundingSphere;
 
         /**
          * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
@@ -345,14 +347,6 @@ define([
                 }
             }
         }
-        var attributes = {
-                indices: [],
-                binormals: binormals,
-                tangents: tangents,
-                normals: normals,
-                textureCoordinates: textureCoordinates,
-                positions: positions
-        };
 
         var indices = [];
         var index = 0;
@@ -373,7 +367,15 @@ define([
             }
             ++index;
         }
-        attributes.indices = indices;
+        var attributes = {
+                indices: indices,
+                binormals: binormals,
+                tangents: tangents,
+                normals: normals,
+                textureCoordinates: textureCoordinates,
+                positions: positions,
+                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight)
+        };
 
         return attributes;
     }
@@ -551,6 +553,8 @@ define([
                 }
             }
         }
+        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, bottomBoundingSphere);
         var indices = [];
         var indicesIndex = 0;
         var attributes = {
@@ -559,7 +563,8 @@ define([
                 tangents: tangents,
                 normals: normals,
                 textureCoordinates: textureCoordinates,
-                positions: positions
+                positions: positions,
+                boundingSphere: BoundingSphere.union(topBS, bottomBS)
         };
 
         var upperLeft;
@@ -611,88 +616,86 @@ define([
             }
         }
 
-        for (i = width - 1; i > 0; i--) { // north
-            upperLeft = i;
-            lowerLeft = upperLeft + size;
-            lowerRight = lowerLeft - 1;
-            upperRight = upperLeft - 1;
-            indices[indicesIndex++] = upperLeft;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = lowerRight;
-            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
+        i = 0;
+        while (i < size) {
+            if (i > 0 && i < width) { // north wall
+                upperLeft = i;
+                lowerLeft = upperLeft + size;
+                lowerRight = lowerLeft - 1;
+                upperRight = upperLeft - 1;
                 indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
                 indices[indicesIndex++] = lowerRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-            }
-        }
-
-        for (i = 0; i < size - width; i += width) { // west
-            upperLeft = i;
-            lowerLeft = upperLeft + size;
-            lowerRight = lowerLeft + width;
-            upperRight = upperLeft + width;
-            indices[indicesIndex++] = upperLeft;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = lowerRight;
-            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
+                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                }
+            } else if (i % width === 0 && i < size - width) { // west wall
+                upperLeft = i;
+                lowerLeft = upperLeft + size;
+                lowerRight = lowerLeft + width;
+                upperRight = upperLeft + width;
                 indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
                 indices[indicesIndex++] = lowerRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-            }
-        }
-
-        for (i = size - 1; i > width - 1; i -= width) { // east
-            upperLeft = i;
-            lowerLeft = upperLeft + size;
-            lowerRight = lowerLeft - width;
-            upperRight = upperLeft - width;
-            indices[indicesIndex++] = upperLeft;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = lowerRight;
-            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
+                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                }
+            } else if ((i + 1) % width === 0 && i > width - 1) { // east wall
+                upperLeft = i;
+                lowerLeft = upperLeft + size;
+                lowerRight = lowerLeft - width;
+                upperRight = upperLeft - width;
                 indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
                 indices[indicesIndex++] = lowerRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-            }
-        }
-
-        for (i = size - width; i < size-1; i++) { // south
-            upperLeft = i;
-            lowerLeft = upperLeft + size;
-            lowerRight = lowerLeft + 1;
-            upperRight = upperLeft + 1;
-            indices[indicesIndex++] = upperLeft;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = lowerRight;
-            if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
+                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                }
+            } else if (i < size-1 && i >= size - width) { // south wall
+                upperLeft = i;
+                lowerLeft = upperLeft + size;
+                lowerRight = lowerLeft + 1;
+                upperRight = upperLeft + 1;
                 indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerRight;
                 indices[indicesIndex++] = lowerLeft;
                 indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = lowerRight;
+                if (!extrudedOptions.closeTop || !extrudedOptions.closeBottom) {
+                    indices[indicesIndex++] = upperRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperLeft;
+                    indices[indicesIndex++] = lowerRight;
+                    indices[indicesIndex++] = lowerLeft;
+                    indices[indicesIndex++] = upperRight;
+                }
             }
+            i++;
         }
 
         return attributes;

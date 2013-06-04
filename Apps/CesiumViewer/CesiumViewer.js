@@ -101,9 +101,7 @@ define([
             rotation: CesiumMath.toRadians(30),
             extrudedOptions: {
                 minHeight: 300000,
-                maxHeight: 600000,
-                closeBottom: false,
-                closeTop: false
+                maxHeight: 600000
             },
             pickData : 'mesh',
             color : Color.BLUEVIOLET
