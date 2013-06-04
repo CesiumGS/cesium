@@ -231,12 +231,12 @@ define([
         var extrudedOptions = options.extrudedOptions;
         var surfaceHeight = defaultValue(options.surfaceHeight, 0);
         if (typeof extrudedOptions.height !== 'number'){
-            throw new DeveloperError("minHeight and maxHeight must be numbers");
+            return constructExtent(options, extent, vertexFormat);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
         var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(options, vertexFormat);
+            return constructExtent(options, extent, vertexFormat);
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);

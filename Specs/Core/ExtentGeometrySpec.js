@@ -177,17 +177,6 @@ defineSuite([
         expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
     });
 
-    it('throws without extruded min and max height', function() {
-        expect(function() {
-            return new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITIONS_ONLY,
-                extent: new Extent(-1, -1, 1, 1),
-                granularity : 1.0,
-                extrudedOptions: {}
-            });
-        }).toThrow();
-    });
-
     it('computes extruded top open', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
         var m = new ExtentGeometry({
@@ -238,6 +227,37 @@ defineSuite([
 
         expect(positions.length).toEqual(9 * 3 * 2);
         expect(m.indexLists[0].values.length).toEqual(8 * 3 * 4);
+    });
+
+    it('computes non-extruded extent if height is not specified', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(9 * 3);
+        expect(m.indexLists[0].values.length).toEqual(8 * 3);
+    });
+
+    it('computes non-extruded extent if height is small', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 0.1
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(9 * 3);
+        expect(m.indexLists[0].values.length).toEqual(8 * 3);
     });
 
 });
