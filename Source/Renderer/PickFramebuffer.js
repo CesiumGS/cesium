@@ -89,7 +89,7 @@ define([
         });
 
 // TODO: remove
-console.log(pixels[0] + ', ' + pixels[1] + ', ' + pixels[2] + ', ' + pixels[3]);
+// console.log(pixels[0] + ', ' + pixels[1] + ', ' + pixels[2] + ', ' + pixels[3]);
 
         var max = Math.max(width, height);
         var length = max * max;

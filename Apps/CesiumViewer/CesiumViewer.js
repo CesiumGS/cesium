@@ -91,6 +91,24 @@ define([
             color : Color.CORNFLOWERBLUE
         });
 
+        var mesh1 = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+            extent : new Extent(
+                    CesiumMath.toRadians(-90.0),
+                    CesiumMath.toRadians(0.0),
+                    CesiumMath.toRadians(-80.0),
+                    CesiumMath.toRadians(20.0)),
+            rotation: CesiumMath.toRadians(30),
+            extrudedOptions: {
+                minHeight: 300000,
+                maxHeight: 600000,
+                closeBottom: false,
+                closeTop: false
+            },
+            pickData : 'mesh',
+            color : Color.BLUEVIOLET
+        });
+
         var mesh2 = new EllipsoidGeometry({
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0),
@@ -123,7 +141,7 @@ define([
         });
 
         var primitive = new Primitive({
-            geometries : [mesh, mesh2, mesh3, mesh4],
+            geometries : [mesh, mesh1, mesh2, mesh3, mesh4],
             appearance : Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT
         });
         scene.getPrimitives().add(primitive);
@@ -220,7 +238,7 @@ define([
             geometries : polygonGeometry,
             appearance : Appearance.CLOSED_TRANSLUCENT
         }));
-
+/*
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
@@ -231,7 +249,7 @@ define([
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
-
+*/
         domClass.remove(win.body(), 'loading');
     });
 });
