@@ -8,6 +8,7 @@ define([
         './ComponentDatatype',
         './PrimitiveType',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryIndices',
         './VertexFormat'
@@ -20,6 +21,7 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryIndices,
         VertexFormat) {
@@ -332,6 +334,11 @@ define([
          */
         this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
     };
+
+    /**
+     * DOC_TBA
+     */
+    EllipsoidGeometry.prototype.clone = Geometry.prototype.clone;
 
     return EllipsoidGeometry;
 });

@@ -14,7 +14,7 @@ define([
      * @constructor
      *
      * @param {Geometry} [options.geometry] The geometry to instance.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
+     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
      * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {Object} [options.pickData] DOC_TBA
      */
@@ -47,6 +47,22 @@ define([
          * DOC_TBA
          */
         this.pickData = options.pickData;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryInstance.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+            result = new GeometryInstance();
+        }
+
+        result.geometry = this.geometry.clone();
+        result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
+        result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
+        result.pickData = this.pickData;  // Shadow copy
+
+        return result;
     };
 
     return GeometryInstance;

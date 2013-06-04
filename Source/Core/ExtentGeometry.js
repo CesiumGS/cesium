@@ -10,6 +10,7 @@ define([
         './Ellipsoid',
         './Extent',
         './GeographicProjection',
+        './Geometry',
         './GeometryAttribute',
         './GeometryIndices',
         './Math',
@@ -27,6 +28,7 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
+        Geometry,
         GeometryAttribute,
         GeometryIndices,
         CesiumMath,
@@ -320,6 +322,11 @@ define([
          */
         this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid, surfaceHeight);
     };
+
+    /**
+     * DOC_TBA
+     */
+    ExtentGeometry.prototype.clone = Geometry.prototype.clone;
 
     return ExtentGeometry;
 });

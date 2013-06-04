@@ -285,28 +285,32 @@ define([
     }
 
     function geometryPipeline(primitive, instances, context) {
-
-// TODO: copy instances first since we don't want to modify what they instance.
+        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+        var length = instances.length;
+        var insts = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            insts[i] = instances[i].clone();
+        }
 
         // Add color attribute if any geometries have per-geometry color
-        if (hasPerInstanceColor(instances)) {
-            addColorAttribute(primitive, instances, context);
+        if (hasPerInstanceColor(insts)) {
+            addColorAttribute(primitive, insts, context);
         }
 
         // Add pickColor attribute if any geometries are pickable
-        if (isPickable(instances)) {
-            addPickColorAttribute(primitive, instances, context);
+        if (isPickable(insts)) {
+            addPickColorAttribute(primitive, insts, context);
         }
 
         // Add default values for any undefined attributes
-        addDefaultAttributes(instances);
+        addDefaultAttributes(insts);
 
         // Unify to world coordinates before combining.  If there is only one geometry or all
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, instances);
+        transformToWorldCoordinates(primitive, insts);
 
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryFilters.combine(instances);
+        var geometry = GeometryFilters.combine(insts);
 
         // Split position for GPU RTE
         GeometryFilters.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');

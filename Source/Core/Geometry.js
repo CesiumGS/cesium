@@ -19,7 +19,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.attributes = options.attributes;
+        this.attributes = defaultValue(options.attributes, {});
 
         /**
          * DOC_TBA
@@ -30,6 +30,41 @@ define([
          * DOC_TBA
          */
         this.boundingSphere = options.boundingSphere;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Geometry.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+// TODO: is this always what we want, for say BoxGeometry?
+            result = new Geometry();
+        }
+
+        var attributes = this.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = attributes[property].clone();
+            }
+        }
+        result.attributes = newAttributes;
+
+        var indexLists = this.indexLists;
+        if (typeof indexLists !== 'undefined') {
+            var length = indexLists.length;
+            var newIndexLists = new Array(length);
+            for (var i = 0; i < length; ++i) {
+                newIndexLists[i] = indexLists[i].clone();
+            }
+            result.indexLists = newIndexLists;
+        } else {
+            result.indexLists = undefined;
+        }
+
+        this.boundingSphere.clone(result.boundingSphere);
+
+        return result;
     };
 
     /**

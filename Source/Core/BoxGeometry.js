@@ -6,6 +6,7 @@ define([
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryIndices',
         './VertexFormat'
@@ -16,6 +17,7 @@ define([
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryIndices,
         VertexFormat) {
@@ -381,6 +383,11 @@ define([
          */
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
     };
+
+    /**
+     * DOC_TBA
+     */
+    BoxGeometry.prototype.clone = Geometry.prototype.clone;
 
     return BoxGeometry;
 });

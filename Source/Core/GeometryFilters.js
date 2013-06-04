@@ -238,22 +238,20 @@ define([
 
             //Reorder Vertices
             var attributes = mesh.attributes;
-            if (typeof attributes !== 'undefined') {
-                for ( var property in attributes) {
-                    if (attributes.hasOwnProperty(property) && attributes[property].values) {
-                        var elementsIn = attributes[property].values;
-                        var intoElementsIn = 0;
-                        var numComponents = attributes[property].componentsPerAttribute;
-                        var elementsOut = [];
-                        while (intoElementsIn < numVertices) {
-                            var temp = indexCrossReferenceOldToNew[intoElementsIn];
-                            for (i = 0; i < numComponents; i++) {
-                                elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
-                            }
-                            ++intoElementsIn;
+            for ( var property in attributes) {
+                if (attributes.hasOwnProperty(property) && attributes[property].values) {
+                    var elementsIn = attributes[property].values;
+                    var intoElementsIn = 0;
+                    var numComponents = attributes[property].componentsPerAttribute;
+                    var elementsOut = [];
+                    while (intoElementsIn < numVertices) {
+                        var temp = indexCrossReferenceOldToNew[intoElementsIn];
+                        for (i = 0; i < numComponents; i++) {
+                            elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
                         }
-                        attributes[property].values = elementsOut;
+                        ++intoElementsIn;
                     }
+                    attributes[property].values = elementsOut;
                 }
             }
         }
@@ -459,7 +457,7 @@ define([
      * DOC_TBA
      */
     GeometryFilters.projectTo2D = function(mesh, projection) {
-        if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
+        if (typeof mesh !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
             projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
 
@@ -508,7 +506,6 @@ define([
      * @returns The modified <code>mesh</code> argument, with its encoded attribute.
      *
      * @exception {DeveloperError} mesh is required.
-     * @exception {DeveloperError} mesh must have an attributes property.
      * @exception {DeveloperError} mesh must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
      *
@@ -524,10 +521,6 @@ define([
 
         if (typeof mesh === 'undefined') {
             throw new DeveloperError('mesh is required.');
-        }
-
-        if (typeof mesh.attributes === 'undefined') {
-            throw new DeveloperError('mesh must have an attributes property.');
         }
 
         var attribute = mesh.attributes[attributeName];
@@ -876,8 +869,7 @@ define([
             throw new DeveloperError('mesh is required.');
         }
         var attributes = mesh.attributes;
-        if (typeof attributes === 'undefined' || typeof attributes.position === 'undefined' ||
-                typeof attributes.position.values === 'undefined') {
+        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
             throw new DeveloperError('mesh.attributes.position.values is required');
         }
         var vertices = mesh.attributes.position.values;
@@ -969,9 +961,9 @@ define([
 
             if (typeof mesh.attributes.normal === 'undefined') {
                 mesh.attributes.normal = new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.FLOAT,
-                        componentsPerAttribute: 3,
-                        values: new Array(numVertices * 3)
+                    componentDatatype: ComponentDatatype.FLOAT,
+                    componentsPerAttribute: 3,
+                    values: new Array(numVertices * 3)
                 });
             }
             var normalValues = mesh.attributes.normal.values;
@@ -1030,24 +1022,21 @@ define([
             throw new DeveloperError('geometry is required.');
         }
         var attributes = geometry.attributes;
-        if (typeof attributes === 'undefined' || typeof attributes.position === 'undefined' ||
-                typeof attributes.position.values === 'undefined') {
+        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.position.values is required');
         }
         var vertices = geometry.attributes.position.values;
         if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
             throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
         }
-        if (typeof attributes.normal === 'undefined' ||
-                typeof attributes.normal.values === 'undefined') {
+        if (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.normal.values is required');
         }
         var normals = geometry.attributes.normal.values;
         if (geometry.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
             throw new DeveloperError('geometry.attributes.normals.values.length must be a multiple of 3');
         }
-        if (typeof attributes.st === 'undefined' ||
-                typeof attributes.st.values === 'undefined') {
+        if (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.st.values is required');
         }
         var st = geometry.attributes.st.values;
@@ -1138,18 +1127,18 @@ define([
             }
             if (typeof geometry.attributes.tangent === 'undefined') {
                 geometry.attributes.tangent = new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.FLOAT,
-                        componentsPerAttribute: 3,
-                        values: tangentValues
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : tangentValues
                 });
             } else {
                 geometry.attributes.tangent.values = tangentValues;
             }
             if (typeof geometry.attributes.binormal === 'undefined') {
                 geometry.attributes.binormal = new GeometryAttribute({
-                        componentDatatype: ComponentDatatype.FLOAT,
-                        componentsPerAttribute: 3,
-                        values: binormalValues
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : binormalValues
                 });
             } else {
                 geometry.attributes.binormal.values = binormalValues;
