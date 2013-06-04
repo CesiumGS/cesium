@@ -123,8 +123,7 @@ defineSuite([
             extent : extent,
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2
+                height: 2
             }
         });
         var positions = m.attributes.position.values;
@@ -139,8 +138,7 @@ defineSuite([
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2
+                height: 2
             }
         });
         expect(m.attributes.position.values.length).toEqual(9 * 3 * 2);
@@ -160,8 +158,7 @@ defineSuite([
             rotation: angle,
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2
+                height: 2
             }
         });
         var positions = m.attributes.position.values;
@@ -191,46 +188,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws without extruded min height', function() {
-        expect(function() {
-            return new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITIONS_ONLY,
-                extent: new Extent(-1, -1, 1, 1),
-                granularity : 1.0,
-                extrudedOptions: {
-                    maxHeight: 2
-                }
-            });
-        }).toThrow();
-    });
-
-    it('throws without extruded max height', function() {
-        expect(function() {
-            return new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITIONS_ONLY,
-                extent: new Extent(-1, -1, 1, 1),
-                granularity : 1.0,
-                extrudedOptions: {
-                    minHeight: 0
-                }
-            });
-        }).toThrow();
-    });
-
-    it('throws if min height > max height', function() {
-        expect(function() {
-            return new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITIONS_ONLY,
-                extent: new Extent(-1, -1, 1, 1),
-                granularity : 1.0,
-                extrudedOptions: {
-                    minHeight: 2,
-                    maxHeight: 0
-                }
-            });
-        }).toThrow();
-    });
-
     it('computes extruded top open', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
         var m = new ExtentGeometry({
@@ -238,8 +195,7 @@ defineSuite([
             extent : extent,
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2,
+                height: 2,
                 closeTop: false
             }
         });
@@ -256,8 +212,7 @@ defineSuite([
             extent : extent,
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2,
+                height: 2,
                 closeBottom: false
             }
         });
@@ -274,8 +229,7 @@ defineSuite([
             extent : extent,
             granularity : 1.0,
             extrudedOptions: {
-                minHeight: 0,
-                maxHeight: 2,
+                height: 2,
                 closeTop: false,
                 closeBottom: false
             }

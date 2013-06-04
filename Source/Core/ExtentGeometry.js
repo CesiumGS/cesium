@@ -64,13 +64,7 @@ define([
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
 
-    function constructExtent(options, vertexFormat){
-        var extent = options.extent;
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-        extent.validate();
-
+    function constructExtent(options, extent, vertexFormat){
         var granularity = defaultValue(options.granularity, 0.1);
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
@@ -233,20 +227,16 @@ define([
         return attributes;
     }
 
-    function constructExtrudedExtent(options, vertexFormat) {
+    function constructExtrudedExtent(options, extent, vertexFormat) {
         var extrudedOptions = options.extrudedOptions;
-        var minHeight = extrudedOptions.minHeight;
-        var maxHeight = extrudedOptions.maxHeight;
-        var extent = options.extent;
-        if (typeof extent === 'undefined') {
-            throw new DeveloperError('extent is required.');
-        }
-        extent.validate();
-        if ((typeof minHeight !== 'number')||(typeof maxHeight !== 'number')){
+        var surfaceHeight = defaultValue(options.surfaceHeight, 0);
+        if (typeof extrudedOptions.height !== 'number'){
             throw new DeveloperError("minHeight and maxHeight must be numbers");
         }
-        if (minHeight > maxHeight) {
-            throw new DeveloperError('maxHeight cannot be less than minHeight');
+        var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
+        var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+            return constructExtent(options, vertexFormat);
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
@@ -566,8 +556,7 @@ define([
      * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
      * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.minHeight] Lower height of extruded extent
-     * @param {Number} [options.extrudedOptions.maxHeight] Upper height of extruded extent
+     * @param {Number} [options.extrudedOptions.height] Height of extruded surface
      * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
      * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
      * @param {DOC_TBA} [options.pickData] DOC_TBA
@@ -601,10 +590,16 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var attr;
 
+        var extent = options.extent;
+        if (typeof extent === 'undefined') {
+            throw new DeveloperError('extent is required.');
+        }
+        extent.validate();
+
         if (typeof options.extrudedOptions !== 'undefined') {
-            attr = constructExtrudedExtent(options, vertexFormat);
+            attr = constructExtrudedExtent(options, extent, vertexFormat);
         } else {
-            attr = constructExtent(options, vertexFormat);
+            attr = constructExtent(options, extent, vertexFormat);
         }
 
         var attributes = {};
