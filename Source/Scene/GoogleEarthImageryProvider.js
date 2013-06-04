@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/jsonp',
         '../Core/loadText',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
@@ -13,7 +12,6 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        jsonp,
         loadText,
         Cartesian2,
         DeveloperError,
@@ -125,7 +123,7 @@ define([
                 data = JSON.parse(text.replace(/([\[\{,])[\n\r ]*([A-Za-z0-9]+)[\n\r ]*:/g, '$1"$2":'));
             }
 
-            var layer = undefined;
+            var layer;
             for(var i = 0; i < data.layers.length; i++) {
               if(data.layers[i].id === that._channel) {
                 layer = data.layers[i];
