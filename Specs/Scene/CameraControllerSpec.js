@@ -4,14 +4,12 @@ defineSuite([
          'Scene/CameraController',
          'Core/Cartesian2',
          'Core/Cartesian3',
-         'Core/Cartesian4',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/GeographicProjection',
          'Core/Extent',
          'Core/Math',
          'Core/Matrix4',
-         'Core/Transforms',
          'Core/WebMercatorProjection',
          'Scene/AnimationCollection',
          'Scene/Camera',
@@ -22,14 +20,12 @@ defineSuite([
          CameraController,
          Cartesian2,
          Cartesian3,
-         Cartesian4,
          Cartographic,
          Ellipsoid,
          GeographicProjection,
          Extent,
          CesiumMath,
          Matrix4,
-         Transforms,
          WebMercatorProjection,
          AnimationCollection,
          Camera,
@@ -568,9 +564,6 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
-
         var extent = new Extent(
                 -CesiumMath.PI_OVER_TWO,
                 -CesiumMath.PI_OVER_FOUR,
@@ -583,8 +576,9 @@ defineSuite([
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10);
 
+        expect(camera.position.x).toEqual(0);
+        expect(camera.position.y).toEqual(0);
         expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
@@ -601,9 +595,6 @@ defineSuite([
         frustum.far = 21.0;
         camera.frustum = frustum;
 
-        var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-        camera.position = new Cartesian3(0.0, 0.0, maxRadii * 2.0);
-
         var extent = new Extent(
                 -CesiumMath.PI_OVER_FOUR,
                 -CesiumMath.PI_OVER_TWO,
@@ -616,8 +607,9 @@ defineSuite([
         controller._mode = SceneMode.SCENE2D;
         controller._projection = projection;
         controller.viewExtent(extent);
-        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, maxRadii * 2.0), CesiumMath.EPSILON10);
 
+        expect(camera.position.x).toEqual(0);
+        expect(camera.position.y).toEqual(0);
         expect(frustum.right - expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.left + expected <= CesiumMath.EPSILON14).toEqual(true);
         expect(frustum.top - expected <= CesiumMath.EPSILON14).toEqual(true);
@@ -638,6 +630,120 @@ defineSuite([
         expect(camera.direction).toEqualEpsilon(new Cartesian3(0.0, 0.0, -1.0), CesiumMath.EPSILON2);
         expect(camera.up).toEqualEpsilon(new Cartesian3(0.0, 1.0, 0.0), CesiumMath.EPSILON2);
         expect(camera.right).toEqualEpsilon(new Cartesian3(1.0, 0.0, 0.0), CesiumMath.EPSILON10);
+    });
+
+    it('getExtentCameraCoordinates throws without extent', function() {
+        expect(function () {
+            controller.getExtentCameraCoordinates();
+        }).toThrow();
+    });
+
+    it('getExtentCameraCoordinates extent in 3D', function() {
+        var extent = new Extent(
+                -Math.PI,
+                -CesiumMath.PI_OVER_TWO,
+                Math.PI,
+                CesiumMath.PI_OVER_TWO);
+        var position = camera.position;
+        var direction = camera.direction.clone();
+        var up = camera.up.clone();
+        var right = camera.right.clone();
+        controller._mode = SceneMode.SCENE3D;
+        controller.getExtentCameraCoordinates(extent, position);
+        expect(position).toEqualEpsilon(new Cartesian3(-11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('gets coordinates for extent in 3D across IDL', function() {
+        var extent = new Extent(
+                0.1,
+                -CesiumMath.PI_OVER_TWO,
+                -0.1,
+                CesiumMath.PI_OVER_TWO);
+        var position = new Cartesian3();
+        var direction = camera.direction.clone();
+        var up = camera.up.clone();
+        var right = camera.right.clone();
+        controller._mode = SceneMode.SCENE3D;
+        position = controller.getExtentCameraCoordinates(extent);
+        expect(position).toEqualEpsilon(new Cartesian3(11010217.979403382, 0.0, 0.0), CesiumMath.EPSILON6);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('views extent in 2D with larger latitude', function() {
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_FOUR,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_FOUR,
+                CesiumMath.PI_OVER_TWO);
+        var projection = new GeographicProjection();
+        var cam = new Camera(canvas);
+        var frustum = new OrthographicFrustum();
+        frustum.right = 1.0;
+        frustum.left = -1.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        cam.frustum = frustum;
+        var z = cam.position.z;
+
+        controller._camera = cam;
+        controller._mode = SceneMode.SCENE2D;
+        controller._projection = projection;
+        camera.position = controller.getExtentCameraCoordinates(extent);
+
+        expect(camera.position.x).toEqual(0);
+        expect(camera.position.y).toEqual(0);
+        expect(camera.position.z).not.toEqual(z);
+
+        expect(cam.frustum.left).toEqual(-1.0);
+        expect(cam.frustum.far).toEqual(2.0);
+
+    });
+
+    it('gets coordinates for extent in Columbus View', function() {
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO);
+        var projection = new GeographicProjection();
+        controller._mode = SceneMode.COLUMBUS_VIEW;
+        controller._projection = projection;
+        var direction = camera.direction.clone();
+        var up = camera.up.clone();
+        var right = camera.right.clone();
+        camera.position = controller.getExtentCameraCoordinates(extent);
+        expect(camera.position).toEqualEpsilon(new Cartesian3(0.0, 0.0, 17352991.253398113), CesiumMath.EPSILON10);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
+    });
+
+
+    it('get extent coordinate returns camera position if scene mode is morphing', function() {
+        var extent = new Extent(
+                -CesiumMath.PI_OVER_TWO,
+                -CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO,
+                CesiumMath.PI_OVER_TWO);
+        var projection = new GeographicProjection();
+        controller._mode = SceneMode.MORPHING;
+        controller._projection = projection;
+        var position = camera.position.clone();
+        var direction = camera.direction.clone();
+        var up = camera.up.clone();
+        var right = camera.right.clone();
+        controller.getExtentCameraCoordinates(extent, camera.position);
+        expect(camera.position).toEqual(position);
+        expect(camera.direction).toEqual(direction);
+        expect(camera.up).toEqual(up);
+        expect(camera.right).toEqual(right);
     });
 
     it('pick ellipsoid thows without a position', function() {

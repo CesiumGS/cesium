@@ -17,7 +17,8 @@ define([
         '../Timeline/Timeline',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
-        '../Fullscreen/FullscreenWidget',
+        '../FullscreenButton/FullscreenButton',
+        '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/ImageryProviderViewModel',
@@ -58,6 +59,7 @@ define([
         '../../Scene/SceneMode',
         '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
+        '../../Scene/Sun',
         '../../DynamicScene/processCzml',
         '../../DynamicScene/DynamicObjectView',
         '../../DynamicScene/DynamicObjectCollection',
@@ -81,7 +83,8 @@ define([
         Timeline,
         Animation,
         AnimationViewModel,
-        FullscreenWidget,
+        FullscreenButton,
+        HomeButton,
         SceneModePicker,
         BaseLayerPicker,
         ImageryProviderViewModel,
@@ -122,6 +125,7 @@ define([
         SceneMode,
         SkyBox,
         SkyAtmosphere,
+        Sun,
         processCzml,
         DynamicObjectView,
         DynamicObjectCollection,
@@ -135,7 +139,7 @@ define([
         var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
 
         var providerViewModels = [];
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Aerial',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingAerial.png'),
             tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
@@ -148,7 +152,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Aerial with Labels',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'),
             tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
@@ -161,7 +165,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Roads',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingRoads.png'),
             tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
@@ -174,7 +178,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI World Imagery',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'),
             tooltip : '\
@@ -193,7 +197,7 @@ contributed by the GIS User Community.\nhttp://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI World Street Map',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'),
             tooltip : '\
@@ -209,7 +213,7 @@ http://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI National Geographic',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'),
             tooltip : '\
@@ -224,7 +228,7 @@ mapping applications.\nhttp://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
@@ -237,7 +241,7 @@ of the world.\nhttp://www.openstreetmap.org',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Stamen Watercolor',
             iconUrl : require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'),
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
@@ -251,7 +255,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Stamen Toner',
             iconUrl : require.toUrl('../Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
@@ -264,7 +268,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'MapQuest Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -277,7 +281,7 @@ map of the world.\nhttp://www.openstreetmap.org',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'The Black Marble',
             iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
@@ -292,7 +296,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Disable Streaming Imagery',
             iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
             tooltip : 'Uses a single image for the entire world.',
@@ -335,6 +339,15 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @see SkyBox
          */
         showSkyBox : true,
+        /**
+         * Determines if the sun is drawn.  This is read-only after construction.
+         *
+         * @type {Boolean}
+         * @memberof CesiumViewerWidget.prototype
+         * @default true
+         * @see Sun
+         */
+        showSun : true,
         /**
          * An object containing settings supplied by the end user, typically from the query string
          * of the URL of the page with the widget.
@@ -404,7 +417,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * The fullscreen widget, configured to put only the viewer widget
          * into fullscreen mode by default.
          *
-         * @type {FullscreenWidget}
+         * @type {FullscreenButton}
          * @memberof CesiumViewerWidget.prototype
          */
         fullscreen: undefined,
@@ -902,6 +915,10 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 });
             }
 
+            if (this.showSun) {
+                scene.sun = new Sun();
+            }
+
             scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
 
             var camera = scene.getCamera();
@@ -945,13 +962,13 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
                 on(dropBox, 'dragexit', event.stop);
             }
 
-            this.fullscreen = new FullscreenWidget(this.fullscreenContainer, this.cesiumNode);
+            this.fullscreen = new FullscreenButton(this.fullscreenContainer, this.cesiumNode);
 
             var animationViewModel = this.animationViewModel;
             if (typeof animationViewModel === 'undefined') {
                 var clockViewModel = new ClockViewModel();
                 clockViewModel.owner = this;
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.shouldAnimate = true;
                 animationViewModel = new AnimationViewModel(clockViewModel);
             }
             this.animationViewModel = animationViewModel;
@@ -971,7 +988,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);
             this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
-            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+            this.baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
 
             if (typeof endUserOptions.source !== 'undefined') {
                 this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
@@ -991,11 +1008,11 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             timeline.addEventListener('settime', onTimelineScrub, false);
             timeline.zoomTo(clock.startTime, clock.stopTime);
 
-            var viewHomeButton = this.viewHomeButton;
-
-            viewHomeButton.addEventListener('click', function() {
-                that.viewHome();
-            }, false);
+            var homeButton = new HomeButton(this.homeButtonContainer, scene, transitioner, ellipsoid);
+            this.homeButton = homeButton;
+            homeButton.viewModel.command.beforeExecute.addEventListener(function() {
+                that._viewFromTo = undefined;
+            });
 
             if (this.resizeWidgetOnWindowResize) {
                 on(window, 'resize', function() {
@@ -1018,59 +1035,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
          * @memberof CesiumViewerWidget.prototype
          */
         viewHome : function() {
-            this._viewFromTo = undefined;
-
-            var scene = this.scene;
-            var mode = scene.mode;
-
-            var camera = scene.getCamera();
-            camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
-
-            var controller = scene.getScreenSpaceCameraController();
-            controller.enableTranslate = true;
-            controller.enableTilt = true;
-            controller.setEllipsoid(Ellipsoid.WGS84);
-            controller.columbusViewMode = CameraColumbusViewMode.FREE;
-
-            if (mode === SceneMode.MORPHING) {
-                this.sceneTransitioner.completeMorph();
-            }
-
-            if (mode === SceneMode.SCENE2D) {
-                camera.controller.viewExtent(Extent.MAX_VALUE);
-            } else if (mode === SceneMode.SCENE3D) {
-                var camera3D = this._camera3D;
-                camera3D.position.clone(camera.position);
-                camera3D.direction.clone(camera.direction);
-                camera3D.up.clone(camera.up);
-                camera3D.right.clone(camera.right);
-                camera3D.transform.clone(camera.transform);
-                camera3D.frustum.clone(camera.frustum);
-            } else if (mode === SceneMode.COLUMBUS_VIEW) {
-                var transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                            1.0, 0.0, 0.0, 0.0,
-                                            0.0, 1.0, 0.0, 0.0,
-                                            0.0, 0.0, 0.0, 1.0);
-
-                var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-                var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-                var direction = Cartesian3.ZERO.subtract(position).normalize();
-                var right = direction.cross(Cartesian3.UNIT_Z);
-                var up = right.cross(direction);
-                right = direction.cross(up);
-                direction = up.cross(right);
-
-                var frustum = new PerspectiveFrustum();
-                frustum.fovy = CesiumMath.toRadians(60.0);
-                frustum.aspectRatio = this.canvas.clientWidth / this.canvas.clientHeight;
-
-                camera.position = position;
-                camera.direction = direction;
-                camera.up = up;
-                camera.right = right;
-                camera.frustum = frustum;
-                camera.transform = transform;
-            }
+            this.homeButton.viewModel.command();
         },
 
         /**

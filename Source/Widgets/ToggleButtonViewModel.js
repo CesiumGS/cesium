@@ -1,40 +1,62 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defineProperties,
+        DeveloperError,
         knockout) {
     "use strict";
 
     /**
-     * A ViewModel which exposes the properties of a toggle button.
+     * A view model which exposes the properties of a toggle button.
      * @alias ToggleButtonViewModel
      * @constructor
      *
-     * @param {Object} [options] A options defining the button's properties.
+     * @param {Command} command The command which will be executed when the button is toggled.
+     * @param {Object} [options] Options defining the button's properties.
+     * @param {Boolean|Observable} [options.toggled=false] A boolean, or observable, indicating whether the button should be initially toggled.
+     * @param {String|Observable} [options.tooltip=''] A string, or observable, containing the button's tooltip.
      */
-    var ToggleButtonViewModel = function(options) {
-        options = defaultValue(options, {});
+    var ToggleButtonViewModel = function(command, options) {
+        if (typeof command === 'undefined') {
+            throw new DeveloperError('command is required.');
+        }
+
+        this._command = command;
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * A command object which encapsulates what happens when the button is toggled.
+         * Gets or sets whether the button is currently toggled.  This property is observable.
+         * @type Boolean
+         */
+        this.toggled = defaultValue(options.toggled, false);
+
+        /**
+         * Gets or sets the button's tooltip.  This property is observable.
+         * @type String
+         */
+        this.tooltip = defaultValue(options.tooltip, '');
+
+        knockout.track(this, ['toggled', 'tooltip']);
+    };
+
+    defineProperties(ToggleButtonViewModel.prototype, {
+        /**
+         * Gets the command which will be executed when the button is toggled.
+         * @memberof ToggleButtonViewModel.prototype
          * @type Command
          */
-        this.command = options.command;
-
-        /**
-         * An observable boolean indicating if the button is currently toggled.
-         * @type Observable
-         */
-        this.toggled = defaultValue(options.toggled, knockout.observable(false));
-
-        /**
-         * An observable string defining the  tool tip.
-         * @type Observable
-         */
-        this.tooltip = defaultValue(options.tooltip, knockout.observable(''));
-    };
+        command : {
+            get : function() {
+                return this._command;
+            }
+        }
+    });
 
     return ToggleButtonViewModel;
 });

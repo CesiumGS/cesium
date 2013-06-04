@@ -112,6 +112,27 @@ define([
     };
 
     /**
+     * Creates a Cartesian3 instance from x, y and z coordinates.
+     * @memberof Cartesian3
+     *
+     * @param {Number} x The x coordinate.
+     * @param {Number} y The y coordinate.
+     * @param {Number} z The z coordinate.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     */
+    Cartesian3.fromElements = function(x, y, z, result) {
+        if (typeof result === 'undefined') {
+            return new Cartesian3(x, y, z);
+        }
+
+        result.x = x;
+        result.y = y;
+        result.z = z;
+        return result;
+    };
+
+    /**
      * Duplicates a Cartesian3 instance.
      * @memberof Cartesian3
      *
@@ -609,7 +630,8 @@ define([
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
-     * @return {Number} The cross product.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -918,7 +940,8 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} right The right hand side Cartesian.
-     * @return {Number} The cross product.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @return {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} right is required.
      */

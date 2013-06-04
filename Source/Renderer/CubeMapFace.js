@@ -2,21 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/destroyObject',
-        './MipmapHint',
-        './PixelDatatype',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap'
+        './PixelDatatype'
     ], function(
         defaultValue,
         DeveloperError,
-        destroyObject,
-        MipmapHint,
-        PixelDatatype,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
+        PixelDatatype) {
     "use strict";
 
     /**

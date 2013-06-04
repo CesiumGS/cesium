@@ -26,6 +26,7 @@
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
+				<include name="server.js" />
 			</fileset>
 		</copy>
 
@@ -61,6 +62,7 @@
 				<include name="Documentation/**" />
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
+				<include name="server.js" />
 			</fileset>
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -76,6 +78,7 @@
 			<include name="ThirdParty/**" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
+			<include name="server.js" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
@@ -104,7 +107,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b16" />
+	<property name="version" value="b17" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -122,7 +125,7 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
-	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-r12/jshint.js" />
+	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
 
 	<!-- properties controlling documentation source-->
 	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />

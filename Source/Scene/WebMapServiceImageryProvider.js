@@ -8,7 +8,6 @@ define([
         '../Core/Event',
         '../Core/Extent',
         './ImageryProvider',
-        './WebMercatorTilingScheme',
         './GeographicTilingScheme'
     ], function(
         clone,
@@ -19,7 +18,6 @@ define([
         Event,
         Extent,
         ImageryProvider,
-        WebMercatorTilingScheme,
         GeographicTilingScheme) {
     "use strict";
 

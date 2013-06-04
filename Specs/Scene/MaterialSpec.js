@@ -13,9 +13,7 @@ defineSuite([
         'Core/Cartographic',
         'Core/Color',
         'Core/Ellipsoid',
-        'Core/Matrix4',
         'Core/Math',
-        'Core/JulianDate',
         'Renderer/ClearCommand'
     ], function(
         Material,
@@ -31,9 +29,7 @@ defineSuite([
         Cartographic,
         Color,
         Ellipsoid,
-        Matrix4,
         CesiumMath,
-        JulianDate,
         ClearCommand) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

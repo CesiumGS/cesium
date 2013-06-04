@@ -71,12 +71,11 @@ defineSuite([
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var sp = context.createShaderProgram(vs, fs);
 
-        var va = context.createVertexArray();
-        va.addAttribute({
+        var va = context.createVertexArray([{
             index : sp.getVertexAttributes().position.index,
             vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 4
-        });
+        }]);
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
@@ -693,6 +692,22 @@ defineSuite([
         us.update(createFrameState(createMockCamera()));
 
         var fs = 'void main() { gl_FragColor = vec4(czm_pixelSizeInMeters == 1.0); }';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sunPositionWC', function() {
+        var us = context.getUniformState();
+        us.update(createFrameState(createMockCamera()));
+
+        var fs = 'void main() { gl_FragColor = vec4(czm_sunPositionWC != vec3(0.0)); }';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sunPositionColumbusView', function() {
+        var us = context.getUniformState();
+        us.update(createFrameState(createMockCamera()));
+
+        var fs = 'void main() { gl_FragColor = vec4(czm_sunPositionColumbusView != vec3(0.0)); }';
         verifyDraw(fs);
     });
 

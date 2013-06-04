@@ -4,7 +4,6 @@ define([
         '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlCartesian3',
-        './CzmlColor',
         './DynamicProperty',
         './DynamicMaterialProperty'
     ], function(
@@ -12,7 +11,6 @@ define([
         defaultValue,
         CzmlBoolean,
         CzmlCartesian3,
-        CzmlColor,
         DynamicProperty,
         DynamicMaterialProperty) {
     "use strict";

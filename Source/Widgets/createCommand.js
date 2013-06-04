@@ -1,11 +1,15 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/Event',
         '../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defineProperties,
         DeveloperError,
+        Event,
         knockout) {
     "use strict";
 
@@ -14,27 +18,58 @@ define([
      *
      * A Command is a function with an extra <code>canExecute</code> observable property to determine
      * whether the command can be executed.  When executed, a Command function will check the
-     * value of <code>canExecute</code> and throw if false.
+     * value of <code>canExecute</code> and throw if false.  It also provides events for when
+     * a command has been or is about to be executed.
      *
      * @exports createCommand
      *
      * @param {Function} func The function to execute.
-     * @param {Observable} [canExecute=true] An observable indicating if the function can currently be executed.
+     * @param {Boolean|Observable} [canExecute=true] A boolean, or observable, indicating whether the function can currently be executed.
+     *
+     * @exception {DeveloperError} func is required.
      */
     var createCommand = function(func, canExecute) {
-        canExecute = defaultValue(canExecute, knockout.observable(true));
+        if (typeof func === 'undefined') {
+            throw new DeveloperError('func is required.');
+        }
+
+        canExecute = defaultValue(canExecute, true);
+
+        var beforeExecute = new Event();
+        var afterExecute = new Event();
 
         function command() {
-            if (!canExecute()) {
+            if (!command.canExecute) {
                 throw new DeveloperError('Cannot execute command, canExecute is false.');
             }
-            return func.apply(null, arguments);
+
+            var commandInfo = {
+                args : arguments,
+                cancel : false
+            };
+
+            var result;
+            beforeExecute.raiseEvent(commandInfo);
+            if (!commandInfo.cancel) {
+                result = func.apply(null, arguments);
+                afterExecute.raiseEvent(result);
+            }
+            return result;
         }
 
         command.canExecute = canExecute;
+        knockout.track(command, ['canExecute']);
+
+        defineProperties(command, {
+            beforeExecute : {
+                value : beforeExecute
+            },
+            afterExecute : {
+                value : afterExecute
+            }
+        });
 
         return command;
-
     };
 
     return createCommand;
