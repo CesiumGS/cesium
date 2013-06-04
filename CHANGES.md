@@ -12,7 +12,7 @@ Beta Releases
       * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
    * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
    * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
-   * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passes as its first parameter.
+   * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
     
 ### b17 - 2013-06-03
