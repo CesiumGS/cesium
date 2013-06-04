@@ -2,7 +2,6 @@
 define([
         './DeveloperError',
         './Cartesian3',
-        './Matrix4',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
@@ -13,7 +12,6 @@ define([
     ], function(
         DeveloperError,
         Cartesian3,
-        Matrix4,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
@@ -33,9 +31,6 @@ define([
      * @param {Cartesian3} [options.maximumCorner] The maximum x, y, and z coordinates of the box.
      * @param {Cartesian3} [options.dimensions=new Cartesian3(1.0, 1.0, 1.0)] The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this box.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
@@ -71,8 +66,6 @@ define([
 
         var attributes = {};
         var indexLists = [];
-
-// TODO: use typed arrays
 
         if (vertexFormat !== VertexFormat.POSITION_ONLY) {
 
@@ -387,28 +380,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     return BoxGeometry;

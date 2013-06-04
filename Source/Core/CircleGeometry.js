@@ -23,9 +23,6 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} radius is required.
@@ -79,30 +76,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = ellipseGeometry.boundingSphere;
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         */
-        this.modelMatrix = ellipseGeometry.modelMatrix;
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-         this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = ellipseGeometry.pickData;
     };
 
     return CircleGeometry;

@@ -118,28 +118,28 @@ defineSuite([
 
     it('creates a polygon from hierarchy', function() {
         var hierarchy = {
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(-124.0, 35.0, 0.0),
+                Cartographic.fromDegrees(-110.0, 35.0, 0.0),
+                Cartographic.fromDegrees(-110.0, 40.0, 0.0),
+                Cartographic.fromDegrees(-124.0, 40.0, 0.0)
+            ]),
+            holes : [{
                 positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                    Cartographic.fromDegrees(-124.0, 35.0, 0.0),
-                    Cartographic.fromDegrees(-110.0, 35.0, 0.0),
-                    Cartographic.fromDegrees(-110.0, 40.0, 0.0),
-                    Cartographic.fromDegrees(-124.0, 40.0, 0.0)
+                    Cartographic.fromDegrees(-122.0, 36.0, 0.0),
+                    Cartographic.fromDegrees(-122.0, 39.0, 0.0),
+                    Cartographic.fromDegrees(-112.0, 39.0, 0.0),
+                    Cartographic.fromDegrees(-112.0, 36.0, 0.0)
                 ]),
                 holes : [{
                     positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(-122.0, 36.0, 0.0),
-                        Cartographic.fromDegrees(-122.0, 39.0, 0.0),
-                        Cartographic.fromDegrees(-112.0, 39.0, 0.0),
-                        Cartographic.fromDegrees(-112.0, 36.0, 0.0)
-                    ]),
-                    holes : [{
-                        positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                            Cartographic.fromDegrees(-120.0, 36.5, 0.0),
-                            Cartographic.fromDegrees(-114.0, 36.5, 0.0),
-                            Cartographic.fromDegrees(-114.0, 38.5, 0.0),
-                            Cartographic.fromDegrees(-120.0, 38.5, 0.0)
-                        ])
-                    }]
+                        Cartographic.fromDegrees(-120.0, 36.5, 0.0),
+                        Cartographic.fromDegrees(-114.0, 36.5, 0.0),
+                        Cartographic.fromDegrees(-114.0, 38.5, 0.0),
+                        Cartographic.fromDegrees(-120.0, 38.5, 0.0)
+                    ])
                 }]
+            }]
         };
 
         var p = new PolygonGeometry({

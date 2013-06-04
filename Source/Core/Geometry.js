@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError',
-        './Matrix4'
+        './DeveloperError'
     ], function(
         defaultValue,
-        DeveloperError,
-        Matrix4) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -32,45 +30,6 @@ define([
          * DOC_TBA
          */
         this.boundingSphere = options.boundingSphere;
-
-        /**
-         * DOC_TBA
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
-    };
-
-    /**
-     * DOC_TBA
-     *
-     * @exception {DeveloperError} geometries is required.
-     */
-    Geometry.isPickable = function(geometries) {
-        if (typeof geometries === 'undefined') {
-            throw new DeveloperError('geometries is required.');
-        }
-
-        var pickable = false;
-        var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof geometries[i].pickData !== 'undefined') {
-                pickable = true;
-                break;
-            }
-        }
-
-        return pickable;
     };
 
     /**

@@ -14,7 +14,6 @@ define([
         './GeometryIndices',
         './Math',
         './Matrix2',
-        './Matrix4',
         './PrimitiveType',
         './VertexFormat'
     ], function(
@@ -32,7 +31,6 @@ define([
         GeometryIndices,
         CesiumMath,
         Matrix2,
-        Matrix4,
         PrimitiveType,
         VertexFormat) {
     "use strict";
@@ -67,9 +65,6 @@ define([
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -324,30 +319,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid, surfaceHeight);
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     return ExtentGeometry;

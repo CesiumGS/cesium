@@ -46,7 +46,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.geometries = options.geometries;
+        this.geometryInstances = options.geometryInstances;
 
         /**
          * DOC_TBA
@@ -78,24 +78,25 @@ define([
         this._commandLists = new CommandLists();
     };
 
-    function hasPerGeometryColor(geometries) {
-        var perGeometryColor = false;
-        var length = geometries.length;
+    function hasPerInstanceColor(instances) {
+        var perInstanceColor = false;
+        var length = instances.length;
         for (var i = 0; i < length; ++i) {
-            if (typeof geometries[i].color !== 'undefined') {
-                perGeometryColor = true;
+            if (typeof instances[i].color !== 'undefined') {
+                perInstanceColor = true;
                 break;
             }
         }
 
-        return perGeometryColor;
+        return perInstanceColor;
     }
 
-    function addColorAttribute(primitive, geometries, context) {
-        var length = geometries.length;
+    function addColorAttribute(primitive, instances, context) {
+        var length = instances.length;
 
         for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
+            var instance = instances[i];
+            var geometry = instance.geometry;
             var attributes = geometry.attributes;
             var positionAttr = attributes.position;
             var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
@@ -107,7 +108,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var color = geometry.color;
+            var color = instance.color;
 
             if (typeof color !== 'undefined') {
                 var red = Color.floatToByte(color.red);
@@ -126,11 +127,11 @@ define([
         }
     }
 
-    function isPickable(geometries) {
+    function isPickable(instances) {
         var pickable = false;
-        var length = geometries.length;
+        var length = instances.length;
         for (var i = 0; i < length; ++i) {
-            if (typeof geometries[i].pickData !== 'undefined') {
+            if (typeof instances[i].pickData !== 'undefined') {
                 pickable = true;
                 break;
             }
@@ -139,11 +140,12 @@ define([
         return pickable;
     }
 
-    function addPickColorAttribute(primitive, geometries, context) {
-        var length = geometries.length;
+    function addPickColorAttribute(primitive, instances, context) {
+        var length = instances.length;
 
         for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
+            var instance = instances[i];
+            var geometry = instance.geometry;
             var attributes = geometry.attributes;
             var positionAttr = attributes.position;
             var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
@@ -155,10 +157,10 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            if (typeof geometry.pickData !== 'undefined') {
+            if (typeof instance.pickData !== 'undefined') {
                 var pickId = context.createPickId({
                     primitive : primitive,
-                    pickData : geometry.pickData
+                    pickData : instance.pickData
                 });
                 primitive._pickIds.push(pickId);
 
@@ -179,10 +181,10 @@ define([
         }
     }
 
-    function addDefaultAttributes(geometries) {
-        var length = geometries.length;
+    function addDefaultAttributes(instances) {
+        var length = instances.length;
         for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
+            var geometry = instances[i].geometry;
             var attributes = geometry.attributes;
             var positionAttr = attributes.position;
             var positionLength = positionAttr.values.length / positionAttr.componentsPerAttribute;
@@ -256,16 +258,16 @@ define([
         }
     }
 
-    function transformToWorldCoordinates(primitive, geometries) {
+    function transformToWorldCoordinates(primitive, instances) {
         var toWorld = primitive._transformToWorldCoordinates;
-        var length = geometries.length;
+        var length = instances.length;
         var i;
 
         if (!toWorld && (length > 1)) {
-            var modelMatrix = Matrix4.clone(geometries[0].modelMatrix);
+            var modelMatrix = instances[0].modelMatrix;
 
             for (i = 1; i < length; ++i) {
-                if (!Matrix4.equals(modelMatrix, geometries[i])) {
+                if (!Matrix4.equals(modelMatrix, instances[i].modelMatrix)) {
                     toWorld = true;
                     break;
                 }
@@ -274,34 +276,37 @@ define([
 
         if (toWorld) {
             for (i = 0; i < length; ++i) {
-                GeometryFilters.transformToWorldCoordinates(geometries[i]);
+                GeometryFilters.transformToWorldCoordinates(instances[i]);
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
-            Matrix4.clone(geometries[0].modelMatrix, primitive.modelMatrix);
+            Matrix4.clone(instances[0].modelMatrix, primitive.modelMatrix);
         }
     }
 
-    function geometryPipeline(primitive, geometries, context) {
+    function geometryPipeline(primitive, instances, context) {
+
+// TODO: copy instances first since we don't want to modify what they instance.
+
         // Add color attribute if any geometries have per-geometry color
-        if (hasPerGeometryColor(geometries)) {
-            addColorAttribute(primitive, geometries, context);
+        if (hasPerInstanceColor(instances)) {
+            addColorAttribute(primitive, instances, context);
         }
 
         // Add pickColor attribute if any geometries are pickable
-        if (isPickable(geometries)) {
-            addPickColorAttribute(primitive, geometries, context);
+        if (isPickable(instances)) {
+            addPickColorAttribute(primitive, instances, context);
         }
 
         // Add default values for any undefined attributes
-        addDefaultAttributes(geometries);
+        addDefaultAttributes(instances);
 
         // Unify to world coordinates before combining.  If there is only one geometry or all
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, geometries);
+        transformToWorldCoordinates(primitive, instances);
 
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryFilters.combine(geometries);
+        var geometry = GeometryFilters.combine(instances);
 
         // Split position for GPU RTE
         GeometryFilters.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
@@ -321,7 +326,7 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
-            ((typeof this.geometries === 'undefined') && (this._va.length === 0)) ||
+            ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
             (typeof this.appearance === 'undefined')) {
 // TODO: support Columbus view and 2D
             return;
@@ -333,24 +338,24 @@ define([
         var i;
 
         if (this._va.length === 0) {
-            var geometries = (this.geometries instanceof Array) ? this.geometries : [this.geometries];
-            var finalGeometries = geometryPipeline(this, geometries, context);
+            var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
+            var geometries = geometryPipeline(this, instances, context);
 
-            length = finalGeometries.length;
+            length = geometries.length;
             if (this._vertexCacheOptimize) {
                 // Optimize for vertex shader caches
                 for (i = 0; i < length; ++i) {
-                    GeometryFilters.reorderForPostVertexCache(finalGeometries[i]);
-                    GeometryFilters.reorderForPreVertexCache(finalGeometries[i]);
+                    GeometryFilters.reorderForPostVertexCache(geometries[i]);
+                    GeometryFilters.reorderForPreVertexCache(geometries[i]);
                 }
             }
 
-            var attributeIndices = GeometryFilters.createAttributeIndices(finalGeometries[0]);
+            var attributeIndices = GeometryFilters.createAttributeIndices(geometries[0]);
 
             var va = [];
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromMesh({
-                    mesh : finalGeometries[i],
+                    mesh : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED
@@ -367,7 +372,7 @@ define([
             var rs = context.createRenderState(appearance.renderState);
             var pickRS;
 
-            if (isPickable(geometries)) {
+            if (isPickable(instances)) {
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
                 pickRS = rs;
             } else {
@@ -387,7 +392,7 @@ define([
             var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
 
             for (i = 0; i < length; ++i) {
-                var geometry = finalGeometries[i];
+                var geometry = geometries[i];
 
                 var command = new DrawCommand();
 // TODO: this assumes indices in the geometries - and only one set
@@ -410,7 +415,7 @@ define([
             }
 
             if (this._releaseGeometries) {
-                this.geometries = undefined;
+                this.geometryInstances = undefined;
             }
         }
 

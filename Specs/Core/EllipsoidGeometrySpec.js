@@ -73,6 +73,4 @@ defineSuite([
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent), CesiumMath.EPSILON10);
         }
     });
-
-
 });

@@ -12,6 +12,7 @@ defineSuite([
          'Core/Geometry',
          'Core/GeometryAttribute',
          'Core/GeometryIndices',
+         'Core/GeometryInstance',
          'Core/VertexFormat',
          'Core/Math'
      ], function(
@@ -27,6 +28,7 @@ defineSuite([
          Geometry,
          GeometryAttribute,
          GeometryIndices,
+         GeometryInstance,
          VertexFormat,
          CesiumMath) {
     "use strict";
@@ -506,73 +508,79 @@ defineSuite([
     });
 
     it('GeometryFilters.combine combines one mesh', function() {
-        var mesh = new Geometry({
-            attributes : new GeometryAttribute({
-                position : {
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [0.0, 0.0, 0.0]
-                }
-            })
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                })
+            }),
         });
 
-        var combinedMesh = GeometryFilters.combine([mesh]);
-        expect(combinedMesh).toBe(mesh);
+        var combined = GeometryFilters.combine([instance]);
+        expect(combined).toBe(instance.geometry);
     });
 
     it('GeometryFilters.combine combines several meshes', function() {
-        var mesh = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        0.0, 0.0, 0.0,
-                        1.0, 1.0, 1.0,
-                        2.0, 2.0, 2.0
-                    ]
-                }),
-                normal : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        0.0, 0.0, 0.0,
-                        1.0, 1.0, 1.0,
-                        2.0, 2.0, 2.0
-                    ]
-                })
-            },
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 1, 2]
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.LINES,
-                values : [1, 2]
-            })]
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 1.0, 1.0,
+                            2.0, 2.0, 2.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 1.0, 1.0,
+                            2.0, 2.0, 2.0
+                        ]
+                    })
+                },
+                indexLists : [new GeometryIndices({
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    values : [0, 1, 2]
+                }), new GeometryIndices({
+                    primitiveType : PrimitiveType.LINES,
+                    values : [1, 2]
+                })]
+            })
         });
-        var anotherMesh = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        3.0, 3.0, 3.0,
-                        4.0, 4.0, 4.0,
-                        5.0, 5.0, 5.0
-                    ]
-                })
-            },
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 1, 2]
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.POINTS,
-                values : [0, 1, 2]
-            })]
+        var anotherInstance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            3.0, 3.0, 3.0,
+                            4.0, 4.0, 4.0,
+                            5.0, 5.0, 5.0
+                        ]
+                    })
+                },
+                indexLists : [new GeometryIndices({
+                    primitiveType : PrimitiveType.TRIANGLES,
+                    values : [0, 1, 2]
+                }), new GeometryIndices({
+                    primitiveType : PrimitiveType.POINTS,
+                    values : [0, 1, 2]
+                })]
+            })
         });
 
-        var combinedMesh = GeometryFilters.combine([mesh, anotherMesh]);
-        expect(combinedMesh).toEqual(new Geometry({
+        var combined = GeometryFilters.combine([instance, anotherInstance]);
+        expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -600,13 +608,13 @@ defineSuite([
         }));
     });
 
-    it('GeometryFilters.combine throws with meshes', function() {
+    it('GeometryFilters.combine throws with instances', function() {
         expect(function() {
             GeometryFilters.combine();
         }).toThrow();
     });
 
-    it('GeometryFilters.combine throws when meshes.length is zero', function() {
+    it('GeometryFilters.combine throws when instances.length is zero', function() {
         expect(function() {
             GeometryFilters.combine([]);
         }).toThrow();

@@ -14,6 +14,7 @@ define([
         '../Core/Cartesian4',
         '../Core/ComponentDatatype',
         '../Core/GeometryFilters',
+        '../Core/GeometryInstance',
         '../Core/PrimitiveType',
         '../Core/EllipsoidTangentPlane',
         '../Core/PolygonPipeline',
@@ -48,6 +49,7 @@ define([
         Cartesian4,
         ComponentDatatype,
         GeometryFilters,
+        GeometryInstance,
         PrimitiveType,
         EllipsoidTangentPlane,
         PolygonPipeline,
@@ -518,7 +520,10 @@ define([
         var boundary = outerPositions || cleanedPositions;
         var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);
         mesh = appendTextureCoordinates(tangentPlane, boundingRectangle, mesh, angle);
-        return mesh;
+
+        return new GeometryInstance({
+            geometry : mesh
+        });
     }
 
     function createMeshes(polygon) {

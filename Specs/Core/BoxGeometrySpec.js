@@ -49,7 +49,5 @@ defineSuite([
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(m.boundingSphere.radius).toEqual(maximumCorner.magnitude() * 0.5);
-
-        expect(m.modelMatrix).toEqual(Matrix4.IDENTITY);
     });
 });

@@ -4,7 +4,6 @@ define([
         './DeveloperError',
         './Cartesian3',
         './Math',
-        './Matrix4',
         './Ellipsoid',
         './ComponentDatatype',
         './PrimitiveType',
@@ -17,7 +16,6 @@ define([
         DeveloperError,
         Cartesian3,
         CesiumMath,
-        Matrix4,
         Ellipsoid,
         ComponentDatatype,
         PrimitiveType,
@@ -123,9 +121,6 @@ define([
      * @param {Ellipsoid} [options.ellipsoi=Ellipsoid.UNIT_SPHERE] The ellipsoid used to create vertex attributes.
      * @param {Number} [options.numberOfPartitions=32] The number of times to partition the ellipsoid in a plane formed by two radii in a single quadrant.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this ellipsoid.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
      *
@@ -336,28 +331,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     return EllipsoidGeometry;

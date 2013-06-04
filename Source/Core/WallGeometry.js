@@ -10,7 +10,6 @@ define([
         './EllipsoidTangentPlane',
         './GeometryAttribute',
         './GeometryIndices',
-        './Matrix4',
         './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType',
@@ -27,7 +26,6 @@ define([
         EllipsoidTangentPlane,
         GeometryAttribute,
         GeometryIndices,
-        Matrix4,
         PolylinePipeline,
         PolygonPipeline,
         PrimitiveType,
@@ -58,28 +56,23 @@ define([
      *        this height. Otherwise, its treated as 'ground' (the WGS84 ellipsoid height 0).
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} positions is required.
      * @exception {DeveloperError} positions and terrain points must have the same length.
      *
      * @example
+     * var positions = [
+     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *     Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *     Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *     Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     * ];
      *
-     *  var positions = [
-     *      Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *      Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *      Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *      Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *      Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     *  ];
-     *
-     *  // create a wall that spans from ground level to 10000 meters
-     *  var wall = new Cesium.WallGeometry({
-     *      positions    : ellipsoid.cartographicArrayToCartesianArray(positions)
-     *  });
-     *
+     * // create a wall that spans from ground level to 10000 meters
+     * var wall = new Cesium.WallGeometry({
+     *     positions    : ellipsoid.cartographicArrayToCartesianArray(positions)
+     * });
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -306,28 +299,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = new BoundingSphere.fromVertices(positions);
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     return WallGeometry;

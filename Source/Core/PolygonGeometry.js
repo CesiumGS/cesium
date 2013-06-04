@@ -11,11 +11,11 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './GeometryAttribute',
+        './GeometryInstance',
         './GeometryFilters',
         './Intersect',
         './Math',
         './Matrix3',
-        './Matrix4',
         './PolygonPipeline',
         './Quaternion',
         './Queue',
@@ -33,11 +33,11 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         GeometryAttribute,
+        GeometryInstance,
         GeometryFilters,
         Intersect,
         CesiumMath,
         Matrix3,
-        Matrix4,
         PolygonPipeline,
         Quaternion,
         Queue,
@@ -110,7 +110,9 @@ define([
         if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
             indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
         }
-        return PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
+        return new GeometryInstance({
+            geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
+        });
     }
 
     var scratchBoundingRectangle = new BoundingRectangle();
@@ -139,9 +141,6 @@ define([
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} At least three positions are required.
      * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
@@ -426,28 +425,6 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = boundingSphere;
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     return PolygonGeometry;

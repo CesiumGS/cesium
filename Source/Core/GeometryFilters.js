@@ -601,20 +601,22 @@ define([
      *
      * @exception {DeveloperError} mesh is required.
      */
-    GeometryFilters.transformToWorldCoordinates = function(mesh) {
-        if (typeof mesh === 'undefined') {
-            throw new DeveloperError('mesh is required.');
+    GeometryFilters.transformToWorldCoordinates = function(instance) {
+        if (typeof instance === 'undefined') {
+            throw new DeveloperError('instance is required.');
         }
 
-        if (mesh.modelMatrix.equals(Matrix4.IDENTITY)) {
+        var modelMatrix = instance.modelMatrix;
+
+        if (modelMatrix.equals(Matrix4.IDENTITY)) {
             // Already in world coordinates
             return;
         }
 
-        var attributes = mesh.attributes;
+        var attributes = instance.geometry.attributes;
 
         // Transform attributes in known vertex formats
-        transformPoint(mesh.modelMatrix, attributes.position);
+        transformPoint(modelMatrix, attributes.position);
 
         if ((typeof attributes.normal !== 'undefined') ||
             (typeof attributes.binormal !== 'undefined') ||
@@ -622,7 +624,7 @@ define([
 
             var inverseTranspose = new Matrix4();
             var normalMatrix = new Matrix3();
-            Matrix4.inverse(mesh.modelMatrix, inverseTranspose);
+            Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
 
@@ -631,75 +633,78 @@ define([
             transformVector(normalMatrix, attributes.tangent);
         }
 
-        if (typeof mesh.boundingSphere !== 'undefined') {
-            Matrix4.multiplyByPoint(mesh.modelMatrix, mesh.boundingSphere.center, mesh.boundingSphere.center);
-            mesh.boundingSphere.center = Cartesian3.fromCartesian4(mesh.boundingSphere.center);
+        var boundingSphere = instance.geometry.boundingSphere;
+
+        if (typeof boundingSphere !== 'undefined') {
+            Matrix4.multiplyByPoint(modelMatrix, boundingSphere.center, boundingSphere.center);
+            boundingSphere.center = Cartesian3.fromCartesian4(boundingSphere.center);
         }
 
-        mesh.modelMatrix = Matrix4.IDENTITY.clone();
+        instance.modelMatrix = Matrix4.IDENTITY.clone();
 
-        return mesh;
+        return instance;
     };
 
-    function findAttributesInAllMeshes(meshes) {
-        var length = meshes.length;
+    function findAttributesInAllGeometries(instances) {
+        var length = instances.length;
 
-        var attributesInAllMeshes = {};
+        var attributesInAllGeometries = {};
 
-        var attributes0 = meshes[0].attributes;
+        var attributes0 = instances[0].geometry.attributes;
         var name;
 
         for (name in attributes0) {
             if (attributes0.hasOwnProperty(name)) {
                 var attribute = attributes0[name];
                 var numberOfComponents = attribute.values.length;
-                var inAllMeshes = true;
+                var inAllGeometries = true;
 
-                // Does this same attribute exist in all meshes?
+                // Does this same attribute exist in all geometries?
                 for (var i = 1; i < length; ++i) {
-                    var otherAttribute = meshes[i].attributes[name];
+                    var otherAttribute = instances[i].geometry.attributes[name];
 
                     if ((typeof otherAttribute === 'undefined') ||
                         (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
 
-                        inAllMeshes = false;
+                        inAllGeometries = false;
                         break;
                     }
 
                     numberOfComponents += otherAttribute.values.length;
                 }
 
-                if (inAllMeshes) {
-                    attributesInAllMeshes[name] = new GeometryAttribute({
+                if (inAllGeometries) {
+                    attributesInAllGeometries[name] = new GeometryAttribute({
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
+// TODO: or new Array()
                         values : attribute.componentDatatype.createTypedArray(numberOfComponents)
                     });
                 }
             }
         }
 
-        return attributesInAllMeshes;
+        return attributesInAllGeometries;
     }
 
     /**
      * DOC_TBA
      *
-     * @exception {DeveloperError} meshes is required and must have length greater than zero.
-     * @exception {DeveloperError} All meshes must have the same modelMatrix.
+     * @exception {DeveloperError} instances is required and must have length greater than zero.
+     * @exception {DeveloperError} All instances must have the same modelMatrix.
      */
-    GeometryFilters.combine = function(meshes) {
-        if ((typeof meshes === 'undefined') || (meshes.length < 1)) {
-            throw new DeveloperError('meshes is required and must have length greater than zero.');
+    GeometryFilters.combine = function(instances) {
+        if ((typeof instances === 'undefined') || (instances.length < 1)) {
+            throw new DeveloperError('instances is required and must have length greater than zero.');
         }
 
-        var length = meshes.length;
+        var length = instances.length;
 
         if (length === 1) {
-            return meshes[0];
+            return instances[0].geometry;
         }
 
         var name;
@@ -707,15 +712,15 @@ define([
         var j;
         var k;
 
-        var m = meshes[0].modelMatrix;
+        var m = instances[0].modelMatrix;
         for (i = 1; i < length; ++i) {
-            if (!Matrix4.equals(meshes[i].modelMatrix, m)) {
-                throw new DeveloperError('All meshes must have the same modelMatrix.');
+            if (!Matrix4.equals(instances[i].modelMatrix, m)) {
+                throw new DeveloperError('All instances must have the same modelMatrix.');
             }
         }
 
-        // Find subset of attributes in all meshes
-        var attributes = findAttributesInAllMeshes(meshes);
+        // Find subset of attributes in all geometries
+        var attributes = findAttributesInAllGeometries(instances);
         var values;
         var sourceValues;
         var sourceValuesLength;
@@ -730,7 +735,7 @@ define([
 
                 k = 0;
                 for (i = 0; i < length; ++i) {
-                    sourceValues = meshes[i].attributes[name].values;
+                    sourceValues = instances[i].geometry.attributes[name].values;
                     sourceValuesLength = sourceValues.length;
 
                     for (j = 0; j < sourceValuesLength; ++j) {
@@ -740,7 +745,8 @@ define([
             }
         }
 
-        // PERFORMANCE_IDEA: Could combine with fitToUnsignedShortIndices, but it would start to get ugly.
+        // PERFORMANCE_IDEA: Could combine with fitToUnsignedShortIndices, but it would start to get ugly
+        // and it is not needed when OES_element_index_uint is supported.
 
         // Combine index lists
 
@@ -751,7 +757,7 @@ define([
         var indices;
 
         for (i = 0; i < length; ++i) {
-            indexLists = meshes[i].indexLists;
+            indexLists = instances[i].geometry.indexLists;
             indexListsLength = indexLists.length;
 
             for (j = 0; j < indexListsLength; ++j) {
@@ -770,6 +776,7 @@ define([
             if (numberOfIndices.hasOwnProperty(name)) {
                 var num = numberOfIndices[name];
 
+// TODO: or new Array()
                 if (num < 60 * 1024) {
                     values = new Uint16Array(num);
                 } else {
@@ -792,7 +799,7 @@ define([
         var offset = 0;
 
         for (i = 0; i < length; ++i) {
-            indexLists = meshes[i].indexLists;
+            indexLists = instances[i].geometry.indexLists;
             indexListsLength = indexLists.length;
 
             for (j = 0; j < indexListsLength; ++j) {
@@ -809,7 +816,7 @@ define([
                 indexListsByPrimitiveType[indices.primitiveType].currentOffset = n;
             }
 
-            var attrs = meshes[i].attributes;
+            var attrs = instances[i].geometry.attributes;
             for (name in attrs) {
                 if (attrs.hasOwnProperty(name)) {
                     offset += attrs[name].values.length / attrs[name].componentsPerAttribute;
@@ -818,11 +825,11 @@ define([
             }
         }
 
-        // Create bounding sphere that includes all meshes
+        // Create bounding sphere that includes all instances
         var boundingSphere;
 
         for (i = 0; i < length; ++i) {
-            var bs = meshes[i].boundingSphere;
+            var bs = instances[i].geometry.boundingSphere;
             if (typeof bs === 'undefined') {
                 // If any meshes have an undefined bounding sphere, then so does the combined mesh
                 boundingSphere = undefined;
@@ -843,6 +850,11 @@ define([
         });
     };
 
+    var normal = new Cartesian3();
+    var v0 = new Cartesian3();
+    var v1 = new Cartesian3();
+    var v2 = new Cartesian3();
+
     /**
      * Computes the normals of all vertices in a mesh based on the normals of triangles that include the vertex.
      * This assumes a counter-clockwise vertex winding order.
@@ -859,10 +871,6 @@ define([
      * mesh = GeometryFilters.computeNormal(mesh);
      *
      */
-    var normal = new Cartesian3();
-    var v0 = new Cartesian3();
-    var v1 = new Cartesian3();
-    var v2 = new Cartesian3();
     GeometryFilters.computeNormal = function(mesh) {
         if (typeof mesh === 'undefined') {
             throw new DeveloperError('mesh is required.');
@@ -990,6 +998,10 @@ define([
         return mesh;
     };
 
+    var normalScratch = new Cartesian3();
+    var normalScale = new Cartesian3();
+    var tScratch = new Cartesian3();
+
     /**
      * Computes the tangent and binormal of all vertices in a geometry
      * This assumes a counter-clockwise vertex winding order.
@@ -1013,9 +1025,6 @@ define([
      * @example
      * geometry = GeometryFilters.computeTangentAndBinormal(geometry);
      */
-    var normalScratch = new Cartesian3();
-    var normalScale = new Cartesian3();
-    var tScratch = new Cartesian3();
     GeometryFilters.computeTangentAndBinormal = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
