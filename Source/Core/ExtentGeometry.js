@@ -277,6 +277,7 @@ define([
         extent.getNorthwest(nwCartographic);
         extent.getCenter(centerCartographic);
         var latitude, longitude;
+        var stLatitude, stLongitude;
 
         var granYCos = granularityY * cos(rotation);
         var granYSin = granularityY * sin(rotation);
@@ -327,11 +328,14 @@ define([
             top = defaultValue(top, true);
             bottom = defaultValue(bottom, true);
             latitude = nwCartographic.latitude - granYCos*row + col*granXSin;
+            stLatitude = extent.north - granularityY*row;
+
             var cosLatitude = cos(latitude);
             var nZ = sin(latitude);
             var kZ = radiiSquaredZ * nZ;
 
             longitude = nwCartographic.longitude + row*granYSin + col*granXCos;
+            stLongitude = extent.west + col*granularityX;
 
             var nX = cosLatitude * cos(longitude);
             var nY = cosLatitude * sin(longitude);
@@ -384,8 +388,8 @@ define([
             }
             if (!wall) {
                 if (vertexFormat.st) {
-                    var stLon = (longitude - extent.west) * lonScalar;
-                    var stlat = (latitude - extent.south) * latScalar;
+                    var stLon = (stLongitude - extent.west) * lonScalar;
+                    var stlat = (stLatitude - extent.south) * latScalar;
                     if (bottom) {
                         textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
                         textureCoordinates[stIndex + 1 + twoExtrudedOffset] = stlat;
@@ -465,7 +469,7 @@ define([
                 var twoOffset = offset*2;
                 var twoExtrudedOffset = extrudedOffset*2;
 
-                var stLon = (longitude - extent.west) * lonScalar;
+                var stLon = (stLongitude - extent.west) * lonScalar;
 
                 textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
                 textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
@@ -480,7 +484,7 @@ define([
                 var twoOffset = offset*2;
                 var twoExtrudedOffset = extrudedOffset*2;
 
-                var stLon = (longitude - extent.west) * lonScalar;
+                var stLon = (stLongitude - extent.west) * lonScalar;
 
                 textureCoordinates[stIndex + twoExtrudedOffset] = stLon;
                 textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
@@ -495,7 +499,7 @@ define([
                 var twoOffset = offset*2;
                 var twoExtrudedOffset = extrudedOffset*2;
 
-                var stlat = (latitude - extent.south) * latScalar;
+                var stlat = (stLatitude - extent.south) * latScalar;
 
                 textureCoordinates[stIndex + twoExtrudedOffset] = stlat;
                 textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
@@ -510,7 +514,7 @@ define([
                 var twoOffset = offset*2;
                 var twoExtrudedOffset = extrudedOffset*2;
 
-                var stlat = (latitude - extent.south) * latScalar;
+                var stlat = (stLatitude - extent.south) * latScalar;
 
                 textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stlat;
                 textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
