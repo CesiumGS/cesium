@@ -1,11 +1,14 @@
 /*global defineSuite*/
-defineSuite(['Widgets/Viewer/ViewerDropHandler',
-             'Widgets/Viewer/Viewer',
-             'Core/TimeInterval'
-            ], function(
-                    ViewerDropHandler,
-                    Viewer,
-                    TimeInterval) {
+defineSuite([
+         'Widgets/Viewer/ViewerDropHandler',
+         'Core/TimeInterval',
+         'Specs/EventHelper',
+         'Widgets/Viewer/Viewer',
+     ], function(
+         ViewerDropHandler,
+         TimeInterval,
+         EventHelper,
+         Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -16,7 +19,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
         container.style.display = 'none';
         document.body.appendChild(container);
 
-        //Impersonate FielReader for drag and drop tests
+        //Impersonate FileReader for drag and drop tests
         var fakeFileReader = jasmine.createSpyObj('FileReader', ['readAsText']);
         fakeFileReader.readAsText = function(file) {
             if (typeof file.czmlString !== 'undefined') {
@@ -110,7 +113,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
         var viewer = new Viewer(container);
         var dropHandler = new ViewerDropHandler(viewer);
 
-        dropHandler._handleDrop(mockEvent);
+        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
 
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 1;
@@ -150,7 +153,8 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
         var viewer = new Viewer(container);
         var dropHandler = new ViewerDropHandler(viewer);
 
-        dropHandler._handleDrop(mockEvent);
+        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 2;
             if (result) {
@@ -192,7 +196,8 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
         var viewer = new Viewer(container);
         var dropHandler = new ViewerDropHandler(viewer);
 
-        dropHandler._handleDrop(mockEvent);
+        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 2;
             if (result) {
@@ -210,7 +215,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
 
         runs(function() {
             dropHandler.clearOnDrop = false;
-            dropHandler._handleDrop(mockEvent);
+            EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -231,7 +236,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
 
         runs(function() {
             dropHandler.clearOnDrop = true;
-            dropHandler._handleDrop(mockEvent);
+            EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -280,7 +285,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
             called = true;
         };
         dropHandler.onError.addEventListener(callback);
-        dropHandler._handleDrop(mockEvent);
+        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
 
         waitsFor(function() {
             return called;
@@ -318,7 +323,7 @@ defineSuite(['Widgets/Viewer/ViewerDropHandler',
             called = true;
         };
         dropHandler.onError.addEventListener(callback);
-        dropHandler._handleDrop(mockEvent);
+        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
 
         waitsFor(function() {
             return called;

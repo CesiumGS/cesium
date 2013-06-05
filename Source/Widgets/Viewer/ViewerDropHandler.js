@@ -61,7 +61,7 @@ define(['../../Core/defaultValue',
             stop(event);
 
             var dataSources = viewer.dataSources;
-            if (this._clearOnDrop) {
+            if (that._clearOnDrop) {
                 dataSources.removeAll();
             }
 
