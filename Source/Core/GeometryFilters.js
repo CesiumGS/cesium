@@ -111,27 +111,21 @@ define([
         }
 
         if (typeof mesh !== 'undefined') {
-            var indexLists = mesh.indexLists;
-            if (typeof indexLists !== 'undefined') {
-                var count = indexLists.length;
-                for ( var i = 0; i < count; ++i) {
-                    var indices = indexLists[i];
-
-                    switch (indices.primitiveType) {
-                        case PrimitiveType.TRIANGLES:
-                            indices.primitiveType = PrimitiveType.LINES;
-                            indices.values = trianglesToLines(indices.values);
-                            break;
-                        case PrimitiveType.TRIANGLE_STRIP:
-                            indices.primitiveType = PrimitiveType.LINES;
-                            indices.values = triangleStripToLines(indices.values);
-                            break;
-                        case PrimitiveType.TRIANGLE_FAN:
-                            indices.primitiveType = PrimitiveType.LINES;
-                            indices.values = triangleFanToLines(indices.values);
-                            break;
-                    }
+            var indices = mesh.indexList;
+            if (typeof indices !== 'undefined') {
+                switch (indices.primitiveType) {
+                    case PrimitiveType.TRIANGLES:
+                        indices.values = trianglesToLines(indices.values);
+                        break;
+                    case PrimitiveType.TRIANGLE_STRIP:
+                        indices.values = triangleStripToLines(indices.values);
+                        break;
+                    case PrimitiveType.TRIANGLE_FAN:
+                        indices.values = triangleFanToLines(indices.values);
+                        break;
                 }
+
+                indices.primitiveType = PrimitiveType.LINES;
             }
         }
 
@@ -204,36 +198,33 @@ define([
             }
 
             //Construct cross reference and reorder indices
-            var indexLists = mesh.indexLists;
-            if (typeof indexLists !== 'undefined') {
-                var count = indexLists.length;
-                for ( var j = 0; j < count; ++j) {
-                    var indicesIn = indexLists[j].values;
-                    var numIndices = indicesIn.length;
-                    var indicesOut = [];
-                    var intoIndicesIn = 0;
-                    var intoIndicesOut = 0;
-                    var nextIndex = 0;
-                    var tempIndex;
-                    while (intoIndicesIn < numIndices) {
-                        tempIndex = indexCrossReferenceOldToNew[indicesIn[intoIndicesIn]];
-                        if (tempIndex !== -1) {
-                            indicesOut[intoIndicesOut] = tempIndex;
-                        } else {
-                            tempIndex = indicesIn[intoIndicesIn];
-                            if (tempIndex >= numVertices) {
-                                throw new DeveloperError('Input indices contains a value greater than or equal to the number of vertices');
-                            }
-                            indexCrossReferenceOldToNew[tempIndex] = nextIndex;
-
-                            indicesOut[intoIndicesOut] = nextIndex;
-                            ++nextIndex;
+            var indexList = mesh.indexList;
+            if (typeof indexList !== 'undefined') {
+                var indicesIn = indexList.values;
+                var numIndices = indicesIn.length;
+                var indicesOut = [];
+                var intoIndicesIn = 0;
+                var intoIndicesOut = 0;
+                var nextIndex = 0;
+                var tempIndex;
+                while (intoIndicesIn < numIndices) {
+                    tempIndex = indexCrossReferenceOldToNew[indicesIn[intoIndicesIn]];
+                    if (tempIndex !== -1) {
+                        indicesOut[intoIndicesOut] = tempIndex;
+                    } else {
+                        tempIndex = indicesIn[intoIndicesIn];
+                        if (tempIndex >= numVertices) {
+                            throw new DeveloperError('Input indices contains a value greater than or equal to the number of vertices');
                         }
-                        ++intoIndicesIn;
-                        ++intoIndicesOut;
+                        indexCrossReferenceOldToNew[tempIndex] = nextIndex;
+
+                        indicesOut[intoIndicesOut] = nextIndex;
+                        ++nextIndex;
                     }
-                    indexLists[j].values = indicesOut;
+                    ++intoIndicesIn;
+                    ++intoIndicesOut;
                 }
+                mesh.indexList.values = indicesOut;
             }
 
             //Reorder Vertices
@@ -287,36 +278,23 @@ define([
      */
     GeometryFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
         if (typeof mesh !== 'undefined') {
-            var indexLists = mesh.indexLists;
-            if (typeof indexLists !== 'undefined') {
-                var count = indexLists.length;
-                for ( var i = 0; i < count; i++) {
-                    var indices = indexLists[i].values;
-                    var numIndices = indices.length;
-                    var maximumIndex = 0;
-                    for ( var j = 0; j < numIndices; j++) {
-                        if (indices[j] > maximumIndex) {
-                            maximumIndex = indices[j];
-                        }
+            var indices = mesh.indexList.values;
+            if (typeof indices !== 'undefined') {
+                var numIndices = indices.length;
+                var maximumIndex = 0;
+                for ( var j = 0; j < numIndices; j++) {
+                    if (indices[j] > maximumIndex) {
+                        maximumIndex = indices[j];
                     }
-                    indexLists[i].values = Tipsify.tipsify({
-                        indices : indices,
-                        maximumIndex : maximumIndex,
-                        cacheSize : cacheCapacity
-                    });
                 }
+                mesh.indexList.values = Tipsify.tipsify({
+                    indices : indices,
+                    maximumIndex : maximumIndex,
+                    cacheSize : cacheCapacity
+                });
             }
         }
         return mesh;
-    };
-
-    GeometryFilters._verifyTrianglesPrimitiveType = function(indexLists) {
-        var length = indexLists.length;
-        for ( var i = 0; i < length; ++i) {
-            if (indexLists[i].primitiveType !== PrimitiveType.TRIANGLES) {
-                throw new DeveloperError('indexLists must have PrimitiveType equal to PrimitiveType.TRIANGLES.');
-            }
-        }
     };
 
     GeometryFilters._copyAttributesDescriptions = function(attributes) {
@@ -359,10 +337,10 @@ define([
         function createMesh(attributes, primitiveType, indices) {
             return new Geometry({
                 attributes : attributes,
-                indexLists : [new GeometryIndices({
+                indexList : new GeometryIndices({
                     primitiveType : primitiveType,
                     values : indices
-                })],
+                }),
                 boundingSphere : (typeof mesh.boundingSphere !== 'undefined') ? BoundingSphere.clone(mesh.boundingSphere) : undefined,
                 modelMatrix : (typeof mesh.modelMatrix !== 'undefined') ? Matrix4.clone(mesh.modelMatrix) : undefined,
                 pickData : mesh.pickData
@@ -372,77 +350,72 @@ define([
         var meshes = [];
 
         if (typeof mesh !== 'undefined') {
-            GeometryFilters._verifyTrianglesPrimitiveType(mesh.indexLists);
+            if (mesh.indexList.primitiveType !== PrimitiveType.TRIANGLES) {
+                throw new DeveloperError('indexList must have PrimitiveType equal to PrimitiveType.TRIANGLES.');
+            }
 
             var numberOfVertices = Geometry.computeNumberOfVertices(mesh);
 
             // If there's an index list and more than 64K attributes, it is possible that
             // some indices are outside the range of unsigned short [0, 64K - 1]
             var sixtyFourK = 64 * 1024;
-            var indexLists = mesh.indexLists;
-            if (typeof indexLists !== 'undefined' && (numberOfVertices > sixtyFourK)) {
-                // PERFORMANCE_IDEA:  If an input mesh has more than one index-list.  This creates
-                // at least one vertex-array per index-list.  A more sophisticated implementation
-                // may create less vertex-arrays.
-                var length = indexLists.length;
-                for ( var i = 0; i < length; ++i) {
-                    var oldToNewIndex = [];
-                    var newIndices = [];
-                    var currentIndex = 0;
-                    var newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
+            if (typeof mesh.indexList !== 'undefined' && (numberOfVertices > sixtyFourK)) {
+                var oldToNewIndex = [];
+                var newIndices = [];
+                var currentIndex = 0;
+                var newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
 
-                    var originalIndices = indexLists[i].values;
-                    var numberOfIndices = originalIndices.length;
+                var originalIndices = mesh.indexList.values;
+                var numberOfIndices = originalIndices.length;
 
-                    for ( var j = 0; j < numberOfIndices; j += 3) {
-                        // It would be easy to extend this inter-loop to support all primitive-types.
+                for ( var j = 0; j < numberOfIndices; j += 3) {
+                    // It would be easy to extend this inter-loop to support all primitive-types.
 
-                        var x0 = originalIndices[j];
-                        var x1 = originalIndices[j + 1];
-                        var x2 = originalIndices[j + 2];
+                    var x0 = originalIndices[j];
+                    var x1 = originalIndices[j + 1];
+                    var x2 = originalIndices[j + 2];
 
-                        var i0 = oldToNewIndex[x0];
-                        if (typeof i0 === 'undefined') {
-                            i0 = currentIndex++;
-                            oldToNewIndex[x0] = i0;
+                    var i0 = oldToNewIndex[x0];
+                    if (typeof i0 === 'undefined') {
+                        i0 = currentIndex++;
+                        oldToNewIndex[x0] = i0;
 
-                            copyVertex(newAttributes, mesh.attributes, x0);
-                        }
-
-                        var i1 = oldToNewIndex[x1];
-                        if (typeof i1 === 'undefined') {
-                            i1 = currentIndex++;
-                            oldToNewIndex[x1] = i1;
-
-                            copyVertex(newAttributes, mesh.attributes, x1);
-                        }
-
-                        var i2 = oldToNewIndex[x2];
-                        if (typeof i2 === 'undefined') {
-                            i2 = currentIndex++;
-                            oldToNewIndex[x2] = i2;
-
-                            copyVertex(newAttributes, mesh.attributes, x2);
-                        }
-
-                        newIndices.push(i0);
-                        newIndices.push(i1);
-                        newIndices.push(i2);
-
-                        if (currentIndex + 3 > sixtyFourK) {
-                            meshes.push(createMesh(newAttributes, indexLists[i].primitiveType, newIndices));
-
-                            // Reset for next vertex-array
-                            oldToNewIndex = [];
-                            newIndices = [];
-                            currentIndex = 0;
-                            newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
-                        }
+                        copyVertex(newAttributes, mesh.attributes, x0);
                     }
 
-                    if (newIndices.length !== 0) {
-                        meshes.push(createMesh(newAttributes, indexLists[i].primitiveType, newIndices));
+                    var i1 = oldToNewIndex[x1];
+                    if (typeof i1 === 'undefined') {
+                        i1 = currentIndex++;
+                        oldToNewIndex[x1] = i1;
+
+                        copyVertex(newAttributes, mesh.attributes, x1);
                     }
+
+                    var i2 = oldToNewIndex[x2];
+                    if (typeof i2 === 'undefined') {
+                        i2 = currentIndex++;
+                        oldToNewIndex[x2] = i2;
+
+                        copyVertex(newAttributes, mesh.attributes, x2);
+                    }
+
+                    newIndices.push(i0);
+                    newIndices.push(i1);
+                    newIndices.push(i2);
+
+                    if (currentIndex + 3 > sixtyFourK) {
+                        meshes.push(createMesh(newAttributes, mesh.indexList.primitiveType, newIndices));
+
+                        // Reset for next vertex-array
+                        oldToNewIndex = [];
+                        newIndices = [];
+                        currentIndex = 0;
+                        newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
+                    }
+                }
+
+                if (newIndices.length !== 0) {
+                    meshes.push(createMesh(newAttributes, mesh.indexList.primitiveType, newIndices));
                 }
             } else {
                 // No need to split into multiple meshes
@@ -745,20 +718,12 @@ define([
 
         // First, determine the size of a typed array per primitive type
         var numberOfIndices = {};
-        var indexLists;
-        var indexListsLength;
         var indices;
 
         for (i = 0; i < length; ++i) {
-            indexLists = instances[i].geometry.indexLists;
-            indexListsLength = indexLists.length;
-
-            for (j = 0; j < indexListsLength; ++j) {
-                indices = indexLists[j];
-
-                numberOfIndices[indices.primitiveType] = (typeof numberOfIndices[indices.primitiveType] !== 'undefined') ?
-                    (numberOfIndices[indices.primitiveType] += indices.values.length) : indices.values.length;
-            }
+            indices = instances[i].geometry.indexList;
+            numberOfIndices[indices.primitiveType] = (typeof numberOfIndices[indices.primitiveType] !== 'undefined') ?
+                (numberOfIndices[indices.primitiveType] += indices.values.length) : indices.values.length;
         }
 
         // Next, allocate a typed array for indices per primitive type
@@ -792,22 +757,17 @@ define([
         var offset = 0;
 
         for (i = 0; i < length; ++i) {
-            indexLists = instances[i].geometry.indexLists;
-            indexListsLength = indexLists.length;
+            indices = instances[i].geometry.indexList;
+            sourceValues = indices.values;
+            sourceValuesLength = sourceValues.length;
+            var destValues = indexListsByPrimitiveType[indices.primitiveType].values;
+            var n = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
 
-            for (j = 0; j < indexListsLength; ++j) {
-                indices = indexLists[j];
-                sourceValues = indices.values;
-                sourceValuesLength = sourceValues.length;
-                var destValues = indexListsByPrimitiveType[indices.primitiveType].values;
-                var n = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
-
-                for (k = 0; k < sourceValuesLength; ++k) {
-                    destValues[n++] = offset + sourceValues[k];
-                }
-
-                indexListsByPrimitiveType[indices.primitiveType].currentOffset = n;
+            for (k = 0; k < sourceValuesLength; ++k) {
+                destValues[n++] = offset + sourceValues[k];
             }
+
+            indexListsByPrimitiveType[indices.primitiveType].currentOffset = n;
 
             var attrs = instances[i].geometry.attributes;
             for (name in attrs) {
@@ -838,7 +798,8 @@ define([
 
         return new Geometry({
             attributes : attributes,
-            indexLists : combinedIndexLists,
+// TODO: cleanup combinedIndexLists
+            indexList : combinedIndexLists[0],
             boundingSphere : boundingSphere
         });
     };
@@ -876,114 +837,111 @@ define([
         if (mesh.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
             throw new DeveloperError('mesh.attributes.position.values.length must be a multiple of 3');
         }
-        var indexLists = mesh.indexLists;
-        if (typeof indexLists === 'undefined') {
+        var indexList = mesh.indexList;
+        if (typeof indexList === 'undefined') {
             return mesh;
         }
 
-        var length = indexLists.length;
-        for (var k = 0; k < length; k++) {
-            var indices = indexLists[k].values;
-            if (indexLists[k].primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
-                    indices.length < 2 || indices.length % 3 !== 0) {
-                continue;
-            }
+        var indices = indexList.values;
+        if (indexList.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+                indices.length < 2 || indices.length % 3 !== 0) {
+            return mesh;
+        }
 
-            var numVertices = mesh.attributes.position.values.length/3;
-            var numIndices = indices.length;
-            var normalsPerVertex = new Array(numVertices);
-            var normalsPerTriangle = new Array(numIndices/3);
-            var normalIndices = new Array(numIndices);
+        var numVertices = mesh.attributes.position.values.length / 3;
+        var numIndices = indices.length;
+        var normalsPerVertex = new Array(numVertices);
+        var normalsPerTriangle = new Array(numIndices / 3);
+        var normalIndices = new Array(numIndices);
 
-            for (var i = 0; i < numVertices; i++) {
-                normalsPerVertex[i] = {
-                        indexOffset: 0,
-                        count: 0,
-                        currentCount: 0
-                    };
-            }
+        for (var i = 0; i < numVertices; i++) {
+            normalsPerVertex[i] = {
+                indexOffset : 0,
+                count : 0,
+                currentCount : 0
+            };
+        }
 
-            var j = 0;
-            for (i = 0; i < numIndices; i+=3) {
-                var i0 = indices[i];
-                var i1 = indices[i+1];
-                var i2 = indices[i+2];
-                var i03 = i0*3;
-                var i13 = i1*3;
-                var i23 = i2*3;
+        var j = 0;
+        for (i = 0; i < numIndices; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+            var i03 = i0*3;
+            var i13 = i1*3;
+            var i23 = i2*3;
 
-                v0.x = vertices[i03];
-                v0.y = vertices[i03+1];
-                v0.z = vertices[i03+2];
-                v1.x = vertices[i13];
-                v1.y = vertices[i13+1];
-                v1.z = vertices[i13+2];
-                v2.x = vertices[i23];
-                v2.y = vertices[i23+1];
-                v2.z = vertices[i23+2];
+            v0.x = vertices[i03];
+            v0.y = vertices[i03 + 1];
+            v0.z = vertices[i03 + 2];
+            v1.x = vertices[i13];
+            v1.y = vertices[i13 + 1];
+            v1.z = vertices[i13 + 2];
+            v2.x = vertices[i23];
+            v2.y = vertices[i23 + 1];
+            v2.z = vertices[i23 + 2];
 
-                normalsPerVertex[i0].count++;
-                normalsPerVertex[i1].count++;
-                normalsPerVertex[i2].count++;
+            normalsPerVertex[i0].count++;
+            normalsPerVertex[i1].count++;
+            normalsPerVertex[i2].count++;
 
-                v1.subtract(v0, v1);
-                v2.subtract(v0, v2);
-                normalsPerTriangle[j] = v1.cross(v2);
-                j++;
-            }
+            v1.subtract(v0, v1);
+            v2.subtract(v0, v2);
+            normalsPerTriangle[j] = v1.cross(v2);
+            j++;
+        }
 
-            var indexOffset = 0;
-            for (i = 0; i < numVertices; i++) {
-                normalsPerVertex[i].indexOffset += indexOffset;
-                indexOffset += normalsPerVertex[i].count;
-            }
+        var indexOffset = 0;
+        for (i = 0; i < numVertices; i++) {
+            normalsPerVertex[i].indexOffset += indexOffset;
+            indexOffset += normalsPerVertex[i].count;
+        }
 
-            j = 0;
-            var vertexNormalData;
-            for (i = 0; i < numIndices; i+=3) {
-                vertexNormalData = normalsPerVertex[indices[i]];
-                var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-                normalIndices[index] = j;
-                vertexNormalData.currentCount++;
+        j = 0;
+        var vertexNormalData;
+        for (i = 0; i < numIndices; i += 3) {
+            vertexNormalData = normalsPerVertex[indices[i]];
+            var index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
 
-                vertexNormalData = normalsPerVertex[indices[i+1]];
-                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-                normalIndices[index] = j;
-                vertexNormalData.currentCount++;
+            vertexNormalData = normalsPerVertex[indices[i + 1]];
+            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
 
-                vertexNormalData = normalsPerVertex[indices[i+2]];
-                index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
-                normalIndices[index] = j;
-                vertexNormalData.currentCount++;
+            vertexNormalData = normalsPerVertex[indices[i + 2]];
+            index = vertexNormalData.indexOffset + vertexNormalData.currentCount;
+            normalIndices[index] = j;
+            vertexNormalData.currentCount++;
 
-                j++;
-            }
+            j++;
+        }
 
-            if (typeof mesh.attributes.normal === 'undefined') {
-                mesh.attributes.normal = new GeometryAttribute({
-                    componentDatatype: ComponentDatatype.FLOAT,
-                    componentsPerAttribute: 3,
-                    values: new Array(numVertices * 3)
-                });
-            }
-            var normalValues = mesh.attributes.normal.values;
-            for (i = 0; i < numVertices; i++) {
-                var i3 = i * 3;
-                vertexNormalData = normalsPerVertex[i];
-                if (vertexNormalData.count > 0) {
-                    Cartesian3.ZERO.clone(normal);
-                    for (j = 0; j < vertexNormalData.count; j++) {
-                        normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
-                    }
-                    normal.normalize(normal);
-                    normalValues[i3] = normal.x;
-                    normalValues[i3+1] = normal.y;
-                    normalValues[i3+2] = normal.z;
-                } else {
-                    normalValues[i3] = 0;
-                    normalValues[i3+1] = 0;
-                    normalValues[i3+2] = 1;
+        if (typeof mesh.attributes.normal === 'undefined') {
+            mesh.attributes.normal = new GeometryAttribute({
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                values: new Array(numVertices * 3)
+            });
+        }
+        var normalValues = mesh.attributes.normal.values;
+        for (i = 0; i < numVertices; i++) {
+            var i3 = i * 3;
+            vertexNormalData = normalsPerVertex[i];
+            if (vertexNormalData.count > 0) {
+                Cartesian3.ZERO.clone(normal);
+                for (j = 0; j < vertexNormalData.count; j++) {
+                    normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
+                normal.normalize(normal);
+                normalValues[i3] = normal.x;
+                normalValues[i3+1] = normal.y;
+                normalValues[i3+2] = normal.z;
+            } else {
+                normalValues[i3] = 0.0;
+                normalValues[i3+1] = 0.0;
+                normalValues[i3+2] = 1.0;
             }
         }
 
@@ -1044,106 +1002,104 @@ define([
             throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
         }
 
-        var indexLists = geometry.indexLists;
-        if (typeof indexLists === 'undefined') {
+        var indexList = geometry.indexList;
+        if (typeof indexList === 'undefined') {
             return geometry;
         }
 
-        var length = indexLists.length;
-        for (var k = 0; k < length; k++) {
-            var indices = indexLists[k].values;
-            if (indexLists[k].primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
-                    indices.length < 2 || indices.length % 3 !== 0) {
-                continue;
-            }
-
-            var numVertices = geometry.attributes.position.values.length/3;
-            var numIndices = indices.length;
-            var tan1 = new Array(numVertices*3);
-
-            for (var i = 0; i < tan1.length; i++) {
-                tan1[i] = 0;
-            }
-
-            var i03;
-            var i13;
-            var i23;
-            for (i = 0; i < numIndices; i+=3) {
-                var i0 = indices[i];
-                var i1 = indices[i+1];
-                var i2 = indices[i+2];
-                i03 = i0*3;
-                i13 = i1*3;
-                i23 = i2*3;
-                var i02 = i0*2;
-                var i12 = i1*2;
-                var i22 = i2*2;
-
-                var ux = vertices[i03];
-                var uy = vertices[i03+1];
-                var uz = vertices[i03+2];
-
-                var wx = st[i02];
-                var wy = st[i02+1];
-                var t1 = st[i12+1] - wy;
-                var t2 = st[i22+1] - wy;
-
-                var r = 1.0/((st[i12] - wx) * t2 - (st[i22] - wx) * t1);
-                var sdirx = (t2 * (vertices[i13] - ux) - t1 * (vertices[i23] - ux)) * r;
-                var sdiry = (t2 * (vertices[i13+1] - uy) - t1 * (vertices[i23+1] - uy)) * r;
-                var sdirz = (t2 * (vertices[i13+2] - uz) - t1 * (vertices[i23+2] - uz)) * r;
-
-                tan1[i03] += sdirx;
-                tan1[i03+1] += sdiry;
-                tan1[i03+2] += sdirz;
-
-                tan1[i13] += sdirx;
-                tan1[i13+1] += sdiry;
-                tan1[i13+2] += sdirz;
-
-                tan1[i23] += sdirx;
-                tan1[i23+1] += sdiry;
-                tan1[i23+2] += sdirz;
-            }
-            var binormalValues = new Array(numVertices * 3);
-            var tangentValues = new Array(numVertices * 3);
-            for (i = 0; i < numVertices; i++) {
-                i03 = i*3;
-                i13 = i03+1;
-                i23 = i03+2;
-
-                var n = Cartesian3.fromArray(normals, i03, normalScratch);
-                var t = Cartesian3.fromArray(tan1, i03, tScratch);
-                var scalar = n.dot(t);
-                n.multiplyByScalar(scalar, normalScale);
-                t.subtract(normalScale, t).normalize(t);
-                tangentValues[i03] = t.x;
-                tangentValues[i13] = t.y;
-                tangentValues[i23] = t.z;
-                n.cross(t, t).normalize(t);
-                binormalValues[i03] = t.x;
-                binormalValues[i13] = t.y;
-                binormalValues[i23] = t.z;
-            }
-            if (typeof geometry.attributes.tangent === 'undefined') {
-                geometry.attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : tangentValues
-                });
-            } else {
-                geometry.attributes.tangent.values = tangentValues;
-            }
-            if (typeof geometry.attributes.binormal === 'undefined') {
-                geometry.attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : binormalValues
-                });
-            } else {
-                geometry.attributes.binormal.values = binormalValues;
-            }
+        var indices = indexList.values;
+        if (indexList.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+                indices.length < 2 || indices.length % 3 !== 0) {
+            return geometry;
         }
+
+        var numVertices = geometry.attributes.position.values.length/3;
+        var numIndices = indices.length;
+        var tan1 = new Array(numVertices * 3);
+
+        for (var i = 0; i < tan1.length; i++) {
+            tan1[i] = 0;
+        }
+
+        var i03;
+        var i13;
+        var i23;
+        for (i = 0; i < numIndices; i+=3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+            i03 = i0*3;
+            i13 = i1*3;
+            i23 = i2*3;
+            var i02 = i0*2;
+            var i12 = i1*2;
+            var i22 = i2*2;
+
+            var ux = vertices[i03];
+            var uy = vertices[i03 + 1];
+            var uz = vertices[i03 + 2];
+
+            var wx = st[i02];
+            var wy = st[i02 + 1];
+            var t1 = st[i12 + 1] - wy;
+            var t2 = st[i22 + 1] - wy;
+
+            var r = 1.0 / ((st[i12] - wx) * t2 - (st[i22] - wx) * t1);
+            var sdirx = (t2 * (vertices[i13] - ux) - t1 * (vertices[i23] - ux)) * r;
+            var sdiry = (t2 * (vertices[i13 + 1] - uy) - t1 * (vertices[i23 + 1] - uy)) * r;
+            var sdirz = (t2 * (vertices[i13 + 2] - uz) - t1 * (vertices[i23 + 2] - uz)) * r;
+
+            tan1[i03] += sdirx;
+            tan1[i03+1] += sdiry;
+            tan1[i03+2] += sdirz;
+
+            tan1[i13] += sdirx;
+            tan1[i13+1] += sdiry;
+            tan1[i13+2] += sdirz;
+
+            tan1[i23] += sdirx;
+            tan1[i23+1] += sdiry;
+            tan1[i23+2] += sdirz;
+        }
+        var binormalValues = new Array(numVertices * 3);
+        var tangentValues = new Array(numVertices * 3);
+        for (i = 0; i < numVertices; i++) {
+            i03 = i * 3;
+            i13 = i03 + 1;
+            i23 = i03 + 2;
+
+            var n = Cartesian3.fromArray(normals, i03, normalScratch);
+            var t = Cartesian3.fromArray(tan1, i03, tScratch);
+            var scalar = n.dot(t);
+            n.multiplyByScalar(scalar, normalScale);
+            t.subtract(normalScale, t).normalize(t);
+            tangentValues[i03] = t.x;
+            tangentValues[i13] = t.y;
+            tangentValues[i23] = t.z;
+            n.cross(t, t).normalize(t);
+            binormalValues[i03] = t.x;
+            binormalValues[i13] = t.y;
+            binormalValues[i23] = t.z;
+        }
+        if (typeof geometry.attributes.tangent === 'undefined') {
+            geometry.attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangentValues
+            });
+        } else {
+            geometry.attributes.tangent.values = tangentValues;
+        }
+        if (typeof geometry.attributes.binormal === 'undefined') {
+            geometry.attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormalValues
+            });
+        } else {
+            geometry.attributes.binormal.values = binormalValues;
+        }
+
         return geometry;
     };
 

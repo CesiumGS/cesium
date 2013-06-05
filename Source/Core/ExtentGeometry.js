@@ -304,16 +304,14 @@ define([
         this.attributes = attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
-         * @type Array
+         * @type GeometryIndices
          */
-        this.indexLists = [
-            new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : indices
-            })
-        ];
+        this.indexList = new GeometryIndices({
+            primitiveType : PrimitiveType.TRIANGLES,
+            values : indices
+        });
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

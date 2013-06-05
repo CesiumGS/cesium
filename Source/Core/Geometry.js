@@ -24,7 +24,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.indexLists = options.indexLists;
+        this.indexList = options.indexList;
 
         /**
          * DOC_TBA
@@ -48,20 +48,9 @@ define([
                 newAttributes[property] = attributes[property].clone();
             }
         }
+
         result.attributes = newAttributes;
-
-        var indexLists = this.indexLists;
-        if (typeof indexLists !== 'undefined') {
-            var length = indexLists.length;
-            var newIndexLists = new Array(length);
-            for (var i = 0; i < length; ++i) {
-                newIndexLists[i] = indexLists[i].clone();
-            }
-            result.indexLists = newIndexLists;
-        } else {
-            result.indexLists = undefined;
-        }
-
+        result.indexList = (typeof this.indexList !== 'undefined') ?  this.indexList.clone() : undefined;
         this.boundingSphere.clone(result.boundingSphere);
 
         return result;

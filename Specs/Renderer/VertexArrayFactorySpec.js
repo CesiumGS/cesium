@@ -541,10 +541,10 @@ defineSuite([
 
     it('creates an index buffer', function() {
         var mesh = {
-            indexLists : [{
+            indexList : {
                 primitiveType : PrimitiveType.POINTS,
                 values : [0]
-            }]
+            }
         };
 
         var va = context.createVertexArrayFromMesh({
@@ -555,25 +555,7 @@ defineSuite([
         expect(va.getIndexBuffer()).toBeDefined();
         expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
         expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(mesh.indexLists[0].values.length);
-    });
-
-    it('throws with multiple index lists', function() {
-        var mesh = {
-            indexLists : [{
-                primitiveType : PrimitiveType.POINTS,
-                values : [0]
-            }, {
-                primitiveType : PrimitiveType.POINTS,
-                values : [1]
-            }]
-        };
-
-        expect(function() {
-            return context.createVertexArrayFromMesh({
-                mesh : mesh
-            });
-        }).toThrow();
+        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(mesh.indexList.values.length);
     });
 
     it('throws with different number of interleaved attributes', function() {

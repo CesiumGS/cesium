@@ -42,7 +42,7 @@ defineSuite([
         });
 
         expect(w.attributes.position.values.length).toEqual(2 * 2 * 3);
-        expect(w.indexLists[0].values.length).toEqual(2 * 3);
+        expect(w.indexList.values.length).toEqual(2 * 3);
     });
 
     it('creates positions relative to terrain', function() {
@@ -63,7 +63,7 @@ defineSuite([
         });
 
         expect(w.attributes.position.values.length).toEqual(2 * 2 * 3);
-        expect(w.indexLists[0].values.length).toEqual(2 * 3);
+        expect(w.indexList.values.length).toEqual(2 * 3);
     });
 
     it('creates all attributes', function() {
@@ -83,7 +83,7 @@ defineSuite([
         expect(w.attributes.tangent.values.length).toEqual(3 * 2 * 3);
         expect(w.attributes.binormal.values.length).toEqual(3 * 2 * 3);
         expect(w.attributes.st.values.length).toEqual(3 * 2 * 2);
-        expect(w.indexLists[0].values.length).toEqual((3 * 2 - 2) * 3);
+        expect(w.indexList.values.length).toEqual((3 * 2 - 2) * 3);
     });
 });
 

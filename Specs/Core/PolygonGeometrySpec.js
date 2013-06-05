@@ -93,7 +93,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 11);
-        expect(p.indexLists[0].values.length).toEqual(3 * 14);
+        expect(p.indexList.values.length).toEqual(3 * 14);
     });
 
     it('computes all attributes', function() {
@@ -113,7 +113,7 @@ defineSuite([
         expect(p.attributes.normal.values.length).toEqual(3 * 11);
         expect(p.attributes.tangent.values.length).toEqual(3 * 11);
         expect(p.attributes.binormal.values.length).toEqual(3 * 11);
-        expect(p.indexLists[0].values.length).toEqual(3 * 14);
+        expect(p.indexList.values.length).toEqual(3 * 14);
     });
 
     it('creates a polygon from hierarchy', function() {
@@ -149,7 +149,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 14);
-        expect(p.indexLists[0].values.length).toEqual(3 * 10);
+        expect(p.indexList.values.length).toEqual(3 * 10);
     });
 
     it('creates a polygon from clockwise hierarchy', function() {
@@ -185,7 +185,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 14);
-        expect(p.indexLists[0].values.length).toEqual(3 * 10);
+        expect(p.indexList.values.length).toEqual(3 * 10);
     });
 
 }, 'WebGL');

@@ -2351,14 +2351,6 @@ define([
         var mesh = defaultValue(ca.mesh, defaultValue.EMPTY_OBJECT);
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
-        var indexLists;
-
-        if (mesh.indexLists) {
-            indexLists = mesh.indexLists;
-            if (indexLists.length !== 1) {
-                throw new DeveloperError('The mesh must have zero or one index lists.  This mesh has ' + indexLists.length.toString() + ' index lists.');
-            }
-        }
 
         var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
         var interleave = ca.vertexLayout && (ca.vertexLayout === VertexLayout.INTERLEAVED);
@@ -2421,11 +2413,12 @@ define([
         }
 
         var indexBuffer;
-        if (typeof indexLists !== 'undefined') {
+        var indexList = mesh.indexList;
+        if (typeof indexList !== 'undefined') {
             if ((Geometry.computeNumberOfVertices(mesh) > 64 * 1024) && this.getElementIndexUint()) {
-                indexBuffer = this.createIndexBuffer(new Uint32Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = this.createIndexBuffer(new Uint32Array(indexList.values), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
-                indexBuffer = this.createIndexBuffer(new Uint16Array(indexLists[0].values), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = this.createIndexBuffer(new Uint16Array(indexList.values), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
             }
         }
 

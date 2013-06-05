@@ -27,7 +27,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);
-        expect(m.indexLists[0].values.length).toEqual(12 * 3);
+        expect(m.indexList.values.length).toEqual(12 * 3);
     });
 
     it('constructor computes all vertex attributes', function() {
@@ -45,7 +45,7 @@ defineSuite([
         expect(m.attributes.binormal.values.length).toEqual(6 * 4 * 3);
         expect(m.attributes.st.values.length).toEqual(6 * 4 * 2);
 
-        expect(m.indexLists[0].values.length).toEqual(12 * 3);
+        expect(m.indexList.values.length).toEqual(12 * 3);
 
         expect(m.boundingSphere.center).toEqual(Cartesian3.ZERO);
         expect(m.boundingSphere.radius).toEqual(maximumCorner.magnitude() * 0.5);

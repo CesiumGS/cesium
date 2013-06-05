@@ -66,11 +66,11 @@ define([
         this.attributes = ellipseGeometry.attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
-         * @type Array
+         * @type GeometryIndices
          */
-        this.indexLists = ellipseGeometry.indexLists;
+        this.indexList = ellipseGeometry.indexList;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

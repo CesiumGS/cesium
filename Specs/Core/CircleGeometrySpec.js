@@ -60,7 +60,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 24);
-        expect(m.indexLists[0].values.length).toEqual(3 * 34);
+        expect(m.indexList.values.length).toEqual(3 * 34);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -79,6 +79,6 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * 24);
         expect(m.attributes.tangent.values.length).toEqual(3 * 24);
         expect(m.attributes.binormal.values.length).toEqual(3 * 24);
-        expect(m.indexLists[0].values.length).toEqual(3 * 34);
+        expect(m.indexList.values.length).toEqual(3 * 34);
     });
 });

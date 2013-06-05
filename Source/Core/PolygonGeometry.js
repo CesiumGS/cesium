@@ -415,11 +415,11 @@ define([
         this.attributes = attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
-         * @type Array
+         * @type GeometryIndices
          */
-        this.indexLists = mesh.indexLists;
+        this.indexList = mesh.indexList;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

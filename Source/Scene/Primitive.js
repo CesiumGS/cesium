@@ -399,8 +399,8 @@ define([
                 var geometry = geometries[i];
 
                 var command = new DrawCommand();
-// TODO: this assumes indices in the geometries - and only one set
-                command.primitiveType = geometry.indexLists[0].primitiveType;
+// TODO: this assumes indices in the geometries
+                command.primitiveType = geometry.indexList.primitiveType;
                 command.vertexArray = this._va[i];
                 command.renderState = rs;
                 command.shaderProgram = this._sp;
@@ -409,7 +409,7 @@ define([
                 colorCommands.push(command);
 
                 var pickCommand = new DrawCommand();
-                pickCommand.primitiveType = geometry.indexLists[0].primitiveType;
+                pickCommand.primitiveType = geometry.indexList.primitiveType;
                 pickCommand.vertexArray = this._va[i];
                 pickCommand.renderState = pickRS;
                 pickCommand.shaderProgram = this._pickSP;

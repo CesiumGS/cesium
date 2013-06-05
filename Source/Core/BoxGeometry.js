@@ -67,7 +67,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         var attributes = {};
-        var indexLists = [];
+        var indexList;
 
         if (vertexFormat !== VertexFormat.POSITION_ONLY) {
 
@@ -292,36 +292,35 @@ define([
                 });
             }
 
-            indexLists.push(
-                new GeometryIndices({
-                    // 12 triangles:  6 faces, 2 triangles each.
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [
-                        // +z face
-                        0, 1, 2,
-                        0, 2, 3,
+            indexList = new GeometryIndices({
+                // 12 triangles:  6 faces, 2 triangles each.
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [
+                    // +z face
+                    0, 1, 2,
+                    0, 2, 3,
 
-                        // -z face
-                        4 + 2, 4 + 1, 4 + 0,
-                        4 + 3, 4 + 2, 4 + 0,
+                    // -z face
+                    4 + 2, 4 + 1, 4 + 0,
+                    4 + 3, 4 + 2, 4 + 0,
 
-                        // +x face
-                        8 + 0, 8 + 1, 8 + 2,
-                        8 + 0, 8 + 2, 8 + 3,
+                    // +x face
+                    8 + 0, 8 + 1, 8 + 2,
+                    8 + 0, 8 + 2, 8 + 3,
 
-                        // -x face
-                        12 + 2, 12 + 1, 12 + 0,
-                        12 + 3, 12 + 2, 12 + 0,
+                    // -x face
+                    12 + 2, 12 + 1, 12 + 0,
+                    12 + 3, 12 + 2, 12 + 0,
 
-                        // +y face
-                        16 + 2, 16 + 1, 16 + 0,
-                        16 + 3, 16 + 2, 16 + 0,
+                    // +y face
+                    16 + 2, 16 + 1, 16 + 0,
+                    16 + 3, 16 + 2, 16 + 0,
 
-                        // -y face
-                        20 + 0, 20 + 1, 20 + 2,
-                        20 + 0, 20 + 2, 20 + 3
-                    ]
-                }));
+                    // -y face
+                    20 + 0, 20 + 1, 20 + 2,
+                    20 + 0, 20 + 2, 20 + 3
+                ]
+            });
         } else {
             // Positions only - no need to duplicate corner points
             attributes.position = new GeometryAttribute({
@@ -340,25 +339,24 @@ define([
                 ]
             });
 
-            indexLists.push(
-                new GeometryIndices({
-                    // 12 triangles:  6 faces, 2 triangles each.
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [
-                        4, 5, 6, // plane z = corner.Z
-                        4, 6, 7,
-                        1, 0, 3, // plane z = -corner.Z
-                        1, 3, 2,
-                        1, 6, 5, // plane x = corner.X
-                        1, 2, 6,
-                        2, 3, 7, // plane y = corner.Y
-                        2, 7, 6,
-                        3, 0, 4, // plane x = -corner.X
-                        3, 4, 7,
-                        0, 1, 5, // plane y = -corner.Y
-                        0, 5, 4
-                    ]
-                }));
+            indexList = new GeometryIndices({
+                // 12 triangles:  6 faces, 2 triangles each.
+                primitiveType : PrimitiveType.TRIANGLES,
+                values : [
+                    4, 5, 6, // plane z = corner.Z
+                    4, 6, 7,
+                    1, 0, 3, // plane z = -corner.Z
+                    1, 3, 2,
+                    1, 6, 5, // plane x = corner.X
+                    1, 2, 6,
+                    2, 3, 7, // plane y = corner.Y
+                    2, 7, 6,
+                    3, 0, 4, // plane x = -corner.X
+                    3, 4, 7,
+                    0, 1, 5, // plane y = -corner.Y
+                    0, 5, 4
+                ]
+            });
         }
 
         /**
@@ -370,11 +368,11 @@ define([
         this.attributes = attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
-         * @type Array
+         * @type GeometryIndices
          */
-        this.indexLists = indexLists;
+        this.indexList = indexList;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
