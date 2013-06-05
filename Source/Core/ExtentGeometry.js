@@ -12,7 +12,6 @@ define([
         './GeographicProjection',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './Math',
         './Matrix2',
         './PrimitiveType',
@@ -30,7 +29,6 @@ define([
         GeographicProjection,
         Geometry,
         GeometryAttribute,
-        GeometryIndices,
         CesiumMath,
         Matrix2,
         PrimitiveType,
@@ -306,11 +304,9 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
-        this.indexList = new GeometryIndices({
-            values : indices
-        });
+        this.indexList = indices;
 
         /**
          * DOC_TBA

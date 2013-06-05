@@ -10,7 +10,6 @@ define([
         './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './VertexFormat'
     ], function(
         defaultValue,
@@ -23,7 +22,6 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
-        GeometryIndices,
         VertexFormat) {
     "use strict";
 
@@ -318,11 +316,9 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
-        this.indexList = new GeometryIndices({
-            values : indices
-        });
+        this.indexList = indices;
 
         /**
          * DOC_TBA

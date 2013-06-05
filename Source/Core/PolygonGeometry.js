@@ -417,7 +417,7 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
         this.indexList = mesh.indexList;
 

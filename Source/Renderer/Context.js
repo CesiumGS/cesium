@@ -2416,9 +2416,9 @@ define([
         var indexList = mesh.indexList;
         if (typeof indexList !== 'undefined') {
             if ((Geometry.computeNumberOfVertices(mesh) > 64 * 1024) && this.getElementIndexUint()) {
-                indexBuffer = this.createIndexBuffer(new Uint32Array(indexList.values), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = this.createIndexBuffer(new Uint32Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
-                indexBuffer = this.createIndexBuffer(new Uint16Array(indexList.values), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = this.createIndexBuffer(new Uint16Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
             }
         }
 

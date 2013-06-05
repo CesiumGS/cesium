@@ -6,7 +6,6 @@ define([
         './Cartesian3',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
@@ -22,7 +21,6 @@ define([
         Cartesian3,
         Geometry,
         GeometryAttribute,
-        GeometryIndices,
         Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
@@ -837,11 +835,7 @@ define([
                         values : flattenedPositions
                     })
                 },
-
-                indexList : new GeometryIndices({
-                    values : subdividedIndices
-                }),
-
+                indexList : subdividedIndices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
         },

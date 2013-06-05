@@ -10,7 +10,6 @@ define([
         './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType',
@@ -27,7 +26,6 @@ define([
         EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
-        GeometryIndices,
         PolylinePipeline,
         PolygonPipeline,
         PrimitiveType,
@@ -286,11 +284,9 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
-        this.indexList = new GeometryIndices({
-            values : indices
-        });
+        this.indexList = indices;
 
         /**
          * DOC_TBA

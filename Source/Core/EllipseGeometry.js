@@ -8,7 +8,6 @@ define([
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './Math',
         './Matrix3',
         './PrimitiveType',
@@ -23,7 +22,6 @@ define([
         Ellipsoid,
         Geometry,
         GeometryAttribute,
-        GeometryIndices,
         CesiumMath,
         Matrix3,
         PrimitiveType,
@@ -434,11 +432,9 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
-        this.indexList = new GeometryIndices({
-            values : indices
-        });
+        this.indexList = indices;
 
         /**
          * DOC_TBA

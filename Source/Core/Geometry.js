@@ -53,9 +53,17 @@ define([
                 newAttributes[property] = attributes[property].clone();
             }
         }
-
         result.attributes = newAttributes;
-        result.indexList = (typeof this.indexList !== 'undefined') ?  this.indexList.clone() : undefined;
+
+// TODO: typed array or not.  fastest way to copy?
+        var sourceValues = this.indexList;
+        var length = sourceValues.length;
+        var values = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            values[i] = sourceValues[i];
+        }
+        result.indexList = values;
+
         result.primitiveType = this.primitiveType;
         this.boundingSphere.clone(result.boundingSphere);
 

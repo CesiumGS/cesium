@@ -68,7 +68,7 @@ define([
         /**
          * The geometry indices.
          *
-         * @type GeometryIndices
+         * @type Array
          */
         this.indexList = ellipseGeometry.indexList;
 

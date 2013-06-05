@@ -14,7 +14,6 @@ define([
         './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './GeometryIndices'
     ], function(
         defaultValue,
         DeveloperError,
@@ -29,8 +28,7 @@ define([
         Tipsify,
         BoundingSphere,
         Geometry,
-        GeometryAttribute,
-        GeometryIndices) {
+        GeometryAttribute) {
     "use strict";
 
     /**
@@ -43,9 +41,9 @@ define([
     var GeometryFilters = {};
 
     /**
-     * Converts a mesh's triangle indices to line indices.  Each list of indices in the mesh's <code>indexList</code> with
+     * Converts a mesh's triangle indices to line indices.  The mesh's <code>indexList</code> with
      * a primitive type of <code>triangles</code>, <code>triangleStrip</code>, or <code>trangleFan</code> is converted to a
-     * list of indices with a primitive type of <code>lines</code>.  Lists of indices with other primitive types remain unchanged.
+     * list of indices with a primitive type of <code>lines</code>.
      * <br /><br />
      * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
      * <br /><br />
@@ -115,13 +113,13 @@ define([
             if (typeof indices !== 'undefined') {
                 switch (mesh.primitiveType) {
                     case PrimitiveType.TRIANGLES:
-                        indices.values = trianglesToLines(indices.values);
+                        mesh.indexList = trianglesToLines(indices);
                         break;
                     case PrimitiveType.TRIANGLE_STRIP:
-                        indices.values = triangleStripToLines(indices.values);
+                        mesh.indexList = triangleStripToLines(indices);
                         break;
                     case PrimitiveType.TRIANGLE_FAN:
-                        indices.values = triangleFanToLines(indices.values);
+                        mesh.indexList = triangleFanToLines(indices);
                         break;
                 }
 
@@ -200,7 +198,7 @@ define([
             //Construct cross reference and reorder indices
             var indexList = mesh.indexList;
             if (typeof indexList !== 'undefined') {
-                var indicesIn = indexList.values;
+                var indicesIn = indexList;
                 var numIndices = indicesIn.length;
                 var indicesOut = [];
                 var intoIndicesIn = 0;
@@ -224,7 +222,7 @@ define([
                     ++intoIndicesIn;
                     ++intoIndicesOut;
                 }
-                mesh.indexList.values = indicesOut;
+                mesh.indexList = indicesOut;
             }
 
             //Reorder Vertices
@@ -278,7 +276,7 @@ define([
      */
     GeometryFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
         if (typeof mesh !== 'undefined') {
-            var indices = mesh.indexList.values;
+            var indices = mesh.indexList;
             if (typeof indices !== 'undefined') {
                 var numIndices = indices.length;
                 var maximumIndex = 0;
@@ -287,7 +285,7 @@ define([
                         maximumIndex = indices[j];
                     }
                 }
-                mesh.indexList.values = Tipsify.tipsify({
+                mesh.indexList = Tipsify.tipsify({
                     indices : indices,
                     maximumIndex : maximumIndex,
                     cacheSize : cacheCapacity
@@ -338,9 +336,7 @@ define([
             // TODO: is this always what we want, for say BoxGeometry?
             return new Geometry({
                 attributes : attributes,
-                indexList : new GeometryIndices({
-                    values : indices
-                }),
+                indexList : indices,
                 primitiveType : primitiveType
             });
         }
@@ -363,7 +359,7 @@ define([
                 var currentIndex = 0;
                 var newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
 
-                var originalIndices = mesh.indexList.values;
+                var originalIndices = mesh.indexList;
                 var numberOfIndices = originalIndices.length;
 
                 for ( var j = 0; j < numberOfIndices; j += 3) {
@@ -722,7 +718,7 @@ define([
         for (i = 0; i < length; ++i) {
             indices = instances[i].geometry.indexList;
             numberOfIndices[primitiveType] = (typeof numberOfIndices[primitiveType] !== 'undefined') ?
-                (numberOfIndices[primitiveType] += indices.values.length) : indices.values.length;
+                (numberOfIndices[primitiveType] += indices.length) : indices.length;
         }
 
         // Next, allocate a typed array for indices per primitive type
@@ -740,9 +736,7 @@ define([
                     values = new Uint32Array(num);
                 }
 
-                combinedIndexLists.push(new GeometryIndices({
-                    values : values
-                }));
+                combinedIndexLists.push(values);
 
                 indexListsByPrimitiveType[name] = {
                     values : values,
@@ -755,8 +749,7 @@ define([
         var offset = 0;
 
         for (i = 0; i < length; ++i) {
-            indices = instances[i].geometry.indexList;
-            sourceValues = indices.values;
+            sourceValues = instances[i].geometry.indexList;
             sourceValuesLength = sourceValues.length;
             var destValues = indexListsByPrimitiveType[primitiveType].values;
             var n = indexListsByPrimitiveType[primitiveType].currentOffset;
@@ -836,12 +829,11 @@ define([
         if (mesh.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
             throw new DeveloperError('mesh.attributes.position.values.length must be a multiple of 3');
         }
-        var indexList = mesh.indexList;
-        if (typeof indexList === 'undefined') {
+        var indices = mesh.indexList;
+        if (typeof indices === 'undefined') {
             return mesh;
         }
 
-        var indices = indexList.values;
         if (mesh.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
                 indices.length < 2 || indices.length % 3 !== 0) {
             return mesh;
@@ -1001,12 +993,11 @@ define([
             throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
         }
 
-        var indexList = geometry.indexList;
-        if (typeof indexList === 'undefined') {
+        var indices = geometry.indexList;
+        if (typeof indices === 'undefined') {
             return geometry;
         }
 
-        var indices = indexList.values;
         if (geometry.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
                 indices.length < 2 || indices.length % 3 !== 0) {
             return geometry;

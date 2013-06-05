@@ -31,7 +31,7 @@ defineSuite([
         var length = positions.length;
 
         expect(positions.length).toEqual(9 * 3);
-        expect(m.indexList.values.length).toEqual(8 * 3);
+        expect(m.indexList.length).toEqual(8 * 3);
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
@@ -50,7 +50,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(9 * 3);
         expect(m.attributes.tangent.values.length).toEqual(9 * 3);
         expect(m.attributes.binormal.values.length).toEqual(9 * 3);
-        expect(m.indexList.values.length).toEqual(8 * 3);
+        expect(m.indexList.length).toEqual(8 * 3);
     });
 
     it('compute positions with rotation', function() {
@@ -66,7 +66,7 @@ defineSuite([
         var length = positions.length;
 
         expect(length).toEqual(9 * 3);
-        expect(m.indexList.values.length).toEqual(8 * 3);
+        expect(m.indexList.length).toEqual(8 * 3);
 
         var unrotatedSECorner = extent.getSoutheast();
         var projection = new GeographicProjection();
@@ -89,7 +89,7 @@ defineSuite([
         var length = positions.length;
 
         expect(length).toEqual(9 * 3);
-        expect(m.indexList.values.length).toEqual(8 * 3);
+        expect(m.indexList.length).toEqual(8 * 3);
 
         var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
