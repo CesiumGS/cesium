@@ -309,6 +309,7 @@ define([
 
         var size = width * height;
         var perimeterPositions = 2*width + 2*height - 4;
+        var twoPP = perimeterPositions * 2;
         var vertexCount = (perimeterPositions + 4)*2;
         if (closeTop) {
             vertexCount += size;
@@ -317,9 +318,8 @@ define([
             vertexCount += size;
         }
         var threeVertexCount = vertexCount * 3;
-        var twoVertexCount = vertexCount * 2;
         var positions = (vertexFormat.position) ? new Array(threeVertexCount) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(twoVertexCount) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Array(vertexCount * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Array(threeVertexCount) : undefined;
         var tangents = (vertexFormat.tangent) ? new Array(threeVertexCount) : undefined;
         var binormals = (vertexFormat.binormal) ? new Array(threeVertexCount) : undefined;
@@ -327,6 +327,7 @@ define([
         var computePosition = function(row, col, top, bottom) {
             top = defaultValue(top, true);
             bottom = defaultValue(bottom, true);
+
             latitude = nwCartographic.latitude - granYCos*row + col*granXSin;
             stLatitude = extent.north - granularityY*row;
 
@@ -368,10 +369,7 @@ define([
             }
 
             var threeExtrudedOffset = extrudedOffset*3;
-            var twoExtrudedOffset = extrudedOffset*2;
-
             var threeOffset = offset*3;
-            var twoOffset = offset*2;
 
             if (vertexFormat.position) {
                 if (bottom) {
@@ -386,21 +384,6 @@ define([
                     positions[attrIndex + threeOffset + 2] = position.z;
                 }
             }
-            if (!wall) {
-                if (vertexFormat.st) {
-                    var stLon = (stLongitude - extent.west) * lonScalar;
-                    var stlat = (stLatitude - extent.south) * latScalar;
-                    if (bottom) {
-                        textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
-                        textureCoordinates[stIndex + 1 + twoExtrudedOffset] = stlat;
-                    }
-
-                    if (top) {
-                        textureCoordinates[stIndex + twoOffset] = stLon;
-                        textureCoordinates[stIndex + twoOffset + 1] = stlat;
-                    }
-                }
-            }
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 if (wall) {
@@ -410,124 +393,109 @@ define([
                     ellipsoid.geodeticSurfaceNormal(position, normal);
                     Cartesian3.negate(normal, extrudedNormal);
                 }
-
-                if (vertexFormat.normal) {
-                    if (bottom) {
-                        normals[attrIndex + threeExtrudedOffset] = extrudedNormal.x;
-                        normals[attrIndex + 1 + threeExtrudedOffset] = extrudedNormal.y;
-                        normals[attrIndex + 2 + threeExtrudedOffset] = extrudedNormal.z;
-                    }
-
-                    if (top) {
-                        normals[attrIndex + threeOffset] = normal.x;
-                        normals[attrIndex + threeOffset + 1] = normal.y;
-                        normals[attrIndex + threeOffset+ 2] = normal.z;
-                    }
-                }
-
-                if (vertexFormat.tangent) {
+                if (vertexFormat.tangent || vertexFormat.binormal) {
                     Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    if (binormal) {
+                        Cartesian3.cross(normal, tangent, binormal);
+                    }
                     if (wall) {
                         tangent.clone(extrudedTangent);
                     } else {
                         Cartesian3.negate(tangent, extrudedTangent);
                     }
-                    if (bottom) {
-                        tangents[attrIndex + threeExtrudedOffset] = extrudedTangent.x;
-                        tangents[attrIndex + 1 + threeExtrudedOffset] = extrudedTangent.y;
-                        tangents[attrIndex + 2 + threeExtrudedOffset] = extrudedTangent.z;
+                }
+
+                if (top) {
+                    if (vertexFormat.normal) {
+                        normals[attrIndex + threeOffset] = normal.x;
+                        normals[attrIndex + threeOffset + 1] = normal.y;
+                        normals[attrIndex + threeOffset+ 2] = normal.z;
                     }
 
-                    if (top) {
+                    if (vertexFormat.tangent) {
                         tangents[attrIndex + threeOffset] = tangent.x;
                         tangents[attrIndex + threeOffset + 1] = tangent.y;
                         tangents[attrIndex + threeOffset + 2] = tangent.z;
                     }
-                }
 
-                if (vertexFormat.binormal) {
-                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                    Cartesian3.cross(normal, tangent, binormal);
-
-                    if (bottom) {
-                        binormals[attrIndex + threeExtrudedOffset] = binormal.x;
-                        binormals[attrIndex + 1 + threeExtrudedOffset] = binormal.y;
-                        binormals[attrIndex + 2 + threeExtrudedOffset] = binormal.z;
-                    }
-
-                    if (top) {
+                    if (vertexFormat.binormal) {
                         binormals[attrIndex + threeOffset] = binormal.x;
                         binormals[attrIndex + threeOffset + 1] = binormal.y;
                         binormals[attrIndex + threeOffset + 2] = binormal.z;
                     }
                 }
+
+                if (bottom) {
+                    if (vertexFormat.normal) {
+                        normals[attrIndex + threeExtrudedOffset] = extrudedNormal.x;
+                        normals[attrIndex + 1 + threeExtrudedOffset] = extrudedNormal.y;
+                        normals[attrIndex + 2 + threeExtrudedOffset] = extrudedNormal.z;
+                    }
+
+                    if (vertexFormat.tangent) {
+                        tangents[attrIndex + threeExtrudedOffset] = extrudedTangent.x;
+                        tangents[attrIndex + 1 + threeExtrudedOffset] = extrudedTangent.y;
+                        tangents[attrIndex + 2 + threeExtrudedOffset] = extrudedTangent.z;
+                    }
+
+                    if (vertexFormat.binormal) {
+                        binormals[attrIndex + threeExtrudedOffset] = binormal.x;
+                        binormals[attrIndex + 1 + threeExtrudedOffset] = binormal.y;
+                        binormals[attrIndex + 2 + threeExtrudedOffset] = binormal.z;
+                    }
+                }
             }
         };
 
-        var stNorth = function(offset, extrudedOffset){
+        var stWall = function(offset, extrudedOffset, direction){
             if (vertexFormat.st) {
                 var twoOffset = offset*2;
                 var twoExtrudedOffset = extrudedOffset*2;
 
                 var stLon = (stLongitude - extent.west) * lonScalar;
+                var stLat = (stLatitude - extent.south) * latScalar;
 
-                textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
-                textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-
-                textureCoordinates[stIndex + twoOffset] =  1 - stLon;
-                textureCoordinates[stIndex + twoOffset + 1] = 1;
+                if (direction === 'n') {
+                    textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
+                    textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
+                    textureCoordinates[stIndex + twoOffset] =  1 - stLon;
+                    textureCoordinates[stIndex + twoOffset + 1] = 1;
+                } else if (direction === 's') {
+                    textureCoordinates[stIndex + twoExtrudedOffset] = stLon;
+                    textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
+                    textureCoordinates[stIndex + twoOffset] = stLon;
+                    textureCoordinates[stIndex + twoOffset + 1] = 1;
+                } else if (direction === 'e') {
+                    textureCoordinates[stIndex + twoExtrudedOffset] = stLat;
+                    textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
+                    textureCoordinates[stIndex + twoOffset] = stLat;
+                    textureCoordinates[stIndex + twoOffset + 1] = 1;
+                } else if (direction === 'w') {
+                    textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLat;
+                    textureCoordinates[stIndex + 1 + twoExtrudedOffset] =  0;
+                    textureCoordinates[stIndex + twoOffset] = 1 - stLat;
+                    textureCoordinates[stIndex + twoOffset + 1] = 1;
+                }
             }
         };
 
-        var stSouth = function(offset, extrudedOffset){
+        var stTopBottom = function(offset, extrudedOffset) {
             if (vertexFormat.st) {
-                var twoOffset = offset*2;
-                var twoExtrudedOffset = extrudedOffset*2;
-
                 var stLon = (stLongitude - extent.west) * lonScalar;
-
-                textureCoordinates[stIndex + twoExtrudedOffset] = stLon;
-                textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-
-                textureCoordinates[stIndex + twoOffset] = stLon;
-                textureCoordinates[stIndex + twoOffset + 1] = 1;
-            }
-        };
-
-        var stEast = function(offset, extrudedOffset){
-            if (vertexFormat.st) {
-                var twoOffset = offset*2;
-                var twoExtrudedOffset = extrudedOffset*2;
-
                 var stlat = (stLatitude - extent.south) * latScalar;
+                if (!closeTop) {
+                    extrudedOffset = offset;
+                }
+                if (closeBottom) {
+                    textureCoordinates[stIndex +  extrudedOffset*2] = 1 - stLon;
+                    textureCoordinates[stIndex + 1 +  extrudedOffset*2] = stlat;
+                }
 
-                textureCoordinates[stIndex + twoExtrudedOffset] = stlat;
-                textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-
-                textureCoordinates[stIndex + twoOffset] = stlat;
-                textureCoordinates[stIndex + twoOffset + 1] = 1;
+                if (closeTop) {
+                    textureCoordinates[stIndex + offset*2] = stLon;
+                    textureCoordinates[stIndex + offset*2 + 1] = stlat;
+                }
             }
-        };
-
-        var stWest = function(offset, extrudedOffset){
-            if (vertexFormat.st) {
-                var twoOffset = offset*2;
-                var twoExtrudedOffset = extrudedOffset*2;
-
-                var stlat = (stLatitude - extent.south) * latScalar;
-
-                textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stlat;
-                textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-
-                textureCoordinates[stIndex + twoOffset] = 1 - stlat;
-                textureCoordinates[stIndex + twoOffset + 1] = 1;
-            }
-        };
-
-        var addAttributesAtIndex = function(index, extrudedIndex, setNormal) {
-            var o = index - vertexIndex;
-            var eo = extrudedIndex - vertexIndex;
-            addAttributes(o, eo, true, true, true, setNormal);
         };
 
         var incrementIndex = function(amount) {
@@ -573,40 +541,34 @@ define([
             if (row === 0) { // north row
                 for (col = 0; col < width; ++col) {
                     computePosition(row, col);
+
                     if (col === 0) {
-                        addAttributesAtIndex(2*perimeterPositions, 2*perimeterPositions + 4, northNormal);
-                        stWest(2*perimeterPositions - vertexIndex, 2*perimeterPositions + 4 - vertexIndex);
-                        addAttributes(0, perimeterPositions, true, true, true, northNormal); // add north row
-                        stNorth(0, perimeterPositions);
+                        addAttributes(twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, true, westNormal);
+                        stWall(twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w');
                     } else if (col === width - 1) {
-                        addAttributesAtIndex(2*perimeterPositions + 1, 2*perimeterPositions + 5, northNormal);
-                        stNorth(2*perimeterPositions + 1 - vertexIndex, 2*perimeterPositions + 5 - vertexIndex);
-                        addAttributes(0, perimeterPositions, true, true, true, northNormal); // add north row
-                        stEast(0, perimeterPositions);
-                    } else {
-                        addAttributes(0, perimeterPositions, true, true, true, northNormal); // add north row
-                        stNorth(0, perimeterPositions);
+                        addAttributes((twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, true, eastNormal);
+                        stWall(twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e');
                     }
+
+                    addAttributes(0, perimeterPositions, true, true, true, northNormal); // add north row
+                    stWall(0, perimeterPositions, 'n');
 
                     incrementIndex(1);
                 }
             } else if (row === height - 1) { // south row
                 for (col = 0; col < width; ++col) {
                     computePosition(row, col);
+
                     if (col === 0) {
-                        addAttributesAtIndex(2*perimeterPositions + 2, 2*perimeterPositions + 6, southNormal);
-                        stSouth(2*perimeterPositions + 2 - vertexIndex, 2*perimeterPositions + 6 - vertexIndex);
-                        addAttributes(0, perimeterPositions, true, true, true, southNormal); // add south row
-                        stWest(0, perimeterPositions);
+                        addAttributes((twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, true, westNormal);
+                        stWall(twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w');
                     } else if (col === width - 1) {
-                        addAttributesAtIndex(2*perimeterPositions + 3, 2*perimeterPositions + 7, southNormal);
-                        stEast(2*perimeterPositions + 3 - vertexIndex, 2*perimeterPositions + 7 - vertexIndex);
-                        addAttributes(0, perimeterPositions, true, true, true, southNormal); // add south row
-                        stSouth(0, perimeterPositions);
-                    } else {
-                        addAttributes(0, perimeterPositions, true, true, true, southNormal); // add south row
-                        stSouth(0, perimeterPositions);
+                        addAttributes((twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, true, eastNormal);
+                        stWall(twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e');
                     }
+
+                    addAttributes(0, perimeterPositions, true, true, true, southNormal); // add south row
+                    stWall(0, perimeterPositions, 's');
 
                     incrementIndex(1);
                 }
@@ -614,13 +576,13 @@ define([
                 col = 0;
                 computePosition(row, col);
                 addAttributes(0, perimeterPositions, true, true, true, westNormal); // add west side
-                stWest(0, perimeterPositions);
+                stWall(0, perimeterPositions, 'w');
                 incrementIndex(1);
 
                 col = width - 1;
                 computePosition(row, col);
                 addAttributes(0, perimeterPositions, true, true, true, eastNormal); // add east side
-                stEast(0, perimeterPositions);
+                stWall(0, perimeterPositions, 'e');
                 incrementIndex(1);
             }
         }
@@ -631,6 +593,7 @@ define([
                 for (col = 0; col < width; ++col) {
                     computePosition(row, col, closeTop, closeBottom);
                     addAttributes(0, size, closeTop, closeBottom, false);
+                    stTopBottom(0, size);
                     incrementIndex(1);
                 }
             }
@@ -662,33 +625,33 @@ define([
             if (i > 0 && i < width) { // north wall
                 lowerRight = lowerLeft - 1;
                 upperRight = upperLeft - 1;
-                if (i === width - 1) {
-                    upperLeft = perimeterPositions * 2 + 1; //get clone of corner point
-                    lowerLeft = upperLeft + 4;
-                }
             } else if (i >= perimeterPositions - width && i < perimeterPositions - 1) { // south wall
                 lowerRight = lowerLeft + 1;
                 upperRight = upperLeft + 1;
-                if (i === perimeterPositions - width) {
-                    upperLeft = perimeterPositions * 2 + 2; //get clone of corner point
-                    lowerLeft = upperLeft + 4;
-                }
-            } else if (i === 0) { // west wall: NW corner
+            } else if (i === 0) { // north wall: NW corner
                 lowerRight = lowerLeft + width;
                 upperRight = upperLeft + width;
-                upperLeft = perimeterPositions * 2; //get clone of corner point
+                upperLeft = twoPP; //get clone of corner point
                 lowerLeft = upperLeft + 4;
-            } else if (i === perimeterPositions - 1) { // east wall: SE corner
+            } else if (i === perimeterPositions - 1) { // south wall: SE corner
                 lowerRight = lowerLeft - width;
                 upperRight = upperLeft - width;
-                upperLeft = perimeterPositions * 2 + 3; //get clone of corner point
+                upperLeft = twoPP + 3; //get clone of corner point
                 lowerLeft = upperLeft + 4;
             } else if (evenWidth && i % 2 === 0 || !evenWidth && i % 2 !== 0) { // west walll
                 lowerRight = lowerLeft + 2;
                 upperRight = upperLeft + 2;
+                if (upperRight === perimeterPositions - width) {
+                    upperRight = twoPP + 2; //get clone of corner point
+                    lowerRight = upperRight + 4;
+                }
             } else { // east wall: if (evenWidth && i % 2 !== 0 || !evenWidth && i % 2 === 0)
                 lowerRight = lowerLeft - 2;
                 upperRight = upperLeft - 2;
+                if (upperRight === width - 1) {
+                    upperRight = twoPP + 1; //get clone of corner point
+                    lowerRight = upperRight + 4;
+                }
             }
 
             indices[indicesIndex++] = upperLeft;
@@ -702,6 +665,7 @@ define([
 
         if (closeTop || closeBottom) {
             var index = perimeterPositions*2 + 8;
+            var bottomOffset = (closeBottom && closeTop) ? size : 0;
             for (i = 0; i < height - 1; ++i) {
                 for ( var j = 0; j < width - 1; ++j) {
                     upperLeft = index;
@@ -709,21 +673,12 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        if (closeTop) {
-                            indices[indicesIndex++] = upperRight + size;
-                            indices[indicesIndex++] = lowerLeft + size;
-                            indices[indicesIndex++] = upperLeft + size;
-                            indices[indicesIndex++] = lowerRight + size;
-                            indices[indicesIndex++] = lowerLeft + size;
-                            indices[indicesIndex++] = upperRight + size;
-                        } else {
-                            indices[indicesIndex++] = upperRight;
-                            indices[indicesIndex++] = lowerLeft;
-                            indices[indicesIndex++] = upperLeft;
-                            indices[indicesIndex++] = lowerRight;
-                            indices[indicesIndex++] = lowerLeft;
-                            indices[indicesIndex++] = upperRight;
-                        }
+                        indices[indicesIndex++] = upperRight + bottomOffset;
+                        indices[indicesIndex++] = lowerLeft + bottomOffset;
+                        indices[indicesIndex++] = upperLeft + bottomOffset;
+                        indices[indicesIndex++] = lowerRight + bottomOffset;
+                        indices[indicesIndex++] = lowerLeft + bottomOffset;
+                        indices[indicesIndex++] = upperRight + bottomOffset;
                     }
 
                     if (closeTop) {
