@@ -1,6 +1,7 @@
 @import url(../Animation/Animation.css);
 @import url(../BaseLayerPicker/BaseLayerPicker.css);
 @import url(../CesiumWidget/CesiumWidget.css);
+@import url(../DataSourceBrowser/DataSourceBrowser.css);
 @import url(../FullscreenButton/FullscreenButton.css);
 @import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
@@ -54,6 +55,13 @@
 	width: 29px;
 	height: 29px;
 	overflow: hidden;
+}
+
+.cesium-viewer-dataSourceBrowserContainer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 0;
 }
 
 .cesium-viewer-toolbar {

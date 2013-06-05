@@ -18,6 +18,7 @@ define([
         '../BaseLayerPicker/createDefaultBaseLayers',
         '../CesiumWidget/CesiumWidget',
         '../ClockViewModel',
+        '../DataSourceBrowser/DataSourceBrowser',
         '../FullscreenButton/FullscreenButton',
         '../getElement',
         '../HomeButton/HomeButton',
@@ -43,6 +44,7 @@ define([
         createDefaultBaseLayers,
         CesiumWidget,
         ClockViewModel,
+        DataSourceBrowser,
         FullscreenButton,
         getElement,
         HomeButton,
@@ -94,6 +96,7 @@ define([
      * @param {Object} [options] Configuration options for the widget.
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
      * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+     * @param {Boolean} [options.dataSourceBrowser=true] If set to false, the DataSourceBrowser widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -280,6 +283,15 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
+        //DataSourceBrowser
+        var dataSourceBrowser;
+        if (!defined(options.dataSourceBrowser) || options.dataSourceBrowser !== false) {
+            var dataSourceBrowserContainer = document.createElement('div');
+            dataSourceBrowserContainer.className = 'cesium-viewer-dataSourceBrowserContainer';
+            viewerContainer.appendChild(dataSourceBrowserContainer);
+            dataSourceBrowser = new DataSourceBrowser(dataSourceBrowserContainer, dataSourceCollection);
+        }
+
         var eventHelper = new EventHelper();
 
         function updateDataSourceDisplay(clock) {
@@ -316,6 +328,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
+        this._dataSourceBrowser = dataSourceBrowser;
         this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
@@ -413,6 +426,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         fullscreenButton : {
             get : function() {
                 return this._fullscreenButton;
+            }
+        },
+
+        /**
+         * Gets the DataSourceBrowser.
+         * @memberof Viewer
+         * @type {DataSourceBrowser}
+         */
+        dataSourceBrowser : {
+            get : function() {
+                return this._dataSourceBrowser;
             }
         },
 
@@ -710,6 +734,11 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             this._fullscreenSubscription.dispose();
             this._viewerContainer.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
+        }
+
+        if (defined(this._dataSourceBrowser)) {
+            this._viewerContainer.removeChild(this._dataSourceBrowser.container);
+            this._dataSourceBrowser = this._dataSourceBrowser.destroy();
         }
 
         this._clockViewModel = this._clockViewModel.destroy();
