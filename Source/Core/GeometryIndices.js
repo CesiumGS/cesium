@@ -17,11 +17,6 @@ define([
         /**
          * DOC_TBA
          */
-        this.primitiveType = options.primitiveType;
-
-        /**
-         * DOC_TBA
-         */
         this.values = options.values;
     };
 
@@ -32,8 +27,6 @@ define([
         if (typeof result === 'undefined') {
             result = new GeometryIndices();
         }
-
-        result.primitiveType = this.primitiveType; // Shallow copy enum
 
 // TODO: typed array or not.  fastest way to copy?
         var sourceValues = this.values;

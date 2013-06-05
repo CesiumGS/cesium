@@ -804,9 +804,9 @@ define([
                     }
                 },
                 indexList : {
-                    primitiveType : PrimitiveType.TRIANGLES,
                     values : TerrainProvider.getRegularGridIndices(256, 256)
-                }
+                },
+                primitiveType : PrimitiveType.TRIANGLES
             };
 
             var reprojectAttribInds = {

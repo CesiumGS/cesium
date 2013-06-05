@@ -422,6 +422,11 @@ define([
         this.indexList = mesh.indexList;
 
         /**
+         * DOC_TBA
+         */
+        this.primitiveType = mesh.primitiveType;
+
+        /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
          * @type BoundingSphere

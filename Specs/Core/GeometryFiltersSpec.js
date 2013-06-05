@@ -37,12 +37,12 @@ defineSuite([
     it('converts triangles to wireframe in place', function() {
         var mesh = GeometryFilters.toWireframe({
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 1, 2, 3, 4, 5]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
-        expect(mesh.indexList.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexList.values;
         expect(v.length).toEqual(12);
@@ -65,12 +65,12 @@ defineSuite([
     it('converts a triangle fan to wireframe in place', function() {
         var mesh = GeometryFilters.toWireframe({
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLE_FAN,
                 values : [0, 1, 2, 3]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLE_FAN
         });
 
-        expect(mesh.indexList.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexList.values;
         expect(v.length).toEqual(12);
@@ -93,12 +93,12 @@ defineSuite([
     it('converts a triangle strip to wireframe in place', function() {
         var mesh = GeometryFilters.toWireframe({
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLE_STRIP,
                 values : [0, 1, 2, 3]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
-        expect(mesh.indexList.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
         var v = mesh.indexList.values;
         expect(v.length).toEqual(12);
@@ -180,9 +180,10 @@ defineSuite([
         mesh.attributes = {};
 
         mesh.indexList = {
-            primitiveType : PrimitiveType.TRIANGLES,
             values : [5, 3, 2, 0, 1, 4, 4, 1, 3, 2, 5, 0]
         };
+
+        mesh.primitiveType = PrimitiveType.TRIANGLES;
 
         mesh.attributes.vertexNames = {
             componentDatatype : ComponentDatatype.FLOAT,
@@ -277,9 +278,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 0, 0]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         };
 
         var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
@@ -304,9 +305,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 0, 0, sixtyFourK, sixtyFourK, sixtyFourK, 0, sixtyFourK, 0]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         };
 
         var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
@@ -316,7 +317,7 @@ defineSuite([
         expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
         expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
-        expect(meshes[0].indexList.primitiveType).toEqual(PrimitiveType.TRIANGLES);
+        expect(meshes[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(meshes[0].indexList.values).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
@@ -343,9 +344,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : indices
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         };
 
         var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
@@ -368,11 +369,10 @@ defineSuite([
                     values : [10.0]
                 }
             },
-
             indexList : {
-                primitiveType : PrimitiveType.POINTS,
                 values : [0]
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         };
 
         expect(function() {
@@ -395,11 +395,10 @@ defineSuite([
                     values : [1.0, 2.0]
                 }
             },
-
             indexList : {
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [0, 0, 0]
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         };
 
         expect(function() {
@@ -541,9 +540,9 @@ defineSuite([
                     })
                 },
                 indexList : new GeometryIndices({
-                    primitiveType : PrimitiveType.TRIANGLES,
                     values : [0, 1, 2]
-                })
+                }),
+                primitiveType : PrimitiveType.TRIANGLES
             })
         });
         var anotherInstance = new GeometryInstance({
@@ -560,9 +559,9 @@ defineSuite([
                     })
                 },
                 indexList : new GeometryIndices({
-                    primitiveType : PrimitiveType.TRIANGLES,
                     values : [0, 1, 2]
-                })
+                }),
+                primitiveType : PrimitiveType.TRIANGLES
             })
         });
 
@@ -583,9 +582,9 @@ defineSuite([
                 })
             },
             indexList : new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : new Uint16Array([0, 1, 2, 3, 4, 5])
-            })
+            }),
+            primitiveType : PrimitiveType.TRIANGLES
         }));
     });
 
@@ -686,9 +685,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLE_STRIP,
                 values: [0, 1, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -708,9 +707,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLES,
                 values: [0, 1, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -731,9 +730,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLES,
                 values: [0, 1, 2, 1, 3, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -761,9 +760,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLES,
                 values: [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -1060,9 +1059,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLE_STRIP,
                 values: [0, 1, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
         mesh = GeometryFilters.computeTangentAndBinormal(mesh);
@@ -1088,9 +1087,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLES,
                 values: [0, 1, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -1119,9 +1118,9 @@ defineSuite([
                 }
             },
             indexList : {
-                primitiveType: PrimitiveType.TRIANGLES,
                 values: [0, 1, 2, 1, 3, 2]
-            }
+            },
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);

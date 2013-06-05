@@ -294,7 +294,6 @@ define([
 
             indexList = new GeometryIndices({
                 // 12 triangles:  6 faces, 2 triangles each.
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [
                     // +z face
                     0, 1, 2,
@@ -341,7 +340,6 @@ define([
 
             indexList = new GeometryIndices({
                 // 12 triangles:  6 faces, 2 triangles each.
-                primitiveType : PrimitiveType.TRIANGLES,
                 values : [
                     4, 5, 6, // plane z = corner.Z
                     4, 6, 7,
@@ -373,6 +371,11 @@ define([
          * @type GeometryIndices
          */
         this.indexList = indexList;
+
+        /**
+         * DOC_TBA
+         */
+        this.primitiveType = PrimitiveType.TRIANGLES;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

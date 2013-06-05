@@ -839,9 +839,10 @@ define([
                 },
 
                 indexList : new GeometryIndices({
-                    primitiveType : PrimitiveType.TRIANGLES,
                     values : subdividedIndices
-                })
+                }),
+
+                primitiveType : PrimitiveType.TRIANGLES
             });
         },
 

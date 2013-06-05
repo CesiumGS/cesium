@@ -113,7 +113,7 @@ define([
         if (typeof mesh !== 'undefined') {
             var indices = mesh.indexList;
             if (typeof indices !== 'undefined') {
-                switch (indices.primitiveType) {
+                switch (mesh.primitiveType) {
                     case PrimitiveType.TRIANGLES:
                         indices.values = trianglesToLines(indices.values);
                         break;
@@ -125,7 +125,7 @@ define([
                         break;
                 }
 
-                indices.primitiveType = PrimitiveType.LINES;
+                mesh.primitiveType = PrimitiveType.LINES;
             }
         }
 
@@ -330,28 +330,26 @@ define([
     /**
      * DOC_TBA.  Old mesh is not guaranteed to be copied.
      *
-     * @exception {DeveloperError} The mesh's index-lists must have PrimitiveType equal to PrimitiveType.TRIANGLES.
+     * @exception {DeveloperError} mesh.primitiveType must equal to PrimitiveType.TRIANGLES.
      * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
      */
     GeometryFilters.fitToUnsignedShortIndices = function(mesh) {
         function createMesh(attributes, primitiveType, indices) {
+            // TODO: is this always what we want, for say BoxGeometry?
             return new Geometry({
                 attributes : attributes,
                 indexList : new GeometryIndices({
-                    primitiveType : primitiveType,
                     values : indices
                 }),
-                boundingSphere : (typeof mesh.boundingSphere !== 'undefined') ? BoundingSphere.clone(mesh.boundingSphere) : undefined,
-                modelMatrix : (typeof mesh.modelMatrix !== 'undefined') ? Matrix4.clone(mesh.modelMatrix) : undefined,
-                pickData : mesh.pickData
+                primitiveType : primitiveType
             });
         }
 
         var meshes = [];
 
         if (typeof mesh !== 'undefined') {
-            if (mesh.indexList.primitiveType !== PrimitiveType.TRIANGLES) {
-                throw new DeveloperError('indexList must have PrimitiveType equal to PrimitiveType.TRIANGLES.');
+            if (mesh.primitiveType !== PrimitiveType.TRIANGLES) {
+                throw new DeveloperError('mesh.primitiveType must equal to PrimitiveType.TRIANGLES.');
             }
 
             var numberOfVertices = Geometry.computeNumberOfVertices(mesh);
@@ -404,7 +402,7 @@ define([
                     newIndices.push(i2);
 
                     if (currentIndex + 3 > sixtyFourK) {
-                        meshes.push(createMesh(newAttributes, mesh.indexList.primitiveType, newIndices));
+                        meshes.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
 
                         // Reset for next vertex-array
                         oldToNewIndex = [];
@@ -415,7 +413,7 @@ define([
                 }
 
                 if (newIndices.length !== 0) {
-                    meshes.push(createMesh(newAttributes, mesh.indexList.primitiveType, newIndices));
+                    meshes.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
                 }
             } else {
                 // No need to split into multiple meshes
@@ -717,13 +715,14 @@ define([
         // Combine index lists
 
         // First, determine the size of a typed array per primitive type
+        var primitiveType = instances[0].geometry.primitiveType;
         var numberOfIndices = {};
         var indices;
 
         for (i = 0; i < length; ++i) {
             indices = instances[i].geometry.indexList;
-            numberOfIndices[indices.primitiveType] = (typeof numberOfIndices[indices.primitiveType] !== 'undefined') ?
-                (numberOfIndices[indices.primitiveType] += indices.values.length) : indices.values.length;
+            numberOfIndices[primitiveType] = (typeof numberOfIndices[primitiveType] !== 'undefined') ?
+                (numberOfIndices[primitiveType] += indices.values.length) : indices.values.length;
         }
 
         // Next, allocate a typed array for indices per primitive type
@@ -742,7 +741,6 @@ define([
                 }
 
                 combinedIndexLists.push(new GeometryIndices({
-                    primitiveType : PrimitiveType[name],
                     values : values
                 }));
 
@@ -760,14 +758,14 @@ define([
             indices = instances[i].geometry.indexList;
             sourceValues = indices.values;
             sourceValuesLength = sourceValues.length;
-            var destValues = indexListsByPrimitiveType[indices.primitiveType].values;
-            var n = indexListsByPrimitiveType[indices.primitiveType].currentOffset;
+            var destValues = indexListsByPrimitiveType[primitiveType].values;
+            var n = indexListsByPrimitiveType[primitiveType].currentOffset;
 
             for (k = 0; k < sourceValuesLength; ++k) {
                 destValues[n++] = offset + sourceValues[k];
             }
 
-            indexListsByPrimitiveType[indices.primitiveType].currentOffset = n;
+            indexListsByPrimitiveType[primitiveType].currentOffset = n;
 
             var attrs = instances[i].geometry.attributes;
             for (name in attrs) {
@@ -800,6 +798,7 @@ define([
             attributes : attributes,
 // TODO: cleanup combinedIndexLists
             indexList : combinedIndexLists[0],
+            primitiveType : primitiveType,
             boundingSphere : boundingSphere
         });
     };
@@ -843,7 +842,7 @@ define([
         }
 
         var indices = indexList.values;
-        if (indexList.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+        if (mesh.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
                 indices.length < 2 || indices.length % 3 !== 0) {
             return mesh;
         }
@@ -1008,7 +1007,7 @@ define([
         }
 
         var indices = indexList.values;
-        if (indexList.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
                 indices.length < 2 || indices.length % 3 !== 0) {
             return geometry;
         }

@@ -289,9 +289,13 @@ define([
          * @type GeometryIndices
          */
         this.indexList = new GeometryIndices({
-            primitiveType : PrimitiveType.TRIANGLES,
             values : indices
         });
+
+        /**
+         * DOC_TBA
+         */
+        this.primitiveType = PrimitiveType.TRIANGLES;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

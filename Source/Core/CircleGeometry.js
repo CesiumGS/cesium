@@ -73,6 +73,11 @@ define([
         this.indexList = ellipseGeometry.indexList;
 
         /**
+         * DOC_TBA
+         */
+        this.primitiveType = ellipseGeometry.primitiveType;
+
+        /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
          * @type BoundingSphere

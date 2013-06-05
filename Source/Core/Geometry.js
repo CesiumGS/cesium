@@ -29,6 +29,11 @@ define([
         /**
          * DOC_TBA
          */
+        this.primitiveType = options.primitiveType;
+
+        /**
+         * DOC_TBA
+         */
         this.boundingSphere = options.boundingSphere;
     };
 
@@ -51,6 +56,7 @@ define([
 
         result.attributes = newAttributes;
         result.indexList = (typeof this.indexList !== 'undefined') ?  this.indexList.clone() : undefined;
+        result.primitiveType = this.primitiveType;
         this.boundingSphere.clone(result.boundingSphere);
 
         return result;
