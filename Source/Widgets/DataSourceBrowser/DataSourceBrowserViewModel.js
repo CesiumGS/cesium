@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../../Core/createGuid',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout'
     ], function(
+        createGuid,
         DeveloperError,
         knockout) {
     "use strict";
@@ -10,6 +12,7 @@ define([
     function DataSourceViewModel(name) {
         var that = this;
 
+        this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
         this.name = name;
         this.children = [];
         this.expanded = false;

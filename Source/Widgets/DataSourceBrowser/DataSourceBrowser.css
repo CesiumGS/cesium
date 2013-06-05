@@ -12,6 +12,7 @@
 .cesium-dataSourceBrowser {
     font-family: sans-serif;
     font-size: 11px;
+    color: #edffff;
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
@@ -29,8 +30,12 @@
     cursor: pointer;
 }
 
+.cesium-dataSourceBrowser input:checked~ul {
+    display: block;
+}
+
 .cesium-dataSourceBrowser label,.cesium-dataSourceBrowser label::before {
-    background: url(../DataSourceBrowserIcons.png) no-repeat;
+    background: url(../Images/DataSourceBrowserIcons.png) no-repeat;
 }
 
 .cesium-dataSourceBrowser label,.cesium-dataSourceBrowser a,.cesium-dataSourceBrowser label::before {
