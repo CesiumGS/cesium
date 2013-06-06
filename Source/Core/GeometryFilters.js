@@ -36,7 +36,7 @@ define([
      *
      * @exports GeometryFilters
      *
-     * @see Context#createVertexArrayFromMesh
+     * @see Context#createVertexArrayFromGeometry
      */
     var GeometryFilters = {};
 
@@ -257,9 +257,9 @@ define([
      * @param {Geometry} mesh The mesh to filter, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
      *
-     * @exception {DeveloperError} Mesh's index list must be defined.
-     * @exception {DeveloperError} Mesh's index lists' lengths must each be a multiple of three.
-     * @exception {DeveloperError} Mesh's index list's maximum index value must be greater than zero.
+     * @exception {DeveloperError} Geometry's index list must be defined.
+     * @exception {DeveloperError} Geometry's index lists' lengths must each be a multiple of three.
+     * @exception {DeveloperError} Geometry's index list's maximum index value must be greater than zero.
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
      * @returns The modified <code>mesh</code> argument, with its indices optimally reordered for the post-vertex-shader cache.
@@ -332,15 +332,6 @@ define([
      * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
      */
     GeometryFilters.fitToUnsignedShortIndices = function(mesh) {
-        function createMesh(attributes, primitiveType, indices) {
-            // TODO: is this always what we want, for say BoxGeometry?
-            return new Geometry({
-                attributes : attributes,
-                indexList : indices,
-                primitiveType : primitiveType
-            });
-        }
-
         var geometries = [];
 
         if (typeof mesh !== 'undefined') {
@@ -398,7 +389,12 @@ define([
                     newIndices.push(i2);
 
                     if (currentIndex + 3 > sixtyFourK) {
-                        geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                        // TODO: is this always what we want, for say BoxGeometry?
+                        geometries.push(new Geometry({
+                            attributes : newAttributes,
+                            indexList : newIndices,
+                            primitiveType : mesh.primitiveType
+                        }));
 
                         // Reset for next vertex-array
                         oldToNewIndex = [];
@@ -409,7 +405,12 @@ define([
                 }
 
                 if (newIndices.length !== 0) {
-                    geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                    // TODO: is this always what we want, for say BoxGeometry?
+                    geometries.push(new Geometry({
+                        attributes : newAttributes,
+                        indexList : newIndices,
+                        primitiveType : mesh.primitiveType
+                    }));
                 }
             } else {
                 // No need to split into multiple geometries
@@ -685,7 +686,7 @@ define([
         var sourceValues;
         var sourceValuesLength;
 
-        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromMesh to save a copy.
+        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromGeometry to save a copy.
         // This will require adding offset and stride to the mesh.
 
         // Combine attributes from each mesh into a single typed array

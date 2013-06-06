@@ -215,7 +215,7 @@ defineSuite([
                     maximumCorner: maximumCorner
                 });
                 var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
-                this._va = context.createVertexArrayFromMesh({
+                this._va = context.createVertexArrayFromGeometry({
                     mesh: mesh,
                     attributeIndices: attributeIndices,
                     bufferUsage: BufferUsage.STATIC_DRAW

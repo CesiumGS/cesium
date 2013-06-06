@@ -87,9 +87,9 @@ define([
         return result;
     }
 
-    var createMeshFromPositionsPositions = [];
+    var createGeometryFromPositionsPositions = [];
 
-    function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -97,7 +97,7 @@ define([
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -219,7 +219,7 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            mesh = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
             if (typeof mesh !== 'undefined') {
                 geometries.push(mesh);
             }
@@ -272,7 +272,7 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                mesh = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
                 if (typeof mesh !== 'undefined') {
                     geometries.push(mesh);
                 }
@@ -292,7 +292,7 @@ define([
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
-            // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
+            // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
             var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);

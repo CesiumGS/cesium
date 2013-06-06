@@ -799,7 +799,7 @@ define([
                 }
             }
 
-            var reprojectMesh = new Geometry({
+            var reprojectGeometry = new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
@@ -815,8 +815,8 @@ define([
                 position : 0
             };
 
-            reproject.vertexArray = context.createVertexArrayFromMesh({
-                mesh : reprojectMesh,
+            reproject.vertexArray = context.createVertexArrayFromGeometry({
+                mesh : reprojectGeometry,
                 attributeIndices : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });

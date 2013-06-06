@@ -370,7 +370,7 @@ define([
                             }
                         }
                     };
-                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
+                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                         mesh : mesh,
                         attributeIndices : {
                             position : 0
@@ -418,7 +418,7 @@ define([
                              }
                          }
                      };
-                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
+                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
                          mesh : mesh,
                          attributeIndices : {
                              position : 0
@@ -552,7 +552,7 @@ define([
                 indexList : [0, 1, 2, 2, 1, 3],
                 primitiveType : PrimitiveType.TRIANGLES
             };
-            this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
+            this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 attributeIndices : {
                     position : 0

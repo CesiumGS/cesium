@@ -158,7 +158,7 @@ define([
 
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.modelMatrix = Matrix4.IDENTITY.clone();
-            command.vertexArray = context.createVertexArrayFromMesh({
+            command.vertexArray = context.createVertexArrayFromGeometry({
                 mesh: mesh,
                 attributeIndices: attributeIndices,
                 bufferUsage: BufferUsage.STATIC_DRAW

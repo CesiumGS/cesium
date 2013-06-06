@@ -1138,7 +1138,7 @@ define([
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Context#createVertexArrayFromMesh
+     * @see Context#createVertexArrayFromGeometry
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      * @see Context#draw
@@ -2321,7 +2321,7 @@ define([
      * // usage is used for the created vertex and index buffer.  The attributes are not
      * // interleaved by default.
      * var mesh = new BoxGeometry();
-     * var va = context.createVertexArrayFromMesh({
+     * var va = context.createVertexArrayFromGeometry({
      *     mesh             : mesh,
      *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      * });
@@ -2330,7 +2330,7 @@ define([
      *
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
-     * var va = context.createVertexArrayFromMesh({
+     * var va = context.createVertexArrayFromGeometry({
      *     mesh             : mesh,
      *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
      *     bufferUsage      : BufferUsage.STATIC_DRAW,
@@ -2343,7 +2343,7 @@ define([
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
      */
-    Context.prototype.createVertexArrayFromMesh = function(creationArguments) {
+    Context.prototype.createVertexArrayFromGeometry = function(creationArguments) {
         var ca = defaultValue(creationArguments, defaultValue.EMPTY_OBJECT);
         var mesh = defaultValue(ca.mesh, defaultValue.EMPTY_OBJECT);
 

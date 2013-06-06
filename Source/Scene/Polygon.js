@@ -96,7 +96,7 @@ define([
 
             var length = geometries.length;
             for ( var i = 0; i < length; ++i) {
-                va.push(context.createVertexArrayFromMesh({
+                va.push(context.createVertexArrayFromGeometry({
                     mesh : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : bufferUsage,
@@ -492,10 +492,10 @@ define([
         return result;
     }
 
-    var createMeshFromPositionsPositions = [];
-    var createMeshFromPositionsBoundingRectangle = new BoundingRectangle();
+    var createGeometryFromPositionsPositions = [];
+    var createGeometryFromPositionsBoundingRectangle = new BoundingRectangle();
 
-    function createMeshFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
+    function createGeometryFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -503,7 +503,7 @@ define([
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, polygon.ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -518,7 +518,7 @@ define([
         }
         var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary = outerPositions || cleanedPositions;
-        var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);
+        var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createGeometryFromPositionsBoundingRectangle);
         mesh = appendTextureCoordinates(tangentPlane, boundingRectangle, mesh, angle);
 
         return new GeometryInstance({
@@ -534,7 +534,7 @@ define([
 
         if (typeof polygon._positions !== 'undefined') {
             polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
-            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
+            mesh = createGeometryFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
             if (typeof mesh !== 'undefined') {
                 geometries.push(mesh);
             }
@@ -545,7 +545,7 @@ define([
             // volume doesn't cover the polygon.
             polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
+                mesh = createGeometryFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
                 if (typeof mesh !== 'undefined') {
                     geometries.push(mesh);
                 }

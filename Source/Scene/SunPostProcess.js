@@ -139,7 +139,7 @@ define([
             }
         };
 
-        vertexArray = context.createVertexArrayFromMesh({
+        vertexArray = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : attributeIndices,
             bufferUsage : BufferUsage.STATIC_DRAW

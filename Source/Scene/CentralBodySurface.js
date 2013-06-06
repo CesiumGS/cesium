@@ -701,7 +701,7 @@ define([
                     numberOfPartitions : 10
                 });
                 GeometryFilters.toWireframe(sphere);
-                surface._debug.boundingSphereVA = context.createVertexArrayFromMesh({
+                surface._debug.boundingSphereVA = context.createVertexArrayFromGeometry({
                     mesh : sphere,
                     attributeIndices : GeometryFilters.createAttributeIndices(sphere)
                 });

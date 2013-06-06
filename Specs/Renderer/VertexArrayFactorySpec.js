@@ -44,13 +44,13 @@ defineSuite([
     });
 
     it('creates with no arguments', function() {
-        va = context.createVertexArrayFromMesh();
+        va = context.createVertexArrayFromGeometry();
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.getIndexBuffer()).not.toBeDefined();
     });
 
     it('creates with no mesh', function() {
-        va = context.createVertexArrayFromMesh({
+        va = context.createVertexArrayFromGeometry({
             vertexLayout : VertexLayout.INTERLEAVED
         });
         expect(va.getNumberOfAttributes()).toEqual(0);
@@ -68,7 +68,7 @@ defineSuite([
             }
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : GeometryFilters.createAttributeIndices(mesh)
         });
@@ -97,7 +97,7 @@ defineSuite([
             }
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED,
@@ -133,7 +133,7 @@ defineSuite([
             }
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : GeometryFilters.createAttributeIndices(mesh)
         });
@@ -174,7 +174,7 @@ defineSuite([
             }
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED
@@ -218,7 +218,7 @@ defineSuite([
             }
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : GeometryFilters.createAttributeIndices(mesh),
             vertexLayout : VertexLayout.INTERLEAVED
@@ -268,7 +268,7 @@ defineSuite([
         });
 
         var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
@@ -328,7 +328,7 @@ defineSuite([
         });
 
         var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
@@ -402,7 +402,7 @@ defineSuite([
         });
 
         var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
@@ -470,7 +470,7 @@ defineSuite([
         });
 
         var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
@@ -549,7 +549,7 @@ defineSuite([
             primitiveType : PrimitiveType.POINTS
         });
 
-        var va = context.createVertexArrayFromMesh({
+        var va = context.createVertexArrayFromGeometry({
             mesh : mesh
         });
 
@@ -577,7 +577,7 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromMesh({
+            return context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 vertexLayout : VertexLayout.INTERLEAVED
             });
@@ -601,7 +601,7 @@ defineSuite([
         });
 
         expect(function() {
-            return context.createVertexArrayFromMesh({
+            return context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 attributeIndices : {
                     position : 0,

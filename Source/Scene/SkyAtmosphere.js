@@ -137,7 +137,7 @@ define([
                 ellipsoid : Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)),
                 numberOfPartitions : 60
             });
-            command.vertexArray = context.createVertexArrayFromMesh({
+            command.vertexArray = context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 attributeIndices : GeometryFilters.createAttributeIndices(mesh),
                 bufferUsage : BufferUsage.STATIC_DRAW

@@ -102,7 +102,7 @@ require([
             }));
             var attributeIndices = Cesium.GeometryFilters.createAttributeIndices(mesh);
 
-            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
+            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 attributeIndices : attributeIndices,
                 bufferUsage : Cesium.BufferUsage.STATIC_DRAW
@@ -261,7 +261,7 @@ require([
             }
 
             colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
-            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromMesh({
+            colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromGeometry({
                 mesh : mesh,
                 attributeIndices : this._attributeIndices,
                 bufferUsage : Cesium.BufferUsage.STATIC_DRAW
