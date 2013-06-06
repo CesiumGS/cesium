@@ -128,7 +128,8 @@ define([
             geometry : new EllipsoidGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
-            }),            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+            }),
+            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
             pickData : 'mesh2',
             color : Color.AQUAMARINE.clone()
@@ -158,7 +159,7 @@ define([
             color : Color.LIME
         });
         var primitive = new Primitive({
-            geometries : [mesh, mesh1, mesh2, mesh3, mesh4],
+            geometries : [mesh, mesh2, mesh3, mesh4],
             appearance : new PerGeometryColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
