@@ -384,7 +384,7 @@ define(['../../Core/Cartesian2',
             get : function() {
                 return this._cesiumWidget.screenSpaceEventHandler;
             }
-        },
+        }
     });
 
     /**
