@@ -169,9 +169,6 @@ define([
         if (typeof options === 'undefined') {
             options = {};
         }
-        if (typeof options.stencil === 'undefined') {
-            options.stencil = false;
-        }
         if (typeof options.alpha === 'undefined') {
             options.alpha = false;
         }
