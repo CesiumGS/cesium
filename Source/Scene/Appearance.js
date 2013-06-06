@@ -1,24 +1,14 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/freezeObject',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
         './Material',
         '../Shaders/Appearances/DefaultAppearanceVS',
-        '../Shaders/Appearances/DefaultAppearanceFS',
-        '../Shaders/Appearances/PerGeometryColorAppearanceVS',
-        '../Shaders/Appearances/PerGeometryColorAppearanceFS'
+        '../Shaders/Appearances/DefaultAppearanceFS'
     ], function(
         defaultValue,
-        freezeObject,
-        CullFace,
-        BlendingState,
         Material,
         DefaultAppearanceVS,
-        DefaultAppearanceFS,
-        PerGeometryColorAppearanceVS,
-        PerGeometryColorDefaultAppearanceFS) {
+        DefaultAppearanceFS) {
     "use strict";
 
     /**
@@ -57,42 +47,6 @@ define([
             '#line 0\n' +
             this.fragmentShaderSource;
     };
-
-    /**
-     * DOC_TBA
-     */
-    Appearance.CLOSED_TRANSLUCENT = freezeObject(new Appearance({
-        renderState : {
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            },
-            depthTest : {
-                enabled : true
-            },
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND
-        }
-    }));
-
-    /**
-     * DOC_TBA
-     */
-    Appearance.PER_GEOMETRY_COLOR_CLOSED_TRANSLUCENT = freezeObject(new Appearance({
-        vertexShaderSource : PerGeometryColorAppearanceVS,
-        fragmentShaderSource : PerGeometryColorDefaultAppearanceFS,
-        renderState : {
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            },
-            depthTest : {
-                enabled : true
-            },
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND
-        }
-    }));
 
     return Appearance;
 });

@@ -7,6 +7,11 @@ Beta Releases
 ### TODO
 
 * Breaking changes:
+   * Changed all widgets to use ECMAScript 5 properties.  All public observable properties now must be accessed and assigned as if they were normal properties, instead of being called as functions.  For example:
+      * `clockViewModel.shouldAnimate()` -> `clockViewModel.shouldAnimate`
+      * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
+   * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
+   * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
    * Replaced tessellators and meshes with geometry.  In particular:
       * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
       * Replaced `BoxTessellator` with `BoxGeometry`.
@@ -14,6 +19,7 @@ Beta Releases
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryFilters`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
+      * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
    * Removed `Polygon.configureExtent`.

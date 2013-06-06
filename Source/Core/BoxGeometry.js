@@ -2,24 +2,22 @@
 define([
         './DeveloperError',
         './Cartesian3',
-        './Matrix4',
         './ComponentDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './VertexFormat'
     ], function(
         DeveloperError,
         Cartesian3,
-        Matrix4,
         ComponentDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
-        GeometryIndices,
         VertexFormat) {
     "use strict";
 
@@ -33,9 +31,6 @@ define([
      * @param {Cartesian3} [options.maximumCorner] The maximum x, y, and z coordinates of the box.
      * @param {Cartesian3} [options.dimensions=new Cartesian3(1.0, 1.0, 1.0)] The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this box.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
@@ -70,9 +65,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         var attributes = {};
-        var indexLists = [];
-
-// TODO: use typed arrays
+        var indexList;
 
         if (vertexFormat !== VertexFormat.POSITION_ONLY) {
 
@@ -297,36 +290,32 @@ define([
                 });
             }
 
-            indexLists.push(
-                new GeometryIndices({
-                    // 12 triangles:  6 faces, 2 triangles each.
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [
-                        // +z face
-                        0, 1, 2,
-                        0, 2, 3,
+            // 12 triangles:  6 faces, 2 triangles each.
+            indexList = [
+                // +z face
+                0, 1, 2,
+                0, 2, 3,
 
-                        // -z face
-                        4 + 2, 4 + 1, 4 + 0,
-                        4 + 3, 4 + 2, 4 + 0,
+                // -z face
+                4 + 2, 4 + 1, 4 + 0,
+                4 + 3, 4 + 2, 4 + 0,
 
-                        // +x face
-                        8 + 0, 8 + 1, 8 + 2,
-                        8 + 0, 8 + 2, 8 + 3,
+                // +x face
+                8 + 0, 8 + 1, 8 + 2,
+                8 + 0, 8 + 2, 8 + 3,
 
-                        // -x face
-                        12 + 2, 12 + 1, 12 + 0,
-                        12 + 3, 12 + 2, 12 + 0,
+                // -x face
+                12 + 2, 12 + 1, 12 + 0,
+                12 + 3, 12 + 2, 12 + 0,
 
-                        // +y face
-                        16 + 2, 16 + 1, 16 + 0,
-                        16 + 3, 16 + 2, 16 + 0,
+                // +y face
+                16 + 2, 16 + 1, 16 + 0,
+                16 + 3, 16 + 2, 16 + 0,
 
-                        // -y face
-                        20 + 0, 20 + 1, 20 + 2,
-                        20 + 0, 20 + 2, 20 + 3
-                    ]
-                }));
+                // -y face
+                20 + 0, 20 + 1, 20 + 2,
+                20 + 0, 20 + 2, 20 + 3
+            ];
         } else {
             // Positions only - no need to duplicate corner points
             attributes.position = new GeometryAttribute({
@@ -345,25 +334,21 @@ define([
                 ]
             });
 
-            indexLists.push(
-                new GeometryIndices({
-                    // 12 triangles:  6 faces, 2 triangles each.
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [
-                        4, 5, 6, // plane z = corner.Z
-                        4, 6, 7,
-                        1, 0, 3, // plane z = -corner.Z
-                        1, 3, 2,
-                        1, 6, 5, // plane x = corner.X
-                        1, 2, 6,
-                        2, 3, 7, // plane y = corner.Y
-                        2, 7, 6,
-                        3, 0, 4, // plane x = -corner.X
-                        3, 4, 7,
-                        0, 1, 5, // plane y = -corner.Y
-                        0, 5, 4
-                    ]
-                }));
+            // 12 triangles:  6 faces, 2 triangles each.
+            indexList = [
+                4, 5, 6, // plane z = corner.Z
+                4, 6, 7,
+                1, 0, 3, // plane z = -corner.Z
+                1, 3, 2,
+                1, 6, 5, // plane x = corner.X
+                1, 2, 6,
+                2, 3, 7, // plane y = corner.Y
+                2, 7, 6,
+                3, 0, 4, // plane x = -corner.X
+                3, 4, 7,
+                0, 1, 5, // plane y = -corner.Y
+                0, 5, 4
+            ];
         }
 
         /**
@@ -375,11 +360,16 @@ define([
         this.attributes = attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
          * @type Array
          */
-        this.indexLists = indexLists;
+        this.indexList = indexList;
+
+        /**
+         * DOC_TBA
+         */
+        this.primitiveType = PrimitiveType.TRIANGLES;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
@@ -387,29 +377,12 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
-
-        /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
+
+    /**
+     * DOC_TBA
+     */
+    BoxGeometry.prototype.clone = Geometry.prototype.clone;
 
     return BoxGeometry;
 });

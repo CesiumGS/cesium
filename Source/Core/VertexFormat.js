@@ -74,6 +74,16 @@ define([
 
     /**
      * DOC_TBA
+     *
+     * For use with ellipsoid-surface appearance.
+     */
+    VertexFormat.POSITION_AND_ST = freezeObject(new VertexFormat({
+        position : true,
+        st : true
+    }));
+
+    /**
+     * DOC_TBA
      */
     VertexFormat.ALL = freezeObject(new VertexFormat({
         position : true,

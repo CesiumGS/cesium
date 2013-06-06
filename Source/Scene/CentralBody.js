@@ -14,6 +14,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/GeographicProjection',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
@@ -55,6 +57,8 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
+        Geometry,
+        GeometryAttribute,
         Intersect,
         CesiumMath,
         Matrix4,
@@ -335,7 +339,7 @@ define([
         var occludeePoint;
         var occluded;
         var datatype;
-        var mesh;
+        var geometry;
         var rect;
         var positions;
         var occluder = centralBody._occluder;
@@ -365,17 +369,17 @@ define([
 
                 if (typeof centralBody._northPoleCommand.vertexArray === 'undefined') {
                     centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                    mesh = {
+                    geometry = new Geometry({
                         attributes : {
-                            position : {
+                            position : new GeometryAttribute({
                                 componentDatatype : ComponentDatatype.FLOAT,
                                 componentsPerAttribute : 2,
                                 values : positions
-                            }
+                            })
                         }
-                    };
-                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                        mesh : mesh,
+                    });
+                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                        geometry : geometry,
                         attributeIndices : {
                             position : 0
                         },
@@ -413,17 +417,17 @@ define([
 
                  if (typeof centralBody._southPoleCommand.vertexArray === 'undefined') {
                      centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                     mesh = {
+                     geometry = new Geometry({
                          attributes : {
-                             position : {
+                             position : new GeometryAttribute({
                                  componentDatatype : ComponentDatatype.FLOAT,
                                  componentsPerAttribute : 2,
                                  values : positions
-                             }
+                             })
                          }
-                     };
-                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                         mesh : mesh,
+                     });
+                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                         geometry : geometry,
                          attributeIndices : {
                              position : 0
                          },
@@ -545,21 +549,19 @@ define([
 
         // depth plane
         if (!this._depthCommand.vertexArray) {
-            var mesh = {
+            var geometry = new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : depthQuad
-                    }
+                    })
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [0, 1, 2, 2, 1, 3]
-                }]
-            };
-            this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
-                mesh : mesh,
+                indexList : [0, 1, 2, 2, 1, 3],
+                primitiveType : PrimitiveType.TRIANGLES
+            });
+            this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
+                geometry : geometry,
                 attributeIndices : {
                     position : 0
                 },

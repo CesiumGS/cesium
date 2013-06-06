@@ -1,12 +1,10 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError',
-        './Matrix4'
+        './DeveloperError'
     ], function(
         defaultValue,
-        DeveloperError,
-        Matrix4) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -21,56 +19,55 @@ define([
         /**
          * DOC_TBA
          */
-        this.attributes = options.attributes;
+        this.attributes = defaultValue(options.attributes, {});
 
         /**
          * DOC_TBA
          */
-        this.indexLists = options.indexLists;
+        this.indexList = options.indexList;
+
+        /**
+         * DOC_TBA
+         */
+        this.primitiveType = options.primitiveType;
 
         /**
          * DOC_TBA
          */
         this.boundingSphere = options.boundingSphere;
-
-        /**
-         * DOC_TBA
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
-         * DOC_TBA
-         */
-        this.pickData = options.pickData;
     };
 
     /**
      * DOC_TBA
-     *
-     * @exception {DeveloperError} geometries is required.
      */
-    Geometry.isPickable = function(geometries) {
-        if (typeof geometries === 'undefined') {
-            throw new DeveloperError('geometries is required.');
+    Geometry.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+// TODO: is this always what we want, for say BoxGeometry?
+            result = new Geometry();
         }
 
-        var pickable = false;
-        var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof geometries[i].pickData !== 'undefined') {
-                pickable = true;
-                break;
+        var attributes = this.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = attributes[property].clone();
             }
         }
+        result.attributes = newAttributes;
 
-        return pickable;
+// TODO: typed array or not.  fastest way to copy?
+        var sourceValues = this.indexList;
+        var length = sourceValues.length;
+        var values = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            values[i] = sourceValues[i];
+        }
+        result.indexList = values;
+
+        result.primitiveType = this.primitiveType;
+        this.boundingSphere.clone(result.boundingSphere);
+
+        return result;
     };
 
     /**

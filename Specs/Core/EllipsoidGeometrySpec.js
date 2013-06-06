@@ -30,7 +30,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
-        expect(m.indexLists[0].values.length).toEqual(12 * 3);
+        expect(m.indexList.length).toEqual(12 * 3);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 
@@ -46,7 +46,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * (8 + 6 + 12));
         expect(m.attributes.tangent.values.length).toEqual(3 * (8 + 6 + 12));
         expect(m.attributes.binormal.values.length).toEqual(3 * (8 + 6 + 12));
-        expect(m.indexLists[0].values.length).toEqual(2 * 3 * 4 * 6);
+        expect(m.indexList.length).toEqual(2 * 3 * 4 * 6);
     });
 
     it('computes attributes for a unit sphere', function() {
@@ -73,6 +73,4 @@ defineSuite([
             expect(binormal).toEqualEpsilon(Cartesian3.cross(normal, tangent), CesiumMath.EPSILON10);
         }
     });
-
-
 });
