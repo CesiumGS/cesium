@@ -150,16 +150,16 @@ define([
                 }
             };
 
-            var mesh = new BoxGeometry({
+            var geometry = new BoxGeometry({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
             });
-            var attributeIndices = GeometryFilters.createAttributeIndices(mesh);
+            var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.modelMatrix = Matrix4.IDENTITY.clone();
-            command.vertexArray = context.createVertexArrayFromMesh({
-                mesh: mesh,
+            command.vertexArray = context.createVertexArrayFromGeometry({
+                geometry: geometry,
                 attributeIndices: attributeIndices,
                 bufferUsage: BufferUsage.STATIC_DRAW
             });

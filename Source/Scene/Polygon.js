@@ -96,8 +96,8 @@ define([
 
             var length = geometries.length;
             for ( var i = 0; i < length; ++i) {
-                va.push(context.createVertexArrayFromMesh({
-                    mesh : geometries[i],
+                va.push(context.createVertexArrayFromGeometry({
+                    geometry : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : bufferUsage,
                     vertexLayout : VertexLayout.INTERLEAVED
@@ -418,10 +418,10 @@ define([
     var appendTextureCoordinatesQuaternion = new Quaternion();
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
-    function appendTextureCoordinates(tangentPlane, boundingRectangle, mesh, angle) {
+    function appendTextureCoordinates(tangentPlane, boundingRectangle, geometry, angle) {
         var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
 
-        var positions = mesh.attributes.position.values;
+        var positions = geometry.attributes.position.values;
         var length = positions.length;
 
         var textureCoordinates = new Float32Array(2 * (length / 3));
@@ -443,13 +443,13 @@ define([
             textureCoordinates[j++] = st.y / boundingRectangle.height;
         }
 
-        mesh.attributes.textureCoordinates = {
+        geometry.attributes.textureCoordinates = {
             componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : 2,
             values : textureCoordinates
         };
 
-        return mesh;
+        return geometry;
     }
 
     var computeBoundingRectangleCartesian2 = new Cartesian2();
@@ -492,10 +492,10 @@ define([
         return result;
     }
 
-    var createMeshFromPositionsPositions = [];
-    var createMeshFromPositionsBoundingRectangle = new BoundingRectangle();
+    var createGeometryFromPositionsPositions = [];
+    var createGeometryFromPositionsBoundingRectangle = new BoundingRectangle();
 
-    function createMeshFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
+    function createGeometryFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -503,7 +503,7 @@ define([
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, polygon.ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -516,13 +516,13 @@ define([
         if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
             indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
         }
-        var mesh = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
+        var geometry = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
         var boundary = outerPositions || cleanedPositions;
-        var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createMeshFromPositionsBoundingRectangle);
-        mesh = appendTextureCoordinates(tangentPlane, boundingRectangle, mesh, angle);
+        var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createGeometryFromPositionsBoundingRectangle);
+        geometry = appendTextureCoordinates(tangentPlane, boundingRectangle, geometry, angle);
 
         return new GeometryInstance({
-            geometry : mesh
+            geometry : geometry
         });
     }
 
@@ -530,13 +530,13 @@ define([
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
         var geometries = [];
-        var mesh;
+        var geometry;
 
         if (typeof polygon._positions !== 'undefined') {
             polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
-            mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
-            if (typeof mesh !== 'undefined') {
-                geometries.push(mesh);
+            geometry = createGeometryFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
+            if (typeof geometry !== 'undefined') {
+                geometries.push(geometry);
             }
         } else if (typeof polygon._polygonHierarchy !== 'undefined') {
             var outerPositions =  polygon._polygonHierarchy[0];
@@ -545,9 +545,9 @@ define([
             // volume doesn't cover the polygon.
             polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
-                if (typeof mesh !== 'undefined') {
-                    geometries.push(mesh);
+                geometry = createGeometryFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
+                if (typeof geometry !== 'undefined') {
+                    geometries.push(geometry);
                 }
             }
         }
@@ -556,24 +556,24 @@ define([
             return undefined;
         }
 
-        mesh = GeometryFilters.combine(geometries);
-        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
-        mesh = GeometryFilters.reorderForPostVertexCache(mesh);
-        mesh = GeometryFilters.reorderForPreVertexCache(mesh);
+        geometry = GeometryFilters.combine(geometries);
+        geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, polygon.height, polygon.ellipsoid);
+        geometry = GeometryFilters.reorderForPostVertexCache(geometry);
+        geometry = GeometryFilters.reorderForPreVertexCache(geometry);
 
         if (polygon._mode === SceneMode.SCENE3D) {
-            mesh.attributes.position2DHigh = { // Not actually used in shader
+            geometry.attributes.position2DHigh = { // Not actually used in shader
                 value : [0.0, 0.0]
             };
-            mesh.attributes.position2DLow = { // Not actually used in shader
+            geometry.attributes.position2DLow = { // Not actually used in shader
                 value : [0.0, 0.0]
             };
-            mesh = GeometryFilters.encodeAttribute(mesh, 'position', 'position3DHigh', 'position3DLow');
+            geometry = GeometryFilters.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         } else {
-            mesh = GeometryFilters.projectTo2D(mesh, polygon._projection);
+            geometry = GeometryFilters.projectTo2D(geometry, polygon._projection);
 
             if (polygon._mode !== SceneMode.SCENE3D) {
-                var projectedPositions = mesh.attributes.position2D.values;
+                var projectedPositions = geometry.attributes.position2D.values;
                 var positions = [];
 
                 for (var j = 0; j < projectedPositions.length; j += 2) {
@@ -585,11 +585,11 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
             }
 
-            mesh = GeometryFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
-            mesh = GeometryFilters.encodeAttribute(mesh, 'position2D', 'position2DHigh', 'position2DLow');
+            geometry = GeometryFilters.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            geometry = GeometryFilters.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
         }
 
-        return GeometryFilters.fitToUnsignedShortIndices(mesh);
+        return GeometryFilters.fitToUnsignedShortIndices(geometry);
     }
 
     function getGranularity(polygon, mode) {

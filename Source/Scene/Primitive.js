@@ -359,8 +359,8 @@ define([
 
             var va = [];
             for (i = 0; i < length; ++i) {
-                va.push(context.createVertexArrayFromMesh({
-                    mesh : geometries[i],
+                va.push(context.createVertexArrayFromGeometry({
+                    geometry : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED

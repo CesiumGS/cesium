@@ -1138,7 +1138,7 @@ define([
      * @exception {DeveloperError} Attribute must have a <code>strideInBytes</code> less than or equal to 255 or not specify it.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
-     * @see Context#createVertexArrayFromMesh
+     * @see Context#createVertexArrayFromGeometry
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
      * @see Context#draw
@@ -2286,28 +2286,28 @@ define([
     }
 
     /**
-     * Creates a vertex array from a mesh.  A mesh contains vertex attributes and optional index data
+     * Creates a vertex array from a geometry.  A geometry contains vertex attributes and optional index data
      * in system memory, whereas a vertex array contains vertex buffers and an optional index buffer in WebGL
      * memory for use with rendering.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
+     * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
      * <br /><br />
      * <code>creationArguments</code> can have four properties:
      * <ul>
-     *   <li><code>mesh</code>:  The source mesh containing data used to create the vertex array.</li>
-     *   <li><code>attributeIndices</code>:  An object that maps mesh attribute names to vertex shader attribute indices.</li>
+     *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
+     *   <li><code>attributeIndices</code>:  An object that maps geometry attribute names to vertex shader attribute indices.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
      *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
      * <br />
-     * If <code>creationArguments</code> is not specified or the <code>mesh</code> contains no data, the returned vertex array is empty.
+     * If <code>creationArguments</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
      *
      * @memberof Context
      *
-     * @param {Object} [creationArguments=undefined] An object defining the mesh, attribute indices, buffer usage, and vertex layout used to create the vertex array.
+     * @param {Object} [creationArguments=undefined] An object defining the geometry, attribute indices, buffer usage, and vertex layout used to create the vertex array.
      *
      * @exception {RuntimeError} Each attribute list must have the same number of vertices.
-     * @exception {DeveloperError} The mesh must have zero or one index lists.
+     * @exception {DeveloperError} The geometry must have zero or one index lists.
      * @exception {DeveloperError} Index n is used by more than one attribute.
      *
      * @see Context#createVertexArray
@@ -2320,19 +2320,19 @@ define([
      * // Example 1. Creates a vertex array for rendering a box.  The default dynamic draw
      * // usage is used for the created vertex and index buffer.  The attributes are not
      * // interleaved by default.
-     * var mesh = new BoxGeometry();
-     * var va = context.createVertexArrayFromMesh({
-     *     mesh             : mesh,
-     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
+     * var geometry = new BoxGeometry();
+     * var va = context.createVertexArrayFromGeometry({
+     *     geometry             : geometry,
+     *     attributeIndices : GeometryFilters.createAttributeIndices(geometry),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
      *
      * // Example 2. Creates a vertex array with interleaved attributes in a
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
-     * var va = context.createVertexArrayFromMesh({
-     *     mesh             : mesh,
-     *     attributeIndices : GeometryFilters.createAttributeIndices(mesh),
+     * var va = context.createVertexArrayFromGeometry({
+     *     geometry             : geometry,
+     *     attributeIndices : GeometryFilters.createAttributeIndices(geometry),
      *     bufferUsage      : BufferUsage.STATIC_DRAW,
      *     vertexLayout     : VertexLayout.INTERLEAVED
      * });
@@ -2343,9 +2343,9 @@ define([
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
      */
-    Context.prototype.createVertexArrayFromMesh = function(creationArguments) {
+    Context.prototype.createVertexArrayFromGeometry = function(creationArguments) {
         var ca = defaultValue(creationArguments, defaultValue.EMPTY_OBJECT);
-        var mesh = defaultValue(ca.mesh, defaultValue.EMPTY_OBJECT);
+        var geometry = defaultValue(ca.geometry, defaultValue.EMPTY_OBJECT);
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
@@ -2355,7 +2355,7 @@ define([
         var name;
         var attribute;
         var vaAttributes = [];
-        var attributes = mesh.attributes;
+        var attributes = geometry.attributes;
 
         if (interleave) {
             // Use a single vertex buffer with interleaved vertices.
@@ -2410,9 +2410,9 @@ define([
         }
 
         var indexBuffer;
-        var indexList = mesh.indexList;
+        var indexList = geometry.indexList;
         if (typeof indexList !== 'undefined') {
-            if ((Geometry.computeNumberOfVertices(mesh) > 64 * 1024) && this.getElementIndexUint()) {
+            if ((Geometry.computeNumberOfVertices(geometry) > 64 * 1024) && this.getElementIndexUint()) {
                 indexBuffer = this.createIndexBuffer(new Uint32Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
                 indexBuffer = this.createIndexBuffer(new Uint16Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_SHORT);

@@ -16,9 +16,9 @@ void main()
     materialInput.st = v_st;
     czm_material material = czm_getMaterial(materialInput);
     
-    //material.specular = 0.2;
-    //material.shininess = 10.0;
+    material.specular = 0.2;
+    material.shininess = 10.0;
     
-    //gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+    //gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 }

@@ -87,9 +87,9 @@ define([
         return result;
     }
 
-    var createMeshFromPositionsPositions = [];
+    var createGeometryFromPositionsPositions = [];
 
-    function createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.cleanUp(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -97,7 +97,7 @@ define([
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createMeshFromPositionsPositions);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
 
         var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
         if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -208,7 +208,7 @@ define([
         var polygonHierarchy = options.polygonHierarchy;
 
         var geometries = [];
-        var mesh;
+        var geometry;
         var boundingSphere;
         var i;
 
@@ -219,9 +219,9 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
-            if (typeof mesh !== 'undefined') {
-                geometries.push(mesh);
+            geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            if (typeof geometry !== 'undefined') {
+                geometries.push(geometry);
             }
         } else if (typeof polygonHierarchy !== 'undefined') {
             // create from a polygon hierarchy
@@ -272,27 +272,27 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                mesh = createMeshFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
-                if (typeof mesh !== 'undefined') {
-                    geometries.push(mesh);
+                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                if (typeof geometry !== 'undefined') {
+                    geometries.push(geometry);
                 }
             }
         } else {
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        mesh = GeometryFilters.combine(geometries);
-        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, height, ellipsoid);
+        geometry = GeometryFilters.combine(geometries);
+        geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
         var attributes = {};
 
         if (vertexFormat.position) {
-            attributes.position = mesh.attributes.position;
+            attributes.position = geometry.attributes.position;
         }
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
-            // PERFORMANCE_IDEA: Compute with createMeshFromPositions() for fast path when there's no holes.
+            // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
             var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
@@ -301,7 +301,7 @@ define([
             origin.x = boundingRectangle.x;
             origin.y = boundingRectangle.y;
 
-            var flatPositions = mesh.attributes.position.values;
+            var flatPositions = geometry.attributes.position.values;
             var length = flatPositions.length;
 
             var textureCoordinates = vertexFormat.st ? new Array(2 * (length / 3)) : undefined;
@@ -419,12 +419,12 @@ define([
          *
          * @type Array
          */
-        this.indexList = mesh.indexList;
+        this.indexList = geometry.indexList;
 
         /**
          * DOC_TBA
          */
-        this.primitiveType = mesh.primitiveType;
+        this.primitiveType = geometry.primitiveType;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

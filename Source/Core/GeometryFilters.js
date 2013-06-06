@@ -36,28 +36,28 @@ define([
      *
      * @exports GeometryFilters
      *
-     * @see Context#createVertexArrayFromMesh
+     * @see Context#createVertexArrayFromGeometry
      */
     var GeometryFilters = {};
 
     /**
-     * Converts a mesh's triangle indices to line indices.  The mesh's <code>indexList</code> with
+     * Converts a geometry's triangle indices to line indices.  The geometry's <code>indexList</code> with
      * a primitive type of <code>triangles</code>, <code>triangleStrip</code>, or <code>trangleFan</code> is converted to a
      * list of indices with a primitive type of <code>lines</code>.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
+     * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
      * <br /><br />
-     * This filter is commonly used to create a wireframe mesh for visual debugging.
+     * This filter is commonly used to create a wireframe geometry for visual debugging.
      *
-     * @param {Geometry} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} geometry The geometry to filter, which is modified in place.
      *
-     * @returns The modified <code>mesh</code> argument, with its triangle indices converted to lines.
+     * @returns The modified <code>geometry</code> argument, with its triangle indices converted to lines.
      *
      * @example
-     * var mesh = new BoxGeometry();
-     * mesh = GeometryFilters.toWireframe(mesh);
+     * var geometry = new BoxGeometry();
+     * geometry = GeometryFilters.toWireframe(geometry);
      */
-    GeometryFilters.toWireframe = function(mesh) {
+    GeometryFilters.toWireframe = function(geometry) {
         function addTriangle(lines, i0, i1, i2) {
             lines.push(i0);
             lines.push(i1);
@@ -108,36 +108,36 @@ define([
             return lines;
         }
 
-        if (typeof mesh !== 'undefined') {
-            var indices = mesh.indexList;
+        if (typeof geometry !== 'undefined') {
+            var indices = geometry.indexList;
             if (typeof indices !== 'undefined') {
-                switch (mesh.primitiveType) {
+                switch (geometry.primitiveType) {
                     case PrimitiveType.TRIANGLES:
-                        mesh.indexList = trianglesToLines(indices);
+                        geometry.indexList = trianglesToLines(indices);
                         break;
                     case PrimitiveType.TRIANGLE_STRIP:
-                        mesh.indexList = triangleStripToLines(indices);
+                        geometry.indexList = triangleStripToLines(indices);
                         break;
                     case PrimitiveType.TRIANGLE_FAN:
-                        mesh.indexList = triangleFanToLines(indices);
+                        geometry.indexList = triangleFanToLines(indices);
                         break;
                 }
 
-                mesh.primitiveType = PrimitiveType.LINES;
+                geometry.primitiveType = PrimitiveType.LINES;
             }
         }
 
-        return mesh;
+        return geometry;
     };
 
     /**
      * DOC_TBA
      */
-    GeometryFilters.createAttributeIndices = function(mesh) {
+    GeometryFilters.createAttributeIndices = function(geometry) {
         var indices = {};
 
-        if (typeof mesh !== 'undefined') {
-            var attributes = mesh.attributes;
+        if (typeof geometry !== 'undefined') {
+            var attributes = geometry.attributes;
             var j = 0;
 
             for ( var name in attributes) {
@@ -168,27 +168,27 @@ define([
     };
 
     /**
-     * Reorders a mesh's indices to achieve better performance from the GPU's pre-vertex-shader cache.
-     * Each list of indices in the mesh's <code>indexList</code> is reordered to keep the same index-vertex correspondence.
+     * Reorders a geometry's indices to achieve better performance from the GPU's pre-vertex-shader cache.
+     * Each list of indices in the geometry's <code>indexList</code> is reordered to keep the same index-vertex correspondence.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
+     * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
      * <br /><br />
 
-     * @param {Geometry} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} geometry The geometry to filter, which is modified in place.
      *
-     * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
+     * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
      *
-     * @returns The modified <code>mesh</code> argument, with its vertices and indices reordered for the GPU's pre-vertex-shader cache.
+     * @returns The modified <code>geometry</code> argument, with its vertices and indices reordered for the GPU's pre-vertex-shader cache.
      *
      * @see GeometryFilters.reorderForPostVertexCache
      *
      * @example
-     * var mesh = new EllipsoidGeometry(...);
-     * mesh = GeometryFilters.reorderForPreVertexCache(mesh);
+     * var geometry = new EllipsoidGeometry(...);
+     * geometry = GeometryFilters.reorderForPreVertexCache(geometry);
      */
-    GeometryFilters.reorderForPreVertexCache = function(mesh) {
-        if (typeof mesh !== 'undefined') {
-            var numVertices = Geometry.computeNumberOfVertices(mesh);
+    GeometryFilters.reorderForPreVertexCache = function(geometry) {
+        if (typeof geometry !== 'undefined') {
+            var numVertices = Geometry.computeNumberOfVertices(geometry);
 
             var indexCrossReferenceOldToNew = [];
             for ( var i = 0; i < numVertices; i++) {
@@ -196,7 +196,7 @@ define([
             }
 
             //Construct cross reference and reorder indices
-            var indexList = mesh.indexList;
+            var indexList = geometry.indexList;
             if (typeof indexList !== 'undefined') {
                 var indicesIn = indexList;
                 var numIndices = indicesIn.length;
@@ -222,11 +222,11 @@ define([
                     ++intoIndicesIn;
                     ++intoIndicesOut;
                 }
-                mesh.indexList = indicesOut;
+                geometry.indexList = indicesOut;
             }
 
             //Reorder Vertices
-            var attributes = mesh.attributes;
+            var attributes = geometry.attributes;
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && attributes[property].values) {
                     var elementsIn = attributes[property].values;
@@ -244,25 +244,25 @@ define([
                 }
             }
         }
-        return mesh;
+        return geometry;
     };
 
     /**
-     * Reorders a mesh's indices to achieve better performance from the GPU's post vertex-shader cache by using the Tipsify algorithm.
-     * Each list of indices in the mesh's <code>indexList</code> is optimally reordered.
+     * Reorders a geometry's indices to achieve better performance from the GPU's post vertex-shader cache by using the Tipsify algorithm.
+     * Each list of indices in the geometry's <code>indexList</code> is optimally reordered.
      * <br /><br />
-     * The <code>mesh</code> argument should use the standard layout like the mesh returned by {@link BoxGeometry}.
+     * The <code>geometry</code> argument should use the standard layout like the geometry returned by {@link BoxGeometry}.
      * <br /><br />
 
-     * @param {Geometry} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} geometry The geometry to filter, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
      *
-     * @exception {DeveloperError} Mesh's index list must be defined.
-     * @exception {DeveloperError} Mesh's index lists' lengths must each be a multiple of three.
-     * @exception {DeveloperError} Mesh's index list's maximum index value must be greater than zero.
+     * @exception {DeveloperError} Geometry's index list must be defined.
+     * @exception {DeveloperError} Geometry's index lists' lengths must each be a multiple of three.
+     * @exception {DeveloperError} Geometry's index list's maximum index value must be greater than zero.
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
-     * @returns The modified <code>mesh</code> argument, with its indices optimally reordered for the post-vertex-shader cache.
+     * @returns The modified <code>geometry</code> argument, with its indices optimally reordered for the post-vertex-shader cache.
      *
      * @see GeometryFilters.reorderForPreVertexCache
      * @see Tipsify
@@ -271,12 +271,12 @@ define([
      * by Sander, Nehab, and Barczak
      *
      * @example
-     * var mesh = new EllipsoidGeometry(...);
-     * mesh = GeometryFilters.reorderForPostVertexCache(mesh);
+     * var geometry = new EllipsoidGeometry(...);
+     * geometry = GeometryFilters.reorderForPostVertexCache(geometry);
      */
-    GeometryFilters.reorderForPostVertexCache = function(mesh, cacheCapacity) {
-        if (typeof mesh !== 'undefined') {
-            var indices = mesh.indexList;
+    GeometryFilters.reorderForPostVertexCache = function(geometry, cacheCapacity) {
+        if (typeof geometry !== 'undefined') {
+            var indices = geometry.indexList;
             if (typeof indices !== 'undefined') {
                 var numIndices = indices.length;
                 var maximumIndex = 0;
@@ -285,14 +285,14 @@ define([
                         maximumIndex = indices[j];
                     }
                 }
-                mesh.indexList = Tipsify.tipsify({
+                geometry.indexList = Tipsify.tipsify({
                     indices : indices,
                     maximumIndex : maximumIndex,
                     cacheSize : cacheCapacity
                 });
             }
         }
-        return mesh;
+        return geometry;
     };
 
     GeometryFilters._copyAttributesDescriptions = function(attributes) {
@@ -326,40 +326,31 @@ define([
     }
 
     /**
-     * DOC_TBA.  Old mesh is not guaranteed to be copied.
+     * DOC_TBA.  Old geometry is not guaranteed to be copied.
      *
-     * @exception {DeveloperError} mesh.primitiveType must equal to PrimitiveType.TRIANGLES.
-     * @exception {DeveloperError} All mesh attribute lists must have the same number of attributes.
+     * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES.
+     * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
      */
-    GeometryFilters.fitToUnsignedShortIndices = function(mesh) {
-        function createMesh(attributes, primitiveType, indices) {
-            // TODO: is this always what we want, for say BoxGeometry?
-            return new Geometry({
-                attributes : attributes,
-                indexList : indices,
-                primitiveType : primitiveType
-            });
-        }
-
+    GeometryFilters.fitToUnsignedShortIndices = function(geometry) {
         var geometries = [];
 
-        if (typeof mesh !== 'undefined') {
-            if (mesh.primitiveType !== PrimitiveType.TRIANGLES) {
-                throw new DeveloperError('mesh.primitiveType must equal to PrimitiveType.TRIANGLES.');
+        if (typeof geometry !== 'undefined') {
+            if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+                throw new DeveloperError('geometry.primitiveType must equal to PrimitiveType.TRIANGLES.');
             }
 
-            var numberOfVertices = Geometry.computeNumberOfVertices(mesh);
+            var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
             // If there's an index list and more than 64K attributes, it is possible that
             // some indices are outside the range of unsigned short [0, 64K - 1]
             var sixtyFourK = 64 * 1024;
-            if (typeof mesh.indexList !== 'undefined' && (numberOfVertices > sixtyFourK)) {
+            if (typeof geometry.indexList !== 'undefined' && (numberOfVertices > sixtyFourK)) {
                 var oldToNewIndex = [];
                 var newIndices = [];
                 var currentIndex = 0;
-                var newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
+                var newAttributes = GeometryFilters._copyAttributesDescriptions(geometry.attributes);
 
-                var originalIndices = mesh.indexList;
+                var originalIndices = geometry.indexList;
                 var numberOfIndices = originalIndices.length;
 
                 for ( var j = 0; j < numberOfIndices; j += 3) {
@@ -374,7 +365,7 @@ define([
                         i0 = currentIndex++;
                         oldToNewIndex[x0] = i0;
 
-                        copyVertex(newAttributes, mesh.attributes, x0);
+                        copyVertex(newAttributes, geometry.attributes, x0);
                     }
 
                     var i1 = oldToNewIndex[x1];
@@ -382,7 +373,7 @@ define([
                         i1 = currentIndex++;
                         oldToNewIndex[x1] = i1;
 
-                        copyVertex(newAttributes, mesh.attributes, x1);
+                        copyVertex(newAttributes, geometry.attributes, x1);
                     }
 
                     var i2 = oldToNewIndex[x2];
@@ -390,7 +381,7 @@ define([
                         i2 = currentIndex++;
                         oldToNewIndex[x2] = i2;
 
-                        copyVertex(newAttributes, mesh.attributes, x2);
+                        copyVertex(newAttributes, geometry.attributes, x2);
                     }
 
                     newIndices.push(i0);
@@ -398,22 +389,32 @@ define([
                     newIndices.push(i2);
 
                     if (currentIndex + 3 > sixtyFourK) {
-                        geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                        // TODO: is this always what we want, for say BoxGeometry?
+                        geometries.push(new Geometry({
+                            attributes : newAttributes,
+                            indexList : newIndices,
+                            primitiveType : geometry.primitiveType
+                        }));
 
                         // Reset for next vertex-array
                         oldToNewIndex = [];
                         newIndices = [];
                         currentIndex = 0;
-                        newAttributes = GeometryFilters._copyAttributesDescriptions(mesh.attributes);
+                        newAttributes = GeometryFilters._copyAttributesDescriptions(geometry.attributes);
                     }
                 }
 
                 if (newIndices.length !== 0) {
-                    geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                    // TODO: is this always what we want, for say BoxGeometry?
+                    geometries.push(new Geometry({
+                        attributes : newAttributes,
+                        indexList : newIndices,
+                        primitiveType : geometry.primitiveType
+                    }));
                 }
             } else {
                 // No need to split into multiple geometries
-                geometries.push(mesh);
+                geometries.push(geometry);
             }
         }
 
@@ -423,13 +424,13 @@ define([
     /**
      * DOC_TBA
      */
-    GeometryFilters.projectTo2D = function(mesh, projection) {
-        if (typeof mesh !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
+    GeometryFilters.projectTo2D = function(geometry, projection) {
+        if (typeof geometry !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
             projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
 
             // Project original positions to 2D.
-            var wgs84Positions = mesh.attributes.position.values;
+            var wgs84Positions = geometry.attributes.position.values;
             var projectedPositions = [];
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
@@ -439,18 +440,18 @@ define([
             }
 
             // Rename original positions to WGS84 Positions.
-            mesh.attributes.position3D = mesh.attributes.position;
+            geometry.attributes.position3D = geometry.attributes.position;
 
             // Replace original positions with 2D projected positions
-            mesh.attributes.position2D = {
+            geometry.attributes.position2D = {
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : projectedPositions
             };
-            delete mesh.attributes.position;
+            delete geometry.attributes.position;
         }
 
-        return mesh;
+        return geometry;
     };
 
     var encodedResult = {
@@ -459,41 +460,41 @@ define([
     };
 
     /**
-     * Encodes floating-point mesh attribute values as two separate attributes to improve
+     * Encodes floating-point geometry attribute values as two separate attributes to improve
      * rendering precision using the same encoding as {@link EncodedCartesian3}.
      * <p>
      * This is commonly used to create high-precision position vertex attributes.
      * </p>
      *
-     * @param {Geometry} mesh The mesh to filter, which is modified in place.
+     * @param {Geometry} geometry The geometry to filter, which is modified in place.
      * @param {String} [attributeName='position'] The name of the attribute.
      * @param {String} [attributeHighName='positionHigh'] The name of the attribute for the encoded high bits.
      * @param {String} [attributeLowName='positionLow'] The name of the attribute for the encoded low bits.
      *
-     * @returns The modified <code>mesh</code> argument, with its encoded attribute.
+     * @returns The modified <code>geometry</code> argument, with its encoded attribute.
      *
-     * @exception {DeveloperError} mesh is required.
-     * @exception {DeveloperError} mesh must have attribute matching the attributeName argument.
+     * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
      *
      * @example
-     * mesh = GeometryFilters.encodeAttribute(mesh, 'position3D', 'position3DHigh', 'position3DLow');
+     * geometry = GeometryFilters.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
      *
      * @see EncodedCartesian3
      */
-    GeometryFilters.encodeAttribute = function(mesh, attributeName, attributeHighName, attributeLowName) {
+    GeometryFilters.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
         attributeName = defaultValue(attributeName, 'position');
         attributeHighName = defaultValue(attributeHighName, 'positionHigh');
         attributeLowName = defaultValue(attributeLowName, 'positionLow');
 
-        if (typeof mesh === 'undefined') {
-            throw new DeveloperError('mesh is required.');
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
         }
 
-        var attribute = mesh.attributes[attributeName];
+        var attribute = geometry.attributes[attributeName];
 
         if (typeof attribute === 'undefined') {
-            throw new DeveloperError('mesh must have attribute matching the attributeName argument: ' + attributeName + '.');
+            throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
         if (attribute.componentDatatype !== ComponentDatatype.FLOAT) {
@@ -511,19 +512,19 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
-        mesh.attributes[attributeHighName] = new GeometryAttribute({
+        geometry.attributes[attributeHighName] = new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             values : highValues
         });
-        mesh.attributes[attributeLowName] = new GeometryAttribute({
+        geometry.attributes[attributeLowName] = new GeometryAttribute({
             componentDatatype : attribute.componentDatatype,
             componentsPerAttribute : attribute.componentsPerAttribute,
             values : lowValues
         });
-        delete mesh.attributes[attributeName];
+        delete geometry.attributes[attributeName];
 
-        return mesh;
+        return geometry;
     };
 
     var scratch = new Cartesian3();
@@ -559,7 +560,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @exception {DeveloperError} mesh is required.
+     * @exception {DeveloperError} instance is required.
      */
     GeometryFilters.transformToWorldCoordinates = function(instance) {
         if (typeof instance === 'undefined') {
@@ -685,10 +686,10 @@ define([
         var sourceValues;
         var sourceValuesLength;
 
-        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromMesh to save a copy.
-        // This will require adding offset and stride to the mesh.
+        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromGeometry to save a copy.
+        // This will require adding offset and stride to the geometry.
 
-        // Combine attributes from each mesh into a single typed array
+        // Combine attributes from each geometry into a single typed array
         for (name in attributes) {
             if (attributes.hasOwnProperty(name)) {
                 values = attributes[name].values;
@@ -775,7 +776,7 @@ define([
         for (i = 0; i < length; ++i) {
             var bs = instances[i].geometry.boundingSphere;
             if (typeof bs === 'undefined') {
-                // If any geometries have an undefined bounding sphere, then so does the combined mesh
+                // If any geometries have an undefined bounding sphere, then so does the combined geometry
                 boundingSphere = undefined;
                 break;
             }
@@ -802,44 +803,44 @@ define([
     var v2 = new Cartesian3();
 
     /**
-     * Computes the normals of all vertices in a mesh based on the normals of triangles that include the vertex.
+     * Computes the normals of all vertices in a geometry based on the normals of triangles that include the vertex.
      * This assumes a counter-clockwise vertex winding order.
      *
-     * @param {Geometry} mesh The mesh to filter, which is modified in place.
-     * @param {Object} mesh.attributes.position
+     * @param {Geometry} geometry The geometry to filter, which is modified in place.
+     * @param {Object} geometry.attributes.position
      *
-     * @returns The modified <code>mesh</code> argument.
+     * @returns The modified <code>geometry</code> argument.
      *
-     * @exception {DeveloperError} mesh.attributes.position.values is required
-     * @exception {DeveloperError} mesh.attributes.position.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry.attributes.position.values is required
+     * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
      *
      * @example
-     * mesh = GeometryFilters.computeNormal(mesh);
+     * geometry = GeometryFilters.computeNormal(geometry);
      *
      */
-    GeometryFilters.computeNormal = function(mesh) {
-        if (typeof mesh === 'undefined') {
-            throw new DeveloperError('mesh is required.');
+    GeometryFilters.computeNormal = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
         }
-        var attributes = mesh.attributes;
+        var attributes = geometry.attributes;
         if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
-            throw new DeveloperError('mesh.attributes.position.values is required');
+            throw new DeveloperError('geometry.attributes.position.values is required');
         }
-        var vertices = mesh.attributes.position.values;
-        if (mesh.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
-            throw new DeveloperError('mesh.attributes.position.values.length must be a multiple of 3');
+        var vertices = geometry.attributes.position.values;
+        if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
+            throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
         }
-        var indices = mesh.indexList;
+        var indices = geometry.indexList;
         if (typeof indices === 'undefined') {
-            return mesh;
+            return geometry;
         }
 
-        if (mesh.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
                 indices.length < 2 || indices.length % 3 !== 0) {
-            return mesh;
+            return geometry;
         }
 
-        var numVertices = mesh.attributes.position.values.length / 3;
+        var numVertices = geometry.attributes.position.values.length / 3;
         var numIndices = indices.length;
         var normalsPerVertex = new Array(numVertices);
         var normalsPerTriangle = new Array(numIndices / 3);
@@ -909,14 +910,14 @@ define([
             j++;
         }
 
-        if (typeof mesh.attributes.normal === 'undefined') {
-            mesh.attributes.normal = new GeometryAttribute({
+        if (typeof geometry.attributes.normal === 'undefined') {
+            geometry.attributes.normal = new GeometryAttribute({
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
                 values: new Array(numVertices * 3)
             });
         }
-        var normalValues = mesh.attributes.normal.values;
+        var normalValues = geometry.attributes.normal.values;
         for (i = 0; i < numVertices; i++) {
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
@@ -936,7 +937,7 @@ define([
             }
         }
 
-        return mesh;
+        return geometry;
     };
 
     var normalScratch = new Cartesian3();
