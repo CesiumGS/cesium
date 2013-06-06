@@ -87,17 +87,17 @@ define([
         return this._va;
     };
 
-    PositionVertices.prototype.update = function(context, meshes, bufferUsage) {
-        if (typeof meshes !== 'undefined') {
+    PositionVertices.prototype.update = function(context, geometries, bufferUsage) {
+        if (typeof geometries !== 'undefined') {
             // Initially create or recreate vertex array and buffers
             this._destroyVA();
 
             var va = [];
 
-            var length = meshes.length;
+            var length = geometries.length;
             for ( var i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromMesh({
-                    mesh : meshes[i],
+                    mesh : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : bufferUsage,
                     vertexLayout : VertexLayout.INTERLEAVED
@@ -526,17 +526,17 @@ define([
         });
     }
 
-    function createMeshes(polygon) {
+    function createGeometries(polygon) {
         // PERFORMANCE_IDEA:  Move this to a web-worker.
         var i;
-        var meshes = [];
+        var geometries = [];
         var mesh;
 
         if (typeof polygon._positions !== 'undefined') {
             polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
             mesh = createMeshFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
             if (typeof mesh !== 'undefined') {
-                meshes.push(mesh);
+                geometries.push(mesh);
             }
         } else if (typeof polygon._polygonHierarchy !== 'undefined') {
             var outerPositions =  polygon._polygonHierarchy[0];
@@ -547,16 +547,16 @@ define([
             for (i = 0; i < polygon._polygonHierarchy.length; i++) {
                 mesh = createMeshFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
                 if (typeof mesh !== 'undefined') {
-                    meshes.push(mesh);
+                    geometries.push(mesh);
                 }
             }
         }
 
-        if (meshes.length === 0) {
+        if (geometries.length === 0) {
             return undefined;
         }
 
-        mesh = GeometryFilters.combine(meshes);
+        mesh = GeometryFilters.combine(geometries);
         mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, polygon.height, polygon.ellipsoid);
         mesh = GeometryFilters.reorderForPostVertexCache(mesh);
         mesh = GeometryFilters.reorderForPreVertexCache(mesh);
@@ -665,7 +665,7 @@ define([
 
         if (this._createVertexArray) {
             this._createVertexArray = false;
-            this._vertices.update(context, createMeshes(this), this.bufferUsage);
+            this._vertices.update(context, createGeometries(this), this.bufferUsage);
         }
 
         if (typeof this._vertices.getVertexArrays() === 'undefined') {

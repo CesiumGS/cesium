@@ -284,6 +284,7 @@ define([
         }
     }
 
+    // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context) {
         // Copy instances first since most pipeline operations modify the geometry and instance in-place.
         var length = instances.length;

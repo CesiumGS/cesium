@@ -271,10 +271,10 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(1);
-        expect(meshes[0]).toBe(mesh);
+        expect(geometries.length).toEqual(1);
+        expect(geometries[0]).toBe(mesh);
     });
 
     it('fitToUnsignedShortIndices creates one mesh', function() {
@@ -296,18 +296,18 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(1);
-        expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
-        expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
+        expect(geometries.length).toEqual(1);
+        expect(geometries[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(geometries[0].attributes.time.componentsPerAttribute).toEqual(1);
+        expect(geometries[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
-        expect(meshes[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(meshes[0].indexList).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(geometries[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
+        expect(geometries[0].indexList).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
-    it('fitToUnsignedShortIndices creates two meshes', function() {
+    it('fitToUnsignedShortIndices creates two geometries', function() {
         var sixtyFourK = 64 * 1024;
 
         var positions = [];
@@ -333,15 +333,15 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(2);
+        expect(geometries.length).toEqual(2);
 
-        expect(meshes[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(meshes[0].indexList.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
+        expect(geometries[0].indexList.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
 
-        expect(meshes[1].attributes.position.values.length).toEqual(9);
-        expect(meshes[1].indexList.length).toEqual(3);
+        expect(geometries[1].attributes.position.values.length).toEqual(9);
+        expect(geometries[1].indexList.length).toEqual(3);
     });
 
     it('fitToUnsignedShortIndices throws without triangles', function() {
@@ -491,7 +491,7 @@ defineSuite([
         expect(combined).toBe(instance.geometry);
     });
 
-    it('GeometryFilters.combine combines several meshes', function() {
+    it('GeometryFilters.combine combines several geometries', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {

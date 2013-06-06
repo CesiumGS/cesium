@@ -341,7 +341,7 @@ define([
             });
         }
 
-        var meshes = [];
+        var geometries = [];
 
         if (typeof mesh !== 'undefined') {
             if (mesh.primitiveType !== PrimitiveType.TRIANGLES) {
@@ -398,7 +398,7 @@ define([
                     newIndices.push(i2);
 
                     if (currentIndex + 3 > sixtyFourK) {
-                        meshes.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                        geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
 
                         // Reset for next vertex-array
                         oldToNewIndex = [];
@@ -409,15 +409,15 @@ define([
                 }
 
                 if (newIndices.length !== 0) {
-                    meshes.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
+                    geometries.push(createMesh(newAttributes, mesh.primitiveType, newIndices));
                 }
             } else {
-                // No need to split into multiple meshes
-                meshes.push(mesh);
+                // No need to split into multiple geometries
+                geometries.push(mesh);
             }
         }
 
-        return meshes;
+        return geometries;
     };
 
     /**
@@ -775,7 +775,7 @@ define([
         for (i = 0; i < length; ++i) {
             var bs = instances[i].geometry.boundingSphere;
             if (typeof bs === 'undefined') {
-                // If any meshes have an undefined bounding sphere, then so does the combined mesh
+                // If any geometries have an undefined bounding sphere, then so does the combined mesh
                 boundingSphere = undefined;
                 break;
             }

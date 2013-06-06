@@ -207,7 +207,7 @@ define([
         var positions = options.positions;
         var polygonHierarchy = options.polygonHierarchy;
 
-        var meshes = [];
+        var geometries = [];
         var mesh;
         var boundingSphere;
         var i;
@@ -221,7 +221,7 @@ define([
             boundingSphere = BoundingSphere.fromPoints(positions);
             mesh = createMeshFromPositions(ellipsoid, positions, boundingSphere, granularity);
             if (typeof mesh !== 'undefined') {
-                meshes.push(mesh);
+                geometries.push(mesh);
             }
         } else if (typeof polygonHierarchy !== 'undefined') {
             // create from a polygon hierarchy
@@ -274,14 +274,14 @@ define([
             for (i = 0; i < polygonHierarchy.length; i++) {
                 mesh = createMeshFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
                 if (typeof mesh !== 'undefined') {
-                    meshes.push(mesh);
+                    geometries.push(mesh);
                 }
             }
         } else {
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        mesh = GeometryFilters.combine(meshes);
+        mesh = GeometryFilters.combine(geometries);
         mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, height, ellipsoid);
 
         var attributes = {};
