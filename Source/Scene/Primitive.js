@@ -360,7 +360,7 @@ define([
             var va = [];
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
-                    mesh : geometries[i],
+                    geometry : geometries[i],
                     attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED

@@ -133,13 +133,13 @@ define([
         var command = this._command;
 
         if (typeof command.vertexArray === 'undefined') {
-            var mesh = new EllipsoidGeometry({
+            var geometry = new EllipsoidGeometry({
                 ellipsoid : Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)),
                 numberOfPartitions : 60
             });
             command.vertexArray = context.createVertexArrayFromGeometry({
-                mesh : mesh,
-                attributeIndices : GeometryFilters.createAttributeIndices(mesh),
+                geometry : geometry,
+                attributeIndices : GeometryFilters.createAttributeIndices(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;

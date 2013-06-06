@@ -96,14 +96,14 @@ require([
             var minimumCorner = maximumCorner.negate();
             Cesium.BoundingSphere.fromPoints([minimumCorner, maximumCorner], colorCommand.boundingVolume);
 
-            var mesh = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
+            var geometry = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));
-            var attributeIndices = Cesium.GeometryFilters.createAttributeIndices(mesh);
+            var attributeIndices = Cesium.GeometryFilters.createAttributeIndices(geometry);
 
             colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromGeometry({
-                mesh : mesh,
+                geometry : geometry,
                 attributeIndices : attributeIndices,
                 bufferUsage : Cesium.BufferUsage.STATIC_DRAW
             });
@@ -204,15 +204,15 @@ require([
             var maximumCorner = dimensions.multiplyByScalar(0.5);
             var minimumCorner = maximumCorner.negate();
 
-            var mesh = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
+            var geometry = Cesium.GeometryFilters.toWireframe(new Cesium.BoxGeometry({
                 minimumCorner : minimumCorner,
                 maximumCorner : maximumCorner
             }));
-            mesh.attributes.position3D = mesh.attributes.position;
-            delete mesh.attributes.position;
+            geometry.attributes.position3D = geometry.attributes.position;
+            delete geometry.attributes.position;
 
             if (mode === Cesium.SceneMode.SCENE3D) {
-                mesh.attributes.position2D = { // Not actually used in shader
+                geometry.attributes.position2D = { // Not actually used in shader
                     value : [0.0, 0.0]
                 };
 
@@ -222,7 +222,7 @@ require([
                                                  ],
                                                  colorCommand.boundingVolume);
             } else {
-                var positions = mesh.attributes.position3D.values;
+                var positions = geometry.attributes.position3D.values;
                 var projectedPositions = [];
                 var projectedPositionsFlat = [];
                 for ( var i = 0; i < positions.length; i += 3) {
@@ -253,7 +253,7 @@ require([
                     bv3D.union(bv2D, colorCommand.boundingVolume);
                 }
 
-                mesh.attributes.position2D = {
+                geometry.attributes.position2D = {
                     componentDatatype : Cesium.ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : projectedPositionsFlat
@@ -262,7 +262,7 @@ require([
 
             colorCommand.vertexArray = colorCommand.vertexArray && colorCommand.vertexArray.destroy();
             colorCommand.vertexArray = pickCommand.vertexArray = context.createVertexArrayFromGeometry({
-                mesh : mesh,
+                geometry : geometry,
                 attributeIndices : this._attributeIndices,
                 bufferUsage : Cesium.BufferUsage.STATIC_DRAW
             });

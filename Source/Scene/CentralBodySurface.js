@@ -702,7 +702,7 @@ define([
                 });
                 GeometryFilters.toWireframe(sphere);
                 surface._debug.boundingSphereVA = context.createVertexArrayFromGeometry({
-                    mesh : sphere,
+                    geometry : sphere,
                     attributeIndices : GeometryFilters.createAttributeIndices(sphere)
                 });
             }

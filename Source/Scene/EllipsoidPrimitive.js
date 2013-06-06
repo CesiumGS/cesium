@@ -196,12 +196,12 @@ define([
             return vertexArray;
         }
 
-        var mesh = new BoxGeometry({
+        var geometry = new BoxGeometry({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 
         vertexArray = context.createVertexArrayFromGeometry({
-            mesh: mesh,
+            geometry: geometry,
             attributeIndices: attributeIndices,
             bufferUsage: BufferUsage.STATIC_DRAW
         });

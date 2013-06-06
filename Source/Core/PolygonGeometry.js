@@ -208,7 +208,7 @@ define([
         var polygonHierarchy = options.polygonHierarchy;
 
         var geometries = [];
-        var mesh;
+        var geometry;
         var boundingSphere;
         var i;
 
@@ -219,9 +219,9 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            mesh = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
-            if (typeof mesh !== 'undefined') {
-                geometries.push(mesh);
+            geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            if (typeof geometry !== 'undefined') {
+                geometries.push(geometry);
             }
         } else if (typeof polygonHierarchy !== 'undefined') {
             // create from a polygon hierarchy
@@ -272,22 +272,22 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                mesh = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
-                if (typeof mesh !== 'undefined') {
-                    geometries.push(mesh);
+                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                if (typeof geometry !== 'undefined') {
+                    geometries.push(geometry);
                 }
             }
         } else {
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        mesh = GeometryFilters.combine(geometries);
-        mesh = PolygonPipeline.scaleToGeodeticHeight(mesh, height, ellipsoid);
+        geometry = GeometryFilters.combine(geometries);
+        geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
         var attributes = {};
 
         if (vertexFormat.position) {
-            attributes.position = mesh.attributes.position;
+            attributes.position = geometry.attributes.position;
         }
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -301,7 +301,7 @@ define([
             origin.x = boundingRectangle.x;
             origin.y = boundingRectangle.y;
 
-            var flatPositions = mesh.attributes.position.values;
+            var flatPositions = geometry.attributes.position.values;
             var length = flatPositions.length;
 
             var textureCoordinates = vertexFormat.st ? new Array(2 * (length / 3)) : undefined;
@@ -419,12 +419,12 @@ define([
          *
          * @type Array
          */
-        this.indexList = mesh.indexList;
+        this.indexList = geometry.indexList;
 
         /**
          * DOC_TBA
          */
-        this.primitiveType = mesh.primitiveType;
+        this.primitiveType = geometry.primitiveType;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.

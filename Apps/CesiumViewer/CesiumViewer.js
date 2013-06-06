@@ -92,7 +92,7 @@ define([
         var scene = widget.scene;
         var ellipsoid = widget.centralBody.getEllipsoid();
 
-        var mesh = new GeometryInstance({
+        var geometry = new GeometryInstance({
             geometry : new ExtentGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 extent : new Extent(
@@ -102,31 +102,31 @@ define([
                     CesiumMath.toRadians(90.0)),
                 granularity : 0.006                     // More than 64K vertices
             }),
-            pickData : 'mesh',
+            pickData : 'geometry',
             color : Color.CORNFLOWERBLUE
         });
-        var mesh2 = new GeometryInstance({
+        var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-            pickData : 'mesh2',
+            pickData : 'geometry2',
             color : Color.AQUAMARINE.clone()
         });
-        mesh2.color.alpha = 0.5;
-        var mesh3 = new GeometryInstance({
+        geometry2.color.alpha = 0.5;
+        var geometry3 = new GeometryInstance({
             geometry : new BoxGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-            pickData : 'mesh3',
+            pickData : 'geometry3',
             color : Color.BLANCHEDALMOND
         });
-        var mesh4 = new GeometryInstance({
+        var geometry4 = new GeometryInstance({
             geometry : new EllipseGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 ellipsoid : ellipsoid,
@@ -136,11 +136,11 @@ define([
                 bearing : CesiumMath.PI_OVER_FOUR,
                 height : 1000000.0
             }),
-            pickData : 'mesh4',
+            pickData : 'geometry4',
             color : Color.LIME
         });
         var primitive = new Primitive({
-            geometryInstances : [mesh, mesh2, mesh3, mesh4],
+            geometryInstances : [geometry, geometry2, geometry3, geometry4],
             appearance : new PerGeometryColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
@@ -179,17 +179,17 @@ define([
             material : m,
             renderState : rs
         });
-        var mesh5 = new GeometryInstance({
+        var geometry5 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
                 vertexFormat : VertexFormat.ALL,
                 ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
-            pickData : 'mesh5'
+            pickData : 'geometry5'
         });
         scene.getPrimitives().add(new Primitive({
-            geometryInstances : mesh5,
+            geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
             releasegeometryInstances : true,
