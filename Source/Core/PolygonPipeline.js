@@ -845,7 +845,7 @@ define([
          *
          * @exception {DeveloperError} ellipsoid is required.
          */
-        scaleToGeodeticHeight : function(mesh, height, ellipsoid) {
+        scaleToGeodeticHeight : function(geometry, height, ellipsoid) {
             ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
             var n = scaleToGeodeticHeightN;
@@ -853,8 +853,8 @@ define([
 
             height = defaultValue(height, 0.0);
 
-            if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
-                var positions = mesh.attributes.position.values;
+            if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
+                var positions = geometry.attributes.position.values;
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
@@ -873,7 +873,7 @@ define([
                 }
             }
 
-            return mesh;
+            return geometry;
         },
 
         /**
