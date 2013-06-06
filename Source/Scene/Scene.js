@@ -16,6 +16,7 @@ define([
         '../Core/Matrix4',
         '../Core/JulianDate',
         '../Core/EllipsoidGeometry',
+        '../Core/GeometryInstance',
         '../Core/GeometryFilters',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
@@ -31,7 +32,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
-        './Appearance',
+        './ClosedTranslucentAppearance',
         './SunPostProcess'
     ], function(
         CesiumMath,
@@ -50,6 +51,7 @@ define([
         Matrix4,
         JulianDate,
         EllipsoidGeometry,
+        GeometryInstance,
         GeometryFilters,
         Context,
         ClearCommand,
@@ -65,7 +67,7 @@ define([
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
-        Appearance,
+        ClosedTranslucentAppearance,
         SunPostProcess) {
     "use strict";
 
@@ -477,8 +479,10 @@ define([
             if (typeof scene._debugSphere === 'undefined') {
                 var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
                 scene._debugSphere = new Primitive({
-                    geometries : GeometryFilters.toWireframe(geometry),
-                    appearance : Appearance.CLOSED_TRANSLUCENT
+                    geometryInstances : new GeometryInstance({
+                        geometry : GeometryFilters.toWireframe(geometry),
+                    }),
+                    appearance : new ClosedTranslucentAppearance()
                 });
             }
 
