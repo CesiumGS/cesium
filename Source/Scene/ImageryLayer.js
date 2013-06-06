@@ -10,6 +10,8 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/PrimitiveType',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
@@ -37,6 +39,8 @@ define([
         Extent,
         CesiumMath,
         PrimitiveType,
+        Geometry,
+        GeometryAttribute,
         BufferUsage,
         MipmapHint,
         TextureMagnificationFilter,
@@ -795,19 +799,17 @@ define([
                 }
             }
 
-            var reprojectMesh = {
+            var reprojectMesh = new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
                         values : positions
-                    }
+                    })
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : TerrainProvider.getRegularGridIndices(256, 256)
-                }]
-            };
+                indexList : TerrainProvider.getRegularGridIndices(256, 256),
+                primitiveType : PrimitiveType.TRIANGLES
+            });
 
             var reprojectAttribInds = {
                 position : 0

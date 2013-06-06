@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './DeveloperError',
         './Cartesian3',
         './Cartesian4',
         './IntersectionTests',
@@ -8,6 +9,7 @@ define([
         './Plane'
     ], function(
         defaultValue,
+        DeveloperError,
         Cartesian3,
         Cartesian4,
         IntersectionTests,
@@ -110,6 +112,34 @@ define([
             positions : cartesians,
             lengths : segments
         };
+    };
+
+    /**
+     * DOC_TBA
+     */
+    PolylinePipeline.cleanUp = function(positions) {
+        if (typeof positions  === 'undefined') {
+            throw new DeveloperError('positions is required.');
+        }
+
+        var length = positions.length;
+        if (length < 2) {
+            return positions.slice(0);
+        }
+
+        var cleanedPositions = [];
+        cleanedPositions.push(positions[0]);
+
+        for (var i = 1; i < length; ++i) {
+            var v0 = positions[i - 1];
+            var v1 = positions[i];
+
+            if (!v0.equals(v1)) {
+                cleanedPositions.push(v1); // Shallow copy!
+            }
+        }
+
+        return cleanedPositions;
     };
 
     return PolylinePipeline;

@@ -4,6 +4,8 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
+        './Geometry',
+        './GeometryAttribute',
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
@@ -17,6 +19,8 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
+        Geometry,
+        GeometryAttribute,
         Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
@@ -823,20 +827,17 @@ define([
                 flattenedPositions[q++] = item.z;
             }
 
-            return {
+            return new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : flattenedPositions
-                    }
+                    })
                 },
-
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : subdividedIndices
-                }]
-            };
+                indexList : subdividedIndices,
+                primitiveType : PrimitiveType.TRIANGLES
+            });
         },
 
         /**

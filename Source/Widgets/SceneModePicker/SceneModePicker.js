@@ -1,17 +1,20 @@
 /*global define*/
-define(['./SceneModePickerViewModel',
-        '../../Core/DeveloperError',
+define([
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/DeveloperError',
+        './SceneModePickerViewModel',
         '../../ThirdParty/knockout'
-        ], function(
-            SceneModePickerViewModel,
-            DeveloperError,
-            destroyObject,
-            knockout) {
+    ], function(
+        defineProperties,
+        destroyObject,
+        DeveloperError,
+        SceneModePickerViewModel,
+        knockout) {
     "use strict";
 
     /**
-     * <img src="images/SceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
+     * <img src="images/sceneModePicker.png" style="float: left; margin: 3px; border: none; border-radius: 5px;" />
      * <p>The SceneModePicker is a single button widget for switching between scene modes;
      * shown to the left in its expanded state. Programatic switching of scene modes will
      * be automatically reflected in the widget as long as the specified SceneTransitioner
@@ -56,28 +59,16 @@ define(['./SceneModePickerViewModel',
 
         var viewModel = new SceneModePickerViewModel(transitioner);
 
-        /**
-         * Gets the viewModel being used by the widget.
-         * @memberof SceneModePicker
-         * @type {SeneModePickerViewModel}
-         */
-        this.viewModel = viewModel;
-
-        /**
-         * Gets the container element for the widget.
-         * @memberof SceneModePicker
-         * @type {Element}
-         */
-        this.container = container;
-
+        this._viewModel = viewModel;
+        this._container = container;
         this._element = document.createElement('span');
 
         var widgetNode = this._element;
         widgetNode.className = 'cesium-sceneModePicker-button';
         widgetNode.setAttribute('data-bind', '\
-                                 css: { "cesium-sceneModePicker-button2D": sceneMode() === _sceneMode.SCENE2D,\
-                                        "cesium-sceneModePicker-button3D": sceneMode() === _sceneMode.SCENE3D,\
-                                        "cesium-sceneModePicker-buttonColumbusView": sceneMode() === _sceneMode.COLUMBUS_VIEW,\
+                                 css: { "cesium-sceneModePicker-button2D": sceneMode === _sceneMode.SCENE2D,\
+                                        "cesium-sceneModePicker-button3D": sceneMode === _sceneMode.SCENE3D,\
+                                        "cesium-sceneModePicker-buttonColumbusView": sceneMode === _sceneMode.COLUMBUS_VIEW,\
                                         "cesium-sceneModePicker-selected": dropDownVisible},\
                                  attr: { title: selectedTooltip }, click: toggleDropDown');
         container.appendChild(widgetNode);
@@ -85,9 +76,9 @@ define(['./SceneModePickerViewModel',
         var node3D = document.createElement('span');
         node3D.className = 'cesium-sceneModePicker-button cesium-sceneModePicker-button3D';
         node3D.setAttribute('data-bind', '\
-                             css: { "cesium-sceneModePicker-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.SCENE3D)) || (!dropDownVisible() && (sceneMode() === _sceneMode.SCENE3D)),\
-                                    "cesium-sceneModePicker-none" : sceneMode() === _sceneMode.SCENE3D,\
-                                    "cesium-sceneModePicker-hidden" : !dropDownVisible()},\
+                             css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sceneMode.SCENE3D)) || (!dropDownVisible && (sceneMode === _sceneMode.SCENE3D)),\
+                                    "cesium-sceneModePicker-none" : sceneMode === _sceneMode.SCENE3D,\
+                                    "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                              attr: { title: tooltip3D },\
                              click: morphTo3D');
         container.appendChild(node3D);
@@ -96,9 +87,9 @@ define(['./SceneModePickerViewModel',
         var node2D = document.createElement('span');
         node2D.className = 'cesium-sceneModePicker-button cesium-sceneModePicker-button2D';
         node2D.setAttribute('data-bind', '\
-                             css: { "cesium-sceneModePicker-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.SCENE2D)),\
-                                    "cesium-sceneModePicker-none" : sceneMode() === _sceneMode.SCENE2D,\
-                                    "cesium-sceneModePicker-hidden" : !dropDownVisible()},\
+                             css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sceneMode.SCENE2D)),\
+                                    "cesium-sceneModePicker-none" : sceneMode === _sceneMode.SCENE2D,\
+                                    "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                              attr: { title: tooltip2D },\
                              click: morphTo2D');
         container.appendChild(node2D);
@@ -107,9 +98,9 @@ define(['./SceneModePickerViewModel',
         var nodeColumbus = document.createElement('span');
         nodeColumbus.className = 'cesium-sceneModePicker-button cesium-sceneModePicker-buttonColumbusView';
         nodeColumbus.setAttribute('data-bind', '\
-                                   css: { "cesium-sceneModePicker-visible" : (dropDownVisible() && (sceneMode() !== _sceneMode.COLUMBUS_VIEW)) || (!dropDownVisible() && (sceneMode() === _sceneMode.COLUMBUS_VIEW)),\
-                                          "cesium-sceneModePicker-none" : sceneMode() === _sceneMode.COLUMBUS_VIEW,\
-                                          "cesium-sceneModePicker-hidden" : !dropDownVisible()},\
+                                   css: { "cesium-sceneModePicker-visible" : (dropDownVisible && (sceneMode !== _sceneMode.COLUMBUS_VIEW)) || (!dropDownVisible && (sceneMode === _sceneMode.COLUMBUS_VIEW)),\
+                                          "cesium-sceneModePicker-none" : sceneMode === _sceneMode.COLUMBUS_VIEW,\
+                                          "cesium-sceneModePicker-hidden" : !dropDownVisible},\
                                    attr: { title: tooltipColumbusView },\
                                    click: morphToColumbusView');
 
@@ -120,7 +111,7 @@ define(['./SceneModePickerViewModel',
 
         this._closeDropDown = function(e) {
             if (!container.contains(e.target)) {
-                viewModel.dropDownVisible(false);
+                viewModel.dropDownVisible = false;
             }
         };
 
@@ -128,16 +119,50 @@ define(['./SceneModePickerViewModel',
         document.addEventListener('touchstart', this._closeDropDown);
     };
 
+    defineProperties(SceneModePicker.prototype, {
+        /**
+         * Gets the parent container.
+         * @memberof SceneModePicker.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
+
+        /**
+         * Gets the view model.
+         * @memberof SceneModePicker.prototype
+         *
+         * @type {SceneModePickerViewModel}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
+            }
+        }
+    });
+
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * @memberof SceneModePicker
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    SceneModePicker.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof SceneModePicker
      */
     SceneModePicker.prototype.destroy = function() {
-        this.viewModel.destroy();
+        this._viewModel.destroy();
         document.removeEventListener('mousedown', this._closeDropDown);
         document.removeEventListener('touchstart', this._closeDropDown);
-        var container = this.container;
+        var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
         container.removeChild(this._node3D);

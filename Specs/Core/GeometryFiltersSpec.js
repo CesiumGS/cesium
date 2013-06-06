@@ -11,7 +11,7 @@ defineSuite([
          'Core/GeographicProjection',
          'Core/Geometry',
          'Core/GeometryAttribute',
-         'Core/GeometryIndices',
+         'Core/GeometryInstance',
          'Core/VertexFormat',
          'Core/Math'
      ], function(
@@ -26,23 +26,21 @@ defineSuite([
          GeographicProjection,
          Geometry,
          GeometryAttribute,
-         GeometryIndices,
+         GeometryInstance,
          VertexFormat,
          CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('converts triangles to wireframe in place', function() {
-        var mesh = GeometryFilters.toWireframe({
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 1, 2, 3, 4, 5]
-            }]
-        });
+        var mesh = GeometryFilters.toWireframe(new Geometry({
+            indexList : [0, 1, 2, 3, 4, 5],
+            primitiveType : PrimitiveType.TRIANGLES
+        }));
 
-        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = mesh.indexLists[0].values;
+        var v = mesh.indexList;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -61,16 +59,14 @@ defineSuite([
     });
 
     it('converts a triangle fan to wireframe in place', function() {
-        var mesh = GeometryFilters.toWireframe({
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLE_FAN,
-                values : [0, 1, 2, 3]
-            }]
-        });
+        var mesh = GeometryFilters.toWireframe(new Geometry({
+            indexList : [0, 1, 2, 3],
+            primitiveType : PrimitiveType.TRIANGLE_FAN
+        }));
 
-        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = mesh.indexLists[0].values;
+        var v = mesh.indexList;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -89,16 +85,14 @@ defineSuite([
     });
 
     it('converts a triangle strip to wireframe in place', function() {
-        var mesh = GeometryFilters.toWireframe({
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLE_STRIP,
-                values : [0, 1, 2, 3]
-            }]
-        });
+        var mesh = GeometryFilters.toWireframe(new Geometry({
+            indexList : [0, 1, 2, 3],
+            primitiveType : PrimitiveType.TRIANGLE_STRIP
+        }));
 
-        expect(mesh.indexLists[0].primitiveType).toEqual(PrimitiveType.LINES);
+        expect(mesh.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = mesh.indexLists[0].values;
+        var v = mesh.indexList;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -117,13 +111,13 @@ defineSuite([
     });
 
     it('creates attribute indices', function() {
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                position : {},
-                normal : {},
-                color : {}
+                position : new GeometryAttribute(),
+                normal : new GeometryAttribute(),
+                color : new GeometryAttribute()
             }
-        };
+        });
 
         var indices = GeometryFilters.createAttributeIndices(mesh);
 
@@ -155,72 +149,64 @@ defineSuite([
 
     it('throws an exception when mesh properties have a different number of attributes', function() {
         expect(function() {
-            var mesh = {};
-            mesh.attributes = {};
+            var mesh = new Geometry({
+                attributes : {
+                    attribute1 : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 1,
+                        values : [0, 1, 2]
+                    }),
+                    attribute2 : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0, 1, 2, 3, 4, 5]
+                    })
+                }
+            });
 
-            mesh.attributes.attribute1 = {
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 1,
-                values : [0, 1, 2]
-            };
-
-            mesh.attributes.attribute2 = {
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : [0, 1, 2, 3, 4, 5]
-            };
             mesh = GeometryFilters.reorderForPreVertexCache(mesh);
         }).toThrow();
     });
 
     it('can reorder all indices and attributes for the pre vertex cahce', function() {
-        var mesh = {};
-        mesh.attributes = {};
-        mesh.indexLists = [];
-
-        mesh.indexLists.push({
-            primitiveType : PrimitiveType.TRIANGLES,
-            values : [5, 3, 2, 0, 1, 4]
+        var mesh = new Geometry({
+            attributes : {
+                weight : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 1,
+                    values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+                }),
+                positions : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
+                })
+            },
+            indexList : [5, 3, 2, 0, 1, 4, 4, 1, 3, 2, 5, 0],
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
-        mesh.indexLists.push({
-            primitiveType : PrimitiveType.TRIANGLES,
-            values : [4, 1, 3, 2, 5, 0]
-        });
-
-        mesh.attributes.vertexNames = {
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 1,
-            values : ['v0', 'v1', 'v2', 'v3', 'v4', 'v5']
-        };
-
-        mesh.attributes.positions = {
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 3,
-            values : [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
-        };
         GeometryFilters.reorderForPreVertexCache(mesh);
 
-        expect(mesh.indexLists[0].values[0]).toEqual(0);
-        expect(mesh.indexLists[0].values[1]).toEqual(1);
-        expect(mesh.indexLists[0].values[2]).toEqual(2);
-        expect(mesh.indexLists[0].values[3]).toEqual(3);
-        expect(mesh.indexLists[0].values[4]).toEqual(4);
-        expect(mesh.indexLists[0].values[5]).toEqual(5);
+        expect(mesh.indexList[0]).toEqual(0);
+        expect(mesh.indexList[1]).toEqual(1);
+        expect(mesh.indexList[2]).toEqual(2);
+        expect(mesh.indexList[3]).toEqual(3);
+        expect(mesh.indexList[4]).toEqual(4);
+        expect(mesh.indexList[5]).toEqual(5);
+        expect(mesh.indexList[6]).toEqual(5);
+        expect(mesh.indexList[7]).toEqual(4);
+        expect(mesh.indexList[8]).toEqual(1);
+        expect(mesh.indexList[9]).toEqual(2);
+        expect(mesh.indexList[10]).toEqual(0);
+        expect(mesh.indexList[11]).toEqual(3);
 
-        expect(mesh.indexLists[1].values[0]).toEqual(5);
-        expect(mesh.indexLists[1].values[1]).toEqual(4);
-        expect(mesh.indexLists[1].values[2]).toEqual(1);
-        expect(mesh.indexLists[1].values[3]).toEqual(2);
-        expect(mesh.indexLists[1].values[4]).toEqual(0);
-        expect(mesh.indexLists[1].values[5]).toEqual(3);
-
-        expect(mesh.attributes.vertexNames.values[0]).toEqual('v5');
-        expect(mesh.attributes.vertexNames.values[1]).toEqual('v3');
-        expect(mesh.attributes.vertexNames.values[2]).toEqual('v2');
-        expect(mesh.attributes.vertexNames.values[3]).toEqual('v0');
-        expect(mesh.attributes.vertexNames.values[4]).toEqual('v1');
-        expect(mesh.attributes.vertexNames.values[5]).toEqual('v4');
+        expect(mesh.attributes.weight.values[0]).toEqual(5.0);
+        expect(mesh.attributes.weight.values[1]).toEqual(3.0);
+        expect(mesh.attributes.weight.values[2]).toEqual(2.0);
+        expect(mesh.attributes.weight.values[3]).toEqual(0.0);
+        expect(mesh.attributes.weight.values[4]).toEqual(1.0);
+        expect(mesh.attributes.weight.values[5]).toEqual(4.0);
 
         expect(mesh.attributes.positions.values[0]).toEqual(15);
         expect(mesh.attributes.positions.values[1]).toEqual(16);
@@ -247,7 +233,7 @@ defineSuite([
             ellipsoid : new Ellipsoid(10.0, 10.0, 10.0),
             numberOfPartitions : 100
         });
-        var indices = mesh.indexLists[0].values;
+        var indices = mesh.indexList;
         var numIndices = indices.length;
         var maximumIndex = 0;
         for ( var i = 0; i < numIndices; i++) {
@@ -260,7 +246,7 @@ defineSuite([
                                                 cacheSize : 24});
         expect(ACMRbefore).toBeGreaterThan(1.00);
         mesh = GeometryFilters.reorderForPostVertexCache(mesh);
-        indices = mesh.indexLists[0].values;
+        indices = mesh.indexList;
         var ACMRafter = Tipsify.calculateACMR({indices : indices,
                                                maximumIndex : maximumIndex,
                                                cacheSize : 24});
@@ -268,29 +254,27 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices does not change mesh', function() {
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                time : {
+                time : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [10.0]
-                },
-                heat : {
+                }),
+                heat : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [1.0]
-                }
+                })
             },
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 0, 0]
-            }]
-        };
+            indexList : [0, 0, 0],
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(1);
-        expect(meshes[0]).toBe(mesh);
+        expect(geometries.length).toEqual(1);
+        expect(geometries[0]).toBe(mesh);
     });
 
     it('fitToUnsignedShortIndices creates one mesh', function() {
@@ -300,32 +284,30 @@ defineSuite([
             times.push(i);
         }
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                time : {
+                time : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : times
-                }
+                })
             },
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 0, 0, sixtyFourK, sixtyFourK, sixtyFourK, 0, sixtyFourK, 0]
-            }]
-        };
+            indexList : [0, 0, 0, sixtyFourK, sixtyFourK, sixtyFourK, 0, sixtyFourK, 0],
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(1);
-        expect(meshes[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
-        expect(meshes[0].attributes.time.componentsPerAttribute).toEqual(1);
-        expect(meshes[0].attributes.time.values).toEqual([0, sixtyFourK]);
+        expect(geometries.length).toEqual(1);
+        expect(geometries[0].attributes.time.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(geometries[0].attributes.time.componentsPerAttribute).toEqual(1);
+        expect(geometries[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
-        expect(meshes[0].indexLists[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(meshes[0].indexLists[0].values).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(geometries[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
+        expect(geometries[0].indexList).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
-    it('fitToUnsignedShortIndices creates two meshes', function() {
+    it('fitToUnsignedShortIndices creates two geometries', function() {
         var sixtyFourK = 64 * 1024;
 
         var positions = [];
@@ -339,46 +321,41 @@ defineSuite([
         }
         indices.push(0, 1, 2);
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : positions
-                }
+                })
             },
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : indices
-            }]
-        };
+            indexList : indices,
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        var meshes = GeometryFilters.fitToUnsignedShortIndices(mesh);
+        var geometries = GeometryFilters.fitToUnsignedShortIndices(mesh);
 
-        expect(meshes.length).toEqual(2);
+        expect(geometries.length).toEqual(2);
 
-        expect(meshes[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(meshes[0].indexLists[0].values.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
+        expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
+        expect(geometries[0].indexList.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
 
-        expect(meshes[1].attributes.position.values.length).toEqual(9);
-        expect(meshes[1].indexLists[0].values.length).toEqual(3);
+        expect(geometries[1].attributes.position.values.length).toEqual(9);
+        expect(geometries[1].indexList.length).toEqual(3);
     });
 
     it('fitToUnsignedShortIndices throws without triangles', function() {
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                time : {
+                time : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [10.0]
-                }
+                })
             },
-
-            indexLists : [{
-                primitiveType : PrimitiveType.POINTS,
-                values : [0]
-            }]
-        };
+            indexList : [0],
+            primitiveType : PrimitiveType.POINTS
+        });
 
         expect(function() {
             return GeometryFilters.fitToUnsignedShortIndices(mesh);
@@ -386,26 +363,22 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices throws with different numbers of attributes', function() {
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                time : {
+                time : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [10.0]
-                },
-
-                heat : {
+                }),
+                heat : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [1.0, 2.0]
-                }
+                })
             },
-
-            indexLists : [{
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 0, 0]
-            }]
-        };
+            indexList : [0, 0, 0],
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
         expect(function() {
             return GeometryFilters.fitToUnsignedShortIndices(mesh);
@@ -448,15 +421,15 @@ defineSuite([
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);
 
-        var mesh = {
+        var mesh = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [c.x, c.y, c.z]
-                }
+                })
             }
-        };
+        });
         mesh = GeometryFilters.encodeAttribute(mesh);
 
         expect(mesh.attributes.positionHigh).toBeDefined();
@@ -484,95 +457,87 @@ defineSuite([
 
     it('GeometryFilters.encodeAttribute throws without attribute', function() {
         expect(function() {
-            var mesh = {
-                attributes : {
-                }
-            };
-            GeometryFilters.encodeAttribute(mesh);
+            GeometryFilters.encodeAttribute(new Geometry());
         }).toThrow();
     });
 
     it('GeometryFilters.encodeAttribute throws without ComponentDatatype.FLOAT', function() {
         expect(function() {
-            var mesh = {
-                attributes : {
+            var mesh = new Geometry({
+                attributes : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
                     componentsPerAttribute : 1,
                     values : [0.0]
-                }
-            };
+                })
+            });
             GeometryFilters.encodeAttribute(mesh);
         }).toThrow();
     });
 
     it('GeometryFilters.combine combines one mesh', function() {
-        var mesh = new Geometry({
-            attributes : new GeometryAttribute({
-                position : {
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [0.0, 0.0, 0.0]
-                }
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                })
             })
         });
 
-        var combinedMesh = GeometryFilters.combine([mesh]);
-        expect(combinedMesh).toBe(mesh);
+        var combined = GeometryFilters.combine([instance]);
+        expect(combined).toBe(instance.geometry);
     });
 
-    it('GeometryFilters.combine combines several meshes', function() {
-        var mesh = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        0.0, 0.0, 0.0,
-                        1.0, 1.0, 1.0,
-                        2.0, 2.0, 2.0
-                    ]
-                }),
-                normal : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        0.0, 0.0, 0.0,
-                        1.0, 1.0, 1.0,
-                        2.0, 2.0, 2.0
-                    ]
-                })
-            },
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 1, 2]
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.LINES,
-                values : [1, 2]
-            })]
+    it('GeometryFilters.combine combines several geometries', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 1.0, 1.0,
+                            2.0, 2.0, 2.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 1.0, 1.0,
+                            2.0, 2.0, 2.0
+                        ]
+                    })
+                },
+                indexList : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES
+            })
         });
-        var anotherMesh = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : [
-                        3.0, 3.0, 3.0,
-                        4.0, 4.0, 4.0,
-                        5.0, 5.0, 5.0
-                    ]
-                })
-            },
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : [0, 1, 2]
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.POINTS,
-                values : [0, 1, 2]
-            })]
+        var anotherInstance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            3.0, 3.0, 3.0,
+                            4.0, 4.0, 4.0,
+                            5.0, 5.0, 5.0
+                        ]
+                    })
+                },
+                indexList : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES
+            })
         });
 
-        var combinedMesh = GeometryFilters.combine([mesh, anotherMesh]);
-        expect(combinedMesh).toEqual(new Geometry({
+        var combined = GeometryFilters.combine([instance, anotherInstance]);
+        expect(combined).toEqual(new Geometry({
             attributes : {
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -587,26 +552,18 @@ defineSuite([
                     ])
                 })
             },
-            indexLists : [new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : new Uint16Array([0, 1, 2, 3, 4, 5])
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.LINES,
-                values : new Uint16Array([1, 2])
-            }), new GeometryIndices({
-                primitiveType : PrimitiveType.POINTS,
-                values : new Uint16Array([3, 4, 5])
-            })]
+            indexList : new Uint16Array([0, 1, 2, 3, 4, 5]),
+            primitiveType : PrimitiveType.TRIANGLES
         }));
     });
 
-    it('GeometryFilters.combine throws with meshes', function() {
+    it('GeometryFilters.combine throws with instances', function() {
         expect(function() {
             GeometryFilters.combine();
         }).toThrow();
     });
 
-    it('GeometryFilters.combine throws when meshes.length is zero', function() {
+    it('GeometryFilters.combine throws when instances.length is zero', function() {
         expect(function() {
             GeometryFilters.combine([]);
         }).toThrow();
@@ -618,25 +575,17 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormal throws when mesh.attributes is undefined', function() {
+    it('GeometryFilters.computeNormal throws when mesh.attributes.position is undefined', function() {
         expect(function() {
             GeometryFilters.computeNormal(new Geometry());
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormal throws when mesh.attributes.position is undefined', function() {
-        expect(function() {
-            GeometryFilters.computeNormal(new Geometry( {
-                attributes: {}
-            }));
-        }).toThrow();
-    });
-
     it('GeometryFilters.computeNormal throws when mesh.attributes.position.values is undefined', function() {
         expect(function() {
-            GeometryFilters.computeNormal(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry({
                 attributes: {
-                    position: {}
+                    position: new GeometryAttribute()
                 }
             }));
         }).toThrow();
@@ -644,12 +593,12 @@ defineSuite([
 
     it('GeometryFilters.computeNormal throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
         expect(function() {
-            GeometryFilters.computeNormal(new Geometry( {
+            GeometryFilters.computeNormal(new Geometry({
                 attributes: {
-                    position: {
-                        values: [3, 2, 1, 1, 2, 4],
-                        componentsPerAttribute: 2
-                    }
+                    position: new GeometryAttribute({
+                        values : [3, 2, 1, 1, 2, 4],
+                        componentsPerAttribute : 2
+                    })
                 }
             }));
         }).toThrow();
@@ -659,24 +608,22 @@ defineSuite([
         expect(function() {
             GeometryFilters.computeNormal(new Geometry( {
                 attributes: {
-                    position: {
+                    position: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 4, 3],
                         componentsPerAttribute: 3
-                    }
+                    })
                 }
             }));
         }).toThrow();
     });
 
-    it('GeometryFilters.computeNormal does not compute normals when mesh.indexLists is undefined', function() {
+    it('GeometryFilters.computeNormal does not compute normals when mesh.indexList is undefined', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
                     componentsPerAttribute: 3
-                }
+                })
             }
         });
 
@@ -688,18 +635,13 @@ defineSuite([
     it('GeometryFilters.computeNormal does not compute normals when primitive type is not triangle', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
-
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLE_STRIP,
-                values: [0, 1, 2]
-            }]
+            indexList : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -711,17 +653,13 @@ defineSuite([
     it('GeometryFilters.computeNormal computes normal for one triangle', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLES,
-                values: [0, 1, 2]
-            }]
+            indexList : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -733,18 +671,13 @@ defineSuite([
     it('GeometryFilters.computeNormal computes normal for two triangles', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 1,
-                             1, 1, 1,
-                             2, 0, 0],
-                             componentsPerAttribute: 3
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
+                    componentsPerAttribute: 3
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLES,
-                values: [0, 1, 2, 1, 3, 2]
-            }]
+            indexList : [0, 1, 2, 1, 3, 2],
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -760,21 +693,13 @@ defineSuite([
     it('GeometryFilters.computeNormal computes normal for six triangles', function() {
         var mesh = new Geometry ({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             1, 0, 1,
-                             0, 0, 1,
-                             0, 1, 1,
-                             0, 1, 0,
-                             1, 1, 0],
-                             componentsPerAttribute: 3
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
+                    componentsPerAttribute: 3
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLES,
-                values: [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0]
-            }]
+            indexList : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -799,15 +724,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes is undefined', function() {
-        expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry());
-        }).toThrow();
-    });
-
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position is undefined', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {}
             }));
         }).toThrow();
@@ -815,9 +734,9 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.values is undefined', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {}
+                    position: new GeometryAttribute()
                 }
             }));
         }).toThrow();
@@ -825,12 +744,12 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.componentsPerAttribute is not 3', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
+                    position: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 4],
                         componentsPerAttribute: 2
-                    }
+                    })
                 }
             }));
         }).toThrow();
@@ -838,12 +757,12 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.position.values is not a multiple of 3', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
+                    position: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 4, 3],
                         componentsPerAttribute: 3
-                    }
+                    })
                 }
             }));
         }).toThrow();
@@ -851,15 +770,12 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal is undefined', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    }
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    })
                 }
             }));
         }).toThrow();
@@ -867,15 +783,12 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.values is undefined', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
                     normal: {}
                 }
             }));
@@ -884,16 +797,16 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.componentsPerAttribute is not 3', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
+                    position: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 4],
                         componentsPerAttribute: 3
-                    },
-                    normal: {
+                    }),
+                    normal: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 4],
                         componentsPerAttribute: 2
-                    }
+                    })
                 }
             }));
         }).toThrow();
@@ -901,16 +814,16 @@ defineSuite([
 
     it('GeometryFilters.computeTangentAndBinormal throws when mesh.attributes.normal.values is not a multiple of 3', function() {
         expect(function() {
-            GeometryFilters.computeTangentAndBinormal(new Geometry( {
+            GeometryFilters.computeTangentAndBinormal(new Geometry({
                 attributes: {
-                    position: {
+                    position: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 3],
                         componentsPerAttribute: 3
-                    },
-                    normal: {
+                    }),
+                    normal: new GeometryAttribute({
                         values: [3, 2, 1, 1, 2, 3, 4],
                         componentsPerAttribute: 3
-                    }
+                    })
                 }
             }));
         }).toThrow();
@@ -920,20 +833,15 @@ defineSuite([
         expect(function() {
             GeometryFilters.computeTangentAndBinormal(new Geometry( {
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
 
-                    },
-                    normal: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    }
+                    }),
+                    normal: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    })
                 }
             }));
         }).toThrow();
@@ -943,21 +851,15 @@ defineSuite([
         expect(function() {
             GeometryFilters.computeTangentAndBinormal(new Geometry( {
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    normal: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    st: {}
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    normal: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    st: new GeometryAttribute()
                 }
             }));
         }).toThrow();
@@ -967,24 +869,18 @@ defineSuite([
         expect(function() {
             GeometryFilters.computeTangentAndBinormal(new Geometry( {
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    normal: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    st: {
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    normal: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    st: new GeometryAttribute({
                         values: [0, 1],
                         componentsPerAttribute: 3
-                    }
+                    })
                 }
             }));
         }).toThrow();
@@ -994,51 +890,39 @@ defineSuite([
         expect(function() {
             GeometryFilters.computeTangentAndBinormal(new Geometry( {
                 attributes: {
-                    position: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    normal: {
-                        values: [0, 0, 0,
-                                 1, 0, 0,
-                                 0, 1, 0],
-                                 componentsPerAttribute: 3
-
-                    },
-                    st: {
+                    position: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    normal: new GeometryAttribute({
+                        values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                        componentsPerAttribute: 3
+                    }),
+                    st: new GeometryAttribute({
                         values: [0, 1, 3],
                         componentsPerAttribute: 2
-                    }
+                    })
                 }
             }));
         }).toThrow();
     });
 
-
-    it('GeometryFilters.computeTangentAndBinormal does not compute tangent and binormals when mesh.indexLists is undefined', function() {
+    it('GeometryFilters.computeTangentAndBinormal does not compute tangent and binormals when mesh.indexList is undefined', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
 
-                },
-                normal: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
-
-                },
-                st: {
+                }),
+                st: new GeometryAttribute({
                     values: [0, 1],
                     componentsPerAttribute: 2
-                }
+                })
             }
         });
 
@@ -1051,29 +935,23 @@ defineSuite([
     it('GeometryFilters.computeTangentAndBinormal does not compute tangent and binormals when primitive type is not triangle', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
 
-                },
-                normal: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
 
-                },
-                st: {
+                }),
+                st: new GeometryAttribute({
                     values: [0, 1],
                     componentsPerAttribute: 2
-                }
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLE_STRIP,
-                values: [0, 1, 2]
-            }]
+            indexList : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
         mesh = GeometryFilters.computeTangentAndBinormal(mesh);
@@ -1085,23 +963,17 @@ defineSuite([
     it('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for one triangle', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 0,
-                             0, 1, 0],
-                             componentsPerAttribute: 3
-                },
-                st: {
-                    values: [0, 0,
-                             1, 0,
-                             0, 1],
-                             componentsPerAttribute: 2
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 0, 0, 1],
+                    componentsPerAttribute: 2
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLES,
-                values: [0, 1, 2]
-            }]
+            indexList : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);
@@ -1114,25 +986,17 @@ defineSuite([
     it('GeometryFilters.computeTangentAndBinormal computes tangent and binormal for two triangles', function() {
         var mesh = new Geometry({
             attributes: {
-                position: {
-                    values: [0, 0, 0,
-                             1, 0, 1,
-                             1, 1, 1,
-                             2, 0, 0],
-                             componentsPerAttribute: 3
-                },
-                st: {
-                    values: [0, 0,
-                             1, 0,
-                             1, 1,
-                             0, 1],
-                             componentsPerAttribute: 2
-                }
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
+                    componentsPerAttribute: 3
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 0, 1, 1, 0, 1],
+                    componentsPerAttribute: 2
+                })
             },
-            indexLists: [{
-                primitiveType: PrimitiveType.TRIANGLES,
-                values: [0, 1, 2, 1, 3, 2]
-            }]
+            indexList : [0, 1, 2, 1, 3, 2],
+            primitiveType: PrimitiveType.TRIANGLES
         });
 
         mesh = GeometryFilters.computeNormal(mesh);

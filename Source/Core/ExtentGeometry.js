@@ -10,11 +10,10 @@ define([
         './Ellipsoid',
         './Extent',
         './GeographicProjection',
+        './Geometry',
         './GeometryAttribute',
-        './GeometryIndices',
         './Math',
         './Matrix2',
-        './Matrix4',
         './PrimitiveType',
         './VertexFormat'
     ], function(
@@ -28,11 +27,10 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
+        Geometry,
         GeometryAttribute,
-        GeometryIndices,
         CesiumMath,
         Matrix2,
-        Matrix4,
         PrimitiveType,
         VertexFormat) {
     "use strict";
@@ -64,7 +62,7 @@ define([
     var topBoundingSphere = new BoundingSphere();
 
     function constructExtent(options, extent, vertexFormat){
-        var granularity = defaultValue(options.granularity, 0.1);
+        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
@@ -253,7 +251,7 @@ define([
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
         var closeBottom  = defaultValue(extrudedOptions.closeBottom, true);
 
-        var granularity = defaultValue(options.granularity, 0.1);
+        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
@@ -808,17 +806,11 @@ define([
         this.attributes = attributes;
 
         /**
-         * An array of {@link GeometryIndices} defining primitives.
+         * The geometry indices.
          *
          * @type Array
          */
-        this.indexLists = [
-            new GeometryIndices({
-                primitiveType : PrimitiveType.TRIANGLES,
-                values : attr.indices
-            })
-        ];
-
+        this.indexList = attr.indices;
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
@@ -827,31 +819,17 @@ define([
         this.boundingSphere = attr.boundingSphere;
 
         /**
-         * The 4x4 transformation matrix that transforms the geometry from model to world coordinates.
-         * When this is the identity matrix, the geometry is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
-         * Local reference frames can be used by providing a different transformation matrix, like that returned
-         * by {@link Transforms.eastNorthUpToFixedFrame}.
-         *
-         * @type Matrix4
-         *
-         * @see Transforms.eastNorthUpToFixedFrame
-         */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
-
-        /**
-         * The color of the geometry when a per-geometry color appearance is used.
-         *
-         * @type Color
-         */
-        this.color = options.color;
-
-        /**
          * DOC_TBA
          */
-        this.pickData = options.pickData;
+        this.primitiveType = PrimitiveType.TRIANGLES;
+
+
     };
 
-
+    /**
+     * DOC_TBA
+     */
+    ExtentGeometry.prototype.clone = Geometry.prototype.clone;
 
     return ExtentGeometry;
 });

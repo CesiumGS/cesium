@@ -1,12 +1,18 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Renderer/CullFace',
+        '../Renderer/BlendingState',
         './Material',
+        './Appearance',
         '../Shaders/Appearances/DefaultAppearanceVS',
         '../Shaders/Appearances/DefaultAppearanceFS'
     ], function(
         defaultValue,
+        CullFace,
+        BlendingState,
         Material,
+        Appearance,
         DefaultAppearanceVS,
         DefaultAppearanceFS) {
     "use strict";
@@ -14,7 +20,7 @@ define([
     /**
      * DOC_TBA
      */
-    var Appearance = function(options) {
+    var ClosedTranslucentAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -35,18 +41,23 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {});
+        this.renderState = defaultValue(options.renderState, {
+            cull : {
+                enabled : true,
+                face : CullFace.BACK
+            },
+            depthTest : {
+                enabled : true
+            },
+            depthMask : false,
+            blending : BlendingState.ALPHA_BLEND
+        });
     };
 
     /**
      * DOC_TBA
      */
-    Appearance.prototype.getFragmentShaderSource = function() {
-        return '#line 0\n' +
-            this.material.shaderSource +
-            '#line 0\n' +
-            this.fragmentShaderSource;
-    };
+    ClosedTranslucentAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
-    return Appearance;
+    return ClosedTranslucentAppearance;
 });

@@ -549,10 +549,8 @@ define([
                         values : depthQuad
                     }
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [0, 1, 2, 2, 1, 3]
-                }]
+                indexList : [0, 1, 2, 2, 1, 3],
+                primitiveType : PrimitiveType.TRIANGLES
             };
             this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
                 mesh : mesh,
