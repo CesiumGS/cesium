@@ -389,7 +389,6 @@ define([
                     newIndices.push(i2);
 
                     if (currentIndex + 3 > sixtyFourK) {
-                        // TODO: is this always what we want, for say BoxGeometry?
                         geometries.push(new Geometry({
                             attributes : newAttributes,
                             indexList : newIndices,
@@ -405,7 +404,6 @@ define([
                 }
 
                 if (newIndices.length !== 0) {
-                    // TODO: is this always what we want, for say BoxGeometry?
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indexList : newIndices,

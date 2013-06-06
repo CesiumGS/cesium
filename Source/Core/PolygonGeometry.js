@@ -437,7 +437,7 @@ define([
     /**
      * DOC_TBA
      */
-    PolygonGeometry.prototype.clone = Geometry.prototype.clone;
+    PolygonGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return PolygonGeometry;
 });
