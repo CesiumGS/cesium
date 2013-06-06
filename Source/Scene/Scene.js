@@ -67,8 +67,8 @@ define([
      * @alias Scene
      * @constructor
      */
-    var Scene = function(canvas) {
-        var context = new Context(canvas);
+    var Scene = function(canvas, contextOptions) {
+        var context = new Context(canvas, contextOptions);
 
         this._frameState = new FrameState();
         this._passState = new PassState(context);
