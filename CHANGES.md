@@ -12,7 +12,8 @@ Beta Releases
       * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
    * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
    * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
-    
+* Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+
 ### b17 - 2013-06-03
 
 * Breaking changes:

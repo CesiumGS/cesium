@@ -119,7 +119,8 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-2.1.2/r.js" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
+	<property name="rjsPath" location="${requirejsPath}/r.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.3/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
@@ -219,7 +220,7 @@
 		<fail if="jsHint.failure" message="JSHint failed!" />
 	</target>
 
-	<target name="combineJavaScript.setNodePathValue">
+	<target name="setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
 			<os family="windows" />
 		</condition>
@@ -233,11 +234,11 @@
 		</condition>
 	</target>
 
-	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
+	<target name="setNodePathLocation" if="nodePathValue">
 		<property name="nodePath" location="${nodePathValue}" />
 	</target>
 
-	<target name="combineJavaScript.setNodePath" depends="combineJavaScript.setNodePathValue,combineJavaScript.setNodePathLocation">
+	<target name="setNodePath" depends="setNodePathValue,setNodePathLocation">
 		<condition property="nodePath" value="node">
 			<not>
 				<isset property="nodePath" />
@@ -262,6 +263,7 @@
 			<arg value="-o" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
 			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
 			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
@@ -343,9 +345,9 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="combineJavaScript.setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
-	<target name="minifyCSS" depends="combineJavaScript.setNodePath">
+	<target name="minifyCSS" depends="setNodePath">
 		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
