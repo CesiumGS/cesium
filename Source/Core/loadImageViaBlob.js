@@ -45,12 +45,11 @@ define([
      * });
      */
     var loadImageViaBlob = function(url) {
-
         if (dataUriRegex.test(url)) {
             return loadImage(url);
         }
 
-        return loadBlob(url).then(function(blob){
+        return loadBlob(url).then(function(blob) {
             var blobUrl = window.URL.createObjectURL(blob);
 
             return loadImage(blobUrl, false).then(function(image) {
@@ -61,7 +60,6 @@ define([
                 window.URL.revokeObjectURL(blobUrl);
                 return e;
             });
-
         });
     };
 
@@ -70,7 +68,7 @@ define([
             var xhr = new XMLHttpRequest();
             xhr.responseType = 'blob';
             return xhr.responseType === 'blob';
-        } catch(e) {
+        } catch (e) {
             return false;
         }
     })();
