@@ -330,7 +330,16 @@ define([
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            var imagery = tileImagery.imagery;
+
+            // We may be using our parent's imagery temporarily... but we still want to load ours.
+            var originalImagery = tileImagery.originalImagery;
+            var imagery;
+            if (typeof originalImagery !== 'undefined' && originalImagery.state !== ImageryState.FAILED && originalImagery.state !== ImageryState.INVALID) {
+                imagery = tileImagery.originalImagery;
+            } else {
+                imagery = tileImagery.imagery;
+            }
+
             var imageryLayer = imagery.imageryLayer;
 
             if (imagery.state === ImageryState.PLACEHOLDER) {
@@ -360,9 +369,10 @@ define([
                 imageryLayer._reprojectTexture(context, imagery);
             }
 
+            var parent;
             if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
                 // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                var parent = imagery.parent;
+                parent = imagery.parent;
                 while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
                     parent = parent.parent;
                 }
@@ -383,15 +393,52 @@ define([
                 parent.addReference();
                 tileImagery.imagery = parent;
                 imagery = parent;
+            } else if (imagery.state !== ImageryState.READY) {
+                // re-associate TileImagery with a parent Imagery that is ready.
+                parent = imagery.parent;
+                while (typeof parent !== 'undefined' && parent.state !== ImageryState.READY) {
+                    parent = parent.parent;
+                }
+
+                // If we found a valid parent, use it.
+                if (typeof parent !== 'undefined') {
+                    if (tileImagery.imagery !== parent) {
+                        // If we're already using an ancestor's imagery, release it.
+                        if (typeof tileImagery.originalImagery !== 'undefined') {
+                            tileImagery.imagery.releaseReference();
+                        }
+
+                        // use that parent imagery instead, storing the original imagery
+                        // in originalImagery to keep it alive
+                        tileImagery.originalImagery = imagery;
+
+                        parent.addReference();
+                        tileImagery.imagery = parent;
+
+                        tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
+                    }
+
+                    imagery = parent;
+                }
+            } else if (typeof tileImagery.originalImagery !== 'undefined') {
+                tileImagery.imagery.releaseReference();
+                imagery = tileImagery.imagery = tileImagery.originalImagery;
+                tileImagery.originalImagery = undefined;
+                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
             }
 
-            var imageryDoneLoading = imagery.state === ImageryState.READY;
+            var imageryRenderable = imagery.state === ImageryState.READY;
+            var imageryDoneLoading = imagery.state === ImageryState.READY &&
+                                     (typeof tileImagery.originalImagery === 'undefined' ||
+                                      tileImagery.originalImagery.state === ImageryState.READY ||
+                                      tileImagery.originalImagery.state === ImageryState.FAILED ||
+                                      tileImagery.originalImagery.state === ImageryState.INVALID);
 
             if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
                 tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
             }
 
-            isRenderable = isRenderable && (imageryDoneLoading || imageryLayer.alpha === 0.0);
+            isRenderable = isRenderable && (imageryRenderable || imageryLayer.alpha === 0.0);
             isDoneLoading = isDoneLoading && imageryDoneLoading;
         }
 
