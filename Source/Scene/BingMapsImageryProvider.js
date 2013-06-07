@@ -350,7 +350,7 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(url);
+        return ImageryProvider.loadImage(this, url);
     };
 
     /**
