@@ -1,13 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/loadImage',
+        '../Core/loadImageViaBlob',
         '../Core/getImagePixels',
         '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
-        loadImage,
+        loadImageViaBlob,
         getImagePixels,
         DeveloperError,
         when) {
@@ -43,11 +43,16 @@ define([
 
         this._pixelsToCheck = description.pixelsToCheck;
         this._missingImagePixels = undefined;
+        this._missingImageByteLength = undefined;
         this._isReady = false;
 
         var that = this;
 
         function success(image) {
+            if (typeof image.blob !== 'undefined') {
+                that._missingImageByteLength = image.blob.size;
+            }
+
             var pixels = getImagePixels(image);
 
             if (description.disableCheckIfAllPixelsAreTransparent) {
@@ -81,7 +86,7 @@ define([
             that._isReady = true;
         }
 
-        when(loadImage(description.missingImageUrl), success, failure);
+        when(loadImageViaBlob(description.missingImageUrl), success, failure);
     };
 
     /**
@@ -111,6 +116,10 @@ define([
 
         // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
         if (typeof missingImagePixels === 'undefined') {
+            return false;
+        }
+
+        if (typeof image.blob !== 'undefined' && image.blob.size !== this._missingImageByteLength) {
             return false;
         }
 
