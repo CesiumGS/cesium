@@ -117,7 +117,7 @@ define([
     /**
      * DOC_TBA
      */
-    PolylinePipeline.cleanUp = function(positions) {
+    PolylinePipeline.removeDuplicates = function(positions) {
         if (typeof positions  === 'undefined') {
             throw new DeveloperError('positions is required.');
         }

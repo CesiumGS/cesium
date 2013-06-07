@@ -496,7 +496,7 @@ define([
     var createGeometryFromPositionsBoundingRectangle = new BoundingRectangle();
 
     function createGeometryFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
-        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
             return undefined;
