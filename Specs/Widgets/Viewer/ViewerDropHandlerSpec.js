@@ -3,7 +3,7 @@ defineSuite([
          'Widgets/Viewer/ViewerDropHandler',
          'Core/TimeInterval',
          'Specs/EventHelper',
-         'Widgets/Viewer/Viewer',
+         'Widgets/Viewer/Viewer'
      ], function(
          ViewerDropHandler,
          TimeInterval,
