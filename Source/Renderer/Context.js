@@ -678,7 +678,7 @@ define([
      * @returns {Boolean} <code>true</code> if antialiasing is supported.
      */
     Context.prototype.getAntialias = function() {
-        return !!this._antialias;
+        return this._antialias;
     };
 
     /**
