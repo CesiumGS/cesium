@@ -69,6 +69,15 @@ defineSuite([
         widget.destroy();
     });
 
+    it('does not create an ImageryProvider if option is false', function() {
+        var widget = new CesiumWidget(document.body, {
+            imageryProvider : false
+        });
+        var imageryLayers = widget.centralBody.getImageryLayers();
+        expect(imageryLayers.getLength()).toEqual(0);
+        widget.destroy();
+    });
+
     it('sets expected options terrainProvider', function() {
         var options = {
             terrainProvider : new EllipsoidTerrainProvider()

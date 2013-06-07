@@ -65,7 +65,7 @@ define(['../../Core/Cartesian2',
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
      * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, it not supplied the first available base layer is used.
-     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLyerPicker.
+     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -100,12 +100,20 @@ define(['../../Core/Cartesian2',
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
 
+        var createBaseLayerPicker = typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false;
+        var imageryProvider;
+        if (createBaseLayerPicker) {
+            // BaseLayerPicker will add the base layer later
+            imageryProvider = false;
+        }
+
         //Cesium widget
         var cesiumWidgetContainer = document.createElement('div');
         cesiumWidgetContainer.className = 'cesium-viewer-cesiumWidgetContainer';
         viewerContainer.appendChild(cesiumWidgetContainer);
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
+            imageryProvider : imageryProvider,
             sceneMode : options.sceneMode
         });
 
@@ -147,7 +155,7 @@ define(['../../Core/Cartesian2',
 
         //BaseLayerPicker
         var baseLayerPicker;
-        if (typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false) {
+        if (createBaseLayerPicker) {
             var baseLayerPickerContainer = document.createElement('div');
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
