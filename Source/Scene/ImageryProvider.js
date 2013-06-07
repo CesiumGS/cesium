@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/loadImage',
+        '../Core/loadImageViaBlob',
         '../Core/DeveloperError',
         '../Core/throttleRequestByServer'
     ], function(
         loadImage,
+        loadImageViaBlob,
         DeveloperError,
         throttleRequestByServer) {
     "use strict";
@@ -193,7 +195,10 @@ define([
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(url) {
+    ImageryProvider.loadImage = function(imageryProvider, url) {
+        if (typeof imageryProvider.getTileDiscardPolicy() !== 'undefined') {
+            return throttleRequestByServer(url, loadImageViaBlob);
+        }
         return throttleRequestByServer(url, loadImage);
     };
 
