@@ -38,6 +38,7 @@
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
+		<antcall target="minifyCSS" />
 	</target>
 
 	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
@@ -50,8 +51,9 @@
 
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
 		<exec executable="${jscoveragePath}">
-			<arg line="${sourceDirectory} ${instrumentedDirectory}" />
-			<arg line="--no-instrument=./ThirdParty" />
+			<arg value="${sourceDirectory}" />
+			<arg value="${instrumentedDirectory}" />
+			<arg value="--no-instrument=./ThirdParty" />
 		</exec>
 	</target>
 
@@ -256,7 +258,12 @@
 
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
+			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
 
 		<!-- create each combined worker layer -->
@@ -288,7 +295,14 @@
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="wrap=true" />
+			<arg value="baseUrl=." />
+			<arg value="name=${relativeAlmondPath}" />
+			<arg value="include=main" />
+			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
 		</exec>
 	</target>
 
@@ -300,7 +314,12 @@
 
 	<target name="combineJavaScript.combineWorker">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="name=Workers/${worker}" />
+			<arg value="out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
 		</exec>
 	</target>
 
@@ -326,6 +345,20 @@
 
 	<target name="combineJavaScript" depends="combineJavaScript.setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
+	<target name="minifyCSS" depends="combineJavaScript.setNodePath">
+		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimizeCss=standard" />
+			<srcfile prefix="cssIn=" />
+			<targetfile prefix="out=" />
+			<identitymapper />
+			<fileset dir="${buildOutputDirectory}">
+				<include name="**/*.css" />
+			</fileset>
+		</apply>
+	</target>
+
 	<target name="generateDocumentation">
 		<extractShaderComments output="${shadersDirectory}/glslComments.js">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
@@ -340,14 +373,16 @@
 		<property name="relativeSourceFilesPath" location="${sourceDirectory}" relative="true" basedir="${jsdoc3Directory}" />
 
 		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true">
-			<arg line="-modules node_modules -modules rhino_modules -modules ." />
-			<arg line="jsdoc.js" />
-			<arg line="-r" />
+			<arg line="-modules node_modules" />
+			<arg line="-modules rhino_modules" />
+			<arg value="-modules ." />
+			<arg value="jsdoc.js" />
+			<arg value="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
-			<arg line="${relativeSourceFilesPath}" />
-			<arg line='${version}' />
-			<arg line='${githubRepoLink}' />
-			<arg line='${githubLinkExt}' />
+			<arg value="${relativeSourceFilesPath}" />
+			<arg value="${version}" />
+			<arg value="${githubRepoLink}" />
+			<arg value="${githubLinkExt}" />
 		</java>
 
 		<copy todir="${buildDocumentationImagesDirectory}">
@@ -400,9 +435,9 @@
 			<sysproperty key="java.util.logging.config.file" value="${toolsDirectory}/dojoBuildLogging.properties" />
 			<arg line="-opt -1" />
 			<arg line="-f ${toolsDirectory}/envjs-1.2/env.rhino.1.2.js" />
-			<arg line="${dojoPath}/dojo/dojo.js" />
-			<arg line="baseUrl=${dojoPath}/dojo" />
-			<arg line="load=build" />
+			<arg value="${dojoPath}/dojo/dojo.js" />
+			<arg value="baseUrl=${dojoPath}/dojo" />
+			<arg value="load=build" />
 			<arg line="--require ${app.path}/${appStartupScript}" />
 			<arg line="--profile ${app.path}/${app.name}.profile.js" />
 		</java>
