@@ -115,7 +115,23 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Removes adjacent duplicate positions in an array of positions.
+     *
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The array of positions.  Each element is usually a {@see Cartesian3}, but all that is required is that the object have an <code>equals</code> function.
+     *
+     * @returns {Object} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     *
+     * @exception {DeveloperError} positions is required.
+     *
+     * @example
+     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
+     * var positions = [
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
         if (typeof positions  === 'undefined') {

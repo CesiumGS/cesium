@@ -53,6 +53,7 @@ defineSuite([
     it('removeDuplicates to return one positions', function() {
         var positions = [Cartesian3.ZERO];
         var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+        expect(nonDuplicatePositions).not.toBe(positions);
         expect(nonDuplicatePositions).toEqual(positions);
     });
 
@@ -68,6 +69,7 @@ defineSuite([
             new Cartesian3(2.0, 2.0, 2.0),
             new Cartesian3(3.0, 3.0, 3.0)];
         var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+        expect(nonDuplicatePositions).not.toBe(expectedPositions);
         expect(nonDuplicatePositions).toEqual(expectedPositions);
     });
 
