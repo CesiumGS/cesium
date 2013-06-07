@@ -86,9 +86,6 @@ define([
         widget.startup();
         widget.fullscreen.viewModel.fullscreenElement = document.body;
 
-        // For debug.  This kills performance.
-        widget.scene.getContext().setThrowOnWebGLError(true);
-
         var scene = widget.scene;
         var ellipsoid = widget.centralBody.getEllipsoid();
 

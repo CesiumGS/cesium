@@ -304,7 +304,7 @@ define([
     /**
      * DOC_TBA
      */
-    WallGeometry.prototype.clone = Geometry.prototype.clone;
+    WallGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return WallGeometry;
 });

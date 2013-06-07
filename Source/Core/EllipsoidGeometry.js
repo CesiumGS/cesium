@@ -336,7 +336,7 @@ define([
     /**
      * DOC_TBA
      */
-    EllipsoidGeometry.prototype.clone = Geometry.prototype.clone;
+    EllipsoidGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return EllipsoidGeometry;
 });

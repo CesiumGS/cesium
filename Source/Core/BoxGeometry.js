@@ -382,7 +382,7 @@ define([
     /**
      * DOC_TBA
      */
-    BoxGeometry.prototype.clone = Geometry.prototype.clone;
+    BoxGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return BoxGeometry;
 });

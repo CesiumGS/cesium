@@ -452,7 +452,7 @@ define([
     /**
      * DOC_TBA
      */
-    EllipseGeometry.prototype.clone = Geometry.prototype.clone;
+    EllipseGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return EllipseGeometry;
 });

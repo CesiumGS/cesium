@@ -40,7 +40,7 @@ define([
     /**
      * DOC_TBA
      */
-    Geometry.prototype.clone = function(result) {
+    Geometry.prototype.cloneGeometry = function(result) {
         if (typeof result === 'undefined') {
 // TODO: is this always what we want, for say BoxGeometry?
             result = new Geometry();
