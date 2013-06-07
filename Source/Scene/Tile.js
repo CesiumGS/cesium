@@ -386,12 +386,25 @@ define([
                     continue;
                 }
 
-                // use that parent imagery instead, storing the original imagery
-                // in originalImagery to keep it alive
-                tileImagery.originalImagery = imagery;
+                if (tileImagery.imagery !== parent) {
+                    // If we're already using an ancestor's imagery, release it.
+                    if (typeof tileImagery.originalImagery !== 'undefined') {
+                        tileImagery.imagery.releaseReference();
+                    }
 
-                parent.addReference();
-                tileImagery.imagery = parent;
+                    // use that parent imagery instead, storing the original imagery
+                    // in originalImagery to keep it alive
+                    tileImagery.originalImagery = imagery;
+
+                    parent.addReference();
+                    tileImagery.imagery = parent;
+
+                    // !!!
+                    // The parent imagery can later be found to be invalid as well.  But if the tile is already
+                    // marked renderable, it's possible/likely that we'll try to render it after it was deemed invalid
+                    // but before we replaced it with something that's not.
+                }
+
                 imagery = parent;
             } else if (imagery.state !== ImageryState.READY) {
                 // re-associate TileImagery with a parent Imagery that is ready.
