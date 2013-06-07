@@ -4,6 +4,18 @@ Change Log
 Beta Releases
 -------------
 
+### b18 - 2013-07-01
+
+* Breaking changes:
+   * Changed all widgets to use ECMAScript 5 properties.  All public observable properties now must be accessed and assigned as if they were normal properties, instead of being called as functions.  For example:
+      * `clockViewModel.shouldAnimate()` -> `clockViewModel.shouldAnimate`
+      * `clockViewModel.shouldAnimate(true);` -> `clockViewModel.shouldAnimate = true;`
+   * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
+   * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
+   * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
+* Improved the performance of "missing tile" checking, especially for Bing imagery.
+* Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+
 ### b17 - 2013-06-03
 
 * Breaking changes:
@@ -11,11 +23,14 @@ Beta Releases
    * Renamed `Widgets/Fullscreen` folder to `Widgets/FullscreenButton` along with associated objects/files.
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
+   * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
+* Added support for approximating local vertical, local horizontal (LVLH) reference frames when using `DynamicObjectView` in 3D.  The object automatically selects LVLH or EastNorthUp based on the object's velocity. 
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DrawCommand.cull` to avoid redundant visibility checks.
 * Added `czm_morphTime` automatic GLSL uniform.
+* Added support for [OES_vertex_array_object](http://www.khronos.org/registry/webgl/extensions/OES_vertex_array_object/), which improves rendering performance.
 * Added support for floating-point textures.
 * Added `IntersectionTests.trianglePlaneIntersection`.
 * Added `computeHorizonCullingPoint`, `computeHorizonCullingPointFromVertices`, and `computeHorizonCullingPointFromExtent` methods to `EllipsoidalOccluder` and used them to build a more accurate horizon occlusion test for terrain rendering.
@@ -35,27 +50,28 @@ Beta Releases
 
 * Breaking changes:
    * Removed the color, outline color, and outline width properties of polylines. Instead, use materials for polyline color and outline properties. Code that looked like:
-         
-         var polyline = polylineCollection.add({
-             positions : positions,
-             color : new Color(1.0, 1.0, 1.0, 1.0),
-             outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
-             width : 1.0,
-             outlineWidth : 3.0
-         });
-         
+
+            var polyline = polylineCollection.add({
+                positions : positions,
+                color : new Color(1.0, 1.0, 1.0, 1.0),
+                outlineColor : new Color(1.0, 0.0, 0.0, 1.0),
+                width : 1.0,
+                outlineWidth : 3.0
+            });
+
      should now look like:
-         
-         var outlineMaterial = Material.fromType(context, Material.PolylineOutlineType);
-         outlineMaterial.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
-         outlineMaterial.uniforms.outlineColor = new Color(1.0, 0.0, 0.0, 1.0);
-         outlineMaterial.uniforms.outlinewidth = 2.0;
-         
-         var polyline = polylineCollection.add({
-             positions : positions,
-             width : 3.0,
-             material : outlineMaterial
-         });
+
+            var outlineMaterial = Material.fromType(context, Material.PolylineOutlineType);
+            outlineMaterial.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
+            outlineMaterial.uniforms.outlineColor = new Color(1.0, 0.0, 0.0, 1.0);
+            outlineMaterial.uniforms.outlinewidth = 2.0;
+
+            var polyline = polylineCollection.add({
+                positions : positions,
+                width : 3.0,
+                material : outlineMaterial
+            });
+
    * `CzmlCartographic` has been removed and all cartographic values are converted to Cartesian internally during CZML processing.  This improves performance and fixes interpolation of cartographic source data.  The Cartographic representation can still be retrieved if needed.
    * Removed `ComplexConicSensorVolume`, which was not documented and did not work on most platforms.  It will be brought back in a future release.  This does not affect CZML, which uses a custom sensor to approximate a complex conic.
    * Replaced `computeSunPosition` with `Simon1994PlanetaryPosition`, which has functions to calculate the position of the sun and the moon more accurately.
@@ -81,19 +97,19 @@ Beta Releases
 * Breaking changes:
    * `Billboard.computeScreenSpacePosition` now takes `Context` and `FrameState` arguments instead of a `UniformState` argument.
    * Removed `clampToPixel` property from `BillboardCollection` and `LabelCollection`.  This options is no longer be needed due to overall LabelCollection visualization improvements.
-   * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.    
-   * `destroyObject` no longer deletes properties from the object being destroyed.  
+   * Removed `Widgets/Dojo/CesiumWidget` and replaced it with `Widgets/CesiumWidget`, which has no Dojo dependancies.
+   * `destroyObject` no longer deletes properties from the object being destroyed.
    * `darker.css` files have been deleted and the `darker` theme is now the default style for widgets.  The original theme is now known as `lighter` and is in corresponding `lighter.css` files.
    * CSS class names have been standardized to avoid potential collisions. All widgets now follow the same pattern, `cesium-<widget>-<className>`.
    * Removed `view2D`, `view3D`, and `viewColumbus` properties from `CesiumViewerWidget`.  Use the `sceneTransitioner` property instead.
 * Added `BoundingSphere.fromCornerPoints`.
 * Added `fromArray` and `distance` functions to `Cartesian2`, `Cartesian3`, and `Cartesian4`.
 * Added `DynamicPath.resolution` property for setting the maximum step size, in seconds, to take when sampling a position for path visualization.
-* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging. 
+* Added `TileCoordinatesImageryProvider` that renders imagery with tile X, Y, Level coordinates on the surface of the globe.  This is mostly useful for debugging.
 * Added `DynamicEllipse` and `DynamicObject.ellipse` property to render CZML ellipses on the globe.
 * Added `sampleTerrain` function to sample the terrain height of a list of `Cartographic` positions.
-* Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property. 
-* Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased. 
+* Added `DynamicObjectCollection.removeObject` and handling of the new CZML `delete` property.
+* Imagery layers with an `alpha` of exactly 0.0 are no longer rendered.  Previously these invisible layers were rendered normally, which was a waste of resources.  Unlike the `show` property, imagery tiles in a layer with an `alpha` of 0.0 are still downloaded, so the layer will become visible more quickly when its `alpha` is increased.
 * Added `onTransitionStart` and `onTransitionComplete` events to `SceneModeTransitioner`.
 * Added `SceneModePicker`; a new widget for morphing between scene modes.
 * Added `BaseLayerPicker`; a new widget for switching among pre-configured base layer imagery providers.
@@ -109,7 +125,7 @@ Beta Releases
       * `ClockRange.LOOP` was renamed to `ClockRange.LOOP_STOP` and now only loops in the forward direction.
       * `Clock.reverseTick` was removed, simply negate `Clock.multiplier` and pass it to `Clock.tick`.
       * `Clock.shouldAnimate` was added to indicate if `Clock.tick` should actually advance time.
-      * The Timeline widget was moved into the Widgets/Timeline subdirectory. 
+      * The Timeline widget was moved into the Widgets/Timeline subdirectory.
       * `Dojo/TimelineWidget` was removed.  You should use the non-toolkit specific Timeline widget directly.
    * Removed `CesiumViewerWidget.fullScreenElement`, instead use the `CesiumViewerWidget.fullscreen.viewModel.fullScreenElement` observable property.
    * `IntersectionTests.rayPlane` now takes the new `Plane` type instead of separate `planeNormal` and `planeD` arguments.
@@ -132,7 +148,7 @@ Beta Releases
    * The Web Worker files needed when using the combined `Cesium.js` file are now in a `Workers` subdirectory.
    * Removed `erosion` property from `Polygon`, `ComplexConicSensorVolume`, `RectangularPyramidSensorVolume`, and `ComplexConicSensorVolume`.  Use the new `Erosion` material.  See the Sandbox Animation example.
    * Removed `setRectangle` and `getRectangle` methods from `ViewportQuad`. Use the new `rectangle` property.
-   * Removed `time` parameter from `Scene.initializeFrame`. Instead, pass the time to `Scene.render`. 
+   * Removed `time` parameter from `Scene.initializeFrame`. Instead, pass the time to `Scene.render`.
 * Added new `RimLighting` and `Erosion` materials.  See the [Fabric](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric) wiki page.
 * Added `hue` and `saturation` properties to `ImageryLayer`.
 * Added `czm_hue` and `czm_saturation` to adjust the hue and saturation of RGB colors.

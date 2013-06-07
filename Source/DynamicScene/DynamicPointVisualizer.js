@@ -108,7 +108,7 @@ define([
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -171,7 +171,7 @@ define([
     var color;
     var position;
     var outlineColor;
-    DynamicPointVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    function updateObject(dynamicPointVisualizer, time, dynamicObject) {
         var dynamicPoint = dynamicObject.point;
         if (typeof dynamicPoint === 'undefined') {
             return;
@@ -190,25 +190,25 @@ define([
         if (!show) {
             //don't bother creating or updating anything else
             if (typeof pointVisualizerIndex !== 'undefined') {
-                billboard = this._billboardCollection.get(pointVisualizerIndex);
+                billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
                 billboard.setShow(false);
                 billboard.setImageIndex(-1);
                 dynamicObject._pointVisualizerIndex = undefined;
-                this._unusedIndexes.push(pointVisualizerIndex);
+                dynamicPointVisualizer._unusedIndexes.push(pointVisualizerIndex);
             }
             return;
         }
 
         var needRedraw = false;
         if (typeof pointVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicPointVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 pointVisualizerIndex = unusedIndexes.pop();
-                billboard = this._billboardCollection.get(pointVisualizerIndex);
+                billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
             } else {
-                pointVisualizerIndex = this._billboardCollection.getLength();
-                billboard = this._billboardCollection.add();
+                pointVisualizerIndex = dynamicPointVisualizer._billboardCollection.getLength();
+                billboard = dynamicPointVisualizer._billboardCollection.add();
             }
             dynamicObject._pointVisualizerIndex = pointVisualizerIndex;
             billboard.dynamicObject = dynamicObject;
@@ -220,7 +220,7 @@ define([
             billboard._visualizerPixelSize = 1;
             needRedraw = true;
         } else {
-            billboard = this._billboardCollection.get(pointVisualizerIndex);
+            billboard = dynamicPointVisualizer._billboardCollection.get(pointVisualizerIndex);
         }
 
         billboard.setShow(true);
@@ -273,7 +273,7 @@ define([
             var cssOutlineWidth = defaultValue(billboard._visualizerOutlineWidth, 2);
             var textureId = JSON.stringify([cssColor, cssPixelSize, cssOutlineColor, cssOutlineWidth]);
 
-            this._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
+            dynamicPointVisualizer._textureAtlasBuilder.addTextureFromFunction(textureId, function(id, loadedCallback) {
                 var canvas = document.createElement('canvas');
 
                 var length = cssPixelSize + (2 * cssOutlineWidth);
@@ -301,7 +301,7 @@ define([
                 billboard.setImageIndex(imageIndex);
             });
         }
-    };
+    }
 
     DynamicPointVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisBillboardCollection = this._billboardCollection;

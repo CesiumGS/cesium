@@ -26,6 +26,7 @@
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
+				<include name="server.js" />
 			</fileset>
 		</copy>
 
@@ -37,6 +38,7 @@
 		<antcall target="combine">
 			<param name="build.minification" value="true" />
 		</antcall>
+		<antcall target="minifyCSS" />
 	</target>
 
 	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
@@ -49,8 +51,9 @@
 
 	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
 		<exec executable="${jscoveragePath}">
-			<arg line="${sourceDirectory} ${instrumentedDirectory}" />
-			<arg line="--no-instrument=./ThirdParty" />
+			<arg value="${sourceDirectory}" />
+			<arg value="${instrumentedDirectory}" />
+			<arg value="--no-instrument=./ThirdParty" />
 		</exec>
 	</target>
 
@@ -61,6 +64,7 @@
 				<include name="Documentation/**" />
 				<include name="HelloWorld.html" />
 				<include name="index.html" />
+				<include name="server.js" />
 			</fileset>
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
@@ -76,6 +80,7 @@
 			<include name="ThirdParty/**" />
 			<include name="HelloWorld.html" />
 			<include name="index.html" />
+			<include name="server.js" />
 			<include name="LICENSE.md" />
 			<include name="CHANGES.md" />
 			<include name="README.md" />
@@ -104,7 +109,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b16" />
+	<property name="version" value="b17" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -114,8 +119,9 @@
 	<property name="toolsDirectory" location="Tools" />
 	<property name="tasksDirectory" location="${toolsDirectory}/buildTasks" />
 	<property name="thirdPartyDirectory" location="ThirdParty" />
-	<property name="rjsPath" location="${thirdPartyDirectory}/requirejs-2.1.2/r.js" />
-	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.3/almond.js" />
+	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
+	<property name="rjsPath" location="${requirejsPath}/r.js" />
+	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.5/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
@@ -214,7 +220,7 @@
 		<fail if="jsHint.failure" message="JSHint failed!" />
 	</target>
 
-	<target name="combineJavaScript.setNodePathValue">
+	<target name="setNodePathValue">
 		<condition property="nodePathValue" value="${toolsDirectory}/nodejs-0.6.17/windows/node.exe">
 			<os family="windows" />
 		</condition>
@@ -228,11 +234,11 @@
 		</condition>
 	</target>
 
-	<target name="combineJavaScript.setNodePathLocation" if="nodePathValue">
+	<target name="setNodePathLocation" if="nodePathValue">
 		<property name="nodePath" location="${nodePathValue}" />
 	</target>
 
-	<target name="combineJavaScript.setNodePath" depends="combineJavaScript.setNodePathValue,combineJavaScript.setNodePathLocation">
+	<target name="setNodePath" depends="setNodePathValue,setNodePathLocation">
 		<condition property="nodePath" value="node">
 			<not>
 				<isset property="nodePath" />
@@ -253,7 +259,13 @@
 
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. include=Workers/cesiumWorkerBootstrapper.js out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
+			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
+			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
 
 		<!-- create each combined worker layer -->
@@ -285,7 +297,14 @@
 
 	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} wrap=true baseUrl=. name=${relativeAlmondPath} include=main out=${relativeCombineOutputDirectory}/Cesium.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="wrap=true" />
+			<arg value="baseUrl=." />
+			<arg value="name=${relativeAlmondPath}" />
+			<arg value="include=main" />
+			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
 		</exec>
 	</target>
 
@@ -297,7 +316,12 @@
 
 	<target name="combineJavaScript.combineWorker">
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg line="${rjsPath} -o optimize=${optimize} baseUrl=. name=Workers/${worker} out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="name=Workers/${worker}" />
+			<arg value="out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
 		</exec>
 	</target>
 
@@ -321,7 +345,21 @@
 		</antcall>
 	</target>
 
-	<target name="combineJavaScript" depends="combineJavaScript.setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
+	<target name="combineJavaScript" depends="setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
+
+	<target name="minifyCSS" depends="setNodePath">
+		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="optimizeCss=standard" />
+			<srcfile prefix="cssIn=" />
+			<targetfile prefix="out=" />
+			<identitymapper />
+			<fileset dir="${buildOutputDirectory}">
+				<include name="**/*.css" />
+			</fileset>
+		</apply>
+	</target>
 
 	<target name="generateDocumentation">
 		<extractShaderComments output="${shadersDirectory}/glslComments.js">
@@ -337,14 +375,16 @@
 		<property name="relativeSourceFilesPath" location="${sourceDirectory}" relative="true" basedir="${jsdoc3Directory}" />
 
 		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true">
-			<arg line="-modules node_modules -modules rhino_modules -modules ." />
-			<arg line="jsdoc.js" />
-			<arg line="-r" />
+			<arg line="-modules node_modules" />
+			<arg line="-modules rhino_modules" />
+			<arg value="-modules ." />
+			<arg value="jsdoc.js" />
+			<arg value="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
-			<arg line="${relativeSourceFilesPath}" />
-			<arg line='${version}' />
-			<arg line='${githubRepoLink}' />
-			<arg line='${githubLinkExt}' />
+			<arg value="${relativeSourceFilesPath}" />
+			<arg value="${version}" />
+			<arg value="${githubRepoLink}" />
+			<arg value="${githubLinkExt}" />
 		</java>
 
 		<copy todir="${buildDocumentationImagesDirectory}">
@@ -397,9 +437,9 @@
 			<sysproperty key="java.util.logging.config.file" value="${toolsDirectory}/dojoBuildLogging.properties" />
 			<arg line="-opt -1" />
 			<arg line="-f ${toolsDirectory}/envjs-1.2/env.rhino.1.2.js" />
-			<arg line="${dojoPath}/dojo/dojo.js" />
-			<arg line="baseUrl=${dojoPath}/dojo" />
-			<arg line="load=build" />
+			<arg value="${dojoPath}/dojo/dojo.js" />
+			<arg value="baseUrl=${dojoPath}/dojo" />
+			<arg value="load=build" />
 			<arg line="--require ${app.path}/${appStartupScript}" />
 			<arg line="--profile ${app.path}/${app.name}.profile.js" />
 		</java>

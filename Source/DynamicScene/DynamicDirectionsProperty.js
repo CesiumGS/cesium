@@ -95,10 +95,10 @@ define([
     DynamicDirectionsProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, dynamicObjectCollection) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
-                this._addCzmlInterval(czmlIntervals[i], constrainedInterval, dynamicObjectCollection);
+                addCzmlInterval(this, czmlIntervals[i], constrainedInterval, dynamicObjectCollection);
             }
         } else {
-            this._addCzmlInterval(czmlIntervals, constrainedInterval, dynamicObjectCollection);
+            addCzmlInterval(this, czmlIntervals, constrainedInterval, dynamicObjectCollection);
         }
     };
 
@@ -132,7 +132,7 @@ define([
         return interval.data.getValueCartesian();
     };
 
-    DynamicDirectionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
+    function addCzmlInterval(dynamicDirectionsProperty, czmlInterval, constrainedInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
         if (typeof iso8601Interval === 'undefined') {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -145,7 +145,7 @@ define([
         }
 
         //See if we already have data at that interval.
-        var thisIntervals = this._propertyIntervals;
+        var thisIntervals = dynamicDirectionsProperty._propertyIntervals;
         var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
         //If not, create it.
@@ -155,7 +155,7 @@ define([
         }
 
         existingInterval.data = new ValueHolder(czmlInterval);
-    };
+    }
 
     return DynamicDirectionsProperty;
 });
