@@ -34,11 +34,11 @@ define([
     /**
      * DOC_TBA
      *
-     * @exports GeometryFilters
+     * @exports GeometryPipeline
      *
      * @see Context#createVertexArrayFromGeometry
      */
-    var GeometryFilters = {};
+    var GeometryPipeline = {};
 
     /**
      * Converts a geometry's triangle indices to line indices.  The geometry's <code>indexList</code> with
@@ -55,9 +55,9 @@ define([
      *
      * @example
      * var geometry = new BoxGeometry();
-     * geometry = GeometryFilters.toWireframe(geometry);
+     * geometry = GeometryPipeline.toWireframe(geometry);
      */
-    GeometryFilters.toWireframe = function(geometry) {
+    GeometryPipeline.toWireframe = function(geometry) {
         function addTriangle(lines, i0, i1, i2) {
             lines.push(i0);
             lines.push(i1);
@@ -133,7 +133,7 @@ define([
     /**
      * DOC_TBA
      */
-    GeometryFilters.createAttributeIndices = function(geometry) {
+    GeometryPipeline.createAttributeIndices = function(geometry) {
         var indices = {};
 
         if (typeof geometry !== 'undefined') {
@@ -153,7 +153,7 @@ define([
     /**
      * DOC_TBA
      */
-    GeometryFilters.mapAttributeIndices = function(indices, map) {
+    GeometryPipeline.mapAttributeIndices = function(indices, map) {
         var mappedIndices = {};
 
         if (typeof indices !== 'undefined' && typeof map !== 'undefined') {
@@ -180,13 +180,13 @@ define([
      *
      * @returns The modified <code>geometry</code> argument, with its vertices and indices reordered for the GPU's pre-vertex-shader cache.
      *
-     * @see GeometryFilters.reorderForPostVertexCache
+     * @see GeometryPipeline.reorderForPostVertexCache
      *
      * @example
      * var geometry = new EllipsoidGeometry(...);
-     * geometry = GeometryFilters.reorderForPreVertexCache(geometry);
+     * geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
      */
-    GeometryFilters.reorderForPreVertexCache = function(geometry) {
+    GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         if (typeof geometry !== 'undefined') {
             var numVertices = Geometry.computeNumberOfVertices(geometry);
 
@@ -264,7 +264,7 @@ define([
      *
      * @returns The modified <code>geometry</code> argument, with its indices optimally reordered for the post-vertex-shader cache.
      *
-     * @see GeometryFilters.reorderForPreVertexCache
+     * @see GeometryPipeline.reorderForPreVertexCache
      * @see Tipsify
      * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
@@ -272,9 +272,9 @@ define([
      *
      * @example
      * var geometry = new EllipsoidGeometry(...);
-     * geometry = GeometryFilters.reorderForPostVertexCache(geometry);
+     * geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
      */
-    GeometryFilters.reorderForPostVertexCache = function(geometry, cacheCapacity) {
+    GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         if (typeof geometry !== 'undefined') {
             var indices = geometry.indexList;
             if (typeof indices !== 'undefined') {
@@ -295,7 +295,7 @@ define([
         return geometry;
     };
 
-    GeometryFilters._copyAttributesDescriptions = function(attributes) {
+    GeometryPipeline._copyAttributesDescriptions = function(attributes) {
         var newAttributes = {};
 
         for ( var attribute in attributes) {
@@ -331,7 +331,7 @@ define([
      * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES.
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
      */
-    GeometryFilters.fitToUnsignedShortIndices = function(geometry) {
+    GeometryPipeline.fitToUnsignedShortIndices = function(geometry) {
         var geometries = [];
 
         if (typeof geometry !== 'undefined') {
@@ -348,7 +348,7 @@ define([
                 var oldToNewIndex = [];
                 var newIndices = [];
                 var currentIndex = 0;
-                var newAttributes = GeometryFilters._copyAttributesDescriptions(geometry.attributes);
+                var newAttributes = GeometryPipeline._copyAttributesDescriptions(geometry.attributes);
 
                 var originalIndices = geometry.indexList;
                 var numberOfIndices = originalIndices.length;
@@ -399,7 +399,7 @@ define([
                         oldToNewIndex = [];
                         newIndices = [];
                         currentIndex = 0;
-                        newAttributes = GeometryFilters._copyAttributesDescriptions(geometry.attributes);
+                        newAttributes = GeometryPipeline._copyAttributesDescriptions(geometry.attributes);
                     }
                 }
 
@@ -422,7 +422,7 @@ define([
     /**
      * DOC_TBA
      */
-    GeometryFilters.projectTo2D = function(geometry, projection) {
+    GeometryPipeline.projectTo2D = function(geometry, projection) {
         if (typeof geometry !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
             projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
@@ -476,11 +476,11 @@ define([
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
      *
      * @example
-     * geometry = GeometryFilters.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+     * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
      *
      * @see EncodedCartesian3
      */
-    GeometryFilters.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
+    GeometryPipeline.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
         attributeName = defaultValue(attributeName, 'position');
         attributeHighName = defaultValue(attributeHighName, 'positionHigh');
         attributeLowName = defaultValue(attributeLowName, 'positionLow');
@@ -560,7 +560,7 @@ define([
      *
      * @exception {DeveloperError} instance is required.
      */
-    GeometryFilters.transformToWorldCoordinates = function(instance) {
+    GeometryPipeline.transformToWorldCoordinates = function(instance) {
         if (typeof instance === 'undefined') {
             throw new DeveloperError('instance is required.');
         }
@@ -655,7 +655,7 @@ define([
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
      */
-    GeometryFilters.combine = function(instances) {
+    GeometryPipeline.combine = function(instances) {
         if ((typeof instances === 'undefined') || (instances.length < 1)) {
             throw new DeveloperError('instances is required and must have length greater than zero.');
         }
@@ -813,10 +813,10 @@ define([
      * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
      *
      * @example
-     * geometry = GeometryFilters.computeNormal(geometry);
+     * geometry = GeometryPipeline.computeNormal(geometry);
      *
      */
-    GeometryFilters.computeNormal = function(geometry) {
+    GeometryPipeline.computeNormal = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
@@ -963,9 +963,9 @@ define([
      * @exception {DeveloperError} geometry.attributes.st.values.length must be a multiple of 2
      *
      * @example
-     * geometry = GeometryFilters.computeTangentAndBinormal(geometry);
+     * geometry = GeometryPipeline.computeTangentAndBinormal(geometry);
      */
-    GeometryFilters.computeTangentAndBinormal = function(geometry) {
+    GeometryPipeline.computeTangentAndBinormal = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
@@ -1092,5 +1092,5 @@ define([
         return geometry;
     };
 
-    return GeometryFilters;
+    return GeometryPipeline;
 });

@@ -12,7 +12,7 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
         '../Core/Matrix4',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/WebMercatorProjection',
@@ -36,7 +36,7 @@ define([
         EllipsoidalOccluder,
         Intersect,
         Matrix4,
-        GeometryFilters,
+        GeometryPipeline,
         PrimitiveType,
         Queue,
         WebMercatorProjection,
@@ -700,10 +700,10 @@ define([
                     ellipsoid : new Ellipsoid(radius, radius, radius),
                     numberOfPartitions : 10
                 });
-                GeometryFilters.toWireframe(sphere);
+                GeometryPipeline.toWireframe(sphere);
                 surface._debug.boundingSphereVA = context.createVertexArrayFromGeometry({
                     geometry : sphere,
-                    attributeIndices : GeometryFilters.createAttributeIndices(sphere)
+                    attributeIndices : GeometryPipeline.createAttributeIndices(sphere)
                 });
             }
 

@@ -13,7 +13,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
-        './GeometryFilters',
+        './GeometryPipeline',
         './Intersect',
         './Math',
         './Matrix3',
@@ -36,7 +36,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
-        GeometryFilters,
+        GeometryPipeline,
         Intersect,
         CesiumMath,
         Matrix3,
@@ -281,7 +281,7 @@ define([
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        geometry = GeometryFilters.combine(geometries);
+        geometry = GeometryPipeline.combine(geometries);
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
         var attributes = {};

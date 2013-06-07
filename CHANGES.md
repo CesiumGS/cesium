@@ -17,8 +17,8 @@ Beta Releases
       * Replaced `BoxTessellator` with `BoxGeometry`.
       * Replaced `ExtentTessletaor` with `ExtentGeometry`.
       * Removed `PlaneTessellator`.  It was incomplete and not used.
-      * Renamed `MeshFilters` to `GeometryFilters`.
-      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryFilters.toWireframe`.
+      * Renamed `MeshFilters` to `GeometryPipeline`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryPipeline.toWireframe`.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
@@ -26,9 +26,9 @@ Beta Releases
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
-* Added `GeometryFilters.combine` to combine meshes for better batching.
-* Added `GeometryFilters.computeNormal` to find the normals of vertices in a mesh.
-* Added `GeometryFilters.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
+* Added `GeometryPipeline.combine` to combine meshes for better batching.
+* Added `GeometryPipeline.computeNormal` to find the normals of vertices in a mesh.
+* Added `GeometryPipeline.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added renderer support for `OES_element_index_uint`, which can improve performance by reducing batch sizes.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.

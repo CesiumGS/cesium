@@ -5,7 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Core/VertexFormat',
         '../Core/PrimitiveType',
         '../Renderer/loadCubeMap',
@@ -21,7 +21,7 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
-        GeometryFilters,
+        GeometryPipeline,
         VertexFormat,
         PrimitiveType,
         loadCubeMap,
@@ -154,7 +154,7 @@ define([
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
             });
-            var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+            var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
             command.modelMatrix = Matrix4.IDENTITY.clone();

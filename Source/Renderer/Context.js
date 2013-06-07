@@ -2313,7 +2313,7 @@ define([
      * @see Context#createVertexArray
      * @see Context#createVertexBuffer
      * @see Context#createIndexBuffer
-     * @see GeometryFilters.createAttributeIndices
+     * @see GeometryPipeline.createAttributeIndices
      * @see ShaderProgram
      *
      * @example
@@ -2323,7 +2323,7 @@ define([
      * var geometry = new BoxGeometry();
      * var va = context.createVertexArrayFromGeometry({
      *     geometry             : geometry,
-     *     attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
      * });
      *
      * ////////////////////////////////////////////////////////////////////////////////
@@ -2332,7 +2332,7 @@ define([
      * // single vertex buffer.  The vertex and index buffer have static draw usage.
      * var va = context.createVertexArrayFromGeometry({
      *     geometry             : geometry,
-     *     attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
      *     bufferUsage      : BufferUsage.STATIC_DRAW,
      *     vertexLayout     : VertexLayout.INTERLEAVED
      * });

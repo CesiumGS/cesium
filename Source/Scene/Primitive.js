@@ -5,7 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/Color',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Core/PrimitiveType',
         '../Core/BoundingSphere',
         '../Core/Geometry',
@@ -23,7 +23,7 @@ define([
         destroyObject,
         Matrix4,
         Color,
-        GeometryFilters,
+        GeometryPipeline,
         PrimitiveType,
         BoundingSphere,
         Geometry,
@@ -276,7 +276,7 @@ define([
 
         if (toWorld) {
             for (i = 0; i < length; ++i) {
-                GeometryFilters.transformToWorldCoordinates(instances[i]);
+                GeometryPipeline.transformToWorldCoordinates(instances[i]);
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
@@ -311,14 +311,14 @@ define([
         transformToWorldCoordinates(primitive, insts);
 
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryFilters.combine(insts);
+        var geometry = GeometryPipeline.combine(insts);
 
         // Split position for GPU RTE
-        GeometryFilters.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
-            return GeometryFilters.fitToUnsignedShortIndices(geometry);
+            return GeometryPipeline.fitToUnsignedShortIndices(geometry);
         }
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
@@ -350,12 +350,12 @@ define([
             if (this._vertexCacheOptimize) {
                 // Optimize for vertex shader caches
                 for (i = 0; i < length; ++i) {
-                    GeometryFilters.reorderForPostVertexCache(geometries[i]);
-                    GeometryFilters.reorderForPreVertexCache(geometries[i]);
+                    GeometryPipeline.reorderForPostVertexCache(geometries[i]);
+                    GeometryPipeline.reorderForPreVertexCache(geometries[i]);
                 }
             }
 
-            var attributeIndices = GeometryFilters.createAttributeIndices(geometries[0]);
+            var attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             var va = [];
             for (i = 0; i < length; ++i) {
