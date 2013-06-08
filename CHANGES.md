@@ -15,6 +15,7 @@ Beta Releases
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
 * Added `Context.getAntialias`.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
+* Improved test robustness on Mac.
     
 ### b17 - 2013-06-03
 
