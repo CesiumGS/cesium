@@ -171,7 +171,8 @@ var afterAll;
         baseUrl : getQueryParameter('baseUrl') || '../Source',
         paths : {
             'Specs' : '../Specs'
-        }
+        },
+        waitSeconds : 30
     });
 
     //start loading all of Cesium early, so it's all available for code coverage calculations.

@@ -29,7 +29,7 @@ defineSuite([
     });
 
     it('allows the text to be either stroked or filled', function() {
-        var row = 5;
+        var row = 20;
 
         // exact pixel checks are problematic due to browser differences in how text is drawn
         // so walk pixels left-to-right and check the number of times that the pixel value changes
@@ -37,20 +37,39 @@ defineSuite([
 
         function getColorChangeCount(canvas) {
             var colorChangeCount = 0;
-            var lastPixel;
-            var pixel;
 
             var context = canvas.getContext('2d');
+
+            var pixel = context.getImageData(0, row, 1, 1).data;
+
+            var lastRed = pixel[0];
+            var lastGreen = pixel[1];
+            var lastBlue = pixel[2];
 
             for ( var column = 0; column < canvas.width; ++column) {
                 pixel = context.getImageData(column, row, 1, 1).data;
 
-                if (typeof lastPixel !== 'undefined') {
-                    if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1] || pixel[2] !== lastPixel[2]) {
-                        ++colorChangeCount;
-                    }
+                var red = pixel[0];
+                var green = pixel[1];
+                var blue = pixel[2];
+
+                // round up pixels that have been subpixel anti-aliased
+                if (red > 0 && red !== 255) {
+                    red = 255;
                 }
-                lastPixel = pixel;
+                if (green > 0 && green !== 255) {
+                    green = 255;
+                }
+                if (blue > 0 && blue !== 255) {
+                    blue = 255;
+                }
+
+                if (red !== lastRed || green !== lastGreen || blue !== lastBlue) {
+                    ++colorChangeCount;
+                }
+                lastRed = red;
+                lastGreen = green;
+                lastBlue = blue;
             }
             return colorChangeCount;
         }
