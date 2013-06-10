@@ -13,10 +13,17 @@ Beta Releases
    * `ImageryProviderViewModel.fromConstants` has been removed.  Use the `ImageryProviderViewModel` constructor directly.
    * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
+   * Removed `CesiumViewerWidget` and replaced it with a new `Viewer` widget with mixin architecture. This new widget does not depend on dojo and is part of the combine Cesium.js file. It is intended to be a flexible base widget for easily building robust applications.  See [#838](https://github.com/AnalyticalGraphicsInc/cesium/pull/838) for the full details.
 * Added `Context.getAntialias`.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
 * Improved test robustness on Mac.
 * Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+* The `Client CZML` SandCastle demo has been removed, largely because it is redundant with the Simple CZML demo.
+* The `Two Viewer Widgets` SandCastle demo has been removed. We will add back a multi-scene example when we have a good architecture for it in place.
+* Fixed an issue in `BaseLayerPicker` where destroy wasn't properly cleaning everything up.
+* Extracted all of the default imagery providers in the `BaseLayerPicker` to a helper function, `BaseLayerPicker\createDefaultBaseLayers.js`
+* Added the ability to unsubscribe to `Timeline` update event.
+* Added a `screenSpaceEventHandler` property to `CesiumWidget`. Also added a `sceneMode` option to the constructor to set the initial scene mode.
 
 ### b17 - 2013-06-03
 
