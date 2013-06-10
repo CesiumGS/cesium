@@ -435,7 +435,12 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                if (extrude) {
+                    geometry = createGeometryFromPositionsExtruded(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                } else {
+                    geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                }
+
                 if (typeof geometry !== 'undefined') {
                     geometries.push(geometry);
                 }
@@ -444,10 +449,15 @@ define([
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        geometry = GeometryPipeline.combine(geometries);
+
         if (extrude) {
-            geometry = scaleToGeodeticHeightExtruded(geometry, surfaceHeight, extrudedHeight, ellipsoid);
+            for (i = 0 ; i < geometries.length; i++) {
+                geometries[i].geometry = scaleToGeodeticHeightExtruded(geometries[i].geometry, surfaceHeight, extrudedHeight, ellipsoid);
+            }
+            geometry = GeometryPipeline.combine(geometries);
+
         } else {
+            geometry = GeometryPipeline.combine(geometries);
             geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid);
         }
 
