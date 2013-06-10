@@ -19,8 +19,7 @@ defineSuite([
          'Renderer/DrawCommand',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
-         'Scene/BillboardCollection',
-         'Scene/EllipsoidPrimitive'
+         'Scene/BillboardCollection'
      ], 'Scene/Multifrustum', function(
          createScene,
          destroyScene,
@@ -41,8 +40,7 @@ defineSuite([
          DrawCommand,
          TextureMinificationFilter,
          TextureMagnificationFilter,
-         BillboardCollection,
-         EllipsoidPrimitive) {
+         BillboardCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

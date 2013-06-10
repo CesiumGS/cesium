@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/createGuid',
-        '../Core/defaultValue',
         '../Core/DeveloperError',
         './CzmlDefaults'
-       ], function(
+    ], function(
         createGuid,
-        defaultValue,
         DeveloperError,
         CzmlDefaults) {
     "use strict";

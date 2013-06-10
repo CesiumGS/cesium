@@ -1,25 +1,25 @@
 /*global defineSuite*/
 defineSuite([
-             'Widgets/FullscreenButton/FullscreenButton',
-             'Widgets/FullscreenButton/FullscreenButtonViewModel'
-            ], function(
-              FullscreenButton,
-              FullscreenButtonViewModel) {
+         'Widgets/FullscreenButton/FullscreenButton'
+     ], function(
+         FullscreenButton) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);
         expect(fullscreenButton.container).toBe(document.body);
-        expect(fullscreenButton.viewModel.fullscreenElement()).toBe(document.body);
+        expect(fullscreenButton.viewModel.fullscreenElement).toBe(document.body);
+        expect(fullscreenButton.isDestroyed()).toEqual(false);
         fullscreenButton.destroy();
+        expect(fullscreenButton.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
         var testElement = document.createElement('span');
         var fullscreenButton = new FullscreenButton(document.body, testElement);
         expect(fullscreenButton.container).toBe(document.body);
-        expect(fullscreenButton.viewModel.fullscreenElement()).toBe(testElement);
+        expect(fullscreenButton.viewModel.fullscreenElement).toBe(testElement);
         fullscreenButton.destroy();
     });
 
