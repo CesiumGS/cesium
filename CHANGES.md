@@ -28,6 +28,7 @@ Beta Releases
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added `extrudedOptions` parameters to `ExtentGeometry`, in which height, closeTop and closeBottom can be specified
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
 ### b18 - 2013-07-01

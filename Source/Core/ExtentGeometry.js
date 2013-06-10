@@ -76,8 +76,9 @@ define([
      * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
-     * @param {Number} [options.granularity=0.1] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
      * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
