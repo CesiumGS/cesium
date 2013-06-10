@@ -233,7 +233,7 @@ defineSuite([
         var ray = new Ray(origin, direction);
         var expected = new Cartesian3(-125.9063174739769, -5701095.640722358, 2850156.57342018);
         var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
-        expect(actual).toEqual(expected);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON10);
     });
 
     it('grazingAltitudeLocation inside ellipsoid', function() {
