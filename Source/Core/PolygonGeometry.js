@@ -129,8 +129,34 @@ define([
         return mesh;
     }
 
-    function subdivideLine(positions, indices) {
-        return new Geometry({});
+    function subdivideLine(p0, p1, granularity) {
+        var edges = new Queue();
+        edges.enqueue({
+            v0: p0,
+            v1: p1
+        });
+        var subdividedPositions = [p0, p1];
+        while(edges.length > 0) {
+            var edge = edges.dequeue();
+            var v0 = edge.v0;
+            var v1 = edge.v1;
+
+            if (v0.angleBetween(v1) > granularity) {
+                var i = v0.add(v1).multiplyByScalar(0.5);
+                subdividedPositions.splice(subdividedPositions.indexOf(edge.v1), 0, i);
+
+                edges.enqueue({
+                    v0: v0,
+                    v1: i
+                });
+
+                edges.enqueue({
+                    v0: i,
+                    v1: v1
+                });
+            }
+        }
+        return subdividedPositions;
     }
 
     var createGeometryFromPositionsPositions = [];
@@ -150,6 +176,8 @@ define([
             cleanedPositions.reverse();
         }
 
+        var edgePoints = cleanedPositions;
+
         var indices = PolygonPipeline.earClip2D(positions2D);
 
         // Checking bounding sphere with plane for quick reject
@@ -161,16 +189,44 @@ define([
         var geo = PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
         indices = geo.indexList;
         cleanedPositions = geo.attributes.position.values;
+        var cleanedPosLength = cleanedPositions.length / 3;
 
-        var length = cleanedPositions.length/3;
+        var edgePositions = [];
+        var length = edgePoints.length;
+        var i;
+        for (i = 0; i < length; i++) {
+            var subdividedEdge = subdivideLine(edgePoints[i], edgePoints[(i+1)%length], granularity);
+            edgePositions = edgePositions.concat(subdividedEdge);
+        }
+
+        for (i = 0; i < edgePositions.length; i++) {
+            cleanedPositions.push(edgePositions[i].x, edgePositions[i].y, edgePositions[i].z);
+        }
+
+        length = cleanedPositions.length/3;
         var ilength = indices.length;
         cleanedPositions = cleanedPositions.concat(cleanedPositions);
-        var i;
         for (i = 0 ; i < ilength; i += 3) {
             var i0 = indices[i] + length;
             var i1 = indices[i + 1] + length;
             var i2 = indices[i + 2] + length;
             indices.push(i2, i1, i0);
+        }
+
+
+        length = edgePositions.length;
+        var edgeIndex = indices.length;
+        for (i = 0 ; i < length; i++) {
+            var UL = i + cleanedPosLength;
+            var LL = UL + length + cleanedPosLength;
+            var UR = UL + 1;
+            var LR = LL + 1;
+            indices[edgeIndex++] = UL;
+            indices[edgeIndex++] = LL;
+            indices[edgeIndex++] = UR;
+            indices[edgeIndex++] = UR;
+            indices[edgeIndex++] = LL;
+            indices[edgeIndex++] = LR;
         }
 
         geo.indexList = indices;
