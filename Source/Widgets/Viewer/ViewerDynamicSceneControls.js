@@ -5,6 +5,7 @@ define(['../../Core/defaultValue',
         '../../Core/destroyObject',
         '../../Core/Event',
         '../../Core/ScreenSpaceEventType',
+        '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObjectView'
         ], function(
                 defaultValue,
@@ -13,6 +14,7 @@ define(['../../Core/defaultValue',
                 destroyObject,
                 Event,
                 ScreenSpaceEventType,
+                wrapFunction,
                 DynamicObjectView) {
     "use strict";
 
@@ -22,82 +24,60 @@ define(['../../Core/defaultValue',
      * @alias ViewerDynamicSceneControls
      * @constructor
      */
-    var ViewerDynamicSceneControls = function(viewer) {
-        var that = this;
+    var ViewerDynamicSceneControls = {
+        initialize : function(viewer) {
+            var dynamicObjectView;
+            var trackedObject;
 
-        this._onTick = function(clock) {
-            if (typeof that._dynamicObjectView !== 'undefined') {
-                that._dynamicObjectView.update(clock.currentTime);
+            function _onTick(clock) {
+                if (typeof dynamicObjectView !== 'undefined') {
+                    dynamicObjectView.update(clock.currentTime);
+                }
             }
-        };
 
-        this._onHomeButton = function() {
-            that._dynamicObjectView = undefined;
-        };
-
-        this._onLeftClick = function(e) {
-            var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
-                that.trackedObject = pickedPrimitive.dynamicObject;
+            function _onHomeButton() {
+                viewer.trackedObject = undefined;
             }
-        };
 
-        viewer.clock.onTick.addEventListener(this._onTick);
-        if (typeof viewer.homeButton !== 'undefined') {
-            viewer.homeButton.viewModel.command.beforeExecute.addEventListener(this._onHomeButton);
+            function _onLeftClick(e) {
+                var pickedPrimitive = viewer.scene.pick(e.position);
+                if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
+                    viewer.trackedObject = pickedPrimitive.dynamicObject;
+                }
+            }
+
+            viewer.clock.onTick.addEventListener(_onTick);
+            if (typeof viewer.homeButton !== 'undefined') {
+                viewer.homeButton.viewModel.command.beforeExecute.addEventListener(_onHomeButton);
+            }
+            viewer.screenSpaceEventHandler.setInputAction(_onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
+
+            defineProperties(viewer, {
+                /**
+                 * Gets or sets the DynamicObject instance currently being tracked by the camera.
+                 * @memberof ViewerDynamicSceneControls.prototype
+                 * @type {DynamicObject}
+                 */
+                trackedObject : {
+                    get : function() {
+                        return trackedObject;
+                    },
+                    set : function(value) {
+                        trackedObject = value;
+                        dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                    }
+                }
+            });
+
+            viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
+                viewer.clock.onTick.removeEventListener(_onTick, viewer);
+                if (typeof viewer.homeButton !== 'undefined') {
+                    viewer.homeButton.viewModel.command.beforeExecute.removeEventListener(_onHomeButton, viewer);
+                }
+                viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+            });
+            return viewer;
         }
-        viewer.screenSpaceEventHandler.setInputAction(this._onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
-        this._viewer = viewer;
-    };
-
-    defineProperties(ViewerDynamicSceneControls.prototype, {
-        /**
-         * Gets the viewer instance being used.
-         * @memberof ViewerDynamicSceneControls.prototype
-         * @type {Viewer}
-         */
-        viewer : {
-            get : function() {
-                return this._viewer;
-            }
-        },
-
-        /**
-         * Gets or sets the DynamicObject instance currently being tracked by the camera.
-         * @memberof ViewerDynamicSceneControls.prototype
-         * @type {DynamicObject}
-         */
-        trackedObject : {
-            get : function() {
-                return this._trackedObject;
-            },
-            set : function(value) {
-                this._trackedObject = value;
-                this._dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, this.viewer.scene, this.viewer.centralBody.getEllipsoid()) : undefined;
-            }
-        }
-    });
-
-    /**
-     * @memberof ViewerDynamicSceneControls
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    ViewerDynamicSceneControls.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
-     * Destroys the object.
-     * @memberof Viewer
-     */
-    ViewerDynamicSceneControls.prototype.destroy = function() {
-        var viewer = this.viewer;
-        viewer.clock.onTick.removeEventListener(this._onTick, this);
-        if (typeof viewer.homeButton !== 'undefined') {
-            viewer.homeButton.viewModel.command.beforeExecute.removeEventListener(this._onHomeButton, this);
-        }
-        viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
-        return destroyObject(this);
     };
 
     return ViewerDynamicSceneControls;

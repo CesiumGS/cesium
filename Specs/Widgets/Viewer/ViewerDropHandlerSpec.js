@@ -44,40 +44,32 @@ defineSuite([
     });
 
     it('constructor sets default values', function() {
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
-        expect(dropHandler.dropTarget).toBe(viewer.container);
-        expect(dropHandler.enabled).toBe(true);
-        expect(dropHandler.viewer).toBe(viewer);
-        expect(dropHandler.clearOnDrop).toBe(true);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        expect(viewer.dropTarget).toBe(viewer.container);
+        expect(viewer.dropEnabled).toEqual(true);
+        expect(viewer.clearOnDrop).toEqual(true);
         viewer.destroy();
-        expect(dropHandler.isDestroyed()).toEqual(false);
-        dropHandler.destroy();
-        expect(dropHandler.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets option values', function() {
         var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer, {
+        viewer.extend(ViewerDropHandler, {
             dropTarget : document.body,
             clearOnDrop : false
         });
-        expect(dropHandler.dropTarget).toBe(document.body);
-        expect(dropHandler.enabled).toBe(true);
-        expect(dropHandler.viewer).toBe(viewer);
-        expect(dropHandler.clearOnDrop).toBe(false);
+        expect(viewer.dropTarget).toBe(document.body);
+        expect(viewer.dropEnabled).toEqual(true);
+        expect(viewer.clearOnDrop).toEqual(false);
         viewer.destroy();
-        dropHandler.destroy();
     });
 
     it('constructor works with dropTarget id string', function() {
         var viewer = new Viewer(document.body);
-        var dropHandler = new ViewerDropHandler(viewer, {
+        viewer.extend(ViewerDropHandler, {
             dropTarget : 'container'
         });
-        expect(dropHandler.dropTarget).toBe(container);
+        expect(viewer.dropTarget).toBe(container);
         viewer.destroy();
-        dropHandler.destroy();
     });
 
     var czml1 = {
@@ -110,10 +102,9 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
 
-        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 1;
@@ -129,7 +120,6 @@ defineSuite([
 
         runs(function() {
             viewer.destroy();
-            dropHandler.destroy();
         });
     });
 
@@ -150,10 +140,9 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
 
-        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 2;
@@ -172,7 +161,6 @@ defineSuite([
 
         runs(function() {
             viewer.destroy();
-            dropHandler.destroy();
         });
     });
 
@@ -193,10 +181,9 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
 
-        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             var result = viewer.dataSources.getLength() === 2;
@@ -214,8 +201,8 @@ defineSuite([
         });
 
         runs(function() {
-            dropHandler.clearOnDrop = false;
-            EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+            viewer.clearOnDrop = false;
+            EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -235,8 +222,8 @@ defineSuite([
         });
 
         runs(function() {
-            dropHandler.clearOnDrop = true;
-            EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+            viewer.clearOnDrop = true;
+            EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
         });
 
         waitsFor(function() {
@@ -256,11 +243,10 @@ defineSuite([
 
         runs(function() {
             viewer.destroy();
-            dropHandler.destroy();
         });
     });
 
-    it('onError is raised on exception', function() {
+    it('onDropError is raised on exception', function() {
         var mockEvent = {
             dataTransfer : {
                 files : [{
@@ -274,31 +260,29 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
 
         var called = false;
-        var callback = function(dropHandlerArg, source, error) {
-            expect(dropHandlerArg).toBe(dropHandler);
+        var callback = function(viewerArg, source, error) {
+            expect(viewerArg).toBe(viewer);
             expect(source).toEqual('czml1');
             expect(error).toBeInstanceOf(SyntaxError);
             called = true;
         };
-        dropHandler.onError.addEventListener(callback);
-        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+        viewer.onDropError.addEventListener(callback);
+        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return called;
         });
 
         runs(function() {
-            dropHandler.onError.removeEventListener(callback);
+            viewer.onDropError.removeEventListener(callback);
             viewer.destroy();
-            dropHandler.destroy();
         });
     });
 
-    it('onError is raised FileReader error', function() {
+    it('onDropError is raised FileReader error', function() {
         var mockEvent = {
             dataTransfer : {
                 files : [{
@@ -312,27 +296,25 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
 
         var called = false;
-        var callback = function(dropHandlerArg, source, error) {
-            expect(dropHandlerArg).toBe(dropHandler);
+        var callback = function(viewerArg, source, error) {
+            expect(viewerArg).toBe(viewer);
             expect(source).toEqual(mockEvent.dataTransfer.files[0].name);
             expect(error).toEqual(mockEvent.dataTransfer.files[0].errorMessage);
             called = true;
         };
-        dropHandler.onError.addEventListener(callback);
-        EventHelper.fireMockEvent(dropHandler._handleDrop, mockEvent);
+        viewer.onDropError.addEventListener(callback);
+        EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
         waitsFor(function() {
             return called;
         });
 
         runs(function() {
-            dropHandler.onError.removeEventListener(callback);
+            viewer.onDropError.removeEventListener(callback);
             viewer.destroy();
-            dropHandler.destroy();
         });
     });
 
@@ -358,8 +340,7 @@ defineSuite([
     it('enable/disable subscribes to provided dropTarget.', function() {
         var dropTarget = new MockContainer();
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer, {
+        var viewer = new Viewer(container).extend(ViewerDropHandler, {
             dropTarget : dropTarget
         });
 
@@ -368,28 +349,26 @@ defineSuite([
         expect(dropTarget.events.dragover).toBeDefined();
         expect(dropTarget.events.dragexit).toBeDefined();
 
-        dropHandler.enabled = false;
+        viewer.dropEnabled = false;
         expect(dropTarget.events.drop).toBeUndefined();
         expect(dropTarget.events.dragenter).toBeUndefined();
         expect(dropTarget.events.dragover).toBeUndefined();
         expect(dropTarget.events.dragexit).toBeUndefined();
 
-        dropHandler.enabled = true;
+        viewer.dropEnabled = true;
         expect(dropTarget.events.drop).toBeDefined();
         expect(dropTarget.events.dragenter).toBeDefined();
         expect(dropTarget.events.dragover).toBeDefined();
         expect(dropTarget.events.dragexit).toBeDefined();
 
         viewer.destroy();
-        dropHandler.destroy();
     });
 
     it('can set new dropTarget.', function() {
         var dropTarget1 = new MockContainer();
         var dropTarget2 = new MockContainer();
 
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer, {
+        var viewer = new Viewer(container).extend(ViewerDropHandler, {
             dropTarget : dropTarget1
         });
 
@@ -398,7 +377,7 @@ defineSuite([
         expect(dropTarget1.events.dragover).toBeDefined();
         expect(dropTarget1.events.dragexit).toBeDefined();
 
-        dropHandler.dropTarget = dropTarget2;
+        viewer.dropTarget = dropTarget2;
         expect(dropTarget1.events.drop).toBeUndefined();
         expect(dropTarget1.events.dragenter).toBeUndefined();
         expect(dropTarget1.events.dragover).toBeUndefined();
@@ -410,19 +389,18 @@ defineSuite([
         expect(dropTarget2.events.dragexit).toBeDefined();
 
         viewer.destroy();
-        dropHandler.destroy();
     });
 
-    it('constructor throws with undefined viewer', function() {
+    it('initialize throws with undefined viewer', function() {
         expect(function() {
-            return new ViewerDropHandler(undefined);
+            ViewerDropHandler.initialize(undefined);
         }).toThrow();
     });
 
-    it('constructor throws with non-existant string container', function() {
+    it('initialize throws with non-existant string container', function() {
         var viewer = new Viewer(container);
         expect(function() {
-            return new ViewerDropHandler(viewer, {
+            viewer.extend(ViewerDropHandler, {
                 dropTarget : 'doesNotExist'
             });
         }).toThrow();
@@ -430,12 +408,10 @@ defineSuite([
     });
 
     it('setting dropTarget to undefined throws exception', function() {
-        var viewer = new Viewer(container);
-        var dropHandler = new ViewerDropHandler(viewer);
+        var viewer = new Viewer(container).extend(ViewerDropHandler);
         expect(function() {
-            dropHandler.dropTarget = undefined;
+            viewer.dropTarget = undefined;
         }).toThrow();
         viewer.destroy();
-        dropHandler.destroy();
     });
 });

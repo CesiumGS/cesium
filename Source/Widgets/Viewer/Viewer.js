@@ -403,6 +403,10 @@ define(['../../Core/Cartesian2',
         return false;
     };
 
+    Viewer.prototype.extend = function(extension, options) {
+        return extension.initialize(this, options);
+    };
+
     /**
      * Destroys the  widget.  Should be called if permanently
      * removing the widget from layout.

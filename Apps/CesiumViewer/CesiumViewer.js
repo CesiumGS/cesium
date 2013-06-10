@@ -16,13 +16,13 @@ define([
     /*global console*/
 
     var viewer = new Viewer('cesiumContainer');
-    var dropHandler = new ViewerDropHandler(viewer);
-    dropHandler.onError.addEventListener(function(dropHandler, name, error) {
+    viewer.extend(ViewerDropHandler);
+    viewer.extend(ViewerDynamicSceneControls);
+
+    viewer.onDropError.addEventListener(function(dropHandler, name, error) {
         console.log(error);
         window.alert(error);
     });
-
-    var dynamicSceneControls = new ViewerDynamicSceneControls(viewer);
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -65,7 +65,7 @@ define([
             if (typeof endUserOptions.lookAt !== 'undefined') {
                 var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
                 if (typeof dynamicObject !== 'undefined') {
-                    dynamicSceneControls.trackedObject = dynamicObject;
+                    viewer.trackedObject = dynamicObject;
                 } else {
                     window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
                 }
