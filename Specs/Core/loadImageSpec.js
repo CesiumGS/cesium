@@ -52,7 +52,7 @@ defineSuite([
         var fakeImage = {};
         var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
 
-        loadImage('http://example.com/someImage.png');
+        loadImage('http://example.invalid/someImage.png');
         expect(imageConstructorSpy).toHaveBeenCalled();
         expect(fakeImage.crossOrigin).toEqual('');
     });
@@ -61,7 +61,7 @@ defineSuite([
         var fakeImage = {};
         var imageConstructorSpy = spyOn(window, 'Image').andReturn(fakeImage);
 
-        loadImage('http://example.com/someImage.png', false);
+        loadImage('http://example.invalid/someImage.png', false);
         expect(imageConstructorSpy).toHaveBeenCalled();
         expect(fakeImage.crossOrigin).toBeUndefined();
     });
