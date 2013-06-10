@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
@@ -14,6 +15,7 @@ define([
         '../Scene/SceneMode',
         '../ThirdParty/Tween'
     ], function(
+        Cartesian2,
         Cartesian3,
         clone,
         defaultValue,
@@ -436,11 +438,7 @@ define([
             }
         } else {
             var currentHeight = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
-            var ellipsoid = frameState.scene2D.projection.getEllipsoid();
-            var destinationHeight = ellipsoid.cartesianToCartographic(destination).height;
-            if (CesiumMath.equalsEpsilon(destinationHeight, currentHeight, CesiumMath.EPSILON6) &&
-                    CesiumMath.equalsEpsilon(destination.x, frameState.camera.position.x, CesiumMath.EPSILON6) &&
-                    CesiumMath.equalsEpsilon(destination.y, frameState.camera.position.y, CesiumMath.EPSILON6)) {
+            if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && CesiumMath.equalsEpsilon(currentHeight, destination.z, CesiumMath.EPSILON6)) {
                 return {
                     duration : 0,
                     onComplete : onComplete
