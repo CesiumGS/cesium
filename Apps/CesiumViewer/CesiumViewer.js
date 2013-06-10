@@ -18,7 +18,7 @@ define([
         'Core/EllipsoidGeometry',
         'Core/PolygonGeometry',
         'Core/BoxGeometry',
-        'Core/GeometryFilters',
+        'Core/GeometryPipeline',
         'Core/VertexFormat',
         'Core/Transforms',
         'Core/ScreenSpaceEventHandler',
@@ -51,7 +51,7 @@ define([
         EllipsoidGeometry,
         PolygonGeometry,
         BoxGeometry,
-        GeometryFilters,
+        GeometryPipeline,
         VertexFormat,
         Transforms,
         ScreenSpaceEventHandler,
@@ -85,9 +85,6 @@ define([
         widget.placeAt('cesiumContainer');
         widget.startup();
         widget.fullscreen.viewModel.fullscreenElement = document.body;
-
-        // For debug.  This kills performance.
-        widget.scene.getContext().setThrowOnWebGLError(true);
 
         var scene = widget.scene;
         var ellipsoid = widget.centralBody.getEllipsoid();

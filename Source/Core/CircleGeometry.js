@@ -88,7 +88,7 @@ define([
     /**
      * DOC_TBA
      */
-    CircleGeometry.prototype.clone = Geometry.prototype.clone;
+    CircleGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return CircleGeometry;
 });

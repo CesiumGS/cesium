@@ -57,10 +57,10 @@ define([
             result = new GeometryInstance();
         }
 
-        result.geometry = this.geometry.clone();
+        result.geometry = this.geometry.cloneGeometry();    // Looses type info, e.g., BoxGeometry to Geometry.
         result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
         result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
-        result.pickData = this.pickData;  // Shadow copy
+        result.pickData = this.pickData;                    // Shadow copy
 
         return result;
     };

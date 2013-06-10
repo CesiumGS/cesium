@@ -743,7 +743,7 @@ define([
     /**
      * DOC_TBA
      */
-    ExtentGeometry.prototype.clone = Geometry.prototype.clone;
+    ExtentGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return ExtentGeometry;
 });
