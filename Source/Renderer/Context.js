@@ -215,6 +215,8 @@ define([
         this._aliasedPointSizeRange = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE); // must include 1
         this._maximumViewportDimensions = gl.getParameter(gl.MAX_VIEWPORT_DIMS);
 
+        this._antialias = gl.getContextAttributes().antialias;
+
         // Query and initialize extensions
         this._standardDerivatives = gl.getExtension('OES_standard_derivatives');
         this._depthTexture = gl.getExtension('WEBKIT_WEBGL_depth_texture') || gl.getExtension('MOZ_WEBGL_depth_texture');
@@ -665,6 +667,18 @@ define([
      */
     Context.prototype.getMaximumViewportHeight = function() {
         return this._maximumViewportDimensions[1];
+    };
+
+    /**
+     * Returns <code>true</code> if the WebGL context supports antialiasing.  By default
+     * antialiasing is requested, but it is not supported by all systems.
+     *
+     * @memberof Context
+     *
+     * @returns {Boolean} <code>true</code> if antialiasing is supported.
+     */
+    Context.prototype.getAntialias = function() {
+        return this._antialias;
     };
 
     /**
