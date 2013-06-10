@@ -3,21 +3,21 @@ define([
         'DynamicScene/CzmlDataSource',
         'Scene/PerformanceDisplay',
         'Widgets/Viewer/Viewer',
-        'Widgets/Viewer/ViewerDropHandler',
-        'Widgets/Viewer/ViewerDynamicSceneControls',
+        'Widgets/Viewer/viewerDragDropMixin',
+        'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
         CzmlDataSource,
         PerformanceDisplay,
         Viewer,
-        ViewerDropHandler,
-        ViewerDynamicSceneControls) {
+        viewerDragDropMixin,
+        viewerDynamicObjectMixin) {
     "use strict";
     /*global console*/
 
     var viewer = new Viewer('cesiumContainer');
-    viewer.extend(ViewerDropHandler);
-    viewer.extend(ViewerDynamicSceneControls);
+    viewer.extend(viewerDragDropMixin);
+    viewer.extend(viewerDynamicObjectMixin);
 
     viewer.onDropError.addEventListener(function(dropHandler, name, error) {
         console.log(error);

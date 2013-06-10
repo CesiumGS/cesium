@@ -403,8 +403,21 @@ define(['../../Core/Cartesian2',
         return false;
     };
 
-    Viewer.prototype.extend = function(extension, options) {
-        return extension.initialize(this, options);
+    /**
+     * Extends the base viewer functionality with the provided mixin.
+     * @memberof Viewer
+     *
+     * @param mixin The Viewer mixin to add to this instance.
+     * @param options The options object to be passed to the mixin function.
+     *
+     * @see viewerDragDropMixin
+     * @see viewerDynamicObjectMixin
+     */
+    Viewer.prototype.extend = function(mixin, options) {
+        if (typeof mixin === 'undefined') {
+            throw new DeveloperError('mixin is required.');
+        }
+        mixin(this, options);
     };
 
     /**

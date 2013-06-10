@@ -1,11 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-         'Widgets/Viewer/ViewerDropHandler',
+         'Widgets/Viewer/viewerDragDropMixin',
          'Core/TimeInterval',
          'Specs/EventHelper',
          'Widgets/Viewer/Viewer'
      ], function(
-         ViewerDropHandler,
+         viewerDragDropMixin,
          TimeInterval,
          EventHelper,
          Viewer) {
@@ -44,7 +44,8 @@ defineSuite([
     });
 
     it('constructor sets default values', function() {
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
         expect(viewer.dropTarget).toBe(viewer.container);
         expect(viewer.dropEnabled).toEqual(true);
         expect(viewer.clearOnDrop).toEqual(true);
@@ -53,7 +54,7 @@ defineSuite([
 
     it('constructor sets option values', function() {
         var viewer = new Viewer(container);
-        viewer.extend(ViewerDropHandler, {
+        viewer.extend(viewerDragDropMixin, {
             dropTarget : document.body,
             clearOnDrop : false
         });
@@ -65,7 +66,7 @@ defineSuite([
 
     it('constructor works with dropTarget id string', function() {
         var viewer = new Viewer(document.body);
-        viewer.extend(ViewerDropHandler, {
+        viewer.extend(viewerDragDropMixin, {
             dropTarget : 'container'
         });
         expect(viewer.dropTarget).toBe(container);
@@ -102,7 +103,8 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
 
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
@@ -140,7 +142,8 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
 
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
@@ -181,7 +184,8 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
 
         EventHelper.fireMockEvent(viewer._handleDrop, mockEvent);
 
@@ -260,7 +264,8 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
 
         var called = false;
         var callback = function(viewerArg, source, error) {
@@ -296,7 +301,8 @@ defineSuite([
             }
         };
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
 
         var called = false;
         var callback = function(viewerArg, source, error) {
@@ -340,7 +346,8 @@ defineSuite([
     it('enable/disable subscribes to provided dropTarget.', function() {
         var dropTarget = new MockContainer();
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler, {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin, {
             dropTarget : dropTarget
         });
 
@@ -368,7 +375,8 @@ defineSuite([
         var dropTarget1 = new MockContainer();
         var dropTarget2 = new MockContainer();
 
-        var viewer = new Viewer(container).extend(ViewerDropHandler, {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin, {
             dropTarget : dropTarget1
         });
 
@@ -391,16 +399,16 @@ defineSuite([
         viewer.destroy();
     });
 
-    it('initialize throws with undefined viewer', function() {
+    it('throws with undefined viewer', function() {
         expect(function() {
-            ViewerDropHandler.initialize(undefined);
+            viewerDragDropMixin(undefined);
         }).toThrow();
     });
 
-    it('initialize throws with non-existant string container', function() {
+    it('throws with non-existant string container', function() {
         var viewer = new Viewer(container);
         expect(function() {
-            viewer.extend(ViewerDropHandler, {
+            viewer.extend(viewerDragDropMixin, {
                 dropTarget : 'doesNotExist'
             });
         }).toThrow();
@@ -408,7 +416,8 @@ defineSuite([
     });
 
     it('setting dropTarget to undefined throws exception', function() {
-        var viewer = new Viewer(container).extend(ViewerDropHandler);
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDragDropMixin);
         expect(function() {
             viewer.dropTarget = undefined;
         }).toThrow();
