@@ -86,8 +86,10 @@ define(['../../Core/defaultValue',
                     return trackedObject;
                 },
                 set : function(value) {
-                    trackedObject = value;
-                    dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                    if (trackedObject !== value) {
+                        trackedObject = value;
+                        dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                    }
                 }
             }
         });
