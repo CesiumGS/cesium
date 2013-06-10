@@ -43,7 +43,7 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('constructor sets default values', function() {
+    it('mixin sets default values', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin);
         expect(viewer.dropTarget).toBe(viewer.container);
@@ -52,7 +52,7 @@ defineSuite([
         viewer.destroy();
     });
 
-    it('constructor sets option values', function() {
+    it('mixin sets option values', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDragDropMixin, {
             dropTarget : document.body,
@@ -64,7 +64,7 @@ defineSuite([
         viewer.destroy();
     });
 
-    it('constructor works with dropTarget id string', function() {
+    it('mixin works with dropTarget id string', function() {
         var viewer = new Viewer(document.body);
         viewer.extend(viewerDragDropMixin, {
             dropTarget : 'container'
@@ -414,6 +414,43 @@ defineSuite([
         }).toThrow();
         viewer.destroy();
     });
+
+    it('throws if dropTarget property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.dropTarget = true;
+        expect(function() {
+            viewer.extend(viewerDragDropMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
+    it('throws if dropEnabled property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.dropEnabled = true;
+        expect(function() {
+            viewer.extend(viewerDragDropMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
+    it('throws if onDropError property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.onDropError = true;
+        expect(function() {
+            viewer.extend(viewerDragDropMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
+    it('throws if clearOnDrop property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.clearOnDrop = true;
+        expect(function() {
+            viewer.extend(viewerDragDropMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
 
     it('setting dropTarget to undefined throws exception', function() {
         var viewer = new Viewer(container);

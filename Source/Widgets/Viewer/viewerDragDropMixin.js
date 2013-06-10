@@ -106,9 +106,6 @@ define(['../../Core/defaultValue',
                     return dropEnabled;
                 },
                 set : function(value) {
-                    if (typeof value === 'undefined') {
-                        throw new DeveloperError('value is required.');
-                    }
                     if (value !== dropEnabled) {
                         if (value) {
                             subscribe(dropTarget, handleDrop);
@@ -141,9 +138,6 @@ define(['../../Core/defaultValue',
                     return clearOnDrop;
                 },
                 set : function(value) {
-                    if (typeof value === 'undefined') {
-                        throw new DeveloperError('value is required.');
-                    }
                     clearOnDrop = value;
                 }
             }
