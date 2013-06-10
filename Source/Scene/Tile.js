@@ -323,26 +323,22 @@ define([
             processTerrainStateMachine(this, context, terrainProvider);
         }
 
+        // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = typeof this.vertexArray !== 'undefined';
+
+        // But it's not done loading until our two state machines are terminated.
         var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-
-            // We may be using our parent's imagery temporarily... but we still want to load ours.
-            var originalImagery = tileImagery.originalImagery;
-            var imagery;
-            if (typeof originalImagery !== 'undefined' && originalImagery.state !== ImageryState.FAILED && originalImagery.state !== ImageryState.INVALID) {
-                imagery = tileImagery.originalImagery;
-            } else {
-                imagery = tileImagery.imagery;
+            if (typeof tileImagery.loadingImagery === 'undefined') {
+                continue;
             }
 
-            var imageryLayer = imagery.imageryLayer;
-
-            if (imagery.state === ImageryState.PLACEHOLDER) {
+            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
                 if (imageryLayer.getImageryProvider().isReady()) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
@@ -351,108 +347,14 @@ define([
                     imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
                     --i;
                     len = tileImageryCollection.length;
-                }
-            }
-
-            if (imagery.state === ImageryState.UNLOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._requestImagery(imagery);
-            }
-
-            if (imagery.state === ImageryState.RECEIVED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._createTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._reprojectTexture(context, imagery);
-            }
-
-            var parent;
-            if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                parent = imagery.parent;
-                while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                    parent = parent.parent;
-                }
-
-                // If there's no valid parent, remove this TileImagery from the tile.
-                if (typeof parent === 'undefined') {
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    --i;
-                    len = tileImageryCollection.length;
                     continue;
                 }
-
-                if (tileImagery.imagery !== parent) {
-                    // If we're already using an ancestor's imagery, release it.
-                    if (typeof tileImagery.originalImagery !== 'undefined') {
-                        tileImagery.imagery.releaseReference();
-                    }
-
-                    // use that parent imagery instead, storing the original imagery
-                    // in originalImagery to keep it alive
-                    tileImagery.originalImagery = imagery;
-
-                    parent.addReference();
-                    tileImagery.imagery = parent;
-
-                    // !!!
-                    // The parent imagery can later be found to be invalid as well.  But if the tile is already
-                    // marked renderable, it's possible/likely that we'll try to render it after it was deemed invalid
-                    // but before we replaced it with something that's not.
-                }
-
-                imagery = parent;
-            } else if (imagery.state !== ImageryState.READY) {
-                // re-associate TileImagery with a parent Imagery that is ready.
-                parent = imagery.parent;
-                while (typeof parent !== 'undefined' && parent.state !== ImageryState.READY) {
-                    parent = parent.parent;
-                }
-
-                // If we found a valid parent, use it.
-                if (typeof parent !== 'undefined') {
-                    if (tileImagery.imagery !== parent) {
-                        // If we're already using an ancestor's imagery, release it.
-                        if (typeof tileImagery.originalImagery !== 'undefined') {
-                            tileImagery.imagery.releaseReference();
-                        }
-
-                        // use that parent imagery instead, storing the original imagery
-                        // in originalImagery to keep it alive
-                        tileImagery.originalImagery = imagery;
-
-                        parent.addReference();
-                        tileImagery.imagery = parent;
-
-                        tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
-                    }
-
-                    imagery = parent;
-                }
-            } else if (typeof tileImagery.originalImagery !== 'undefined') {
-                tileImagery.imagery.releaseReference();
-                imagery = tileImagery.imagery = tileImagery.originalImagery;
-                tileImagery.originalImagery = undefined;
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
             }
 
-            var imageryRenderable = imagery.state === ImageryState.READY;
-            var imageryDoneLoading = imagery.state === ImageryState.READY &&
-                                     (typeof tileImagery.originalImagery === 'undefined' ||
-                                      tileImagery.originalImagery.state === ImageryState.READY ||
-                                      tileImagery.originalImagery.state === ImageryState.FAILED ||
-                                      tileImagery.originalImagery.state === ImageryState.INVALID);
+            isDoneLoading = tileImagery.processStateMachine(this, context) && isDoneLoading;
 
-            if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
-            }
-
-            isRenderable = isRenderable && (imageryRenderable || imageryLayer.alpha === 0.0);
-            isDoneLoading = isDoneLoading && imageryDoneLoading;
+            // The imagery is renderable as soon as we have any renderable imagery for this region.
+            isRenderable = isRenderable && typeof tileImagery.readyImagery !== 'undefined';
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.

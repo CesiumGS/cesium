@@ -359,7 +359,7 @@ define([
             // The imagery provider is not ready, so we can't create skeletons, yet.
             // Instead, add a placeholder so that we'll know to create
             // the skeletons once the provider is ready.
-            this._skeletonPlaceholder.imagery.addReference();
+            this._skeletonPlaceholder.loadingImagery.addReference();
             tile.imagery.splice(insertionPoint, 0, this._skeletonPlaceholder);
             return true;
         }
@@ -526,7 +526,7 @@ define([
      *          are the scale.
      */
     ImageryLayer.prototype._calculateTextureTranslationAndScale = function(tile, tileImagery) {
-        var imageryExtent = tileImagery.imagery.extent;
+        var imageryExtent = tileImagery.readyImagery.extent;
         var terrainExtent = tile.extent;
         var terrainWidth = terrainExtent.east - terrainExtent.west;
         var terrainHeight = terrainExtent.north - terrainExtent.south;
