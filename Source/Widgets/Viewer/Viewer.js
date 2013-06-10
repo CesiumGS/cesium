@@ -405,6 +405,8 @@ define(['../../Core/Cartesian2',
 
     /**
      * Extends the base viewer functionality with the provided mixin.
+     * A mixin may add additional properties, functions, or other behavior
+     * to the provided viewer instance.
      * @memberof Viewer
      *
      * @param mixin The Viewer mixin to add to this instance.
