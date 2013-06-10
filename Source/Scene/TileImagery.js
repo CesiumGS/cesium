@@ -37,6 +37,13 @@ define([
         }
     };
 
+    /**
+     * Processes the load state machine for this instance.
+     *
+     * @param {Tile} tile The tile to which this instance belongs.
+     * @param {Context} context The context.
+     * @returns {Boolean} True if this instance is done loading; otherwise, false.
+     */
     TileImagery.prototype.processStateMachine = function(tile, context) {
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
@@ -68,29 +75,31 @@ define([
 
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
-        var isFirstNotFailedOrInvalid = true;
+        var ancestorsAreStillLoading = false;
         while (typeof ancestor !== 'undefined' && ancestor.state !== ImageryState.READY) {
-            isFirstNotFailedOrInvalid = isFirstNotFailedOrInvalid && (ancestor.state === ImageryState.FAILED || ancestor.state === ImageryState.INVALID);
+            ancestorsAreStillLoading = ancestorsAreStillLoading || (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID);
             ancestor = ancestor.parent;
         }
 
-        if (this.readyImagery !== ancestor && typeof ancestor !== 'undefined') {
+        if (this.readyImagery !== ancestor) {
             if (typeof this.readyImagery !== 'undefined') {
                 this.readyImagery.releaseReference();
             }
 
             this.readyImagery = ancestor;
-            this.readyImagery.addReference();
 
-            this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, this);
+            if (typeof ancestor !== 'undefined') {
+                ancestor.addReference();
+                this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, this);
+            }
         }
 
-        if (isFirstNotFailedOrInvalid && (loadingImagery.state === ImageryState.FAILED || loadingImagery.state === ImageryState.INVALID)) {
+        if (!ancestorsAreStillLoading && (loadingImagery.state === ImageryState.FAILED || loadingImagery.state === ImageryState.INVALID)) {
             // This imagery tile is failed or invalid, and we have the "best available" substitute.  So we're done loading.
-            return true;
+            return true; // done loading
         }
 
-        return false; // not done loading yet
+        return false; // not done loading
     };
 
     return TileImagery;

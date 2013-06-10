@@ -351,15 +351,18 @@ define([
                 }
             }
 
-            isDoneLoading = tileImagery.processStateMachine(this, context) && isDoneLoading;
+            var thisTileDoneLoading = tileImagery.processStateMachine(this, context);
+            isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
-            isRenderable = isRenderable && typeof tileImagery.readyImagery !== 'undefined';
+            isRenderable = isRenderable && (thisTileDoneLoading || typeof tileImagery.readyImagery !== 'undefined');
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len && isRenderable) {
-            this.isRenderable = true;
+        if (i === len) {
+            if (isRenderable) {
+                this.isRenderable = true;
+            }
 
             if (isDoneLoading) {
                 this.state = TileState.READY;
