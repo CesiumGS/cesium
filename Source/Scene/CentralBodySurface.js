@@ -943,7 +943,6 @@ define([
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }
-                    command.tile = tile;
                     var uniformMap = tileCommandUniformMaps[tileCommandIndex];
 
                     mergeUniformMap(uniformMap, centralBodyUniformMap);

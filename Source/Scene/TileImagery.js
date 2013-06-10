@@ -19,7 +19,6 @@ define([
         this.readyImagery = undefined;
         this.loadingImagery = imagery;
         this.textureCoordinateExtent = textureCoordinateExtent;
-        this.originalImagery = undefined;
         this.textureTranslationAndScale = undefined;
     };
 
