@@ -32,14 +32,14 @@ defineSuite([
         it('throws if pixelsToCheck is not provided', function() {
             function constructWithoutPixelsToCheck() {
                 return new DiscardMissingTileImagePolicy({
-                    missingImageUrl : 'http://made.up.com/missingImage.png'
+                    missingImageUrl : 'http://some.host.invalid/missingImage.png'
                 });
             }
             expect(constructWithoutPixelsToCheck).toThrow();
         });
 
         it('requests the missing image url', function() {
-            var missingImageUrl = 'http://made.up.com/missingImage.png';
+            var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             var imageDownloaded = false;
             loadImage.createImage = function(url, crossOrigin, deferred) {
@@ -57,7 +57,7 @@ defineSuite([
             };
 
             var policy = new DiscardMissingTileImagePolicy({
-                missingImageUrl : 'http://made.up.com/missingImage.png',
+                missingImageUrl : 'http://some.host.invalid/missingImage.png',
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
@@ -73,7 +73,7 @@ defineSuite([
 
     describe('shouldDiscardImage', function() {
         it('discards an image that is identical to the missing image', function() {
-            var missingImageUrl = 'http://made.up.com/missingImage.png';
+            var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             var redImage;
             when(loadImage('Data/Images/Red16x16.png'), function(image) {
@@ -98,7 +98,7 @@ defineSuite([
             };
 
             var policy = new DiscardMissingTileImagePolicy({
-                missingImageUrl : 'http://made.up.com/missingImage.png',
+                missingImageUrl : 'http://some.host.invalid/missingImage.png',
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
@@ -121,7 +121,7 @@ defineSuite([
         });
 
         it('discards an image that is identical to the missing image even if the missing image is transparent', function() {
-            var missingImageUrl = 'http://made.up.com/missingImage.png';
+            var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             var transparentImage;
             when(loadImage('Data/Images/Transparent.png'), function(image) {
@@ -141,7 +141,7 @@ defineSuite([
             };
 
             var policy = new DiscardMissingTileImagePolicy({
-                missingImageUrl : 'http://made.up.com/missingImage.png',
+                missingImageUrl : 'http://some.host.invalid/missingImage.png',
                 pixelsToCheck : [new Cartesian2(0, 0)]
             });
 
@@ -159,7 +159,7 @@ defineSuite([
         });
 
         it('does not discard at all when the missing image is transparent and disableCheckIfAllPixelsAreTransparent is set', function() {
-            var missingImageUrl = 'http://made.up.com/missingImage.png';
+            var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             var transparentImage;
             when(loadImage('Data/Images/Transparent.png'), function(image) {
@@ -172,7 +172,7 @@ defineSuite([
             };
 
             var policy = new DiscardMissingTileImagePolicy({
-                missingImageUrl : 'http://made.up.com/missingImage.png',
+                missingImageUrl : 'http://some.host.invalid/missingImage.png',
                 pixelsToCheck : [new Cartesian2(0, 0)],
                 disableCheckIfAllPixelsAreTransparent : true
             });
@@ -200,7 +200,7 @@ defineSuite([
             };
 
             var policy = new DiscardMissingTileImagePolicy({
-                missingImageUrl : 'http://made.up.com/missingImage.png',
+                missingImageUrl : 'http://some.host.invalid/missingImage.png',
                 pixelsToCheck : [new Cartesian2(0, 0)],
                 disableCheckIfAllPixelsAreTransparent : true
             });
