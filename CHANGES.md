@@ -17,6 +17,7 @@ Beta Releases
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
 * Improved test robustness on Mac.
 * Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+* Fixed artifacts that showed up on the edges of imagery tiles on a number of GPUs.
 
 ### b17 - 2013-06-03
 
