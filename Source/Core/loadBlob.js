@@ -6,14 +6,14 @@ define([
     "use strict";
 
     /**
-     * Asynchronously loads the given URL as raw binary data.  Returns a promise that will resolve to
-     * an ArrayBuffer once loaded, or reject if the URL failed to load.  The data is loaded
+     * Asynchronously loads the given URL as a blob.  Returns a promise that will resolve to
+     * a Blob once loaded, or reject if the URL failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled.
      *
-     * @exports loadArrayBuffer
+     * @exports loadBlob
      *
-     * @param {String|Promise} url The URL of the binary data, or a promise for the URL.
+     * @param {String|Promise} url The URL of the data, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the requests.
      *
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
@@ -23,15 +23,15 @@ define([
      *
      * @example
      * // load a single URL asynchronously
-     * loadArrayBuffer('some/url').then(function(arrayBuffer) {
+     * loadBlob('some/url').then(function(blob) {
      *     // use the data
      * }, function() {
      *     // an error occurred
      * });
      */
-    var loadArrayBuffer = function(url, headers) {
-        return loadWithXhr(url, 'arraybuffer', headers);
+    var loadBlob = function(url, headers) {
+        return loadWithXhr(url, 'blob', headers);
     };
 
-    return loadArrayBuffer;
+    return loadBlob;
 });
