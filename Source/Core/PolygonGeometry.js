@@ -21,7 +21,8 @@ define([
         './Quaternion',
         './Queue',
         './VertexFormat',
-        './WindingOrder'
+        './WindingOrder',
+        './PrimitiveType'
     ], function(
         defaultValue,
         BoundingRectangle,
@@ -44,7 +45,8 @@ define([
         Quaternion,
         Queue,
         VertexFormat,
-        WindingOrder) {
+        WindingOrder,
+        PrimitiveType) {
     "use strict";
 
     var computeBoundingRectangleCartesian2 = new Cartesian2();
@@ -87,7 +89,97 @@ define([
         return result;
     }
 
+    var scaleToGeodeticHeightN1 = new Cartesian3();
+    var scaleToGeodeticHeightN2 = new Cartesian3();
+    var scaleToGeodeticHeightP = new Cartesian3();
+    function scaleToGeodeticHeightExtruded(mesh, maxHeight, minHeight, ellipsoid) {
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var n1 = scaleToGeodeticHeightN1;
+        var n2 = scaleToGeodeticHeightN2;
+        var p = scaleToGeodeticHeightP;
+
+        if (typeof mesh !== 'undefined' && typeof mesh.attributes !== 'undefined' && typeof mesh.attributes.position !== 'undefined') {
+            var positions = mesh.attributes.position.values;
+            var length = positions.length / 2;
+
+            for ( var i = 0; i < length; i += 3) {
+                p.x = positions[i];
+                p.y = positions[i + 1];
+                p.z = positions[i + 2];
+
+                ellipsoid.scaleToGeodeticSurface(p, p);
+                ellipsoid.geodeticSurfaceNormal(p, n1);
+                Cartesian3.multiplyByScalar(n1, maxHeight, n1);
+                Cartesian3.add(p, n1, n1);
+
+                ellipsoid.geodeticSurfaceNormal(p, n2);
+                Cartesian3.multiplyByScalar(n2, minHeight, n2);
+                Cartesian3.add(p, n2, n2);
+
+                positions[i] = n1.x;
+                positions[i + 1] = n1.y;
+                positions[i + 2] = n1.z;
+
+                positions[i + length] = n2.x;
+                positions[i + 1 + length] = n2.y;
+                positions[i + 2 + length] = n2.z;
+            }
+        }
+        return mesh;
+    }
+
+    function subdivideLine(positions, indices) {
+        return new Geometry({});
+    }
+
     var createGeometryFromPositionsPositions = [];
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, boundingSphere, granularity) {
+        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        if (cleanedPositions.length < 3) {
+            // Duplicate positions result in not enough positions to form a polygon.
+            return undefined;
+        }
+
+        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
+        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
+
+        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
+        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
+            positions2D.reverse();
+            cleanedPositions.reverse();
+        }
+
+        var indices = PolygonPipeline.earClip2D(positions2D);
+
+        // Checking bounding sphere with plane for quick reject
+        var minX = boundingSphere.center.x - boundingSphere.radius;
+        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
+            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
+        }
+
+        var geo = PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
+        indices = geo.indexList;
+        cleanedPositions = geo.attributes.position.values;
+
+        var length = cleanedPositions.length/3;
+        var ilength = indices.length;
+        cleanedPositions = cleanedPositions.concat(cleanedPositions);
+        var i;
+        for (i = 0 ; i < ilength; i += 3) {
+            var i0 = indices[i] + length;
+            var i1 = indices[i + 1] + length;
+            var i2 = indices[i + 2] + length;
+            indices.push(i2, i1, i0);
+        }
+
+        geo.indexList = indices;
+        geo.attributes.position.values = cleanedPositions;
+
+        return new GeometryInstance({
+            geometry : geo
+        });
+    }
 
     function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
@@ -138,12 +230,15 @@ define([
      *
      * @param {Array} [options.positions] An array of positions that defined the corner points of the polygon.
      * @param {Object} [options.polygonHierarchy] A polygon hierarchy that can include holes.
-     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {Number} [options.surfaceHeight=0.0] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     *
+     * @param {Object} [options.extrudedOptions] Extruded options
+     * @param {Number} [options.extrudedOptions.height] Height of extruded surface
+     * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
+     * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
      * @exception {DeveloperError} At least three positions are required.
      * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
      *
@@ -202,8 +297,15 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var stRotation = defaultValue(options.stRotation, 0.0);
-        var height = defaultValue(options.height, 0.0);
-
+        var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
+        var extrudedHeight = surfaceHeight;
+        var extrudedOptions = options.extrudedOptions;
+        if (typeof extrudedOptions !== 'undefined') {
+            var h = defaultValue(extrudedOptions.height, surfaceHeight);
+            extrudedHeight = Math.min(h, surfaceHeight);
+            surfaceHeight = Math.max(h, surfaceHeight);
+        }
+        var extrude = (surfaceHeight !== extrudedHeight);
         var positions = options.positions;
         var polygonHierarchy = options.polygonHierarchy;
 
@@ -219,7 +321,12 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            if (extrude) {
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, positions, boundingSphere, granularity);
+            } else {
+                geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            }
+
             if (typeof geometry !== 'undefined') {
                 geometries.push(geometry);
             }
@@ -282,7 +389,11 @@ define([
         }
 
         geometry = GeometryPipeline.combine(geometries);
-        geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
+        if (extrude) {
+            geometry = scaleToGeodeticHeightExtruded(geometry, surfaceHeight, extrudedHeight, ellipsoid);
+        } else {
+            geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, surfaceHeight, ellipsoid);
+        }
 
         var attributes = {};
 

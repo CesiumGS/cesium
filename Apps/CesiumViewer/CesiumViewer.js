@@ -196,6 +196,26 @@ define([
         var polygonGeometry = new GeometryInstance({
             geometry : new PolygonGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_ST,
+
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cartographic.fromDegrees(-82.0, 40.0),
+                    Cartographic.fromDegrees(-75.0, 35.0),
+                    Cartographic.fromDegrees(-85.0, 30.0),
+                    Cartographic.fromDegrees(-70.0, 30.0),
+                    Cartographic.fromDegrees(-68.0, 40.0)
+                ]),
+                surfaceHeight: 600000,
+                extrudedOptions: {
+                    height: 300000
+                },
+                stRotation : 0.523598776
+            }),
+            pickData : 'polygon3'
+        });
+
+        var polygonGeometry1 = new GeometryInstance({
+            geometry : new PolygonGeometry({
+                vertexFormat : VertexFormat.POSITION_AND_ST,
 /*
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-72.0, 40.0),
@@ -272,7 +292,7 @@ define([
                 }
             })
         }));
-
+/*
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
             function (movement) {
@@ -283,7 +303,7 @@ define([
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
-
+*/
         domClass.remove(win.body(), 'loading');
     });
 });
