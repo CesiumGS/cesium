@@ -87,7 +87,7 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var url = 'http://fake.fake.net';
+        var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
 
@@ -103,7 +103,7 @@ defineSuite([
                         "resources" : [{
                             "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                             "imageHeight" : 256,
-                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.net\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                             "imageUrlSubdomains" : ["t0"],
                             "imageWidth" : 256,
                             "imageryProviders" : null,
@@ -153,7 +153,7 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {
-                    expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+                    expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
                 }
 
                 // Just return any old image.
@@ -161,7 +161,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, headers, deferred) {
-                expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+                expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
 
                 // Just return any old image.
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
@@ -182,7 +182,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.net';
+        var url = 'http://foo.bar.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
         var proxy = new DefaultProxy('/proxy/');
@@ -217,7 +217,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'http://foo.bar.net',
+            url : 'http://foo.bar.invalid',
             mapStyle : mapStyle,
             proxy : proxy
         });
@@ -263,7 +263,7 @@ defineSuite([
     });
 
     it('raises error on invalid url', function() {
-        var url = 'invalid.localhost';
+        var url = 'host.invalid';
         var provider = new BingMapsImageryProvider({
             url : url
         });
@@ -297,7 +297,7 @@ defineSuite([
                     "resources" : [{
                         "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                         "imageHeight" : 256,
-                        "imageUrl" : "http:\/\/invalid.{subdomain}.localhost\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                        "imageUrl" : "http:\/\/invalid.{subdomain}.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                         "imageUrlSubdomains" : ["t0"],
                         "imageWidth" : 256,
                         "imageryProviders" : null,
@@ -314,7 +314,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'invalid.localhost',
+            url : 'host.invalid',
             mapStyle : mapStyle
         });
 
