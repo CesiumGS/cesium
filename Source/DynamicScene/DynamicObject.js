@@ -152,6 +152,12 @@ define([
         this.vertexPositions = undefined;
 
         /**
+         * Gets or sets the vector.
+         * @type DynamicVector
+         */
+        this.vector = undefined;
+
+        /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
          * @type Cartesian3

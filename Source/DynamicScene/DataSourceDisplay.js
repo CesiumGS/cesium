@@ -12,24 +12,22 @@ define(['./DataSourceCollection',
         './VisualizerCollection',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Iso8601'
-        ], function(
-                DataSourceCollection,
-                DynamicBillboardVisualizer,
-                DynamicEllipsoidVisualizer,
-                DynamicConeVisualizerUsingCustomSensor,
-                DynamicLabelVisualizer,
-                DynamicPathVisualizer,
-                DynamicPointVisualizer,
-                DynamicPolygonVisualizer,
-                DynamicPolylineVisualizer,
-                DynamicPyramidVisualizer,
-                VisualizerCollection,
-                defaultValue,
-                destroyObject,
-                DeveloperError,
-                Iso8601) {
+        '../Core/DeveloperError'
+    ], function(
+        DataSourceCollection,
+        DynamicBillboardVisualizer,
+        DynamicEllipsoidVisualizer,
+        DynamicConeVisualizerUsingCustomSensor,
+        DynamicLabelVisualizer,
+        DynamicPathVisualizer,
+        DynamicPointVisualizer,
+        DynamicPolygonVisualizer,
+        DynamicPolylineVisualizer,
+        DynamicPyramidVisualizer,
+        VisualizerCollection,
+        defaultValue,
+        destroyObject,
+        DeveloperError) {
     "use strict";
 
     var defaultVisualizerTypes = [DynamicBillboardVisualizer,

@@ -6,7 +6,6 @@ define([
         '../Core/Cartesian2',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/RuntimeError',
         './DiscardMissingTileImagePolicy',
         './GeographicTilingScheme',
         './ImageryProvider',
@@ -20,7 +19,6 @@ define([
         Cartesian2,
         DeveloperError,
         Event,
-        RuntimeError,
         DiscardMissingTileImagePolicy,
         GeographicTilingScheme,
         ImageryProvider,
@@ -373,7 +371,7 @@ define([
             throw new DeveloperError('requestImage must not be called before the imagery provider is ready.');
         }
         var url = buildImageUrl(this, x, y, level);
-        return ImageryProvider.loadImage(url);
+        return ImageryProvider.loadImage(this, url);
     };
 
     /**

@@ -1,26 +1,16 @@
 /*global defineSuite*/
 defineSuite([
-             'DynamicScene/DynamicCone',
-             'DynamicScene/DynamicObject',
-             'Core/JulianDate',
-             'Core/Cartesian2',
-             'Core/Cartesian3',
-             'Core/Color',
-             'Core/Iso8601',
-             'Core/TimeInterval',
-             'Scene/HorizontalOrigin',
-             'Scene/VerticalOrigin'
-            ], function(
-              DynamicCone,
-              DynamicObject,
-              JulianDate,
-              Cartesian2,
-              Cartesian3,
-              Color,
-              Iso8601,
-              TimeInterval,
-              HorizontalOrigin,
-              VerticalOrigin) {
+         'DynamicScene/DynamicCone',
+         'DynamicScene/DynamicObject',
+         'Core/Color',
+         'Core/Iso8601',
+         'Core/TimeInterval'
+     ], function(
+         DynamicCone,
+         DynamicObject,
+         Color,
+         Iso8601,
+         TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

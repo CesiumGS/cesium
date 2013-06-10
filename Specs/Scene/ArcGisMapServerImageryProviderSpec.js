@@ -3,6 +3,7 @@ defineSuite([
          'Scene/ArcGisMapServerImageryProvider',
          'Core/jsonp',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Core/DefaultProxy',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/GeographicTilingScheme',
@@ -16,6 +17,7 @@ defineSuite([
          ArcGisMapServerImageryProvider,
          jsonp,
          loadImage,
+         loadWithXhr,
          DefaultProxy,
          DiscardMissingTileImagePolicy,
          GeographicTilingScheme,
@@ -31,6 +33,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -96,10 +99,19 @@ defineSuite([
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(baseUrl + '/tile/0/0/0');
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0');
+                }
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0');
+
+                // Just return any old image.
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -168,10 +180,19 @@ defineSuite([
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(baseUrl + '/tile/0/0/0');
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0');
+                }
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0');
+
+                // Just return any old image.
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -309,10 +330,19 @@ defineSuite([
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
+                }
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
+
+                // Just return any old image.
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {

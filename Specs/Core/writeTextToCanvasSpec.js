@@ -29,50 +29,69 @@ defineSuite([
     });
 
     it('allows the text to be either stroked or filled', function() {
-        var canvas1 = writeTextToCanvas('I', {
-            font : '30px Arial bold',
-            fill : true,
-            fillColor : Color.RED,
-            stroke : false
-        });
-        var context1 = canvas1.getContext('2d');
-
-        var canvas2 = writeTextToCanvas('I', {
-            font : '30px Arial bold',
-            fill : false,
-            stroke : true,
-            strokeColor : Color.BLUE
-        });
-        var context2 = canvas2.getContext('2d');
-
-        var row = 5;
+        var row = 20;
 
         // exact pixel checks are problematic due to browser differences in how text is drawn
         // so walk pixels left-to-right and check the number of times that the pixel value changes
         // color, ignoring alpha.
 
-        function getColorChangeCount(context) {
+        function getColorChangeCount(canvas) {
             var colorChangeCount = 0;
-            var lastPixel;
-            var pixel;
 
-            for ( var column = 0; column < canvas1.width; ++column) {
-                pixel = context1.getImageData(column, row, 1, 1).data;
+            var context = canvas.getContext('2d');
 
-                if (typeof lastPixel !== 'undefined') {
-                    if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1] || pixel[2] !== lastPixel[2]) {
-                        ++colorChangeCount;
-                    }
+            var pixel = context.getImageData(0, row, 1, 1).data;
+
+            var lastRed = pixel[0];
+            var lastGreen = pixel[1];
+            var lastBlue = pixel[2];
+
+            for ( var column = 0; column < canvas.width; ++column) {
+                pixel = context.getImageData(column, row, 1, 1).data;
+
+                var red = pixel[0];
+                var green = pixel[1];
+                var blue = pixel[2];
+
+                // round up pixels that have been subpixel anti-aliased
+                if (red > 0 && red !== 255) {
+                    red = 255;
                 }
-                lastPixel = pixel;
+                if (green > 0 && green !== 255) {
+                    green = 255;
+                }
+                if (blue > 0 && blue !== 255) {
+                    blue = 255;
+                }
+
+                if (red !== lastRed || green !== lastGreen || blue !== lastBlue) {
+                    ++colorChangeCount;
+                }
+                lastRed = red;
+                lastGreen = green;
+                lastBlue = blue;
             }
             return colorChangeCount;
         }
 
-        // context1 is filled, so there should only be two "edges"
-        expect(getColorChangeCount(context1)).toEqual(2);
+        var canvas1 = writeTextToCanvas('I', {
+            font : '90px "Open Sans"',
+            fill : true,
+            fillColor : Color.RED,
+            stroke : false
+        });
 
-        // context1 is stroked, so there should be four "edges"
-        expect(getColorChangeCount(context2)).toEqual(2);
+        // canvas1 is filled, so there should only be two "edges"
+        expect(getColorChangeCount(canvas1)).toEqual(2);
+
+        var canvas2 = writeTextToCanvas('I', {
+            font : '90px "Open Sans"',
+            fill : false,
+            stroke : true,
+            strokeColor : Color.BLUE
+        });
+
+        // canvas2 is stroked, so there should be four "edges"
+        expect(getColorChangeCount(canvas2)).toEqual(4);
     });
 });

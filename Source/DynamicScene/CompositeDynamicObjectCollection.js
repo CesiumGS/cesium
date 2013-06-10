@@ -6,7 +6,6 @@ define([
         '../Core/TimeInterval',
         '../Core/DeveloperError',
         './DynamicObject',
-        './DynamicObjectCollection',
         './CzmlDefaults'
     ], function(
         defaultValue,
@@ -15,7 +14,6 @@ define([
         TimeInterval,
         DeveloperError,
         DynamicObject,
-        DynamicObjectCollection,
         CzmlDefaults) {
     "use strict";
 
@@ -138,7 +136,7 @@ define([
             thisCollections = this._collections = collections;
 
             //Clear all existing objects and rebuild the collection.
-            this._clearObjects();
+            clearObjects(this);
             var thisMergeFunctions = this.mergeFunctions;
             for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
                 collection = thisCollections[iCollection];
@@ -151,7 +149,7 @@ define([
                 var objects = collection.getObjects();
                 for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                     var object = objects[iObjects];
-                    var compositeObject = this._getOrCreateObject(object.id);
+                    var compositeObject = getOrCreateObject(this, object.id);
                     for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
                         var mergeFunc = thisMergeFunctions[iMergeFuncs];
                         mergeFunc(compositeObject, object);
@@ -195,24 +193,24 @@ define([
         this.setCollections([]);
     };
 
-    CompositeDynamicObjectCollection.prototype._getOrCreateObject = function(id) {
-        var obj = this._hash[id];
+    function getOrCreateObject(compositeDynamicObjectCollection, id) {
+        var obj = compositeDynamicObjectCollection._hash[id];
         if (!obj) {
             obj = new DynamicObject(id);
-            this._hash[id] = obj;
-            this._array.push(obj);
+            compositeDynamicObjectCollection._hash[id] = obj;
+            compositeDynamicObjectCollection._array.push(obj);
         }
         return obj;
-    };
+    }
 
-    CompositeDynamicObjectCollection.prototype._clearObjects = function() {
-        var removedObjects = this._array;
-        this._hash = {};
-        this._array = [];
+    function clearObjects(compositeDynamicObjectCollection) {
+        var removedObjects = compositeDynamicObjectCollection._array;
+        compositeDynamicObjectCollection._hash = {};
+        compositeDynamicObjectCollection._array = [];
         if (removedObjects.length > 0) {
-            this.objectsRemoved.raiseEvent(this, removedObjects);
+            compositeDynamicObjectCollection.objectsRemoved.raiseEvent(compositeDynamicObjectCollection, removedObjects);
         }
-    };
+    }
 
     CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
         var thisMergeFunctions = this.mergeFunctions;
@@ -229,7 +227,7 @@ define([
                     deleteFunc(compositeObject);
                 }
             } else {
-                compositeObject = this._getOrCreateObject(updatedObject.id);
+                compositeObject = getOrCreateObject(this, updatedObject.id);
             }
 
             compositeObjects.push(compositeObject);

@@ -1,12 +1,8 @@
 /*global define*/
 define([
-        './DeveloperError',
-        './RequestErrorEvent',
-        '../ThirdParty/when'
+        './loadWithXhr'
     ], function(
-        DeveloperError,
-        RequestErrorEvent,
-        when) {
+        loadWithXhr) {
     "use strict";
 
     /**
@@ -38,40 +34,7 @@ define([
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadText = function(url, headers) {
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
-        }
-
-        return when(url, function(url) {
-            var xhr = new XMLHttpRequest();
-            xhr.open("GET", url, true);
-
-            if (typeof headers !== 'undefined') {
-                for ( var key in headers) {
-                    if (headers.hasOwnProperty(key)) {
-                        xhr.setRequestHeader(key, headers[key]);
-                    }
-                }
-            }
-
-            var deferred = when.defer();
-
-            xhr.onload = function(e) {
-                if (xhr.status === 200) {
-                    deferred.resolve(xhr.response);
-                } else {
-                    deferred.reject(new RequestErrorEvent(xhr.status, xhr.response));
-                }
-            };
-
-            xhr.onerror = function(e) {
-                deferred.reject(new RequestErrorEvent());
-            };
-
-            xhr.send();
-
-            return deferred.promise;
-        });
+        return loadWithXhr(url, undefined, headers);
     };
 
     return loadText;

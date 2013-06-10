@@ -139,7 +139,7 @@ define([
         var proxyIfNeeded = FeatureDetection.supportsCrossOriginImagery() ? undefined : proxy;
 
         var providerViewModels = [];
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Aerial',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingAerial.png'),
             tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
@@ -152,7 +152,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Aerial with Labels',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingAerialLabels.png'),
             tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
@@ -165,7 +165,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Bing Maps Roads',
             iconUrl : require.toUrl('../Images/ImageryProviders/bingRoads.png'),
             tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
@@ -178,7 +178,7 @@ define([
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI World Imagery',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldImagery.png'),
             tooltip : '\
@@ -197,7 +197,7 @@ contributed by the GIS User Community.\nhttp://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI World Street Map',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriWorldStreetMap.png'),
             tooltip : '\
@@ -213,7 +213,7 @@ http://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'ESRI National Geographic',
             iconUrl : require.toUrl('../Images/ImageryProviders/esriNationalGeographic.png'),
             tooltip : '\
@@ -228,7 +228,7 @@ mapping applications.\nhttp://www.esri.com',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
@@ -241,7 +241,7 @@ of the world.\nhttp://www.openstreetmap.org',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Stamen Watercolor',
             iconUrl : require.toUrl('../Images/ImageryProviders/stamenWatercolor.png'),
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
@@ -255,7 +255,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Stamen Toner',
             iconUrl : require.toUrl('../Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
@@ -268,7 +268,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'MapQuest Open\u00adStreet\u00adMap',
             iconUrl : require.toUrl('../Images/ImageryProviders/mapQuestOpenStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
@@ -281,7 +281,7 @@ map of the world.\nhttp://www.openstreetmap.org',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'The Black Marble',
             iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
             tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
@@ -296,7 +296,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             }
         }));
 
-        providerViewModels.push(ImageryProviderViewModel.fromConstants({
+        providerViewModels.push(new ImageryProviderViewModel({
             name : 'Disable Streaming Imagery',
             iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
             tooltip : 'Uses a single image for the entire world.',
@@ -968,7 +968,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             if (typeof animationViewModel === 'undefined') {
                 var clockViewModel = new ClockViewModel();
                 clockViewModel.owner = this;
-                clockViewModel.shouldAnimate(true);
+                clockViewModel.shouldAnimate = true;
                 animationViewModel = new AnimationViewModel(clockViewModel);
             }
             this.animationViewModel = animationViewModel;
@@ -988,7 +988,7 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             var imageryLayers = centralBody.getImageryLayers();
             var providerViewModels = createImageryProviders(this.dayImageUrl);
             this.baseLayerPicker = new BaseLayerPicker(this.baseLayerPickerContainer, imageryLayers, providerViewModels);
-            this.baseLayerPicker.viewModel.selectedItem(providerViewModels[0]);
+            this.baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
 
             if (typeof endUserOptions.source !== 'undefined') {
                 this.loadCzml(endUserOptions.source, endUserOptions.lookAt);
