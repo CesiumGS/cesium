@@ -425,9 +425,22 @@ define([
         var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
+        var frustum = frameState.camera.frustum;
 
-        if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            if (frameState.mode !== SceneMode.SCENE2D) {
+        if (frameState.mode !== SceneMode.SCENE2D) {
+            if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+                return {
+                    duration : 0,
+                    onComplete : onComplete
+                };
+            }
+        } else {
+            var currentHeight = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
+            var ellipsoid = frameState.scene2D.projection.getEllipsoid();
+            var destinationHeight = ellipsoid.cartesianToCartographic(destination).height;
+            if (CesiumMath.equalsEpsilon(destinationHeight, currentHeight, CesiumMath.EPSILON6) &&
+                    CesiumMath.equalsEpsilon(destination.x, frameState.camera.position.x, CesiumMath.EPSILON6) &&
+                    CesiumMath.equalsEpsilon(destination.y, frameState.camera.position.y, CesiumMath.EPSILON6)) {
                 return {
                     duration : 0,
                     onComplete : onComplete
@@ -440,23 +453,31 @@ define([
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
                     dirScratch = defaultValue(description.direction, position.negate(dirScratch).normalize(dirScratch));
-                    rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                    } else {
+                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                    }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
                     dirScratch = defaultValue(description.direction, Cartesian3.UNIT_Z.negate(dirScratch));
-                    rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                    } else {
+                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                    }
                     upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
                 }
 
-                frameState.camera.position = position;
-                frameState.camera.direction = dirScratch;
-                frameState.camera.up = upScratch;
-                frameState.camera.right = rightScratch;
+                Cartesian3.clone(position, frameState.camera.position);
+                Cartesian3.clone(dirScratch, frameState.camera.direction);
+                Cartesian3.clone(upScratch, frameState.camera.up);
+                Cartesian3.clone(rightScratch, frameState.camera.right);
 
                 if (frameState.mode === SceneMode.SCENE2D) {
                     var zoom = frameState.camera.position.z;
 
-                    var frustum = frameState.camera.frustum;
+
                     var ratio = frustum.top / frustum.right;
 
                     var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
