@@ -24,6 +24,9 @@ define(['require',
                 SingleTileImageryProvider) {
     "use strict";
 
+    /**
+     * @private
+     */
     function createDefaultBaseLayers() {
         var proxy = new DefaultProxy('http://cesium.agi.com/proxy/');
         //While some sites have CORS on, not all browsers implement it properly, so a proxy is needed anyway;

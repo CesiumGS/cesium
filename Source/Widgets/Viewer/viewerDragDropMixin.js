@@ -21,8 +21,8 @@ define(['../../Core/defaultValue',
      * @exports viewerDragDropMixin
      *
      * @param {Viewer} viewer The viewer instance.
-     * @param {Element|String} [options.dropTarget=viewer.container] The DOM element or ID that will contain the widget.
      * @param {Object} [options] Configuration options for the mixin.
+     * @param {Element|String} [options.dropTarget=viewer.container] The DOM element or ID that will contain the widget.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *
      * @exception {DeveloperError} viewer is required.
@@ -33,7 +33,7 @@ define(['../../Core/defaultValue',
      * @exception {DeveloperError} clearOnDrop is already defined by another mixin.
      *
      * @example
-     * // Add basic drag and drop support with a simple error pop-up.
+     * // Add basic drag and drop support and pop up an alert window on error.
      * var viewer = new Viewer('cesiumContainer');
      * viewer.extend(viewerDragDropMixin);
      * viewer.onDropError.addEventListener(function(viewerArg, source, error) {
@@ -100,8 +100,6 @@ define(['../../Core/defaultValue',
              * @type {Element}
              */
             dropEnabled : {
-                //TODO See https://github.com/AnalyticalGraphicsInc/cesium/issues/832
-                //* @exception {DeveloperError} value is required.
                 get : function() {
                     return dropEnabled;
                 },

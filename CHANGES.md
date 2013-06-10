@@ -21,7 +21,6 @@ Beta Releases
 * The `Client CZML` SandCastle demo has been removed, largely because it is redundant with the Simple CZML demo.
 * The `Two Viewer Widgets` SandCastle demo has been removed. We will add back a multi-scene example when we have a good architecture for it in place.
 * Fixed an issue in `BaseLayerPicker` where destroy wasn't properly cleaning everything up.
-* Extracted all of the default imagery providers in the `BaseLayerPicker` to a helper function, `BaseLayerPicker\createDefaultBaseLayers.js`
 * Added the ability to unsubscribe to `Timeline` update event.
 * Added a `screenSpaceEventHandler` property to `CesiumWidget`. Also added a `sceneMode` option to the constructor to set the initial scene mode.
 

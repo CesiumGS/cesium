@@ -52,6 +52,7 @@ define(['../../Core/Cartesian2',
 
     /**
      * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
+     * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
      *
      * @alias Viewer
      * @constructor
@@ -80,6 +81,45 @@ define(['../../Core/Cartesian2',
      * @see HomeButton
      * @see SceneModePicker
      * @see Timeline
+     * @see viewerDragDropMixin
+     * @see viewerDynamicObjectMixin
+     *
+     * @example
+     * //Initialize the viewer widget with several custom options and mixins.
+     * var viewer = new Viewer('cesiumContainer', {
+     *     //Start in Columbus Viewer
+     *     sceneMode : SceneMode.COLUMBUS_VIEW,
+     *     //Use standard Cesium terrain
+     *     terrainProvider : new CesiumTerrainProvider({
+     *         url : 'http://cesium.agi.com/smallterrain',
+     *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
+     *     }),
+     *     //Hide the base layer picker
+     *     baselayerPicker : false,
+     *     //Use OpenStreetMaps
+     *     selectedImageryProviderViewModel : new ImageryProviderViewModel({
+     *         name : 'Open\u00adStreet\u00adMap',
+     *         iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
+     *         tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map',
+     *         creationFunction : function() {
+     *             return new OpenStreetMapImageryProvider({
+     *                 url : 'http://tile.openstreetmap.org/'
+     *             });
+     *         }
+     *     })
+     * });
+     *
+     * //Add basic drag and drop functionality
+     * viewer.extend(viewerDragDropMixin);
+     *
+     * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
+     * viewer.extend(viewerDynamicObjectMixin);
+     *
+     * //Show a pop-up alert if we encounter an error when processing a dropped file
+     * viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+     *     console.log(error);
+     *     window.alert(error);
+     * });
      */
     var Viewer = function(container, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -220,7 +260,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the CesiumWidget.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {CesiumWidget}
          */
         cesiumWidget : {
@@ -231,7 +271,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the HomeButton.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {HomeButton}
          */
         homeButton : {
@@ -242,7 +282,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the SceneModePicker.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {SceneModePicker}
          */
         sceneModePicker : {
@@ -253,7 +293,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the BaseLayerPicker.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {BaseLayerPicker}
          */
         baseLayerPicker : {
@@ -264,7 +304,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the Animation widget.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {Animation}
          */
         animation : {
@@ -275,7 +315,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the Timeline widget.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {Timeline}
          */
         timeline : {
@@ -286,7 +326,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the FullscreenButton.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {FullscreenButton}
          */
         fullscreenButton : {
@@ -297,7 +337,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the display used for {@link DataSource} visualization.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {DataSourceDisplay}
          */
         dataSourceDisplay : {
@@ -308,7 +348,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the set of {@link DataSource} instances to be visualized.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @type {DataSourceCollection}
          */
         dataSources : {
@@ -319,7 +359,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the canvas.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {Canvas} The canvas.
          */
         canvas : {
@@ -330,7 +370,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the Cesium logo element.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {Element} The logo element.
          */
         cesiumLogo : {
@@ -341,7 +381,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the scene.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {Scene} The scene.
          */
         scene : {
@@ -352,7 +392,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the primary central body.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {CentralBody} The primary central body.
          */
         centralBody : {
@@ -363,7 +403,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the clock.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {Clock} the clock
          */
         clock : {
@@ -374,7 +414,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the scene transitioner.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {SceneTransitioner} The scene transitioner.
          */
         sceneTransitioner : {
@@ -385,7 +425,7 @@ define(['../../Core/Cartesian2',
 
         /**
          * Gets the screen space event handler.
-         * @memberof Viewer
+         * @memberof Viewer.prototype
          * @returns {ScreenSpaceEventHandler}
          */
         screenSpaceEventHandler : {

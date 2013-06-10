@@ -17,9 +17,9 @@ define(['../../Core/defaultValue',
     "use strict";
 
     /**
-     * A mixin which adds default input interaction to the Viewer widget for DynamicObject instances.
+     * A mixin which adds default behavior to the Viewer widget for dealing with DynamicObject instances.
      * This allows for DynamicObjects to be tracked with the camera, either by the viewer clicking
-     * on them, or by setting the newly created trackedObject property.
+     * on them, or by setting the trackedObject property.
      * Rather than calling this function directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDynamicObjectMixin
