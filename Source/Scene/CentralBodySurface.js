@@ -193,7 +193,7 @@ define([
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
                 var imagery = tileImagery.loadingImagery;
-                if (typeof imagery === undefined) {
+                if (typeof imagery === 'undefined') {
                     imagery = tileImagery.readyImagery;
                 }
                 if (imagery.imageryLayer === layer) {
