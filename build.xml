@@ -377,7 +377,7 @@
 		<java jar="${jsdoc3Directory}/lib/js.jar" dir="${jsdoc3Directory}" fork="true">
 			<arg line="-modules node_modules" />
 			<arg line="-modules rhino_modules" />
-			<arg value="-modules ." />
+			<arg line="-modules ." />
 			<arg value="jsdoc.js" />
 			<arg value="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
