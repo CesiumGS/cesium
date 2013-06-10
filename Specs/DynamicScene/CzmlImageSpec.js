@@ -25,7 +25,7 @@ defineSuite([
     });
 
     it('unwrapInterval works with absolute urls', function() {
-        var url = 'http://example.com/someDir/some.png';
+        var url = 'http://example.invalid/someDir/some.png';
         expect(CzmlImage.unwrapInterval(url, "http://www.agi.com")).toEqual(url);
         expect(CzmlImage.unwrapInterval(url, "http://www.agi.com/data.czml")).toEqual(url);
         expect(CzmlImage.unwrapInterval(url, "http://www.agi.com/subdir/data.czml")).toEqual(url);

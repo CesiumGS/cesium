@@ -43,7 +43,7 @@ defineSuite([
     });
 
     it('creates and sends request without any custom headers', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         loadText(testUrl);
 
         expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
@@ -52,7 +52,7 @@ defineSuite([
     });
 
     it('creates and sends request with custom headers', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         loadText(testUrl, {
             'Accept' : 'application/json',
             'Cache-Control' : 'no-cache'
@@ -66,7 +66,7 @@ defineSuite([
     });
 
     it('returns a promise that resolves when the request loads', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadText(testUrl);
 
         expect(promise).toBeDefined();
@@ -89,7 +89,7 @@ defineSuite([
     });
 
     it('returns a promise that rejects when the request errors', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadText(testUrl);
 
         expect(promise).toBeDefined();
@@ -113,7 +113,7 @@ defineSuite([
     });
 
     it('returns a promise that rejects when the request results in an HTTP error code', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadText(testUrl);
 
         expect(promise).toBeDefined();
