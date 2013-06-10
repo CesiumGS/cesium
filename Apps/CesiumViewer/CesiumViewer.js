@@ -3,26 +3,26 @@ define([
         'DynamicScene/CzmlDataSource',
         'Scene/PerformanceDisplay',
         'Widgets/Viewer/Viewer',
-        'Widgets/Viewer/ViewerDropHandler',
-        'Widgets/Viewer/ViewerDynamicSceneControls',
+        'Widgets/Viewer/viewerDragDropMixin',
+        'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
         CzmlDataSource,
         PerformanceDisplay,
         Viewer,
-        ViewerDropHandler,
-        ViewerDynamicSceneControls) {
+        viewerDragDropMixin,
+        viewerDynamicObjectMixin) {
     "use strict";
     /*global console*/
 
     var viewer = new Viewer('cesiumContainer');
-    var dropHandler = new ViewerDropHandler(viewer);
-    dropHandler.onError.addEventListener(function(dropHandler, name, error) {
+    viewer.extend(viewerDragDropMixin);
+    viewer.extend(viewerDynamicObjectMixin);
+
+    viewer.onDropError.addEventListener(function(dropHandler, name, error) {
         console.log(error);
         window.alert(error);
     });
-
-    var dynamicSceneControls = new ViewerDynamicSceneControls(viewer);
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -65,7 +65,7 @@ define([
             if (typeof endUserOptions.lookAt !== 'undefined') {
                 var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
                 if (typeof dynamicObject !== 'undefined') {
-                    dynamicSceneControls.trackedObject = dynamicObject;
+                    viewer.trackedObject = dynamicObject;
                 } else {
                     window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
                 }

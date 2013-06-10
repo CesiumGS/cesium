@@ -233,11 +233,10 @@ defineSuite(['Widgets/Viewer/Viewer',
         }).toThrow();
     });
 
-    it('handleDrop throws with undefined event', function() {
+    it('extend throws with undefined mixin', function() {
         var viewer = new Viewer(container);
         expect(function() {
-            return viewer.handleDrop(undefined, function() {
-            });
+            return viewer.extend(undefined);
         }).toThrow();
         viewer.destroy();
     });
