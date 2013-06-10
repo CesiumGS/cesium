@@ -61,7 +61,7 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var url = 'http://fake.fake.net';
+        var url = 'http://example.invalid';
         var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var channel = 1234;
 
@@ -93,7 +93,7 @@ defineSuite([
                       "version": 8
                     }
                   ],
-                  "serverUrl": "https://fake.com",
+                  "serverUrl": "https://example.invalid",
                   "useGoogleLayers": false
                 });
             }, 1);
@@ -131,7 +131,7 @@ defineSuite([
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if(url.indexOf('blob:') !== 0) {
-                  expect(url).toEqual('http://fake.fake.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
+                  expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
                 }
 
                 // Just return any old image.
@@ -139,7 +139,7 @@ defineSuite([
             };
 
             loadWithXhr.load = function(url, responseType, headers, deferred) {
-                expect(url).toEqual('http://fake.fake.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
+                expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
                 // Just return any old image.
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
@@ -160,7 +160,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.net';
+        var url = 'http://example.invalid';
         var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var proxy = new DefaultProxy('/proxy/');
 
@@ -192,14 +192,14 @@ defineSuite([
                       "version": 8
                     }
                   ],
-                  "serverUrl": "https://fake.com",
+                  "serverUrl": "https://example.invalid",
                   "useGoogleLayers": false
                 });
             }, 1);
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://foo.bar.net',
+            url : 'http://example.invalid',
             channel: 1234,
             proxy : proxy
         });
@@ -216,7 +216,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if(url.indexOf('blob:') !== 0) {
-                  expect(url).toEqual(proxy.getURL('http://foo.bar.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
+                  expect(url).toEqual(proxy.getURL('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
                 }
 
                 // Just return any old image.
@@ -224,7 +224,7 @@ defineSuite([
             };
 
             loadWithXhr.createImage = function(url, responseType, headers, deferred) {
-                expect(url).toEqual(proxy.getURL('http://foo.bar.net/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
+                expect(url).toEqual(proxy.getURL('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
 
                 // Just return any old image.
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
@@ -294,13 +294,13 @@ defineSuite([
                   "version": 8
                 }
               ],
-              "serverUrl": "https://fake.com",
+              "serverUrl": "https://example.invalid",
               "useGoogleLayers": false
             });
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'invalid.localhost',
+            url : 'example.invalid',
             channel: 1234
         });
 
