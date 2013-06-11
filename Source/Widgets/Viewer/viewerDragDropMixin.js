@@ -203,7 +203,10 @@ define(['../../Core/defaultValue',
                     var dataClock = czmlSource.getClock();
                     if (typeof dataClock !== 'undefined') {
                         dataClock.clone(viewer.clock);
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                        if (typeof viewer.timline !== 'undefined') {
+                            viewer.timeline.updateFromClock();
+                            viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                        }
                     }
                 }
             } catch (error) {

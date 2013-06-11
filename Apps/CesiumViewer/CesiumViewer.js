@@ -59,6 +59,7 @@ define([
             var dataClock = source.getClock();
             if (typeof dataClock !== 'undefined') {
                 dataClock.clone(viewer.clock);
+                viewer.timeline.updateFromClock();
                 viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
             }
 
