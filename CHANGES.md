@@ -15,6 +15,7 @@ Beta Releases
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
 * Added `Context.getAntialias`.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
+* Improved the performance of terrain and imagery refinement, especially when using a mixture of slow and fast imagery sources.
 * Improved test robustness on Mac.
 * Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
 * Fixed artifacts that showed up on the edges of imagery tiles on a number of GPUs.

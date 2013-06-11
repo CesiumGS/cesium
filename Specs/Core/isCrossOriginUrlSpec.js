@@ -24,7 +24,7 @@ defineSuite([
     });
 
     it('returns true for absolute urls that are cross-origin', function() {
-        expect(isCrossOriginUrl('http://example.com/some/url.jpg')).toEqual(true);
+        expect(isCrossOriginUrl('http://example.invalid/some/url.jpg')).toEqual(true);
 
         // a different scheme counts as cross-origin
         var pageUri = new Uri(location.href);
