@@ -558,15 +558,6 @@ define([
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
-        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            if (frameState.mode !== SceneMode.SCENE2D) {
-                return {
-                    duration : 0,
-                    onComplete : description.onComplete
-                };
-            }
-        }
-
         var createAnimationDescription = clone(description);
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
@@ -606,15 +597,6 @@ define([
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
-
-        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            if (frameState.mode !== SceneMode.SCENE2D) {
-                return {
-                    duration : 0,
-                    onComplete : description.onComplete
-                };
-            }
-        }
 
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
