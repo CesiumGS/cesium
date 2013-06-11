@@ -492,6 +492,12 @@ defineSuite([
         expect(geometry.attributes.position3D.values[5]).toEqual(p2.z);
     });
 
+    it('projectTo2D throws without a geometry', function() {
+        expect(function() {
+            GeometryPipeline.projectTo2D(undefined);
+        }).toThrow();
+    });
+
     it('encodeAttribute encodes positions', function() {
         var c = new Cartesian3(-10000000.0, 0.0, 10000000.0);
         var encoded = EncodedCartesian3.fromCartesian(c);

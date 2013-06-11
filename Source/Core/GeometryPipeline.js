@@ -101,7 +101,7 @@ define([
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
-     * @returns The modified <code>geometry</code> argument, with its triangle indices converted to lines.
+     * @returns {Geometry} The modified <code>geometry</code> argument, with its triangle indices converted to lines.
      *
      * @exception {DeveloperError} geometry is required.
      *
@@ -139,7 +139,7 @@ define([
      *
      * @param {Geometry} geometry The geometry, which is not modified, to create the object for.
      *
-     * @returns An object with attribute name / index pairs.
+     * @returns {Object} An object with attribute name / index pairs.
      *
      * @exception {DeveloperError} geometry is required.
      *
@@ -178,10 +178,10 @@ define([
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
+     * @returns {Geometry} The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
+     *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
-     *
-     * @returns The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
      *
      * @see GeometryPipeline.reorderForPostVertexCache
      *
@@ -260,10 +260,10 @@ define([
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
      *
+     * @returns {Geometry} The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
+     *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} cacheCapacity must be greater than two.
-     *
-     * @returns The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
      *
      * @see GeometryPipeline.reorderForPreVertexCache
      * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
@@ -328,13 +328,23 @@ define([
     }
 
     /**
-     * DOC_TBA.  Old geometry is not guaranteed to be copied.
-     *
+     * Splits a geometry into multiple geometries - if necessary - to ensure that indices in the
+     * <code>indexList</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
+     * when {@link Context#getElementIndexUint} is <code>false</code>.
+     * <p>
      * If the geometry does not have an <code>indexList</code>, this function has no effect.
+     * </p>
+     *
+     * @param {Geometry} geometry The geometry to modify, which is modified in place if it needs to be split into multiple geometries.
+     *
+     * @returns {Array} An array of geometries, each with indices that fit into unsigned shorts.
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS
      * @exception {DeveloperError} All geometry attribute lists must have the same number of attributes.
+     *
+     * @example
+     * var geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
      */
     GeometryPipeline.fitToUnsignedShortIndices = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -415,12 +425,32 @@ define([
         return geometries;
     };
 
+    var scratchCartesian = new Cartesian3();
+
     /**
-     * DOC_TBA
+     * Projects a geometry's 3D <code>position</code> attribute to 2D, replacing the <code>position</code>
+     * attribute with separate <code>position3D</code> and <code>position2D</code> attributes.
+     * <p>
+     * If the geometry does not have a <code>position</code>, this function has no effect.
+     * </p>
+     *
+     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Object} [projection=new GeographicProjection()] The projection to use.
+     *
+     * @returns {Geometry} The modified <code>geometry</code> argument with <code>position3D</code> and <code>position2D</code> attributes.
+     *
+     * @exception {DeveloperError} geometry is required.
+     *
+     * @example
+     * geometry = GeometryPipeline.projectTo2D(geometry);
      */
     GeometryPipeline.projectTo2D = function(geometry, projection) {
-        if (typeof geometry !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
-            projection = typeof projection !== 'undefined' ? projection : new GeographicProjection();
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (typeof geometry.attributes.position !== 'undefined') {
+            projection = (typeof projection !== 'undefined') ? projection : new GeographicProjection();
             var ellipsoid = projection.getEllipsoid();
 
             // Project original positions to 2D.
@@ -428,7 +458,7 @@ define([
             var projectedPositions = [];
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var lonLat = ellipsoid.cartesianToCartographic(new Cartesian3(wgs84Positions[i], wgs84Positions[i + 1], wgs84Positions[i + 2]));
+                var lonLat = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(wgs84Positions, i, scratchCartesian));
                 var projectedLonLat = projection.project(lonLat);
                 projectedPositions.push(projectedLonLat.x, projectedLonLat.y);
             }
@@ -437,11 +467,11 @@ define([
             geometry.attributes.position3D = geometry.attributes.position;
 
             // Replace original positions with 2D projected positions
-            geometry.attributes.position2D = {
+            geometry.attributes.position2D = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : projectedPositions
-            };
+            });
             delete geometry.attributes.position;
         }
 
@@ -465,7 +495,7 @@ define([
      * @param {String} [attributeHighName='positionHigh'] The name of the attribute for the encoded high bits.
      * @param {String} [attributeLowName='positionLow'] The name of the attribute for the encoded low bits.
      *
-     * @returns The modified <code>geometry</code> argument, with its encoded attribute.
+     * @returns {Geometry} The modified <code>geometry</code> argument, with its encoded attribute.
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
@@ -803,7 +833,7 @@ define([
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      * @param {Object} geometry.attributes.position
      *
-     * @returns The modified <code>geometry</code> argument.
+     * @returns {Geometry} The modified <code>geometry</code> argument.
      *
      * @exception {DeveloperError} geometry.attributes.position.values is required
      * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
@@ -949,7 +979,7 @@ define([
      * @param {Object} geometry.attributes.normal The normals of the vertices
      * @param {Object} geometry.attributes.st The texture coordinates
      *
-     * @returns The modified <code>geometry</code> argument.
+     * @returns {Geometry} The modified <code>geometry</code> argument.
      *
      * @exception {DeveloperError} geometry.attributes.position.values is required
      * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
