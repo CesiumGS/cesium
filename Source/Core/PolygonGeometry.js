@@ -615,8 +615,7 @@ define([
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.height] Height of extruded surface
+     * @param {Number} [options.extrudedHeight] Height of extruded surface
      * @exception {DeveloperError} At least three positions are required.
      * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
      *
@@ -667,6 +666,19 @@ define([
      *         }]
      *     }
      * });
+     *
+     * create extruded polygon
+     * var geometry = new Cesium.PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
+     *     ]),
+     *     extrudedHeight: 300000
+     * });
+     *
      */
     var PolygonGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -676,15 +688,14 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var stRotation = defaultValue(options.stRotation, 0.0);
         var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
-        var extrudedHeight = surfaceHeight;
-        var extrudedOptions = options.extrudedOptions;
-        if (typeof extrudedOptions !== 'undefined') {
-            var h = defaultValue(extrudedOptions.height, surfaceHeight);
+        var extrudedHeight = defaultValue(options.extrudedHeight, surfaceHeight);
+        var extrude = (surfaceHeight !== extrudedHeight);
+        if (extrude) {
+            var h = extrudedHeight;
             extrudedHeight = Math.min(h, surfaceHeight);
             surfaceHeight = Math.max(h, surfaceHeight);
         }
 
-        var extrude = (surfaceHeight !== extrudedHeight);
         var positions = options.positions;
         var polygonHierarchy = options.polygonHierarchy;
 
@@ -809,6 +820,10 @@ define([
         var attributes = {};
 
         geometry = GeometryPipeline.combine(geometries);
+
+        if (extrude || surfaceHeight !== 0) {
+            boundingSphere = BoundingSphere.fromPoints(geometry.attributes.position);
+        }
 
         if (vertexFormat.position) {
             attributes.position = geometry.attributes.position;
