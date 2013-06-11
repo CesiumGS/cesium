@@ -763,12 +763,17 @@ defineSuite([
 
         geometry = GeometryPipeline.computeNormal(geometry);
 
-        expect(geometry.attributes.normal.values.length).toEqual(4*3);
+        var normals = geometry.attributes.normal.values;
+        expect(normals.length).toEqual(4*3);
+
         var a = new Cartesian3(-1, 0, 1).normalize();
-        expect(geometry.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
-        expect(geometry.attributes.normal.values.slice(3, 9)).toEqual([0, 0, 1, 0, 0, 1]);
+
+        expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON7);
+
         a = new Cartesian3(1, 0, 1).normalize();
-        expect(geometry.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
+        expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
     });
 
     it('computeNormal computes normal for six triangles', function() {
@@ -785,18 +790,26 @@ defineSuite([
 
         geometry = GeometryPipeline.computeNormal(geometry);
 
-        expect(geometry.attributes.normal.values.length).toEqual(7*3);
+        var normals = geometry.attributes.normal.values;
+        expect(normals.length).toEqual(7*3);
+
         var a = new Cartesian3(-1, -1, -1).normalize();
-        expect(geometry.attributes.normal.values.slice(0, 3)).toEqual([a.x, a.y, a.z]);
+        expect(Cartesian3.fromArray(normals, 0)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
         a = new Cartesian3(0, -1, -1).normalize();
-        expect(geometry.attributes.normal.values.slice(3, 6)).toEqual([a.x, a.y, a.z]);
-        expect(geometry.attributes.normal.values.slice(6, 9)).toEqual([0, -1, 0]);
+        expect(Cartesian3.fromArray(normals, 3)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        expect(Cartesian3.fromArray(normals, 6)).toEqualEpsilon(Cartesian3.UNIT_Y.negate(), CesiumMath.EPSILON7);
+
         a = new Cartesian3(-1, -1, 0).normalize();
-        expect(geometry.attributes.normal.values.slice(9, 12)).toEqual([a.x, a.y, a.z]);
-        expect(geometry.attributes.normal.values.slice(12, 15)).toEqual([-1, 0, 0]);
+        expect(Cartesian3.fromArray(normals, 9)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        expect(Cartesian3.fromArray(normals, 12)).toEqualEpsilon(Cartesian3.UNIT_X.negate(), CesiumMath.EPSILON7);
+
         a = new Cartesian3(-1, 0, -1).normalize();
-        expect(geometry.attributes.normal.values.slice(15,18)).toEqual([a.x, a.y, a.z]);
-        expect(geometry.attributes.normal.values.slice(18,21)).toEqual([0, 0, -1]);
+        expect(Cartesian3.fromArray(normals, 15)).toEqualEpsilon(a, CesiumMath.EPSILON7);
+
+        expect(Cartesian3.fromArray(normals, 18)).toEqualEpsilon(Cartesian3.UNIT_Z.negate(), CesiumMath.EPSILON7);
     });
 
     it('computeTangentAndBinormal throws when geometry is undefined', function() {
@@ -1085,21 +1098,42 @@ defineSuite([
         expect(geometry.attributes.tangent.values).toEqualEpsilon([0.7071067811865475, 0, 0.7071067811865475,
                                                         0, 1, 0,
                                                         0, 1, 0,
-                                                        -0.5773502691896258, 0.5773502691896258, 0.5773502691896258], CesiumMath.EPSILON8);
+                                                        -0.5773502691896258, 0.5773502691896258, 0.5773502691896258], CesiumMath.EPSILON7);
         expect(geometry.attributes.binormal.values).toEqualEpsilon([0, 1, 0,
                                                         -1, 0, 0,
                                                         -1, 0, 0,
-                                                        -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON8);
+                                                        -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON7);
     });
 
     it ('GeometryPipeline.computeTangentAndBinormal computes tangent and binormal for an EllipsoidGeometry', function() {
-        var geometry = new EllipsoidGeometry();
-        var expected = new EllipsoidGeometry({
+        var geometry = new EllipsoidGeometry({
+            vertexFormat : new VertexFormat({
+                position : true,
+                normal : true,
+                st : true
+            })
+        });
+        geometry = GeometryPipeline.computeTangentAndBinormal(geometry);
+        var actualTangents = geometry.attributes.tangent.values;
+        var actualBinormals = geometry.attributes.binormal.values;
+
+        var expectedGeometry = new EllipsoidGeometry({
             vertexFormat: VertexFormat.ALL
         });
+        var expectedTangents = expectedGeometry.attributes.tangent.values;
+        var expectedBinormals = expectedGeometry.attributes.binormal.values;
 
-        geometry = GeometryPipeline.computeTangentAndBinormal(geometry);
-        expect(geometry.attributes.tangent.values.slice(1000,1200)).toEqualEpsilon(expected.attributes.tangent.values.slice(1000,1200), CesiumMath.EPSILON1);
-        expect(geometry.attributes.binormal.values.slice(1000,1200)).toEqualEpsilon(expected.attributes.binormal.values.slice(1000,1200), CesiumMath.EPSILON1);
+        expect(actualTangents.length).toEqual(expectedTangents.length);
+        expect(actualBinormals.length).toEqual(expectedBinormals.length);
+
+        for (var i = 1000; i < 12000; i += 3) {
+            var actual = Cartesian3.fromArray(actualTangents, i);
+            var expected = Cartesian3.fromArray(expectedTangents, i);
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
+
+            actual = Cartesian3.fromArray(actualBinormals, i);
+            expected = Cartesian3.fromArray(expectedBinormals, i);
+            expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
+        }
     });
 });

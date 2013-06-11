@@ -43,54 +43,60 @@ define([
      */
     var GeometryPipeline = {};
 
-    function addTriangle(lines, i0, i1, i2) {
-        lines.push(i0);
-        lines.push(i1);
+    function addTriangle(lines, index, i0, i1, i2) {
+        lines[index++] = i0;
+        lines[index++] = i1;
 
-        lines.push(i1);
-        lines.push(i2);
+        lines[index++] = i1;
+        lines[index++] = i2;
 
-        lines.push(i2);
-        lines.push(i0);
+        lines[index++] = i2;
+        lines[index] = i0;
     }
 
     function trianglesToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-        for ( var i = 0; i < count; i += 3) {
-            addTriangle(lines, triangles[i], triangles[i + 1], triangles[i + 2]);
+        var lines = new Uint32Array((count / 3) * 6);
+        var index = 0;
+        for ( var i = 0; i < count; i += 3, index += 6) {
+            addTriangle(lines, index, triangles[i], triangles[i + 1], triangles[i + 2]);
         }
 
         return lines;
     }
 
     function triangleStripToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-
         if (count >= 3) {
-            addTriangle(lines, triangles[0], triangles[1], triangles[2]);
+            var lines = new Uint32Array((count - 2) * 6);
 
-            for ( var i = 3; i < count; ++i) {
-                addTriangle(lines, triangles[i - 1], triangles[i], triangles[i - 2]);
+            addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
+            var index = 6;
+
+            for ( var i = 3; i < count; ++i, index += 6) {
+                addTriangle(lines, index, triangles[i - 1], triangles[i], triangles[i - 2]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return [];
     }
 
     function triangleFanToLines(triangles) {
-        var lines = [];
-
         if (triangles.length > 0) {
-            var base = triangles[0];
             var count = triangles.length - 1;
-            for ( var i = 1; i < count; ++i) {
-                addTriangle(lines, base, triangles[i], triangles[i + 1]);
+            var lines = new Uint32Array((count - 1) * 6);
+            var base = triangles[0];
+            var index = 0;
+            for ( var i = 1; i < count; ++i, index += 6) {
+                addTriangle(lines, index, base, triangles[i], triangles[i + 1]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return [];
     }
 
     /**
