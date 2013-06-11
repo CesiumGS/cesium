@@ -147,7 +147,7 @@ defineSuite([
                 forEachRenderedTile(surface, 1, undefined, function(tile) {
                     expect(tile.imagery.length).toBeGreaterThan(0);
                     for (var i = 0; i < tile.imagery.length; ++i) {
-                        expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer);
+                        expect(tile.imagery[i].readyImagery.imageryLayer).toEqual(layer);
                     }
                 });
 
@@ -183,7 +183,11 @@ defineSuite([
                     expect(tile.imagery.length).toBeGreaterThan(0);
                     var hasImageFromLayer2 = false;
                     for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer2) {
+                        var imageryTile = tile.imagery[i].readyImagery;
+                        if (typeof imageryTile === 'undefined') {
+                            imageryTile = tile.imagery[i].loadingImagery;
+                        }
+                        if (imageryTile.imageryLayer === layer2) {
                             hasImageFromLayer2 = true;
                         }
                     }
@@ -208,11 +212,11 @@ defineSuite([
                     var indexOfLastLayer1 = -1;
                     var indexOfFirstLayer2 = tile.imagery.length;
                     for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer1) {
+                        if (tile.imagery[i].readyImagery.imageryLayer === layer1) {
                             indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                             indexOfLastLayer1 = i;
                         } else {
-                            expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer2);
+                            expect(tile.imagery[i].readyImagery.imageryLayer).toEqual(layer2);
                             indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
                         }
                     }
@@ -232,11 +236,11 @@ defineSuite([
                     var indexOfLastLayer2 = -1;
                     var indexOfFirstLayer1 = tile.imagery.length;
                     for (var i = 0; i < tile.imagery.length; ++i) {
-                        if (tile.imagery[i].imagery.imageryLayer === layer2) {
+                        if (tile.imagery[i].readyImagery.imageryLayer === layer2) {
                             indexOfFirstLayer2 = Math.min(indexOfFirstLayer2, i);
                             indexOfLastLayer2 = i;
                         } else {
-                            expect(tile.imagery[i].imagery.imageryLayer).toEqual(layer1);
+                            expect(tile.imagery[i].readyImagery.imageryLayer).toEqual(layer1);
                             indexOfFirstLayer1 = Math.min(indexOfFirstLayer1, i);
                         }
                     }
