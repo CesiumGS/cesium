@@ -1,93 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">
-<!-- Use Chrome Frame in IE -->
-<meta name="viewport"
-    content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-<meta name="description" content="Construct and style polylines.">
-<meta name="cesium-sandcastle-labels" content="Beginner">
-<title>Cesium Demo</title>
-<script type="text/javascript" src="../Sandcastle-header.js"></script>
-<script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js"></script>
-<script type="text/javascript" src="../Sandcastle-warn.js"></script>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Construct and style polylines.">
+    <meta name="cesium-sandcastle-labels" content="">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source'
+    });
+    </script>
 </head>
-<body class="sandcastle-loading" data-sandcastle-bucket="bucket-plain.html" data-sandcastle-title="Cesium (standalone)">
-    <style>
-@import url(../templates/bucket.css);
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
 </style>
-    <div id="cesiumContainer" class="fullSize"></div>
-    <script id="cesium_sandcastle_script">
-function createPrimitives(scene, ellipsoid) {
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
     "use strict";
-    var primitives = scene.getPrimitives();
-    var polylines = new Cesium.PolylineCollection();
 
-    // A simple polyline with two points.
-    var polyline = polylines.add();
-    Sandcastle.declare(polyline);   // For highlighting on mouseover in Sandcastle.
-    polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-120.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-110.0, 30.0)
-    ]));
+    function createPrimitives(scene, ellipsoid) {
+        var primitives = scene.getPrimitives();
+        var polylines = new Cesium.PolylineCollection();
 
-    // Apply a polyline outline material
-    var widePolyline = polylines.add();
-    Sandcastle.declare(widePolyline);   // For highlighting on mouseover in Sandcastle.
-    widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-105.0, 40.0),
-        Cesium.Cartographic.fromDegrees(-100.0, 38.0),
-        Cesium.Cartographic.fromDegrees(-105.0, 35.0),
-        Cesium.Cartographic.fromDegrees(-100.0, 32.0)
-    ]));
-    var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
-    outlineMaterial.uniforms.outlineWidth = 5.0;
-    widePolyline.setMaterial(outlineMaterial);
-    widePolyline.setWidth(10.0);
+        // A simple polyline with two points.
+        var polyline = polylines.add();
+        Sandcastle.declare(polyline);   // For highlighting on mouseover in Sandcastle.
+        polyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-120.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-110.0, 30.0)
+        ]));
 
-    // Apply a polyline glow material
-    var coloredPolyline = polylines.add();
-    Sandcastle.declare(coloredPolyline);    // For highlighting on mouseover in Sandcastle.
-    coloredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
-        Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-        Cesium.Cartographic.fromDegrees(-85.0, 40.0)
-    ]));
-    var glowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
-    glowMaterial.uniforms.innerWidth = 3.0;
-    glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 1.0);
-    coloredPolyline.setMaterial(glowMaterial);
-    coloredPolyline.setWidth(10.0);
+        // Apply a polyline outline material
+        var widePolyline = polylines.add();
+        Sandcastle.declare(widePolyline);   // For highlighting on mouseover in Sandcastle.
+        widePolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-105.0, 40.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 38.0),
+            Cesium.Cartographic.fromDegrees(-105.0, 35.0),
+            Cesium.Cartographic.fromDegrees(-100.0, 32.0)
+        ]));
+        var outlineMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineOutlineType);
+        outlineMaterial.uniforms.outlineWidth = 5.0;
+        widePolyline.setMaterial(outlineMaterial);
+        widePolyline.setWidth(10.0);
 
-    primitives.add(polylines);
+        // Apply a polyline glow material
+        var coloredPolyline = polylines.add();
+        Sandcastle.declare(coloredPolyline);    // For highlighting on mouseover in Sandcastle.
+        coloredPolyline.setPositions(ellipsoid.cartographicArrayToCartesianArray([
+            Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+            Cesium.Cartographic.fromDegrees(-85.0, 40.0)
+        ]));
+        var glowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineGlowType);
+        glowMaterial.uniforms.innerWidth = 3.0;
+        glowMaterial.uniforms.color = new Cesium.Color(1.0, 0.5, 0.0, 1.0);
+        coloredPolyline.setMaterial(glowMaterial);
+        coloredPolyline.setWidth(10.0);
 
-    // Draw a line in a local reference frame
-    // The arrow points to the east, i.e. along the local x-axis.
-    var localPolylines = new Cesium.PolylineCollection();
-    var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0));
-    localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
-    var localPolyline = localPolylines.add();
-    Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
-    localPolyline.setPositions([
-        new Cesium.Cartesian3(0.0, 0.0, 0.0),
-        new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
-    ]);
-    localPolyline.setWidth(10.0);
-    var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
-    localPolyline.setMaterial(arrowMaterial);
-    primitives.add(localPolylines);
-}
+        primitives.add(polylines);
 
-var viewer = new Cesium.Viewer('cesiumContainer');
-viewer.screenSpaceEventHandler.setInputAction(function(movement) {
-    "use strict";
-    var pickedPrimitive = viewer.scene.pick(movement.endPosition);
-    Sandcastle.highlight(pickedPrimitive);
-}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+        // Draw a line in a local reference frame
+        // The arrow points to the east, i.e. along the local x-axis.
+        var localPolylines = new Cesium.PolylineCollection();
+        var center = ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0));
+        localPolylines.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(center);
+        var localPolyline = localPolylines.add();
+        Sandcastle.declare(localPolyline);  // For highlighting on mouseover in Sandcastle.
+        localPolyline.setPositions([
+            new Cesium.Cartesian3(0.0, 0.0, 0.0),
+            new Cesium.Cartesian3(1000000.0, 0.0, 0.0)
+        ]);
+        localPolyline.setWidth(10.0);
+        var arrowMaterial = Cesium.Material.fromType(undefined, Cesium.Material.PolylineArrowType);
+        localPolyline.setMaterial(arrowMaterial);
+        primitives.add(localPolylines);
+    }
 
-createPrimitives(viewer.scene, viewer.centralBody.getEllipsoid());
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    viewer.screenSpaceEventHandler.setInputAction(function(movement) {
+        var pickedPrimitive = viewer.scene.pick(movement.endPosition);
+        Sandcastle.highlight(pickedPrimitive);
+    }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
-Sandcastle.finishedLoading();
+    createPrimitives(viewer.scene, viewer.centralBody.getEllipsoid());
+
+    Sandcastle.finishedLoading();
+});
 </script>
 </body>
 </html>
