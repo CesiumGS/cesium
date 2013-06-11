@@ -27,7 +27,7 @@ define([
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
      */
-    var HomeButton = function(container, scene, transitioner, ellipsoid) {
+    var HomeButton = function(container, scene, transitioner, ellipsoid, flightDuration) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
@@ -41,7 +41,7 @@ define([
         }
 
         this._container = container;
-        this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
+        this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, flightDuration);
 
         this._element = document.createElement('span');
         this._element.className = 'cesium-homeButton';
