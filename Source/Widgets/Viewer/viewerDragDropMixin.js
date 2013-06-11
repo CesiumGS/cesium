@@ -203,7 +203,7 @@ define(['../../Core/defaultValue',
                     var dataClock = czmlSource.getClock();
                     if (typeof dataClock !== 'undefined') {
                         dataClock.clone(viewer.clock);
-                        if (typeof viewer.timline !== 'undefined') {
+                        if (typeof viewer.timeline !== 'undefined') {
                             viewer.timeline.updateFromClock();
                             viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                         }
