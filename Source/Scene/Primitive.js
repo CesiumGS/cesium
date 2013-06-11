@@ -316,10 +316,10 @@ define([
         // Split position for GPU RTE
         GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
 
-        if (!context.getElementIndexUint()) {
+//        if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
-        }
+//        }
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];

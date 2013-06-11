@@ -14,6 +14,7 @@ Beta Releases
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryPipeline`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryPipeline.toWireframe`.
+      * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
    * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
