@@ -236,13 +236,17 @@ define([
         }
 
         // The original length may have been an over-estimate
-        positions.length = positionIndex;
-        size = positions.length / 3;
+        if (positions.length !== positionIndex) {
+            size = positionIndex / 3;
+            positions.length = positionIndex;
+        }
 
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+        positions = new Float64Array(positions);
+
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
@@ -420,6 +424,7 @@ define([
         }
 
         indices.length = indicesIndex;
+        indices = new Uint32Array(indices);
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the

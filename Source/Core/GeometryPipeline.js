@@ -4,6 +4,7 @@ define([
         './DeveloperError',
         './Cartesian3',
         './Cartesian2',
+        './Cartographic',
         './EncodedCartesian3',
         './Matrix3',
         './Matrix4',
@@ -13,12 +14,13 @@ define([
         './Tipsify',
         './BoundingSphere',
         './Geometry',
-        './GeometryAttribute',
+        './GeometryAttribute'
     ], function(
         defaultValue,
         DeveloperError,
         Cartesian3,
         Cartesian2,
+        Cartographic,
         EncodedCartesian3,
         Matrix3,
         Matrix4,
@@ -295,7 +297,7 @@ define([
         return geometry;
     };
 
-    GeometryPipeline._copyAttributesDescriptions = function(attributes) {
+    function copyAttributesDescriptions(attributes) {
         var newAttributes = {};
 
         for ( var attribute in attributes) {
@@ -311,7 +313,7 @@ define([
         }
 
         return newAttributes;
-    };
+    }
 
     function copyVertex(destinationAttributes, sourceAttributes, index) {
         for ( var attribute in sourceAttributes) {
@@ -348,7 +350,7 @@ define([
                 var oldToNewIndex = [];
                 var newIndices = [];
                 var currentIndex = 0;
-                var newAttributes = GeometryPipeline._copyAttributesDescriptions(geometry.attributes);
+                var newAttributes = copyAttributesDescriptions(geometry.attributes);
 
                 var originalIndices = geometry.indexList;
                 var numberOfIndices = originalIndices.length;
@@ -399,7 +401,7 @@ define([
                         oldToNewIndex = [];
                         newIndices = [];
                         currentIndex = 0;
-                        newAttributes = GeometryPipeline._copyAttributesDescriptions(geometry.attributes);
+                        newAttributes = copyAttributesDescriptions(geometry.attributes);
                     }
                 }
 
@@ -419,6 +421,9 @@ define([
         return geometries;
     };
 
+    var scratchProjectTo2DCartesian3 = new Cartesian3();
+    var scratchProjectTo2DCartographic = new Cartographic();
+
     /**
      * DOC_TBA
      */
@@ -429,12 +434,16 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = [];
+            var projectedPositions = new Array(2 * wgs84Positions.length / 3); // TODO: Float64Array?
+            var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var lonLat = ellipsoid.cartesianToCartographic(new Cartesian3(wgs84Positions[i], wgs84Positions[i + 1], wgs84Positions[i + 2]));
-                var projectedLonLat = projection.project(lonLat);
-                projectedPositions.push(projectedLonLat.x, projectedLonLat.y);
+                var position = Cartesian3.fromArray(wgs84Positions, i, scratchProjectTo2DCartesian3);
+                var lonLat = ellipsoid.cartesianToCartographic(position, scratchProjectTo2DCartographic);
+                var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
+
+                projectedPositions[index++] = projectedLonLat.x;
+                projectedPositions[index++] = projectedLonLat.y;
             }
 
             // Rename original positions to WGS84 Positions.
@@ -501,8 +510,8 @@ define([
 
         var values = attribute.values;
         var length = values.length;
-        var highValues = new Array(length);
-        var lowValues = new Array(length);
+        var highValues = new Float32Array(length);
+        var lowValues = new Float32Array(length);
 
         for (var i = 0; i < length; ++i) {
             EncodedCartesian3.encode(values[i], encodedResult);
@@ -510,14 +519,17 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
+        var componentDatatype = attribute.componentDatatype;
+        var componentsPerAttribute = attribute.componentsPerAttribute;
+
         geometry.attributes[attributeHighName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : componentDatatype,
+            componentsPerAttribute : componentsPerAttribute,
             values : highValues
         });
         geometry.attributes[attributeLowName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : componentDatatype,
+            componentsPerAttribute : componentsPerAttribute,
             values : lowValues
         });
         delete geometry.attributes[attributeName];
@@ -555,6 +567,9 @@ define([
         }
     }
 
+    var inverseTranspose = new Matrix4();
+    var normalMatrix = new Matrix3();
+
     /**
      * DOC_TBA
      *
@@ -581,8 +596,6 @@ define([
             (typeof attributes.binormal !== 'undefined') ||
             (typeof attributes.tangent !== 'undefined')) {
 
-            var inverseTranspose = new Matrix4();
-            var normalMatrix = new Matrix3();
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
@@ -639,7 +652,6 @@ define([
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
-// TODO: or new Array()
                         values : attribute.componentDatatype.createTypedArray(numberOfComponents)
                     });
                 }
@@ -728,7 +740,6 @@ define([
             if (numberOfIndices.hasOwnProperty(name)) {
                 var num = numberOfIndices[name];
 
-// TODO: or new Array()
                 if (num < 60 * 1024) {
                     values = new Uint16Array(num);
                 } else {
@@ -820,14 +831,17 @@ define([
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
+
         var attributes = geometry.attributes;
         if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.position.values is required');
         }
+
         var vertices = geometry.attributes.position.values;
         if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
             throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
         }
+
         var indices = geometry.indexList;
         if (typeof indices === 'undefined') {
             return geometry;
@@ -912,7 +926,7 @@ define([
             geometry.attributes.normal = new GeometryAttribute({
                 componentDatatype: ComponentDatatype.FLOAT,
                 componentsPerAttribute: 3,
-                values: new Array(numVertices * 3)
+                values: new Float32Array(numVertices * 3)
             });
         }
         var normalValues = geometry.attributes.normal.values;
@@ -969,24 +983,30 @@ define([
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
+
         var attributes = geometry.attributes;
         if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.position.values is required');
         }
+
         var vertices = geometry.attributes.position.values;
         if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
             throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
         }
+
         if (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.normal.values is required');
         }
+
         var normals = geometry.attributes.normal.values;
         if (geometry.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
             throw new DeveloperError('geometry.attributes.normals.values.length must be a multiple of 3');
         }
+
         if (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') {
             throw new DeveloperError('geometry.attributes.st.values is required');
         }
+
         var st = geometry.attributes.st.values;
         if (geometry.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
             throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
@@ -1050,8 +1070,10 @@ define([
             tan1[i23+1] += sdiry;
             tan1[i23+2] += sdirz;
         }
-        var binormalValues = new Array(numVertices * 3);
-        var tangentValues = new Array(numVertices * 3);
+
+        var binormalValues = new Float32Array(numVertices * 3);
+        var tangentValues = new Float32Array(numVertices * 3);
+
         for (i = 0; i < numVertices; i++) {
             i03 = i * 3;
             i13 = i03 + 1;
@@ -1062,32 +1084,29 @@ define([
             var scalar = n.dot(t);
             n.multiplyByScalar(scalar, normalScale);
             t.subtract(normalScale, t).normalize(t);
+
             tangentValues[i03] = t.x;
             tangentValues[i13] = t.y;
             tangentValues[i23] = t.z;
+
             n.cross(t, t).normalize(t);
+
             binormalValues[i03] = t.x;
             binormalValues[i13] = t.y;
             binormalValues[i23] = t.z;
         }
-        if (typeof geometry.attributes.tangent === 'undefined') {
-            geometry.attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : tangentValues
-            });
-        } else {
-            geometry.attributes.tangent.values = tangentValues;
-        }
-        if (typeof geometry.attributes.binormal === 'undefined') {
-            geometry.attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : binormalValues
-            });
-        } else {
-            geometry.attributes.binormal.values = binormalValues;
-        }
+
+        geometry.attributes.tangent = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            values : tangentValues
+        });
+
+        geometry.attributes.binormal = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            values : binormalValues
+        });
 
         return geometry;
     };

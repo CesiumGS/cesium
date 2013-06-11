@@ -66,289 +66,311 @@ define([
 
         var attributes = {};
         var indexList;
+        var positions;
 
         if (vertexFormat !== VertexFormat.POSITION_ONLY) {
-
             if (vertexFormat.position) {
                 // 8 corner points.  Duplicated 3 times each for each incident edge/face.
+                positions = new Float64Array(6 * 4 * 3);
+
+                // +z face
+                positions[0]  = min.x; positions[1]  = min.y; positions[2]  = max.z;
+                positions[3]  = max.x; positions[4]  = min.y; positions[5]  = max.z;
+                positions[6]  = max.x; positions[7]  = max.y; positions[8]  = max.z;
+                positions[9]  = min.x; positions[10] = max.y; positions[11] = max.z;
+
+                // -z face
+                positions[12] = min.x; positions[13] = min.y; positions[14] = min.z;
+                positions[15] = max.x; positions[16] = min.y; positions[17] = min.z;
+                positions[18] = max.x; positions[19] = max.y; positions[20] = min.z;
+                positions[21] = min.x; positions[22] = max.y; positions[23] = min.z;
+
+                // +x face
+                positions[24] = max.x; positions[25] = min.y; positions[26] = min.z;
+                positions[27] = max.x; positions[28] = max.y; positions[29] = min.z;
+                positions[30] = max.x; positions[31] = max.y; positions[32] = max.z;
+                positions[33] = max.x; positions[34] = min.y; positions[35] = max.z;
+
+                // -x face
+                positions[36] = min.x; positions[37] = min.y; positions[38] = min.z;
+                positions[39] = min.x; positions[40] = max.y; positions[41] = min.z;
+                positions[42] = min.x; positions[43] = max.y; positions[44] = max.z;
+                positions[45] = min.x; positions[46] = min.y; positions[47] = max.z;
+
+                // +y face
+                positions[48] = min.x; positions[49] = max.y; positions[50] = min.z;
+                positions[51] = max.x; positions[52] = max.y; positions[53] = min.z;
+                positions[54] = max.x; positions[55] = max.y; positions[56] = max.z;
+                positions[57] = min.x; positions[58] = max.y; positions[59] = max.z;
+
+                // -y face
+                positions[60] = min.x; positions[61] = min.y; positions[62] = min.z;
+                positions[63] = max.x; positions[64] = min.y; positions[65] = min.z;
+                positions[66] = max.x; positions[67] = min.y; positions[68] = max.z;
+                positions[69] = min.x; positions[70] = min.y; positions[71] = max.z;
+
                 attributes.position = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        min.x, min.y, max.z,
-                        max.x, min.y, max.z,
-                        max.x, max.y, max.z,
-                        min.x, max.y, max.z,
-
-                        // -z face
-                        min.x, min.y, min.z,
-                        max.x, min.y, min.z,
-                        max.x, max.y, min.z,
-                        min.x, max.y, min.z,
-
-                        // +x face
-                        max.x, min.y, min.z,
-                        max.x, max.y, min.z,
-                        max.x, max.y, max.z,
-                        max.x, min.y, max.z,
-
-                        // -x face
-                        min.x, min.y, min.z,
-                        min.x, max.y, min.z,
-                        min.x, max.y, max.z,
-                        min.x, min.y, max.z,
-
-                        // +y face
-                        min.x, max.y, min.z,
-                        max.x, max.y, min.z,
-                        max.x, max.y, max.z,
-                        min.x, max.y, max.z,
-
-                        // -y face
-                        min.x, min.y, min.z,
-                        max.x, min.y, min.z,
-                        max.x, min.y, max.z,
-                        min.x, min.y, max.z
-                    ]
+                    values : positions
                 });
             }
 
             if (vertexFormat.normal) {
+                var normals = new Float32Array(6 * 4 * 3);
+
+                // +z face
+                normals[0]  = 0.0; normals[1]  = 0.0; normals[2]  = 1.0;
+                normals[3]  = 0.0; normals[4]  = 0.0; normals[5]  = 1.0;
+                normals[6]  = 0.0; normals[7]  = 0.0; normals[8]  = 1.0;
+                normals[9]  = 0.0; normals[10] = 0.0; normals[11] = 1.0;
+
+                // -z face
+                normals[12] = 0.0; normals[13] = 0.0; normals[14] = -1.0;
+                normals[15] = 0.0; normals[16] = 0.0; normals[17] = -1.0;
+                normals[18] = 0.0; normals[19] = 0.0; normals[20] = -1.0;
+                normals[21] = 0.0; normals[22] = 0.0; normals[23] = -1.0;
+
+                // +x face
+                normals[24] = 1.0; normals[25] = 0.0; normals[26] = 0.0;
+                normals[27] = 1.0; normals[28] = 0.0; normals[29] = 0.0;
+                normals[30] = 1.0; normals[31] = 0.0; normals[32] = 0.0;
+                normals[33] = 1.0; normals[34] = 0.0; normals[35] = 0.0;
+
+                // -x face
+                normals[36] = -1.0; normals[37] = 0.0; normals[38] = 0.0;
+                normals[39] = -1.0; normals[40] = 0.0; normals[41] = 0.0;
+                normals[42] = -1.0; normals[43] = 0.0; normals[44] = 0.0;
+                normals[45] = -1.0; normals[46] = 0.0; normals[47] = 0.0;
+
+                // +y face
+                normals[48] = 0.0; normals[49] = 1.0; normals[50] = 0.0;
+                normals[51] = 0.0; normals[52] = 1.0; normals[53] = 0.0;
+                normals[54] = 0.0; normals[55] = 1.0; normals[56] = 0.0;
+                normals[57] = 0.0; normals[58] = 1.0; normals[59] = 0.0;
+
+                // -y face
+                normals[60] = 0.0; normals[61] = -1.0; normals[62] = 0.0;
+                normals[63] = 0.0; normals[64] = -1.0; normals[65] = 0.0;
+                normals[66] = 0.0; normals[67] = -1.0; normals[68] = 0.0;
+                normals[69] = 0.0; normals[70] = -1.0; normals[71] = 0.0;
+
                 attributes.normal = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // -z face
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-                        0.0, 0.0, -1.0,
-
-                        // +x face
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-
-                        // -x face
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-
-                        // +y face
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-
-                        // -y face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0
-                    ]
+                    values : normals
                 });
             }
 
             if (vertexFormat.st) {
+                var texCoords = new Float32Array(6 * 4 * 2);
+
+                // +z face
+                texCoords[0]  = 0.0; texCoords[1]  = 0.0;
+                texCoords[2]  = 1.0; texCoords[3]  = 0.0;
+                texCoords[4]  = 1.0; texCoords[5]  = 1.0;
+                texCoords[6]  = 0.0; texCoords[7]  = 1.0;
+
+                // -z face
+                texCoords[8]  = 1.0; texCoords[9]  = 0.0;
+                texCoords[10] = 0.0; texCoords[11] = 0.0;
+                texCoords[12] = 0.0; texCoords[13] = 1.0;
+                texCoords[14] = 1.0; texCoords[15] = 1.0;
+
+                //+x face
+                texCoords[16] = 0.0; texCoords[17] = 0.0;
+                texCoords[18] = 1.0; texCoords[19] = 0.0;
+                texCoords[20] = 1.0; texCoords[21] = 1.0;
+                texCoords[22] = 0.0; texCoords[23] = 1.0;
+
+                // -x face
+                texCoords[24] = 1.0; texCoords[25] = 0.0;
+                texCoords[26] = 0.0; texCoords[27] = 0.0;
+                texCoords[28] = 0.0; texCoords[29] = 1.0;
+                texCoords[30] = 1.0; texCoords[31] = 1.0;
+
+                // +y face
+                texCoords[32] = 1.0; texCoords[33] = 0.0;
+                texCoords[34] = 0.0; texCoords[35] = 0.0;
+                texCoords[36] = 0.0; texCoords[37] = 1.0;
+                texCoords[38] = 1.0; texCoords[39] = 1.0;
+
+                // -y face
+                texCoords[40] = 0.0; texCoords[41] = 0.0;
+                texCoords[42] = 1.0; texCoords[43] = 0.0;
+                texCoords[44] = 1.0; texCoords[45] = 1.0;
+                texCoords[46] = 0.0; texCoords[47] = 1.0;
+
                 attributes.st = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
-                    values : [
-                        // +z face
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0,
-
-                        // -z face
-                        1.0, 0.0,
-                        0.0, 0.0,
-                        0.0, 1.0,
-                        1.0, 1.0,
-
-                        // +x face
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0,
-
-                        // -x face
-                        1.0, 0.0,
-                        0.0, 0.0,
-                        0.0, 1.0,
-                        1.0, 1.0,
-
-                        // +y face
-                        1.0, 0.0,
-                        0.0, 0.0,
-                        0.0, 1.0,
-                        1.0, 1.0,
-
-                        // -y face
-                        0.0, 0.0,
-                        1.0, 0.0,
-                        1.0, 1.0,
-                        0.0, 1.0
-                    ]
+                    values : texCoords
                 });
             }
 
             if (vertexFormat.tangent) {
+                var tangents = new Float32Array(6 * 4 * 3);
+
+                // +z face
+                tangents[0]  = 1.0; tangents[1]  = 0.0; tangents[2]  = 0.0;
+                tangents[3]  = 1.0; tangents[4]  = 0.0; tangents[5]  = 0.0;
+                tangents[6]  = 1.0; tangents[7]  = 0.0; tangents[8]  = 0.0;
+                tangents[9]  = 1.0; tangents[10] = 0.0; tangents[11] = 0.0;
+
+                // -z face
+                tangents[12] = -1.0; tangents[13] = 0.0; tangents[14] = 0.0;
+                tangents[15] = -1.0; tangents[16] = 0.0; tangents[17] = 0.0;
+                tangents[18] = -1.0; tangents[19] = 0.0; tangents[20] = 0.0;
+                tangents[21] = -1.0; tangents[22] = 0.0; tangents[23] = 0.0;
+
+                // +x face
+                tangents[24] = 0.0; tangents[25] = 1.0; tangents[26] = 0.0;
+                tangents[27] = 0.0; tangents[28] = 1.0; tangents[29] = 0.0;
+                tangents[30] = 0.0; tangents[31] = 1.0; tangents[32] = 0.0;
+                tangents[33] = 0.0; tangents[34] = 1.0; tangents[35] = 0.0;
+
+                // -x face
+                tangents[36] = 0.0; tangents[37] = -1.0; tangents[38] = 0.0;
+                tangents[39] = 0.0; tangents[40] = -1.0; tangents[41] = 0.0;
+                tangents[42] = 0.0; tangents[43] = -1.0; tangents[44] = 0.0;
+                tangents[45] = 0.0; tangents[46] = -1.0; tangents[47] = 0.0;
+
+                // +y face
+                tangents[48] = -1.0; tangents[49] = 0.0; tangents[50] = 0.0;
+                tangents[51] = -1.0; tangents[52] = 0.0; tangents[53] = 0.0;
+                tangents[54] = -1.0; tangents[55] = 0.0; tangents[56] = 0.0;
+                tangents[57] = -1.0; tangents[58] = 0.0; tangents[59] = 0.0;
+
+                // -y face
+                tangents[60] = 1.0; tangents[61] = 0.0; tangents[62] = 0.0;
+                tangents[63] = 1.0; tangents[64] = 0.0; tangents[65] = 0.0;
+                tangents[66] = 1.0; tangents[67] = 0.0; tangents[68] = 0.0;
+                tangents[69] = 1.0; tangents[70] = 0.0; tangents[71] = 0.0;
+
                 attributes.tangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-
-                        // -z face
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-
-                        // +x face
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-
-                        // -x face
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-                        0.0, -1.0, 0.0,
-
-                        // +y face
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0,
-
-                        // -y face
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0
-                    ]
+                    values : tangents
                 });
             }
 
             if (vertexFormat.binormal) {
+                var binormals = new Float32Array(6 * 4 * 3);
+
+                // +z face
+                binormals[0]  = 0.0; binormals[1]  = 1.0; binormals[2]  = 0.0;
+                binormals[3]  = 0.0; binormals[4]  = 1.0; binormals[5]  = 0.0;
+                binormals[6]  = 0.0; binormals[7]  = 1.0; binormals[8]  = 0.0;
+                binormals[9]  = 0.0; binormals[10] = 1.0; binormals[11] = 0.0;
+
+                // -z face
+                binormals[12] = 0.0; binormals[13] = 1.0; binormals[14] = 0.0;
+                binormals[15] = 0.0; binormals[16] = 1.0; binormals[17] = 0.0;
+                binormals[18] = 0.0; binormals[19] = 1.0; binormals[20] = 0.0;
+                binormals[21] = 0.0; binormals[22] = 1.0; binormals[23] = 0.0;
+
+                // +x face
+                binormals[24] = 0.0; binormals[25] = 0.0; binormals[26] = 1.0;
+                binormals[27] = 0.0; binormals[28] = 0.0; binormals[29] = 1.0;
+                binormals[30] = 0.0; binormals[31] = 0.0; binormals[32] = 1.0;
+                binormals[33] = 0.0; binormals[34] = 0.0; binormals[35] = 1.0;
+
+                // -x face
+                binormals[36] = 0.0; binormals[37] = 0.0; binormals[38] = 1.0;
+                binormals[39] = 0.0; binormals[40] = 0.0; binormals[41] = 1.0;
+                binormals[42] = 0.0; binormals[43] = 0.0; binormals[44] = 1.0;
+                binormals[45] = 0.0; binormals[46] = 0.0; binormals[47] = 1.0;
+
+                // +y face
+                binormals[48] = 0.0; binormals[49] = 0.0; binormals[50] = 1.0;
+                binormals[51] = 0.0; binormals[52] = 0.0; binormals[53] = 1.0;
+                binormals[54] = 0.0; binormals[55] = 0.0; binormals[56] = 1.0;
+                binormals[57] = 0.0; binormals[58] = 0.0; binormals[59] = 1.0;
+
+                // -y face
+                binormals[60] = 0.0; binormals[61] = 0.0; binormals[62] = 1.0;
+                binormals[63] = 0.0; binormals[64] = 0.0; binormals[65] = 1.0;
+                binormals[66] = 0.0; binormals[67] = 0.0; binormals[68] = 1.0;
+                binormals[69] = 0.0; binormals[70] = 0.0; binormals[71] = 1.0;
+
                 attributes.binormal = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
-                    values : [
-                        // +z face
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-
-                        // -z face
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-                        0.0, 1.0, 0.0,
-
-                        // +x face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // -x face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // +y face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-
-                        // -y face
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0,
-                        0.0, 0.0, 1.0
-                    ]
+                    values : binormals
                 });
             }
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = [
-                // +z face
-                0, 1, 2,
-                0, 2, 3,
+            indexList = new Uint32Array(6 * 2 * 3);
 
-                // -z face
-                4 + 2, 4 + 1, 4 + 0,
-                4 + 3, 4 + 2, 4 + 0,
+            // +z face
+            indexList[0] = 0; indexList[1] = 1; indexList[2] = 2;
+            indexList[3] = 0; indexList[4] = 2; indexList[5] = 3;
 
-                // +x face
-                8 + 0, 8 + 1, 8 + 2,
-                8 + 0, 8 + 2, 8 + 3,
+            // -z face
+            indexList[6] = 4 + 2; indexList[7]  = 4 + 1; indexList[8]  = 4 + 0;
+            indexList[9] = 4 + 3; indexList[10] = 4 + 2; indexList[11] = 4 + 0;
 
-                // -x face
-                12 + 2, 12 + 1, 12 + 0,
-                12 + 3, 12 + 2, 12 + 0,
+            // +x face
+            indexList[12] = 8 + 0; indexList[13] = 8 + 1; indexList[14] = 8 + 2;
+            indexList[15] = 8 + 0; indexList[16] = 8 + 2; indexList[17] = 8 + 3;
 
-                // +y face
-                16 + 2, 16 + 1, 16 + 0,
-                16 + 3, 16 + 2, 16 + 0,
+            // -x face
+            indexList[18] = 12 + 2; indexList[19] = 12 + 1; indexList[20] = 12 + 0;
+            indexList[21] = 12 + 3; indexList[22] = 12 + 2; indexList[23] = 12 + 0;
 
-                // -y face
-                20 + 0, 20 + 1, 20 + 2,
-                20 + 0, 20 + 2, 20 + 3
-            ];
+            // +y face
+            indexList[24] = 16 + 2; indexList[25] = 16 + 1; indexList[26] = 16 + 0;
+            indexList[27] = 16 + 3; indexList[28] = 16 + 2; indexList[29] = 16 + 0;
+
+            // -y face
+            indexList[30] = 20 + 0; indexList[31] = 20 + 1; indexList[32] = 20 + 2;
+            indexList[33] = 20 + 0; indexList[34] = 20 + 2; indexList[35] = 20 + 3;
         } else {
             // Positions only - no need to duplicate corner points
+            positions = new Float64Array(8 * 3);
+
+            positions[0]  = min.x; positions[1]  = min.y; positions[2]  = min.z;
+            positions[3]  = max.x; positions[4]  = min.y; positions[5]  = min.z;
+            positions[6]  = max.x; positions[7]  = max.y; positions[8]  = min.z;
+            positions[9]  = min.x; positions[10] = max.y; positions[11] = min.z;
+            positions[12] = min.x; positions[13] = min.y; positions[14] = max.z;
+            positions[15] = max.x; positions[16] = min.y; positions[17] = max.z;
+            positions[18] = max.x; positions[19] = max.y; positions[20] = max.z;
+            positions[21] = min.x; positions[22] = max.y; positions[23] = max.z;
+
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : [
-                    // 8 corner points.
-                    min.x, min.y, min.z,
-                    max.x, min.y, min.z,
-                    max.x, max.y, min.z,
-                    min.x, max.y, min.z,
-                    min.x, min.y, max.z,
-                    max.x, min.y, max.z,
-                    max.x, max.y, max.z,
-                    min.x, max.y, max.z
-                ]
+                values : positions
             });
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = [
-                4, 5, 6, // plane z = corner.Z
-                4, 6, 7,
-                1, 0, 3, // plane z = -corner.Z
-                1, 3, 2,
-                1, 6, 5, // plane x = corner.X
-                1, 2, 6,
-                2, 3, 7, // plane y = corner.Y
-                2, 7, 6,
-                3, 0, 4, // plane x = -corner.X
-                3, 4, 7,
-                0, 1, 5, // plane y = -corner.Y
-                0, 5, 4
-            ];
+            indexList = new Uint32Array(6 * 2 * 3);
+
+            // plane z = corner.Z
+            indexList[0] = 4; indexList[1] = 5; indexList[2] = 6;
+            indexList[3] = 4; indexList[4] = 6; indexList[5] = 7;
+
+            // plane z = -corner.Z
+            indexList[6] = 1; indexList[7]  = 0; indexList[8]  = 3;
+            indexList[9] = 1; indexList[10] = 3; indexList[11] = 2;
+
+            // plane x = corner.X
+            indexList[12] = 1; indexList[13] = 6; indexList[14] = 5;
+            indexList[15] = 1; indexList[16] = 2; indexList[17] = 6;
+
+            // plane y = corner.Y
+            indexList[18] = 2; indexList[19] = 3; indexList[20] = 7;
+            indexList[21] = 2; indexList[22] = 7; indexList[23] = 6;
+
+            // plane x = -corner.X
+            indexList[24] = 3; indexList[25] = 0; indexList[26] = 4;
+            indexList[27] = 3; indexList[28] = 4; indexList[29] = 7;
+
+            // plane y = -corner.Y
+            indexList[30] = 0; indexList[31] = 1; indexList[32] = 5;
+            indexList[33] = 0; indexList[34] = 5; indexList[35] = 4;
         }
 
         /**

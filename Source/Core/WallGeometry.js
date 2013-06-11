@@ -106,11 +106,11 @@ define([
         var i;
         var size = wallPositions.length * 2;
 
-        var positions = vertexFormat.position ? new Array(size * 3) : undefined;
-        var normals = vertexFormat.normal ? new Array(size * 3) : undefined;
-        var tangents = vertexFormat.tangent ? new Array(size * 3) : undefined;
-        var binormals = vertexFormat.binormal ? new Array(size * 3) : undefined;
-        var textureCoordinates = vertexFormat.st ? new Array(size * 2) : undefined;
+        var positions = vertexFormat.position ? new Float64Array(size * 3) : undefined;
+        var normals = vertexFormat.normal ? new Float32Array(size * 3) : undefined;
+        var tangents = vertexFormat.tangent ? new Float32Array(size * 3) : undefined;
+        var binormals = vertexFormat.binormal ? new Float32Array(size * 3) : undefined;
+        var textureCoordinates = vertexFormat.st ? new Float32Array(size * 2) : undefined;
 
         var positionIndex = 0;
         var normalIndex = 0;
@@ -258,7 +258,7 @@ define([
         //
 
         size -= 2;
-        var indices = new Array(size * 3);
+        var indices = new Uint32Array(size * 3);
 
         var j = 0;
         for (i = 0; i < size; i += 2) {
