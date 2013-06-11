@@ -205,9 +205,7 @@ define([
                     Cartographic.fromDegrees(-68.0, 40.0)
                 ]),
                 surfaceHeight: 600000,
-                extrudedOptions: {
-                    height: 300000
-                },
+                extrudedHeight: 300000,
                 stRotation : 0.523598776
             }),
             pickData : 'polygon3'
@@ -216,15 +214,6 @@ define([
         var polygonGeometry1 = new GeometryInstance({
             geometry : new PolygonGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_ST,
-/*
-                positions : ellipsoid.cartographicArrayToCartesianArray([
-                    Cartographic.fromDegrees(-72.0, 40.0),
-                    Cartographic.fromDegrees(-70.0, 35.0),
-                    Cartographic.fromDegrees(-75.0, 30.0),
-                    Cartographic.fromDegrees(-70.0, 30.0),
-                    Cartographic.fromDegrees(-68.0, 40.0)
-                ]),
-*/
                 polygonHierarchy : {
                     positions : ellipsoid.cartographicArrayToCartesianArray([
                         Cartographic.fromDegrees(-109.0, 30.0),
@@ -262,7 +251,7 @@ define([
             pickData : 'polygon3'
         });
         widget.scene.getPrimitives().add(new Primitive({
-            geometryInstances : polygonGeometry,
+            geometryInstances : [polygonGeometry, polygonGeometry1],
             appearance : new EllipsoidSurfaceAppearance({
                 material : Material.fromType(scene.getContext(), 'Stripe')
             })

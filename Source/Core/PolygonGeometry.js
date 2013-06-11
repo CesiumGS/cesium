@@ -821,10 +821,6 @@ define([
 
         geometry = GeometryPipeline.combine(geometries);
 
-        if (extrude || surfaceHeight !== 0) {
-            boundingSphere = BoundingSphere.fromPoints(geometry.attributes.position);
-        }
-
         if (vertexFormat.position) {
             attributes.position = geometry.attributes.position;
         }
