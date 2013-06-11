@@ -11,7 +11,7 @@ defineSuite([
          'Core/defaultValue',
          'Core/Math',
          'Core/Matrix4',
-         'Core/GeometryFilters',
+         'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
@@ -32,7 +32,7 @@ defineSuite([
          defaultValue,
          CesiumMath,
          Matrix4,
-         GeometryFilters,
+         GeometryPipeline,
          PrimitiveType,
          BlendingState,
          BufferUsage,
@@ -214,7 +214,7 @@ defineSuite([
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 });
-                var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+                var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
                 this._va = context.createVertexArrayFromGeometry({
                     geometry: geometry,
                     attributeIndices: attributeIndices,

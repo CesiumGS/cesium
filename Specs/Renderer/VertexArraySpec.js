@@ -168,8 +168,8 @@ defineSuite([
 
     it('renders with a one-component constant value', function() {
         var vs =
-            'attribute float attr;' +
             'attribute float firefoxWorkaround;' +
+            'attribute float attr;' +
             'varying vec4 v_color;' +
             'void main() { ' +
             '  v_color = vec4(attr == 0.5) + vec4(firefoxWorkaround);' +
@@ -180,15 +180,15 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            attr : 0,
-            firefoxWorkaround : 1
+            firefoxWorkaround : 0,
+            attr : 1
         });
 
         var va = context.createVertexArray([{
-            value : [0.5]
-        }, {
             vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 1
+        }, {
+            value : [0.5]
         }]);
 
         context.draw({
@@ -206,8 +206,8 @@ defineSuite([
 
     it('renders with a two-component constant value', function() {
         var vs =
-            'attribute vec2 attr;' +
             'attribute float firefoxWorkaround;' +
+            'attribute vec2 attr;' +
             'varying vec4 v_color;' +
             'void main() { ' +
             '  v_color = vec4(attr == vec2(0.25, 0.75)) + vec4(firefoxWorkaround);' +
@@ -218,15 +218,15 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            attr : 0,
-            firefoxWorkaround : 1
+            firefoxWorkaround : 0,
+            attr : 1
         });
 
         var va = context.createVertexArray([{
-            value : [0.25, 0.75]
-        }, {
             vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 1
+        }, {
+            value : [0.25, 0.75]
         }]);
 
         context.draw({
@@ -244,8 +244,8 @@ defineSuite([
 
     it('renders with a three-component constant value', function() {
         var vs =
-            'attribute vec3 attr;' +
             'attribute float firefoxWorkaround;' +
+            'attribute vec3 attr;' +
             'varying vec4 v_color;' +
             'void main() { ' +
             '  v_color = vec4(attr == vec3(0.25, 0.5, 0.75)) + vec4(firefoxWorkaround);' +
@@ -256,15 +256,15 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            attr : 0,
-            firefoxWorkaround : 1
+            firefoxWorkaround : 0,
+            attr : 1
         });
 
         var va = context.createVertexArray([{
-            value : [0.25, 0.5, 0.75]
-        }, {
             vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 1
+        }, {
+            value : [0.25, 0.5, 0.75]
         }]);
 
         context.draw({
@@ -282,8 +282,8 @@ defineSuite([
 
     it('renders with a four-component constant value', function() {
         var vs =
-            'attribute vec4 attr;' +
             'attribute float firefoxWorkaround;' +
+            'attribute vec4 attr;' +
             'varying vec4 v_color;' +
             'void main() { ' +
             '  v_color = vec4(attr == vec4(0.2, 0.4, 0.6, 0.8)) + vec4(firefoxWorkaround);' +
@@ -294,15 +294,15 @@ defineSuite([
             'varying vec4 v_color;' +
             'void main() { gl_FragColor = v_color; }';
         var sp = context.createShaderProgram(vs, fs, {
-            attr : 0,
-            firefoxWorkaround : 1
+            firefoxWorkaround : 0,
+            attr : 1
         });
 
         var va = context.createVertexArray([{
-            value : [0.2, 0.4, 0.6, 0.8]
-        }, {
             vertexBuffer : context.createVertexBuffer(Float32Array.BYTES_PER_ELEMENT, BufferUsage.STATIC_DRAW),
             componentsPerAttribute : 1
+        }, {
+            value : [0.2, 0.4, 0.6, 0.8]
         }]);
 
         context.draw({

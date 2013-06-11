@@ -17,7 +17,7 @@ define([
         '../Core/JulianDate',
         '../Core/EllipsoidGeometry',
         '../Core/GeometryInstance',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -52,7 +52,7 @@ define([
         JulianDate,
         EllipsoidGeometry,
         GeometryInstance,
-        GeometryFilters,
+        GeometryPipeline,
         Context,
         ClearCommand,
         PassState,
@@ -480,7 +480,7 @@ define([
                 var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
-                        geometry : GeometryFilters.toWireframe(geometry),
+                        geometry : GeometryPipeline.toWireframe(geometry),
                     }),
                     appearance : new ClosedTranslucentAppearance()
                 });

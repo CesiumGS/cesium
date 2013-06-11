@@ -5,7 +5,7 @@ defineSuite([
          'Core/ComponentDatatype',
          'Core/Geometry',
          'Core/GeometryAttribute',
-         'Core/GeometryFilters',
+         'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
@@ -17,7 +17,7 @@ defineSuite([
          ComponentDatatype,
          Geometry,
          GeometryAttribute,
-         GeometryFilters,
+         GeometryPipeline,
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
@@ -70,7 +70,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryFilters.createAttributeIndices(geometry)
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(1);
@@ -99,7 +99,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
@@ -135,7 +135,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryFilters.createAttributeIndices(geometry)
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
@@ -176,7 +176,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -220,7 +220,7 @@ defineSuite([
 
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
-            attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
@@ -267,7 +267,7 @@ defineSuite([
             }
         });
 
-        var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeIndices : attributeIndices,
@@ -327,7 +327,7 @@ defineSuite([
             }
         });
 
-        var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeIndices : attributeIndices,
@@ -401,7 +401,7 @@ defineSuite([
             }
         });
 
-        var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeIndices : attributeIndices,
@@ -469,7 +469,7 @@ defineSuite([
             }
         });
 
-        var attributeIndices = GeometryFilters.createAttributeIndices(geometry);
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
         var va = context.createVertexArrayFromGeometry({
             geometry : geometry,
             attributeIndices : attributeIndices,

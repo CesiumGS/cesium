@@ -18,8 +18,8 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('cleanUp removes duplicate points', function() {
-        var positions = PolygonPipeline.cleanUp([
+    it('removeDuplicates removes duplicate points', function() {
+        var positions = PolygonPipeline.removeDuplicates([
                                                  new Cartesian3(1.0, 1.0, 1.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
@@ -33,8 +33,8 @@ defineSuite([
                                        ]);
     });
 
-    it('cleanUp removes duplicate first and last points', function() {
-        var positions = PolygonPipeline.cleanUp([
+    it('removeDuplicates removes duplicate first and last points', function() {
+        var positions = PolygonPipeline.removeDuplicates([
                                                  new Cartesian3(1.0, 1.0, 1.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
                                                  new Cartesian3(3.0, 3.0, 3.0),
@@ -48,15 +48,15 @@ defineSuite([
                                        ]);
     });
 
-    it('cleanUp throws without positions', function() {
+    it('removeDuplicates throws without positions', function() {
         expect(function() {
-            PolygonPipeline.cleanUp();
+            PolygonPipeline.removeDuplicates();
         }).toThrow();
     });
 
-    it('cleanUp throws without three positions', function() {
+    it('removeDuplicates throws without three positions', function() {
         expect(function() {
-            PolygonPipeline.cleanUp([Cartesian3.ZERO, Cartesian3.ZERO]);
+            PolygonPipeline.removeDuplicates([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
 

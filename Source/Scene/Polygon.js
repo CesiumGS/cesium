@@ -13,7 +13,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/ComponentDatatype',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Core/GeometryInstance',
         '../Core/PrimitiveType',
         '../Core/EllipsoidTangentPlane',
@@ -48,7 +48,7 @@ define([
         Cartesian3,
         Cartesian4,
         ComponentDatatype,
-        GeometryFilters,
+        GeometryPipeline,
         GeometryInstance,
         PrimitiveType,
         EllipsoidTangentPlane,
@@ -496,7 +496,7 @@ define([
     var createGeometryFromPositionsBoundingRectangle = new BoundingRectangle();
 
     function createGeometryFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
-        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
             return undefined;
@@ -556,10 +556,10 @@ define([
             return undefined;
         }
 
-        geometry = GeometryFilters.combine(geometries);
+        geometry = GeometryPipeline.combine(geometries);
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, polygon.height, polygon.ellipsoid);
-        geometry = GeometryFilters.reorderForPostVertexCache(geometry);
-        geometry = GeometryFilters.reorderForPreVertexCache(geometry);
+        geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
+        geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
 
         if (polygon._mode === SceneMode.SCENE3D) {
             geometry.attributes.position2DHigh = { // Not actually used in shader
@@ -568,9 +568,9 @@ define([
             geometry.attributes.position2DLow = { // Not actually used in shader
                 value : [0.0, 0.0]
             };
-            geometry = GeometryFilters.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+            geometry = GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         } else {
-            geometry = GeometryFilters.projectTo2D(geometry, polygon._projection);
+            geometry = GeometryPipeline.projectTo2D(geometry, polygon._projection);
 
             if (polygon._mode !== SceneMode.SCENE3D) {
                 var projectedPositions = geometry.attributes.position2D.values;
@@ -585,11 +585,11 @@ define([
                 polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
             }
 
-            geometry = GeometryFilters.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-            geometry = GeometryFilters.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+            geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            geometry = GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
         }
 
-        return GeometryFilters.fitToUnsignedShortIndices(geometry);
+        return GeometryPipeline.fitToUnsignedShortIndices(geometry);
     }
 
     function getGranularity(polygon, mode) {

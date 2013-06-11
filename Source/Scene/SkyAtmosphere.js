@@ -3,7 +3,7 @@ define([
         '../Core/defaultValue',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
-        '../Core/GeometryFilters',
+        '../Core/GeometryPipeline',
         '../Core/PrimitiveType',
         '../Core/Ellipsoid',
         '../Renderer/BufferUsage',
@@ -17,7 +17,7 @@ define([
         defaultValue,
         EllipsoidGeometry,
         destroyObject,
-        GeometryFilters,
+        GeometryPipeline,
         PrimitiveType,
         Ellipsoid,
         BufferUsage,
@@ -140,7 +140,7 @@ define([
             });
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
-                attributeIndices : GeometryFilters.createAttributeIndices(geometry),
+                attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
             command.primitiveType = PrimitiveType.TRIANGLES;

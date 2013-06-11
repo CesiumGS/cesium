@@ -410,7 +410,7 @@ define([
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
-        cleanUp : function(positions) {
+        removeDuplicates : function(positions) {
             if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
             }

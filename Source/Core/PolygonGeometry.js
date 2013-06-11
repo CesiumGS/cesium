@@ -13,7 +13,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
-        './GeometryFilters',
+        './GeometryPipeline',
         './Intersect',
         './Math',
         './Matrix3',
@@ -36,7 +36,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
-        GeometryFilters,
+        GeometryPipeline,
         Intersect,
         CesiumMath,
         Matrix3,
@@ -90,7 +90,7 @@ define([
     var createGeometryFromPositionsPositions = [];
 
     function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
-        var cleanedPositions = PolygonPipeline.cleanUp(positions);
+        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
             return undefined;
@@ -281,7 +281,7 @@ define([
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        geometry = GeometryFilters.combine(geometries);
+        geometry = GeometryPipeline.combine(geometries);
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
         var attributes = {};
@@ -293,7 +293,7 @@ define([
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
-            var cleanedPositions = PolygonPipeline.cleanUp(outerPositions);
+            var cleanedPositions = PolygonPipeline.removeDuplicates(outerPositions);
             var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
             var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
 
