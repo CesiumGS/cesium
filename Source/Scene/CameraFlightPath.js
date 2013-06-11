@@ -429,39 +429,38 @@ define([
         var onComplete = description.onComplete;
         var frustum = frameState.camera.frustum;
 
-        if (frameState.mode !== SceneMode.SCENE2D) {
-            if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+        if (frameState.mode === SceneMode.SCENE2D) {
+            if ((Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
                     duration : 0,
                     onComplete : onComplete
                 };
             }
-        } else {
-            var currentHeight = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
-            if (Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6) && CesiumMath.equalsEpsilon(currentHeight, destination.z, CesiumMath.EPSILON6)) {
-                return {
-                    duration : 0,
-                    onComplete : onComplete
-                };
-            }
+        } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+            return {
+                duration : 0,
+                onComplete : onComplete
+            };
         }
 
         if (duration <= 0) {
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
-                    dirScratch = defaultValue(description.direction, position.negate(dirScratch).normalize(dirScratch));
                     if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        dirScratch = position.negate(dirScratch).normalize(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
                     } else {
+                        dirScratch = description.direction;
                         rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
                     }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
-                    dirScratch = defaultValue(description.direction, Cartesian3.UNIT_Z.negate(dirScratch));
                     if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
                     } else {
+                        dirScratch = description.direction;
                         rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
                     }
                     upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
