@@ -16,8 +16,10 @@ Beta Releases
    * Removed `CesiumViewerWidget` and replaced it with a new `Viewer` widget with mixin architecture. This new widget does not depend on Dojo and is part of the combined Cesium.js file. It is intended to be a flexible base widget for easily building robust applications.  See [#838](https://github.com/AnalyticalGraphicsInc/cesium/pull/838) for the full details.
 * Added `Context.getAntialias`.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
+* Improved the performance of terrain and imagery refinement, especially when using a mixture of slow and fast imagery sources.
 * Improved test robustness on Mac.
 * Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+* Fixed artifacts that showed up on the edges of imagery tiles on a number of GPUs.
 * The `Client CZML` SandCastle demo has been removed, largely because it is redundant with the Simple CZML demo.
 * The `Two Viewer Widgets` SandCastle demo has been removed. We will add back a multi-scene example when we have a good architecture for it in place.
 * Fixed an issue in `BaseLayerPicker` where destroy wasn't properly cleaning everything up.

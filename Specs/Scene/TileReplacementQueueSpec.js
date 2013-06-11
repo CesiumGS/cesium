@@ -123,7 +123,7 @@ defineSuite([
             queue.markTileRendered(three);
 
             two.imagery.push({
-                imagery : {
+                loadingImagery : {
                     state : ImageryState.TRANSITIONING
                 }
             });
