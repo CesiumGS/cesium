@@ -193,10 +193,10 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
+        var numVertices = Geometry.computeNumberOfVertices(geometry);
+
         var indexList = geometry.indexList;
         if (typeof indexList !== 'undefined') {
-            var numVertices = Geometry.computeNumberOfVertices(geometry);
-
             var indexCrossReferenceOldToNew = new Array(numVertices);
             for ( var i = 0; i < numVertices; i++) {
                 indexCrossReferenceOldToNew[i] = -1;
