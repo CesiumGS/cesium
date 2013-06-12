@@ -870,8 +870,6 @@ define([
         }
 
         var attributes = geometry.attributes;
-
-
         var indices = geometry.indexList;
 
         if (typeof attributes.position === 'undefined' ||
@@ -1016,7 +1014,6 @@ define([
         }
 
         var attributes = geometry.attributes;
-
         var vertices = geometry.attributes.position.values;
         var normals = geometry.attributes.normal.values;
         var st = geometry.attributes.st.values;

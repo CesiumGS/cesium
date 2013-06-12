@@ -166,7 +166,7 @@ define([
         result.attributes = newAttributes;
 
         if (typeof this.indexList !== 'undefined') {
-			result.indexList = new Uint32Array(this.indexList);
+            result.indexList = new Uint32Array(this.indexList);
         } else {
             result.indexList = undefined;
         }
