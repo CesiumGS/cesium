@@ -35,7 +35,7 @@ define([
             throw new DeveloperError('duration is required.');
         }
 
-        if (options.duration !== 0) {
+        if (options.duration > 0) {
             var delayDuration = defaultValue(options.delayDuration, 0);
             var easingFunction = defaultValue(options.easingFunction, Tween.Easing.Linear.None);
 
