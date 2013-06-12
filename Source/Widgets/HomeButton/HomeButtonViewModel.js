@@ -191,6 +191,25 @@ define([
             get : function() {
                 return this._command;
             }
+        },
+
+        /**
+         * Gets or sets the the duration of the camera flight in milliseconds.
+         * A value of zero causes the camera to instantly switch to home view.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        flightDuration : {
+            get : function() {
+                return this._flightDuration;
+            },
+            set : function(value) {
+                if (value < 0) {
+                    throw new DeveloperError('value must be positive.');
+                }
+                this._flightDuration = value;
+            }
         }
     });
 

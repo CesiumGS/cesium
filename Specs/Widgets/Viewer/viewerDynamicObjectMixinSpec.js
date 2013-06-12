@@ -3,19 +3,21 @@ defineSuite([
          'Widgets/Viewer/viewerDynamicObjectMixin',
          'Core/Cartesian3',
          'DynamicScene/DynamicObject',
+         'Scene/CameraFlightPath',
          'Specs/MockProperty',
          'Widgets/Viewer/Viewer'
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
          DynamicObject,
+         CameraFlightPath,
          MockProperty,
          Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var container;
-    beforeEach(function(){
+    beforeEach(function() {
         container = document.createElement('span');
         container.id = 'container';
         container.style.display = 'none';
@@ -58,6 +60,11 @@ defineSuite([
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
+
+        //Needed to avoid actually creating a flight when we issue the home command.
+        spyOn(CameraFlightPath, 'createAnimation').andReturn({
+            duration : 0
+        });
 
         viewer.homeButton.viewModel.command();
         expect(viewer.trackedObject).toBeUndefined();
