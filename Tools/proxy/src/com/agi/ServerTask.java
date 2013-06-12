@@ -8,6 +8,7 @@ import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
 import org.eclipse.jetty.client.Address;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
@@ -73,6 +74,12 @@ public class ServerTask extends Task {
 			});
 			resourceHandler.setResourceBase(baseDir.getAbsolutePath());
 			resourceHandler.setCacheControl("no-cache");
+
+			MimeTypes mimeTypes = resourceHandler.getMimeTypes();
+			mimeTypes.addMimeMapping("czml", "application/json");
+			mimeTypes.addMimeMapping("json", "application/json");
+			mimeTypes.addMimeMapping("woff", "application/font-woff");
+
 			ContextHandler resourceContextHandler = new ContextHandler("/");
 			resourceContextHandler.setHandler(resourceHandler);
 

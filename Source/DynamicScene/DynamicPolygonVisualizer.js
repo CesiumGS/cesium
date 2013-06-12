@@ -102,7 +102,7 @@ define(['../Core/Cartesian3',
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
-                this._updateObject(time, dynamicObjects[i]);
+                updateObject(this, time, dynamicObjects[i]);
             }
         }
     };
@@ -168,7 +168,7 @@ define(['../Core/Cartesian3',
     };
 
     var cachedPosition = new Cartesian3();
-    DynamicPolygonVisualizer.prototype._updateObject = function(time, dynamicObject) {
+    function updateObject(dynamicPolygonVisualizer, time, dynamicObject) {
         var dynamicPolygon = dynamicObject.polygon;
         if (typeof dynamicPolygon === 'undefined') {
             return;
@@ -187,26 +187,26 @@ define(['../Core/Cartesian3',
            (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined'))) {
             //Remove the existing primitive if we have one
             if (typeof polygonVisualizerIndex !== 'undefined') {
-                polygon = this._polygonCollection[polygonVisualizerIndex];
+                polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
                 polygon.show = false;
                 dynamicObject._polygonVisualizerIndex = undefined;
-                this._unusedIndexes.push(polygonVisualizerIndex);
+                dynamicPolygonVisualizer._unusedIndexes.push(polygonVisualizerIndex);
             }
             return;
         }
 
-        var context = this._scene.getContext();
+        var context = dynamicPolygonVisualizer._scene.getContext();
         if (typeof polygonVisualizerIndex === 'undefined') {
-            var unusedIndexes = this._unusedIndexes;
+            var unusedIndexes = dynamicPolygonVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
                 polygonVisualizerIndex = unusedIndexes.pop();
-                polygon = this._polygonCollection[polygonVisualizerIndex];
+                polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
             } else {
-                polygonVisualizerIndex = this._polygonCollection.length;
+                polygonVisualizerIndex = dynamicPolygonVisualizer._polygonCollection.length;
                 polygon = new Polygon();
-                this._polygonCollection.push(polygon);
-                this._primitives.add(polygon);
+                dynamicPolygonVisualizer._polygonCollection.push(polygon);
+                dynamicPolygonVisualizer._primitives.add(polygon);
             }
             dynamicObject._polygonVisualizerIndex = polygonVisualizerIndex;
             polygon.dynamicObject = dynamicObject;
@@ -214,7 +214,7 @@ define(['../Core/Cartesian3',
             // CZML_TODO Determine official defaults
             polygon.material = Material.fromType(context, Material.ColorType);
         } else {
-            polygon = this._polygonCollection[polygonVisualizerIndex];
+            polygon = dynamicPolygonVisualizer._polygonCollection[polygonVisualizerIndex];
         }
 
         polygon.show = true;
@@ -237,7 +237,7 @@ define(['../Core/Cartesian3',
         if (typeof material !== 'undefined') {
             polygon.material = material.getValue(time, context, polygon.material);
         }
-    };
+    }
 
     DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
         var thisPolygonCollection = this._polygonCollection;

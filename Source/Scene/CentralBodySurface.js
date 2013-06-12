@@ -192,7 +192,10 @@ define([
             var numDestroyed = 0;
             for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
                 var tileImagery = tileImageryCollection[i];
-                var imagery = tileImagery.imagery;
+                var imagery = tileImagery.loadingImagery;
+                if (typeof imagery === 'undefined') {
+                    imagery = tileImagery.readyImagery;
+                }
                 if (imagery.imageryLayer === layer) {
                     if (startIndex === -1) {
                         startIndex = i;
@@ -291,7 +294,17 @@ define([
     };
 
     function sortTileImageryByLayerIndex(a, b) {
-        return a.imagery.imageryLayer._layerIndex - b.imagery.imageryLayer._layerIndex;
+        var aImagery = a.loadingImagery;
+        if (typeof aImagery === 'undefined') {
+            aImagery = a.readyImagery;
+        }
+
+        var bImagery = b.loadingImagery;
+        if (typeof bImagery === 'undefined') {
+            bImagery = b.readyImagery;
+        }
+
+        return aImagery.imageryLayer._layerIndex - bImagery.imageryLayer._layerIndex;
     }
 
     function updateLayers(surface) {
@@ -492,8 +505,7 @@ define([
         var tileImageryCollection = tile.imagery;
         for ( var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            var imageryLayer = tileImagery.imagery.imageryLayer;
-            if (tileImagery.imagery.state === ImageryState.READY && imageryLayer.alpha !== 0.0) {
+            if (typeof tileImagery.readyImagery !== 'undefined' && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
                 ++readyTextureCount;
             }
         }
@@ -954,13 +966,14 @@ define([
 
                     while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                         var tileImagery = tileImageryCollection[imageryIndex];
-                        var imagery = tileImagery.imagery;
-                        var imageryLayer = imagery.imageryLayer;
+                        var imagery = tileImagery.readyImagery;
                         ++imageryIndex;
 
-                        if (imagery.state !== ImageryState.READY || imageryLayer.alpha === 0.0) {
+                        if (typeof imagery === 'undefined' || imagery.state !== ImageryState.READY || imagery.imageryLayer.alpha === 0.0) {
                             continue;
                         }
+
+                        var imageryLayer = imagery.imageryLayer;
 
                         if (typeof tileImagery.textureTranslationAndScale === 'undefined') {
                             tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, tileImagery);

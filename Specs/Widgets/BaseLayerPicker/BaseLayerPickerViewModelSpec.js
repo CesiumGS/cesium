@@ -1,11 +1,12 @@
 /*global defineSuite*/
-defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
-             'Widgets/BaseLayerPicker/ImageryProviderViewModel',
-             'Scene/ImageryLayerCollection'
-            ], function(
-              BaseLayerPickerViewModel,
-              ImageryProviderViewModel,
-              ImageryLayerCollection) {
+defineSuite([
+         'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
+         'Widgets/BaseLayerPicker/ImageryProviderViewModel',
+         'Scene/ImageryLayerCollection'
+     ], function(
+         BaseLayerPickerViewModel,
+         ImageryProviderViewModel,
+         ImageryLayerCollection) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -15,7 +16,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel = ImageryProviderViewModel.fromConstants({
+    var testProviderViewModel = new ImageryProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -30,7 +31,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         }
     };
 
-    var testProviderViewModel2 = ImageryProviderViewModel.fromConstants({
+    var testProviderViewModel2 = new ImageryProviderViewModel({
         name : 'name',
         tooltip : 'tooltip',
         iconUrl : 'url',
@@ -44,7 +45,7 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         var imageryLayers = new ImageryLayerCollection();
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, array);
         expect(viewModel.imageryLayers).toBe(imageryLayers);
-        expect(viewModel.imageryProviderViewModels()).toBe(array);
+        expect(viewModel.imageryProviderViewModels).toEqual(array);
     });
 
     it('selecting an item closes the dropDown', function() {
@@ -52,9 +53,9 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         var imageryLayers = new ImageryLayerCollection();
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, array);
 
-        viewModel.dropDownVisible(true);
-        viewModel.selectedItem(testProviderViewModel);
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        viewModel.dropDownVisible = true;
+        viewModel.selectedItem = testProviderViewModel;
+        expect(viewModel.dropDownVisible).toEqual(false);
     });
 
     it('selectedName, selectedIconUrl, and selectedItem all return expected values', function() {
@@ -62,15 +63,15 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         var imageryLayers = new ImageryLayerCollection();
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, array);
 
-        expect(viewModel.selectedName()).toBeUndefined();
-        expect(viewModel.selectedIconUrl()).toBeUndefined();
-        expect(viewModel.selectedItem()).toBeUndefined();
+        expect(viewModel.selectedName).toBeUndefined();
+        expect(viewModel.selectedIconUrl).toBeUndefined();
+        expect(viewModel.selectedItem).toBeUndefined();
 
-        viewModel.selectedItem(testProviderViewModel);
+        viewModel.selectedItem = testProviderViewModel;
 
-        expect(viewModel.selectedName()).toEqual(testProviderViewModel.name());
-        expect(viewModel.selectedIconUrl()).toEqual(testProviderViewModel.iconUrl());
-        expect(viewModel.selectedItem()).toBe(testProviderViewModel);
+        expect(viewModel.selectedName).toEqual(testProviderViewModel.name);
+        expect(viewModel.selectedIconUrl).toEqual(testProviderViewModel.iconUrl);
+        expect(viewModel.selectedItem).toBe(testProviderViewModel);
     });
 
     it('selectedItem actually sets base layer', function() {
@@ -80,11 +81,11 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
 
         expect(imageryLayers.getLength()).toEqual(0);
 
-        viewModel.selectedItem(testProviderViewModel);
+        viewModel.selectedItem = testProviderViewModel;
         expect(imageryLayers.getLength()).toEqual(1);
         expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider);
 
-        viewModel.selectedItem(testProviderViewModel2);
+        viewModel.selectedItem = testProviderViewModel2;
         expect(imageryLayers.getLength()).toEqual(1);
         expect(imageryLayers.get(0).getImageryProvider()).toBe(testProvider2);
     });
@@ -92,11 +93,11 @@ defineSuite(['Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
     it('dropDownVisible and toggleDropDown work', function() {
         var viewModel = new BaseLayerPickerViewModel(new ImageryLayerCollection());
 
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(false);
         viewModel.toggleDropDown();
-        expect(viewModel.dropDownVisible()).toEqual(true);
-        viewModel.dropDownVisible(false);
-        expect(viewModel.dropDownVisible()).toEqual(false);
+        expect(viewModel.dropDownVisible).toEqual(true);
+        viewModel.dropDownVisible = false;
+        expect(viewModel.dropDownVisible).toEqual(false);
     });
 
     it('constructor throws with no layer collection', function() {

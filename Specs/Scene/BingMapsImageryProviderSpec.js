@@ -5,6 +5,7 @@ defineSuite([
          'Core/FeatureDetection',
          'Core/jsonp',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Scene/BingMapsStyle',
          'Scene/DiscardMissingTileImagePolicy',
          'Scene/Imagery',
@@ -20,6 +21,7 @@ defineSuite([
          FeatureDetection,
          jsonp,
          loadImage,
+         loadWithXhr,
          BingMapsStyle,
          DiscardMissingTileImagePolicy,
          Imagery,
@@ -35,6 +37,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -84,7 +87,7 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var url = 'http://fake.fake.net';
+        var url = 'http://fake.fake.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
 
@@ -100,7 +103,7 @@ defineSuite([
                         "resources" : [{
                             "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                             "imageHeight" : 256,
-                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.net\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                            "imageUrl" : "http:\/\/fake.{subdomain}.tiles.fake.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                             "imageUrlSubdomains" : ["t0"],
                             "imageWidth" : 256,
                             "imageryProviders" : null,
@@ -149,10 +152,19 @@ defineSuite([
             expect(provider.getLogo()).toBeInstanceOf(Image);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual('http://fake.t0.tiles.fake.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+                }
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                expect(url).toEqual('http://fake.t0.tiles.fake.invalid/tiles/r0?g=1062&lbl=l1&productSet=mmCB');
+
+                // Just return any old image.
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -170,7 +182,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.net';
+        var url = 'http://foo.bar.invalid';
         var mapStyle = BingMapsStyle.COLLINS_BART;
         var metadataUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle.imagerySetName + '?key=';
         var proxy = new DefaultProxy('/proxy/');
@@ -205,7 +217,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'http://foo.bar.net',
+            url : 'http://foo.bar.invalid',
             mapStyle : mapStyle,
             proxy : proxy
         });
@@ -221,10 +233,19 @@ defineSuite([
 
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
-                expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
+                if (url.indexOf('blob:') !== 0) {
+                    expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
+                }
 
                 // Just return any old image.
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            };
+
+            loadWithXhr.load = function(url, responseType, headers, deferred) {
+                expect(url).toEqual(proxy.getURL('http://ecn.t0.tiles.virtualearth.net/tiles/r0?g=1062&lbl=l1&productSet=mmCB'));
+
+                // Just return any old image.
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
             };
 
             when(provider.requestImage(0, 0, 0), function(image) {
@@ -242,7 +263,7 @@ defineSuite([
     });
 
     it('raises error on invalid url', function() {
-        var url = 'invalid.localhost';
+        var url = 'host.invalid';
         var provider = new BingMapsImageryProvider({
             url : url
         });
@@ -276,7 +297,7 @@ defineSuite([
                     "resources" : [{
                         "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                         "imageHeight" : 256,
-                        "imageUrl" : "http:\/\/invalid.{subdomain}.localhost\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                        "imageUrl" : "http:\/\/invalid.{subdomain}.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                         "imageUrlSubdomains" : ["t0"],
                         "imageWidth" : 256,
                         "imageryProviders" : null,
@@ -293,7 +314,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'invalid.localhost',
+            url : 'host.invalid',
             mapStyle : mapStyle
         });
 
@@ -310,13 +331,24 @@ defineSuite([
 
         loadImage.createImage = function(url, crossOrigin, deferred) {
             // Succeed after 2 tries
-            if (tries === 2) {
+            if (url.indexOf('blob:') !== 0 && tries === 2) {
                 // valid URL
                 return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             }
 
             // invalid URL
             return loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        };
+
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            // Succeed after 2 tries
+            if (tries === 2) {
+                // valid URL
+                return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+            }
+
+            // invalid URL
+            return loadWithXhr.defaultLoad(url, responseType, headers, deferred);
         };
 
         waitsFor(function() {
