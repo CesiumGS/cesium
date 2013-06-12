@@ -557,4 +557,160 @@ defineSuite([
         expect(camera.direction).toEqual(startDirection);
         expect(camera.up).toEqual(startUp);
     });
+
+    it('creates an animation with 0 duration', function() {
+        var destination = new Cartesian3(1e9, 1e9, 1e9);
+        var duration = 0;
+        var onComplete = function() {
+            return true;
+        };
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : destination,
+            duration : duration,
+            onComplete : onComplete
+        });
+
+        expect(flight.duration).toEqual(duration);
+        expect(flight.onComplete).not.toEqual(onComplete);
+        expect(typeof flight.onUpdate).toEqual('undefined');
+        expect(frameState.camera.position).not.toEqual(destination);
+        flight.onComplete();
+        expect(frameState.camera.position).toEqual(destination);
+    });
+
+    it('duration is 0 when destination is the same as camera position in 2D', function() {
+        frameState.mode = SceneMode.SCENE2D;
+        var camera = frameState.camera;
+
+        camera.position = new Cartesian3(0.0, 0.0, 1000.0);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = camera.direction.cross(camera.up);
+        camera.frustum = createOrthographicFrustum();
+        var frustum = camera.frustum;
+        var destination = camera.position.clone();
+        destination.z = Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom);
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : destination
+        });
+
+        expect(flight.duration).toEqual(0);
+    });
+
+    it('duration is 0 when destination is the same as camera position in 3D', function() {
+        frameState.mode = SceneMode.SCENE3D;
+        var camera = frameState.camera;
+
+        camera.position = new Cartesian3(0.0, 0.0, 1000.0);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = camera.direction.cross(camera.up);
+        camera.frustum = createOrthographicFrustum();
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : camera.position
+        });
+
+        expect(flight.duration).toEqual(0);
+    });
+
+    it('duration is 0 when destination is the same as camera position in CV', function() {
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var camera = frameState.camera;
+
+        camera.position = new Cartesian3(0.0, 0.0, 1000.0);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = camera.direction.cross(camera.up);
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : camera.position
+        });
+
+        expect(flight.duration).toEqual(0);
+    });
+
+    it('creates an animation in 2D 0 duration', function() {
+        frameState.mode = SceneMode.SCENE2D;
+        var camera = frameState.camera;
+
+        camera.position = new Cartesian3(0.0, 0.0, 1000.0);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = camera.direction.cross(camera.up);
+        camera.frustum = createOrthographicFrustum();
+
+        var startPosition = camera.position.clone();
+        var startDirection = camera.direction.clone();
+        var startUp = camera.up.clone();
+
+        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endDirection = startDirection.clone();
+        var endUp = startUp.negate();
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : endPosition,
+            direction : endDirection,
+            up : endUp,
+            duration : 0
+        });
+
+        expect(typeof flight.onComplete).toEqual('function');
+        flight.onComplete();
+        expect(camera.position.x).toEqualEpsilon(endPosition.x, CesiumMath.EPSILON12);
+        expect(camera.position.y).toEqualEpsilon(endPosition.y, CesiumMath.EPSILON12);
+        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
+        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
+        expect(camera.frustum.right - camera.frustum.left).toEqual(endPosition.z);
+    });
+
+    it('creates an animation in Columbus view 0 duration', function() {
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var camera = frameState.camera;
+
+        camera.position = new Cartesian3(0.0, 0.0, 1000.0);
+        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.up = Cartesian3.UNIT_Y.clone();
+        camera.right = camera.direction.cross(camera.up);
+
+        var startPosition = camera.position.clone();
+        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : endPosition,
+            duration : 0
+        });
+
+        expect(typeof flight.onComplete).toEqual('function');
+        flight.onComplete();
+        expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+    });
+
+    it('creates an animation in 3d 0 duration', function() {
+        var camera = frameState.camera;
+
+        var startPosition = camera.position.clone();
+        var startDirection = camera.direction.clone();
+        var startUp = camera.up.clone();
+
+        var endPosition = startPosition.negate();
+        var endDirection = startDirection.negate();
+        var endUp = startUp.negate();
+
+        var flight = CameraFlightPath.createAnimation(frameState, {
+            destination : endPosition,
+            direction : endDirection,
+            up : endUp,
+            duration : 0
+        });
+
+        expect(typeof flight.onComplete).toEqual('function');
+        flight.onComplete();
+        expect(camera.position).toEqualEpsilon(endPosition, CesiumMath.EPSILON12);
+        expect(camera.direction).toEqualEpsilon(endDirection, CesiumMath.EPSILON12);
+        expect(camera.up).toEqualEpsilon(endUp, CesiumMath.EPSILON12);
+    });
+
 });
