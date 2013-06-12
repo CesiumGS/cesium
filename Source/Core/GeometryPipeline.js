@@ -203,7 +203,7 @@ define([
 
         var numVertices = Geometry.computeNumberOfVertices(geometry);
 
-        var indexCrossReferenceOldToNew = new Array(numVertices);
+        var indexCrossReferenceOldToNew = new Int32Array(numVertices);
         for ( var i = 0; i < numVertices; i++) {
             indexCrossReferenceOldToNew[i] = -1;
         }
@@ -213,7 +213,7 @@ define([
             // Construct cross reference and reorder indices
             var indicesIn = indexList;
             var numIndices = indicesIn.length;
-            var indicesOut = [];
+            var indicesOut = new Uint32Array(numIndices);
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
             var nextIndex = 0;
@@ -242,10 +242,11 @@ define([
         var attributes = geometry.attributes;
         for ( var property in attributes) {
             if (attributes.hasOwnProperty(property) && attributes[property].values) {
-                var elementsIn = attributes[property].values;
+                var attribute = attributes[property];
+                var elementsIn = attribute.values;
                 var intoElementsIn = 0;
-                var numComponents = attributes[property].componentsPerAttribute;
-                var elementsOut = [];
+                var numComponents = attribute.componentsPerAttribute;
+                var elementsOut = attribute.componentDatatype.createTypedArray(elementsIn.length);
                 while (intoElementsIn < numVertices) {
                     var temp = indexCrossReferenceOldToNew[intoElementsIn];
                     for (i = 0; i < numComponents; i++) {
@@ -253,7 +254,7 @@ define([
                     }
                     ++intoElementsIn;
                 }
-                attributes[property].values = elementsOut;
+                attribute.values = elementsOut;
             }
         }
 
@@ -464,7 +465,7 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = new Array(2 * wgs84Positions.length / 3); // TODO: Float64Array?
+            var projectedPositions = new Float64Array(2 * wgs84Positions.length / 3);
             var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {

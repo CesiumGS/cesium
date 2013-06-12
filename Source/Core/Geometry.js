@@ -55,15 +55,7 @@ define([
         }
         result.attributes = newAttributes;
 
-// TODO: typed array or not.  fastest way to copy?
-        var sourceValues = this.indexList;
-        var length = sourceValues.length;
-        var values = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            values[i] = sourceValues[i];
-        }
-        result.indexList = values;
-
+        result.indexList = new Uint32Array(this.indexList);
         result.primitiveType = this.primitiveType;
         this.boundingSphere.clone(result.boundingSphere);
 

@@ -141,7 +141,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('reorderForPreVertexCache reorders all indices and attributes for the pre vertex cahce', function() {
+    it('reorderForPreVertexCache reorders all indices and attributes for the pre vertex cache', function() {
         var geometry = new Geometry({
             attributes : {
                 weight : new GeometryAttribute({
