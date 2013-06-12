@@ -111,7 +111,7 @@ defineSuite([
                     "resources" : [{
                         "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                         "imageHeight" : 256,
-                        "imageUrl" : "http:\/\/invalid.{subdomain}.localhost\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                        "imageUrl" : "http:\/\/invalid.{subdomain}.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                         "imageUrlSubdomains" : ["t0"],
                         "imageWidth" : 256,
                         "imageryProviders" : null,
@@ -136,7 +136,7 @@ defineSuite([
         };
 
         var provider = new BingMapsImageryProvider({
-            url : 'http://invalid.localhost',
+            url : 'http://host.invalid',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 
