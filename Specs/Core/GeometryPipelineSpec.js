@@ -989,7 +989,7 @@ defineSuite([
                 st : true
             })
         });
-        geometry = GeometryPipeline.computeTangentAndBinormal(geometry);
+        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
