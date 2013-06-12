@@ -15,6 +15,7 @@ define([
     "use strict";
     /*global console*/
 
+    var loading = document.getElementById('loading');
     var viewer = new Viewer('cesiumContainer');
     viewer.extend(viewerDragDropMixin);
     viewer.extend(viewerDynamicObjectMixin);
@@ -38,7 +39,9 @@ define([
         for ( var i = 0, len = params.length; i < len; ++i) {
             var param = params[i];
             var keyValuePair = param.split('=');
-            endUserOptions[keyValuePair[0]] = decodeURIComponent(keyValuePair[1].replace(/\+/g, ' '));
+            if (keyValuePair.length > 1) {
+                endUserOptions[keyValuePair[0]] = decodeURIComponent(keyValuePair[1].replace(/\+/g, ' '));
+            }
         }
     }
 
@@ -71,7 +74,13 @@ define([
                     window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
                 }
             }
+        }, function(e) {
+            window.alert(e);
+        }).always(function() {
+            loading.style.display = 'none';
         });
+    } else {
+        loading.style.display = 'none';
     }
 
     if (endUserOptions.stats) {

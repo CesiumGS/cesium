@@ -103,20 +103,6 @@
 	margin: 1px;
 }
 
-.cesium-viewer-loading {
-	display: none;
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	margin-top: -33px;
-	margin-left: -33px;
-	width: 66px;
-	height: 66px;
-	background-position: center;
-	background-repeat: no-repeat;
-	background-image: url(../Images/ajax-loader.gif);
-}
-
 @media only screen and (min-width: 600px) and (max-width: 900px) {
 	.cesium-viewer .cesium-viewer-animationContainer {
 		width: 136px;
