@@ -1,17 +1,20 @@
 /*global define*/
-define(['../../Core/defaultValue',
+define([
+        '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/Event',
         '../../Core/wrapFunction',
-        '../../DynamicScene/CzmlDataSource'
-        ], function(
-                defaultValue,
-                DeveloperError,
-                defineProperties,
-                Event,
-                wrapFunction,
-                CzmlDataSource) {
+        '../../DynamicScene/CzmlDataSource',
+        '../getElement'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        defineProperties,
+        Event,
+        wrapFunction,
+        CzmlDataSource,
+        getElement) {
     "use strict";
 
     /**
@@ -64,13 +67,8 @@ define(['../../Core/defaultValue',
         var onDropError = new Event();
         var clearOnDrop = defaultValue(options.clearOnDrop, true);
         var dropTarget = defaultValue(options.dropTarget, viewer.container);
-        if (typeof dropTarget === 'string') {
-            var tmp = document.getElementById(dropTarget);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + dropTarget + '" does not exist in the document.');
-            }
-            dropTarget = tmp;
-        }
+
+        dropTarget = getElement(dropTarget);
 
         defineProperties(viewer, {
             /**

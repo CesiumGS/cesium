@@ -1,39 +1,42 @@
 /*global define*/
-define(['../../Core/Cartesian2',
+define([
+        '../../Core/Cartesian2',
         '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceDisplay',
-        '../ClockViewModel',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/createDefaultBaseLayers',
         '../CesiumWidget/CesiumWidget',
+        '../ClockViewModel',
         '../FullscreenButton/FullscreenButton',
+        '../getElement',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
         '../Timeline/Timeline'
-        ], function(
-                Cartesian2,
-                defaultValue,
-                DeveloperError,
-                defineProperties,
-                destroyObject,
-                ScreenSpaceEventType,
-                DataSourceDisplay,
-                ClockViewModel,
-                Animation,
-                AnimationViewModel,
-                BaseLayerPicker,
-                createDefaultBaseLayers,
-                CesiumWidget,
-                FullscreenButton,
-                HomeButton,
-                SceneModePicker,
-                Timeline) {
+    ], function(
+        Cartesian2,
+        defaultValue,
+        DeveloperError,
+        defineProperties,
+        destroyObject,
+        ScreenSpaceEventType,
+        DataSourceDisplay,
+        Animation,
+        AnimationViewModel,
+        BaseLayerPicker,
+        createDefaultBaseLayers,
+        CesiumWidget,
+        ClockViewModel,
+        FullscreenButton,
+        getElement,
+        HomeButton,
+        SceneModePicker,
+        Timeline) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -114,23 +117,17 @@ define(['../../Core/Cartesian2',
      * });
      */
     var Viewer = function(container, options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
+        container = getElement(container);
 
         var viewerContainer = document.createElement('div');
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
+
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var createBaseLayerPicker = typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false;
         var imageryProvider;
