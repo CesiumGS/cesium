@@ -8,10 +8,48 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A geometry representation with attributes forming vertices and optional index data
+     * defining primitives.  Geometries and an {@link Appearance}, which describes the shading,
+     * can be assigned to a {@link Primitive} for visualization.  A <code>Primitive</code> can
+     * be created from many heterogeneous - in many cases - geometries for performance.
+     * <p>
+     * In low-level rendering code, a vertex array can be created from a geometry using
+     * {@link Context#createVertexArrayFromGeometry}.
+     * </p>
+     * <p>
+     * Geometries can be transformed and optimized using functions in {@link GeometryPipeline}.
+     * </p>
      *
      * @alias Geometry
      * @constructor
+     *
+     * @param {Object} [options=undefined] An object with properties corresponding to Geometry properties as shown in the code example.
+     *
+     * @example
+     * // Create geometry with a position attribute and indexed lines.
+     * var positions = [
+     *   0.0, 0.0, 0.0,
+     *   7500000.0, 0.0, 0.0,
+     *   0.0, 7500000.0, 0.0
+     * ];
+     *
+     * var geometry = new Geometry({
+     *   attributes : {
+     *     position : new GeometryAttribute({
+     *       componentDatatype : ComponentDatatype.FLOAT,
+     *       componentsPerAttribute : 3,
+     *       values : positions
+     *     })
+     *   },
+     *   indexList : [0, 1, 1, 2, 2, 0],
+     *   primitiveType : PrimitiveType.LINES,
+     *   boundingSphere : BoundingSphere.fromVertices(positions)
+     * });
+     *
+     * @see Appearance
+     * @see Primitive
+     * @see Context#createVertexArrayFromGeometry
+     * @see GeometryPipeline
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -51,6 +89,8 @@ define([
          *
          * @type Object
          *
+         * @default undefined
+         *
          * @example
          * geometry.attributes = new GeometryAttribute({
          *   componentDatatype : ComponentDatatype.FLOAT,
@@ -64,17 +104,45 @@ define([
         this.attributes = defaultValue(options.attributes, {});
 
         /**
-         * DOC_TBA
+         * Optional index data that - along with {@link Geometry#primitiveType} -
+         * determines the primitives in the geometry.
+         *
+         * @type Array
+         *
+         * @default undefined
+         *
+         * @example
+         * // Two triangles with shared vertices
+         * geometry.primitiveType = PrimitiveType.TRIANGLES;
+         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.indexList = options.indexList;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
+         * but can varying based on the specific geometry.
+         *
+         * @type PrimitiveType
+         *
+         * @default undefined
+         *
+         * @example
+         * // Two triangles with shared vertices
+         * geometry.primitiveType = PrimitiveType.TRIANGLES;
+         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.primitiveType = options.primitiveType;
 
         /**
-         * DOC_TBA
+         * An optional bounding sphere that fully enclosed the geometry.  This is
+         * commonly used for culling.
+         *
+         * @type BoundingSphere
+         *
+         * @default undefined
+         *
+         * @example
+         * geometry.boundingSphere = BoundingSphere.fromVertices(positions);
          */
         this.boundingSphere = options.boundingSphere;
     };
