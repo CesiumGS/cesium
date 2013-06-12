@@ -193,15 +193,15 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        var numVertices = Geometry.computeNumberOfVertices(geometry);
-
-        var indexCrossReferenceOldToNew = new Array(numVertices);
-        for ( var i = 0; i < numVertices; i++) {
-            indexCrossReferenceOldToNew[i] = -1;
-        }
-
         var indexList = geometry.indexList;
         if (typeof indexList !== 'undefined') {
+            var numVertices = Geometry.computeNumberOfVertices(geometry);
+
+            var indexCrossReferenceOldToNew = new Array(numVertices);
+            for ( var i = 0; i < numVertices; i++) {
+                indexCrossReferenceOldToNew[i] = -1;
+            }
+
             // Construct cross reference and reorder indices
             var indicesIn = indexList;
             var numIndices = indicesIn.length;
@@ -228,24 +228,24 @@ define([
                 ++intoIndicesOut;
             }
             geometry.indexList = indicesOut;
-        }
 
-        // Reorder attributes
-        var attributes = geometry.attributes;
-        for ( var property in attributes) {
-            if (attributes.hasOwnProperty(property) && attributes[property].values) {
-                var elementsIn = attributes[property].values;
-                var intoElementsIn = 0;
-                var numComponents = attributes[property].componentsPerAttribute;
-                var elementsOut = [];
-                while (intoElementsIn < numVertices) {
-                    var temp = indexCrossReferenceOldToNew[intoElementsIn];
-                    for (i = 0; i < numComponents; i++) {
-                        elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+            // Reorder attributes
+            var attributes = geometry.attributes;
+            for ( var property in attributes) {
+                if (attributes.hasOwnProperty(property) && attributes[property].values) {
+                    var elementsIn = attributes[property].values;
+                    var intoElementsIn = 0;
+                    var numComponents = attributes[property].componentsPerAttribute;
+                    var elementsOut = [];
+                    while (intoElementsIn < numVertices) {
+                        var temp = indexCrossReferenceOldToNew[intoElementsIn];
+                        for (i = 0; i < numComponents; i++) {
+                            elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                        }
+                        ++intoElementsIn;
                     }
-                    ++intoElementsIn;
+                    attributes[property].values = elementsOut;
                 }
-                attributes[property].values = elementsOut;
             }
         }
 
@@ -696,6 +696,8 @@ define([
      *
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
+     * @exception {DeveloperError} All instance geometries must have an indexList or not have one.
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
      * @example
      * for (var i = 0; i < instances.length; ++i) {
@@ -722,9 +724,20 @@ define([
         var k;
 
         var m = instances[0].modelMatrix;
+        var haveIndexLists = (typeof instances[0].geometry.indexList !== 'undefined');
+        var primitiveType = instances[0].geometry.primitiveType;
+
         for (i = 1; i < length; ++i) {
             if (!Matrix4.equals(instances[i].modelMatrix, m)) {
                 throw new DeveloperError('All instances must have the same modelMatrix.');
+            }
+
+            if ((typeof instances[i].geometry.indexList !== 'undefined') !== haveIndexLists) {
+                throw new DeveloperError('All instance geometries must have an indexList or not have one.');
+            }
+
+            if (instances[i].geometry.primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
 
@@ -751,68 +764,38 @@ define([
             }
         }
 
-        // PERFORMANCE_IDEA: Could combine with fitToUnsignedShortIndices, but it would start to get ugly
-        // and it is not needed when OES_element_index_uint is supported.
-
         // Combine index lists
+        var indexList;
 
-        // First, determine the size of a typed array per primitive type
-        var primitiveType = instances[0].geometry.primitiveType;
-        var numberOfIndices = {};
-        var indices;
-
-        for (i = 0; i < length; ++i) {
-            indices = instances[i].geometry.indexList;
-            numberOfIndices[primitiveType] = (typeof numberOfIndices[primitiveType] !== 'undefined') ?
-                (numberOfIndices[primitiveType] += indices.length) : indices.length;
-        }
-
-        // Next, allocate a typed array for indices per primitive type
-        var combinedIndexLists = [];
-        var indexListsByPrimitiveType = {};
-
-        for (name in numberOfIndices) {
-            if (numberOfIndices.hasOwnProperty(name)) {
-                var num = numberOfIndices[name];
+        if (haveIndexLists) {
+            var numberOfIndices = 0;
+            for (i = 0; i < length; ++i) {
+                numberOfIndices += instances[i].geometry.indexList.length;
+            }
 
 // TODO: or new Array()
-                if (num < 60 * 1024) {
-                    values = new Uint16Array(num);
-                } else {
-                    values = new Uint32Array(num);
+            var destIndices;
+            if (numberOfIndices < 60 * 1024) {
+                destIndices = new Uint16Array(numberOfIndices);
+            } else {
+                destIndices = new Uint32Array(numberOfIndices);
+            }
+
+            var destOffset = 0;
+            var offset = 0;
+
+            for (i = 0; i < length; ++i) {
+                var sourceIndices = instances[i].geometry.indexList;
+                var sourceIndicesLen = sourceIndices.length;
+
+                for (k = 0; k < sourceIndicesLen; ++k) {
+                    destIndices[destOffset++] = offset + sourceIndices[k];
                 }
 
-                combinedIndexLists.push(values);
-
-                indexListsByPrimitiveType[name] = {
-                    values : values,
-                    currentOffset : 0
-                };
-            }
-        }
-
-        // Finally, combine index lists with the same primitive type
-        var offset = 0;
-
-        for (i = 0; i < length; ++i) {
-            sourceValues = instances[i].geometry.indexList;
-            sourceValuesLength = sourceValues.length;
-            var destValues = indexListsByPrimitiveType[primitiveType].values;
-            var n = indexListsByPrimitiveType[primitiveType].currentOffset;
-
-            for (k = 0; k < sourceValuesLength; ++k) {
-                destValues[n++] = offset + sourceValues[k];
+                offset += Geometry.computeNumberOfVertices(instances[i].geometry);
             }
 
-            indexListsByPrimitiveType[primitiveType].currentOffset = n;
-
-            var attrs = instances[i].geometry.attributes;
-            for (name in attrs) {
-                if (attrs.hasOwnProperty(name)) {
-                    offset += attrs[name].values.length / attrs[name].componentsPerAttribute;
-                    break;
-                }
-            }
+            indexList = destIndices;
         }
 
         // Create bounding sphere that includes all instances
@@ -835,8 +818,7 @@ define([
 
         return new Geometry({
             attributes : attributes,
-// TODO: cleanup combinedIndexLists
-            indexList : combinedIndexLists[0],
+            indexList : indexList,
             primitiveType : primitiveType,
             boundingSphere : boundingSphere
         });

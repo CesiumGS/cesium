@@ -7,6 +7,7 @@ defineSuite([
          'Core/Ellipsoid',
          'Core/Cartesian3',
          'Core/EncodedCartesian3',
+         'Core/Matrix4',
          'Core/Tipsify',
          'Core/GeographicProjection',
          'Core/Geometry',
@@ -22,6 +23,7 @@ defineSuite([
          Ellipsoid,
          Cartesian3,
          EncodedCartesian3,
+         Matrix4,
          Tipsify,
          GeographicProjection,
          Geometry,
@@ -555,13 +557,13 @@ defineSuite([
     it('combine combines one geometry', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                })
+                    })
+                }
             })
         });
 
@@ -569,7 +571,46 @@ defineSuite([
         expect(combined).toBe(instance.geometry);
     });
 
-    it('combine combines several geometries', function() {
+    it('combine combines several geometries without indexLists', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                }
+            })
+        });
+        var anotherInstance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [1.0, 1.0, 1.0]
+                    })
+                }
+            })
+        });
+
+        var combined = GeometryPipeline.combine([instance, anotherInstance]);
+        expect(combined).toEqual(new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([
+                        0.0, 0.0, 0.0,
+                        1.0, 1.0, 1.0
+                    ])
+                })
+            }
+        }));
+    });
+
+    it('combine combines several geometries with indexLists', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -644,6 +685,69 @@ defineSuite([
     it('combine throws when instances.length is zero', function() {
         expect(function() {
             GeometryPipeline.combine([]);
+        }).toThrow();
+    });
+
+    it('combine throws when instances.modelMatrix do not match', function() {
+        var instance0 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                })
+            }),
+            modelMatrix : Matrix4.fromScale(1.0)
+        });
+
+        var instance1 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                })
+            }),
+            modelMatrix : Matrix4.fromScale(2.0)
+        });
+
+        expect(function() {
+            GeometryPipeline.combine([instance0, instance1]);
+        }).toThrow();
+    });
+
+    it('combine throws when instance geometries do not all have or not have an indexList', function() {
+        var instance0 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                }),
+                indexList : [0]
+            })
+        });
+
+        var instance1 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                })
+            })
+        });
+
+        expect(function() {
+            GeometryPipeline.combine([instance0, instance1]);
         }).toThrow();
     });
 

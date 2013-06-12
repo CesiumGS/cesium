@@ -97,17 +97,26 @@ define([
         }
         result.attributes = newAttributes;
 
+        if (typeof this.indexList !== 'undefined') {
 // TODO: typed array or not.  fastest way to copy?
-        var sourceValues = this.indexList;
-        var length = sourceValues.length;
-        var values = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            values[i] = sourceValues[i];
+            var sourceValues = this.indexList;
+            var length = sourceValues.length;
+            var values = new Array(length);
+            for (var i = 0; i < length; ++i) {
+                values[i] = sourceValues[i];
+            }
+            result.indexList = values;
+        } else {
+            result.indexList = undefined;
         }
-        result.indexList = values;
 
         result.primitiveType = this.primitiveType;
-        this.boundingSphere.clone(result.boundingSphere);
+
+        if (typeof this.boundingSphere !== 'undefined') {
+            this.boundingSphere.clone(result.boundingSphere);
+        } else {
+            result.boundingSphere = undefined;
+        }
 
         return result;
     };
