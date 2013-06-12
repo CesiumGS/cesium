@@ -323,17 +323,22 @@ define([
             processTerrainStateMachine(this, context, terrainProvider);
         }
 
+        // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = typeof this.vertexArray !== 'undefined';
+
+        // But it's not done loading until our two state machines are terminated.
         var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            var imagery = tileImagery.imagery;
-            var imageryLayer = imagery.imageryLayer;
+            if (typeof tileImagery.loadingImagery === 'undefined') {
+                continue;
+            }
 
-            if (imagery.state === ImageryState.PLACEHOLDER) {
+            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
                 if (imageryLayer.getImageryProvider().isReady()) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
@@ -342,62 +347,22 @@ define([
                     imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
                     --i;
                     len = tileImageryCollection.length;
-                }
-            }
-
-            if (imagery.state === ImageryState.UNLOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._requestImagery(imagery);
-            }
-
-            if (imagery.state === ImageryState.RECEIVED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._createTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._reprojectTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                var parent = imagery.parent;
-                while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                    parent = parent.parent;
-                }
-
-                // If there's no valid parent, remove this TileImagery from the tile.
-                if (typeof parent === 'undefined') {
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    --i;
-                    len = tileImageryCollection.length;
                     continue;
                 }
-
-                // use that parent imagery instead, storing the original imagery
-                // in originalImagery to keep it alive
-                tileImagery.originalImagery = imagery;
-
-                parent.addReference();
-                tileImagery.imagery = parent;
-                imagery = parent;
             }
 
-            var imageryDoneLoading = imagery.state === ImageryState.READY;
+            var thisTileDoneLoading = tileImagery.processStateMachine(this, context);
+            isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
-            if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
-            }
-
-            isRenderable = isRenderable && (imageryDoneLoading || imageryLayer.alpha === 0.0);
-            isDoneLoading = isDoneLoading && imageryDoneLoading;
+            // The imagery is renderable as soon as we have any renderable imagery for this region.
+            isRenderable = isRenderable && (thisTileDoneLoading || typeof tileImagery.readyImagery !== 'undefined');
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len && isRenderable) {
-            this.isRenderable = true;
+        if (i === len) {
+            if (isRenderable) {
+                this.isRenderable = true;
+            }
 
             if (isDoneLoading) {
                 this.state = TileState.READY;
