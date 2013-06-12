@@ -195,6 +195,10 @@ define(['../../Core/Cartesian2',
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
             baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
             baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
+
+            //Grab the dropdown for resize code.
+            var elements = baseLayerPickerContainer.getElementsByClassName('cesium-baseLayerPicker-dropDown');
+            this._baseLayerPickerDropDown = elements[0];
         }
 
         //Animation
@@ -545,9 +549,8 @@ define(['../../Core/Cartesian2',
                 this._timeline.container.style.left = animationExists ? animationWidth + 'px' : 0;
             }
 
-            if (typeof this._baseLayerPicker !== 'undefined') {
-                var elements = this._baseLayerPicker.container.getElementsByClassName('cesium-baseLayerPicker-dropDown');
-                var baseLayerPickerDropDown = elements[0];
+            var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
+            if (typeof baseLayerPickerDropDown !== 'undefined') {
                 var baseLayerPickerMaxHeight = cesiumWidget.canvas.height - 100;
                 baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
             }
