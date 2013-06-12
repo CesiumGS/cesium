@@ -5,14 +5,6 @@ define([
         Fullscreen) {
     "use strict";
 
-    /**
-     * A set of functions to detect whether the current browser supports
-     * various features.
-     *
-     * @exports FeatureDetection
-     */
-    var FeatureDetection = {};
-
     function extractVersion(versionString) {
         return versionString.split('.').map(function(v) {
             return parseInt(v, 10);
@@ -84,6 +76,42 @@ define([
     function webkitVersion() {
         return isWebkit() && webkitVersionResult;
     }
+
+    var isInternetExplorerResult;
+    var internetExplorerVersionResult;
+    function isInternetExplorer() {
+        if (typeof isInternetExplorerResult === 'undefined') {
+            var fields = (/ MSIE ([\.0-9]+)/).exec(navigator.userAgent);
+            if (fields === null) {
+                isInternetExplorerResult = false;
+            } else {
+                isInternetExplorerResult = true;
+                internetExplorerVersionResult = extractVersion(fields[1]);
+            }
+        }
+        return isInternetExplorerResult;
+    }
+
+    function internetExplorerVersion() {
+        return isInternetExplorer() && internetExplorerVersionResult;
+    }
+
+    /**
+     * A set of functions to detect whether the current browser supports
+     * various features.
+     *
+     * @exports FeatureDetection
+     */
+    var FeatureDetection = {
+        isChrome : isChrome,
+        chromeVersion : chromeVersion,
+        isSafari : isSafari,
+        safariVersion : safariVersion,
+        isWebkit : isWebkit,
+        webkitVersion : webkitVersion,
+        isInternetExplorer : isInternetExplorer,
+        internetExplorerVersion : internetExplorerVersion
+    };
 
     var supportsCrossOriginImagery;
 
