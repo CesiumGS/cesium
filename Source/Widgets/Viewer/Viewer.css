@@ -25,13 +25,6 @@
 	height: 100%;
 }
 
-.cesium-viewer-cesiumWidgetContainer .cesium-widget-logo {
-    bottom: 32px;
-    left: 179px;
-    width: 118px;
-    height: 26px;
-}
-
 .cesium-viewer-canvas {
 	display: block;
 	position: absolute;
@@ -108,24 +101,12 @@
 		width: 136px;
 		height: 90px;
 	}
-	.cesium-viewer .cesium-viewer-timelineContainer {
-		left: 137px;
-	}
-	.cesium-viewer .cesium-widget-logo {
-		left: 146px;
-	}
 }
 
 @media only screen and (max-width: 599px) {
 	.cesium-viewer .cesium-viewer-animationContainer {
 		width: 106px;
 		height: 70px;
-	}
-	.cesium-viewer .cesium-viewer-timelineContainer {
-		left: 107px;
-	}
-	.cesium-viewer .cesium-widget-logo {
-		left: 116px;
 	}
 }
 

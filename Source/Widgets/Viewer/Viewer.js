@@ -36,14 +36,6 @@ define(['../../Core/Cartesian2',
                 Timeline) {
     "use strict";
 
-    function setLogoOffset(centralBody, logoOffsetX, logoOffsetY) {
-        var logoOffset = centralBody.logoOffset;
-        if ((logoOffsetX !== logoOffset.x) || (logoOffsetY !== logoOffset.y)) {
-            centralBody.logoOffset.x = logoOffsetX;
-            centralBody.logoOffset.y = logoOffsetY;
-        }
-    }
-
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
@@ -158,11 +150,12 @@ define(['../../Core/Cartesian2',
         });
 
         //Subscribe for resize events and set the initial size.
+        var that = this;
+        this._needResize = true;
         this._resizeCallback = function() {
-            setLogoOffset(cesiumWidget.centralBody, cesiumWidget.cesiumLogo.offsetWidth + cesiumWidget.cesiumLogo.offsetLeft + 10, 28);
+            that._needResize = true;
         };
         window.addEventListener('resize', this._resizeCallback, false);
-        this._resizeCallback();
 
         var clock = cesiumWidget.clock;
 
@@ -506,6 +499,29 @@ define(['../../Core/Cartesian2',
     };
 
     Viewer.prototype._onTick = function(clock) {
+        if (this._needResize) {
+            this._needResize = false;
+            var cesiumWidget = this._cesiumWidget;
+            var timelineExists = typeof this._timeline !== 'undefined';
+            var animationExists = typeof this._animation !== 'undefined';
+
+            var logoBottom = timelineExists ? 28 : 0;
+            var logoLeft = animationExists ? this._animation.container.clientWidth : 0;
+
+            var logo = cesiumWidget.cesiumLogo;
+            var logoStyle = logo.style;
+            logoStyle.bottom = logoBottom + 'px';
+            logoStyle.left = logoLeft + 'px';
+
+            var logoOffset = cesiumWidget.centralBody.logoOffset;
+            logoOffset.x = logoLeft + 123;
+            logoOffset.y = logoBottom;
+
+            if (timelineExists) {
+                this._timeline.container.style.left = animationExists ? logoLeft + 'px' : 0;
+            }
+        }
+
         var currentTime = clock.currentTime;
         this._dataSourceDisplay.update(currentTime);
     };
