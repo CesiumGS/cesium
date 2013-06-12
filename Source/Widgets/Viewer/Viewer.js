@@ -501,12 +501,36 @@ define(['../../Core/Cartesian2',
     Viewer.prototype._onTick = function(clock) {
         if (this._needResize) {
             this._needResize = false;
+
             var cesiumWidget = this._cesiumWidget;
+            var widgetWidth = cesiumWidget.canvas.clientWidth;
+
             var timelineExists = typeof this._timeline !== 'undefined';
             var animationExists = typeof this._animation !== 'undefined';
+            var animationContainer;
+
+            var animationWidth = 0;
+            if (animationExists) {
+                animationContainer = this._animation.container;
+
+                if (widgetWidth > 900) {
+                    animationWidth = 169;
+                    animationContainer.style.width = '169px';
+                    animationContainer.style.height = '112px';
+                } else if (widgetWidth >= 600) {
+                    animationWidth = 136;
+                    animationContainer.style.width = '136px';
+                    animationContainer.style.height = '90px';
+                } else {
+                    animationWidth = 106;
+                    animationContainer.style.width = '106px';
+                    animationContainer.style.height = '70px';
+                }
+                this._animation._resizeCallback();
+            }
 
             var logoBottom = timelineExists ? 28 : 0;
-            var logoLeft = animationExists ? this._animation.container.clientWidth : 0;
+            var logoLeft = animationExists ? animationWidth : 0;
 
             var logo = cesiumWidget.cesiumLogo;
             var logoStyle = logo.style;
@@ -518,7 +542,14 @@ define(['../../Core/Cartesian2',
             logoOffset.y = logoBottom;
 
             if (timelineExists) {
-                this._timeline.container.style.left = animationExists ? logoLeft + 'px' : 0;
+                this._timeline.container.style.left = animationExists ? animationWidth + 'px' : 0;
+            }
+
+            if (typeof this._baseLayerPicker !== 'undefined') {
+                var elements = this._baseLayerPicker.container.getElementsByClassName('cesium-baseLayerPicker-dropDown');
+                var baseLayerPickerDropDown = elements[0];
+                var baseLayerPickerMaxHeight = cesiumWidget.canvas.height - 100;
+                baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
             }
         }
 

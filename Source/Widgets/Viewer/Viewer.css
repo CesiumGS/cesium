@@ -95,35 +95,3 @@
 	vertical-align: middle;
 	margin: 1px;
 }
-
-@media only screen and (min-width: 600px) and (max-width: 900px) {
-	.cesium-viewer .cesium-viewer-animationContainer {
-		width: 136px;
-		height: 90px;
-	}
-}
-
-@media only screen and (max-width: 599px) {
-	.cesium-viewer .cesium-viewer-animationContainer {
-		width: 106px;
-		height: 70px;
-	}
-}
-
-@media only screen and (max-height: 300px) {
-    .cesium-viewer .cesium-baseLayerPicker-dropDown {
-        max-height: 125px;
-    }
-}
-
-@media only screen and (min-height: 300px) and (max-height: 425px) {
-    .cesium-viewer .cesium-baseLayerPicker-dropDown {
-        max-height: 225px;
-    }
-}
-
-@media only screen and (min-height: 425px) and (max-height: 550px) {
-    .cesium-viewer .cesium-baseLayerPicker-dropDown {
-        max-height: 325px;
-    }
-}
