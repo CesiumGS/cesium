@@ -19,13 +19,13 @@ define([
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
-     * Rather than calling this function directly, this function is normally passed as
+     * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDragDropMixin
      *
      * @param {Viewer} viewer The viewer instance.
      * @param {Object} [options] Configuration options for the mixin.
-     * @param {Element|String} [options.dropTarget=viewer.container] The DOM element or ID that will contain the widget.
+     * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
      * @param {Boolean} [options.clearOnDrop=true] When true, dropping files will clear all existing data sources first, when false, new data sources will be loaded after the existing ones.
      *
      * @exception {DeveloperError} viewer is required.
