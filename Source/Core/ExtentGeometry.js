@@ -76,31 +76,20 @@ define([
     var sin = Math.sin;
     var sqrt = Math.sqrt;
 
-    var granYCos;
-    var granYSin;
-    var granXCos;
-    var granXSin;
-    var granularityY;
-    var granularityX;
-    var radiiSquared;
-
-    var ellipsoid;
     var stLatitude, stLongitude;
 
-    var extent;
-
-    var lonScalar, latScalar;
-
-    function computePosition(row, col, maxHeight, minHeight) {
-        var latitude = nwCartographic.latitude - granYCos*row + col*granXSin;
-        stLatitude = extent.north - granularityY*row;
+    function computePosition(params, row, col, maxHeight, minHeight) {
+        var extent = params.extent;
+        var radiiSquared = params.radiiSquared;
+        var latitude = nwCartographic.latitude - params.granYCos*row + col*params.granXSin;
+        stLatitude = extent.north - params.granularityY*row;
 
         var cosLatitude = cos(latitude);
         var nZ = sin(latitude);
         var kZ = radiiSquared.z * nZ;
 
-        var longitude = nwCartographic.longitude + row*granYSin + col*granXCos;
-        stLongitude = extent.west + col*granularityX;
+        var longitude = nwCartographic.longitude + row*params.granYSin + col*params.granXCos;
+        stLongitude = extent.west + col*params.granularityX;
 
         var nX = cosLatitude * cos(longitude);
         var nY = cosLatitude * sin(longitude);
@@ -127,7 +116,9 @@ define([
         }
     }
 
-    function constructExtent(options, vertexFormat, width, height, surfaceHeight){
+    function constructExtent(options, vertexFormat, width, height, surfaceHeight, params){
+        var extent = params.extent;
+        var ellipsoid = params.ellipsoid;
         var size = width * height;
         var threeCount = size * 3;
         var positions = (vertexFormat.position) ? new Array(threeCount) : undefined;
@@ -142,7 +133,7 @@ define([
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
-                computePosition(row, col, surfaceHeight);
+                computePosition(params, row, col, surfaceHeight);
 
                 var attrIndex1 = attrIndex + 1;
                 var attrIndex2 = attrIndex + 2;
@@ -154,8 +145,8 @@ define([
                 }
 
                 if (vertexFormat.st) {
-                    textureCoordinates[stIndex] = (stLongitude - extent.west) * lonScalar;
-                    textureCoordinates[stIndex+1] = (stLatitude - extent.south) * latScalar;
+                    textureCoordinates[stIndex] = (stLongitude - extent.west) * params.lonScalar;
+                    textureCoordinates[stIndex+1] = (stLatitude - extent.south) * params.latScalar;
                 }
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -220,7 +211,7 @@ define([
         };
     }
 
-    function addAttributes(attrIndex, vertexFormat, attributes, offset, extrudedOffset, top, bottom, setNormal) {
+    function addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, offset, extrudedOffset, top, bottom, setNormal) {
         if (!top) {
             extrudedOffset = offset;
         }
@@ -307,13 +298,14 @@ define([
         }
     }
 
-    function stWall (vertexFormat, stIndex, attributes, offset, extrudedOffset, direction){
+    function stWall (vertexFormat, stIndex, attributes, offset, extrudedOffset, direction, params){
         if (vertexFormat.st) {
             var twoOffset = offset*2;
             var twoExtrudedOffset = extrudedOffset*2;
+            var extent = params.extent;
 
-            var stLon = (stLongitude - extent.west) * lonScalar;
-            var stLat = (stLatitude - extent.south) * latScalar;
+            var stLon = (stLongitude - extent.west) * params.lonScalar;
+            var stLat = (stLatitude - extent.south) * params.latScalar;
 
             if (direction === 'n') {
                 attributes.textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
@@ -339,10 +331,11 @@ define([
         }
     }
 
-    function stTopBottom(vertexFormat, stIndex, attributes, offset, extrudedOffset, closeTop, closeBottom) {
+    function stTopBottom(vertexFormat, stIndex, attributes, offset, extrudedOffset, closeTop, closeBottom, params) {
+        var extent = params.extent;
         if (vertexFormat.st) {
-            var stLon = (stLongitude - extent.west) * lonScalar;
-            var stlat = (stLatitude - extent.south) * latScalar;
+            var stLon = (stLongitude - extent.west) * params.lonScalar;
+            var stlat = (stLatitude - extent.south) * params.latScalar;
             if (!closeTop) {
                 extrudedOffset = offset;
             } else {
@@ -356,16 +349,17 @@ define([
         }
     }
 
-    function constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight) {
+    function constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight, params) {
         var size = width * height;
+        var ellipsoid = params.ellipsoid;
         var extrudedOptions = options.extrudedOptions;
         if (typeof extrudedOptions.height !== 'number'){
-            return constructExtent(options, vertexFormat, width, height, surfaceHeight);
+            return constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
         var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(options, vertexFormat, width, height, surfaceHeight);
+            return constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
@@ -403,14 +397,14 @@ define([
         var row;
         var col;
 
-        computePosition(0, 0, maxHeight, minHeight);
+        computePosition(params, 0, 0, maxHeight, minHeight);
         position.clone(northWestTop);
         extrudedPosition.clone(northWestBottom);
 
-        computePosition(0, width-1, maxHeight);
+        computePosition(params, 0, width-1, maxHeight);
         position.clone(northEastTop);
 
-        computePosition(height-1, 0, maxHeight);
+        computePosition(params, height-1, 0, maxHeight);
         position.clone(southWestTop);
 
         northEastTop.subtract(northWestTop, v1Scratch);
@@ -427,18 +421,18 @@ define([
         for (row = 0; row < height; ++row) { // add vertices for walls (the perimeter)
             if (row === 0) { // north row
                 for (col = 0; col < width; ++col) {
-                    computePosition(row, col, maxHeight, minHeight);
+                    computePosition(params, row, col, maxHeight, minHeight);
 
                     if (col === 0) {
-                        addAttributes(attrIndex, vertexFormat, attributes, twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, westNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w');
+                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, westNormal);
+                        stWall(vertexFormat, stIndex, attributes, twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w', params);
                     } else if (col === width - 1) {
-                        addAttributes(attrIndex, vertexFormat, attributes, (twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, eastNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e');
+                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, eastNormal);
+                        stWall(vertexFormat, stIndex, attributes, twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e', params);
                     }
 
-                    addAttributes(attrIndex, vertexFormat, attributes, 0, perimeterPositions, true, true, northNormal); // add north row
-                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'n');
+                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, northNormal); // add north row
+                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'n', params);
 
                     vertexIndex ++;
                     attrIndex += 3;
@@ -446,18 +440,18 @@ define([
                 }
             } else if (row === height - 1) { // south row
                 for (col = 0; col < width; ++col) {
-                    computePosition(row, col, maxHeight, minHeight);
+                    computePosition(params, row, col, maxHeight, minHeight);
 
                     if (col === 0) {
-                        addAttributes(attrIndex, vertexFormat, attributes, (twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, westNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w');
+                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, westNormal);
+                        stWall(vertexFormat, stIndex, attributes, twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w', params);
                     } else if (col === width - 1) {
-                        addAttributes(attrIndex, vertexFormat, attributes, (twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, eastNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e');
+                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, eastNormal);
+                        stWall(vertexFormat, stIndex, attributes, twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e', params);
                     }
 
-                    addAttributes(attrIndex, vertexFormat, attributes, 0, perimeterPositions, true, true, southNormal); // add south row
-                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 's');
+                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, southNormal); // add south row
+                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 's', params);
 
                     vertexIndex ++;
                     attrIndex += 3;
@@ -465,17 +459,17 @@ define([
                 }
             } else { // sides
                 col = 0;
-                computePosition(row, col, maxHeight, minHeight);
-                addAttributes(attrIndex, vertexFormat, attributes, 0, perimeterPositions, true, true, westNormal); // add west side
-                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w');
+                computePosition(params, row, col, maxHeight, minHeight);
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, westNormal); // add west side
+                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w', params);
                 vertexIndex ++;
                 attrIndex += 3;
                 stIndex += 2;
 
                 col = width - 1;
-                computePosition(row, col, maxHeight, minHeight);
-                addAttributes(attrIndex, vertexFormat, attributes, 0, perimeterPositions, true, true, eastNormal); // add east side
-                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'e');
+                computePosition(params, row, col, maxHeight, minHeight);
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, eastNormal); // add east side
+                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'e', params);
                 vertexIndex ++;
                 attrIndex += 3;
                 stIndex += 2;
@@ -491,9 +485,9 @@ define([
             stIndex += 2 * incAmount;
             for (row = 0; row < height; ++row) { // fill in middle
                 for (col = 0; col < width; ++col) {
-                    computePosition(row, col, maxH, minH);
-                    addAttributes(attrIndex, vertexFormat, attributes, 0, size, closeTop, closeBottom);
-                    stTopBottom(vertexFormat, stIndex, attributes, 0, size, closeTop, closeBottom);
+                    computePosition(params, row, col, maxH, minH);
+                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, size, closeTop, closeBottom);
+                    stTopBottom(vertexFormat, stIndex, attributes, 0, size, closeTop, closeBottom, params);
                     vertexIndex ++;
                     attrIndex += 3;
                     stIndex += 2;
@@ -501,8 +495,8 @@ define([
             }
         }
 
-        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var topBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, minHeight, bottomBoundingSphere);
         var indices = [];
         var indicesIndex = 0;
         var attr = {
@@ -645,7 +639,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var attr;
 
-        extent = options.extent;
+        var extent = options.extent;
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
@@ -654,27 +648,27 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
-        granularityX = (extent.east - extent.west) / (width - 1);
-        granularityY = (extent.north - extent.south) / (height - 1);
+        var granularityX = (extent.east - extent.west) / (width - 1);
+        var granularityY = (extent.north - extent.south) / (height - 1);
 
-        ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        radiiSquared = ellipsoid.getRadiiSquared();
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var radiiSquared = ellipsoid.getRadiiSquared();
 
         var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
         var rotation = defaultValue(options.rotation, 0.0);
 
         // for computing texture coordinates
-        lonScalar = 1.0 / (extent.east - extent.west);
-        latScalar = 1.0 / (extent.north - extent.south);
+        var lonScalar = 1.0 / (extent.east - extent.west);
+        var latScalar = 1.0 / (extent.north - extent.south);
 
         extent.getNorthwest(nwCartographic);
         extent.getCenter(centerCartographic);
         var latitude, longitude;
 
-        granYCos = granularityY * cos(rotation);
-        granYSin = granularityY * sin(rotation);
-        granXCos = granularityX * cos(rotation);
-        granXSin = granularityX * sin(rotation);
+        var granYCos = granularityY * cos(rotation);
+        var granYSin = granularityY * sin(rotation);
+        var granXCos = granularityX * cos(rotation);
+        var granXSin = granularityX * sin(rotation);
 
         if (rotation !== 0) {
             proj.project(nwCartographic, nw);
@@ -695,10 +689,24 @@ define([
             }
         }
 
+        var params = {
+            granYCos: granYCos,
+            granYSin: granYSin,
+            granXCos: granXCos,
+            granXSin: granXSin,
+            granularityY: granularityY,
+            granularityX: granularityX,
+            radiiSquared: radiiSquared,
+            ellipsoid: ellipsoid,
+            lonScalar: lonScalar,
+            latScalar: latScalar,
+            extent: extent
+        };
+
         if (typeof options.extrudedOptions !== 'undefined') {
-            attr = constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight);
+            attr = constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight, params);
         } else {
-            attr = constructExtent(options, vertexFormat, width, height, surfaceHeight);
+            attr = constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
         }
 
         var attributes = {};
