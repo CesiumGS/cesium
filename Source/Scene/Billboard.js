@@ -596,7 +596,7 @@ define([
     };
 
     /**
-     * Gets the aligned axis. The aligned axis is the unit vector that the billboard up vector points towards.
+     * Gets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
      * The default is the zero vector, which means the billboard is aligned to the screen up vector.
      *
      * @memberof Billboard
@@ -612,7 +612,7 @@ define([
     };
 
     /**
-     * Sets the aligned axis. The aligned axis is the unit vector that the billboard up vector points towards.
+     * Sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
      * The default is the zero vector, which means the billboard is aligned to the screen up vector.
      *
      * @memberof Billboard

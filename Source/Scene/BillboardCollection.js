@@ -820,7 +820,7 @@ define([
     }
 
     function writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var rotation = billboard.getRotation();
         var alignedAxis = billboard.getAlignedAxis();
 
