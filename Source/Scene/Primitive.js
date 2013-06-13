@@ -38,13 +38,97 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
+     * as shown in Code Example 1 below, or from an array of instances, even if the geometry is from different
+     * geometry types, e.g., an {@link ExtentGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
+     * <p>
+     * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
+     * {@link Material} and {@link Renderstate}.  Roughly, the geometry instance defines the structure and placement,
+     * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
+     * and max most of them, and to easily add new geometry types and appearances.
+     * </p>
+     * <p>
+     * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
+     * Instances can be individually picked; {@link Context.pick} returns their {@link GeometryInstance#pickData}.  Using
+     * per-instance appearances like {@link PerGeometryColorClosedTranslucentAppearance}, each instance can also have a unique color.
+     * </p>
+     *
+     * @alias Geometry
+     * @constructor
+     *
+     * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
+     * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
+     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
+     * @param {Boolean} [options.releaseGeometries=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+     * @param {Boolean} [options.transformToWorldCoordinates=true] When <code>true</code>, each geometry instance is transform to world coordinates even if they are already in the same coordinate system.
+     *
+     * @example
+     * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
+     * var instance = new GeometryInstance({
+     *   geometry : new EllipseGeometry({
+     *       vertexFormat : VertexFormat.POSITION_AND_ST,
+     *       ellipsoid : ellipsoid,
+     *       center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+     *       semiMinorAxis : 500000.0,
+     *       semiMajorAxis : 1000000.0,
+     *       bearing : CesiumMath.PI_OVER_FOUR
+     *   }),
+     *   pickData : 'object returned when this instance is picked'
+     * });
+     * var primitive = new Primitive({
+     *   geometryInstances : instance,
+     *   appearance : new EllipsoidSurfaceAppearance({
+     *     material : Material.fromType(scene.getContext(), 'Checkerboard')
+     *   })
+     * });
+     * scene.getPrimitives().add(primitive);
+     *
+     * // 2. Draw different instances each with a unique color
+     * var extentInstance = new GeometryInstance({
+     *   geometry : new ExtentGeometry({
+     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *     extent : new Extent(
+     *       CesiumMath.toRadians(-140.0),
+     *       CesiumMath.toRadians(30.0),
+     *       CesiumMath.toRadians(-100.0),
+     *       CesiumMath.toRadians(40.0))
+     *     }),
+     *   pickData : 'object returned when this extent is picked',
+     *   color : new Color(0.0, 1.0, 1.0, 0.5)
+     * });
+     * var ellipsoidInstance = new GeometryInstance({
+     *   geometry : new EllipsoidGeometry({
+     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *     ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
+     *   }),
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+     *   pickData : 'object returned when this ellipsoid is picked',
+     *   color : new Color(1.0, 0.0, 1.0, 0.5)
+     * });
+     * var primitive = new Primitive({
+     *   geometryInstances : [extentInstance, ellipsoidInstance],
+     *   appearance : new PerGeometryColorClosedTranslucentAppearance()
+     * });
+     * scene.getPrimitives().add(primitive);
+     *
+     * @see GeometryInstance
+     * @see Appearance
      */
     var Primitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The geometry instances rendered with this primitive.  This may
+         * be <code>undefined</code> if <code>options.releaseGeometries</code>
+         * is <code>true</code> when the primitive is constructed.
+         * <p>
+         * Changing this property after the primitive is rendered has no effect.
+         * </p>
+         *
+         * @type Array
+         *
+         * @default undefined
          */
         this.geometryInstances = options.geometryInstances;
 
@@ -54,17 +138,37 @@ define([
         this.appearance = options.appearance;
 
         /**
-         * DOC_TBA
+         * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
+         * When this is the identity matrix, the primitive is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         *
+         * @type Matrix4
+         *
+         * @default Matrix4.IDENTITY
+         *
+         * @example
+         * var origin = ellipsoid.cartographicToCartesian(
+         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * p.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *
+         * @see czm_model
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
 
         /**
-         * DOC_TBA
+         * Determines if the primitive will be shown.  This affects all geometry
+         * instances in the primitive.
+         *
+         * @type Boolean
+         *
+         * @default true
          */
         this.show = true;
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
-        this._releaseGeometries = defaultValue(options.releaseGeometries, false);
+        this._releaseGeometries = defaultValue(options.releaseGeometries, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
@@ -436,14 +540,41 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns true if this object was destroyed; otherwise, false.
+     * <p>
+     * If this object was destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
+     * </p>
+     *
+     * @memberof Primitive
+     *
+     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     *
+     * @see Primitive#destroy
      */
     Primitive.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
-     * DOC_TBA
+     * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
+     * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
+     * <p>
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     * </p>
+     *
+     * @memberof Primitive
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     *
+     * @see Primitive#isDestroyed
+     *
+     * @example
+     * e = e && e.destroy();
      */
     Primitive.prototype.destroy = function() {
         var length;

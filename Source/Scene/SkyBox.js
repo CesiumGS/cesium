@@ -85,11 +85,10 @@ define([
 
         /**
          * Determines if the sky box will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type Boolean
+         *
+         * @default true
          */
         this.show = true;
     };

@@ -142,7 +142,7 @@ define([
                 height : 1000000.0
             }),
             pickData : 'geometry4',
-            color : Color.LIME
+            color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         var primitive = new Primitive({
             geometryInstances : [geometry, geometry2, geometry3, geometry4],
