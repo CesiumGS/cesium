@@ -73,10 +73,12 @@ require([
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER, // default
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
                 scale : 2.0, // default: 1.0
-                imageIndex : 0, // default
+                imageIndex : 0, // default: -1
                 color : Cesium.Color.LIME, // default: WHITE
                 rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
-                alignedAxis : Cesium.Cartesian3.ZERO // default
+                alignedAxis : Cesium.Cartesian3.ZERO, // default
+                width : undefined, // default
+                height : undefined // default
             });
             scene.getPrimitives().add(billboards);
         };

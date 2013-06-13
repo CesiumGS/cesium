@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -24,6 +25,7 @@ define([
     ], function(
         DeveloperError,
         Color,
+        defaultValue,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -206,9 +208,6 @@ define([
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.getTexture();
-            },
-            u_atlasSize : function() {
-                return that._textureAtlas.getTexture().getDimensions();
             }
         };
     };
@@ -636,8 +635,7 @@ define([
         }, {
             index : attributeIndices.textureCoordinatesAndImageSize,
             componentsPerAttribute : 4,
-            normalize : true,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+            componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[IMAGE_INDEX_INDEX]
         }, {
             index : attributeIndices.pickColor,
@@ -682,7 +680,7 @@ define([
     var writePositionScratch = new EncodedCartesian3();
 
     function writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var position = billboard._getActualPosition();
 
         if (billboardCollection._mode === SceneMode.SCENE3D) {
@@ -708,7 +706,7 @@ define([
     }
 
     function writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var pixelOffset = billboard.getPixelOffset();
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x, pixelOffset.y);
 
@@ -721,7 +719,7 @@ define([
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var eyeOffset = billboard.getEyeOffset();
         var scale = billboard.getScale();
         billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
@@ -736,7 +734,7 @@ define([
     }
 
     function writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
 
         var pickWriters = vafWriters[pickPassPurpose];
         var writer = pickWriters[attributeIndices.pickColor];
@@ -754,7 +752,7 @@ define([
     }
 
     function writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
 
         var colorWriters = vafWriters[colorPassPurpose];
         var writer = colorWriters[attributeIndices.color];
@@ -772,7 +770,7 @@ define([
     }
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var horizontalOrigin = billboard.getHorizontalOrigin().value;
         var verticalOrigin = billboard.getVerticalOrigin().value;
         var show = billboard.getShow();
@@ -794,7 +792,7 @@ define([
     }
 
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var bottomLeftX = 0;
         var bottomLeftY = 0;
         var width = 0;
@@ -813,14 +811,18 @@ define([
         var topRightX = bottomLeftX + width;
         var topRightY = bottomLeftY + height;
 
-        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, width, height);
+        var dimensions = billboardCollection._textureAtlas.getTexture().getDimensions();
+        var imageWidth = defaultValue(billboard.getWidth(), dimensions.x * width) * 0.5;
+        var imageHeight = defaultValue(billboard.getHeight(), dimensions.y * height) * 0.5;
+
+        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth, imageHeight);
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.textureCoordinatesAndImageSize];
-        writer(i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
-        writer(i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
-        writer(i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
-        writer(i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
+        writer(i + 0, bottomLeftX, bottomLeftY, imageWidth, imageHeight); // Lower Left
+        writer(i + 1, topRightX, bottomLeftY, imageWidth, imageHeight); // Lower Right
+        writer(i + 2, topRightX, topRightY, imageWidth, imageHeight); // Upper Right
+        writer(i + 3, bottomLeftX, topRightY, imageWidth, imageHeight); // Upper Left
     }
 
     function writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -919,9 +921,6 @@ define([
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
-        var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
-        var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
-
         var pixelScale;
         var size;
         var offset;
@@ -936,7 +935,7 @@ define([
         var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
-        size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+        size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
         if (collection._allHorizontalCenter) {
             size *= 0.5;
         }

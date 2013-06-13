@@ -13,8 +13,6 @@ attribute vec4 pickColor;
 attribute vec4 color;
 #endif
 
-uniform vec2 u_atlasSize;
-
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
 varying vec2 v_textureCoordinates;
@@ -48,7 +46,7 @@ void main()
     
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
     
-    vec2 halfSize = u_atlasSize * imageSize * 0.5 * scale * czm_highResolutionSnapScale;
+    vec2 halfSize = imageSize * scale * czm_highResolutionSnapScale;
     halfSize *= ((direction * 2.0) - 1.0);
     
     positionWC.xy += (origin * abs(halfSize));

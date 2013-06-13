@@ -71,6 +71,8 @@ define([
         this._color = Color.clone(defaultValue(description.color, Color.WHITE));
         this._rotation = defaultValue(description.rotation, 0.0);
         this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
+        this._width = description.width;
+        this._height = description.height;
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -648,6 +650,72 @@ define([
         if (!Cartesian3.equals(axis, value)) {
             Cartesian3.clone(value, axis);
             makeDirty(this, ALIGNED_AXIS_INDEX);
+        }
+    };
+
+    /**
+     * Gets the billboards custom width or undefined if the image width is used.
+     *
+     * @memberof Billboard
+     *
+     * @return {Number} The billboard's width or undefined.
+     *
+     * @see Billboard#setWidth
+     * @see Billboard#getHeight
+     * @see Billboard#setHeight
+     */
+    Billboard.prototype.getWidth = function() {
+        return this._width;
+    };
+
+    /**
+     * Sets a custom width for the billboard. If undefined, the image width will be used.
+     *
+     * @memberof Billboard
+     *
+     * @param {Number} value The width of the billboard or undefined to use the image width.
+     *
+     * @see Billboard#getWidth
+     * @see Billboard#getHeight
+     * @see Billboard#setHeight
+     */
+    Billboard.prototype.setWidth = function(value) {
+        if (this._width !== value) {
+            this._width = value;
+            makeDirty(this, IMAGE_INDEX_INDEX);
+        }
+    };
+
+    /**
+     * Gets the billboards custom height or undefined if the image height is used.
+     *
+     * @memberof Billboard
+     *
+     * @return {Number} The billboard's height or undefined.
+     *
+     * @see Billboard#setHeight
+     * @see Billboard#getWidth
+     * @see Billboard#setWidth
+     */
+    Billboard.prototype.getHeight = function() {
+        return this._height;
+    };
+
+    /**
+     * Sets a custom height for the billboard. If undefined, the image height will be used.
+     *
+     * @memberof Billboard
+     *
+     * @param {Number} value The height of the billboard or undefined to use the image height.
+     *
+     * @see Billboard#getHeight
+     * @see Billboard#getWidth
+     * @see Billboard#setWidth
+     */
+    Billboard.prototype.setHeight = function(value) {
+        if (this._height !== value) {
+            this._height = value;
+            makeDirty(this, IMAGE_INDEX_INDEX);
         }
     };
 
