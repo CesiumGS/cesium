@@ -14,7 +14,7 @@ Beta Releases
    * Renamed the `transitioner` property on `CesiumWidget`, `HomeButton`, and `ScreenModePicker` to `sceneTrasitioner` to be consistent with property naming convention.
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
 * Added `Context.getAntialias`.
-* Added rotation and aligned axis properties to `Billboard`s.
+* Added rotation, aligned axis, width, and height properties to `Billboard`s.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
 * Improved the performance of terrain and imagery refinement, especially when using a mixture of slow and fast imagery sources.
 * Improved test robustness on Mac.
