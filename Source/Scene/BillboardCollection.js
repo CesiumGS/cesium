@@ -140,6 +140,10 @@ define([
         this._billboardsRemoved = false;
         this._createVertexArray = false;
 
+        this._shaderRotation = false;
+        this._compiledShaderRotation = false;
+        this._compiledShaderRotationPick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -824,6 +828,10 @@ define([
         var rotation = billboard.getRotation();
         var alignedAxis = billboard.getAlignedAxis();
 
+        if (rotation !== 0.0 || !Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+            billboardCollection._shaderRotation = true;
+        }
+
         var x = alignedAxis.x;
         var y = alignedAxis.y;
         var z = alignedAxis.z;
@@ -1098,15 +1106,21 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            if (typeof this._sp === 'undefined') {
+            if (typeof this._rs === 'undefined') {
                 this._rs = context.createRenderState({
                     depthTest : {
                         enabled : true
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });
+            }
 
-                this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+            if (typeof this._sp === 'undefined' || (this._shaderRotation && !this._compiledShaderRotation)) {
+                this._sp = context.getShaderCache().getShaderProgram(
+                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + BillboardCollectionVS,
+                        BillboardCollectionFS,
+                        attributeIndices);
+                this._compiledShaderRotation = this._shaderRotation;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1133,11 +1147,12 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            if (typeof this._spPick === 'undefined') {
+            if (typeof this._spPick === 'undefined' || (this._shaderRotation && !this._compiledShaderRotationPick)) {
                 this._spPick = context.getShaderCache().getShaderProgram(
-                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
+                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                         attributeIndices);
+                this._compiledShaderRotation = this._shaderRotationPick;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];

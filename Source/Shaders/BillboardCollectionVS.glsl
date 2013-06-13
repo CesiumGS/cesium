@@ -36,8 +36,6 @@ void main()
     vec2 imageSize = textureCoordinatesAndImageSize.zw;
     vec2 origin = originAndShow.xy;
     float show = originAndShow.z;
-    float rotation = rotationAndAlignedAxis.x;
-    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
     
     ///////////////////////////////////////////////////////////////////////////
     
@@ -54,6 +52,10 @@ void main()
     halfSize *= ((direction * 2.0) - 1.0);
     
     positionWC.xy += (origin * abs(halfSize));
+    
+#ifdef ROTATION
+    float rotation = rotationAndAlignedAxis.x;
+    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
     
     if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
     {
@@ -72,6 +74,7 @@ void main()
         mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
         halfSize = rotationMatrix * halfSize;
     }
+#endif
     
     positionWC.xy += halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
