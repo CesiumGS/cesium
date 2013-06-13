@@ -152,7 +152,6 @@
 	<fileset dir="${sourceDirectory}" id="cesiumJsFileSet">
 		<include name="**/*.js" />
 		<exclude name="*.js" />
-		<exclude name="Widgets/Dojo/**" />
 		<exclude name="Workers/**" />
 		<exclude name="**/*.profile.js" />
 	</fileset>
@@ -290,7 +289,6 @@
 				<exclude name="**/*.glsl" />
 				<exclude name="**/.gitignore" />
 				<exclude name="**/package.json" />
-				<exclude name="Widgets/Dojo/**" />
 			</fileset>
 		</copy>
 	</target>
