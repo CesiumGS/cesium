@@ -90,6 +90,7 @@ define(['../../Core/defaultValue',
                         trackedObject = value;
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
+                    viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                 }
             }
         });
