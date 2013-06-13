@@ -8,7 +8,6 @@ define([
         './ComponentDatatype',
         './PrimitiveType',
         './BoundingSphere',
-        './Geometry',
         './GeometryAttribute',
         './VertexFormat'
     ], function(
@@ -20,7 +19,6 @@ define([
         ComponentDatatype,
         PrimitiveType,
         BoundingSphere,
-        Geometry,
         GeometryAttribute,
         VertexFormat) {
     "use strict";
@@ -126,9 +124,9 @@ define([
      *
      * @example
      * var ellipsoid = new EllipsoidGeometry({
-     *     vertexFormat : VertexFormat.POSITION_ONLY,
-     *     ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
-     *     modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
+     *   vertexFormat : VertexFormat.POSITION_ONLY,
+     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
+     *   modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
      * });
      */
     var EllipsoidGeometry = function(options) {
@@ -310,18 +308,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = indices;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 
@@ -332,11 +334,6 @@ define([
          */
         this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
     };
-
-    /**
-     * DOC_TBA
-     */
-    EllipsoidGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return EllipsoidGeometry;
 });

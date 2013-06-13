@@ -31,7 +31,7 @@ define([
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/ClosedTranslucentAppearance',
-        'Scene/PerGeometryColorClosedTranslucentAppearance',
+        'Scene/PerInstanceColorClosedTranslucentAppearance',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Widgets/Dojo/checkForChromeFrame',
@@ -68,7 +68,7 @@ define([
         Primitive,
         Appearance,
         ClosedTranslucentAppearance,
-        PerGeometryColorClosedTranslucentAppearance,
+        PerInstanceColorClosedTranslucentAppearance,
         EllipsoidSurfaceAppearance,
         Material,
         checkForChromeFrame,
@@ -142,11 +142,11 @@ define([
                 height : 1000000.0
             }),
             pickData : 'geometry4',
-            color : Color.LIME
+            color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         var primitive = new Primitive({
             geometryInstances : [geometry, geometry2, geometry3, geometry4],
-            appearance : new PerGeometryColorClosedTranslucentAppearance()
+            appearance : new PerInstanceColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
 

@@ -311,12 +311,12 @@ defineSuite([
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
-        // TODO:  Color should be normalized
         var geometry = new Geometry({
             attributes : {
                 color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 4,
+                    normalize : true,
                     values : [255, 0, 0, 255, 0, 255, 0, 255]
                 }),
                 position : new GeometryAttribute({
@@ -442,8 +442,6 @@ defineSuite([
     });
 
     it('creates a custom interleaved vertex', function() {
-        // TODO:  Color should be normalized
-
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -454,6 +452,7 @@ defineSuite([
                 color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 3,
+                    normalize : true,
                     values : [255, 0, 0, 0, 255, 0]
                 }),
                 normal : new GeometryAttribute({

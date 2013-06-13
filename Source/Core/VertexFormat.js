@@ -118,7 +118,7 @@ define([
 
     /**
      * An immutable vertex format with position and normal attributes.
-     * This is compatible with per-geometry color appearances like {@link PerGeometryColorClosedTranslucentAppearance}.
+     * This is compatible with per-instance color appearances like {@link PerInstanceColorClosedTranslucentAppearance}.
      *
      * @memberof VertexFormat
      *

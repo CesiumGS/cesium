@@ -47,15 +47,16 @@ define([
      * });
      *
      * @see Appearance
-     * @see Primitive
      * @see Context#createVertexArrayFromGeometry
+     * @see GeometryInstance
      * @see GeometryPipeline
+     * @see Primitive
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * Attributes, which make up the geometry's vertices..  Each property in this object corresponds to a
+         * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
          * {@link GeometryAttribute} containing the attribute's data.
          * <p>
          * Attributes are always stored non-interleaved in a Geometry.  When geometry is prepared for rendering
@@ -148,15 +149,28 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Duplicates a Geometry instance, including a deep copy of the attributes and indices.
+     *
+     * @memberof Geometry
+     *
+     * @param {Cartesian3} geometry The geometry to duplicate.  If this is undefined, undefined is returned.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     *
+     * @return {Cartesian3} The modified result parameter or a new Geometry instance if one was not provided.
+     *
+     * @example
+     * result.geometry = Geometry.clone(this.geometry);
      */
-    Geometry.prototype.cloneGeometry = function(result) {
+    Geometry.clone = function(geometry, result) {
+        if (typeof geometry === 'undefined') {
+            return undefined;
+        }
+
         if (typeof result === 'undefined') {
-// TODO: is this always what we want, for say BoxGeometry?
             result = new Geometry();
         }
 
-        var attributes = this.attributes;
+        var attributes = geometry.attributes;
         var newAttributes = {};
         for (var property in attributes) {
             if (attributes.hasOwnProperty(property)) {
@@ -165,15 +179,15 @@ define([
         }
         result.attributes = newAttributes;
 
-        if (typeof this.indexList !== 'undefined') {
-            result.indexList = new Uint32Array(this.indexList);
+        if (typeof geometry.indexList !== 'undefined') {
+            result.indexList = new Uint32Array(geometry.indexList);
         } else {
             result.indexList = undefined;
         }
-        result.primitiveType = this.primitiveType;
+        result.primitiveType = geometry.primitiveType;
 
-        if (typeof this.boundingSphere !== 'undefined') {
-            this.boundingSphere.clone(result.boundingSphere);
+        if (typeof geometry.boundingSphere !== 'undefined') {
+            geometry.boundingSphere.clone(result.boundingSphere);
         } else {
             result.boundingSphere = undefined;
         }
@@ -182,9 +196,19 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Computes the number of vertices in a geometry.  The runtime is linear with
+     * respect to the number of attributes in a vertex, not the number of vertices.
+     *
+     * @memberof Geometry
+     *
+     * @param {Cartesian3} geometry The geometry.
+     *
+     * @return {Number} The number of vertices in the geometry.
      *
      * @exception {DeveloperError} geometries is required.
+     *
+     * @example
+     * var numVertices = Geometry.computeNumberOfVertices(geometry);
      */
     Geometry.computeNumberOfVertices = function(geometry) {
         if (typeof geometry === 'undefined') {

@@ -10,7 +10,6 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
         './GeometryPipeline',
@@ -33,7 +32,6 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
         GeometryInstance,
         GeometryPipeline,
@@ -149,45 +147,45 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var geometry = new Cesium.PolygonGeometry({
+     * var geometry = new PolygonGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cesium.Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cesium.Cartographic.fromDegrees(-68.0, 40.0)
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
      *     ])
      * });
      *
      * // create a nested polygon with holes
-     * var geometryWithHole = new Cesium.PolygonGeometry({
+     * var geometryWithHole = new PolygonGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cesium.Cartographic.fromDegrees(-109.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 30.0),
-     *             Cesium.Cartographic.fromDegrees(-95.0, 40.0),
-     *             Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+     *             Cartographic.fromDegrees(-109.0, 30.0),
+     *             Cartographic.fromDegrees(-95.0, 30.0),
+     *             Cartographic.fromDegrees(-95.0, 40.0),
+     *             Cartographic.fromDegrees(-109.0, 40.0)
      *         ]),
      *         holes : [{
      *             positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 31.0),
-     *                 Cesium.Cartographic.fromDegrees(-107.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 39.0),
-     *                 Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+     *                 Cartographic.fromDegrees(-107.0, 31.0),
+     *                 Cartographic.fromDegrees(-107.0, 39.0),
+     *                 Cartographic.fromDegrees(-97.0, 39.0),
+     *                 Cartographic.fromDegrees(-97.0, 31.0)
      *             ]),
      *             holes : [{
      *                 positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 33.0),
-     *                     Cesium.Cartographic.fromDegrees(-99.0, 37.0),
-     *                     Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+     *                     Cartographic.fromDegrees(-105.0, 33.0),
+     *                     Cartographic.fromDegrees(-99.0, 33.0),
+     *                     Cartographic.fromDegrees(-99.0, 37.0),
+     *                     Cartographic.fromDegrees(-105.0, 37.0)
      *                     ]),
      *                 holes : [{
      *                     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 34.0),
-     *                         Cesium.Cartographic.fromDegrees(-101.0, 36.0),
-     *                         Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+     *                         Cartographic.fromDegrees(-103.0, 34.0),
+     *                         Cartographic.fromDegrees(-101.0, 34.0),
+     *                         Cartographic.fromDegrees(-101.0, 36.0),
+     *                         Cartographic.fromDegrees(-103.0, 36.0)
      *                     ])
      *                 }]
      *              }]
@@ -411,18 +409,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = geometry.indexList;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = geometry.primitiveType;
 
@@ -433,11 +435,6 @@ define([
          */
         this.boundingSphere = boundingSphere;
     };
-
-    /**
-     * DOC_TBA
-     */
-    PolygonGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return PolygonGeometry;
 });
