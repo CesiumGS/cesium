@@ -296,18 +296,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = indices;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 

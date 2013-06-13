@@ -10,21 +10,53 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Geometry instancing allows one {@link Geometry} object to be positions in several
+     * different locations and colored uniquely.  For example, one {@link BoxGeometry} can
+     * be instanced several times, each with a different <code>modelMatrix</code> to change
+     * its position, rotation, and scale.
      *
      * @alias GeometryInstance
      * @constructor
      *
-     * @param {Geometry} [options.geometry] The geometry to instance.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
-     * @param {Object} [options.pickData] DOC_TBA
+     * @param {Geometry} [options.geometry=undefined] The geometry to instance.
+     * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
+     * @param {Color} [options.color=undefined] The color of the instance when a per-geometry color appearance is used.
+     * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context.pick}
+     *
+     * @example
+     * // Create geometry for a box, and two instances that refer to it.
+     * // One instance positions the box on the bottom and colored aqua.
+     * // The other instance positions the box on the top and color white.
+     * var geometry = new BoxGeometry({
+     *   vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     * }),
+     * var instanceBottom = new GeometryInstance({
+     *     geometry : geometry,
+     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *     color : Color.AQUA,
+     *     pickData : 'bottom'
+     * });
+     * var instanceTop = new GeometryInstance({
+     *   geometry : geometry,
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+     *   color : Color.WHITE,
+     *   pickData : 'top'
+     * });
+     *
+     * @see Geometry
      */
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The geometry being instanced.
+         *
+         * @type Geometry
+         *
+         * @default undefined
          */
         this.geometry = options.geometry;
 
@@ -35,6 +67,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.
          *
          * @type Matrix4
+         *
+         * @default Matrix4.IDENTITY
          */
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
@@ -42,11 +76,17 @@ define([
          * The color of the geometry when a per-geometry color appearance is used.
          *
          * @type Color
+         *
+         * @default undefined
          */
         this.color = options.color;
 
         /**
-         * DOC_TBA
+         * User-defined object returned when the instance is picked.
+         *
+         * @default undefined
+         *
+         * @see Context.pick
          */
         this.pickData = options.pickData;
     };

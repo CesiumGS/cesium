@@ -33,9 +33,9 @@ define([
      * // Create a circle.
      * var ellipsoid = Ellipsoid.WGS84;
      * var circle = new CircleGeometry({
-     *     ellipsoid : ellipsoid,
-     *     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
-     *     radius : 100000.0
+     *   ellipsoid : ellipsoid,
+     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   radius : 100000.0
      * });
      */
     var CircleGeometry = function(options) {
@@ -60,18 +60,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = ellipseGeometry.attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = ellipseGeometry.indexList;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = ellipseGeometry.primitiveType;
 
