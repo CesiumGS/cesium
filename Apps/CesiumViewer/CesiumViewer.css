@@ -8,6 +8,7 @@ body {
     margin: 0;
     overflow: hidden;
     padding: 0;
+    background: #000;
 }
 
 .fullWindow {
@@ -22,7 +23,7 @@ body {
     font-family: sans-serif;
 }
 
-.loading {
+.loadingIndicator {
     display: block;
     position: absolute;
     top: 50%;

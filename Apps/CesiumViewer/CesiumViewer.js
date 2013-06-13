@@ -37,13 +37,13 @@ define([
         }
     }
 
-    var loading = document.getElementById('loading');
+    var loadingIndicator = document.getElementById('loadingIndicator');
 
     checkForChromeFrame('cesiumContainer').then(function(prompting) {
         if (!prompting) {
             startup();
         } else {
-            loading.style.display = 'none';
+            loadingIndicator.style.display = 'none';
         }
     });
 
@@ -89,10 +89,10 @@ define([
             }, function(e) {
                 window.alert(e);
             }).always(function() {
-                loading.style.display = 'none';
+                loadingIndicator.style.display = 'none';
             });
         } else {
-            loading.style.display = 'none';
+            loadingIndicator.style.display = 'none';
         }
 
         if (endUserOptions.stats) {
