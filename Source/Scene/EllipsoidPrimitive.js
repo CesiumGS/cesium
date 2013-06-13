@@ -113,11 +113,10 @@ define([
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
-         * <p>
-         * The default is {@link Matrix4.IDENTITY}.
-         * </p>
          *
          * @type Matrix4
+         *
+         * @default Matrix4.IDENTITY
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
@@ -132,11 +131,10 @@ define([
 
         /**
          * Determines if the ellipsoid primitive will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type Boolean
+         *
+         * @default true
          */
         this.show = true;
 

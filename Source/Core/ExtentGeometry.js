@@ -10,7 +10,6 @@ define([
         './Ellipsoid',
         './Extent',
         './GeographicProjection',
-        './Geometry',
         './GeometryAttribute',
         './Math',
         './Matrix2',
@@ -27,7 +26,6 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
-        Geometry,
         GeometryAttribute,
         CesiumMath,
         Matrix2,
@@ -298,18 +296,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = indices;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 
@@ -320,11 +322,6 @@ define([
          */
         this.boundingSphere = BoundingSphere.fromExtent3D(extent, ellipsoid, surfaceHeight);
     };
-
-    /**
-     * DOC_TBA
-     */
-    ExtentGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return ExtentGeometry;
 });

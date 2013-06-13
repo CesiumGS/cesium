@@ -3,20 +3,20 @@ define([
         '../Core/defaultValue',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
-        '../Shaders/Appearances/PerGeometryColorAppearanceVS',
-        '../Shaders/Appearances/PerGeometryColorAppearanceFS'
+        '../Shaders/Appearances/PerInstanceColorAppearanceVS',
+        '../Shaders/Appearances/PerInstanceColorAppearanceFS'
     ], function(
         defaultValue,
         CullFace,
         BlendingState,
-        PerGeometryColorAppearanceVS,
-        PerGeometryColorDefaultAppearanceFS) {
+        PerInstanceColorAppearanceVS,
+        PerInstanceColorDefaultAppearanceFS) {
     "use strict";
 
     /**
      * DOC_TBA
      */
-    var PerGeometryColorClosedTranslucentAppearance = function(options) {
+    var PerInstanceColorClosedTranslucentAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
@@ -27,12 +27,12 @@ define([
         /**
          * DOC_TBA
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, PerGeometryColorAppearanceVS);
+        this.vertexShaderSource = defaultValue(options.vertexShaderSource, PerInstanceColorAppearanceVS);
 
         /**
          * DOC_TBA
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, PerGeometryColorDefaultAppearanceFS);
+        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, PerInstanceColorDefaultAppearanceFS);
 
         /**
          * DOC_TBA
@@ -53,10 +53,10 @@ define([
     /**
      * DOC_TBA
      */
-    PerGeometryColorClosedTranslucentAppearance.prototype.getFragmentShaderSource = function() {
+    PerInstanceColorClosedTranslucentAppearance.prototype.getFragmentShaderSource = function() {
         // Unlike other appearances, this does not have a material
         return this.fragmentShaderSource;
     };
 
-    return PerGeometryColorClosedTranslucentAppearance;
+    return PerInstanceColorClosedTranslucentAppearance;
 });

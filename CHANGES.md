@@ -14,17 +14,17 @@ Beta Releases
       * Removed `PlaneTessellator`.  It was incomplete and not used.
       * Renamed `MeshFilters` to `GeometryPipeline`.
       * Renamed `MeshFilters.toWireframeInPlace` to `GeometryPipeline.toWireframe`.
+      * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
    * Removed `Polygon.configureExtent`.
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
 * Added `WallGeometry`, `PolygonGeometry`, `EllipseGeometry`, and `CircleGeometry`.
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
-* Added `GeometryPipeline.computeNormal` to find the normals of vertices in a mesh.
-* Added `GeometryPipeline.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
+* Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
+* Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
@@ -47,6 +47,7 @@ Beta Releases
 * Improved the performance of terrain and imagery refinement, especially when using a mixture of slow and fast imagery sources.
 * Improved test robustness on Mac.
 * Upgraded RequireJS to version 2.1.6, and Almond to 0.2.5.
+* Fixed artifacts that showed up on the edges of imagery tiles on a number of GPUs.
 
 ### b17 - 2013-06-03
 

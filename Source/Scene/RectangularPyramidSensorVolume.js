@@ -42,9 +42,11 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
          *
          * @type Boolean
+         *
+         * @default true
          *
          * @see RectangularPyramidSensorVolume#intersectionColor
          */
@@ -55,11 +57,10 @@ define([
          * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
          * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
          * </p>
-         * <p>
-         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
-         * </p>
          *
          * @type Boolean
+         *
+         * @default false
          */
         this.showThroughEllipsoid = defaultValue(options.showThroughEllipsoid, false);
 

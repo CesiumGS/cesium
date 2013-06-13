@@ -8,7 +8,6 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
         './PolylinePipeline',
         './PolygonPipeline',
@@ -24,7 +23,6 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
         PolylinePipeline,
         PolygonPipeline,
@@ -62,16 +60,16 @@ define([
      *
      * @example
      * var positions = [
-     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall that spans from ground level to 10000 meters
-     * var wall = new Cesium.WallGeometry({
-     *     positions    : ellipsoid.cartographicArrayToCartesianArray(positions)
+     * var wall = new WallGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
      */
     var WallGeometry = function(options) {
@@ -278,18 +276,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
         this.indexList = indices;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 
@@ -300,11 +302,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere.fromVertices(positions);
     };
-
-    /**
-     * DOC_TBA
-     */
-    WallGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return WallGeometry;
 });

@@ -12,6 +12,8 @@ define([
         'Core/Matrix4',
         'Core/Ellipsoid',
         'Core/Extent',
+        'Core/Geometry',
+        'Core/GeometryAttribute',
         'Core/GeometryInstance',
         'Core/ExtentGeometry',
         'Core/EllipseGeometry',
@@ -21,13 +23,15 @@ define([
         'Core/GeometryPipeline',
         'Core/VertexFormat',
         'Core/Transforms',
+        'Core/PrimitiveType',
+        'Core/ComponentDatatype',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/ClosedTranslucentAppearance',
-        'Scene/PerGeometryColorClosedTranslucentAppearance',
+        'Scene/PerInstanceColorClosedTranslucentAppearance',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Widgets/Dojo/checkForChromeFrame',
@@ -45,6 +49,8 @@ define([
         Matrix4,
         Ellipsoid,
         Extent,
+        Geometry,
+        GeometryAttribute,
         GeometryInstance,
         ExtentGeometry,
         EllipseGeometry,
@@ -54,13 +60,15 @@ define([
         GeometryPipeline,
         VertexFormat,
         Transforms,
+        PrimitiveType,
+        ComponentDatatype,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         WallGeometry,
         Primitive,
         Appearance,
         ClosedTranslucentAppearance,
-        PerGeometryColorClosedTranslucentAppearance,
+        PerInstanceColorClosedTranslucentAppearance,
         EllipsoidSurfaceAppearance,
         Material,
         checkForChromeFrame,
@@ -134,11 +142,11 @@ define([
                 height : 1000000.0
             }),
             pickData : 'geometry4',
-            color : Color.LIME
+            color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         var primitive = new Primitive({
             geometryInstances : [geometry, geometry2, geometry3, geometry4],
-            appearance : new PerGeometryColorClosedTranslucentAppearance()
+            appearance : new PerInstanceColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
 
@@ -272,6 +280,51 @@ define([
                 }
             })
         }));
+
+        var customWithIndices = new GeometryInstance({
+           geometry : new Geometry({
+               attributes : {
+                   position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 2000000.0,
+                            7500000.0, 0.0, 2000000.0,
+                            0.0, 7500000.0, 2000000.0
+                        ]
+                   })
+               },
+               indexList : [0, 1, 1, 2, 2, 0],
+               primitiveType : PrimitiveType.LINES
+           }),
+           pickData : 'customWithIndices'
+        });
+        widget.scene.getPrimitives().add(new Primitive({
+            geometryInstances : customWithIndices,
+            appearance : new Appearance()
+        }));
+
+        var customWithoutIndices = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                         componentDatatype : ComponentDatatype.FLOAT,
+                         componentsPerAttribute : 3,
+                         values : [
+                             0.0, 0.0, 0.0,
+                             7500000.0, 0.0, 0.0,
+                             0.0, 7500000.0, 0.0
+                         ]
+                    })
+                },
+                primitiveType : PrimitiveType.LINE_LOOP
+            }),
+            pickData : 'customWithoutIndices'
+         });
+         widget.scene.getPrimitives().add(new Primitive({
+             geometryInstances : customWithoutIndices,
+             appearance : new Appearance()
+         }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
