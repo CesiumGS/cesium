@@ -1,0 +1,72 @@
+//>>built
+define("dijit/TooltipDialog",["dojo/_base/declare","dojo/dom-class","dojo/has","dojo/keys","dojo/_base/lang","dojo/on","./focus","./layout/ContentPane","./_DialogMixin","./form/_FormMixin","./_TemplatedMixin","dojo/text!./templates/TooltipDialog.html","./main"],function(_1,_2,_3,_4,_5,on,_6,_7,_8,_9,_a,_b,_c){
+var _d=_1("dijit.TooltipDialog",[_7,_a,_9,_8],{title:"",doLayout:false,autofocus:true,baseClass:"dijitTooltipDialog",_firstFocusItem:null,_lastFocusItem:null,templateString:_b,_setTitleAttr:"containerNode",postCreate:function(){
+this.inherited(arguments);
+this.own(on(this.containerNode,"keydown",_5.hitch(this,"_onKey")));
+},orient:function(_e,_f,_10){
+var _11={"MR-ML":"dijitTooltipRight","ML-MR":"dijitTooltipLeft","TM-BM":"dijitTooltipAbove","BM-TM":"dijitTooltipBelow","BL-TL":"dijitTooltipBelow dijitTooltipABLeft","TL-BL":"dijitTooltipAbove dijitTooltipABLeft","BR-TR":"dijitTooltipBelow dijitTooltipABRight","TR-BR":"dijitTooltipAbove dijitTooltipABRight","BR-BL":"dijitTooltipRight","BL-BR":"dijitTooltipLeft","BR-TL":"dijitTooltipBelow dijitTooltipABLeft","BL-TR":"dijitTooltipBelow dijitTooltipABRight","TL-BR":"dijitTooltipAbove dijitTooltipABRight","TR-BL":"dijitTooltipAbove dijitTooltipABLeft"}[_f+"-"+_10];
+_2.replace(this.domNode,_11,this._currentOrientClass||"");
+this._currentOrientClass=_11;
+},focus:function(){
+this._getFocusItems(this.containerNode);
+_6.focus(this._firstFocusItem);
+},onOpen:function(pos){
+this.orient(this.domNode,pos.aroundCorner,pos.corner);
+var _12=pos.aroundNodePos;
+if(pos.corner.charAt(0)=="M"&&pos.aroundCorner.charAt(0)=="M"){
+this.connectorNode.style.top=_12.y+((_12.h-this.connectorNode.offsetHeight)>>1)-pos.y+"px";
+this.connectorNode.style.left="";
+}else{
+if(pos.corner.charAt(1)=="M"&&pos.aroundCorner.charAt(1)=="M"){
+this.connectorNode.style.left=_12.x+((_12.w-this.connectorNode.offsetWidth)>>1)-pos.x+"px";
+}
+}
+this._onShow();
+},onClose:function(){
+this.onHide();
+},_onKey:function(evt){
+if(evt.keyCode==_4.ESCAPE){
+this.defer("onCancel");
+evt.stopPropagation();
+evt.preventDefault();
+}else{
+if(evt.keyCode==_4.TAB){
+var _13=evt.target;
+this._getFocusItems(this.containerNode);
+if(this._firstFocusItem==this._lastFocusItem){
+evt.stopPropagation();
+evt.preventDefault();
+}else{
+if(_13==this._firstFocusItem&&evt.shiftKey){
+_6.focus(this._lastFocusItem);
+evt.stopPropagation();
+evt.preventDefault();
+}else{
+if(_13==this._lastFocusItem&&!evt.shiftKey){
+_6.focus(this._firstFocusItem);
+evt.stopPropagation();
+evt.preventDefault();
+}else{
+evt.stopPropagation();
+}
+}
+}
+}
+}
+}});
+if(_3("dojo-bidi")){
+_d.extend({_setTitleAttr:function(_14){
+this.containerNode.title=(this.textDir&&this.enforceTextDirWithUcc)?this.enforceTextDirWithUcc(null,_14):_14;
+this._set("title",_14);
+},_setTextDirAttr:function(_15){
+if(!this._created||this.textDir!=_15){
+this._set("textDir",_15);
+if(this.textDir&&this.title){
+this.containerNode.title=this.enforceTextDirWithUcc(null,this.title);
+}
+}
+}});
+}
+return _d;
+});
+require({cache:{"url:dijit/templates/TooltipDialog.html":"<div role=\"alertdialog\" tabIndex=\"-1\">\n\t<div class=\"dijitTooltipContainer\" role=\"presentation\">\n\t\t<div class=\"dijitTooltipContents dijitTooltipFocusNode\" data-dojo-attach-point=\"containerNode\"></div>\n\t</div>\n\t<div class=\"dijitTooltipConnector\" role=\"presentation\" data-dojo-attach-point=\"connectorNode\"></div>\n</div>\n"}});

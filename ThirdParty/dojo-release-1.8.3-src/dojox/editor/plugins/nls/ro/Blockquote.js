@@ -1,5 +1,0 @@
-define(
-({
-	"blockquote": "Bloc citat"
-})
-);

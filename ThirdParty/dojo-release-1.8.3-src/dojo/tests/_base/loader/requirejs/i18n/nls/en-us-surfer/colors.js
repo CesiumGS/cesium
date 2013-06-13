@@ -1,3 +1,0 @@
-define({
-    red: "red, dude"
-});
