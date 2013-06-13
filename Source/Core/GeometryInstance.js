@@ -20,7 +20,7 @@ define([
      *
      * @param {Geometry} [options.geometry=undefined] The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
-     * @param {Color} [options.color=undefined] The color of the instance when a per-geometry color appearance is used.
+     * @param {Color} [options.color=undefined] The color of the instance when a per-instance color appearance is used.
      * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context.pick}
      *
      * @example
@@ -73,7 +73,7 @@ define([
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
-         * The color of the geometry when a per-geometry color appearance is used.
+         * The color of the geometry when a per-instance color appearance is used.
          *
          * @type Color
          *

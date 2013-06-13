@@ -50,7 +50,7 @@ define([
      * <p>
      * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
      * Instances can be individually picked; {@link Context.pick} returns their {@link GeometryInstance#pickData}.  Using
-     * per-instance appearances like {@link PerGeometryColorClosedTranslucentAppearance}, each instance can also have a unique color.
+     * per-instance appearances like {@link PerInstanceColorClosedTranslucentAppearance}, each instance can also have a unique color.
      * </p>
      *
      * @alias Geometry
@@ -108,7 +108,7 @@ define([
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
-     *   appearance : new PerGeometryColorClosedTranslucentAppearance()
+     *   appearance : new PerInstanceColorClosedTranslucentAppearance()
      * });
      * scene.getPrimitives().add(primitive);
      *
@@ -397,7 +397,7 @@ define([
             insts[i] = instances[i].clone();
         }
 
-        // Add color attribute if any geometries have per-geometry color
+        // Add color attribute if any geometries have per-instance color
         if (hasPerInstanceColor(insts)) {
             addColorAttribute(primitive, insts, context);
         }
