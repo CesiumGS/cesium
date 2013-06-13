@@ -2,6 +2,7 @@
 define([
         'DynamicScene/CzmlDataSource',
         'Scene/PerformanceDisplay',
+        'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
         'Widgets/Viewer/viewerDynamicObjectMixin',
@@ -9,21 +10,12 @@ define([
     ], function(
         CzmlDataSource,
         PerformanceDisplay,
+        checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
         viewerDynamicObjectMixin) {
     "use strict";
     /*global console*/
-
-    var loading = document.getElementById('loading');
-    var viewer = new Viewer('cesiumContainer');
-    viewer.extend(viewerDragDropMixin);
-    viewer.extend(viewerDynamicObjectMixin);
-
-    viewer.onDropError.addEventListener(function(dropHandler, name, error) {
-        console.log(error);
-        window.alert(error);
-    });
 
     /*
      * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
@@ -45,55 +37,76 @@ define([
         }
     }
 
-    var scene = viewer.scene;
-    var context = scene.getContext();
-    if (endUserOptions.debug) {
-        context.setValidateShaderProgram(true);
-        context.setValidateFramebuffer(true);
-        context.setLogShaderCompilation(true);
-        context.setThrowOnWebGLError(true);
-    }
+    var loading = document.getElementById('loading');
 
-    if (typeof endUserOptions.source !== 'undefined') {
-        var source = new CzmlDataSource();
-        source.loadUrl(endUserOptions.source).then(function() {
-            viewer.dataSources.add(source);
-
-            var dataClock = source.getClock();
-            if (typeof dataClock !== 'undefined') {
-                dataClock.clone(viewer.clock);
-                viewer.timeline.updateFromClock();
-                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-            }
-
-            if (typeof endUserOptions.lookAt !== 'undefined') {
-                var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
-                if (typeof dynamicObject !== 'undefined') {
-                    viewer.trackedObject = dynamicObject;
-                } else {
-                    window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
-                }
-            }
-        }, function(e) {
-            window.alert(e);
-        }).always(function() {
-            loading.style.display = 'none';
-        });
-    } else {
-        loading.style.display = 'none';
-    }
-
-    if (endUserOptions.stats) {
-        scene.getPrimitives().add(new PerformanceDisplay());
-    }
-
-    var theme = endUserOptions.theme;
-    if (typeof theme !== 'undefined') {
-        if (endUserOptions.theme === 'lighter') {
-            document.body.classList.add('cesium-lighter');
-            viewer.animation.applyThemeChanges();
+    checkForChromeFrame('cesiumContainer').then(function(prompting) {
+        if (!prompting) {
+            startup();
         } else {
-            window.alert('Unknown theme: ' + theme);
+            loading.style.display = 'none';
+        }
+    });
+
+    function startup() {
+        var viewer = new Viewer('cesiumContainer');
+        viewer.extend(viewerDragDropMixin);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+            console.log(error);
+            window.alert(error);
+        });
+
+        var scene = viewer.scene;
+        var context = scene.getContext();
+        if (endUserOptions.debug) {
+            context.setValidateShaderProgram(true);
+            context.setValidateFramebuffer(true);
+            context.setLogShaderCompilation(true);
+            context.setThrowOnWebGLError(true);
+        }
+
+        if (typeof endUserOptions.source !== 'undefined') {
+            var source = new CzmlDataSource();
+            source.loadUrl(endUserOptions.source).then(function() {
+                viewer.dataSources.add(source);
+
+                var dataClock = source.getClock();
+                if (typeof dataClock !== 'undefined') {
+                    dataClock.clone(viewer.clock);
+                    viewer.timeline.updateFromClock();
+                    viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                }
+
+                if (typeof endUserOptions.lookAt !== 'undefined') {
+                    var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
+                    if (typeof dynamicObject !== 'undefined') {
+                        viewer.trackedObject = dynamicObject;
+                    } else {
+                        window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
+                    }
+                }
+            }, function(e) {
+                window.alert(e);
+            }).always(function() {
+                loading.style.display = 'none';
+            });
+        } else {
+            loading.style.display = 'none';
+        }
+
+        if (endUserOptions.stats) {
+            scene.getPrimitives().add(new PerformanceDisplay());
+        }
+
+        var theme = endUserOptions.theme;
+        if (typeof theme !== 'undefined') {
+            if (endUserOptions.theme === 'lighter') {
+                document.body.classList.add('cesium-lighter');
+                viewer.animation.applyThemeChanges();
+            } else {
+                window.alert('Unknown theme: ' + theme);
+            }
         }
     }
 });
