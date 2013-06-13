@@ -150,13 +150,16 @@ define([
     /**
      * DOC_TBA
      */
-    Geometry.prototype.cloneGeometry = function(result) {
+    Geometry.clone = function(geometry, result) {
+        if (typeof geometry === 'undefined') {
+            return undefined;
+        }
+
         if (typeof result === 'undefined') {
-// TODO: is this always what we want, for say BoxGeometry?
             result = new Geometry();
         }
 
-        var attributes = this.attributes;
+        var attributes = geometry.attributes;
         var newAttributes = {};
         for (var property in attributes) {
             if (attributes.hasOwnProperty(property)) {
@@ -165,9 +168,9 @@ define([
         }
         result.attributes = newAttributes;
 
-        if (typeof this.indexList !== 'undefined') {
+        if (typeof geometry.indexList !== 'undefined') {
 // TODO: typed array or not.  fastest way to copy?
-            var sourceValues = this.indexList;
+            var sourceValues = geometry.indexList;
             var length = sourceValues.length;
             var values = new Array(length);
             for (var i = 0; i < length; ++i) {
@@ -178,10 +181,10 @@ define([
             result.indexList = undefined;
         }
 
-        result.primitiveType = this.primitiveType;
+        result.primitiveType = geometry.primitiveType;
 
-        if (typeof this.boundingSphere !== 'undefined') {
-            this.boundingSphere.clone(result.boundingSphere);
+        if (typeof geometry.boundingSphere !== 'undefined') {
+            geometry.boundingSphere.clone(result.boundingSphere);
         } else {
             result.boundingSphere = undefined;
         }

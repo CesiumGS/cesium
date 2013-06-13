@@ -6,7 +6,6 @@ define([
         './ComponentDatatype',
         './DeveloperError',
         './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
         './Math',
         './Matrix3',
@@ -20,7 +19,6 @@ define([
         ComponentDatatype,
         DeveloperError,
         Ellipsoid,
-        Geometry,
         GeometryAttribute,
         CesiumMath,
         Matrix3,
@@ -448,11 +446,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
     };
-
-    /**
-     * DOC_TBA
-     */
-    EllipseGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return EllipseGeometry;
 });

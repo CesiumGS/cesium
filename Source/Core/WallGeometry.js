@@ -8,7 +8,6 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
         './PolylinePipeline',
         './PolygonPipeline',
@@ -24,7 +23,6 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
         PolylinePipeline,
         PolygonPipeline,
@@ -300,11 +298,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere.fromVertices(positions);
     };
-
-    /**
-     * DOC_TBA
-     */
-    WallGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return WallGeometry;
 });

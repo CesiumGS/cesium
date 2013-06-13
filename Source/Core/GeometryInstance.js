@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './Matrix4'
+        './Matrix4',
+        './Geometry'
     ], function(
         defaultValue,
-        Matrix4) {
+        Matrix4,
+        Geometry) {
     "use strict";
 
     /**
@@ -57,7 +59,7 @@ define([
             result = new GeometryInstance();
         }
 
-        result.geometry = this.geometry.cloneGeometry();    // Looses type info, e.g., BoxGeometry to Geometry.
+        result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
         result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
         result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
         result.pickData = this.pickData;                    // Shadow copy

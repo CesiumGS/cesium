@@ -10,7 +10,6 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
         './GeometryInstance',
         './GeometryPipeline',
@@ -33,7 +32,6 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
         GeometryInstance,
         GeometryPipeline,
@@ -433,11 +431,6 @@ define([
          */
         this.boundingSphere = boundingSphere;
     };
-
-    /**
-     * DOC_TBA
-     */
-    PolygonGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return PolygonGeometry;
 });

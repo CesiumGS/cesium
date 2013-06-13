@@ -3,13 +3,11 @@ define([
         './clone',
         './defaultValue',
         './DeveloperError',
-        './Geometry',
         './EllipseGeometry'
     ], function(
         clone,
         defaultValue,
         DeveloperError,
-        Geometry,
         EllipseGeometry) {
     "use strict";
 
@@ -84,11 +82,6 @@ define([
          */
         this.boundingSphere = ellipseGeometry.boundingSphere;
     };
-
-    /**
-     * DOC_TBA
-     */
-    CircleGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return CircleGeometry;
 });

@@ -6,7 +6,6 @@ define([
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
-        './Geometry',
         './GeometryAttribute',
         './VertexFormat'
     ], function(
@@ -16,7 +15,6 @@ define([
         PrimitiveType,
         defaultValue,
         BoundingSphere,
-        Geometry,
         GeometryAttribute,
         VertexFormat) {
     "use strict";
@@ -378,11 +376,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere(new Cartesian3(), max.subtract(min).magnitude() * 0.5);
     };
-
-    /**
-     * DOC_TBA
-     */
-    BoxGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return BoxGeometry;
 });
