@@ -180,7 +180,8 @@ define([
         result.attributes = newAttributes;
 
         if (typeof geometry.indexList !== 'undefined') {
-            result.indexList = new Uint32Array(geometry.indexList);
+            var sourceValues = geometry.indexList;
+            result.indexList = sourceValues.constructor(sourceValues);
         } else {
             result.indexList = undefined;
         }

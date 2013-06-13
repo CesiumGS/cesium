@@ -230,7 +230,13 @@ define([
         }
 
         var indicesSize = 6 * (width - 1) * (height - 1);
-        var indices = new Uint32Array(indicesSize);
+        var indices;
+        if (size > 64 * 1024) {
+            indices = new Uint32Array(indicesSize);
+        } else {
+            indices = new Uint16Array(indicesSize);
+        }
+
         var index = 0;
         var indicesIndex = 0;
         for ( var i = 0; i < height - 1; ++i) {

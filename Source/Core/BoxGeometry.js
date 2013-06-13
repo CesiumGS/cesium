@@ -299,7 +299,7 @@ define([
             }
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = new Uint32Array(6 * 2 * 3);
+            indexList = new Uint16Array(6 * 2 * 3);
 
             // +z face
             indexList[0] = 0; indexList[1] = 1; indexList[2] = 2;
@@ -344,7 +344,7 @@ define([
             });
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = new Uint32Array(6 * 2 * 3);
+            indexList = new Uint16Array(6 * 2 * 3);
 
             // plane z = corner.Z
             indexList[0] = 4; indexList[1] = 5; indexList[2] = 6;

@@ -422,7 +422,12 @@ define([
         }
 
         indices.length = indicesIndex;
-        indices = new Uint32Array(indices);
+
+        if (positions.length / 3 > 64 * 1024) {
+            indices = new Uint32Array(indices);
+        } else {
+            indices = new Uint16Array(indices);
+        }
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the

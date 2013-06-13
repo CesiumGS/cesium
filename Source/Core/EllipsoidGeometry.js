@@ -303,6 +303,12 @@ define([
             }
         }
 
+        if (length > 64 * 1024) {
+            indices = new Uint32Array(indices);
+        } else {
+            indices = new Uint16Array(indices);
+        }
+
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.

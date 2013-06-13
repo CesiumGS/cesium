@@ -56,7 +56,14 @@ define([
 
     function trianglesToLines(triangles) {
         var count = triangles.length;
-        var lines = new Uint32Array((count / 3) * 6);
+        var size = (count / 3) * 6;
+        var lines;
+        if (count > 64 * 1024) {
+            lines = new Uint32Array(size);
+        } else {
+            lines = new Uint16Array(size);
+        }
+
         var index = 0;
         for ( var i = 0; i < count; i += 3, index += 6) {
             addTriangle(lines, index, triangles[i], triangles[i + 1], triangles[i + 2]);
@@ -68,7 +75,13 @@ define([
     function triangleStripToLines(triangles) {
         var count = triangles.length;
         if (count >= 3) {
-            var lines = new Uint32Array((count - 2) * 6);
+            var size = (count - 2) * 6;
+            var lines;
+            if (count > 64 * 1024) {
+                lines = new Uint32Array(size);
+            } else {
+                lines = new Uint16Array(size);
+            }
 
             addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
             var index = 6;
@@ -80,13 +93,20 @@ define([
             return lines;
         }
 
-        return [];
+        return new Uint16Array();
     }
 
     function triangleFanToLines(triangles) {
         if (triangles.length > 0) {
             var count = triangles.length - 1;
-            var lines = new Uint32Array((count - 1) * 6);
+            var size = (count - 1) * 6;
+            var lines;
+            if (count > 64 * 1024) {
+                lines = new Uint32Array(size);
+            } else {
+                lines = new Uint16Array(size);
+            }
+
             var base = triangles[0];
             var index = 0;
             for ( var i = 1; i < count; ++i, index += 6) {
@@ -96,7 +116,7 @@ define([
             return lines;
         }
 
-        return [];
+        return new Uint16Array();
     }
 
     /**
@@ -213,7 +233,13 @@ define([
             // Construct cross reference and reorder indices
             var indicesIn = indexList;
             var numIndices = indicesIn.length;
-            var indicesOut = new Uint32Array(numIndices);
+            var indicesOut;
+            if (numVertices > 64 * 1024) {
+                indicesOut = new Uint32Array(numIndices);
+            } else {
+                indicesOut = new Uint16Array(numIndices);
+            }
+
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
             var nextIndex = 0;
