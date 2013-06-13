@@ -53,6 +53,8 @@ void main()
     vec2 halfSize = u_atlasSize * imageSize * 0.5 * scale * czm_highResolutionSnapScale;
     halfSize *= ((direction * 2.0) - 1.0);
     
+    positionWC.xy += (origin * abs(halfSize));
+    
     if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
     {
         float angle = rotation;
@@ -71,7 +73,7 @@ void main()
         halfSize = rotationMatrix * halfSize;
     }
     
-    positionWC.xy += (origin * abs(halfSize)) + halfSize;
+    positionWC.xy += halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);

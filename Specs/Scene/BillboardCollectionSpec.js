@@ -119,6 +119,8 @@ defineSuite([
         expect(b.getColor().green).toEqual(1.0);
         expect(b.getColor().blue).toEqual(1.0);
         expect(b.getColor().alpha).toEqual(1.0);
+        expect(b.getRotation()).toEqual(0.0);
+        expect(b.getAlignedAxis()).toEqual(Cartesian3.ZERO);
     });
 
     it('explicitly constructs a billboard', function() {
@@ -136,7 +138,9 @@ defineSuite([
                 green : 2.0,
                 blue : 3.0,
                 alpha : 4.0
-            }
+            },
+            rotation : 1.0,
+            alignedAxis : new Cartesian3(1.0, 2.0, 3.0)
         });
 
         expect(b.getShow()).toEqual(false);
@@ -151,6 +155,8 @@ defineSuite([
         expect(b.getColor().green).toEqual(2.0);
         expect(b.getColor().blue).toEqual(3.0);
         expect(b.getColor().alpha).toEqual(4.0);
+        expect(b.getRotation()).toEqual(1.0);
+        expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('set billboard properties', function() {
@@ -169,6 +175,8 @@ defineSuite([
             blue : 3.0,
             alpha : 4.0
         });
+        b.setRotation(1.0);
+        b.setAlignedAxis(new Cartesian3(1.0, 2.0, 3.0));
 
         expect(b.getShow()).toEqual(false);
         expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -182,6 +190,8 @@ defineSuite([
         expect(b.getColor().green).toEqual(2.0);
         expect(b.getColor().blue).toEqual(3.0);
         expect(b.getColor().alpha).toEqual(4.0);
+        expect(b.getRotation()).toEqual(1.0);
+        expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('throws with non number Index', function() {

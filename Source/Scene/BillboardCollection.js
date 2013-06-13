@@ -663,7 +663,7 @@ define([
         }, {
             index : attributeIndices.rotationAndAlignedAxis,
             componentsPerAttribute : 4,
-            componentDatatype : ComponentDatatype.BYTE,
+            componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }

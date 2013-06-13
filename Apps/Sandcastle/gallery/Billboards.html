@@ -74,7 +74,9 @@ require([
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
                 scale : 2.0, // default: 1.0
                 imageIndex : 0, // default
-                color : Cesium.Color.LIME // default: WHITE
+                color : Cesium.Color.LIME, // default: WHITE
+                rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
+                alignedAxis : Cesium.Cartesian3.ZERO // default
             });
             scene.getPrimitives().add(billboards);
         };
