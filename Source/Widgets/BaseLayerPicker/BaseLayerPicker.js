@@ -3,12 +3,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../getElement',
         './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         destroyObject,
         DeveloperError,
+        getElement,
         BaseLayerPickerViewModel,
         knockout) {
     "use strict";
@@ -96,17 +98,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof imageryLayers === 'undefined') {
             throw new DeveloperError('imageryLayers is required.');
         }
+
+        container = getElement(container);
 
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
         this._viewModel = viewModel;
@@ -122,6 +118,7 @@ define([
         container.appendChild(element);
 
         var choices = document.createElement('div');
+        this._choices = choices;
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
                 css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
@@ -206,6 +203,7 @@ define([
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
+        container.removeChild(this._choices);
         return destroyObject(this);
     };
 
