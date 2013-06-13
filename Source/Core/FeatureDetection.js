@@ -6,9 +6,10 @@ define([
     "use strict";
 
     function extractVersion(versionString) {
-        return versionString.split('.').map(function(v) {
-            return parseInt(v, 10);
-        });
+        var parts = versionString.split('.');
+        for ( var i = 0, len = parts.length; i < len; ++i) {
+            parts[i] = parseInt(parts[i], 10);
+        }
     }
 
     var isChromeResult;
