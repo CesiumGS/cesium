@@ -461,3 +461,4 @@ define([
 
     return GoogleEarthImageryProvider;
 });
+
