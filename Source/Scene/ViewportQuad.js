@@ -60,12 +60,11 @@ define([
 
         /**
          * Determines if the viewport quad primitive will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type Boolean
-        */
+         *
+         * @default true
+         */
         this.show = true;
 
         if (typeof rectangle === 'undefined') {

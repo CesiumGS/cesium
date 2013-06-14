@@ -17,17 +17,29 @@ Beta Releases
       * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Replaced `Uniform.getFrameNumber` and `Uniform.getTime` with `Uniform.getFrameState`, which returns the full frame state.
    * Removed `Polygon.configureExtent`.
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
-* Added `WallGeometry`, `PolygonGeometry`, `EllipseGeometry`, and `CircleGeometry`.
+* Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
+   * `PolygonGeometry`
+   * `ExtentGeometry`
+   * `EllipseGeometry`
+   * `CircleGeometry`
+   * `WallGeometry`
+   * `BoxGeometry`
+   * `EllipsoidGeometry`
+* Added `Appearance`, which describe the visual characteristics for geometry instances.  Added the following types:
+   * `TranslucentAppearance`
+   * `EllipsoidSurfaceAppearance`
+   * `ClosedTranslucentAppearance`
+   * `PerInstanceColorClosedTranslucentAppearance`
+* Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
-* Added `GeometryPipeline.computeNormal` to find the normals of vertices in a mesh.
-* Added `GeometryPipeline.computeTangentAndBinormal` to find the tangent and binormal vectors of vertices in a mesh.
-* Added `BoundingSphere.fromEllipsoid`.
+* Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
+* Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `PolylinePipeline.removeDuplicates`.
+* Added `BoundingSphere.fromEllipsoid`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Added `extrudedHeight` parameter to `PolygonGeometry`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.

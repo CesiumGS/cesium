@@ -4,6 +4,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
+        '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/RuntimeError',
         '../Core/PrimitiveType',
@@ -37,6 +38,7 @@ define([
         DeveloperError,
         destroyObject,
         Color,
+        ComponentDatatype,
         IndexDatatype,
         RuntimeError,
         PrimitiveType,
@@ -2199,8 +2201,13 @@ define([
         var names = [];
         for (name in attributes) {
             // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) && attributes[name].values) {
+            if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
                 names.push(name);
+
+                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
+                    attributes[name].componentDatatype = ComponentDatatype.FLOAT;
+                    attributes[name].values = ComponentDatatype.FLOAT.createTypedArray(attributes[name].values);
+                }
             }
         }
 
@@ -2364,18 +2371,19 @@ define([
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
         var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
-        var interleave = ca.vertexLayout && (ca.vertexLayout === VertexLayout.INTERLEAVED);
+        var interleave = (typeof ca.vertexLayout !== 'undefined') && (ca.vertexLayout === VertexLayout.INTERLEAVED);
 
         var name;
         var attribute;
+        var vertexBuffer;
         var vaAttributes = [];
         var attributes = geometry.attributes;
 
         if (interleave) {
             // Use a single vertex buffer with interleaved vertices.
             var interleavedAttributes = interleaveAttributes(attributes);
-            if (interleavedAttributes) {
-                var vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
+            if (typeof interleavedAttributes !== 'undefined') {
+                vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
                 var offsetsInBytes = interleavedAttributes.offsetsInBytes;
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
@@ -2383,7 +2391,7 @@ define([
                     if (attributes.hasOwnProperty(name)) {
                         attribute = attributes[name];
 
-                        if (attribute.values) {
+                        if (typeof attribute.values !== 'undefined') {
                             // Common case: per-vertex attributes
                             vaAttributes.push({
                                 index : attributeIndices[name],
@@ -2411,11 +2419,22 @@ define([
             for (name in attributes) {
                 if (attributes.hasOwnProperty(name)) {
                     attribute = attributes[name];
+
+                    var componentDatatype = attribute.componentDatatype;
+                    if (componentDatatype === ComponentDatatype.DOUBLE) {
+                        componentDatatype = ComponentDatatype.FLOAT;
+                    }
+
+                    vertexBuffer = undefined;
+                    if (typeof attribute.values !== 'undefined') {
+                        vertexBuffer = this.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
+                    }
+
                     vaAttributes.push({
                         index : attributeIndices[name],
-                        vertexBuffer : attribute.values ? this.createVertexBuffer(attribute.componentDatatype.createTypedArray(attribute.values), bufferUsage) : undefined,
-                        value : attribute.value ? attribute.value : undefined,
-                        componentDatatype : attribute.componentDatatype,
+                        vertexBuffer : vertexBuffer,
+                        value : attribute.value,
+                        componentDatatype : componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize
                     });
@@ -2424,12 +2443,12 @@ define([
         }
 
         var indexBuffer;
-        var indexList = geometry.indexList;
-        if (typeof indexList !== 'undefined') {
+        var indices = geometry.indices;
+        if (typeof indices !== 'undefined') {
             if ((Geometry.computeNumberOfVertices(geometry) > 64 * 1024) && this.getElementIndexUint()) {
-                indexBuffer = this.createIndexBuffer(new Uint32Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
-                indexBuffer = this.createIndexBuffer(new Uint16Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
             }
         }
 

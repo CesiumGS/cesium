@@ -93,7 +93,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 11);
-        expect(p.indexList.length).toEqual(3 * 14);
+        expect(p.indices.length).toEqual(3 * 14);
     });
 
     it('computes all attributes', function() {
@@ -113,7 +113,7 @@ defineSuite([
         expect(p.attributes.normal.values.length).toEqual(3 * 11);
         expect(p.attributes.tangent.values.length).toEqual(3 * 11);
         expect(p.attributes.binormal.values.length).toEqual(3 * 11);
-        expect(p.indexList.length).toEqual(3 * 14);
+        expect(p.indices.length).toEqual(3 * 14);
     });
 
     it('creates a polygon from hierarchy', function() {
@@ -149,7 +149,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 14);
-        expect(p.indexList.length).toEqual(3 * 10);
+        expect(p.indices.length).toEqual(3 * 10);
     });
 
     it('creates a polygon from clockwise hierarchy', function() {
@@ -185,7 +185,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 14);
-        expect(p.indexList.length).toEqual(3 * 10);
+        expect(p.indices.length).toEqual(3 * 10);
     });
 
     it('computes positions extruded', function() {
@@ -202,7 +202,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.indexList.length).toEqual(3 * 14 * 2 + 60);
+        expect(p.indices.length).toEqual(3 * 14 * 2 + 60);
     });
 
     it('computes all attributes extruded', function() {
@@ -223,7 +223,7 @@ defineSuite([
         expect(p.attributes.normal.values.length).toEqual(3 * 11 * 2 + 60);
         expect(p.attributes.tangent.values.length).toEqual(3 * 11 * 2 + 60);
         expect(p.attributes.binormal.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.indexList.length).toEqual(3 * 14 * 2 + 60);
+        expect(p.indices.length).toEqual(3 * 14 * 2 + 60);
     });
 
     it('creates a polygon from hierarchy extruded', function() {
@@ -260,7 +260,7 @@ defineSuite([
         });
 
         expect(p.attributes.position.values.length).toEqual(3 * 14 * 2 + 168);
-        expect(p.indexList.length).toEqual(3 * 10 * 2 + 168);
+        expect(p.indices.length).toEqual(3 * 10 * 2 + 168);
     });
 
 }, 'WebGL');

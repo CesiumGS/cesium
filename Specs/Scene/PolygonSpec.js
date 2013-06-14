@@ -334,8 +334,8 @@ defineSuite([
 
         var sphere = BoundingSphere.fromPoints(projectedPositions);
         sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
-        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON9);
-        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON9);
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     }
 
     it('test 2D bounding sphere from positions', function() {

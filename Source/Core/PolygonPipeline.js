@@ -830,12 +830,12 @@ define([
             return new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : flattenedPositions
                     })
                 },
-                indexList : subdividedIndices,
+                indices : subdividedIndices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
         },

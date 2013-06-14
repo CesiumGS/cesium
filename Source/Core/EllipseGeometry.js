@@ -4,9 +4,9 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
-        './Geometry',
         './GeometryAttribute',
         './Math',
         './Matrix3',
@@ -18,9 +18,9 @@ define([
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
-        Geometry,
         GeometryAttribute,
         CesiumMath,
         Matrix3,
@@ -90,11 +90,11 @@ define([
      * // Create an ellipse.
      * var ellipsoid = Ellipsoid.WGS84;
      * var ellipse = new EllipseGeometry({
-     *     ellipsoid : ellipsoid,
-     *     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
-     *     semiMajorAxis : 500000.0,
-     *     semiMinorAxis : 300000.0,
-     *     bearing : CesiumMath.toRadians(60.0)
+     *   ellipsoid : ellipsoid,
+     *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
+     *   semiMajorAxis : 500000.0,
+     *   semiMinorAxis : 300000.0,
+     *   bearing : CesiumMath.toRadians(60.0)
      * });
      */
     var EllipseGeometry = function(options) {
@@ -236,13 +236,17 @@ define([
         }
 
         // The original length may have been an over-estimate
-        positions.length = positionIndex;
-        size = positions.length / 3;
+        if (positions.length !== positionIndex) {
+            size = positionIndex / 3;
+            positions.length = positionIndex;
+        }
 
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+        positions = new Float64Array(positions);
+
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
@@ -303,7 +307,7 @@ define([
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
@@ -419,25 +423,27 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
-        indices.length = indicesIndex;
-
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 
@@ -448,11 +454,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
     };
-
-    /**
-     * DOC_TBA
-     */
-    EllipseGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return EllipseGeometry;
 });

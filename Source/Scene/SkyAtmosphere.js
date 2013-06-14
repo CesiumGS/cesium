@@ -52,11 +52,10 @@ define([
 
         /**
          * Determines if the atmosphere is shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type Boolean
+         *
+         * @default true
          */
         this.show = true;
 
