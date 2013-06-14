@@ -491,7 +491,7 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = new Float64Array(2 * wgs84Positions.length / 3);
+            var projectedPositions = new Float64Array(wgs84Positions.length);
             var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
@@ -501,6 +501,7 @@ define([
 
                 projectedPositions[index++] = projectedLonLat.x;
                 projectedPositions[index++] = projectedLonLat.y;
+                projectedPositions[index++] = projectedLonLat.z;
             }
 
             // Rename original positions to WGS84 Positions.
@@ -508,8 +509,8 @@ define([
 
             // Replace original positions with 2D projected positions
             geometry.attributes.position2D = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
                 values : projectedPositions
             });
             delete geometry.attributes.position;

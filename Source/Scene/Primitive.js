@@ -417,8 +417,12 @@ define([
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
 
-        // Split position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        // Compute 2D positions
+        GeometryPipeline.projectTo2D(geometry);
+
+        // Split 3D and 2D position for GPU RTE
+        GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+        GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -434,10 +438,8 @@ define([
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
-            (frameState.mode !== SceneMode.SCENE3D) ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
             (typeof this.appearance === 'undefined')) {
-// TODO: support Columbus view and 2D
             return;
         }
 

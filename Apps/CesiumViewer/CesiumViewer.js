@@ -198,7 +198,7 @@ define([
             appearance :appearance,
             vertexCacheOptimize : false,
             releasegeometryInstances : true,
-            transformToWorldCoordinates : false
+            //transformToWorldCoordinates : false
         }));
 
         var polygonGeometry = new GeometryInstance({
@@ -281,6 +281,7 @@ define([
             })
         }));
 
+        /*
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
                attributes : {
@@ -325,6 +326,7 @@ define([
              geometryInstances : customWithoutIndices,
              appearance : new Appearance()
          }));
+         */
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
