@@ -1,5 +1,0 @@
-define(
-({
-	label: "Izberi datoteke ..."
-})
-);

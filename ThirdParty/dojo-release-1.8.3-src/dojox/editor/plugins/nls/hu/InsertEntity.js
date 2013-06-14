@@ -1,5 +1,0 @@
-define(
-({
-	insertEntity: "Szimbólum beszúrása"
-})
-);

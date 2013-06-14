@@ -1,8 +1,0 @@
-{ "identifier": "symbol", "idAttribute":"symbol", "label": "symbol","items": [
-	{ "symbol":"\u05d0\u05d7\u05d3.", "name":"Bagies Consulting",	"historicPrice":[4.11,3.98,4.05,4.20,4.16,4.22,3.80], "open":4.11,  "price":3.98, "updown":"v",  "change":"-0.13 (-05%)", "low":3.77, "high":4.11 },
-	{ "symbol":"\u05e9\u05ea\u05d9\u05d9\u05dd.", "name":"BAY Corporation",	"historicPrice":[9.79,9.60,9.50,2.23,9.45,9.76,9.99], "open":9.79,  "price":9.60, "updown":"v",  "change":"-0.19 (+14%)", "low":9.60, "high":9.81 },
-	{ "symbol":"Three.", "name":"Corcor PLC",			"historicPrice":[8.44,8.44,8.54,8.60,9.65,8.42,8.44], "open":8.44,  "price":8.44, "updown":"--", "change":"+0.00 (+00%)", "low":8.22, "high":8.44 },
-	{ "symbol":"Hello.", "name":"Anduct.",           	"historicPrice":[0.01,3.52,3.66,3.11,3.90,3.11,3.11], "open":3.13,  "price":3.52, "updown":"^",  "change":"+0.39 (+21%)", "low":3.13, "high":3.69 },
-	{ "symbol":"\u05e9\u05de\u05d9: Tal.", "name":"\u05d0\u05d5\u05e1\u05d8\u05d9\u05df.",		"historicPrice":[6.72,6.76,6.61,6.41,6.31,6.99,7.20], "open":6.72,  "price":6.76, "updown":"^",  "change":"+0.04 (+01%)", "low":6.56, "high":6.77 },
-	{ "symbol":"My name: \u05d8\u05dc.", "name":"Datio PLC",			"historicPrice":[2.11,2.47,3.11,3.06,3.01,3.01,3.00], "open":2.11,  "price":2.47, "updown":"^",  "change":"+0.36 (+36%)", "low":2.11, "high":3.01 }
-]}
