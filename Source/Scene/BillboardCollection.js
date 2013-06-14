@@ -1115,7 +1115,8 @@ define([
             }
 
             if (typeof this._sp === 'undefined' || (this._shaderRotation && !this._compiledShaderRotation)) {
-                this._sp = context.getShaderCache().getShaderProgram(
+                this._sp = context.getShaderCache().replaceShaderProgram(
+                        this._sp,
                         (this._shaderRotation ? '#define ROTATION 1\n' : '') + BillboardCollectionVS,
                         BillboardCollectionFS,
                         attributeIndices);
@@ -1147,7 +1148,8 @@ define([
             commandLists.pickList = pickList;
 
             if (typeof this._spPick === 'undefined' || (this._shaderRotation && !this._compiledShaderRotationPick)) {
-                this._spPick = context.getShaderCache().getShaderProgram(
+                this._spPick = context.getShaderCache().replaceShaderProgram(
+                        this._spPick,
                         (this._shaderRotation ? '#define ROTATION 1\n' : '') + '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                         attributeIndices);
