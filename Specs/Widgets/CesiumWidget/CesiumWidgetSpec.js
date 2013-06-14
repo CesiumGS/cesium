@@ -2,6 +2,7 @@
 defineSuite([
          'Widgets/CesiumWidget/CesiumWidget',
          'Core/Clock',
+         'Core/ScreenSpaceEventHandler',
          'Scene/CentralBody',
          'Scene/EllipsoidTerrainProvider',
          'Scene/Scene',
@@ -10,6 +11,7 @@ defineSuite([
      ], function(
          CesiumWidget,
          Clock,
+         ScreenSpaceEventHandler,
          CentralBody,
          EllipsoidTerrainProvider,
          Scene,
@@ -31,6 +33,7 @@ defineSuite([
         expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);
         expect(widget.sceneTransitioner).toBeInstanceOf(SceneTransitioner);
+        expect(widget.screenSpaceEventHandler).toBeInstanceOf(ScreenSpaceEventHandler);
         widget.render();
         widget.destroy();
         expect(widget.isDestroyed()).toEqual(true);
@@ -63,6 +66,15 @@ defineSuite([
         var imageryLayers = widget.centralBody.getImageryLayers();
         expect(imageryLayers.getLength()).toEqual(1);
         expect(imageryLayers.get(0).getImageryProvider()).toBe(options.imageryProvider);
+        widget.destroy();
+    });
+
+    it('does not create an ImageryProvider if option is false', function() {
+        var widget = new CesiumWidget(document.body, {
+            imageryProvider : false
+        });
+        var imageryLayers = widget.centralBody.getImageryLayers();
+        expect(imageryLayers.getLength()).toEqual(0);
         widget.destroy();
     });
 

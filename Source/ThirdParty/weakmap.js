@@ -39,12 +39,17 @@ define(['exports'], function(exports) {
             return false;
         }
     })();
+    var forEach = Array.prototype.forEach ? Array.prototype.forEach : function(callback, thisArg) {
+        for (var i = 0, len = this.length; i < len; ++i) {
+            callback.call(thisArg, this[i], i, this);
+        }
+    };
 
 void function(global, undefined_, undefined){
   var getProps = Object.getOwnPropertyNames,
       defProp  = definePropertyWorks ? Object.defineProperty : function(o) { return o; },
       toSource = Function.prototype.toString,
-      create   = Object.create,
+      create   = Object.create ? Object.create : function(o) { function F() {} F.prototype = o; return new F(); },
       hasOwn   = Object.prototype.hasOwnProperty,
       funcName = /^\n?function\s?(\w*)?_?\(/;
 
@@ -224,7 +229,7 @@ void function(global, undefined_, undefined){
 
     prep(WeakMap);
 
-    [toString, get, set, has, del].forEach(function(method){
+    forEach.call([toString, get, set, has, del], function(method){
       define(WeakMap.prototype, method);
       prep(method);
     });

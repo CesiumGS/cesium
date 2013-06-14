@@ -3,12 +3,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../getElement',
         './HomeButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         destroyObject,
         DeveloperError,
+        getElement,
         HomeButtonViewModel,
         knockout) {
     "use strict";
@@ -32,13 +34,7 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
+        container = getElement(container);
 
         this._container = container;
         this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, flightDuration);
