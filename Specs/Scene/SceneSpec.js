@@ -52,7 +52,7 @@ defineSuite([
     it('constructor sets contextOptions', function() {
         var contextOptions = {
             alpha : true,
-            depth : false,
+            depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
             stencil : true,
             antialias : false,
             premultipliedAlpha : false,
