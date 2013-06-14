@@ -1,6 +1,0 @@
-[
-	{id:"obj1",name:"Object 1","lazyValue":{$ref:"obj1.lazyValue"}}, 
-	{id:"obj2",name:"Object 2"},
-	{$ref:"obj3"}, 
-	{$ref:"obj4"}
-]

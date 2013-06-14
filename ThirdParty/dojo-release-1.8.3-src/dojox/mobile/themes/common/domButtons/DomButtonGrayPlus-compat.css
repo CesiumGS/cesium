@@ -1,8 +1,0 @@
-/* === Plus Button ==*/
-.mblDomButtonGrayPlus {
-	background-image: url(compat/mblDomButtonGrayPlus.png);
-	background-repeat: no-repeat;
-}
-.mblDomButtonGrayPlus div {
-	display: none;
-}

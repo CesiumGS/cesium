@@ -1,6 +1,0 @@
-{
-  "items" : [
-    { label: "Long Term Care", icon: "images/i-icon-2.png", url: "data/insurance-life-long.html" },
-    { label: "Child's Education", icon: "images/i-icon-2.png", url: "data/insurance-life-child.html" }
-  ]
-}
