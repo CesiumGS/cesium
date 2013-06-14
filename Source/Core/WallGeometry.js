@@ -5,10 +5,10 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
-        './Geometry',
         './GeometryAttribute',
         './PolylinePipeline',
         './PolygonPipeline',
@@ -21,10 +21,10 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
-        Geometry,
         GeometryAttribute,
         PolylinePipeline,
         PolygonPipeline,
@@ -62,16 +62,16 @@ define([
      *
      * @example
      * var positions = [
-     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *     Cesium.Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
      * ];
      *
      * // create a wall that spans from ground level to 10000 meters
-     * var wall = new Cesium.WallGeometry({
-     *     positions    : ellipsoid.cartographicArrayToCartesianArray(positions)
+     * var wall = new WallGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
      */
     var WallGeometry = function(options) {
@@ -106,11 +106,11 @@ define([
         var i;
         var size = wallPositions.length * 2;
 
-        var positions = vertexFormat.position ? new Array(size * 3) : undefined;
-        var normals = vertexFormat.normal ? new Array(size * 3) : undefined;
-        var tangents = vertexFormat.tangent ? new Array(size * 3) : undefined;
-        var binormals = vertexFormat.binormal ? new Array(size * 3) : undefined;
-        var textureCoordinates = vertexFormat.st ? new Array(size * 2) : undefined;
+        var positions = vertexFormat.position ? new Float64Array(size * 3) : undefined;
+        var normals = vertexFormat.normal ? new Float32Array(size * 3) : undefined;
+        var tangents = vertexFormat.tangent ? new Float32Array(size * 3) : undefined;
+        var binormals = vertexFormat.binormal ? new Float32Array(size * 3) : undefined;
+        var textureCoordinates = vertexFormat.st ? new Float32Array(size * 2) : undefined;
 
         var positionIndex = 0;
         var normalIndex = 0;
@@ -204,7 +204,7 @@ define([
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
@@ -257,8 +257,9 @@ define([
         //    C (i)    D (i+2) F
         //
 
+        length = size;
         size -= 2;
-        var indices = new Array(size * 3);
+        var indices = IndexDatatype.createTypedArray(length, size * 3);
 
         var j = 0;
         for (i = 0; i < size; i += 2) {
@@ -278,18 +279,22 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indices = indices;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
 
@@ -300,11 +305,6 @@ define([
          */
         this.boundingSphere = new BoundingSphere.fromVertices(positions);
     };
-
-    /**
-     * DOC_TBA
-     */
-    WallGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return WallGeometry;
 });

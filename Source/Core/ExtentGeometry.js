@@ -6,11 +6,11 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './Extent',
         './GeographicProjection',
-        './Geometry',
         './GeometryAttribute',
         './Math',
         './Matrix2',
@@ -23,11 +23,11 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         Extent,
         GeographicProjection,
-        Geometry,
         GeometryAttribute,
         CesiumMath,
         Matrix2,
@@ -81,9 +81,9 @@ define([
     function computePosition(params, row, col, maxHeight, minHeight) {
         var extent = params.extent;
         var radiiSquared = params.radiiSquared;
+
         var latitude = nwCartographic.latitude - params.granYCos*row + col*params.granXSin;
         stLatitude = extent.north - params.granularityY*row;
-
         var cosLatitude = cos(latitude);
         var nZ = sin(latitude);
         var kZ = radiiSquared.z * nZ;
@@ -116,20 +116,24 @@ define([
         }
     }
 
-    function constructExtent(options, vertexFormat, width, height, surfaceHeight, params){
+    function constructExtent(options, vertexFormat, params){
         var extent = params.extent;
         var ellipsoid = params.ellipsoid;
-        var size = width * height;
+        var size = params.size;
         var threeCount = size * 3;
-        var positions = (vertexFormat.position) ? new Array(threeCount) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(threeCount) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(threeCount) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(threeCount) : undefined;
+        var height = params.height;
+        var width = params.width;
+        var surfaceHeight = params.surfaceHeight;
 
         var vertexIndex = 0;
         var attrIndex = 0;
         var stIndex = 0;
+
+        var positions = (vertexFormat.position) ? new Float64Array(threeCount) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(threeCount) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(threeCount) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(threeCount) : undefined;
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -181,7 +185,8 @@ define([
             }
         }
 
-        var indices = [];
+        var indicesSize = 6 * (width - 1) * (height - 1);
+        var indices = IndexDatatype.createTypedArray(size, indicesSize);
         var index = 0;
         var indicesIndex = 0;
         for ( var i = 0; i < height - 1; ++i) {
@@ -349,17 +354,20 @@ define([
         }
     }
 
-    function constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight, params) {
-        var size = width * height;
+    function constructExtrudedExtent(options, vertexFormat, params) {
+        var surfaceHeight = params.surfaceHeight;
+        var height = params.height;
+        var width = params.width;
+        var size = params.size;
         var ellipsoid = params.ellipsoid;
         var extrudedOptions = options.extrudedOptions;
         if (typeof extrudedOptions.height !== 'number'){
-            return constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
+            return constructExtent(options, vertexFormat, params);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
         var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
+            return constructExtent(options, vertexFormat, params);
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
@@ -376,11 +384,12 @@ define([
         }
 
         var threeCount = vertexCount * 3;
-        var positions = (vertexFormat.position) ? new Array(threeCount) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(vertexCount * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(threeCount) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(threeCount) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(threeCount) : undefined;
+
+        var positions = (vertexFormat.position) ? new Float64Array(threeCount) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(threeCount) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(threeCount) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(threeCount) : undefined;
 
         var attributes = {
                 positions: positions,
@@ -500,7 +509,6 @@ define([
         var indices = [];
         var indicesIndex = 0;
         var attr = {
-                indices: indices,
                 binormals: binormals,
                 tangents: tangents,
                 normals: normals,
@@ -590,6 +598,8 @@ define([
                 ++index;
             }
         }
+        var typedIndices = IndexDatatype.createTypedArray(vertexCount, indices);
+        attr.indices= typedIndices;
         return attr;
     }
 
@@ -636,13 +646,12 @@ define([
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var attr;
 
         var extent = options.extent;
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
+
         extent.validate();
 
         var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
@@ -689,6 +698,11 @@ define([
             }
         }
 
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var attributes = {};
+
+        var size = width * height;
+
         var params = {
             granYCos: granYCos,
             granYSin: granYSin,
@@ -700,20 +714,25 @@ define([
             ellipsoid: ellipsoid,
             lonScalar: lonScalar,
             latScalar: latScalar,
-            extent: extent
+            extent: extent,
+            width: width,
+            height: height,
+            surfaceHeight: surfaceHeight,
+            size: size
         };
 
+        var attr;
+
         if (typeof options.extrudedOptions !== 'undefined') {
-            attr = constructExtrudedExtent(options, vertexFormat, width, height, surfaceHeight, params);
+            attr = constructExtrudedExtent(options, vertexFormat, params);
         } else {
-            attr = constructExtent(options, vertexFormat, width, height, surfaceHeight, params);
+            attr = constructExtent(options, vertexFormat, params);
         }
 
-        var attributes = {};
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : attr.positions
             });
@@ -756,15 +775,17 @@ define([
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
+         *
+         * @see Geometry.attributes
          */
         this.attributes = attributes;
 
         /**
-         * The geometry indices.
+         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indexList = attr.indices;
+        this.indices = attr.indices;
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
@@ -773,15 +794,12 @@ define([
         this.boundingSphere = attr.boundingSphere;
 
         /**
-         * DOC_TBA
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         *
+         * @type PrimitiveType
          */
         this.primitiveType = PrimitiveType.TRIANGLES;
     };
-
-    /**
-     * DOC_TBA
-     */
-    ExtentGeometry.prototype.cloneGeometry = Geometry.prototype.cloneGeometry;
 
     return ExtentGeometry;
 });

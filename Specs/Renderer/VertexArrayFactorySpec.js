@@ -311,12 +311,12 @@ defineSuite([
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
-        // TODO:  Color should be normalized
         var geometry = new Geometry({
             attributes : {
                 color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 4,
+                    normalize : true,
                     values : [255, 0, 0, 255, 0, 255, 0, 255]
                 }),
                 position : new GeometryAttribute({
@@ -442,8 +442,6 @@ defineSuite([
     });
 
     it('creates a custom interleaved vertex', function() {
-        // TODO:  Color should be normalized
-
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -454,6 +452,7 @@ defineSuite([
                 color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 3,
+                    normalize : true,
                     values : [255, 0, 0, 0, 255, 0]
                 }),
                 normal : new GeometryAttribute({
@@ -545,7 +544,7 @@ defineSuite([
 
     it('creates an index buffer', function() {
         var geometry = new Geometry({
-            indexList : [0],
+            indices : [0],
             primitiveType : PrimitiveType.POINTS
         });
 
@@ -557,7 +556,7 @@ defineSuite([
         expect(va.getIndexBuffer()).toBeDefined();
         expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
         expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indexList.length);
+        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indices.length);
     });
 
     it('throws with different number of interleaved attributes', function() {

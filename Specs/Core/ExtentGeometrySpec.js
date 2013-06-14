@@ -31,7 +31,7 @@ defineSuite([
         var length = positions.length;
 
         expect(positions.length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
@@ -50,7 +50,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(9 * 3);
         expect(m.attributes.tangent.values.length).toEqual(9 * 3);
         expect(m.attributes.binormal.values.length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('compute positions with rotation', function() {
@@ -66,7 +66,7 @@ defineSuite([
         var length = positions.length;
 
         expect(length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
 
         var unrotatedSECorner = extent.getSoutheast();
         var projection = new GeographicProjection();
@@ -89,7 +89,7 @@ defineSuite([
         var length = positions.length;
 
         expect(length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
 
         var unrotatedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getNorthwest());
         var unrotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(extent.getSoutheast());
@@ -129,7 +129,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((9+8+4)*3*2);
-        expect(m.indexList.length).toEqual((8*2 + 4*4)*3);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
     });
 
     it('computes all attributes extruded', function() {
@@ -146,7 +146,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual((9+8+4)*3*2);
         expect(m.attributes.tangent.values.length).toEqual((9+8+4)*3*2);
         expect(m.attributes.binormal.values.length).toEqual((9+8+4)*3*2);
-        expect(m.indexList.length).toEqual((8*2 + 4*4)*3);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
     });
 
     it('compute positions with rotation extruded', function() {
@@ -165,7 +165,7 @@ defineSuite([
         var length = positions.length;
 
         expect(length).toEqual((9+8+4)*3*2);
-        expect(m.indexList.length).toEqual((8*2 + 4*4)*3);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
 
         var unrotatedSECorner = extent.getSoutheast();
         var projection = new GeographicProjection();
@@ -191,7 +191,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((((8+4)*2)+9)*3);
-        expect(m.indexList.length).toEqual((8 + 4*4)*3);
+        expect(m.indices.length).toEqual((8 + 4*4)*3);
     });
 
     it('computes extruded bottom open', function() {
@@ -208,7 +208,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((((8+4)*2)+9)*3);
-        expect(m.indexList.length).toEqual((8 + 4*4)*3);
+        expect(m.indices.length).toEqual((8 + 4*4)*3);
     });
 
     it('computes extruded top and bottom open', function() {
@@ -226,7 +226,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((8+4)*2*3);
-        expect(m.indexList.length).toEqual(4*3*4);
+        expect(m.indices.length).toEqual(4*3*4);
     });
 
     it('computes non-extruded extent if height is not specified', function() {
@@ -241,7 +241,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes non-extruded extent if height is small', function() {
@@ -257,7 +257,7 @@ defineSuite([
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(9 * 3);
-        expect(m.indexList.length).toEqual(8 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
 });

@@ -4,11 +4,13 @@ define([
         './DeveloperError',
         './Cartesian3',
         './Cartesian2',
+        './Cartographic',
         './EncodedCartesian3',
         './Matrix3',
         './Matrix4',
         './GeographicProjection',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './Tipsify',
         './BoundingSphere',
@@ -19,11 +21,13 @@ define([
         DeveloperError,
         Cartesian3,
         Cartesian2,
+        Cartographic,
         EncodedCartesian3,
         Matrix3,
         Matrix4,
         GeographicProjection,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         Tipsify,
         BoundingSphere,
@@ -41,58 +45,69 @@ define([
      */
     var GeometryPipeline = {};
 
-    function addTriangle(lines, i0, i1, i2) {
-        lines.push(i0);
-        lines.push(i1);
+    function addTriangle(lines, index, i0, i1, i2) {
+        lines[index++] = i0;
+        lines[index++] = i1;
 
-        lines.push(i1);
-        lines.push(i2);
+        lines[index++] = i1;
+        lines[index++] = i2;
 
-        lines.push(i2);
-        lines.push(i0);
+        lines[index++] = i2;
+        lines[index] = i0;
     }
 
     function trianglesToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-        for ( var i = 0; i < count; i += 3) {
-            addTriangle(lines, triangles[i], triangles[i + 1], triangles[i + 2]);
+        var size = (count / 3) * 6;
+        var lines = IndexDatatype.createTypedArray(count, size);
+
+        var index = 0;
+        for ( var i = 0; i < count; i += 3, index += 6) {
+            addTriangle(lines, index, triangles[i], triangles[i + 1], triangles[i + 2]);
         }
 
         return lines;
     }
 
     function triangleStripToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-
         if (count >= 3) {
-            addTriangle(lines, triangles[0], triangles[1], triangles[2]);
+            var size = (count - 2) * 6;
+            var lines = IndexDatatype.createTypedArray(count, size);
 
-            for ( var i = 3; i < count; ++i) {
-                addTriangle(lines, triangles[i - 1], triangles[i], triangles[i - 2]);
+            addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
+            var index = 6;
+
+            for ( var i = 3; i < count; ++i, index += 6) {
+                addTriangle(lines, index, triangles[i - 1], triangles[i], triangles[i - 2]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return new Uint16Array();
     }
 
     function triangleFanToLines(triangles) {
-        var lines = [];
-
         if (triangles.length > 0) {
-            var base = triangles[0];
             var count = triangles.length - 1;
-            for ( var i = 1; i < count; ++i) {
-                addTriangle(lines, base, triangles[i], triangles[i + 1]);
+            var size = (count - 1) * 6;
+            var lines = IndexDatatype.createTypedArray(count, size);
+
+            var base = triangles[0];
+            var index = 0;
+            for ( var i = 1; i < count; ++i, index += 6) {
+                addTriangle(lines, index, base, triangles[i], triangles[i + 1]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return new Uint16Array();
     }
 
     /**
-     * Converts a geometry's triangle indices to line indices.  If the geometry has an <code>indexList</code>
+     * Converts a geometry's triangle indices to line indices.  If the geometry has an <code>indices</code>
      * and its <code>primitiveType</code> is <code>TRIANGLES</code>, <code>TRIANGLE_STRIP</code>,
      * <code>TRIANGLE_FAN</code>, it is converted to <code>LINES</code>; otherwise, the geometry is not changed.
      * <p>
@@ -113,17 +128,17 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
         if (typeof indices !== 'undefined') {
             switch (geometry.primitiveType) {
                 case PrimitiveType.TRIANGLES:
-                    geometry.indexList = trianglesToLines(indices);
+                    geometry.indices = trianglesToLines(indices);
                     break;
                 case PrimitiveType.TRIANGLE_STRIP:
-                    geometry.indexList = triangleStripToLines(indices);
+                    geometry.indices = triangleStripToLines(indices);
                     break;
                 case PrimitiveType.TRIANGLE_FAN:
-                    geometry.indexList = triangleFanToLines(indices);
+                    geometry.indices = triangleFanToLines(indices);
                     break;
             }
 
@@ -143,9 +158,6 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      *
-     * @see Context#createVertexArrayFromGeometry
-     * @see ShaderCache
-     *
      * @example
      * var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
      * // Example output
@@ -153,6 +165,9 @@ define([
      * //   'position' : 0,
      * //   'normal' : 1
      * // }
+     *
+     * @see Context#createVertexArrayFromGeometry
+     * @see ShaderCache
      */
     GeometryPipeline.createAttributeIndices = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -174,7 +189,7 @@ define([
     };
 
     /**
-     * Reorders a geometry's attributes and <code>indexList</code> to achieve better performance from the GPU's pre-vertex-shader cache.
+     * Reorders a geometry's attributes and <code>indices</code> to achieve better performance from the GPU's pre-vertex-shader cache.
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
@@ -183,10 +198,10 @@ define([
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} Each attribute array in geometry.attributes must have the same number of attributes.
      *
-     * @see GeometryPipeline.reorderForPostVertexCache
-     *
      * @example
      * geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
+     *
+     * @see GeometryPipeline.reorderForPostVertexCache
      */
     GeometryPipeline.reorderForPreVertexCache = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -195,17 +210,18 @@ define([
 
         var numVertices = Geometry.computeNumberOfVertices(geometry);
 
-        var indexCrossReferenceOldToNew = new Array(numVertices);
-        for ( var i = 0; i < numVertices; i++) {
-            indexCrossReferenceOldToNew[i] = -1;
-        }
+        var indices = geometry.indices;
+        if (typeof indices !== 'undefined') {
+            var indexCrossReferenceOldToNew = new Int32Array(numVertices);
+            for ( var i = 0; i < numVertices; i++) {
+                indexCrossReferenceOldToNew[i] = -1;
+            }
 
-        var indexList = geometry.indexList;
-        if (typeof indexList !== 'undefined') {
             // Construct cross reference and reorder indices
-            var indicesIn = indexList;
+            var indicesIn = indices;
             var numIndices = indicesIn.length;
-            var indicesOut = [];
+            var indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
+
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
             var nextIndex = 0;
@@ -227,25 +243,26 @@ define([
                 ++intoIndicesIn;
                 ++intoIndicesOut;
             }
-            geometry.indexList = indicesOut;
-        }
+            geometry.indices = indicesOut;
 
-        // Reorder attributes
-        var attributes = geometry.attributes;
-        for ( var property in attributes) {
-            if (attributes.hasOwnProperty(property) && attributes[property].values) {
-                var elementsIn = attributes[property].values;
-                var intoElementsIn = 0;
-                var numComponents = attributes[property].componentsPerAttribute;
-                var elementsOut = [];
-                while (intoElementsIn < numVertices) {
-                    var temp = indexCrossReferenceOldToNew[intoElementsIn];
-                    for (i = 0; i < numComponents; i++) {
-                        elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+            // Reorder attributes
+            var attributes = geometry.attributes;
+            for ( var property in attributes) {
+                if (attributes.hasOwnProperty(property) && attributes[property].values) {
+                    var attribute = attributes[property];
+                    var elementsIn = attribute.values;
+                    var intoElementsIn = 0;
+                    var numComponents = attribute.componentsPerAttribute;
+                    var elementsOut = attribute.componentDatatype.createTypedArray(elementsIn.length);
+                    while (intoElementsIn < numVertices) {
+                        var temp = indexCrossReferenceOldToNew[intoElementsIn];
+                        for (i = 0; i < numComponents; i++) {
+                            elementsOut[numComponents * temp + i] = elementsIn[numComponents * intoElementsIn + i];
+                        }
+                        ++intoElementsIn;
                     }
-                    ++intoElementsIn;
+                    attribute.values = elementsOut;
                 }
-                attributes[property].values = elementsOut;
             }
         }
 
@@ -253,9 +270,9 @@ define([
     };
 
     /**
-     * Reorders a geometry's <code>indexList</code> to achieve better performance from the GPU's
+     * Reorders a geometry's <code>indices</code> to achieve better performance from the GPU's
      * post vertex-shader cache by using the Tipsify algorithm.  If the geometry <code>primitiveType</code>
-     * is not <code>TRIANGLES</code> or the geometry does not have an <code>indexList</code>, this function has no effect.
+     * is not <code>TRIANGLES</code> or the geometry does not have an <code>indices</code>, this function has no effect.
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
@@ -265,20 +282,20 @@ define([
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} cacheCapacity must be greater than two.
      *
+     * @example
+     * geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
+     *
      * @see GeometryPipeline.reorderForPreVertexCache
      * @see <a href='http://gfx.cs.princeton.edu/pubs/Sander_2007_%3ETR/tipsy.pdf'>
      * Fast Triangle Reordering for Vertex Locality and Reduced Overdraw</a>
      * by Sander, Nehab, and Barczak
-     *
-     * @example
-     * geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
      */
     GeometryPipeline.reorderForPostVertexCache = function(geometry, cacheCapacity) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
 
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
         if ((geometry.primitiveType === PrimitiveType.TRIANGLES) && (typeof indices !== 'undefined')) {
             var numIndices = indices.length;
             var maximumIndex = 0;
@@ -287,7 +304,7 @@ define([
                     maximumIndex = indices[j];
                 }
             }
-            geometry.indexList = Tipsify.tipsify({
+            geometry.indices = Tipsify.tipsify({
                 indices : indices,
                 maximumIndex : maximumIndex,
                 cacheSize : cacheCapacity
@@ -329,10 +346,10 @@ define([
 
     /**
      * Splits a geometry into multiple geometries - if necessary - to ensure that indices in the
-     * <code>indexList</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
+     * <code>indices</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
      * when {@link Context#getElementIndexUint} is <code>false</code>.
      * <p>
-     * If the geometry does not have an <code>indexList</code>, this function has no effect.
+     * If the geometry does not have an <code>indices</code>, this function has no effect.
      * </p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place if it needs to be split into multiple geometries.
@@ -351,7 +368,7 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        if ((typeof geometry.indexList !== 'undefined') &&
+        if ((typeof geometry.indices !== 'undefined') &&
             ((geometry.primitiveType !== PrimitiveType.TRIANGLES) &&
              (geometry.primitiveType !== PrimitiveType.LINES) &&
              (geometry.primitiveType !== PrimitiveType.POINTS))) {
@@ -364,13 +381,13 @@ define([
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         var sixtyFourK = 64 * 1024;
-        if (typeof geometry.indexList !== 'undefined' && (numberOfVertices > sixtyFourK)) {
+        if (typeof geometry.indices !== 'undefined' && (numberOfVertices > sixtyFourK)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
             var newAttributes = copyAttributesDescriptions(geometry.attributes);
 
-            var originalIndices = geometry.indexList;
+            var originalIndices = geometry.indices;
             var numberOfIndices = originalIndices.length;
 
             var indicesPerPrimitive;
@@ -398,7 +415,7 @@ define([
                 if (currentIndex + indicesPerPrimitive > sixtyFourK) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
-                        indexList : newIndices,
+                        indices : newIndices,
                         primitiveType : geometry.primitiveType
                     }));
 
@@ -413,7 +430,7 @@ define([
             if (newIndices.length !== 0) {
                 geometries.push(new Geometry({
                     attributes : newAttributes,
-                    indexList : newIndices,
+                    indices : newIndices,
                     primitiveType : geometry.primitiveType
                 }));
             }
@@ -425,7 +442,8 @@ define([
         return geometries;
     };
 
-    var scratchCartesian = new Cartesian3();
+    var scratchProjectTo2DCartesian3 = new Cartesian3();
+    var scratchProjectTo2DCartographic = new Cartographic();
 
     /**
      * Projects a geometry's 3D <code>position</code> attribute to 2D, replacing the <code>position</code>
@@ -455,12 +473,16 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = [];
+            var projectedPositions = new Float64Array(2 * wgs84Positions.length / 3);
+            var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var lonLat = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(wgs84Positions, i, scratchCartesian));
-                var projectedLonLat = projection.project(lonLat);
-                projectedPositions.push(projectedLonLat.x, projectedLonLat.y);
+                var position = Cartesian3.fromArray(wgs84Positions, i, scratchProjectTo2DCartesian3);
+                var lonLat = ellipsoid.cartesianToCartographic(position, scratchProjectTo2DCartographic);
+                var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
+
+                projectedPositions[index++] = projectedLonLat.x;
+                projectedPositions[index++] = projectedLonLat.y;
             }
 
             // Rename original positions to WGS84 Positions.
@@ -468,7 +490,7 @@ define([
 
             // Replace original positions with 2D projected positions
             geometry.attributes.position2D = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 2,
                 values : projectedPositions
             });
@@ -499,7 +521,7 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
-     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
      * @example
      * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
@@ -521,14 +543,14 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.FLOAT) {
-            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT.');
+        if (attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
 
         var values = attribute.values;
         var length = values.length;
-        var highValues = new Array(length);
-        var lowValues = new Array(length);
+        var highValues = new Float32Array(length);
+        var lowValues = new Float32Array(length);
 
         for (var i = 0; i < length; ++i) {
             EncodedCartesian3.encode(values[i], encodedResult);
@@ -536,14 +558,16 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
+        var componentsPerAttribute = attribute.componentsPerAttribute;
+
         geometry.attributes[attributeHighName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : componentsPerAttribute,
             values : highValues
         });
         geometry.attributes[attributeLowName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : componentsPerAttribute,
             values : lowValues
         });
         delete geometry.attributes[attributeName];
@@ -581,10 +605,29 @@ define([
         }
     }
 
+    var inverseTranspose = new Matrix4();
+    var normalMatrix = new Matrix3();
+
     /**
-     * DOC_TBA
+     * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
+     * to batch together several instances with {@link GeometryPipeline.combine}.  This changes
+     * the instance's <code>modelMatrix</code> to {@see Matrix4.IDENTITY} and transforms the
+     * following attributes if they are present: <code>position</code>, <code>normal</code>,
+     * <code>binormal</code>, and <code>tangent</code>.
+     *
+     * @param {GeometryInstance} instance The geometry instance to modify, which is modified in place.
+     *
+     * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
      *
      * @exception {DeveloperError} instance is required.
+     *
+     * @example
+     * for (var i = 0; i < instances.length; ++i) {
+     *   GeometryPipeline.transformToWorldCoordinates(instances[i]);
+     * }
+     * var geometry = GeometryPipeline.combine(instances);
+     *
+     * @see GeometryPipeline.combine
      */
     GeometryPipeline.transformToWorldCoordinates = function(instance) {
         if (typeof instance === 'undefined') {
@@ -607,8 +650,6 @@ define([
             (typeof attributes.binormal !== 'undefined') ||
             (typeof attributes.tangent !== 'undefined')) {
 
-            var inverseTranspose = new Matrix4();
-            var normalMatrix = new Matrix3();
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
@@ -665,7 +706,6 @@ define([
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
-// TODO: or new Array()
                         values : attribute.componentDatatype.createTypedArray(numberOfComponents)
                     });
                 }
@@ -680,6 +720,16 @@ define([
      *
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
+     * @exception {DeveloperError} All instance geometries must have an indices or not have one.
+     * @exception {DeveloperError} All instance geometries must have the same primitiveType.
+     *
+     * @example
+     * for (var i = 0; i < instances.length; ++i) {
+     *   GeometryPipeline.transformToWorldCoordinates(instances[i]);
+     * }
+     * var geometry = GeometryPipeline.combine(instances);
+     *
+     * @see GeometryPipeline.transformToWorldCoordinates
      */
     GeometryPipeline.combine = function(instances) {
         if ((typeof instances === 'undefined') || (instances.length < 1)) {
@@ -698,9 +748,20 @@ define([
         var k;
 
         var m = instances[0].modelMatrix;
+        var haveindicess = (typeof instances[0].geometry.indices !== 'undefined');
+        var primitiveType = instances[0].geometry.primitiveType;
+
         for (i = 1; i < length; ++i) {
             if (!Matrix4.equals(instances[i].modelMatrix, m)) {
                 throw new DeveloperError('All instances must have the same modelMatrix.');
+            }
+
+            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveindicess) {
+                throw new DeveloperError('All instance geometries must have an indices or not have one.');
+            }
+
+            if (instances[i].geometry.primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
 
@@ -709,9 +770,6 @@ define([
         var values;
         var sourceValues;
         var sourceValuesLength;
-
-        // PERFORMANCE_IDEA: Interleave here instead of createVertexArrayFromGeometry to save a copy.
-        // This will require adding offset and stride to the geometry.
 
         // Combine attributes from each geometry into a single typed array
         for (name in attributes) {
@@ -730,68 +788,35 @@ define([
             }
         }
 
-        // PERFORMANCE_IDEA: Could combine with fitToUnsignedShortIndices, but it would start to get ugly
-        // and it is not needed when OES_element_index_uint is supported.
-
         // Combine index lists
-
-        // First, determine the size of a typed array per primitive type
-        var primitiveType = instances[0].geometry.primitiveType;
-        var numberOfIndices = {};
         var indices;
 
-        for (i = 0; i < length; ++i) {
-            indices = instances[i].geometry.indexList;
-            numberOfIndices[primitiveType] = (typeof numberOfIndices[primitiveType] !== 'undefined') ?
-                (numberOfIndices[primitiveType] += indices.length) : indices.length;
-        }
+        if (haveindicess) {
+            var numberOfIndices = 0;
+            for (i = 0; i < length; ++i) {
+                numberOfIndices += instances[i].geometry.indices.length;
+            }
 
-        // Next, allocate a typed array for indices per primitive type
-        var combinedIndexLists = [];
-        var indexListsByPrimitiveType = {};
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 
-        for (name in numberOfIndices) {
-            if (numberOfIndices.hasOwnProperty(name)) {
-                var num = numberOfIndices[name];
+            var destOffset = 0;
+            var offset = 0;
 
-// TODO: or new Array()
-                if (num < 60 * 1024) {
-                    values = new Uint16Array(num);
-                } else {
-                    values = new Uint32Array(num);
+            for (i = 0; i < length; ++i) {
+                var sourceIndices = instances[i].geometry.indices;
+                var sourceIndicesLen = sourceIndices.length;
+
+                for (k = 0; k < sourceIndicesLen; ++k) {
+                    destIndices[destOffset++] = offset + sourceIndices[k];
                 }
 
-                combinedIndexLists.push(values);
-
-                indexListsByPrimitiveType[name] = {
-                    values : values,
-                    currentOffset : 0
-                };
-            }
-        }
-
-        // Finally, combine index lists with the same primitive type
-        var offset = 0;
-
-        for (i = 0; i < length; ++i) {
-            sourceValues = instances[i].geometry.indexList;
-            sourceValuesLength = sourceValues.length;
-            var destValues = indexListsByPrimitiveType[primitiveType].values;
-            var n = indexListsByPrimitiveType[primitiveType].currentOffset;
-
-            for (k = 0; k < sourceValuesLength; ++k) {
-                destValues[n++] = offset + sourceValues[k];
+                offset += Geometry.computeNumberOfVertices(instances[i].geometry);
             }
 
-            indexListsByPrimitiveType[primitiveType].currentOffset = n;
-
-            var attrs = instances[i].geometry.attributes;
-            for (name in attrs) {
-                if (attrs.hasOwnProperty(name)) {
-                    offset += attrs[name].values.length / attrs[name].componentsPerAttribute;
-                    break;
-                }
-            }
+            indices = destIndices;
         }
 
         // Create bounding sphere that includes all instances
@@ -814,8 +839,7 @@ define([
 
         return new Geometry({
             attributes : attributes,
-// TODO: cleanup combinedIndexLists
-            indexList : combinedIndexLists[0],
+            indices : indices,
             primitiveType : primitiveType,
             boundingSphere : boundingSphere
         });
@@ -827,43 +851,43 @@ define([
     var v2 = new Cartesian3();
 
     /**
-     * Computes the normals of all vertices in a geometry based on the normals of triangles that include the vertex.
-     * This assumes a counter-clockwise vertex winding order.
+     * Computes per-vertex normals for a geometry containing <code>TRIANGLES</code> by averaging the normals of
+     * all triangles incident to the vertex.  The result is a new <code>normal</code> attribute added to the geometry.
+     * This assumes a counter-clockwise winding order.
+     * <p>
+     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
+     * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have a
+     * <code>position</code> attribute.
+     * </p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
-     * @param {Object} geometry.attributes.position
      *
-     * @returns {Geometry} The modified <code>geometry</code> argument.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>normal</code> attribute.
      *
-     * @exception {DeveloperError} geometry.attributes.position.values is required
-     * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
+     * @exception {DeveloperError} geometry is required
      *
      * @example
      * geometry = GeometryPipeline.computeNormal(geometry);
-     *
      */
     GeometryPipeline.computeNormal = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
+
         var attributes = geometry.attributes;
-        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
-            throw new DeveloperError('geometry.attributes.position.values is required');
+        var indices = geometry.indices;
+
+        if (typeof attributes.position === 'undefined' ||
+            typeof attributes.position.values === 'undefined' ||
+            geometry.primitiveType !== PrimitiveType.TRIANGLES ||
+            typeof indices === 'undefined' ||
+            indices.length < 2 ||
+            indices.length % 3 !== 0) {
+
+            return geometry;
         }
+
         var vertices = geometry.attributes.position.values;
-        if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
-            throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
-        }
-        var indices = geometry.indexList;
-        if (typeof indices === 'undefined') {
-            return geometry;
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
-                indices.length < 2 || indices.length % 3 !== 0) {
-            return geometry;
-        }
-
         var numVertices = geometry.attributes.position.values.length / 3;
         var numIndices = indices.length;
         var normalsPerVertex = new Array(numVertices);
@@ -934,14 +958,7 @@ define([
             j++;
         }
 
-        if (typeof geometry.attributes.normal === 'undefined') {
-            geometry.attributes.normal = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 3,
-                values: new Array(numVertices * 3)
-            });
-        }
-        var normalValues = geometry.attributes.normal.values;
+        var normalValues = new Float32Array(numVertices * 3);
         for (i = 0; i < numVertices; i++) {
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
@@ -952,14 +969,20 @@ define([
                 }
                 normal.normalize(normal);
                 normalValues[i3] = normal.x;
-                normalValues[i3+1] = normal.y;
-                normalValues[i3+2] = normal.z;
+                normalValues[i3 + 1] = normal.y;
+                normalValues[i3 + 2] = normal.z;
             } else {
                 normalValues[i3] = 0.0;
-                normalValues[i3+1] = 0.0;
-                normalValues[i3+2] = 1.0;
+                normalValues[i3 + 1] = 0.0;
+                normalValues[i3 + 2] = 1.0;
             }
         }
+
+        geometry.attributes.normal = new GeometryAttribute({
+            componentDatatype: ComponentDatatype.FLOAT,
+            componentsPerAttribute: 3,
+            values: normalValues
+        });
 
         return geometry;
     };
@@ -969,62 +992,46 @@ define([
     var tScratch = new Cartesian3();
 
     /**
-     * Computes the tangent and binormal of all vertices in a geometry
-     * This assumes a counter-clockwise vertex winding order.
-     *
-     * Based on: Lengyel, Eric. <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors for an Arbitrary Mesh</a>. Terathon Software 3D Graphics Library, 2001.
+     * Computes per-vertex binormals and tangents for a geometry containing <code>TRIANGLES</code>.
+     * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
+     * This assumes a counter-clockwise winding order.
+     * <p>
+     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
+     * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have
+     * <code>position</code>, <code>normal</code>, and <code>st</code> attributes.
+     * </p>
+     * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
+     * for an Arbitrary Mesh</a> by Eric Lengyel.
+     * <p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
-     * @param {Object} geometry.attributes.position The vertices of the geometry
-     * @param {Object} geometry.attributes.normal The normals of the vertices
-     * @param {Object} geometry.attributes.st The texture coordinates
      *
-     * @returns {Geometry} The modified <code>geometry</code> argument.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the compute <code>binormal</code> and <code>tangent</code> attributes.
      *
-     * @exception {DeveloperError} geometry.attributes.position.values is required
-     * @exception {DeveloperError} geometry.attributes.position.values.length must be a multiple of 3
-     * @exception {DeveloperError} geometry.attributes.normal.values is required
-     * @exception {DeveloperError} geometry.attributes.normal.values.length must be a multiple of 3
-     * @exception {DeveloperError} geometry.attributes.st.values is required
-     * @exception {DeveloperError} geometry.attributes.st.values.length must be a multiple of 2
-     *
+     * @exception {DeveloperError} geometry is required.
+     *˙
      * @example
-     * geometry = GeometryPipeline.computeTangentAndBinormal(geometry);
+     * geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
      */
-    GeometryPipeline.computeTangentAndBinormal = function(geometry) {
+    GeometryPipeline.computeBinormalAndTangent = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
+
         var attributes = geometry.attributes;
-        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
-            throw new DeveloperError('geometry.attributes.position.values is required');
-        }
         var vertices = geometry.attributes.position.values;
-        if (geometry.attributes.position.componentsPerAttribute !== 3 || vertices.length % 3 !== 0) {
-            throw new DeveloperError('geometry.attributes.position.values.length must be a multiple of 3');
-        }
-        if (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') {
-            throw new DeveloperError('geometry.attributes.normal.values is required');
-        }
         var normals = geometry.attributes.normal.values;
-        if (geometry.attributes.normal.componentsPerAttribute !== 3 || normals.length % 3 !== 0) {
-            throw new DeveloperError('geometry.attributes.normals.values.length must be a multiple of 3');
-        }
-        if (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') {
-            throw new DeveloperError('geometry.attributes.st.values is required');
-        }
         var st = geometry.attributes.st.values;
-        if (geometry.attributes.st.componentsPerAttribute !== 2 || st.length % 2 !== 0) {
-            throw new DeveloperError('geometry.attributes.st.values.length must be a multiple of 2');
-        }
+        var indices = geometry.indices;
 
-        var indices = geometry.indexList;
-        if (typeof indices === 'undefined') {
-            return geometry;
-        }
+        if ((typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') ||
+            (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') ||
+            (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') ||
+            geometry.primitiveType !== PrimitiveType.TRIANGLES ||
+            typeof indices === 'undefined' ||
+            indices.length < 2 ||
+            indices.length % 3 !== 0) {
 
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES || typeof indices === 'undefined' ||
-                indices.length < 2 || indices.length % 3 !== 0) {
             return geometry;
         }
 
@@ -1076,8 +1083,10 @@ define([
             tan1[i23+1] += sdiry;
             tan1[i23+2] += sdirz;
         }
-        var binormalValues = new Array(numVertices * 3);
-        var tangentValues = new Array(numVertices * 3);
+
+        var binormalValues = new Float32Array(numVertices * 3);
+        var tangentValues = new Float32Array(numVertices * 3);
+
         for (i = 0; i < numVertices; i++) {
             i03 = i * 3;
             i13 = i03 + 1;
@@ -1088,32 +1097,29 @@ define([
             var scalar = n.dot(t);
             n.multiplyByScalar(scalar, normalScale);
             t.subtract(normalScale, t).normalize(t);
+
             tangentValues[i03] = t.x;
             tangentValues[i13] = t.y;
             tangentValues[i23] = t.z;
+
             n.cross(t, t).normalize(t);
+
             binormalValues[i03] = t.x;
             binormalValues[i13] = t.y;
             binormalValues[i23] = t.z;
         }
-        if (typeof geometry.attributes.tangent === 'undefined') {
-            geometry.attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : tangentValues
-            });
-        } else {
-            geometry.attributes.tangent.values = tangentValues;
-        }
-        if (typeof geometry.attributes.binormal === 'undefined') {
-            geometry.attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : binormalValues
-            });
-        } else {
-            geometry.attributes.binormal.values = binormalValues;
-        }
+
+        geometry.attributes.tangent = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            values : tangentValues
+        });
+
+        geometry.attributes.binormal = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            values : binormalValues
+        });
 
         return geometry;
     };

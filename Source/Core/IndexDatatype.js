@@ -1,5 +1,10 @@
 /*global define*/
-define(['./Enumeration'], function(Enumeration) {
+define([
+        './Enumeration',
+        './DeveloperError'
+    ], function(
+        Enumeration,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -43,6 +48,32 @@ define(['./Enumeration'], function(Enumeration) {
         return ((indexDatatype === IndexDatatype.UNSIGNED_BYTE) ||
                 (indexDatatype === IndexDatatype.UNSIGNED_SHORT) ||
                 (indexDatatype === IndexDatatype.UNSIGNED_INT));
+    };
+
+    /**
+     * Creates a typed array that will store indices, using either <code><Uint16Array</code>
+     * or <code>Uint32Array</code> depending on the number of vertices.
+     *
+     * @param {Number} numberOfVertices Number of vertices that the indices will reference.
+     * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
+     *
+     * @return {Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
+     *
+     * @exception {DeveloperError} center is required.
+     *
+     * @example
+     * this.indices = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
+     */
+    IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
+        if (typeof numberOfVertices === 'undefined') {
+            throw new DeveloperError('numberOfVertices is required.');
+        }
+
+        if (numberOfVertices > 64 * 1024) {
+            return new Uint32Array(indicesLengthOrArray);
+        }
+
+        return new Uint16Array(indicesLengthOrArray);
     };
 
     return IndexDatatype;
