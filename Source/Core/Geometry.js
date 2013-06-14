@@ -41,7 +41,7 @@ define([
      *       values : positions
      *     })
      *   },
-     *   indexList : [0, 1, 1, 2, 2, 0],
+     *   indices : [0, 1, 1, 2, 2, 0],
      *   primitiveType : PrimitiveType.LINES,
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
@@ -67,11 +67,11 @@ define([
          * There are reserved attribute names with well-known semantics.  The following attributes
          * are created by a Geometry (depending on the provided {@link VertexFormat}.
          * <ul>
-         *    <li><code>position</code> - 3D vertex position.  64-bit floating-point (for precision).  3 components per attribute.  See {@link VertexFormat.position}.</li>
-         *    <li><code>normal</code> - Normal (normalized), commonly used for lighting.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat.normal}.</li>
-         *    <li><code>st</code> - 2D texture coordinate.  32-bit floating-point.  2 components per attribute.  See {@link VertexFormat.st}.</li>
-         *    <li><code>binormal</code> - Binormal (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat.binormal}.</li>
-         *    <li><code>tangent</code> - Tangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat.tangent}.</li>
+         *    <li><code>position</code> - 3D vertex position.  64-bit floating-point (for precision).  3 components per attribute.  See {@link VertexFormat#position}.</li>
+         *    <li><code>normal</code> - Normal (normalized), commonly used for lighting.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#normal}.</li>
+         *    <li><code>st</code> - 2D texture coordinate.  32-bit floating-point.  2 components per attribute.  See {@link VertexFormat#st}.</li>
+         *    <li><code>binormal</code> - Binormal (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#binormal}.</li>
+         *    <li><code>tangent</code> - Tangent (normalized), used for tangent-space effects like bump mapping.  32-bit floating-point.  3 components per attribute.  See {@link VertexFormat#tangent}.</li>
          * </ul>
          * </p>
          * <p>
@@ -83,7 +83,7 @@ define([
          *    <li><code>position3DLow</code> - Low 32 bits for encoded 64-bit position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
          *    <li><code>position3DHigh</code> - High 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
          *    <li><code>position2DLow</code> - Low 32 bits for encoded 64-bit 2D (Columbus view) position computed with {@link GeometryPipeline.encodeAttribute}.  32-bit floating-point.  4 components per attribute.</li>
-         *    <li><code>color</code> - RGBA color (normalized) usually from {@link GeometryInstance.color}.  32-bit floating-point.  4 components per attribute.</li>
+         *    <li><code>color</code> - RGBA color (normalized) usually from {@link GeometryInstance#color}.  32-bit floating-point.  4 components per attribute.</li>
          *    <li><code>pickColor</code> - RGBA color used for picking, created from {@link Context#createPickId}.  32-bit floating-point.  4 components per attribute.</li>
          * </ul>
          * </p>
@@ -115,9 +115,9 @@ define([
          * @example
          * // Two triangles with shared vertices
          * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
+         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
-        this.indexList = options.indexList;
+        this.indices = options.indices;
 
         /**
          * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
@@ -130,7 +130,7 @@ define([
          * @example
          * // Two triangles with shared vertices
          * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
+         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.primitiveType = options.primitiveType;
 
@@ -153,10 +153,10 @@ define([
      *
      * @memberof Geometry
      *
-     * @param {Cartesian3} geometry The geometry to duplicate.  If this is undefined, undefined is returned.
-     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @param {Geometry} geometry The geometry to duplicate.  If this is undefined, undefined is returned.
+     * @param {Geometry} [result] The object onto which to store the result.
      *
-     * @return {Cartesian3} The modified result parameter or a new Geometry instance if one was not provided.
+     * @return {Geometry} The modified result parameter or a new Geometry instance if one was not provided.
      *
      * @example
      * result.geometry = Geometry.clone(this.geometry);
@@ -179,11 +179,11 @@ define([
         }
         result.attributes = newAttributes;
 
-        if (typeof geometry.indexList !== 'undefined') {
-            var sourceValues = geometry.indexList;
-            result.indexList = new sourceValues.constructor(sourceValues);
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            result.indices = new sourceValues.constructor(sourceValues);
         } else {
-            result.indexList = undefined;
+            result.indices = undefined;
         }
         result.primitiveType = geometry.primitiveType;
 

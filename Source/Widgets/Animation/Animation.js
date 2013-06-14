@@ -5,6 +5,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Color',
+        '../getElement',
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
@@ -12,6 +13,7 @@ define([
         destroyObject,
         DeveloperError,
         Color,
+        getElement,
         knockout) {
     "use strict";
 
@@ -376,17 +378,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof viewModel === 'undefined') {
             throw new DeveloperError('viewModel is required.');
         }
+
+        container = getElement(container);
 
         this._viewModel = viewModel;
         this._container = container;

@@ -40,10 +40,27 @@ define([
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var controller = scene.getScreenSpaceCameraController();
-        controller.enableTranslate = true;
-        controller.enableTilt = true;
+        var enableLook = controller.enableLook;
+        var enableRotate = controller.enableRotate;
+        var enableTilt = controller.enableTilt;
+        var enableTranslate = controller.enableTranslate;
+        var enableZoom = controller.enableZoom;
+
+        controller.enableLook = false;
+        controller.enableRotate = false;
+        controller.enableTilt = false;
+        controller.enableTranslate = false;
+        controller.enableZoom = false;
         controller.setEllipsoid(ellipsoid);
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
+
+        function onComplete() {
+            controller.enableLook = enableLook;
+            controller.enableRotate = enableRotate;
+            controller.enableTilt = enableTilt;
+            controller.enableTranslate = enableTranslate;
+            controller.enableZoom = enableZoom;
+        }
 
         var canvas = scene.getCanvas();
         if (typeof transitioner !== 'undefined' && mode === SceneMode.MORPHING) {
@@ -54,13 +71,14 @@ define([
 
         if (mode === SceneMode.SCENE2D) {
             camera.transform = new Matrix4(0, 0, 1, 0,
-                    1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 0, 1);
+                                           1, 0, 0, 0,
+                                           0, 1, 0, 0,
+                                           0, 0, 0, 1);
             description = {
-                    destination: Extent.MAX_VALUE,
-                    duration: flightDuration
-                };
+                destination : Extent.MAX_VALUE,
+                duration : flightDuration,
+                onComplete : onComplete
+            };
             flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.SCENE3D) {
@@ -72,18 +90,19 @@ define([
             camera.transform = Matrix4.IDENTITY.clone();
             var defaultCamera = new Camera(canvas);
             description = {
-                    destination: defaultCamera.position,
-                    duration: flightDuration,
-                    up: defaultCamera.up,
-                    direction: defaultCamera.direction
+                destination : defaultCamera.position,
+                duration : flightDuration,
+                up : defaultCamera.up,
+                direction : defaultCamera.direction,
+                onComplete : onComplete
             };
             flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                    1.0, 0.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 0.0, 1.0);
+                                           1.0, 0.0, 0.0, 0.0,
+                                           0.0, 1.0, 0.0, 0.0,
+                                           0.0, 0.0, 0.0, 1.0);
             var maxRadii = ellipsoid.getMaximumRadius();
             var position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
             var direction = Cartesian3.ZERO.subtract(position).normalize();
@@ -91,10 +110,11 @@ define([
             var up = right.cross(direction);
 
             description = {
-                    destination: position,
-                    duration: flightDuration,
-                    up: up,
-                    direction: direction
+                destination : position,
+                duration : flightDuration,
+                up : up,
+                direction : direction,
+                onComplete : onComplete
             };
 
             flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
@@ -127,8 +147,9 @@ define([
         this._transitioner = transitioner;
         this._flightDuration = flightDuration;
 
+        var that = this;
         this._command = createCommand(function() {
-            viewHome(scene, ellipsoid, transitioner, flightDuration);
+            viewHome(that._scene, that._ellipsoid, that._transitioner, that._flightDuration);
         });
 
         /**
@@ -190,6 +211,25 @@ define([
         command : {
             get : function() {
                 return this._command;
+            }
+        },
+
+        /**
+         * Gets or sets the the duration of the camera flight in milliseconds.
+         * A value of zero causes the camera to instantly switch to home view.
+         * @memberof HomeButtonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        flightDuration : {
+            get : function() {
+                return this._flightDuration;
+            },
+            set : function(value) {
+                if (value < 0) {
+                    throw new DeveloperError('value must be positive.');
+                }
+                this._flightDuration = value;
             }
         }
     });

@@ -835,7 +835,7 @@ define([
                         values : flattenedPositions
                     })
                 },
-                indexList : subdividedIndices,
+                indices : subdividedIndices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
         },

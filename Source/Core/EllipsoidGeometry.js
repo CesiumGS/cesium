@@ -311,7 +311,7 @@ define([
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 
@@ -320,7 +320,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = IndexDatatype.createTypedArray(length, indices);
+        this.indices = IndexDatatype.createTypedArray(length, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

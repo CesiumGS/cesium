@@ -360,9 +360,9 @@ defineSuite([
         expect(subdivision.attributes.position.values[7]).toEqual(0.0);
         expect(subdivision.attributes.position.values[8]).toEqual(0.0);
 
-        expect(subdivision.indexList[0]).toEqual(0);
-        expect(subdivision.indexList[1]).toEqual(1);
-        expect(subdivision.indexList[2]).toEqual(2);
+        expect(subdivision.indices[0]).toEqual(0);
+        expect(subdivision.indices[1]).toEqual(1);
+        expect(subdivision.indices[2]).toEqual(2);
     });
 
     it('eliminateHoles throws an exception without an outerRing', function() {

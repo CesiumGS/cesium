@@ -12,13 +12,16 @@ define([
         '../../Core/Ellipsoid',
         '../../Core/FeatureDetection',
         '../../Core/requestAnimationFrame',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Scene',
+        '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
         '../../Scene/SkyAtmosphere',
         '../../Scene/SkyBox',
-        '../../Scene/Sun'
+        '../../Scene/Sun',
+        '../getElement'
     ], function(
         buildModuleUrl,
         Cartesian2,
@@ -32,13 +35,16 @@ define([
         Ellipsoid,
         FeatureDetection,
         requestAnimationFrame,
+        ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         CentralBody,
         Scene,
+        SceneMode,
         SceneTransitioner,
         SkyAtmosphere,
         SkyBox,
-        Sun) {
+        Sun,
+        getElement) {
     "use strict";
 
     function getDefaultSkyBoxUrl(suffix) {
@@ -54,8 +60,9 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Configuration options for the widget.
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer.
+     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -81,13 +88,7 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
+        container = getElement(container);
 
         options = defaultValue(options, {});
 
@@ -114,9 +115,9 @@ define([
         var scene = new Scene(canvas);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var _ellipsoid = Ellipsoid.WGS84;
+        var ellipsoid = Ellipsoid.WGS84;
 
-        var centralBody = new CentralBody(_ellipsoid);
+        var centralBody = new CentralBody(ellipsoid);
         centralBody.logoOffset = new Cartesian2(125, 0);
         scene.getPrimitives().setCentralBody(centralBody);
 
@@ -128,7 +129,7 @@ define([
             positiveZ : getDefaultSkyBoxUrl('pz'),
             negativeZ : getDefaultSkyBoxUrl('mz')
         });
-        scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
+        scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
         scene.sun = new Sun();
 
         //Set the base imagery layer
@@ -141,7 +142,10 @@ define([
                 proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
             });
         }
-        centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+
+        if (imageryProvider !== false) {
+            centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+        }
 
         //Set the terrain provider if one is provided.
         if (typeof options.terrainProvider !== 'undefined') {
@@ -155,21 +159,31 @@ define([
         this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
-        this._transitioner = new SceneTransitioner(scene, _ellipsoid);
+        this._transitioner = new SceneTransitioner(scene, ellipsoid);
+        this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
 
-        var widget = this;
+        if (options.sceneMode) {
+            if (options.sceneMode === SceneMode.SCENE2D) {
+                this._transitioner.to2D();
+            }
+            if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
+                this._transitioner.toColumbusView();
+            }
+        }
+
+        var that = this;
         //Subscribe for resize events and set the initial size.
         this._needResize = true;
         this._resizeCallback = function() {
-            widget._needResize = true;
+            that._needResize = true;
         };
         window.addEventListener('resize', this._resizeCallback, false);
 
         //Create and start the render loop
         this._isDestroyed = false;
         function render() {
-            if (!widget._isDestroyed) {
-                widget.render();
+            if (!that._isDestroyed) {
+                that.render();
                 requestAnimationFrame(render);
             }
         }
@@ -259,12 +273,23 @@ define([
             get : function() {
                 return this._clock;
             }
+        },
+
+        /**
+         * Gets the screen space event handler.
+         * @memberof CesiumWidget.prototype
+         *
+         * @returns {ScreenSpaceEventHandler}
+         */
+        screenSpaceEventHandler : {
+            get : function() {
+                return this._screenSpaceEventHandler;
+            }
         }
     });
 
     /**
      * @memberof CesiumWidget
-     *
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {

@@ -280,7 +280,7 @@ define([
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 
@@ -289,7 +289,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indices = indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
