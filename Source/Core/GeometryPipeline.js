@@ -716,7 +716,20 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Combines geometry from several {@link GeometryInstance} objects into one geometry.
+     * This concatenates the attributes, concatenates and adjusts the indices, and creates
+     * a bounding sphere encompassing all instances.
+     * <p>
+     * If the instances do not have the same attributes, a subset of attributes common
+     * to all instances is used, and the others are ignored.
+     * </p>
+     * <p>
+     * This is used by {@link Primitive} to efficiently render a large amount of static data.
+     * </p>
+     *
+     * @param {Array} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
+     *
+     * @returns {Geometry} A new geometry created from the provided geometry instances.
      *
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.

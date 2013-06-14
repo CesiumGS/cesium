@@ -6,10 +6,17 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Values and type information for geometry attributes.  A {@link Geometry}
+     * generally contains one or more attributes.  All attributes together form
+     * the geometry's vertices.
      *
      * @alias GeometryAttribute
      * @constructor
+     *
+     * @param {ComponentDatatype} [options.componentDatatype=undefined] The datatype of each component in the attribute, e.g., individual elements in values.
+     * @param {Number} [options.componentsPerAttribute=undefined] A number between 1 and 4 that defines the number of components in an attributes.
+     * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+     * @param {Array} [options.values=undefined] The values for the attributes stored in a typed array.
      *
      * @example
      * var geometry = new Geometry({
@@ -26,6 +33,8 @@ define([
      *   },
      *   primitiveType : PrimitiveType.LINE_LOOP
      * });
+     *
+     * @see Geometry
      */
     var GeometryAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -107,14 +116,20 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Duplicates a GeometryAttribute instance, including a deep copy of {@link GeometryAttribute#values}.
+     *
+     * @memberof Geometry
+     *
+     * @param {GeometryAttribute} [result] The object onto which to store the result.
+     *
+     * @return {GeometryAttribute} The modified result parameter or a new GeometryAttribute instance if one was not provided.
      */
     GeometryAttribute.prototype.clone = function(result) {
         if (typeof result === 'undefined') {
             result = new GeometryAttribute();
         }
 
-        result.componentDatatype = this.componentDatatype;              // Shallow copy enum
+        result.componentDatatype = this.componentDatatype;
         result.componentsPerAttribute = this.componentsPerAttribute;
         result.normalize = this.normalize;
         result.values = new this.values.constructor(this.values);

@@ -49,7 +49,7 @@ define([
      * </p>
      * <p>
      * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context.pick} returns their {@link GeometryInstance#pickData}.  Using
+     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#pickData}.  Using
      * per-instance appearances like {@link PerInstanceColorClosedTranslucentAppearance}, each instance can also have a unique color.
      * </p>
      *

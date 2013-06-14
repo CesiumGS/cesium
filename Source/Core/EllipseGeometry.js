@@ -429,7 +429,7 @@ define([
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 

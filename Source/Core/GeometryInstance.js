@@ -21,7 +21,7 @@ define([
      * @param {Geometry} [options.geometry=undefined] The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      * @param {Color} [options.color=undefined] The color of the instance when a per-instance color appearance is used.
-     * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context.pick}
+     * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context#pick}
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -86,13 +86,24 @@ define([
          *
          * @default undefined
          *
-         * @see Context.pick
+         * @see Context#pick
          */
         this.pickData = options.pickData;
     };
 
     /**
-     * DOC_TBA
+     * Duplicates a GeometryInstance instance, including a deep copy of the geometry.
+     * <p>
+     * {@link GeometryInstance#pickData} is shallow copied so that the same <code>
+     * pickData</code> reference is returned by {@link Context#pick} regardless of
+     * if the geometry instance was cloned.
+     * </p>
+     *
+     * @memberof GeometryInstance
+     *
+     * @param {Geometry} [result] The object onto which to store the result.
+     *
+     * @return {Geometry} The modified result parameter or a new GeometryInstance instance if one was not provided.
      */
     GeometryInstance.prototype.clone = function(result) {
         if (typeof result === 'undefined') {
