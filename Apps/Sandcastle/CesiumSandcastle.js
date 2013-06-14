@@ -10,9 +10,6 @@ require({
         name : 'dijit',
         location : '../ThirdParty/dojo-release-1.9.0/dijit'
     }, {
-        name : 'dojox',
-        location : '../ThirdParty/dojo-release-1.9.0/dojox'
-    }, {
         name : 'Sandcastle',
         location : '../Apps/Sandcastle'
     }]
