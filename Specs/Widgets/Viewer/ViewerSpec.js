@@ -33,7 +33,8 @@ defineSuite(['Widgets/Viewer/Viewer',
     beforeEach(function(){
         container = document.createElement('span');
         container.id = 'container';
-        container.style.display = 'none';
+        container.style.width = '1px';
+        container.style.height = '1px';
         document.body.appendChild(container);
     });
 
@@ -173,6 +174,25 @@ defineSuite(['Widgets/Viewer/Viewer',
             fullscreenElement : testElement
         });
         expect(viewer.fullscreenButton.viewModel.fullscreenElement).toBe(testElement);
+        viewer.destroy();
+    });
+
+    it('can set contextOptions', function() {
+        var contextOptions = {
+            alpha : true,
+            depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
+            stencil : true,
+            antialias : false,
+            premultipliedAlpha : false,
+            preserveDrawingBuffer : true
+        };
+
+        var viewer = new Viewer(container, {
+            contextOptions : contextOptions
+        });
+
+        var contextAttributes = viewer.scene.getContext()._gl.getContextAttributes();
+        expect(contextAttributes).toEqual(contextOptions);
         viewer.destroy();
     });
 

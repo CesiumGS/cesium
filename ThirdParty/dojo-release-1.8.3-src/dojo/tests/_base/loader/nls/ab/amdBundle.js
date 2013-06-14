@@ -1,3 +1,0 @@
-define({
-	amdBundle:"amdBundle-ab"
-});
