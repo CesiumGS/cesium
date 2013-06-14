@@ -61,6 +61,26 @@ define([
     };
 
     /**
+     * Duplicates a DynamicClock instance.
+     * @memberof DynamicClock
+     *
+     * @param {DynamicClock} [result] The object onto which to store the result.
+     * @return {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
+     */
+    DynamicClock.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+            result = new DynamicClock();
+        }
+        result.startTime = this.startTime;
+        result.stopTime = this.stopTime;
+        result.clockRange = this.clockRange;
+        result.clockStep = this.clockStep;
+        result.multiplier = this.multiplier;
+        result.currentTime = this.currentTime;
+        return result;
+    };
+
+    /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's clock.
      * @memberof DynamicClock
      *
