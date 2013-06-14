@@ -10,6 +10,7 @@ define([
         './Matrix4',
         './GeographicProjection',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './Tipsify',
         './BoundingSphere',
@@ -26,6 +27,7 @@ define([
         Matrix4,
         GeographicProjection,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         Tipsify,
         BoundingSphere,
@@ -57,12 +59,7 @@ define([
     function trianglesToLines(triangles) {
         var count = triangles.length;
         var size = (count / 3) * 6;
-        var lines;
-        if (count > 64 * 1024) {
-            lines = new Uint32Array(size);
-        } else {
-            lines = new Uint16Array(size);
-        }
+        var lines = IndexDatatype.createTypedArray(count, size);
 
         var index = 0;
         for ( var i = 0; i < count; i += 3, index += 6) {
@@ -76,12 +73,7 @@ define([
         var count = triangles.length;
         if (count >= 3) {
             var size = (count - 2) * 6;
-            var lines;
-            if (count > 64 * 1024) {
-                lines = new Uint32Array(size);
-            } else {
-                lines = new Uint16Array(size);
-            }
+            var lines = IndexDatatype.createTypedArray(count, size);
 
             addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
             var index = 6;
@@ -100,12 +92,7 @@ define([
         if (triangles.length > 0) {
             var count = triangles.length - 1;
             var size = (count - 1) * 6;
-            var lines;
-            if (count > 64 * 1024) {
-                lines = new Uint32Array(size);
-            } else {
-                lines = new Uint16Array(size);
-            }
+            var lines = IndexDatatype.createTypedArray(count, size);
 
             var base = triangles[0];
             var index = 0;
@@ -233,12 +220,7 @@ define([
             // Construct cross reference and reorder indices
             var indicesIn = indexList;
             var numIndices = indicesIn.length;
-            var indicesOut;
-            if (numVertices > 64 * 1024) {
-                indicesOut = new Uint32Array(numIndices);
-            } else {
-                indicesOut = new Uint16Array(numIndices);
-            }
+            var indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
 
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
@@ -815,12 +797,10 @@ define([
                 numberOfIndices += instances[i].geometry.indexList.length;
             }
 
-            var destIndices;
-            if (numberOfIndices < 60 * 1024) {
-                destIndices = new Uint16Array(numberOfIndices);
-            } else {
-                destIndices = new Uint32Array(numberOfIndices);
-            }
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 
             var destOffset = 0;
             var offset = 0;

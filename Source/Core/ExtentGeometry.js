@@ -6,6 +6,7 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './Extent',
@@ -22,6 +23,7 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         Extent,
@@ -230,12 +232,7 @@ define([
         }
 
         var indicesSize = 6 * (width - 1) * (height - 1);
-        var indices;
-        if (size > 64 * 1024) {
-            indices = new Uint32Array(indicesSize);
-        } else {
-            indices = new Uint16Array(indicesSize);
-        }
+        var indices = IndexDatatype.createTypedArray(size, indicesSize);
 
         var index = 0;
         var indicesIndex = 0;

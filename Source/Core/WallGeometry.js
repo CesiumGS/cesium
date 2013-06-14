@@ -5,6 +5,7 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -20,6 +21,7 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -257,12 +259,7 @@ define([
 
         length = size;
         size -= 2;
-        var indices;
-        if (length > 64 * 1024) {
-            indices = new Uint32Array(size * 3);
-        } else {
-            indices = new Uint16Array(size * 3);
-        }
+        var indices = IndexDatatype.createTypedArray(length, size * 3);
 
         var j = 0;
         for (i = 0; i < size; i += 2) {
