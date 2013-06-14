@@ -1,8 +1,0 @@
-/* === Arrow Button ==*/
-.mblDomButtonWhiteArrow, .mblDomButtonArrow {
-	background-image: url(compat/mblDomButtonWhiteArrow.png);
-	background-repeat: no-repeat;
-}
-.mblDomButtonWhiteArrow div, .mblDomButtonArrow div {
-	display: none;
-}

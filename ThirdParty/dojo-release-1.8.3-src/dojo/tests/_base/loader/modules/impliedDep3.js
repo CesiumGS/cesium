@@ -1,3 +1,0 @@
-define({
-	id:"impliedDep3"
-});
