@@ -61,7 +61,7 @@ define([
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = ellipseGeometry.attributes;
 
@@ -70,7 +70,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = ellipseGeometry.indexList;
+        this.indices = ellipseGeometry.indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

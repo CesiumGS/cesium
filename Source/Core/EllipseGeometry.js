@@ -4,6 +4,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         GeometryAttribute,
@@ -421,21 +423,13 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
-        indices.length = indicesIndex;
-
-        if (positions.length / 3 > 64 * 1024) {
-            indices = new Uint32Array(indices);
-        } else {
-            indices = new Uint16Array(indices);
-        }
-
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 
@@ -444,7 +438,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

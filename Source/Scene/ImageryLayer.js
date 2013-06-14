@@ -807,7 +807,7 @@ define([
                         values : positions
                     })
                 },
-                indexList : TerrainProvider.getRegularGridIndices(256, 256),
+                indices : TerrainProvider.getRegularGridIndices(256, 256),
                 primitiveType : PrimitiveType.TRIANGLES
             });
 

@@ -36,13 +36,13 @@ defineSuite([
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
-            indexList : [0, 1, 2, 3, 4, 5],
+            indices : [0, 1, 2, 3, 4, 5],
             primitiveType : PrimitiveType.TRIANGLES
         }));
 
         expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = geometry.indexList;
+        var v = geometry.indices;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -62,13 +62,13 @@ defineSuite([
 
     it('converts a triangle fan to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
-            indexList : [0, 1, 2, 3],
+            indices : [0, 1, 2, 3],
             primitiveType : PrimitiveType.TRIANGLE_FAN
         }));
 
         expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = geometry.indexList;
+        var v = geometry.indices;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -88,13 +88,13 @@ defineSuite([
 
     it('converts a triangle strip to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
-            indexList : [0, 1, 2, 3],
+            indices : [0, 1, 2, 3],
             primitiveType : PrimitiveType.TRIANGLE_STRIP
         }));
 
         expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
 
-        var v = geometry.indexList;
+        var v = geometry.indices;
         expect(v.length).toEqual(12);
 
         expect(v[0]).toEqual(0);
@@ -157,24 +157,24 @@ defineSuite([
                     values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0]
                 })
             },
-            indexList : [5, 3, 2, 0, 1, 4, 4, 1, 3, 2, 5, 0],
+            indices : [5, 3, 2, 0, 1, 4, 4, 1, 3, 2, 5, 0],
             primitiveType : PrimitiveType.TRIANGLES
         });
 
         GeometryPipeline.reorderForPreVertexCache(geometry);
 
-        expect(geometry.indexList[0]).toEqual(0);
-        expect(geometry.indexList[1]).toEqual(1);
-        expect(geometry.indexList[2]).toEqual(2);
-        expect(geometry.indexList[3]).toEqual(3);
-        expect(geometry.indexList[4]).toEqual(4);
-        expect(geometry.indexList[5]).toEqual(5);
-        expect(geometry.indexList[6]).toEqual(5);
-        expect(geometry.indexList[7]).toEqual(4);
-        expect(geometry.indexList[8]).toEqual(1);
-        expect(geometry.indexList[9]).toEqual(2);
-        expect(geometry.indexList[10]).toEqual(0);
-        expect(geometry.indexList[11]).toEqual(3);
+        expect(geometry.indices[0]).toEqual(0);
+        expect(geometry.indices[1]).toEqual(1);
+        expect(geometry.indices[2]).toEqual(2);
+        expect(geometry.indices[3]).toEqual(3);
+        expect(geometry.indices[4]).toEqual(4);
+        expect(geometry.indices[5]).toEqual(5);
+        expect(geometry.indices[6]).toEqual(5);
+        expect(geometry.indices[7]).toEqual(4);
+        expect(geometry.indices[8]).toEqual(1);
+        expect(geometry.indices[9]).toEqual(2);
+        expect(geometry.indices[10]).toEqual(0);
+        expect(geometry.indices[11]).toEqual(3);
 
         expect(geometry.attributes.weight.values[0]).toEqual(5.0);
         expect(geometry.attributes.weight.values[1]).toEqual(3.0);
@@ -233,13 +233,13 @@ defineSuite([
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
         var geometry = new EllipsoidGeometry();
         var acmrBefore = Tipsify.calculateACMR({
-            indices : geometry.indexList,
+            indices : geometry.indices,
             cacheSize : 24
         });
         expect(acmrBefore).toBeGreaterThan(1.0);
         geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
         var acmrAfter = Tipsify.calculateACMR({
-            indices : geometry.indexList,
+            indices : geometry.indices,
             cacheSize : 24
         });
         expect(acmrAfter).toBeLessThan(0.7);
@@ -265,7 +265,7 @@ defineSuite([
                     values : [1.0]
                 })
             },
-            indexList : [0, 0, 0],
+            indices : [0, 0, 0],
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -290,7 +290,7 @@ defineSuite([
                     values : times
                 })
             },
-            indexList : [0, 0, 0, sixtyFourK, sixtyFourK, sixtyFourK, 0, sixtyFourK, 0],
+            indices : [0, 0, 0, sixtyFourK, sixtyFourK, sixtyFourK, 0, sixtyFourK, 0],
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -302,7 +302,7 @@ defineSuite([
         expect(geometries[0].attributes.time.values).toEqual([0, sixtyFourK]);
 
         expect(geometries[0].primitiveType).toEqual(PrimitiveType.TRIANGLES);
-        expect(geometries[0].indexList).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
+        expect(geometries[0].indices).toEqual([0, 0, 0, 1, 1, 1, 0, 1, 0]);
     });
 
     it('fitToUnsignedShortIndices creates two triangle geometries', function() {
@@ -327,7 +327,7 @@ defineSuite([
                     values : positions
                 })
             },
-            indexList : indices,
+            indices : indices,
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -336,10 +336,10 @@ defineSuite([
         expect(geometries.length).toEqual(2);
 
         expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(geometries[0].indexList.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
+        expect(geometries[0].indices.length).toEqual(indices.length - 3); // One triangle is not copied (0, 1, 2)
 
         expect(geometries[1].attributes.position.values.length).toEqual(9);
-        expect(geometries[1].indexList.length).toEqual(3);
+        expect(geometries[1].indices.length).toEqual(3);
     });
 
     it('fitToUnsignedShortIndices creates two line geometries', function() {
@@ -364,7 +364,7 @@ defineSuite([
                     values : positions
                 })
             },
-            indexList : indices,
+            indices : indices,
             primitiveType : PrimitiveType.LINES
         });
 
@@ -373,10 +373,10 @@ defineSuite([
         expect(geometries.length).toEqual(2);
 
         expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 6); // Two vertices are not copied (0, 1)
-        expect(geometries[0].indexList.length).toEqual(indices.length - 2); // One line is not copied (0, 1)
+        expect(geometries[0].indices.length).toEqual(indices.length - 2); // One line is not copied (0, 1)
 
         expect(geometries[1].attributes.position.values.length).toEqual(6);
-        expect(geometries[1].indexList.length).toEqual(2);
+        expect(geometries[1].indices.length).toEqual(2);
     });
 
     it('fitToUnsignedShortIndices creates two point geometries', function() {
@@ -397,7 +397,7 @@ defineSuite([
                     values : positions
                 })
             },
-            indexList : indices,
+            indices : indices,
             primitiveType : PrimitiveType.POINTS
         });
 
@@ -406,10 +406,10 @@ defineSuite([
         expect(geometries.length).toEqual(2);
 
         expect(geometries[0].attributes.position.values.length).toEqual(positions.length - 3); // One vertex is not copied
-        expect(geometries[0].indexList.length).toEqual(indices.length - 1); // One point is not copied
+        expect(geometries[0].indices.length).toEqual(indices.length - 1); // One point is not copied
 
         expect(geometries[1].attributes.position.values.length).toEqual(3);
-        expect(geometries[1].indexList.length).toEqual(1);
+        expect(geometries[1].indices.length).toEqual(1);
     });
 
     it('fitToUnsignedShortIndices throws without a geometry', function() {
@@ -427,7 +427,7 @@ defineSuite([
                     values : [10.0, 11.0, 12.0]
                 })
             },
-            indexList : [0, 1, 2],
+            indices : [0, 1, 2],
             primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
@@ -450,7 +450,7 @@ defineSuite([
                     values : [1.0, 2.0]
                 })
             },
-            indexList : [0, 0, 0],
+            indices : [0, 0, 0],
             primitiveType : PrimitiveType.TRIANGLES
         });
 
@@ -504,7 +504,7 @@ defineSuite([
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
                     values : [c.x, c.y, c.z]
                 })
@@ -571,7 +571,7 @@ defineSuite([
         expect(combined).toBe(instance.geometry);
     });
 
-    it('combine combines several geometries without indexLists', function() {
+    it('combine combines several geometries without indicess', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -610,7 +610,7 @@ defineSuite([
         }));
     });
 
-    it('combine combines several geometries with indexLists', function() {
+    it('combine combines several geometries with indicess', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
@@ -633,7 +633,7 @@ defineSuite([
                         ]
                     })
                 },
-                indexList : [0, 1, 2],
+                indices : [0, 1, 2],
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
@@ -650,7 +650,7 @@ defineSuite([
                         ]
                     })
                 },
-                indexList : [0, 1, 2],
+                indices : [0, 1, 2],
                 primitiveType : PrimitiveType.TRIANGLES
             })
         });
@@ -671,7 +671,7 @@ defineSuite([
                     ])
                 })
             },
-            indexList : new Uint16Array([0, 1, 2, 3, 4, 5]),
+            indices : new Uint16Array([0, 1, 2, 3, 4, 5]),
             primitiveType : PrimitiveType.TRIANGLES
         }));
     });
@@ -720,7 +720,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('combine throws when instance geometries do not all have or not have an indexList', function() {
+    it('combine throws when instance geometries do not all have or not have an indices', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
                 attributes : new GeometryAttribute({
@@ -730,7 +730,7 @@ defineSuite([
                         values : [0.0, 0.0, 0.0]
                     }
                 }),
-                indexList : [0]
+                indices : [0]
             })
         });
 
@@ -757,7 +757,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('computeNormal does not compute normals when geometry.indexList is undefined', function() {
+    it('computeNormal does not compute normals when geometry.indices is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -780,7 +780,7 @@ defineSuite([
                     componentsPerAttribute: 3
                 })
             },
-            indexList : [0, 1, 2],
+            indices : [0, 1, 2],
             primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
@@ -798,7 +798,7 @@ defineSuite([
                     componentsPerAttribute: 3
                 })
             },
-            indexList : [0, 1, 2],
+            indices : [0, 1, 2],
             primitiveType: PrimitiveType.TRIANGLES
         });
 
@@ -816,7 +816,7 @@ defineSuite([
                     componentsPerAttribute: 3
                 })
             },
-            indexList : [0, 1, 2, 1, 3, 2],
+            indices : [0, 1, 2, 1, 3, 2],
             primitiveType: PrimitiveType.TRIANGLES
         });
 
@@ -843,7 +843,7 @@ defineSuite([
                     componentsPerAttribute: 3
                 })
             },
-            indexList : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
+            indices : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
             primitiveType: PrimitiveType.TRIANGLES
         });
 
@@ -877,7 +877,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('computeBinormalAndTangent does not compute tangent and binormals when geometry.indexList is undefined', function() {
+    it('computeBinormalAndTangent does not compute tangent and binormals when geometry.indices is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -920,7 +920,7 @@ defineSuite([
                     componentsPerAttribute: 2
                 })
             },
-            indexList : [0, 1, 2],
+            indices : [0, 1, 2],
             primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
@@ -942,7 +942,7 @@ defineSuite([
                     componentsPerAttribute: 2
                 })
             },
-            indexList : [0, 1, 2],
+            indices : [0, 1, 2],
             primitiveType: PrimitiveType.TRIANGLES
         });
 
@@ -965,7 +965,7 @@ defineSuite([
                     componentsPerAttribute: 2
                 })
             },
-            indexList : [0, 1, 2, 1, 3, 2],
+            indices : [0, 1, 2, 1, 3, 2],
             primitiveType: PrimitiveType.TRIANGLES
         });
 

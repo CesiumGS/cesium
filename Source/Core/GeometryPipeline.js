@@ -10,6 +10,7 @@ define([
         './Matrix4',
         './GeographicProjection',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './Tipsify',
         './BoundingSphere',
@@ -26,6 +27,7 @@ define([
         Matrix4,
         GeographicProjection,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         Tipsify,
         BoundingSphere,
@@ -57,12 +59,7 @@ define([
     function trianglesToLines(triangles) {
         var count = triangles.length;
         var size = (count / 3) * 6;
-        var lines;
-        if (count > 64 * 1024) {
-            lines = new Uint32Array(size);
-        } else {
-            lines = new Uint16Array(size);
-        }
+        var lines = IndexDatatype.createTypedArray(count, size);
 
         var index = 0;
         for ( var i = 0; i < count; i += 3, index += 6) {
@@ -76,12 +73,7 @@ define([
         var count = triangles.length;
         if (count >= 3) {
             var size = (count - 2) * 6;
-            var lines;
-            if (count > 64 * 1024) {
-                lines = new Uint32Array(size);
-            } else {
-                lines = new Uint16Array(size);
-            }
+            var lines = IndexDatatype.createTypedArray(count, size);
 
             addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
             var index = 6;
@@ -100,12 +92,7 @@ define([
         if (triangles.length > 0) {
             var count = triangles.length - 1;
             var size = (count - 1) * 6;
-            var lines;
-            if (count > 64 * 1024) {
-                lines = new Uint32Array(size);
-            } else {
-                lines = new Uint16Array(size);
-            }
+            var lines = IndexDatatype.createTypedArray(count, size);
 
             var base = triangles[0];
             var index = 0;
@@ -120,7 +107,7 @@ define([
     }
 
     /**
-     * Converts a geometry's triangle indices to line indices.  If the geometry has an <code>indexList</code>
+     * Converts a geometry's triangle indices to line indices.  If the geometry has an <code>indices</code>
      * and its <code>primitiveType</code> is <code>TRIANGLES</code>, <code>TRIANGLE_STRIP</code>,
      * <code>TRIANGLE_FAN</code>, it is converted to <code>LINES</code>; otherwise, the geometry is not changed.
      * <p>
@@ -141,17 +128,17 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
         if (typeof indices !== 'undefined') {
             switch (geometry.primitiveType) {
                 case PrimitiveType.TRIANGLES:
-                    geometry.indexList = trianglesToLines(indices);
+                    geometry.indices = trianglesToLines(indices);
                     break;
                 case PrimitiveType.TRIANGLE_STRIP:
-                    geometry.indexList = triangleStripToLines(indices);
+                    geometry.indices = triangleStripToLines(indices);
                     break;
                 case PrimitiveType.TRIANGLE_FAN:
-                    geometry.indexList = triangleFanToLines(indices);
+                    geometry.indices = triangleFanToLines(indices);
                     break;
             }
 
@@ -202,7 +189,7 @@ define([
     };
 
     /**
-     * Reorders a geometry's attributes and <code>indexList</code> to achieve better performance from the GPU's pre-vertex-shader cache.
+     * Reorders a geometry's attributes and <code>indices</code> to achieve better performance from the GPU's pre-vertex-shader cache.
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
@@ -223,22 +210,17 @@ define([
 
         var numVertices = Geometry.computeNumberOfVertices(geometry);
 
-        var indexList = geometry.indexList;
-        if (typeof indexList !== 'undefined') {
+        var indices = geometry.indices;
+        if (typeof indices !== 'undefined') {
             var indexCrossReferenceOldToNew = new Int32Array(numVertices);
             for ( var i = 0; i < numVertices; i++) {
                 indexCrossReferenceOldToNew[i] = -1;
             }
 
             // Construct cross reference and reorder indices
-            var indicesIn = indexList;
+            var indicesIn = indices;
             var numIndices = indicesIn.length;
-            var indicesOut;
-            if (numVertices > 64 * 1024) {
-                indicesOut = new Uint32Array(numIndices);
-            } else {
-                indicesOut = new Uint16Array(numIndices);
-            }
+            var indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
 
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
@@ -261,7 +243,7 @@ define([
                 ++intoIndicesIn;
                 ++intoIndicesOut;
             }
-            geometry.indexList = indicesOut;
+            geometry.indices = indicesOut;
 
             // Reorder attributes
             var attributes = geometry.attributes;
@@ -288,9 +270,9 @@ define([
     };
 
     /**
-     * Reorders a geometry's <code>indexList</code> to achieve better performance from the GPU's
+     * Reorders a geometry's <code>indices</code> to achieve better performance from the GPU's
      * post vertex-shader cache by using the Tipsify algorithm.  If the geometry <code>primitiveType</code>
-     * is not <code>TRIANGLES</code> or the geometry does not have an <code>indexList</code>, this function has no effect.
+     * is not <code>TRIANGLES</code> or the geometry does not have an <code>indices</code>, this function has no effect.
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
@@ -313,7 +295,7 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
         if ((geometry.primitiveType === PrimitiveType.TRIANGLES) && (typeof indices !== 'undefined')) {
             var numIndices = indices.length;
             var maximumIndex = 0;
@@ -322,7 +304,7 @@ define([
                     maximumIndex = indices[j];
                 }
             }
-            geometry.indexList = Tipsify.tipsify({
+            geometry.indices = Tipsify.tipsify({
                 indices : indices,
                 maximumIndex : maximumIndex,
                 cacheSize : cacheCapacity
@@ -364,10 +346,10 @@ define([
 
     /**
      * Splits a geometry into multiple geometries - if necessary - to ensure that indices in the
-     * <code>indexList</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
+     * <code>indices</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
      * when {@link Context#getElementIndexUint} is <code>false</code>.
      * <p>
-     * If the geometry does not have an <code>indexList</code>, this function has no effect.
+     * If the geometry does not have an <code>indices</code>, this function has no effect.
      * </p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place if it needs to be split into multiple geometries.
@@ -386,7 +368,7 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        if ((typeof geometry.indexList !== 'undefined') &&
+        if ((typeof geometry.indices !== 'undefined') &&
             ((geometry.primitiveType !== PrimitiveType.TRIANGLES) &&
              (geometry.primitiveType !== PrimitiveType.LINES) &&
              (geometry.primitiveType !== PrimitiveType.POINTS))) {
@@ -399,13 +381,13 @@ define([
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         var sixtyFourK = 64 * 1024;
-        if (typeof geometry.indexList !== 'undefined' && (numberOfVertices > sixtyFourK)) {
+        if (typeof geometry.indices !== 'undefined' && (numberOfVertices > sixtyFourK)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
             var newAttributes = copyAttributesDescriptions(geometry.attributes);
 
-            var originalIndices = geometry.indexList;
+            var originalIndices = geometry.indices;
             var numberOfIndices = originalIndices.length;
 
             var indicesPerPrimitive;
@@ -433,7 +415,7 @@ define([
                 if (currentIndex + indicesPerPrimitive > sixtyFourK) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
-                        indexList : newIndices,
+                        indices : newIndices,
                         primitiveType : geometry.primitiveType
                     }));
 
@@ -448,7 +430,7 @@ define([
             if (newIndices.length !== 0) {
                 geometries.push(new Geometry({
                     attributes : newAttributes,
-                    indexList : newIndices,
+                    indices : newIndices,
                     primitiveType : geometry.primitiveType
                 }));
             }
@@ -540,7 +522,7 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
-     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
      * @example
      * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
@@ -562,8 +544,8 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.FLOAT && attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
-            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.');
+        if (attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
 
         var values = attribute.values;
@@ -735,11 +717,24 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Combines geometry from several {@link GeometryInstance} objects into one geometry.
+     * This concatenates the attributes, concatenates and adjusts the indices, and creates
+     * a bounding sphere encompassing all instances.
+     * <p>
+     * If the instances do not have the same attributes, a subset of attributes common
+     * to all instances is used, and the others are ignored.
+     * </p>
+     * <p>
+     * This is used by {@link Primitive} to efficiently render a large amount of static data.
+     * </p>
+     *
+     * @param {Array} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
+     *
+     * @returns {Geometry} A new geometry created from the provided geometry instances.
      *
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
-     * @exception {DeveloperError} All instance geometries must have an indexList or not have one.
+     * @exception {DeveloperError} All instance geometries must have an indices or not have one.
      * @exception {DeveloperError} All instance geometries must have the same primitiveType.
      *
      * @example
@@ -767,7 +762,7 @@ define([
         var k;
 
         var m = instances[0].modelMatrix;
-        var haveIndexLists = (typeof instances[0].geometry.indexList !== 'undefined');
+        var haveindicess = (typeof instances[0].geometry.indices !== 'undefined');
         var primitiveType = instances[0].geometry.primitiveType;
 
         for (i = 1; i < length; ++i) {
@@ -775,8 +770,8 @@ define([
                 throw new DeveloperError('All instances must have the same modelMatrix.');
             }
 
-            if ((typeof instances[i].geometry.indexList !== 'undefined') !== haveIndexLists) {
-                throw new DeveloperError('All instance geometries must have an indexList or not have one.');
+            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveindicess) {
+                throw new DeveloperError('All instance geometries must have an indices or not have one.');
             }
 
             if (instances[i].geometry.primitiveType !== primitiveType) {
@@ -808,26 +803,24 @@ define([
         }
 
         // Combine index lists
-        var indexList;
+        var indices;
 
-        if (haveIndexLists) {
+        if (haveindicess) {
             var numberOfIndices = 0;
             for (i = 0; i < length; ++i) {
-                numberOfIndices += instances[i].geometry.indexList.length;
+                numberOfIndices += instances[i].geometry.indices.length;
             }
 
-            var destIndices;
-            if (numberOfIndices < 60 * 1024) {
-                destIndices = new Uint16Array(numberOfIndices);
-            } else {
-                destIndices = new Uint32Array(numberOfIndices);
-            }
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 
             var destOffset = 0;
             var offset = 0;
 
             for (i = 0; i < length; ++i) {
-                var sourceIndices = instances[i].geometry.indexList;
+                var sourceIndices = instances[i].geometry.indices;
                 var sourceIndicesLen = sourceIndices.length;
 
                 for (k = 0; k < sourceIndicesLen; ++k) {
@@ -837,7 +830,7 @@ define([
                 offset += Geometry.computeNumberOfVertices(instances[i].geometry);
             }
 
-            indexList = destIndices;
+            indices = destIndices;
         }
 
         // Create bounding sphere that includes all instances
@@ -860,7 +853,7 @@ define([
 
         return new Geometry({
             attributes : attributes,
-            indexList : indexList,
+            indices : indices,
             primitiveType : primitiveType,
             boundingSphere : boundingSphere
         });
@@ -876,7 +869,7 @@ define([
      * all triangles incident to the vertex.  The result is a new <code>normal</code> attribute added to the geometry.
      * This assumes a counter-clockwise winding order.
      * <p>
-     * This function has no effect if the geometry's <code>indexList</code> is undefined or the <code>
+     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
      * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have a
      * <code>position</code> attribute.
      * </p>
@@ -896,7 +889,7 @@ define([
         }
 
         var attributes = geometry.attributes;
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
 
         if (typeof attributes.position === 'undefined' ||
             typeof attributes.position.values === 'undefined' ||
@@ -1017,7 +1010,7 @@ define([
      * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
      * This assumes a counter-clockwise winding order.
      * <p>
-     * This function has no effect if the geometry's <code>indexList</code> is undefined or the <code>
+     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
      * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have
      * <code>position</code>, <code>normal</code>, and <code>st</code> attributes.
      * </p>
@@ -1043,7 +1036,7 @@ define([
         var vertices = geometry.attributes.position.values;
         var normals = geometry.attributes.normal.values;
         var st = geometry.attributes.st.values;
-        var indices = geometry.indexList;
+        var indices = geometry.indices;
 
         if ((typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') ||
             (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') ||

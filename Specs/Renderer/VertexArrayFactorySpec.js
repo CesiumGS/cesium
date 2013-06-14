@@ -544,7 +544,7 @@ defineSuite([
 
     it('creates an index buffer', function() {
         var geometry = new Geometry({
-            indexList : [0],
+            indices : [0],
             primitiveType : PrimitiveType.POINTS
         });
 
@@ -556,7 +556,7 @@ defineSuite([
         expect(va.getIndexBuffer()).toBeDefined();
         expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
         expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indexList.length);
+        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indices.length);
     });
 
     it('throws with different number of interleaved attributes', function() {

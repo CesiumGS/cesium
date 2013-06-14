@@ -6,6 +6,7 @@ define([
         './Math',
         './Ellipsoid',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         CesiumMath,
         Ellipsoid,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         BoundingSphere,
         GeometryAttribute,
@@ -303,19 +305,13 @@ define([
             }
         }
 
-        if (length > 64 * 1024) {
-            indices = new Uint32Array(indices);
-        } else {
-            indices = new Uint16Array(indices);
-        }
-
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 
@@ -324,7 +320,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indices = IndexDatatype.createTypedArray(length, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

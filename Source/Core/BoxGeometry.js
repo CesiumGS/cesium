@@ -63,7 +63,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         var attributes = {};
-        var indexList;
+        var indices;
         var positions;
 
         if (vertexFormat !== VertexFormat.POSITION_ONLY) {
@@ -299,31 +299,31 @@ define([
             }
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = new Uint16Array(6 * 2 * 3);
+            indices = new Uint16Array(6 * 2 * 3);
 
             // +z face
-            indexList[0] = 0; indexList[1] = 1; indexList[2] = 2;
-            indexList[3] = 0; indexList[4] = 2; indexList[5] = 3;
+            indices[0] = 0; indices[1] = 1; indices[2] = 2;
+            indices[3] = 0; indices[4] = 2; indices[5] = 3;
 
             // -z face
-            indexList[6] = 4 + 2; indexList[7]  = 4 + 1; indexList[8]  = 4 + 0;
-            indexList[9] = 4 + 3; indexList[10] = 4 + 2; indexList[11] = 4 + 0;
+            indices[6] = 4 + 2; indices[7]  = 4 + 1; indices[8]  = 4 + 0;
+            indices[9] = 4 + 3; indices[10] = 4 + 2; indices[11] = 4 + 0;
 
             // +x face
-            indexList[12] = 8 + 0; indexList[13] = 8 + 1; indexList[14] = 8 + 2;
-            indexList[15] = 8 + 0; indexList[16] = 8 + 2; indexList[17] = 8 + 3;
+            indices[12] = 8 + 0; indices[13] = 8 + 1; indices[14] = 8 + 2;
+            indices[15] = 8 + 0; indices[16] = 8 + 2; indices[17] = 8 + 3;
 
             // -x face
-            indexList[18] = 12 + 2; indexList[19] = 12 + 1; indexList[20] = 12 + 0;
-            indexList[21] = 12 + 3; indexList[22] = 12 + 2; indexList[23] = 12 + 0;
+            indices[18] = 12 + 2; indices[19] = 12 + 1; indices[20] = 12 + 0;
+            indices[21] = 12 + 3; indices[22] = 12 + 2; indices[23] = 12 + 0;
 
             // +y face
-            indexList[24] = 16 + 2; indexList[25] = 16 + 1; indexList[26] = 16 + 0;
-            indexList[27] = 16 + 3; indexList[28] = 16 + 2; indexList[29] = 16 + 0;
+            indices[24] = 16 + 2; indices[25] = 16 + 1; indices[26] = 16 + 0;
+            indices[27] = 16 + 3; indices[28] = 16 + 2; indices[29] = 16 + 0;
 
             // -y face
-            indexList[30] = 20 + 0; indexList[31] = 20 + 1; indexList[32] = 20 + 2;
-            indexList[33] = 20 + 0; indexList[34] = 20 + 2; indexList[35] = 20 + 3;
+            indices[30] = 20 + 0; indices[31] = 20 + 1; indices[32] = 20 + 2;
+            indices[33] = 20 + 0; indices[34] = 20 + 2; indices[35] = 20 + 3;
         } else {
             // Positions only - no need to duplicate corner points
             positions = new Float64Array(8 * 3);
@@ -344,31 +344,31 @@ define([
             });
 
             // 12 triangles:  6 faces, 2 triangles each.
-            indexList = new Uint16Array(6 * 2 * 3);
+            indices = new Uint16Array(6 * 2 * 3);
 
             // plane z = corner.Z
-            indexList[0] = 4; indexList[1] = 5; indexList[2] = 6;
-            indexList[3] = 4; indexList[4] = 6; indexList[5] = 7;
+            indices[0] = 4; indices[1] = 5; indices[2] = 6;
+            indices[3] = 4; indices[4] = 6; indices[5] = 7;
 
             // plane z = -corner.Z
-            indexList[6] = 1; indexList[7]  = 0; indexList[8]  = 3;
-            indexList[9] = 1; indexList[10] = 3; indexList[11] = 2;
+            indices[6] = 1; indices[7]  = 0; indices[8]  = 3;
+            indices[9] = 1; indices[10] = 3; indices[11] = 2;
 
             // plane x = corner.X
-            indexList[12] = 1; indexList[13] = 6; indexList[14] = 5;
-            indexList[15] = 1; indexList[16] = 2; indexList[17] = 6;
+            indices[12] = 1; indices[13] = 6; indices[14] = 5;
+            indices[15] = 1; indices[16] = 2; indices[17] = 6;
 
             // plane y = corner.Y
-            indexList[18] = 2; indexList[19] = 3; indexList[20] = 7;
-            indexList[21] = 2; indexList[22] = 7; indexList[23] = 6;
+            indices[18] = 2; indices[19] = 3; indices[20] = 7;
+            indices[21] = 2; indices[22] = 7; indices[23] = 6;
 
             // plane x = -corner.X
-            indexList[24] = 3; indexList[25] = 0; indexList[26] = 4;
-            indexList[27] = 3; indexList[28] = 4; indexList[29] = 7;
+            indices[24] = 3; indices[25] = 0; indices[26] = 4;
+            indices[27] = 3; indices[28] = 4; indices[29] = 7;
 
             // plane y = -corner.Y
-            indexList[30] = 0; indexList[31] = 1; indexList[32] = 5;
-            indexList[33] = 0; indexList[34] = 5; indexList[35] = 4;
+            indices[30] = 0; indices[31] = 1; indices[32] = 5;
+            indices[33] = 0; indices[34] = 5; indices[35] = 4;
         }
 
         /**
@@ -377,7 +377,7 @@ define([
          *
          * @type Object
          *
-         * @see Geometry.attributes
+         * @see Geometry#attributes
          */
         this.attributes = attributes;
 
@@ -386,7 +386,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indexList;
+        this.indices = indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
