@@ -65,7 +65,7 @@ define([
      * this.indexList = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
-        if (typeof numberOfVertices !== 'undefined') {
+        if (typeof numberOfVertices === 'undefined') {
             throw new DeveloperError('numberOfVertices is required.');
         }
 

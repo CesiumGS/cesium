@@ -490,7 +490,7 @@ define([
 
             // Replace original positions with 2D projected positions
             geometry.attributes.position2D = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 2,
                 values : projectedPositions
             });
@@ -521,7 +521,7 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
-     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
      * @example
      * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
@@ -543,8 +543,8 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.FLOAT && attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
-            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.');
+        if (attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
 
         var values = attribute.values;

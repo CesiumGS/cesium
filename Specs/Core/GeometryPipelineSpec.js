@@ -504,7 +504,7 @@ defineSuite([
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
                     values : [c.x, c.y, c.z]
                 })
