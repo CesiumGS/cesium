@@ -24,7 +24,7 @@ define([
      *   st : true
      * });
      *
-     * @see Geometry.attributes
+     * @see Geometry#attributes
      */
     var VertexFormat = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

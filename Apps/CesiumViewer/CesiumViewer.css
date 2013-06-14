@@ -1,5 +1,15 @@
-@import	url('../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css');
-@import url('../../Source/Widgets/Dojo/CesiumViewerWidget.css');
+@import url(../../Source/Widgets/Viewer/Viewer.css);
+@import url(../../Source/Widgets/Viewer/lighter.css);
+@import url(../../Source/Widgets/checkForChromeFrame.css);
+
+body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    background: #000;
+}
 
 .fullWindow {
     position: absolute;
@@ -11,4 +21,18 @@
     overflow: hidden;
     padding: 0;
     font-family: sans-serif;
+}
+
+.loadingIndicator {
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -33px;
+    margin-left: -33px;
+    width: 66px;
+    height: 66px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-image: url(Images/ajax-loader.gif);
 }
