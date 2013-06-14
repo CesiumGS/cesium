@@ -4,11 +4,13 @@ define([
         './DeveloperError',
         './Cartesian3',
         './Cartesian2',
+        './Cartographic',
         './EncodedCartesian3',
         './Matrix3',
         './Matrix4',
         './GeographicProjection',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './Tipsify',
         './BoundingSphere',
@@ -19,11 +21,13 @@ define([
         DeveloperError,
         Cartesian3,
         Cartesian2,
+        Cartographic,
         EncodedCartesian3,
         Matrix3,
         Matrix4,
         GeographicProjection,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         Tipsify,
         BoundingSphere,
@@ -41,54 +45,65 @@ define([
      */
     var GeometryPipeline = {};
 
-    function addTriangle(lines, i0, i1, i2) {
-        lines.push(i0);
-        lines.push(i1);
+    function addTriangle(lines, index, i0, i1, i2) {
+        lines[index++] = i0;
+        lines[index++] = i1;
 
-        lines.push(i1);
-        lines.push(i2);
+        lines[index++] = i1;
+        lines[index++] = i2;
 
-        lines.push(i2);
-        lines.push(i0);
+        lines[index++] = i2;
+        lines[index] = i0;
     }
 
     function trianglesToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-        for ( var i = 0; i < count; i += 3) {
-            addTriangle(lines, triangles[i], triangles[i + 1], triangles[i + 2]);
+        var size = (count / 3) * 6;
+        var lines = IndexDatatype.createTypedArray(count, size);
+
+        var index = 0;
+        for ( var i = 0; i < count; i += 3, index += 6) {
+            addTriangle(lines, index, triangles[i], triangles[i + 1], triangles[i + 2]);
         }
 
         return lines;
     }
 
     function triangleStripToLines(triangles) {
-        var lines = [];
         var count = triangles.length;
-
         if (count >= 3) {
-            addTriangle(lines, triangles[0], triangles[1], triangles[2]);
+            var size = (count - 2) * 6;
+            var lines = IndexDatatype.createTypedArray(count, size);
 
-            for ( var i = 3; i < count; ++i) {
-                addTriangle(lines, triangles[i - 1], triangles[i], triangles[i - 2]);
+            addTriangle(lines, 0, triangles[0], triangles[1], triangles[2]);
+            var index = 6;
+
+            for ( var i = 3; i < count; ++i, index += 6) {
+                addTriangle(lines, index, triangles[i - 1], triangles[i], triangles[i - 2]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return new Uint16Array();
     }
 
     function triangleFanToLines(triangles) {
-        var lines = [];
-
         if (triangles.length > 0) {
-            var base = triangles[0];
             var count = triangles.length - 1;
-            for ( var i = 1; i < count; ++i) {
-                addTriangle(lines, base, triangles[i], triangles[i + 1]);
+            var size = (count - 1) * 6;
+            var lines = IndexDatatype.createTypedArray(count, size);
+
+            var base = triangles[0];
+            var index = 0;
+            for ( var i = 1; i < count; ++i, index += 6) {
+                addTriangle(lines, index, base, triangles[i], triangles[i + 1]);
             }
+
+            return lines;
         }
 
-        return lines;
+        return new Uint16Array();
     }
 
     /**
@@ -197,7 +212,7 @@ define([
 
         var indexList = geometry.indexList;
         if (typeof indexList !== 'undefined') {
-            var indexCrossReferenceOldToNew = new Array(numVertices);
+            var indexCrossReferenceOldToNew = new Int32Array(numVertices);
             for ( var i = 0; i < numVertices; i++) {
                 indexCrossReferenceOldToNew[i] = -1;
             }
@@ -205,7 +220,8 @@ define([
             // Construct cross reference and reorder indices
             var indicesIn = indexList;
             var numIndices = indicesIn.length;
-            var indicesOut = [];
+            var indicesOut = IndexDatatype.createTypedArray(numVertices, numIndices);
+
             var intoIndicesIn = 0;
             var intoIndicesOut = 0;
             var nextIndex = 0;
@@ -233,10 +249,11 @@ define([
             var attributes = geometry.attributes;
             for ( var property in attributes) {
                 if (attributes.hasOwnProperty(property) && attributes[property].values) {
-                    var elementsIn = attributes[property].values;
+                    var attribute = attributes[property];
+                    var elementsIn = attribute.values;
                     var intoElementsIn = 0;
-                    var numComponents = attributes[property].componentsPerAttribute;
-                    var elementsOut = [];
+                    var numComponents = attribute.componentsPerAttribute;
+                    var elementsOut = attribute.componentDatatype.createTypedArray(elementsIn.length);
                     while (intoElementsIn < numVertices) {
                         var temp = indexCrossReferenceOldToNew[intoElementsIn];
                         for (i = 0; i < numComponents; i++) {
@@ -244,7 +261,7 @@ define([
                         }
                         ++intoElementsIn;
                     }
-                    attributes[property].values = elementsOut;
+                    attribute.values = elementsOut;
                 }
             }
         }
@@ -425,7 +442,8 @@ define([
         return geometries;
     };
 
-    var scratchCartesian = new Cartesian3();
+    var scratchProjectTo2DCartesian3 = new Cartesian3();
+    var scratchProjectTo2DCartographic = new Cartographic();
 
     /**
      * Projects a geometry's 3D <code>position</code> attribute to 2D, replacing the <code>position</code>
@@ -455,12 +473,16 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = [];
+            var projectedPositions = new Float64Array(2 * wgs84Positions.length / 3);
+            var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var lonLat = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(wgs84Positions, i, scratchCartesian));
-                var projectedLonLat = projection.project(lonLat);
-                projectedPositions.push(projectedLonLat.x, projectedLonLat.y);
+                var position = Cartesian3.fromArray(wgs84Positions, i, scratchProjectTo2DCartesian3);
+                var lonLat = ellipsoid.cartesianToCartographic(position, scratchProjectTo2DCartographic);
+                var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
+
+                projectedPositions[index++] = projectedLonLat.x;
+                projectedPositions[index++] = projectedLonLat.y;
             }
 
             // Rename original positions to WGS84 Positions.
@@ -468,7 +490,7 @@ define([
 
             // Replace original positions with 2D projected positions
             geometry.attributes.position2D = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 2,
                 values : projectedPositions
             });
@@ -499,7 +521,7 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
-     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
      * @example
      * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
@@ -521,14 +543,14 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.FLOAT) {
-            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT.');
+        if (attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
 
         var values = attribute.values;
         var length = values.length;
-        var highValues = new Array(length);
-        var lowValues = new Array(length);
+        var highValues = new Float32Array(length);
+        var lowValues = new Float32Array(length);
 
         for (var i = 0; i < length; ++i) {
             EncodedCartesian3.encode(values[i], encodedResult);
@@ -536,14 +558,16 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
+        var componentsPerAttribute = attribute.componentsPerAttribute;
+
         geometry.attributes[attributeHighName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : componentsPerAttribute,
             values : highValues
         });
         geometry.attributes[attributeLowName] = new GeometryAttribute({
-            componentDatatype : attribute.componentDatatype,
-            componentsPerAttribute : attribute.componentsPerAttribute,
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : componentsPerAttribute,
             values : lowValues
         });
         delete geometry.attributes[attributeName];
@@ -580,6 +604,9 @@ define([
             }
         }
     }
+
+    var inverseTranspose = new Matrix4();
+    var normalMatrix = new Matrix3();
 
     /**
      * Transforms a geometry instance to world coordinates.  This is used as a prerequisite
@@ -623,8 +650,6 @@ define([
             (typeof attributes.binormal !== 'undefined') ||
             (typeof attributes.tangent !== 'undefined')) {
 
-            var inverseTranspose = new Matrix4();
-            var normalMatrix = new Matrix3();
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
             Matrix4.getRotation(inverseTranspose, normalMatrix);
@@ -681,7 +706,6 @@ define([
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
-// TODO: or new Array()
                         values : attribute.componentDatatype.createTypedArray(numberOfComponents)
                     });
                 }
@@ -773,13 +797,10 @@ define([
                 numberOfIndices += instances[i].geometry.indexList.length;
             }
 
-// TODO: or new Array()
-            var destIndices;
-            if (numberOfIndices < 60 * 1024) {
-                destIndices = new Uint16Array(numberOfIndices);
-            } else {
-                destIndices = new Uint32Array(numberOfIndices);
-            }
+            var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
+                attributes : attributes
+            }));
+            var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 
             var destOffset = 0;
             var offset = 0;
@@ -852,6 +873,7 @@ define([
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
+
         var attributes = geometry.attributes;
         var indices = geometry.indexList;
 
@@ -936,7 +958,7 @@ define([
             j++;
         }
 
-        var normalValues = new Array(numVertices * 3);
+        var normalValues = new Float32Array(numVertices * 3);
         for (i = 0; i < numVertices; i++) {
             var i3 = i * 3;
             vertexNormalData = normalsPerVertex[i];
@@ -1062,8 +1084,9 @@ define([
             tan1[i23+2] += sdirz;
         }
 
-        var binormalValues = new Array(numVertices * 3);
-        var tangentValues = new Array(numVertices * 3);
+        var binormalValues = new Float32Array(numVertices * 3);
+        var tangentValues = new Float32Array(numVertices * 3);
+
         for (i = 0; i < numVertices; i++) {
             i03 = i * 3;
             i13 = i03 + 1;
@@ -1074,10 +1097,13 @@ define([
             var scalar = n.dot(t);
             n.multiplyByScalar(scalar, normalScale);
             t.subtract(normalScale, t).normalize(t);
+
             tangentValues[i03] = t.x;
             tangentValues[i13] = t.y;
             tangentValues[i23] = t.z;
+
             n.cross(t, t).normalize(t);
+
             binormalValues[i03] = t.x;
             binormalValues[i13] = t.y;
             binormalValues[i23] = t.z;

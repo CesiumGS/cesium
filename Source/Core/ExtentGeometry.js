@@ -6,6 +6,7 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './Extent',
@@ -22,6 +23,7 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         Extent,
@@ -158,11 +160,11 @@ define([
         var binormalIndex = 0;
 
         var size = width * height;
-        var positions = (vertexFormat.position) ? new Array(size * 3) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+        var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
 
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
@@ -229,7 +231,9 @@ define([
             }
         }
 
-        var indices = [];
+        var indicesSize = 6 * (width - 1) * (height - 1);
+        var indices = IndexDatatype.createTypedArray(size, indicesSize);
+
         var index = 0;
         var indicesIndex = 0;
         for ( var i = 0; i < height - 1; ++i) {
@@ -253,7 +257,7 @@ define([
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
