@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--  This is an invalid OpenSearch Description Document, but it's simply used for testing.  -->
-<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">
-  <Url type="application/rss+xml" template="rss1.xml?q={searchTerms}"/>
-</OpenSearchDescription>

@@ -127,7 +127,6 @@
 	<property name="documentationImagesDirectory" location="Documentation/Images" />
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
-	<property name="dojoPath" location="${thirdPartyDirectory}/dojo-release-1.8.3-src" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
 
 	<!-- properties controlling documentation source-->

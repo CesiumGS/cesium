@@ -7,8 +7,8 @@ define([
         createCanvas) {
     "use strict";
 
-    function createScene() {
-        return new Scene(createCanvas());
+    function createScene(options) {
+        return new Scene(createCanvas(), options);
     }
 
     return createScene;

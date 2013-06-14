@@ -63,6 +63,7 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -112,7 +113,7 @@ define([
         cesiumLogo.className = 'cesium-widget-logo';
         widgetNode.appendChild(cesiumLogo);
 
-        var scene = new Scene(canvas);
+        var scene = new Scene(canvas, options.contextOptions);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var ellipsoid = Ellipsoid.WGS84;

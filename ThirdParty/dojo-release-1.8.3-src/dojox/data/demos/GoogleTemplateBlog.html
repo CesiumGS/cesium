@@ -1,7 +1,0 @@
-{% load dojox.dtl.contrib.data %}
-{% bind_data items to store as google %}
-{% for item in google %}
-<span class="search-result">
-	<a href="{{item.postUrl}}">{{item.titleNoFormatting}}</a>				
-</span>
-{% endfor %}
