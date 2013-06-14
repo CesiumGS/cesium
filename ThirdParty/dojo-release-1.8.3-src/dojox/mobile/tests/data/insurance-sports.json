@@ -1,7 +1,0 @@
-{
-  "items" : [
-    { label: "Motorcycle", icon: "images/i-icon-10.png", url: "data/insurance-sports-moto.html" },
-    { label: "Snowmobile", icon: "images/i-icon-10.png", url: "data/insurance-sports-snow.html" },
-    { label: "Boat", icon: "images/i-icon-10.png", url: "data/insurance-sports-boat.html" }
-  ]
-}

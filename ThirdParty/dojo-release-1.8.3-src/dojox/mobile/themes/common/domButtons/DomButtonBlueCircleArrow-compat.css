@@ -1,9 +1,0 @@
-/* === Blue Circle Arrow Buttons ==*/
-.mblDomButtonBlueCircleArrow {
-	background-image: url(compat/mblDomButtonBlueCircleArrow.png);
-	background-repeat: no-repeat;
-}
-
-.mblDomButtonBlueCircleArrow > div {
-	display: none;
-}
