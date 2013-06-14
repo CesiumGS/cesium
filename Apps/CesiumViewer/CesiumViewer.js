@@ -285,16 +285,16 @@ define([
            geometry : new Geometry({
                attributes : {
                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : [
+                        values : new Float64Array([
                             0.0, 0.0, 2000000.0,
                             7500000.0, 0.0, 2000000.0,
                             0.0, 7500000.0, 2000000.0
-                        ]
+                        ])
                    })
                },
-               indexList : [0, 1, 1, 2, 2, 0],
+               indexList : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
            }),
            pickData : 'customWithIndices'
@@ -308,13 +308,13 @@ define([
             geometry : new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
-                         componentDatatype : ComponentDatatype.FLOAT,
+                         componentDatatype : ComponentDatatype.DOUBLE,
                          componentsPerAttribute : 3,
-                         values : [
+                         values : new Float64Array([
                              0.0, 0.0, 0.0,
                              7500000.0, 0.0, 0.0,
                              0.0, 7500000.0, 0.0
-                         ]
+                         ])
                     })
                 },
                 primitiveType : PrimitiveType.LINE_LOOP

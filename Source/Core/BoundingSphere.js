@@ -522,9 +522,19 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creaates a bounding sphere encompassing an ellipsoid.
+     *
+     * @memberof BoundingSphere
+     *
+     * @param {Ellipsoid} ellipsoid The ellipsoid around which to create a bounding sphere.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     *
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} ellipsoid is required.
+     *
+     * @example
+     * var boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
         if (typeof ellipsoid === 'undefined') {

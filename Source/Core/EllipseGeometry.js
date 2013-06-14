@@ -4,6 +4,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         GeometryAttribute,
@@ -234,13 +236,17 @@ define([
         }
 
         // The original length may have been an over-estimate
-        positions.length = positionIndex;
-        size = positions.length / 3;
+        if (positions.length !== positionIndex) {
+            size = positionIndex / 3;
+            positions.length = positionIndex;
+        }
 
-        var textureCoordinates = (vertexFormat.st) ? new Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Array(size * 3) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Array(size * 3) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Array(size * 3) : undefined;
+        positions = new Float64Array(positions);
+
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
 
         var textureCoordIndex = 0;
 
@@ -301,7 +307,7 @@ define([
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
@@ -417,8 +423,6 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
-        indices.length = indicesIndex;
-
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
@@ -434,7 +438,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indexList = IndexDatatype.createTypedArray(positions.length / 3, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
