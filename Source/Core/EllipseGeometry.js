@@ -438,7 +438,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = IndexDatatype.createTypedArray(positions.length / 3, indices);
+        this.indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

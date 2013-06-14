@@ -41,7 +41,7 @@ define([
      *       values : positions
      *     })
      *   },
-     *   indexList : [0, 1, 1, 2, 2, 0],
+     *   indices : [0, 1, 1, 2, 2, 0],
      *   primitiveType : PrimitiveType.LINES,
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
@@ -115,9 +115,9 @@ define([
          * @example
          * // Two triangles with shared vertices
          * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
+         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
-        this.indexList = options.indexList;
+        this.indices = options.indices;
 
         /**
          * The type of primitives in the geometry.  This is most often {@link PrimitiveType.TRIANGLES},
@@ -130,7 +130,7 @@ define([
          * @example
          * // Two triangles with shared vertices
          * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indexList = new Uint16Array([0, 1, 2, 0, 2, 3]);
+         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.primitiveType = options.primitiveType;
 
@@ -179,11 +179,11 @@ define([
         }
         result.attributes = newAttributes;
 
-        if (typeof geometry.indexList !== 'undefined') {
-            var sourceValues = geometry.indexList;
-            result.indexList = new sourceValues.constructor(sourceValues);
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            result.indices = new sourceValues.constructor(sourceValues);
         } else {
-            result.indexList = undefined;
+            result.indices = undefined;
         }
         result.primitiveType = geometry.primitiveType;
 

@@ -294,7 +294,7 @@ define([
                         ])
                    })
                },
-               indexList : new Uint16Array([0, 1, 1, 2, 2, 0]),
+               indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
            }),
            pickData : 'customWithIndices'

@@ -62,7 +62,7 @@ define([
      * @exception {DeveloperError} center is required.
      *
      * @example
-     * this.indexList = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
+     * this.indices = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
         if (typeof numberOfVertices === 'undefined') {

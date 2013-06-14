@@ -2443,12 +2443,12 @@ define([
         }
 
         var indexBuffer;
-        var indexList = geometry.indexList;
-        if (typeof indexList !== 'undefined') {
+        var indices = geometry.indices;
+        if (typeof indices !== 'undefined') {
             if ((Geometry.computeNumberOfVertices(geometry) > 64 * 1024) && this.getElementIndexUint()) {
-                indexBuffer = this.createIndexBuffer(new Uint32Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_INT);
+                indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
-                indexBuffer = this.createIndexBuffer(new Uint16Array(indexList), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
+                indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);
             }
         }
 
