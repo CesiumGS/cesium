@@ -982,19 +982,22 @@ defineSuite([
     });
 
     it ('GeometryPipeline.computeBinormalAndTangent computes tangent and binormal for an EllipsoidGeometry', function() {
+        var numberOfPartitions = 10;
         var geometry = new EllipsoidGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
                 st : true
-            })
+            }),
+            numberOfPartitions : numberOfPartitions
         });
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
         var expectedGeometry = new EllipsoidGeometry({
-            vertexFormat: VertexFormat.ALL
+            vertexFormat: VertexFormat.ALL,
+            numberOfPartitions : numberOfPartitions
         });
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
@@ -1002,7 +1005,7 @@ defineSuite([
         expect(actualTangents.length).toEqual(expectedTangents.length);
         expect(actualBinormals.length).toEqual(expectedBinormals.length);
 
-        for (var i = 1000; i < 12000; i += 3) {
+        for (var i = 300; i < 500; i += 3) {
             var actual = Cartesian3.fromArray(actualTangents, i);
             var expected = Cartesian3.fromArray(expectedTangents, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
