@@ -1,5 +1,0 @@
-define(
-({
-	"save": "Uložiť"
-})
-);

@@ -1,9 +1,0 @@
-{
-  "identifier": "Serial",
-   "items": [
-    { "Serial" : "12321312", "First" : "Andy", "Last" : "Anderson" },
-    { "Serial" : "34432423", "First" : "Buck", "Last" : "Benjamin" },
-    { "Serial" : "64343423", "First" : "Chad", "Last" : "Chambers" },
-    { "Serial" : "76574534", "First" : "Dean", "Last" : "Davidson" }
-  ]
-}
