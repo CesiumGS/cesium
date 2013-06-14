@@ -365,7 +365,6 @@ define([
     };
 
     var emptyArray = [];
-    var scracthBoundingSphere = new BoundingSphere();
 
     /**
      * @private
@@ -439,11 +438,11 @@ define([
             boundingVolume = this._boundingVolume2D;
         } else if (frameState.mode === SceneMode.SCENE2D) {
             if (typeof this._boundingVolume2D !== 'undefined') {
-                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+                boundingVolume = BoundingSphere.clone(this._boundingVolume2D);
                 boundingVolume.center.x = 0.0;
             }
         } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
+            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D);
         }
 
         if (typeof boundingVolume === 'undefined') {
