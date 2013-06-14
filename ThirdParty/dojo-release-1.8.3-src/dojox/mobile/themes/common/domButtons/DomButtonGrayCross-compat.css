@@ -1,8 +1,0 @@
-/* === Gray Cross Button ==*/
-.mblDomButtonGrayCross, .mblDomButtonCross {
-	background-image: url(compat/mblDomButtonGrayCross.png);
-	background-repeat: no-repeat;
-}
-.mblDomButtonGrayCross div, .mblDomButtonCross div {
-	display: none;
-}

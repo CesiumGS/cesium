@@ -139,6 +139,14 @@ defineSuite([
         expect(context.getMaximumViewportHeight()).toBeGreaterThan(0);
     });
 
+    it('gets antialias', function() {
+        var c = createContext({
+            antialias : false
+        });
+        expect(c.getAntialias()).toEqual(false);
+        c.destroy();
+    });
+
     it('gets the standard derivatives extension', function() {
         var fs =
             '#ifdef GL_OES_standard_derivatives\n' +

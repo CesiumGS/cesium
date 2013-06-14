@@ -1,5 +1,0 @@
-define(
-({
-	insertEntity: "Lisää symboli"
-})
-);

@@ -3,12 +3,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../getElement',
         './HomeButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         destroyObject,
         DeveloperError,
+        getElement,
         HomeButtonViewModel,
         knockout) {
     "use strict";
@@ -27,21 +29,15 @@ define([
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} scene is required.
      */
-    var HomeButton = function(container, scene, transitioner, ellipsoid) {
+    var HomeButton = function(container, scene, transitioner, ellipsoid, flightDuration) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
+        container = getElement(container);
 
         this._container = container;
-        this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid);
+        this._viewModel = new HomeButtonViewModel(scene, transitioner, ellipsoid, flightDuration);
 
         this._element = document.createElement('span');
         this._element.className = 'cesium-homeButton';

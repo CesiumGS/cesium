@@ -3,12 +3,14 @@ define([
         '../../Core/DeveloperError',
         '../../Core/ClockRange',
         '../../Core/JulianDate',
+        '../getElement',
         './TimelineTrack',
         './TimelineHighlightRange'
     ], function(
         DeveloperError,
         ClockRange,
         JulianDate,
+        getElement,
         TimelineTrack,
         TimelineHighlightRange) {
     "use strict";
@@ -72,17 +74,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof clock === 'undefined') {
             throw new DeveloperError('clock is required.');
         }
+
+        container = getElement(container);
 
         /**
          * Gets the parent container.
@@ -111,7 +107,7 @@ define([
         this._timelineDragLocation = undefined;
         var widget = this;
 
-        this.container.className += ' cesium-timeline-main';
+        this.container.classList.add('cesium-timeline-main');
         this.container.innerHTML = '<div class="cesium-timeline-bar"></div><div class="cesium-timeline-trackContainer">' +
                                      '<canvas class="cesium-timeline-tracks" width="10" height="1">' +
                                      '</canvas></div><div class="cesium-timeline-needle"></div><span class="cesium-timeline-ruler"></span>';
@@ -163,9 +159,18 @@ define([
             widget.container.addEventListener(type, listener, useCapture);
         };
 
+        this.removeEventListener = function(type, listener, useCapture) {
+            widget.container.removeEventListener(type, listener, useCapture);
+        };
+
         clock.onTick.addEventListener(this.updateFromClock, this);
         this.updateFromClock();
     }
+
+    Timeline.prototype.destroy = function() {
+        this.container.classList.remove('cesium-timeline-main');
+        this.container.innerHTML = '';
+    };
 
     Timeline.prototype.addHighlightRange = function(color, heightInPx) {
         var newHighlightRange = new TimelineHighlightRange(color, heightInPx);
@@ -503,6 +508,7 @@ define([
         evt.clientX = xPos;
         evt.timeSeconds = seconds;
         evt.timeJulian = this._scrubJulian;
+        evt.clock = this._clock;
         this.container.dispatchEvent(evt);
     };
 
