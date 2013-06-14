@@ -539,7 +539,7 @@ define([
      *
      * @exception {DeveloperError} geometry is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
-     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT.
+     * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.
      *
      * @example
      * geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
@@ -561,8 +561,8 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.FLOAT) {
-            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT.');
+        if (attribute.componentDatatype !== ComponentDatatype.FLOAT && attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+            throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.FLOAT or ComponentDatatype.DOUBLE.');
         }
 
         var values = attribute.values;
@@ -576,16 +576,15 @@ define([
             lowValues[i] = encodedResult.low;
         }
 
-        var componentDatatype = attribute.componentDatatype;
         var componentsPerAttribute = attribute.componentsPerAttribute;
 
         geometry.attributes[attributeHighName] = new GeometryAttribute({
-            componentDatatype : componentDatatype,
+            componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : componentsPerAttribute,
             values : highValues
         });
         geometry.attributes[attributeLowName] = new GeometryAttribute({
-            componentDatatype : componentDatatype,
+            componentDatatype : ComponentDatatype.FLOAT,
             componentsPerAttribute : componentsPerAttribute,
             values : lowValues
         });

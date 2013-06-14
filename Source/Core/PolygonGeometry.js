@@ -285,7 +285,11 @@ define([
         var attributes = {};
 
         if (vertexFormat.position) {
-            attributes.position = geometry.attributes.position;
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : new Float64Array(geometry.attributes.position.values)
+            });
         }
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {

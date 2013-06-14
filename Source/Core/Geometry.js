@@ -181,7 +181,7 @@ define([
 
         if (typeof geometry.indexList !== 'undefined') {
             var sourceValues = geometry.indexList;
-            result.indexList = sourceValues.constructor(sourceValues);
+            result.indexList = new sourceValues.constructor(sourceValues);
         } else {
             result.indexList = undefined;
         }

@@ -260,7 +260,7 @@ define([
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
