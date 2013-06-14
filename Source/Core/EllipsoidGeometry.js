@@ -6,6 +6,7 @@ define([
         './Math',
         './Ellipsoid',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
         './GeometryAttribute',
@@ -17,6 +18,7 @@ define([
         CesiumMath,
         Ellipsoid,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         BoundingSphere,
         GeometryAttribute,
@@ -211,7 +213,7 @@ define([
         if (vertexFormat.position) {
             // Expand cube into ellipsoid and flatten values
             var radii = ellipsoid.getRadii();
-            var flattenedPositions = new Array(length * 3);
+            var flattenedPositions = new Float64Array(length * 3);
 
             for (i = j = 0; i < length; ++i) {
                 var item = positions[i];
@@ -224,14 +226,14 @@ define([
             }
 
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : flattenedPositions
             });
         }
 
         if (vertexFormat.st) {
-            var texCoords = new Array(length * 2);
+            var texCoords = new Float32Array(length * 2);
             var oneOverRadii = ellipsoid.getOneOverRadii();
 
             for (i = j = 0; i < length; ++i) {
@@ -250,9 +252,9 @@ define([
         }
 
         if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-            var normals = (vertexFormat.normal) ? new Array(length * 3) : undefined;
-            var tangents = (vertexFormat.tangent) ? new Array(length * 3) : undefined;
-            var binormals = (vertexFormat.binormal) ? new Array(length * 3) : undefined;
+            var normals = (vertexFormat.normal) ? new Float32Array(length * 3) : undefined;
+            var tangents = (vertexFormat.tangent) ? new Float32Array(length * 3) : undefined;
+            var binormals = (vertexFormat.binormal) ? new Float32Array(length * 3) : undefined;
 
             for (i = j = 0; i < length; ++i, j += 3) {
                 ellipsoid.geodeticSurfaceNormal(positions[i], normal);
@@ -318,7 +320,7 @@ define([
          *
          * @type Array
          */
-        this.indexList = indices;
+        this.indexList = IndexDatatype.createTypedArray(length, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

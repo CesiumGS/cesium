@@ -117,16 +117,7 @@ define([
         result.componentDatatype = this.componentDatatype;              // Shallow copy enum
         result.componentsPerAttribute = this.componentsPerAttribute;
         result.normalize = this.normalize;
-
-// TODO: typed array or not.  fastest way to copy?
-// TODO: attribute not backed by buffer?
-        var sourceValues = this.values;
-        var length = sourceValues.length;
-        var values = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            values[i] = sourceValues[i];
-        }
-        result.values = values;
+        result.values = new this.values.constructor(this.values);
 
         return result;
     };

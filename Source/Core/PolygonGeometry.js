@@ -285,7 +285,11 @@ define([
         var attributes = {};
 
         if (vertexFormat.position) {
-            attributes.position = geometry.attributes.position;
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : new Float64Array(geometry.attributes.position.values)
+            });
         }
 
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -302,10 +306,10 @@ define([
             var flatPositions = geometry.attributes.position.values;
             var length = flatPositions.length;
 
-            var textureCoordinates = vertexFormat.st ? new Array(2 * (length / 3)) : undefined;
-            var normals = vertexFormat.normal ? new Array(length) : undefined;
-            var tangents = vertexFormat.tangent ? new Array(length) : undefined;
-            var binormals = vertexFormat.binormal ? new Array(length) : undefined;
+            var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
+            var normals = vertexFormat.normal ? new Float32Array(length) : undefined;
+            var tangents = vertexFormat.tangent ? new Float32Array(length) : undefined;
+            var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
 
             var textureCoordIndex = 0;
             var normalIndex = 0;

@@ -106,13 +106,31 @@ define(['./Enumeration'], function(Enumeration) {
 
     /**
      * DOC_TBA
+     *
+     * @constant
+     * @type {Enumeration}
+     * @memberOf ComponentDatatype
+     */
+    ComponentDatatype.DOUBLE = new Enumeration(0x140A, 'DOUBLE');
+    ComponentDatatype.DOUBLE.sizeInBytes = Float64Array.BYTES_PER_ELEMENT;
+    ComponentDatatype.DOUBLE.createTypedArray = function(valuesOrLength) {
+        return new Float64Array(valuesOrLength);
+    };
+
+    ComponentDatatype.DOUBLE.createArrayBufferView = function(buffer, byteOffset) {
+        return new Float64Array(buffer, byteOffset);
+    };
+
+    /**
+     * DOC_TBA
      */
     ComponentDatatype.validate = function(componentDatatype) {
         return ((componentDatatype === ComponentDatatype.BYTE) ||
                 (componentDatatype === ComponentDatatype.UNSIGNED_BYTE) ||
                 (componentDatatype === ComponentDatatype.SHORT) ||
                 (componentDatatype === ComponentDatatype.UNSIGNED_SHORT) ||
-                (componentDatatype === ComponentDatatype.FLOAT));
+                (componentDatatype === ComponentDatatype.FLOAT) ||
+                (componentDatatype === ComponentDatatype.DOUBLE));
     };
 
     return ComponentDatatype;

@@ -180,18 +180,11 @@ define([
         result.attributes = newAttributes;
 
         if (typeof geometry.indexList !== 'undefined') {
-// TODO: typed array or not.  fastest way to copy?
             var sourceValues = geometry.indexList;
-            var length = sourceValues.length;
-            var values = new Array(length);
-            for (var i = 0; i < length; ++i) {
-                values[i] = sourceValues[i];
-            }
-            result.indexList = values;
+            result.indexList = new sourceValues.constructor(sourceValues);
         } else {
             result.indexList = undefined;
         }
-
         result.primitiveType = geometry.primitiveType;
 
         if (typeof geometry.boundingSphere !== 'undefined') {
