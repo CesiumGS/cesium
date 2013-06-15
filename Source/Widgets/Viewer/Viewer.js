@@ -151,6 +151,7 @@ define([
         //Subscribe for resize events and set the initial size.
         var that = this;
         this._needResize = true;
+        this._resizeCounter = 0;
         this._resizeCallback = function() {
             that._needResize = true;
         };
@@ -502,7 +503,8 @@ define([
     };
 
     Viewer.prototype._onTick = function(clock) {
-        if (this._needResize) {
+        if (this._needResize || this._resizeCounter === 60) {
+            this._resizeCounter = 0;
             this._needResize = false;
 
             var cesiumWidget = this._cesiumWidget;
@@ -554,6 +556,7 @@ define([
                 baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
             }
         }
+        this._resizeCounter++;
 
         var currentTime = clock.currentTime;
         this._dataSourceDisplay.update(currentTime);
