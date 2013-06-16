@@ -1,6 +1,0 @@
-{
-	"name": "CesiumViewer",
-	"description": "A viewer application for Cesium CZML documents.",
-	"version": "0.6.0",
-	"dojoBuild": "CesiumViewer.profile.js"
-}

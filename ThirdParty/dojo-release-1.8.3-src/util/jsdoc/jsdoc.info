@@ -1,4 +1,0 @@
-; $Id $
-name = "JavaScript Documentation"
-description = "Reads and displays documentation for JavaScript code"
-package = Documentation

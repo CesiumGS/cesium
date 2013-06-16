@@ -191,7 +191,6 @@ define([
 
     function update3DController(that, camera, objectChanged, offset) {
         var scene = that.scene;
-        that._screenSpaceCameraController.enableTilt = false;
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
