@@ -5,6 +5,13 @@ defineSuite([
          'Core/BoundingSphere',
          'Renderer/DrawCommand',
          'Renderer/CommandLists',
+         'Renderer/Context',
+         'Renderer/UniformState',
+         'Scene/AnimationCollection',
+         'Scene/Camera',
+         'Scene/CompositePrimitive',
+         'Scene/FrameState',
+         'Scene/ScreenSpaceCameraController',
          'Specs/createScene',
          'Specs/destroyScene'
      ], 'Scene/Scene', function(
@@ -13,46 +20,61 @@ defineSuite([
          BoundingSphere,
          DrawCommand,
          CommandLists,
+         Context,
+         UniformState,
+         AnimationCollection,
+         Camera,
+         CompositePrimitive,
+         FrameState,
+         ScreenSpaceCameraController,
          createScene,
          destroyScene) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var scene;
+    it('constructor has expected defaults', function() {
+        var scene = createScene();
+        expect(scene.getCanvas()).toBeInstanceOf(HTMLCanvasElement);
+        expect(scene.getContext()).toBeInstanceOf(Context);
+        expect(scene.getPrimitives()).toBeInstanceOf(CompositePrimitive);
+        expect(scene.getCamera()).toBeInstanceOf(Camera);
+        expect(scene.getUniformState()).toBeInstanceOf(UniformState);
+        expect(scene.getScreenSpaceCameraController()).toBeInstanceOf(ScreenSpaceCameraController);
+        expect(scene.getFrameState()).toBeInstanceOf(FrameState);
+        expect(scene.getAnimations()).toBeInstanceOf(AnimationCollection);
 
-    beforeAll(function() {
-        scene = createScene();
-    });
+        var defaultContextOptions = {
+            alpha : false,
+            depth : true,
+            stencil : false,
+            antialias : true,
+            premultipliedAlpha : true,
+            preserveDrawingBuffer : false
+        };
+        var contextAttributes = scene.getContext()._gl.getContextAttributes();
+        expect(contextAttributes).toEqual(defaultContextOptions);
 
-    afterAll(function() {
         destroyScene(scene);
     });
 
-    it('get canvas', function() {
-        expect(scene.getCanvas()).toBeDefined();
-    });
+    it('constructor sets contextOptions', function() {
+        var contextOptions = {
+            alpha : true,
+            depth : true, //TODO Change to false when https://bugzilla.mozilla.org/show_bug.cgi?id=745912 is fixed.
+            stencil : true,
+            antialias : false,
+            premultipliedAlpha : false,
+            preserveDrawingBuffer : true
+        };
 
-    it('get context', function() {
-        expect(scene.getContext()).toBeDefined();
-    });
-
-    it('get primitives', function() {
-        expect(scene.getPrimitives()).toBeDefined();
-    });
-
-    it('get camera', function() {
-        expect(scene.getCamera()).toBeDefined();
-    });
-
-    it('get uniform state', function() {
-        expect(scene.getUniformState()).toBeDefined();
-    });
-
-    it('get animations', function() {
-        expect(scene.getAnimations()).toBeDefined();
+        var scene = createScene(contextOptions);
+        var contextAttributes = scene.getContext()._gl.getContextAttributes();
+        expect(contextAttributes).toEqual(contextOptions);
+        destroyScene(scene);
     });
 
     it('draws background color', function() {
+        var scene = createScene();
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 0, 255]);
@@ -61,6 +83,7 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()).toEqual([0, 0, 255, 255]);
+        destroyScene(scene);
     });
 
     function getMockPrimitive(command) {
@@ -125,9 +148,9 @@ defineSuite([
     });
 
     it('isDestroyed', function() {
-        var s = createScene();
-        expect(s.isDestroyed()).toEqual(false);
-        destroyScene(s);
-        expect(s.isDestroyed()).toEqual(true);
+        var scene = createScene();
+        expect(scene.isDestroyed()).toEqual(false);
+        destroyScene(scene);
+        expect(scene.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');

@@ -1,9 +1,0 @@
-/* === Green Circle Minus Buttons ==*/
-.mblDomButtonGreenCircleMinus {
-	background-image: url(compat/mblDomButtonGreenCircleMinus.png);
-	background-repeat: no-repeat;
-}
-
-.mblDomButtonGreenCircleMinus > div {
-	display: none;
-}

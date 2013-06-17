@@ -1,5 +1,0 @@
-define(
-({
-	label: "Velg filer..."
-})
-);

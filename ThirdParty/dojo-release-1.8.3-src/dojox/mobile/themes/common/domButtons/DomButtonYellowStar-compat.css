@@ -1,8 +1,0 @@
-/* === Yellow Star ==*/
-.mblDomButtonYellowStar {
-	background-image: url(compat/mblDomButtonYellowStar.png);
-	background-repeat: no-repeat;
-}
-.mblDomButtonYellowStar > div {
-	display: none;
-}
