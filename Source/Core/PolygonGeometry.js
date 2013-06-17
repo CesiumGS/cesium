@@ -727,13 +727,13 @@ define([
                 }
             } else {
                 geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
-                geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, surfaceHeight, ellipsoid);
-
-                if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                    geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                }
-
                 if (typeof geometry !== 'undefined') {
+                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, surfaceHeight, ellipsoid);
+
+                    if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                        geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
+                    }
+
                     geometries.push(geometry);
                 }
             }
@@ -801,15 +801,12 @@ define([
                     }
                 } else {
                     geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
-                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, surfaceHeight, ellipsoid);
                     if (typeof geometry !== 'undefined') {
+                        geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, surfaceHeight, ellipsoid);
                         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                             geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
                         }
-
-                        if (typeof geometry !== 'undefined') {
-                            geometries.push(geometry);
-                        }
+                        geometries.push(geometry);
                     }
                 }
             }
