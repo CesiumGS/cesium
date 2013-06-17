@@ -66,8 +66,11 @@ define([
     var eastNormal = new Cartesian3();
     var southNormal = new Cartesian3();
     var northEastTop = new Cartesian3();
+    var northEastBottom = new Cartesian3();
     var northWestTop = new Cartesian3();
     var southWestTop = new Cartesian3();
+    var southWestBottom = new Cartesian3();
+    var southEastTop = new Cartesian3();
     var northWestBottom = new Cartesian3();
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
@@ -125,7 +128,6 @@ define([
         var width = params.width;
         var surfaceHeight = params.surfaceHeight;
 
-        var vertexIndex = 0;
         var attrIndex = 0;
         var stIndex = 0;
 
@@ -179,7 +181,6 @@ define([
                         binormals[attrIndex2] = binormal.z;
                     }
                 }
-                vertexIndex ++;
                 attrIndex += 3;
                 stIndex += 2;
             }
@@ -410,11 +411,16 @@ define([
         position.clone(northWestTop);
         extrudedPosition.clone(northWestBottom);
 
-        computePosition(params, 0, width-1, maxHeight);
+        computePosition(params, 0, width-1, maxHeight, minHeight);
         position.clone(northEastTop);
+        extrudedPosition.clone(northEastBottom);
 
-        computePosition(params, height-1, 0, maxHeight);
+        computePosition(params, height-1, 0, maxHeight, minHeight);
         position.clone(southWestTop);
+        extrudedPosition.clone(southWestBottom);
+
+        computePosition(params, height-1, width-1, maxHeight);
+        position.clone(southEastTop);
 
         northEastTop.subtract(northWestTop, v1Scratch);
         northWestBottom.subtract(northWestTop, v2Scratch);
@@ -424,71 +430,72 @@ define([
         southWestTop.subtract(northWestTop, v2Scratch);
         Cartesian3.cross(v1Scratch, v2Scratch, westNormal);
 
-        Cartesian3.negate(westNormal, eastNormal);
-        Cartesian3.negate(northNormal, southNormal);
+        southEastTop.subtract(southWestTop, v1Scratch);
+        southWestBottom.subtract(southWestTop, v2Scratch);
+        Cartesian3.cross(v1Scratch, v2Scratch, southNormal);
 
-        for (row = 0; row < height; ++row) { // add vertices for walls (the perimeter)
-            if (row === 0) { // north row
-                for (col = 0; col < width; ++col) {
-                    computePosition(params, row, col, maxHeight, minHeight);
+        northEastTop.subtract(southEastTop, v1Scratch);
+        northEastBottom.subtract(southEastTop, v2Scratch);
+        Cartesian3.cross(v1Scratch, v2Scratch, eastNormal);
 
-                    if (col === 0) {
-                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, westNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w', params);
-                    } else if (col === width - 1) {
-                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, eastNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e', params);
-                    }
+        var countSides = (height - 2) * 2 + width;
+        for (col = 0; col < width; ++col) {
+            row = 0;
+            computePosition(params, row, col, maxHeight, minHeight);
 
-                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, northNormal); // add north row
-                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'n', params);
-
-                    vertexIndex ++;
-                    attrIndex += 3;
-                    stIndex += 2;
-                }
-            } else if (row === height - 1) { // south row
-                for (col = 0; col < width; ++col) {
-                    computePosition(params, row, col, maxHeight, minHeight);
-
-                    if (col === 0) {
-                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, westNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w', params);
-                    } else if (col === width - 1) {
-                        addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, eastNormal);
-                        stWall(vertexFormat, stIndex, attributes, twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e', params);
-                    }
-
-                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, southNormal); // add south row
-                    stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 's', params);
-
-                    vertexIndex ++;
-                    attrIndex += 3;
-                    stIndex += 2;
-                }
-            } else { // sides
-                col = 0;
-                computePosition(params, row, col, maxHeight, minHeight);
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, westNormal); // add west side
-                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w', params);
-                vertexIndex ++;
-                attrIndex += 3;
-                stIndex += 2;
-
-                col = width - 1;
-                computePosition(params, row, col, maxHeight, minHeight);
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, eastNormal); // add east side
-                stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'e', params);
-                vertexIndex ++;
-                attrIndex += 3;
-                stIndex += 2;
+            if (col === 0) { //duplicate corners
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, westNormal);
+                stWall(vertexFormat, stIndex, attributes, twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w', params);
+            } else if (col === width - 1) {
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, eastNormal);
+                stWall(vertexFormat, stIndex, attributes, twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e', params);
             }
+
+            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, northNormal); // add north row
+            stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'n', params);
+
+
+            row = height - 1;
+            computePosition(params, row, col, maxHeight, minHeight);
+
+            if (col === 0) { //duplicate corners
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, westNormal);
+                stWall(vertexFormat, stIndex, attributes, twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w', params);
+            } else if (col === width - 1) {
+                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, eastNormal);
+                stWall(vertexFormat, stIndex, attributes, twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e', params);
+            }
+
+            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, true, true, southNormal); // add south row
+            stWall(vertexFormat, stIndex, attributes, countSides, countSides + perimeterPositions, 's', params);
+
+            vertexIndex ++;
+            attrIndex += 3;
+            stIndex += 2;
+        }
+
+        for (row = 1; row < height - 1; ++row) {
+            col = 0;
+            computePosition(params, row, col, maxHeight, minHeight);
+            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, westNormal); // add west side
+            stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w', params);
+            vertexIndex ++;
+            attrIndex += 3;
+            stIndex += 2;
+
+            col = width - 1;
+            computePosition(params, row, col, maxHeight, minHeight);
+            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, eastNormal); // add east side
+            stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'e', params);
+            vertexIndex ++;
+            attrIndex += 3;
+            stIndex += 2;
         }
 
         if (closeBottom || closeTop) {
             var maxH = (closeTop) ? maxHeight : undefined;
             var minH = (closeBottom) ? minHeight : undefined;
-            var incAmount = perimeterPositions + 8;
+            var incAmount = width + perimeterPositions + 8;
             vertexIndex += incAmount;
             attrIndex += 3 * incAmount;
             stIndex += 2 * incAmount;
@@ -506,7 +513,14 @@ define([
 
         var topBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, maxHeight, topBoundingSphere);
         var bottomBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, minHeight, bottomBoundingSphere);
-        var indices = [];
+        var indexCount = perimeterPositions * 2 * 3;
+        if (closeTop) {
+            indexCount += (width - 1) * (height - 1) * 3 * 2;
+        }
+        if (closeBottom) {
+            indexCount += (width - 1) * (height - 1) * 3 * 2;
+        }
+        var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
         var indicesIndex = 0;
         var attr = {
                 binormals: binormals,
@@ -523,7 +537,7 @@ define([
         var upperRight;
         var i = 0;
         var evenWidth = (width % 2 === 0);
-        while (i < perimeterPositions) {
+        for (i = 0; i < perimeterPositions; i++) {
             upperLeft = i;
             lowerLeft = upperLeft + perimeterPositions;
             if (i > 0 && i < width) { // north wall
@@ -564,7 +578,6 @@ define([
             indices[indicesIndex++] = upperRight;
             indices[indicesIndex++] = lowerLeft;
             indices[indicesIndex++] = lowerRight;
-            i++;
         }
 
         if (closeTop || closeBottom) {
@@ -598,8 +611,7 @@ define([
                 ++index;
             }
         }
-        var typedIndices = IndexDatatype.createTypedArray(vertexCount, indices);
-        attr.indices= typedIndices;
+        attr.indices= indices;
         return attr;
     }
 
