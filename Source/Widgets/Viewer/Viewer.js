@@ -5,6 +5,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/Event',
         '../../Core/Fullscreen',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventType',
@@ -27,6 +28,7 @@ define([
         DeveloperError,
         defineProperties,
         destroyObject,
+        Event,
         Fullscreen,
         requestAnimationFrame,
         ScreenSpaceEventType,
@@ -52,16 +54,27 @@ define([
     }
 
     function startRenderLoop(viewer) {
+        viewer._renderLoopShutdown = false;
+
         function render() {
-            if (viewer._useDefaultRenderLoop) {
-                var frameNumber = viewer._cesiumWidget._scene.getFrameState().frameNumber;
-                if (viewer._needResize || (frameNumber % 60) === 0) {
-                    viewer.resize();
+            try {
+                if (viewer._useDefaultRenderLoop) {
+                    var frameNumber = viewer._cesiumWidget._scene.getFrameState().frameNumber;
+                    if (viewer._needResize || (frameNumber % 60) === 0) {
+                        viewer.resize();
+                    }
+                    viewer.render();
+                    requestAnimationFrame(render);
+                } else {
+                    viewer._renderLoopShutdown = true;
                 }
-                viewer.render();
-                requestAnimationFrame(render);
+            } catch (e) {
+                viewer._useDefaultRenderLoop = false;
+                viewer._renderLoopShutdown = true;
+                viewer.onRenderLoopError.raiseEvent(viewer, e);
             }
         }
+
         requestAnimationFrame(render);
     }
 
@@ -260,6 +273,7 @@ define([
                 }
                 if (typeof timeline !== 'undefined') {
                     timeline.container.style.right = fullscreenContainer.clientWidth;
+                    timeline.resize();
                 }
             };
             this._fullscreenSubscription = knockout.getObservable(fullscreenButton.viewModel, 'isFullscreenEnabled').subscribe(fullScreenEnabledCallback);
@@ -281,6 +295,8 @@ define([
         this._lastWidth = 0;
         this._lastHeight = 0;
         this._useDefaultRenderLoop = undefined;
+        this._renderLoopShutdown = true;
+        this._onRenderLoopError = new Event();
 
         //Start the render loop if not explicitly disabled in options.
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
@@ -475,6 +491,20 @@ define([
         },
 
         /**
+         * Gets the event that will be raised when an error is encountered during the default render loop.
+         * The viewer instance and the generated exception are the only two parameters passed to the event handler.
+         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
+         * be set back to true to continue rendering after an exception.
+         * @memberof Viewer.prototype
+         * @type {Event}
+         */
+        onRenderLoopError : {
+            get : function() {
+                return this._onRenderLoopError;
+            }
+        },
+
+        /**
          * Gets or sets whether or not this widget should control the render loop.
          * If set to true the widget will use {@link requestAnimationFrame} to
          * perform rendering and resizing of the widget, as well as drive the
@@ -492,7 +522,7 @@ define([
             set : function(value) {
                 if (this._useDefaultRenderLoop !== value) {
                     this._useDefaultRenderLoop = value;
-                    if (value) {
+                    if (value && this._renderLoopShutdown) {
                         startRenderLoop(this);
                     }
                 }

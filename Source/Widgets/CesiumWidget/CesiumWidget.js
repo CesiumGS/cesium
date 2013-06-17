@@ -52,18 +52,27 @@ define([
     }
 
     function startRenderLoop(widget) {
-        function render() {
-            if (widget._useDefaultRenderLoop) {
-                var frameNumber = widget._scene.getFrameState().frameNumber;
-                if (widget._needResize || (frameNumber % 60) === 0) {
-                    widget.resize();
-                    widget._needResize = false;
-                }
+        widget._renderLoopShutdown = false;
 
-                widget.render();
-                requestAnimationFrame(render);
+        function render() {
+            try {
+                if (widget._useDefaultRenderLoop) {
+                    var frameNumber = widget._scene.getFrameState().frameNumber;
+                    if (widget._needResize || (frameNumber % 60) === 0) {
+                        widget.resize();
+                    }
+                    widget.render();
+                    requestAnimationFrame(render);
+                } else {
+                    widget._renderLoopShutdown = true;
+                }
+            } catch (e) {
+                widget._useDefaultRenderLoop = false;
+                widget._renderLoopShutdown = true;
+                widget.onRenderLoopError.raiseEvent(widget, e);
             }
         }
+
         requestAnimationFrame(render);
     }
 
@@ -180,6 +189,7 @@ define([
         this._transitioner = new SceneTransitioner(scene, ellipsoid);
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
+        this._renderLoopShutdown = true;
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
@@ -299,6 +309,20 @@ define([
         },
 
         /**
+         * Gets the event that will be raised when an error is encountered during the default render loop.
+         * The widget instance and the generated exception are the only two parameters passed to the event handler.
+         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
+         * be set back to true to continue rendering after an exception.
+         * @memberof Viewer.prototype
+         * @type {Event}
+         */
+        onRenderLoopError : {
+            get : function() {
+                return this._onRenderLoopError;
+            }
+        },
+
+        /**
          * Gets or sets whether or not this widget should control the render loop.
          * If set to true the widget will use {@link requestAnimationFrame} to
          * perform rendering and resizing of the widget, as well as drive the
@@ -316,7 +340,7 @@ define([
             set : function(value) {
                 if (this._useDefaultRenderLoop !== value) {
                     this._useDefaultRenderLoop = value;
-                    if (value) {
+                    if (value && this._renderLoopShutdown) {
                         startRenderLoop(this);
                     }
                 }
