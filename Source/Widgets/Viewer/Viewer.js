@@ -19,7 +19,8 @@ define([
         '../getElement',
         '../HomeButton/HomeButton',
         '../SceneModePicker/SceneModePicker',
-        '../Timeline/Timeline'
+        '../Timeline/Timeline',
+        '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
@@ -40,7 +41,8 @@ define([
         getElement,
         HomeButton,
         SceneModePicker,
-        Timeline) {
+        Timeline,
+        knockout) {
     "use strict";
 
     function onTimelineScrubfunction(e) {
@@ -247,11 +249,22 @@ define([
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
-            if (!Fullscreen.isFullscreenEnabled()) {
-                fullscreenContainer.style.display = 'none';
-                timeline.container.style.right = 0;
-            }
-        } else {
+
+            //Subscribe to fullscreenButton.viewModel.isFullscreenEnabled so
+            //that we can hide/show the button as well as size the timeline.
+            var fullScreenEnabledCallback = function(value) {
+                if (value) {
+                    fullscreenContainer.style.display = 'block';
+                } else {
+                    fullscreenContainer.style.display = 'none';
+                }
+                if (typeof timeline !== 'undefined') {
+                    timeline.container.style.right = fullscreenContainer.clientWidth;
+                }
+            };
+            this._fullscreenSubscription = knockout.getObservable(fullscreenButton.viewModel, 'isFullscreenEnabled').subscribe(fullScreenEnabledCallback);
+            fullScreenEnabledCallback(fullscreenButton.viewModel.isFullscreenEnabled);
+        } else if (typeof timeline !== 'undefined') {
             timeline.container.style.right = 0;
         }
 
@@ -543,7 +556,7 @@ define([
         var animationExists = typeof this._animation !== 'undefined';
         var animationContainer;
 
-        var resizeWidgets = false || !animationExists;
+        var resizeWidgets = !animationExists;
         var animationWidth = 0;
         if (animationExists) {
             var lastWidth = this._lastWidth;
@@ -578,7 +591,7 @@ define([
             var logoLeft = animationWidth;
 
             if (timelineExists) {
-                logoBottom = 28;
+                logoBottom = this._timeline.container.clientHeight + 1;
                 this._timeline.container.style.left = animationWidth + 'px';
             }
 
@@ -646,6 +659,7 @@ define([
         }
 
         if (typeof this._fullscreenButton !== 'undefined') {
+            this._fullscreenSubscription.dispose();
             this._viewerContainer.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
