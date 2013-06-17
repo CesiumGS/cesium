@@ -508,7 +508,7 @@ define([
      * Resizes the widget to match the container size.
      * This function is called automatically as needed unless
      * <code>useDefaultRenderLoop</code> is set to false.
-     * @memberof CesiumWidget
+     * @memberof Viewer
      */
     Viewer.prototype.resize = function() {
         this._needResize = false;
@@ -576,7 +576,7 @@ define([
     /**
      * Renders the scene.  This function is called automatically
      * unless <code>useDefaultRenderLoop</code> is set to false;
-     * @memberof CesiumWidget
+     * @memberof Viewer
      */
     Viewer.prototype.render = function() {
         var cesiumWidget = this._cesiumWidget;
