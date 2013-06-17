@@ -516,14 +516,14 @@ define([
         this._needResize = false;
 
         var container = this._container;
-        if (container.clientWidth === this._lastWidth && container.clientHeight === this._lastHeight) {
+        var width = container.clientWidth;
+        var height = container.clientHeight;
+        if (width === this._lastWidth && height === this._lastHeight) {
             return;
         }
 
-        this._lastWidth = container.clientWidth;
-        this._lastHeight = container.clientHeight;
-        var width = this._lastWidth;
-        var height = this._lastHeight;
+        this._lastWidth = width;
+        this._lastHeight = height;
 
         var cesiumWidget = this._cesiumWidget;
         cesiumWidget.resize();
