@@ -257,9 +257,11 @@ define([
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
+        this._lastWidth = undefined;
+        this._lastHeight = undefined;
+        this._useDefaultRenderLoop = undefined;
 
         //Start the render loop if not explicitly disabled in options.
-        this._useDefaultRenderLoop = undefined;
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
     };
 
