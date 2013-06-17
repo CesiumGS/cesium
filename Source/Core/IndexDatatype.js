@@ -8,13 +8,16 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Enumerations for WebGL index datatypes.  These corresponds to the
+     * <code>type</code> parameter of <a href="http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml">drawElements</a>.
      *
-     * @exports IndexDatatype
+     * @alias IndexDatatype
+     * @enumeration
      */
     var IndexDatatype = {
         /**
-         * DOC_TBA
+         * 8-bit unsigned byte enumeration corresponding to <code>UNSIGNED_BYTE</code> and the type
+         * of an element in <code>Uint8Array</code>.
          *
          * @constant
          * @type {Enumeration}
@@ -22,14 +25,19 @@ define([
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
 
         /**
-         * DOC_TBA
+         * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
+         * of an element in <code>Uint16Array</code>.
          *
          * @constant
          * @type {Enumeration}
          */
         UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
+
         /**
-         * DOC_TBA
+         * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
+         * of an element in <code>Uint32Array</code>.
+         *
+         * @memberOf ComponentDatatype
          *
          * @constant
          * @type {Enumeration}
@@ -42,7 +50,16 @@ define([
     IndexDatatype.UNSIGNED_INT.sizeInBytes = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
-     * DOC_TBA
+     * Validates that the provided index datatype is a valid {@link IndexDatatype}
+     *
+     * @param {IndexDatatype} indexDatatype The index datatype to validate.
+     *
+     * @return {Boolean} <code>true</code> if the provided index datatype is a valid enumeration value; otherwise, <code>false</code>.
+     *
+     * @example
+     * if (!IndexDatatype.validate(indexDatatype)) {
+     *   throw new DeveloperError('indexDatatype must be a valid enumeration value.');
+     * }
      */
     IndexDatatype.validate = function(indexDatatype) {
         return ((indexDatatype === IndexDatatype.UNSIGNED_BYTE) ||

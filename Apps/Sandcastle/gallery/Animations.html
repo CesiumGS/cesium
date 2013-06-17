@@ -63,6 +63,7 @@ require([
 
     function resetPolygonPropeties(polygon) {
         polygon.height = 0.0;
+        polygon.material.uniforms.time = 1.0;
         polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
 
