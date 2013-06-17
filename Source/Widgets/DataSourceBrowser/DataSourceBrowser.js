@@ -5,6 +5,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         './DataSourceBrowserViewModel',
+        '../getElement',
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
@@ -12,6 +13,7 @@ define([
         destroyObject,
         DeveloperError,
         DataSourceBrowserViewModel,
+        getElement,
         knockout) {
     "use strict";
 
@@ -20,17 +22,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof dataSourceCollection === 'undefined') {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+
+        container = getElement(container);
 
         this._container = container;
 
