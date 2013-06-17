@@ -5,6 +5,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/Fullscreen',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceDisplay',
@@ -25,6 +26,7 @@ define([
         DeveloperError,
         defineProperties,
         destroyObject,
+        Fullscreen,
         requestAnimationFrame,
         ScreenSpaceEventType,
         DataSourceDisplay,
@@ -245,6 +247,12 @@ define([
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             viewerContainer.appendChild(fullscreenContainer);
             fullscreenButton = new FullscreenButton(fullscreenContainer, defaultValue(options.fullscreenElement, container));
+            if (!Fullscreen.isFullscreenEnabled()) {
+                fullscreenContainer.style.display = 'none';
+                timeline.container.style.right = 0;
+            }
+        } else {
+            timeline.container.style.right = 0;
         }
 
         this._container = container;
@@ -527,7 +535,7 @@ define([
 
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
         if (typeof baseLayerPickerDropDown !== 'undefined') {
-            var baseLayerPickerMaxHeight = height - 100;
+            var baseLayerPickerMaxHeight = height - 125;
             baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
         }
 
@@ -535,7 +543,7 @@ define([
         var animationExists = typeof this._animation !== 'undefined';
         var animationContainer;
 
-        var animationSizeChanged = false;
+        var resizeWidgets = false || !animationExists;
         var animationWidth = 0;
         if (animationExists) {
             var lastWidth = this._lastWidth;
@@ -545,44 +553,50 @@ define([
                     animationWidth = 169;
                     animationContainer.style.width = '169px';
                     animationContainer.style.height = '112px';
-                    animationSizeChanged = true;
+                    resizeWidgets = true;
+                    this._animation.resize();
                 }
             } else if (width >= 600) {
                 if (lastWidth < 600 || lastWidth > 900) {
                     animationWidth = 136;
                     animationContainer.style.width = '136px';
                     animationContainer.style.height = '90px';
-                    animationSizeChanged = true;
+                    resizeWidgets = true;
+                    this._animation.resize();
                 }
             } else if (lastWidth > 600 || lastWidth === 0) {
                 animationWidth = 106;
                 animationContainer.style.width = '106px';
                 animationContainer.style.height = '70px';
-                animationSizeChanged = true;
+                resizeWidgets = true;
+                this._animation.resize();
             }
         }
 
-        if (animationSizeChanged) {
-            this._animation.resize();
-
-            var logoBottom = timelineExists ? 28 : 0;
+        if (resizeWidgets) {
+            var logoBottom = 0;
             var logoLeft = animationWidth;
 
-            var logo = cesiumWidget.cesiumLogo;
-            var logoStyle = logo.style;
-            logoStyle.bottom = logoBottom + 'px';
-            logoStyle.left = logoLeft + 'px';
-
-            var logoOffset = cesiumWidget.centralBody.logoOffset;
-            logoOffset.x = logoLeft + logo.clientWidth + 5;
-            logoOffset.y = logoBottom;
-
             if (timelineExists) {
-                this._timeline.container.style.left = animationExists ? animationWidth + 'px' : 0;
+                logoBottom = 28;
+                this._timeline.container.style.left = animationWidth + 'px';
+            }
+
+            if (timelineExists || animationExists) {
+                var logo = cesiumWidget.cesiumLogo;
+                var logoStyle = logo.style;
+                logoStyle.bottom = logoBottom + 'px';
+                logoStyle.left = logoLeft + 'px';
+
+                var logoOffset = cesiumWidget.centralBody.logoOffset;
+                logoOffset.x = logoLeft + logo.clientWidth + 5;
+                logoOffset.y = logoBottom;
             }
         }
 
-        this._timeline.resize();
+        if (timelineExists) {
+            this._timeline.resize();
+        }
 
         this._lastWidth = width;
         this._lastHeight = height;
