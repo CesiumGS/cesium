@@ -352,6 +352,9 @@ define([
     CesiumWidget.prototype.resize = function() {
         var width = this._canvas.clientWidth;
         var height = this._canvas.clientHeight;
+        if (this._canvas.width === width && this._canvas.height === height) {
+            return;
+        }
 
         this._canvas.width = width;
         this._canvas.height = height;
