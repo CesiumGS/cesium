@@ -31,7 +31,7 @@ define([
     function convertToFixed(time, value) {
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
         if (typeof icrfToFixed === 'undefined') {
-            return Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
+            icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
         return icrfToFixed.multiplyByVector(value, value);
     }
