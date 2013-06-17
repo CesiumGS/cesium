@@ -16,6 +16,7 @@ Beta Releases
    * Removed `CesiumViewerWidget` and replaced it with a new `Viewer` widget with mixin architecture. This new widget does not depend on Dojo and is part of the combined Cesium.js file. It is intended to be a flexible base widget for easily building robust applications.  See [#838](https://github.com/AnalyticalGraphicsInc/cesium/pull/838) for the full details.
    * Removed the Dojo-based `checkForChromeFrame` function, and replaced it with a new standalone version that returns a promise to signal when the asynchronous check has completed. 
 * Added `Context.getAntialias`.
+* Added rotation, aligned axis, width, and height properties to `Billboard`s.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
 * Improved the performance of terrain and imagery refinement, especially when using a mixture of slow and fast imagery sources.
 * Improved test robustness on Mac.
