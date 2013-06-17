@@ -73,7 +73,7 @@ define([
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Configuration options for the widget.
      * @param {Boolean} [options.animation=true] If set to false, the Animation widget will not be created.
-     * @param {Boolean} [options.baselayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
+     * @param {Boolean} [options.baseLayerPicker=true] If set to false, the BaseLayerPicker widget will not be created.
      * @param {Boolean} [options.fullscreenButton=true] If set to false, the FullscreenButton widget will not be created.
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
@@ -110,7 +110,7 @@ define([
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     //Hide the base layer picker
-     *     baselayerPicker : false,
+     *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
      *     selectedImageryProviderViewModel : new ImageryProviderViewModel({
      *         name : 'Open\u00adStreet\u00adMap',
