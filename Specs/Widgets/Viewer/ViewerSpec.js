@@ -241,6 +241,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         viewer.destroy();
     });
 
+    it('can disable render loop', function() {
+        var viewer = new Viewer(container, {
+            useDefaultRenderLoop : false
+        });
+        expect(viewer.useDefaultRenderLoop).toBe(false);
+        viewer.destroy();
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);

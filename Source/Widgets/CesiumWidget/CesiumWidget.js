@@ -54,12 +54,11 @@ define([
     function startRenderLoop(widget) {
         function render() {
             if (widget._useDefaultRenderLoop) {
-                if (widget._needResize || widget._resizeCounter === 0) {
+                var frameNumber = widget._scene.getFrameState().frameNumber;
+                if (widget._needResize || (frameNumber % 60) === 0) {
                     widget.resize();
                     widget._needResize = false;
-                    widget._resizeCounter = 0;
                 }
-                widget._resizeCounter++;
 
                 widget.render();
                 requestAnimationFrame(render);
@@ -193,7 +192,6 @@ define([
 
         var that = this;
         //Subscribe for resize events and set the initial size.
-        this._resizeCounter = 0;
         this._needResize = true;
         this._resizeCallback = function() {
             that._needResize = true;

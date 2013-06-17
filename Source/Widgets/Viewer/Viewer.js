@@ -5,6 +5,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
+        '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceDisplay',
         '../Animation/Animation',
@@ -24,6 +25,7 @@ define([
         DeveloperError,
         defineProperties,
         destroyObject,
+        requestAnimationFrame,
         ScreenSpaceEventType,
         DataSourceDisplay,
         Animation,
@@ -45,6 +47,20 @@ define([
         clock.shouldAnimate = false;
     }
 
+    function startRenderLoop(viewer) {
+        function render() {
+            if (viewer._useDefaultRenderLoop) {
+                var frameNumber = viewer._cesiumWidget._scene.getFrameState().frameNumber;
+                if (viewer._needResize || (frameNumber % 60) === 0) {
+                    viewer.resize();
+                }
+                viewer.render();
+                requestAnimationFrame(render);
+            }
+        }
+        requestAnimationFrame(render);
+    }
+
     /**
      * A base widget for building applications.  It composites all of the standard Cesium widgets into one reusable package.
      * The widget can always be extended by using mixins, which add functionality useful for a variety of applications.
@@ -64,6 +80,7 @@ define([
      * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
+     * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
@@ -145,13 +162,13 @@ define([
             terrainProvider : options.terrainProvider,
             imageryProvider : imageryProvider,
             sceneMode : options.sceneMode,
-            contextOptions : options.contextOptions
+            contextOptions : options.contextOptions,
+            useDefaultRenderLoop : false
         });
 
         //Subscribe for resize events and set the initial size.
         var that = this;
         this._needResize = true;
-        this._resizeCounter = 0;
         this._resizeCallback = function() {
             that._needResize = true;
         };
@@ -162,7 +179,6 @@ define([
         //Data source display
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
         this._dataSourceDisplay = dataSourceDisplay;
-        clock.onTick.addEventListener(this._onTick, this);
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -241,6 +257,10 @@ define([
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
+
+        //Start the render loop if not explicitly disabled in options.
+        this._useDefaultRenderLoop = undefined;
+        this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
     };
 
     defineProperties(Viewer.prototype, {
@@ -429,6 +449,31 @@ define([
             get : function() {
                 return this._cesiumWidget.screenSpaceEventHandler;
             }
+        },
+
+        /**
+         * Gets or sets whether or not this widget should control the render loop.
+         * If set to true the widget will use {@link requestAnimationFrame} to
+         * perform rendering and resizing of the widget, as well as drive the
+         * simulation clock. If set to false, you must manually call the
+         * <code>resize</code>, <code>render</code> methods
+         * as part of a custom render loop.
+         * @memberof Viewer.prototype
+         *
+         * @type {Boolean}
+         */
+        useDefaultRenderLoop : {
+            get : function() {
+                return this._useDefaultRenderLoop;
+            },
+            set : function(value) {
+                if (this._useDefaultRenderLoop !== value) {
+                    this._useDefaultRenderLoop = value;
+                    if (value) {
+                        startRenderLoop(this);
+                    }
+                }
+            }
         }
     });
 
@@ -457,6 +502,86 @@ define([
             throw new DeveloperError('mixin is required.');
         }
         mixin(this, options);
+    };
+
+    /**
+     * Resizes the widget to match the container size.
+     * This function is called automatically as needed unless
+     * <code>useDefaultRenderLoop</code> is set to false.
+     * @memberof CesiumWidget
+     */
+    Viewer.prototype.resize = function() {
+        this._needResize = false;
+
+        var container = this._container;
+        if (container.clientWidth === this._lastWidth && container.clientHeight === this._lastHeight) {
+            return;
+        }
+
+        this._lastWidth = container.clientWidth;
+        this._lastHeight = container.clientHeight;
+        var width = this._lastWidth;
+        var height = this._lastHeight;
+
+        var cesiumWidget = this._cesiumWidget;
+        cesiumWidget.resize();
+
+        var timelineExists = typeof this._timeline !== 'undefined';
+        var animationExists = typeof this._animation !== 'undefined';
+        var animationContainer;
+
+        var animationWidth = 0;
+        if (animationExists) {
+            animationContainer = this._animation.container;
+
+            if (width > 900) {
+                animationWidth = 169;
+                animationContainer.style.width = '169px';
+                animationContainer.style.height = '112px';
+            } else if (width >= 600) {
+                animationWidth = 136;
+                animationContainer.style.width = '136px';
+                animationContainer.style.height = '90px';
+            } else {
+                animationWidth = 106;
+                animationContainer.style.width = '106px';
+                animationContainer.style.height = '70px';
+            }
+            this._animation._resizeCallback();
+        }
+
+        var logoBottom = timelineExists ? 28 : 0;
+        var logoLeft = animationExists ? animationWidth : 0;
+
+        var logo = cesiumWidget.cesiumLogo;
+        var logoStyle = logo.style;
+        logoStyle.bottom = logoBottom + 'px';
+        logoStyle.left = logoLeft + 'px';
+
+        var logoOffset = cesiumWidget.centralBody.logoOffset;
+        logoOffset.x = logoLeft + 123;
+        logoOffset.y = logoBottom;
+
+        if (timelineExists) {
+            this._timeline.container.style.left = animationExists ? animationWidth + 'px' : 0;
+        }
+
+        var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
+        if (typeof baseLayerPickerDropDown !== 'undefined') {
+            var baseLayerPickerMaxHeight = height - 100;
+            baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
+        }
+    };
+
+    /**
+     * Renders the scene.  This function is called automatically
+     * unless <code>useDefaultRenderLoop</code> is set to false;
+     * @memberof CesiumWidget
+     */
+    Viewer.prototype.render = function() {
+        var cesiumWidget = this._cesiumWidget;
+        cesiumWidget.render();
+        this._dataSourceDisplay.update(cesiumWidget.clock.currentTime);
     };
 
     /**
@@ -496,70 +621,9 @@ define([
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
-        this._cesiumWidget.clock.onTick.removeEventListener(this._onTick, this);
         this._cesiumWidget = this._cesiumWidget.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         return destroyObject(this);
-    };
-
-    Viewer.prototype._onTick = function(clock) {
-        if (this._needResize || this._resizeCounter === 60) {
-            this._resizeCounter = 0;
-            this._needResize = false;
-
-            var cesiumWidget = this._cesiumWidget;
-            var widgetWidth = cesiumWidget.canvas.clientWidth;
-
-            var timelineExists = typeof this._timeline !== 'undefined';
-            var animationExists = typeof this._animation !== 'undefined';
-            var animationContainer;
-
-            var animationWidth = 0;
-            if (animationExists) {
-                animationContainer = this._animation.container;
-
-                if (widgetWidth > 900) {
-                    animationWidth = 169;
-                    animationContainer.style.width = '169px';
-                    animationContainer.style.height = '112px';
-                } else if (widgetWidth >= 600) {
-                    animationWidth = 136;
-                    animationContainer.style.width = '136px';
-                    animationContainer.style.height = '90px';
-                } else {
-                    animationWidth = 106;
-                    animationContainer.style.width = '106px';
-                    animationContainer.style.height = '70px';
-                }
-                this._animation._resizeCallback();
-            }
-
-            var logoBottom = timelineExists ? 28 : 0;
-            var logoLeft = animationExists ? animationWidth : 0;
-
-            var logo = cesiumWidget.cesiumLogo;
-            var logoStyle = logo.style;
-            logoStyle.bottom = logoBottom + 'px';
-            logoStyle.left = logoLeft + 'px';
-
-            var logoOffset = cesiumWidget.centralBody.logoOffset;
-            logoOffset.x = logoLeft + 123;
-            logoOffset.y = logoBottom;
-
-            if (timelineExists) {
-                this._timeline.container.style.left = animationExists ? animationWidth + 'px' : 0;
-            }
-
-            var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
-            if (typeof baseLayerPickerDropDown !== 'undefined') {
-                var baseLayerPickerMaxHeight = cesiumWidget.canvas.height - 100;
-                baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
-            }
-        }
-        this._resizeCounter++;
-
-        var currentTime = clock.currentTime;
-        this._dataSourceDisplay.update(currentTime);
     };
 
     return Viewer;
