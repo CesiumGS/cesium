@@ -54,7 +54,7 @@ define([
     }
 
     function startRenderLoop(viewer) {
-        viewer._renderLoopShutdown = false;
+        viewer._renderLoopRunning = true;
 
         function render() {
             try {
@@ -66,11 +66,11 @@ define([
                     viewer.render();
                     requestAnimationFrame(render);
                 } else {
-                    viewer._renderLoopShutdown = true;
+                    viewer._renderLoopRunning = false;
                 }
             } catch (e) {
                 viewer._useDefaultRenderLoop = false;
-                viewer._renderLoopShutdown = true;
+                viewer._renderLoopRunning = false;
                 viewer.onRenderLoopError.raiseEvent(viewer, e);
             }
         }
@@ -295,7 +295,7 @@ define([
         this._lastWidth = 0;
         this._lastHeight = 0;
         this._useDefaultRenderLoop = undefined;
-        this._renderLoopShutdown = true;
+        this._renderLoopRunning = false;
         this._onRenderLoopError = new Event();
 
         //Start the render loop if not explicitly disabled in options.
@@ -522,7 +522,7 @@ define([
             set : function(value) {
                 if (this._useDefaultRenderLoop !== value) {
                     this._useDefaultRenderLoop = value;
-                    if (value && this._renderLoopShutdown) {
+                    if (value && !this._renderLoopRunning) {
                         startRenderLoop(this);
                     }
                 }

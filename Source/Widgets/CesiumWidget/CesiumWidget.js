@@ -52,7 +52,7 @@ define([
     }
 
     function startRenderLoop(widget) {
-        widget._renderLoopShutdown = false;
+        widget._renderLoopRunning = true;
 
         function render() {
             try {
@@ -64,11 +64,11 @@ define([
                     widget.render();
                     requestAnimationFrame(render);
                 } else {
-                    widget._renderLoopShutdown = true;
+                    widget._renderLoopRunning = false;
                 }
             } catch (e) {
                 widget._useDefaultRenderLoop = false;
-                widget._renderLoopShutdown = true;
+                widget._renderLoopRunning = false;
                 widget.onRenderLoopError.raiseEvent(widget, e);
             }
         }
@@ -189,7 +189,7 @@ define([
         this._transitioner = new SceneTransitioner(scene, ellipsoid);
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
-        this._renderLoopShutdown = true;
+        this._renderLoopRunning = false;
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
@@ -340,7 +340,7 @@ define([
             set : function(value) {
                 if (this._useDefaultRenderLoop !== value) {
                     this._useDefaultRenderLoop = value;
-                    if (value && this._renderLoopShutdown) {
+                    if (value && !this._renderLoopRunning) {
                         startRenderLoop(this);
                     }
                 }
