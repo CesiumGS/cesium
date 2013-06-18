@@ -270,7 +270,7 @@ define([
                     fullscreenContainer.style.display = 'none';
                 }
                 if (typeof timeline !== 'undefined') {
-                    timeline.container.style.right = fullscreenContainer.clientWidth;
+                    timeline.container.style.right = fullscreenContainer.clientWidth + 'px';
                     timeline.resize();
                 }
             };
