@@ -175,10 +175,6 @@ define([
             }
         }
 
-
-
-
-
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         var geometry = new GeometryInstance({
@@ -281,8 +277,8 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releasegeometryInstances : true,
-            //transformToWorldCoordinates : false
+            releaseGeometries : true,
+            transformToWorldCoordinates : false
         }));
 
         var polygonGeometry = new GeometryInstance({
@@ -367,18 +363,24 @@ define([
         });
         scene.getPrimitives().add(wallPrimitive);
 
-        /*
+        var positions = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-70.0, 20.0),
+            Cartographic.fromDegrees(-70.0, 0.0),
+            Cartographic.fromDegrees(-60.0, 10.0)
+        ]);
+        var flatPositions = [];
+        var p, i;
+        for (i = 0; i < positions.length; ++i) {
+            p = positions[i];
+            flatPositions.push(p.x, p.y, p.z);
+        }
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
                attributes : {
                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : new Float64Array([
-                            0.0, 0.0, 2000000.0,
-                            7500000.0, 0.0, 2000000.0,
-                            0.0, 7500000.0, 2000000.0
-                        ])
+                        values : new Float64Array(flatPositions)
                    })
                },
                indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
@@ -391,17 +393,23 @@ define([
             appearance : new Appearance()
         }));
 
+        positions = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(-70.0, 20.0, 200000.0),
+            Cartographic.fromDegrees(-70.0,  0.0, 200000.0),
+            Cartographic.fromDegrees(-60.0, 10.0, 200000.0)
+        ]);
+        flatPositions = [];
+        for (i = 0; i < positions.length; ++i) {
+            p = positions[i];
+            flatPositions.push(p.x, p.y, p.z);
+        }
         var customWithoutIndices = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
                          componentDatatype : ComponentDatatype.DOUBLE,
                          componentsPerAttribute : 3,
-                         values : new Float64Array([
-                             0.0, 0.0, 0.0,
-                             7500000.0, 0.0, 0.0,
-                             0.0, 7500000.0, 0.0
-                         ])
+                         values : new Float64Array(flatPositions)
                     })
                 },
                 primitiveType : PrimitiveType.LINE_LOOP
@@ -412,7 +420,6 @@ define([
              geometryInstances : customWithoutIndices,
              appearance : new Appearance()
          }));
-         */
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

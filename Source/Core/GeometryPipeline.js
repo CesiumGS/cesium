@@ -762,7 +762,7 @@ define([
         var k;
 
         var m = instances[0].modelMatrix;
-        var haveindicess = (typeof instances[0].geometry.indices !== 'undefined');
+        var haveIndices = (typeof instances[0].geometry.indices !== 'undefined');
         var primitiveType = instances[0].geometry.primitiveType;
 
         for (i = 1; i < length; ++i) {
@@ -770,7 +770,7 @@ define([
                 throw new DeveloperError('All instances must have the same modelMatrix.');
             }
 
-            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveindicess) {
+            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveIndices) {
                 throw new DeveloperError('All instance geometries must have an indices or not have one.');
             }
 
@@ -805,7 +805,7 @@ define([
         // Combine index lists
         var indices;
 
-        if (haveindicess) {
+        if (haveIndices) {
             var numberOfIndices = 0;
             for (i = 0; i < length; ++i) {
                 numberOfIndices += instances[i].geometry.indices.length;

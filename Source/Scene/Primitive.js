@@ -61,6 +61,7 @@ define([
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometries=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.transformToWorldCoordinates=true] When <code>true</code>, each geometry instance is transform to world coordinates even if they are already in the same coordinate system.
+     * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -174,6 +175,7 @@ define([
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
+        this._allowColumbusView = defaultValue(options.allowColumbusView, true);
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -370,7 +372,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._transformToWorldCoordinates;
+        var toWorld = primitive._transformToWorldCoordinates || primitive._allowColumbusView;
         var length = instances.length;
         var i;
 
@@ -424,12 +426,17 @@ define([
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
 
-        // Compute 2D positions
-        GeometryPipeline.projectTo2D(geometry);
+        if (primitive._allowColumbusView) {
+            // Compute 2D positions
+            GeometryPipeline.projectTo2D(geometry);
 
-        // Split 3D and 2D position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-        GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+            // Split 3D and 2D position for GPU RTE
+            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+        } else {
+            // Split 3D position for GPU RTE
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        }
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
