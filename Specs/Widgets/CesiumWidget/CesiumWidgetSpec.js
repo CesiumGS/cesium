@@ -6,6 +6,7 @@ defineSuite([
          'Scene/CentralBody',
          'Scene/EllipsoidTerrainProvider',
          'Scene/Scene',
+         'Scene/SceneMode',
          'Scene/SceneTransitioner',
          'Scene/TileCoordinatesImageryProvider'
      ], function(
@@ -15,6 +16,7 @@ defineSuite([
          CentralBody,
          EllipsoidTerrainProvider,
          Scene,
+         SceneMode,
          SceneTransitioner,
          TileCoordinatesImageryProvider) {
     "use strict";
@@ -60,6 +62,30 @@ defineSuite([
         };
         var widget = new CesiumWidget(container, options);
         expect(widget.clock).toBe(options.clock);
+        widget.destroy();
+    });
+
+    it('can set scene mode 2D', function() {
+        var widget = new CesiumWidget(container, {
+            sceneMode : SceneMode.SCENE2D
+        });
+        expect(widget.scene.mode).toBe(SceneMode.SCENE2D);
+        widget.destroy();
+    });
+
+    it('can set scene mode Columbus', function() {
+        var widget = new CesiumWidget(container, {
+            sceneMode : SceneMode.COLUMBUS_VIEW
+        });
+        expect(widget.scene.mode).toBe(SceneMode.COLUMBUS_VIEW);
+        widget.destroy();
+    });
+
+    it('can disable render loop', function() {
+        var widget = new CesiumWidget(container, {
+            useDefaultRenderLoop : false
+        });
+        expect(widget.useDefaultRenderLoop).toBe(false);
         widget.destroy();
     });
 
