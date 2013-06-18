@@ -755,22 +755,22 @@ define([
 
         if (typeof reproject === 'undefined') {
             reproject = context.cache.imageryLayer_reproject = {
-                    framebuffer : undefined,
-                    vertexArray : undefined,
-                    shaderProgram : undefined,
-                    renderState : undefined,
-                    sampler : undefined,
-                    destroy : function() {
-                        if (typeof this.framebuffer !== 'undefined') {
-                            this.frameBuffer.destroy();
-                        }
-                        if (typeof this.vertexArray !== 'undefined') {
-                            this.vertexArray.destroy();
-                        }
-                        if (typeof this.shaderProgram !== 'undefined') {
-                            this.shaderProgram.destroy();
-                        }
+                framebuffer : undefined,
+                vertexArray : undefined,
+                shaderProgram : undefined,
+                renderState : undefined,
+                sampler : undefined,
+                destroy : function() {
+                    if (typeof this.framebuffer !== 'undefined') {
+                        this.framebuffer.destroy();
                     }
+                    if (typeof this.vertexArray !== 'undefined') {
+                        this.vertexArray.destroy();
+                    }
+                    if (typeof this.shaderProgram !== 'undefined') {
+                        this.shaderProgram.release();
+                    }
+                }
             };
 
             reproject.framebuffer = context.createFramebuffer();
