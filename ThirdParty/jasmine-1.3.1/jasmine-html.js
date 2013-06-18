@@ -638,6 +638,16 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
                 window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
 	runTime), suiteView.element.getElementsByTagName('a')[2].nextSibling);
 
+	if (suite.beforeSpec_ && !suite.beforeSpec_.results().passed()) {
+        var beforeSpecView = new jasmine.HtmlReporter.SpecView(suite.beforeSpec_, dom, this.views);
+        this.failedCount++;
+        beforeSpecView.refresh();
+    }
+    if (suite.afterSpec_ && !suite.afterSpec_.results().passed()) {
+        var afterSpecView = new jasmine.HtmlReporter.SpecView(suite.afterSpec_, dom, this.views);
+        this.failedCount++;
+        afterSpecView.refresh();
+    }
 
     suiteView.refresh();
   };
