@@ -136,6 +136,8 @@ define([
          * DOC_TBA
          */
         this.appearance = options.appearance;
+        this._appearance = undefined;
+        this._material = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -173,11 +175,16 @@ define([
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
 
-        this._sp = undefined;
         this._va = [];
+        this._attributeIndices = undefined;
 
+        this._rs = undefined;
+        this._sp = undefined;
+
+        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
+        this._isPickable = false;
 
         this._commandLists = new CommandLists();
     };
@@ -441,8 +448,14 @@ define([
             return;
         }
 
+        if (!frameState.passes.color && !frameState.passes.pick) {
+            return;
+        }
+
         var colorCommands = this._commandLists.colorList;
         var pickCommands = this._commandLists.pickList;
+        var colorCommand;
+        var pickCommand;
         var length;
         var i;
 
@@ -459,67 +472,37 @@ define([
                 }
             }
 
-            var attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
+            this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             var va = [];
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
-                    attributeIndices : attributeIndices,
+                    attributeIndices : this._attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED
                 }));
             }
 
-            var appearance = this.appearance;
-            var vs = appearance.vertexShaderSource;
-            var fs = appearance.getFragmentShaderSource();
-
             this._va = va;
-// TODO: recompile on material change.
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, attributeIndices);
-            var rs = context.createRenderState(appearance.renderState);
-            var pickRS;
-
-            if (isPickable(instances)) {
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
-                pickRS = rs;
-            } else {
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, appearance.vertexShaderSource, fs, attributeIndices);
-
-                // Still render during pick pass, but depth-only.
-                var appearanceRS = clone(appearance.renderState);
-                appearanceRS.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-                pickRS = context.createRenderState(appearanceRS);
-            }
-
-            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
+            this._isPickable = isPickable(instances);
 
             for (i = 0; i < length; ++i) {
                 var geometry = geometries[i];
 
-                var command = new DrawCommand();
-                command.owner = this;
-                command.primitiveType = geometry.primitiveType;
-                command.vertexArray = this._va[i];
-                command.renderState = rs;
-                command.shaderProgram = this._sp;
-                command.uniformMap = uniforms;
-                command.boundingVolume = geometry.boundingSphere;
-                colorCommands.push(command);
+                // renderState, shaderProgram, and uniformMap for commands are set below.
 
-                var pickCommand = new DrawCommand();
+                colorCommand = new DrawCommand();
+                colorCommand.owner = this;
+                colorCommand.primitiveType = geometry.primitiveType;
+                colorCommand.vertexArray = this._va[i];
+                colorCommand.boundingVolume = geometry.boundingSphere;
+                colorCommands.push(colorCommand);
+
+                pickCommand = new DrawCommand();
                 pickCommand.owner = this;
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
-                pickCommand.renderState = pickRS;
-                pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = uniforms;
                 pickCommand.boundingVolume = geometry.boundingSphere;
                 pickCommands.push(pickCommand);
             }
@@ -529,16 +512,80 @@ define([
             }
         }
 
-        // The geometry is static but the model matrix can change
-        if (frameState.passes.color || frameState.passes.pick) {
+        // Create or recreate render state and shader program if appearance/material changed
+        var appearance = this.appearance;
+        var createRS = false;
+        var createSP = false;
+
+        if (this._appearance !== appearance) {
+
+            this._appearance = appearance;
+            this._material = appearance.material;
+            createRS = true;
+            createSP = true;
+        } else if (this._material !== appearance.material ) {
+            this._material = appearance.material;
+            createSP = true;
+        }
+
+        if (createRS) {
+            this._rs = context.createRenderState(appearance.renderState);
+
+            if (this._isPickable) {
+                this._pickRS = this._rs;
+            } else {
+                // Still render during pick pass, but depth-only.
+                var appearanceRS = clone(appearance.renderState);
+                appearanceRS.colorMask = {
+                    red : false,
+                    green : false,
+                    blue : false,
+                    alpha : false
+                };
+                this._pickRS = context.createRenderState(appearanceRS);
+            }
+        }
+
+        if (createSP) {
+            var shaderCache = context.getShaderCache();
+            var vs = appearance.vertexShaderSource;
+            var fs = appearance.getFragmentShaderSource();
+
+            this._sp = shaderCache.replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, this._attributeIndices);
+
+            if (this._isPickable) {
+                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
+            } else {
+                // Color pass shader, but rendered with depth-only for correct occlusion
+                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, fs, this._attributeIndices);
+            }
+        }
+
+        if (createRS || createSP) {
+            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
+
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
-                colorCommands[i].modelMatrix = this.modelMatrix;
-                pickCommands[i].modelMatrix = this.modelMatrix;
-            }
+                colorCommand = colorCommands[i];
+                colorCommand.renderState = this._rs;
+                colorCommand.shaderProgram = this._sp;
+                colorCommand.uniformMap = uniforms;
 
-            commandList.push(this._commandLists);
+                pickCommand = pickCommands[i];
+                pickCommand.renderState = this._pickRS;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = uniforms;
+            }
         }
+
+        // modelMatrix can change from frame to frame
+        length = colorCommands.length;
+        for (i = 0; i < length; ++i) {
+            colorCommands[i].modelMatrix = this.modelMatrix;
+            pickCommands[i].modelMatrix = this.modelMatrix;
+        }
+
+        commandList.push(this._commandLists);
     };
 
     /**
