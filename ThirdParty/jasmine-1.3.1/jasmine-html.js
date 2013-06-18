@@ -377,7 +377,7 @@ jasmine.HtmlReporter = function(_doc) {
         self.createDom('span', { className: 'title' }, "Jasmine "),
         self.createDom('span', { className: 'version' }, version)),
 
-      dom.symbolSummary = self.createDom('ul', {className: 'symbolSummary'}),
+      //dom.symbolSummary = self.createDom('ul', {className: 'symbolSummary'}),
       dom.alert = self.createDom('div', {className: 'alert'},
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
@@ -759,8 +759,8 @@ jasmine.HtmlReporter.SpecView = function(spec, dom, views) {
   this.dom = dom;
   this.views = views;
 
-  this.symbol = this.createDom('li', { className: 'pending' });
-  // this.dom.symbolSummary.appendChild(this.symbol);
+  //this.symbol = this.createDom('li', { className: 'pending' });
+  //this.dom.symbolSummary.appendChild(this.symbol);
 
   this.summary = this.createDom('div', { className: 'specSummary' },
     this.createDom('a', {
@@ -795,7 +795,7 @@ jasmine.HtmlReporter.SpecView.prototype.status = function() {
 };
 
 jasmine.HtmlReporter.SpecView.prototype.refresh = function() {
-  this.symbol.className = this.status();
+  //this.symbol.className = this.status();
 
   switch (this.status()) {
     case 'skipped':
