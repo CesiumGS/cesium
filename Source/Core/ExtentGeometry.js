@@ -119,6 +119,16 @@ define([
         }
     }
 
+    function addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight) {
+        indices[indicesIndex++] = upperLeft;
+        indices[indicesIndex++] = lowerLeft;
+        indices[indicesIndex++] = upperRight;
+        indices[indicesIndex++] = upperRight;
+        indices[indicesIndex++] = lowerLeft;
+        indices[indicesIndex++] = lowerRight;
+        return indices;
+    }
+
     function constructExtent(options, vertexFormat, params){
         var extent = params.extent;
         var ellipsoid = params.ellipsoid;
@@ -196,12 +206,8 @@ define([
                 var lowerLeft = upperLeft + width;
                 var lowerRight = lowerLeft + 1;
                 var upperRight = upperLeft + 1;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
+                indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+                indicesIndex += 6;
                 ++index;
             }
             ++index;
@@ -479,14 +485,11 @@ define([
             computePosition(params, row, col, maxHeight, minHeight);
             addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, westNormal); // add west side
             stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w', params);
-            vertexIndex ++;
-            attrIndex += 3;
-            stIndex += 2;
 
             col = width - 1;
             computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, eastNormal); // add east side
-            stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'e', params);
+            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, height - 2, height - 2 + perimeterPositions, true, true, eastNormal); // add east side
+            stWall(vertexFormat, stIndex, attributes, height - 2, height - 2 + perimeterPositions, 'e', params);
             vertexIndex ++;
             attrIndex += 3;
             stIndex += 2;
@@ -495,7 +498,7 @@ define([
         if (closeBottom || closeTop) {
             var maxH = (closeTop) ? maxHeight : undefined;
             var minH = (closeBottom) ? minHeight : undefined;
-            var incAmount = width + perimeterPositions + 8;
+            var incAmount = width + perimeterPositions + 8 + height - 2;
             vertexIndex += incAmount;
             attrIndex += 3 * incAmount;
             stIndex += 2 * incAmount;
@@ -536,48 +539,62 @@ define([
         var lowerRight;
         var upperRight;
         var i = 0;
-        var evenWidth = (width % 2 === 0);
-        for (i = 0; i < perimeterPositions; i++) {
-            upperLeft = i;
+
+        lowerRight = perimeterPositions + width; //NW corner
+        upperRight = width;
+        upperLeft = twoPP;
+        lowerLeft = upperLeft + 4;
+        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+        indicesIndex += 6;
+
+        lowerRight = 2*perimeterPositions - 1 - width; //SE corner
+        upperRight =  perimeterPositions - 1 - width;
+        upperLeft = twoPP + 3;
+        lowerLeft = upperLeft + 4;
+        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+        indicesIndex += 6;
+
+        for (i = 1; i < width; i++) {
+            upperLeft = i; // north wall
             lowerLeft = upperLeft + perimeterPositions;
-            if (i > 0 && i < width) { // north wall
-                lowerRight = lowerLeft - 1;
-                upperRight = upperLeft - 1;
-            } else if (i >= perimeterPositions - width && i < perimeterPositions - 1) { // south wall
+            lowerRight = lowerLeft - 1;
+            upperRight = upperLeft - 1;
+            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+            indicesIndex += 6;
+
+            upperLeft = i + perimeterPositions - width - 1; // south wall
+            lowerLeft = upperLeft + perimeterPositions;
+            lowerRight = lowerLeft + 1;
+            upperRight = upperLeft + 1;
+            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+            indicesIndex += 6;
+        }
+
+
+        for (i = width; i < width + height - 2; i++) {
+            upperLeft = i; // west wall
+            lowerLeft = upperLeft + perimeterPositions;
+            if (upperLeft === width - 1 + height - 2) {
+                upperRight = twoPP + 2; //get clone of corner point
+                lowerRight = upperRight + 4;
+            } else {
                 lowerRight = lowerLeft + 1;
                 upperRight = upperLeft + 1;
-            } else if (i === 0) { // north wall: NW corner
-                lowerRight = lowerLeft + width;
-                upperRight = upperLeft + width;
-                upperLeft = twoPP; //get clone of corner point
-                lowerLeft = upperLeft + 4;
-            } else if (i === perimeterPositions - 1) { // south wall: SE corner
-                lowerRight = lowerLeft - width;
-                upperRight = upperLeft - width;
-                upperLeft = twoPP + 3; //get clone of corner point
-                lowerLeft = upperLeft + 4;
-            } else if (evenWidth && i % 2 === 0 || !evenWidth && i % 2 !== 0) { // west walll
-                lowerRight = lowerLeft + 2;
-                upperRight = upperLeft + 2;
-                if (upperRight === perimeterPositions - width) {
-                    upperRight = twoPP + 2; //get clone of corner point
-                    lowerRight = upperRight + 4;
-                }
-            } else { // east wall: if (evenWidth && i % 2 !== 0 || !evenWidth && i % 2 === 0)
-                lowerRight = lowerLeft - 2;
-                upperRight = upperLeft - 2;
-                if (upperRight === width - 1) {
-                    upperRight = twoPP + 1; //get clone of corner point
-                    lowerRight = upperRight + 4;
-                }
             }
+            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+            indicesIndex += 6;
 
-            indices[indicesIndex++] = upperLeft;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = upperRight;
-            indices[indicesIndex++] = lowerLeft;
-            indices[indicesIndex++] = lowerRight;
+            upperLeft = i + height - 2; // east wall
+            lowerLeft = upperLeft + perimeterPositions;
+            if (upperLeft === width + height - 2) {
+                upperRight = twoPP + 1; //get clone of corner point
+                lowerRight = upperRight + 4;
+            } else {
+                lowerRight = lowerLeft - 1;
+                upperRight = upperLeft - 1;
+            }
+            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+            indicesIndex += 6;
         }
 
         if (closeTop || closeBottom) {
@@ -590,21 +607,13 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        indices[indicesIndex++] = upperRight + bottomOffset;
-                        indices[indicesIndex++] = lowerLeft + bottomOffset;
-                        indices[indicesIndex++] = upperLeft + bottomOffset;
-                        indices[indicesIndex++] = lowerRight + bottomOffset;
-                        indices[indicesIndex++] = lowerLeft + bottomOffset;
-                        indices[indicesIndex++] = upperRight + bottomOffset;
+                        indices = addIndices(indices, indicesIndex, upperLeft + bottomOffset, lowerLeft + bottomOffset, upperRight + bottomOffset, lowerRight + bottomOffset);
+                        indicesIndex += 6;
                     }
 
                     if (closeTop) {
-                        indices[indicesIndex++] = upperLeft;
-                        indices[indicesIndex++] = lowerLeft;
-                        indices[indicesIndex++] = upperRight;
-                        indices[indicesIndex++] = upperRight;
-                        indices[indicesIndex++] = lowerLeft;
-                        indices[indicesIndex++] = lowerRight;
+                        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
+                        indicesIndex += 6;
                     }
                     ++index;
                 }
