@@ -47,6 +47,7 @@ define([
         }
     }).otherwise(function(e) {
         console.error(e);
+        window.alert(e);
     });
 
     function startup() {
