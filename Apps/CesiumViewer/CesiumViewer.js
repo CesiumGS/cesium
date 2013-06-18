@@ -325,12 +325,13 @@ define([
             }),
             pickData : 'polygon3'
         });
-        scene.getPrimitives().add(new Primitive({
+        var polygonPrimitive = new Primitive({
             geometryInstances : polygonGeometry,
             appearance : new EllipsoidSurfaceAppearance({
                 material : Material.fromType(scene.getContext(), 'Stripe')
             })
-        }));
+        });
+        scene.getPrimitives().add(polygonPrimitive);
 
         var wall = new GeometryInstance({
             geometry : new WallGeometry({
@@ -345,7 +346,7 @@ define([
             }),
             pickData : 'wall'
         });
-        scene.getPrimitives().add(new Primitive({
+        var wallPrimitive = new Primitive({
             geometryInstances : wall,
             appearance : new Appearance({
                 material : Material.fromType(scene.getContext(), 'Wood'),
@@ -355,7 +356,8 @@ define([
                     }
                 }
             })
-        }));
+        });
+        scene.getPrimitives().add(wallPrimitive);
 
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
@@ -412,6 +414,12 @@ define([
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
-
+        handler.setInputAction(
+            function () {
+                polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
+                wallPrimitive.appearance = new ClosedTranslucentAppearance();
+            },
+            ScreenSpaceEventType.LEFT_CLICK
+        );
     }
 });
