@@ -1,26 +1,35 @@
 /*global defineSuite*/
 defineSuite([
-    'Core/DeveloperError'
-], function(
-    DeveloperError
-) {
+         'Core/DeveloperError'
+     ], function(
+         DeveloperError) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var name = 'DeveloperError';
     var testMessage = 'Testing';
 
-    it('name and message', function() {
-        var e = new DeveloperError(testMessage);
+    var e;
+    beforeEach(function() {
+        e = new DeveloperError(testMessage);
+    });
 
+    it('has a name property', function() {
         expect(e.name).toEqual(name);
+    });
+
+    it('has a message property', function() {
         expect(e.message).toEqual(testMessage);
     });
 
-    it('toString', function() {
-        var e = new DeveloperError(testMessage).toString();
+    it('has a stack property', function() {
+        expect(e.stack).toContain('DeveloperErrorSpec.js');
+    });
 
-        expect(e.indexOf(name + ': ' + testMessage)).toEqual(0);
-        expect(e.indexOf('Core/DeveloperErrorSpec.js')).toBeGreaterThan(0);
+    it('has a working toString', function() {
+        var str = new DeveloperError(testMessage).toString();
+
+        expect(str).toContain(name + ': ' + testMessage);
+        expect(str).toContain('Core/DeveloperErrorSpec.js');
     });
 });
