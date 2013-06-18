@@ -45,6 +45,9 @@ define([
         } else {
             loadingIndicator.style.display = 'none';
         }
+    }).otherwise(function(e) {
+        console.error(e);
+        window.alert(e);
     });
 
     function startup() {
