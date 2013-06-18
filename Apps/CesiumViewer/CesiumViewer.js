@@ -103,6 +103,9 @@ define([
         } else {
             loadingIndicator.style.display = 'none';
         }
+    }).otherwise(function(e) {
+        console.error(e);
+        window.alert(e);
     });
 
     function startup() {
@@ -110,7 +113,12 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
-        viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
+            console.log(error);
+            window.alert(error);
+        });
+
+        viewer.onDropError.addEventListener(function(viewerArg, name, error) {
             console.log(error);
             window.alert(error);
         });

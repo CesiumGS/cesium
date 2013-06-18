@@ -285,44 +285,6 @@ define([
         this.svgElement.getElementsByTagName('title')[0].textContent = tooltip;
     };
 
-    function resize(that) {
-        var svg = that._svgNode;
-
-        //The width and height as the SVG was originally drawn.
-        var baseWidth = 200;
-        var baseHeight = 132;
-
-        var parentWidth = defaultValue(that._container.clientWidth, 0);
-        var parentHeight = defaultValue(that._container.clientHeight, 0);
-
-        var width = parentWidth;
-        var height = parentHeight;
-
-        if (parentWidth === 0 && parentHeight === 0) {
-            width = baseWidth;
-            height = baseHeight;
-        } else if (parentWidth === 0) {
-            height = parentHeight;
-            width = baseWidth * (parentHeight / baseHeight);
-        } else if (parentHeight === 0) {
-            width = parentWidth;
-            height = baseHeight * (parentWidth / baseWidth);
-        }
-
-        var scaleX = width / baseWidth;
-        var scaleY = height / baseHeight;
-
-        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
-        svg.setAttribute('width', width);
-        svg.setAttribute('height', height);
-        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
-
-        that._topG.setAttribute('transform', 'scale(' + scaleX + ',' + scaleY + ')');
-
-        that._centerX = Math.max(1, 100.0 * scaleX);
-        that._centerY = Math.max(1, 100.0 * scaleY);
-    }
-
     /**
      * <span style="display: block; text-align: center;">
      * <img src="images/AnimationWidget.png" width="211" height="142" alt="" style="border: none; border-radius: 5px;" />
@@ -392,6 +354,8 @@ define([
         this._defsElement = undefined;
         this._svgNode = undefined;
         this._topG = undefined;
+        this._lastHeight = undefined;
+        this._lastWidth = undefined;
 
         // Firefox requires SVG references to be included directly, not imported from external CSS.
         // Also, CSS minifiers get confused by this being in an external CSS file.
@@ -546,11 +510,6 @@ define([
         container.appendChild(svg);
 
         var that = this;
-        this._resizeCallback = function() {
-            resize(that);
-        };
-        window.addEventListener('resize', this._resizeCallback, true);
-
         var mouseCallback = function(e) {
             setShuttleRingFromMouseOrTouch(that, e);
         };
@@ -613,7 +572,7 @@ define([
         })];
 
         this.applyThemeChanges();
-        resize(this);
+        this.resize();
     };
 
     defineProperties(Animation.prototype, {
@@ -657,7 +616,6 @@ define([
      */
     Animation.prototype.destroy = function() {
         var mouseCallback = this._mouseCallback;
-        window.removeEventListener('resize', this._resizeCallback, true);
         this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
         this._shuttleRingSwooshG.removeEventListener('mousedown', mouseCallback, true);
@@ -684,6 +642,55 @@ define([
         }
 
         return destroyObject(this);
+    };
+
+    /**
+     * Resizes the widget to match the container size.
+     * This function should be called whenever the container size is changed.
+     * @memberof Animation
+     */
+    Animation.prototype.resize = function() {
+        var parentWidth = this._container.clientWidth;
+        var parentHeight = this._container.clientHeight;
+        if (parentWidth === this._lastWidth && parentHeight === this._lastHeight) {
+            return;
+        }
+
+        var svg = this._svgNode;
+
+        //The width and height as the SVG was originally drawn.
+        var baseWidth = 200;
+        var baseHeight = 132;
+
+        var width = parentWidth;
+        var height = parentHeight;
+
+        if (parentWidth === 0 && parentHeight === 0) {
+            width = baseWidth;
+            height = baseHeight;
+        } else if (parentWidth === 0) {
+            height = parentHeight;
+            width = baseWidth * (parentHeight / baseHeight);
+        } else if (parentHeight === 0) {
+            width = parentWidth;
+            height = baseHeight * (parentWidth / baseWidth);
+        }
+
+        var scaleX = width / baseWidth;
+        var scaleY = height / baseHeight;
+
+        svg.style.cssText = 'width: ' + width + 'px; height: ' + height + 'px; position: absolute; bottom: 0; left: 0;';
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
+        svg.setAttribute('viewBox', '0 0 ' + width + ' ' + height);
+
+        this._topG.setAttribute('transform', 'scale(' + scaleX + ',' + scaleY + ')');
+
+        this._centerX = Math.max(1, 100.0 * scaleX);
+        this._centerY = Math.max(1, 100.0 * scaleY);
+
+        this._lastHeight = parentWidth;
+        this._lastWidth = parentHeight;
     };
 
     /**
