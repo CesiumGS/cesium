@@ -27,6 +27,7 @@ define([
         'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
+        'Scene/TranslucentAppearance',
         'Scene/ClosedTranslucentAppearance',
         'Scene/PerInstanceColorClosedTranslucentAppearance',
         'Scene/EllipsoidSurfaceAppearance',
@@ -64,6 +65,7 @@ define([
         WallGeometry,
         Primitive,
         Appearance,
+        TranslucentAppearance,
         ClosedTranslucentAppearance,
         PerInstanceColorClosedTranslucentAppearance,
         EllipsoidSurfaceAppearance,
@@ -351,8 +353,8 @@ define([
                     Cartographic.fromDegrees(-120.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
                 ])
-            }),
-            pickData : 'wall'
+            })
+            // pickData is undefined here for testing
         });
         var wallPrimitive = new Primitive({
             geometryInstances : wall,
@@ -425,7 +427,7 @@ define([
         handler.setInputAction(
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
-                wallPrimitive.appearance = new ClosedTranslucentAppearance();
+                wallPrimitive.appearance = new TranslucentAppearance();
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

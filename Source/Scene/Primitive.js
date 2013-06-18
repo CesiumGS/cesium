@@ -181,10 +181,8 @@ define([
         this._rs = undefined;
         this._sp = undefined;
 
-        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
-        this._isPickable = false;
 
         this._commandLists = new CommandLists();
     };
@@ -238,19 +236,6 @@ define([
         }
     }
 
-    function isPickable(instances) {
-        var pickable = false;
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof instances[i].pickData !== 'undefined') {
-                pickable = true;
-                break;
-            }
-        }
-
-        return pickable;
-    }
-
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
 
@@ -268,26 +253,24 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            if (typeof instance.pickData !== 'undefined') {
-                var pickId = context.createPickId({
-                    primitive : primitive,
-                    pickData : instance.pickData
-                });
-                primitive._pickIds.push(pickId);
+            var pickId = context.createPickId({
+                primitive : primitive,
+                pickData : instance.pickData    // may be undefined
+            });
+            primitive._pickIds.push(pickId);
 
-                var pickColor = pickId.color;
-                var red = Color.floatToByte(pickColor.red);
-                var green = Color.floatToByte(pickColor.green);
-                var blue = Color.floatToByte(pickColor.blue);
-                var alpha = Color.floatToByte(pickColor.alpha);
-                var values = attributes.pickColor.values;
+            var pickColor = pickId.color;
+            var red = Color.floatToByte(pickColor.red);
+            var green = Color.floatToByte(pickColor.green);
+            var blue = Color.floatToByte(pickColor.blue);
+            var alpha = Color.floatToByte(pickColor.alpha);
+            var values = attributes.pickColor.values;
 
-                for (var j = 0; j < numberOfComponents; j += 4) {
-                    values[j] = red;
-                    values[j + 1] = green;
-                    values[j + 2] = blue;
-                    values[j + 3] = alpha;
-                }
+            for (var j = 0; j < numberOfComponents; j += 4) {
+                values[j] = red;
+                values[j + 1] = green;
+                values[j + 2] = blue;
+                values[j + 3] = alpha;
             }
         }
     }
@@ -409,10 +392,8 @@ define([
             addColorAttribute(primitive, insts, context);
         }
 
-        // Add pickColor attribute if any geometries are pickable
-        if (isPickable(insts)) {
-            addPickColorAttribute(primitive, insts, context);
-        }
+        // Add pickColor attribute for picking individual instances
+        addPickColorAttribute(primitive, insts, context);
 
         // Add default values for any undefined attributes
         addDefaultAttributes(insts);
@@ -485,7 +466,6 @@ define([
             }
 
             this._va = va;
-            this._isPickable = isPickable(instances);
 
             for (i = 0; i < length; ++i) {
                 var geometry = geometries[i];
@@ -512,36 +492,23 @@ define([
 
         // Create or recreate render state and shader program if appearance/material changed
         var appearance = this.appearance;
+        var material = appearance.material;
         var createRS = false;
         var createSP = false;
 
         if (this._appearance !== appearance) {
 
             this._appearance = appearance;
-            this._material = appearance.material;
+            this._material = material;
             createRS = true;
             createSP = true;
-        } else if (this._material !== appearance.material ) {
-            this._material = appearance.material;
+        } else if (this._material !== material ) {
+            this._material = material;
             createSP = true;
         }
 
         if (createRS) {
             this._rs = context.createRenderState(appearance.renderState);
-
-            if (this._isPickable) {
-                this._pickRS = this._rs;
-            } else {
-                // Still render during pick pass, but depth-only.
-                var appearanceRS = clone(appearance.renderState, true);
-                appearanceRS.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-                this._pickRS = context.createRenderState(appearanceRS);
-            }
         }
 
         if (createSP) {
@@ -549,18 +516,12 @@ define([
             var vs = appearance.vertexShaderSource;
             var fs = appearance.getFragmentShaderSource();
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, this._attributeIndices);
-
-            if (this._isPickable) {
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
-            } else {
-                // Color pass shader, but rendered with depth-only for correct occlusion
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, fs, this._attributeIndices);
-            }
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
         }
 
         if (createRS || createSP) {
-            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
+            var uniforms = (typeof material !== 'undefined') ? material._uniforms : undefined;
 
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
@@ -571,7 +532,7 @@ define([
                 colorCommand.uniformMap = uniforms;
 
                 pickCommand = pickCommands[i];
-                pickCommand.renderState = this._pickRS;
+                pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
             }
