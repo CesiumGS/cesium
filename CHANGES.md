@@ -30,6 +30,7 @@ Beta Releases
 * Added `useDefaultRenderLoop` property to `CesiumWidget` that allows the default render loop to be disabled so that a custom render loop can be used.
 * Fix resizing issues in `CesiumWidget` ([#608](https://github.com/AnalyticalGraphicsInc/cesium/issues/608)) by having the default render loop force a resize event every 60 frames.
 * Added `CesiumWidget.onRenderLoopError` which is an `Event` that is raised if an exception is generated inside of the default render loop.
+* `ImageryProviderViewModel.creationCommand` can now return an array of ImageryProvider instances, which allows adding multiple layers when a single item is selected in the `BaseLayerPicker` widget.
 
 ### b17 - 2013-06-03
 

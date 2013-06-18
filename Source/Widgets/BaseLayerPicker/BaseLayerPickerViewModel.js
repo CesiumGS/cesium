@@ -80,19 +80,42 @@ define([
          */
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
+
+        this._currentProviders = [];
         knockout.defineProperty(this, 'selectedItem', {
             get : function() {
                 return selectedViewModel();
             },
             set : function(value) {
-                if (imageryLayers.getLength() > 0) {
-                    imageryLayers.remove(imageryLayers.get(0));
+                var i;
+                var currentProviders = that._currentProviders;
+                var currentProvidersLength = currentProviders.length;
+                for (i = 0; i < currentProvidersLength; i++) {
+                    var layersLength = imageryLayers.getLength();
+                    for ( var x = 0; x < layersLength; x++) {
+                        var layer = imageryLayers.get(x);
+                        if (layer.getImageryProvider() === currentProviders[i]) {
+                            imageryLayers.remove(layer);
+                            break;
+                        }
+                    }
                 }
-                var newLayer = value.creationCommand();
-                if (typeof newLayer !== 'undefined') {
-                    imageryLayers.addImageryProvider(newLayer, 0);
+
+                if (typeof value !== 'undefined') {
+                    var newProviders = value.creationCommand();
+                    if (Array.isArray(newProviders)) {
+                        var newProvidersLength = newProviders.length;
+                        for (i = newProvidersLength - 1; i >= 0; i--) {
+                            imageryLayers.addImageryProvider(newProviders[i], 0);
+                        }
+                        that._currentProviders = newProviders.slice(0);
+                    } else {
+                        that._currentProviders = [newProviders];
+                        imageryLayers.addImageryProvider(newProviders, 0);
+                    }
+
+                    selectedViewModel(value);
                 }
-                selectedViewModel(value);
                 that.dropDownVisible = false;
             }
         });
