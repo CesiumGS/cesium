@@ -86,17 +86,12 @@ define([
             var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
 
             var textureCoordIndex = 0;
-            var normalIndex = 0;
-            var tangentIndex = 0;
-            var binormalIndex = 0;
+            var attrIndex = 0;
 
             var normal = scratchNormal;
             var tangent = scratchTangent;
             var binormal = scratchBinormal;
             var recomputeNormal = true;
-
-            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
-            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
             length /= 2;
             var stOffset = length * 2 / 3;
@@ -104,9 +99,7 @@ define([
             for (var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
                 if (vertexFormat.st) {
-                    var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
-                    var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
-                    Cartesian2.subtract(st, origin, st);
+
                     textureCoordinates[textureCoordIndex + stOffset] = stValue * i;
                     textureCoordinates[textureCoordIndex + stOffset + 1] = 0;
 
@@ -115,6 +108,8 @@ define([
                 }
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                    var attrIndex1 = attrIndex + 1;
+                    var attrIndex2 = attrIndex + 2;
 
                     p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
                     if (recomputeNormal) {
@@ -124,9 +119,7 @@ define([
                         normal = Cartesian3.cross(p1, p2, normal);
                         recomputeNormal = false;
                         if (vertexFormat.tangent || vertexFormat.binormal) {
-                            Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                            Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
-                            Cartesian3.normalize(tangent, tangent);
+                            Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
                         }
                         if (vertexFormat.binormal) {
                             binormal = Cartesian3.cross(normal, tangent, binormal);
@@ -139,35 +132,36 @@ define([
                     }
 
                     if (vertexFormat.normal) {
-                        normals[normalIndex + length] = normal.x;
-                        normals[normalIndex + length + 1] = normal.y;
-                        normals[normalIndex + length + 2] = normal.z;
+                        normals[attrIndex + length] = normal.x;
+                        normals[attrIndex1 + length] = normal.y;
+                        normals[attrIndex2 + length] = normal.z;
 
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
+                        normals[attrIndex] = normal.x;
+                        normals[attrIndex1] = normal.y;
+                        normals[attrIndex2] = normal.z;
                     }
 
                     if (vertexFormat.tangent) {
-                        tangents[tangentIndex + length] = tangent.x;
-                        tangents[tangentIndex + length + 1] = tangent.y;
-                        tangents[tangentIndex + length + 2] = tangent.z;
+                        tangents[attrIndex + length] = tangent.x;
+                        tangents[attrIndex1 + length] = tangent.y;
+                        tangents[attrIndex2 + length] = tangent.z;
 
-                        tangents[tangentIndex++] = tangent.x;
-                        tangents[tangentIndex++] = tangent.y;
-                        tangents[tangentIndex++] = tangent.z;
+                        tangents[attrIndex] = tangent.x;
+                        tangents[attrIndex1] = tangent.y;
+                        tangents[attrIndex2] = tangent.z;
                     }
 
                     if (vertexFormat.binormal) {
-                        binormals[binormalIndex + length] = binormal.x;
-                        binormals[binormalIndex + length + 1] = binormal.y;
-                        binormals[binormalIndex + length + 2] = binormal.z;
+                        binormals[attrIndex + length] = binormal.x;
+                        binormals[attrIndex1 + length] = binormal.y;
+                        binormals[attrIndex2 + length] = binormal.z;
 
 
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        binormals[attrIndex] = binormal.x;
+                        binormals[attrIndex1] = binormal.y;
+                        binormals[attrIndex2] = binormal.z;
                     }
+                    attrIndex += 3;
                 }
             }
 
@@ -227,9 +221,7 @@ define([
             var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
 
             var textureCoordIndex = 0;
-            var normalIndex = 0;
-            var tangentIndex = 0;
-            var binormalIndex = 0;
+            var attrIndex = 0;
 
             var normal = scratchNormal;
             var tangent = scratchTangent;
@@ -245,6 +237,8 @@ define([
             }
 
             for (var i = 0; i < length; i += 3) {
+                var attrIndex1 = attrIndex + 1;
+                var attrIndex2 = attrIndex + 2;
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
 
                 if (vertexFormat.st) {
@@ -269,17 +263,16 @@ define([
                     normal = ellipsoid.geodeticSurfaceNormal(position, normal);
 
                     if (bottom) {
-                        normals[normalIndex + bottomOffset] = -normal.x;
-                        normals[normalIndex + bottomOffset + 1] = -normal.y;
-                        normals[normalIndex + bottomOffset + 2] = -normal.z;
+                        normals[attrIndex + bottomOffset] = -normal.x;
+                        normals[attrIndex1 + bottomOffset] = -normal.y;
+                        normals[attrIndex2 + bottomOffset] = -normal.z;
                     }
 
                     if (top) {
-                        normals[normalIndex] = normal.x;
-                        normals[normalIndex + 1] = normal.y;
-                        normals[normalIndex + 2] = normal.z;
+                        normals[attrIndex] = normal.x;
+                        normals[attrIndex1] = normal.y;
+                        normals[attrIndex2] = normal.z;
                     }
-                    normalIndex += 3;
                 }
 
                 if (vertexFormat.tangent) {
@@ -292,17 +285,16 @@ define([
                     Cartesian3.normalize(tangent, tangent);
 
                     if (bottom) {
-                        tangents[tangentIndex + bottomOffset] = -tangent.x;
-                        tangents[tangentIndex + bottomOffset + 1] = -tangent.y;
-                        tangents[tangentIndex + bottomOffset + 2] = -tangent.z;
+                        tangents[attrIndex + bottomOffset] = -tangent.x;
+                        tangents[attrIndex1 + bottomOffset] = -tangent.y;
+                        tangents[attrIndex2 + bottomOffset] = -tangent.z;
                     }
 
                     if (top) {
-                        tangents[tangentIndex] = tangent.x;
-                        tangents[tangentIndex + 1] = tangent.y;
-                        tangents[tangentIndex + 2] = tangent.z;
+                        tangents[attrIndex] = tangent.x;
+                        tangents[attrIndex1] = tangent.y;
+                        tangents[attrIndex2] = tangent.z;
                     }
-                    tangentIndex += 3;
                 }
 
                 if (vertexFormat.binormal) {
@@ -319,18 +311,18 @@ define([
                     Cartesian3.normalize(binormal, binormal);
 
                     if (bottom) {
-                        binormals[binormalIndex + bottomOffset] = binormal.x;
-                        binormals[binormalIndex + bottomOffset + 1] = binormal.y;
-                        binormals[binormalIndex + bottomOffset + 2] = binormal.z;
+                        binormals[attrIndex + bottomOffset] = binormal.x;
+                        binormals[attrIndex1 + bottomOffset] = binormal.y;
+                        binormals[attrIndex2 + bottomOffset] = binormal.z;
                     }
 
                     if (top) {
-                        binormals[binormalIndex] = binormal.x;
-                        binormals[binormalIndex + 1] = binormal.y;
-                        binormals[binormalIndex + 2] = binormal.z;
+                        binormals[attrIndex] = binormal.x;
+                        binormals[attrIndex1] = binormal.y;
+                        binormals[attrIndex2] = binormal.z;
                     }
-                    binormalIndex += 3;
                 }
+                attrIndex += 3;
             }
 
             if (vertexFormat.st) {
@@ -445,42 +437,45 @@ define([
         return mesh;
     }
 
+    function getPointAtDistance(p0, p1, dis, length) {
+        var x = p1.x - p0.x;
+        var y = p1.y - p0.y;
+        var z = p1.z - p0.z;
+
+        x /= length;
+        y /= length;
+        z /= length;
+
+        x *= dis;
+        y *= dis;
+        z *= dis;
+
+        return [p0.x + x, p0.y + y, p0.z + z];
+    }
+
     function subdivideLine(p0, p1, granularity) {
-        var edges = new Queue();
-        edges.enqueue({
-            v0: p0,
-            v1: p1
-        });
-        var subdividedPositions = [p0, p1];
-        while(edges.length > 0) {
-            var edge = edges.dequeue();
-            var v0 = edge.v0;
-            var v1 = edge.v1;
+        var length = Cartesian3.distance(p0, p1);
+        var a = Cartesian3.angleBetween(p0, p1);
+        var numVertices = Math.ceil(a / granularity);
 
-            if (v0.angleBetween(v1) > granularity) {
-                var v2 = v0.add(v1).multiplyByScalar(0.5);
-                subdividedPositions.splice(subdividedPositions.indexOf(edge.v1), 0, v2);
+        var distanceBetweenVertices = length / numVertices;
 
-                edges.enqueue({
-                    v0: v0,
-                    v1: v2
-                });
-
-                edges.enqueue({
-                    v0: v2,
-                    v1: v1
-                });
-            }
-        }
-        var length = subdividedPositions.length;
-        var flattenedPositions = new Array(length * 3);
+        var positions = new Array(numVertices * 3);
         var index = 0;
-        for (var i = 0; i < length; i++) {
-            flattenedPositions[index++] = subdividedPositions[i].x;
-            flattenedPositions[index++] = subdividedPositions[i].y;
-            flattenedPositions[index++] = subdividedPositions[i].z;
+        positions[index++] = p0.x;
+        positions[index++] = p0.y;
+        positions[index++] = p0.z;
+        for (var i = 1; i < numVertices - 1; i++) {
+            var p = getPointAtDistance(p0, p1, i*distanceBetweenVertices, length);
+            positions[index++] = p[0];
+            positions[index++] = p[1];
+            positions[index++] = p[2];
         }
-        return flattenedPositions;
+        positions[index++] = p1.x;
+        positions[index++] = p1.y;
+        positions[index++] = p1.z;
+
+        return positions;
     }
 
     var createGeometryFromPositionsPositions = [];
