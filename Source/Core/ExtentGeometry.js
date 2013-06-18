@@ -175,7 +175,7 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
 
                         tangents[attrIndex] = tangent.x;
                         tangents[attrIndex1] = tangent.y;
@@ -183,8 +183,8 @@ define([
                     }
 
                     if (vertexFormat.binormal) {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                        Cartesian3.cross(normal, tangent, binormal);
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                        Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
 
                         binormals[attrIndex] = binormal.x;
                         binormals[attrIndex1] = binormal.y;
@@ -257,9 +257,9 @@ define([
                 Cartesian3.negate(normal, extrudedNormal);
             }
             if (vertexFormat.tangent || vertexFormat.binormal) {
-                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
                 if (vertexFormat.binormal) {
-                    Cartesian3.cross(normal, tangent, binormal);
+                    Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
                 }
                 if (typeof setNormal !== 'undefined') { // if wall
                     tangent.clone(extrudedTangent);
@@ -430,19 +430,19 @@ define([
 
         northEastTop.subtract(northWestTop, v1Scratch);
         northWestBottom.subtract(northWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, northNormal);
+        Cartesian3.cross(v1Scratch, v2Scratch, northNormal).normalize(northNormal);
 
         northWestBottom.subtract(northWestTop, v1Scratch);
         southWestTop.subtract(northWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, westNormal);
+        Cartesian3.cross(v1Scratch, v2Scratch, westNormal).normalize(westNormal);
 
         southEastTop.subtract(southWestTop, v1Scratch);
         southWestBottom.subtract(southWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, southNormal);
+        Cartesian3.cross(v1Scratch, v2Scratch, southNormal).normalize(southNormal);
 
         northEastTop.subtract(southEastTop, v1Scratch);
         northEastBottom.subtract(southEastTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, eastNormal);
+        Cartesian3.cross(v1Scratch, v2Scratch, eastNormal).normalize(eastNormal);
 
         var countSides = (height - 2) * 2 + width;
         for (col = 0; col < width; ++col) {
