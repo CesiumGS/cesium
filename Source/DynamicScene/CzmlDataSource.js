@@ -5,9 +5,9 @@ define(['../Core/ClockRange',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadJson',
-        '../DynamicScene/DynamicClock',
-        '../DynamicScene/processCzml',
-        '../DynamicScene/DynamicObjectCollection'
+        './DynamicClock',
+        './processCzml',
+        './DynamicObjectCollection'
         ], function(
                 ClockRange,
                 ClockStep,
