@@ -11,6 +11,7 @@ define([
         './defaultValue',
         './pointInsideTriangle2D',
         './ComponentDatatype',
+        './IndexDatatype',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -26,6 +27,7 @@ define([
         defaultValue,
         pointInsideTriangle2D,
         ComponentDatatype,
+        IndexDatatype,
         PrimitiveType,
         Queue,
         WindingOrder) {
@@ -835,7 +837,7 @@ define([
                         values : flattenedPositions
                     })
                 },
-                indices : subdividedIndices,
+                indices : IndexDatatype.createTypedArray(length, subdividedIndices),
                 primitiveType : PrimitiveType.TRIANGLES
             });
         },

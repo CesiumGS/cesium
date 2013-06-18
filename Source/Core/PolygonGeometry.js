@@ -7,6 +7,7 @@ define([
         './Cartesian3',
         './Cartesian4',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -31,6 +32,7 @@ define([
         Cartesian3,
         Cartesian4,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -98,18 +100,18 @@ define([
 
             length /= 2;
             var stOffset = length * 2 / 3;
+            var stValue = 1 / (length - 1);
             for (var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
                 if (vertexFormat.st) {
                     var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
+                    textureCoordinates[textureCoordIndex + stOffset] = stValue * i;
+                    textureCoordinates[textureCoordIndex + stOffset + 1] = 0;
 
-                    textureCoordinates[textureCoordIndex + stOffset] = st.x / boundingRectangle.width;
-                    textureCoordinates[textureCoordIndex + stOffset + 1] = st.y / boundingRectangle.height;
-
-                    textureCoordinates[textureCoordIndex++] = st.x / boundingRectangle.width;
-                    textureCoordinates[textureCoordIndex++] = st.y / boundingRectangle.height;
+                    textureCoordinates[textureCoordIndex++] = stValue * i;
+                    textureCoordinates[textureCoordIndex++] = 1;
                 }
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
@@ -127,7 +129,7 @@ define([
                             Cartesian3.normalize(tangent, tangent);
                         }
                         if (vertexFormat.binormal) {
-                            binormal = Cartesian3.cross(tangent, normal, binormal);
+                            binormal = Cartesian3.cross(normal, tangent, binormal);
                             Cartesian3.normalize(binormal, binormal);
                         }
                     }
@@ -251,7 +253,7 @@ define([
                     Cartesian2.subtract(st, origin, st);
 
                     if (bottom){
-                        textureCoordinates[textureCoordIndex + bottomOffset2] = st.x / boundingRectangle.width;
+                        textureCoordinates[textureCoordIndex + bottomOffset2] = 1 - st.x / boundingRectangle.width;
                         textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = st.y / boundingRectangle.height;
                     }
 
@@ -313,7 +315,7 @@ define([
                         Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                     }
 
-                    var binormal = Cartesian3.cross(tangent, normal, scratchBinormal);
+                    var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
                     Cartesian3.normalize(binormal, binormal);
 
                     if (bottom) {
@@ -422,23 +424,19 @@ define([
             var length = positions.length / 2;
 
             for ( var i = 0; i < length; i += 3) {
-                p.x = positions[i];
-                p.y = positions[i + 1];
-                p.z = positions[i + 2];
+                Cartesian3.fromArray(positions, i, p);
 
                 ellipsoid.scaleToGeodeticSurface(p, p);
                 ellipsoid.geodeticSurfaceNormal(p, n1);
-                Cartesian3.multiplyByScalar(n1, maxHeight, n1);
-                Cartesian3.add(p, n1, n1);
 
-                ellipsoid.geodeticSurfaceNormal(p, n2);
-                Cartesian3.multiplyByScalar(n2, minHeight, n2);
+                Cartesian3.multiplyByScalar(n1, maxHeight, n2);
                 Cartesian3.add(p, n2, n2);
+                positions[i] = n2.x;
+                positions[i + 1] = n2.y;
+                positions[i + 2] = n2.z;
 
-                positions[i] = n1.x;
-                positions[i + 1] = n1.y;
-                positions[i + 2] = n1.z;
-
+                Cartesian3.multiplyByScalar(n1, minHeight, n2);
+                Cartesian3.add(p, n2, n2);
                 positions[i + length] = n2.x;
                 positions[i + 1 + length] = n2.y;
                 positions[i + 2 + length] = n2.z;
@@ -516,16 +514,21 @@ define([
         indices = topAndBottomGeo.indices;
         cleanedPositions = topAndBottomGeo.attributes.position.values;
         var length = cleanedPositions.length/3;
+        var newIndices = IndexDatatype.createTypedArray(length*2, indices.length*2);
+        newIndices.set(indices);
         var ilength = indices.length;
         cleanedPositions = cleanedPositions.concat(cleanedPositions);
         var i;
         for (i = 0 ; i < ilength; i += 3) {
-            var i0 = indices[i] + length;
-            var i1 = indices[i + 1] + length;
-            var i2 = indices[i + 2] + length;
-            indices.push(i2, i1, i0);
+            var i0 = newIndices[i] + length;
+            var i1 = newIndices[i + 1] + length;
+            var i2 = newIndices[i + 2] + length;
+
+            newIndices[i + ilength] = i2;
+            newIndices[i + 1 + ilength] = i1;
+            newIndices[i + 2 + ilength] = i0;
         }
-        topAndBottomGeo.indices = indices;
+        topAndBottomGeo.indices = newIndices;
         topAndBottomGeo.attributes.position.values = cleanedPositions;
 
         var edgePositions = [];
@@ -535,8 +538,9 @@ define([
             edgePositions = edgePositions.concat(subdividedEdge);
         }
         edgePositions = edgePositions.concat(edgePositions);
-        length = edgePositions.length / 3 / 2;
-        indices = new Array(length * 3);
+        length = edgePositions.length;
+        indices = IndexDatatype.createTypedArray(length/3, length);
+        length /= 6;
         var edgeIndex = 0;
         for (i = 0 ; i < length; i++) {
             var UL = i;
