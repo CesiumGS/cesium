@@ -22,8 +22,8 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
         transitioner.destroy();
+        destroyScene(scene);
     });
 
     it('constructor sets default values', function() {

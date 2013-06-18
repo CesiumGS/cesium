@@ -41,17 +41,24 @@ define(function() {
          * @see <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error'>Error object on Mozilla Developer Network</a>.
          */
         this.error = new Error();
+
+        /**
+         * The stack trace of this exception.
+         * @type String
+         * @constant
+         */
+        this.stack = this.error.stack;
     };
 
-    RuntimeError.prototype.toString = function () {
+    RuntimeError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
-        if (typeof this.error !== 'undefined') {
-            if (typeof this.error.stack !== 'undefined') {
-                str += '\n' + this.error.stack.toString();
-            } else {
-                str += '\n' + this.error.toString();
-            }
+
+        if (typeof this.stack !== 'undefined') {
+            str += '\n' + this.stack.toString();
+        } else {
+            str += '\n' + this.error.toString();
         }
+
         return str;
     };
 
