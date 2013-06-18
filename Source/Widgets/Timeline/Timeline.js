@@ -2,6 +2,7 @@
 define([
         '../../Core/DeveloperError',
         '../../Core/ClockRange',
+        '../../Core/destroyObject',
         '../../Core/JulianDate',
         '../getElement',
         './TimelineTrack',
@@ -9,6 +10,7 @@ define([
     ], function(
         DeveloperError,
         ClockRange,
+        destroyObject,
         JulianDate,
         getElement,
         TimelineTrack,
@@ -128,50 +130,57 @@ define([
 
         this.zoomTo(clock.startTime, clock.stopTime);
 
-        var widget = this;
+        this._onMouseDown = createMouseDownCallback(this);
+        this._onMouseUp = createMouseUpCallback(this);
+        this._onMouseMove = createMouseMoveCallback(this);
+        this._onMouseWheel = createMouseWheelCallback(this);
+        this._onTouchStart = createTouchStartCallback(this);
+        this._onTouchMove = createTouchMoveCallback(this);
+        this._onTouchEnd = createTouchEndCallback(this);
 
-        this._timeBarEle.addEventListener('mousedown', function(e) {
-            widget._handleMouseDown(e);
-        }, false);
-        document.addEventListener('mouseup', function(e) {
-            widget._handleMouseUp(e);
-        }, false);
-        document.addEventListener('mousemove', function(e) {
-            widget._handleMouseMove(e);
-        }, false);
-        this._timeBarEle.addEventListener('DOMMouseScroll', function(e) {
-            widget._handleMouseWheel(e);
-        }, false); // Mozilla mouse wheel
-        this._timeBarEle.addEventListener('mousewheel', function(e) {
-            widget._handleMouseWheel(e);
-        }, false);
-        this._timeBarEle.addEventListener('touchstart', function(e) {
-            widget._handleTouchStart(e);
-        }, false);
-        document.addEventListener('touchmove', function(e) {
-            widget._handleTouchMove(e);
-        }, false);
-        document.addEventListener('touchend', function(e) {
-            widget._handleTouchEnd(e);
-        }, false);
+        var timeBarEle = this._timeBarEle;
+        document.addEventListener('mouseup', this._onMouseUp, false);
+        document.addEventListener('mousemove', this._onMouseMove, false);
+        timeBarEle.addEventListener('mousedown', this._onMouseDown, false);
+        timeBarEle.addEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
+        timeBarEle.addEventListener('mousewheel', this._onMouseWheel, false);
+        timeBarEle.addEventListener('touchstart', this._onTouchStart, false);
+        timeBarEle.addEventListener('touchmove', this._onTouchMove, false);
+        timeBarEle.addEventListener('touchend', this._onTouchEnd, false);
+
         this._topDiv.oncontextmenu = function() {
             return false;
-        };
-
-        this.addEventListener = function(type, listener, useCapture) {
-            widget.container.addEventListener(type, listener, useCapture);
-        };
-
-        this.removeEventListener = function(type, listener, useCapture) {
-            widget.container.removeEventListener(type, listener, useCapture);
         };
 
         clock.onTick.addEventListener(this.updateFromClock, this);
         this.updateFromClock();
     }
 
+    Timeline.prototype.addEventListener = function(type, listener, useCapture) {
+        this._topDiv.addEventListener(type, listener, useCapture);
+    };
+
+    Timeline.prototype.removeEventListener = function(type, listener, useCapture) {
+        this._topDiv.removeEventListener(type, listener, useCapture);
+    };
+
+    Timeline.prototype.isDestroyed = function() {
+        return false;
+    };
+
     Timeline.prototype.destroy = function() {
-        this.container.innerHTML = '';
+        document.removeEventListener('mouseup', this._onMouseUp, false);
+        document.removeEventListener('mousemove', this._onMouseMove, false);
+
+        var timeBarEle = this._timeBarEle;
+        timeBarEle.removeEventListener('mousedown', this._onMouseDown, false);
+        timeBarEle.removeEventListener('DOMMouseScroll', this._onMouseWheel, false); // Mozilla mouse wheel
+        timeBarEle.removeEventListener('mousewheel', this._onMouseWheel, false);
+        timeBarEle.removeEventListener('touchstart', this._onTouchStart, false);
+        timeBarEle.removeEventListener('touchmove', this._onTouchMove, false);
+        timeBarEle.removeEventListener('touchend', this._onTouchEnd, false);
+        this.container.removeChild(this._topDiv);
+        destroyObject(this);
     };
 
     Timeline.prototype.addHighlightRange = function(color, heightInPx) {
@@ -222,7 +231,7 @@ define([
             }
         }
 
-        this.resize();
+        this._makeTics();
 
         var evt = document.createEvent('Event');
         evt.initEvent('setzoom', true, true);
@@ -514,156 +523,174 @@ define([
         this._topDiv.dispatchEvent(evt);
     };
 
-    Timeline.prototype._handleMouseDown = function(e) {
-        if (this._mouseMode !== timelineMouseMode.touchOnly) {
-            if (e.button === 0) {
-                this._mouseMode = timelineMouseMode.scrub;
-                if (this._scrubElement) {
-                    this._scrubElement.style.backgroundPosition = '-16px 0';
-                }
-                this._handleMouseMove(e);
-            } else {
-                this._mouseX = e.clientX;
-                if (e.button === 2) {
-                    this._mouseMode = timelineMouseMode.zoom;
+    function createMouseDownCallback(timeline) {
+        return function(e) {
+            if (timeline._mouseMode !== timelineMouseMode.touchOnly) {
+                if (e.button === 0) {
+                    timeline._mouseMode = timelineMouseMode.scrub;
+                    if (timeline._scrubElement) {
+                        timeline._scrubElement.style.backgroundPosition = '-16px 0';
+                    }
+                    timeline._onMouseMove(e);
                 } else {
-                    this._mouseMode = timelineMouseMode.slide;
+                    timeline._mouseX = e.clientX;
+                    if (e.button === 2) {
+                        timeline._mouseMode = timelineMouseMode.zoom;
+                    } else {
+                        timeline._mouseMode = timelineMouseMode.slide;
+                    }
                 }
             }
-        }
-        e.preventDefault();
-    };
-    Timeline.prototype._handleMouseUp = function(e) {
-        this._mouseMode = timelineMouseMode.none;
-        if (this._scrubElement) {
-            this._scrubElement.style.backgroundPosition = '0px 0px';
-        }
-        this._timelineDrag = 0;
-        this._timelineDragLocation = undefined;
-    };
-    Timeline.prototype._handleMouseMove = function(e) {
-        var dx;
-        if (this._mouseMode === timelineMouseMode.scrub) {
             e.preventDefault();
-            var x = e.clientX - this._topDiv.getBoundingClientRect().left;
+        };
+    }
 
-            if (x < 0) {
-                this._timelineDragLocation = 0;
-                this._timelineDrag = -0.01*this._timeBarSecondsSpan;
-            } else if (x > this._topDiv.clientWidth) {
-                this._timelineDragLocation = this._topDiv.clientWidth;
-                this._timelineDrag = 0.01*this._timeBarSecondsSpan;
-            } else {
-                this._timelineDragLocation = undefined;
-                this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this._topDiv.clientWidth);
+    function createMouseUpCallback(timeline) {
+        return function(e) {
+            timeline._mouseMode = timelineMouseMode.none;
+            if (timeline._scrubElement) {
+                timeline._scrubElement.style.backgroundPosition = '0px 0px';
             }
+            timeline._timelineDrag = 0;
+            timeline._timelineDragLocation = undefined;
+        };
+    }
 
-        } else if (this._mouseMode === timelineMouseMode.slide) {
-            dx = this._mouseX - e.clientX;
-            this._mouseX = e.clientX;
-            if (dx !== 0) {
-                var dsec = dx * this._timeBarSecondsSpan / this._topDiv.clientWidth;
-                this.zoomTo(this._startJulian.addSeconds(dsec), this._endJulian.addSeconds(dsec));
-            }
-        } else if (this._mouseMode === timelineMouseMode.zoom) {
-            dx = this._mouseX - e.clientX;
-            this._mouseX = e.clientX;
-            if (dx !== 0) {
-                this.zoomFrom(Math.pow(1.01, dx));
-            }
-        }
-    };
-    Timeline.prototype._handleMouseWheel = function(e) {
-        var dy = e.wheelDeltaY || e.wheelDelta || (-e.detail);
-        timelineWheelDelta = Math.max(Math.min(Math.abs(dy), timelineWheelDelta), 1);
-        dy /= timelineWheelDelta;
-        this.zoomFrom(Math.pow(1.05, -dy));
-    };
+    function createMouseMoveCallback(timeline) {
+        return function(e) {
+            var dx;
+            if (timeline._mouseMode === timelineMouseMode.scrub) {
+                e.preventDefault();
+                var x = e.clientX - timeline._topDiv.getBoundingClientRect().left;
 
-    Timeline.prototype._handleTouchStart = function(e) {
-        var len = e.touches.length, seconds, xPos, leftX = this._topDiv.getBoundingClientRect().left;
-        e.preventDefault();
-        this._mouseMode = timelineMouseMode.touchOnly;
-        if (len === 1) {
-            seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-            xPos = Math.round(seconds * this._topDiv.clientWidth / this._timeBarSecondsSpan + leftX);
-            if (Math.abs(e.touches[0].clientX - xPos) < 50) {
-                this._touchMode = timelineTouchMode.scrub;
-                if (this._scrubElement) {
-                    this._scrubElement.style.backgroundPosition = (len === 1) ? '-16px 0' : '0 0';
-                }
-            } else {
-                this._touchMode = timelineTouchMode.singleTap;
-                this._touchState.centerX = e.touches[0].clientX - leftX;
-            }
-        } else if (len === 2) {
-            this._touchMode = timelineTouchMode.slideZoom;
-            this._touchState.centerX = (e.touches[0].clientX + e.touches[1].clientX) * 0.5 - leftX;
-            this._touchState.spanX = Math.abs(e.touches[0].clientX - e.touches[1].clientX);
-        } else {
-            this._touchMode = timelineTouchMode.ignore;
-        }
-    };
-    Timeline.prototype._handleTouchEnd = function(e) {
-        var len = e.touches.length, leftX = this._topDiv.getBoundingClientRect().left;
-        if (this._touchMode === timelineTouchMode.singleTap) {
-            this._touchMode = timelineTouchMode.scrub;
-            this._handleTouchMove(e);
-        } else if (this._touchMode === timelineTouchMode.scrub) {
-            this._handleTouchMove(e);
-        }
-        this._mouseMode = timelineMouseMode.touchOnly;
-        if (len !== 1) {
-            this._touchMode = (len > 0) ? timelineTouchMode.ignore : timelineTouchMode.none;
-        } else if (this._touchMode === timelineTouchMode.slideZoom) {
-            this._touchState.centerX = e.touches[0].clientX - leftX;
-        }
-        if (this._scrubElement) {
-            this._scrubElement.style.backgroundPosition = '0 0';
-        }
-    };
-    Timeline.prototype._handleTouchMove = function(e) {
-        var dx, x, len, newCenter, newSpan, newStartTime, zoom = 1, leftX = this._topDiv.getBoundingClientRect().left;
-        if (this._touchMode === timelineTouchMode.singleTap) {
-            this._touchMode = timelineTouchMode.slideZoom;
-        }
-        this._mouseMode = timelineMouseMode.touchOnly;
-        if (this._touchMode === timelineTouchMode.scrub) {
-            e.preventDefault();
-            if (e.changedTouches.length === 1) {
-                x = e.changedTouches[0].clientX - leftX;
-                if ((x >= 0) && (x <= this._topDiv.clientWidth)) {
-                    this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this._topDiv.clientWidth);
-                }
-            }
-        } else if (this._touchMode === timelineTouchMode.slideZoom) {
-            len = e.touches.length;
-            if (len === 2) {
-                newCenter = (e.touches[0].clientX + e.touches[1].clientX) * 0.5 - leftX;
-                newSpan = Math.abs(e.touches[0].clientX - e.touches[1].clientX);
-            } else if (len === 1) {
-                newCenter = e.touches[0].clientX - leftX;
-                newSpan = 0;
-            }
-
-            if (typeof newCenter !== 'undefined') {
-                if ((newSpan > 0) && (this._touchState.spanX > 0)) {
-                    // Zoom and slide
-                    zoom = (this._touchState.spanX / newSpan);
-                    newStartTime = this._startJulian.addSeconds(((this._touchState.centerX * this._timeBarSecondsSpan) - (newCenter * this._timeBarSecondsSpan * zoom)) /
-                            this._topDiv.clientWidth);
+                if (x < 0) {
+                    timeline._timelineDragLocation = 0;
+                    timeline._timelineDrag = -0.01 * timeline._timeBarSecondsSpan;
+                } else if (x > timeline._topDiv.clientWidth) {
+                    timeline._timelineDragLocation = timeline._topDiv.clientWidth;
+                    timeline._timelineDrag = 0.01 * timeline._timeBarSecondsSpan;
                 } else {
-                    // Slide to newCenter
-                    dx = this._touchState.centerX - newCenter;
-                    newStartTime = this._startJulian.addSeconds(dx * this._timeBarSecondsSpan / this._topDiv.clientWidth);
+                    timeline._timelineDragLocation = undefined;
+                    timeline._setTimeBarTime(x, x * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth);
                 }
 
-                this.zoomTo(newStartTime, newStartTime.addSeconds(this._timeBarSecondsSpan * zoom));
-                this._touchState.centerX = newCenter;
-                this._touchState.spanX = newSpan;
+            } else if (timeline._mouseMode === timelineMouseMode.slide) {
+                dx = timeline._mouseX - e.clientX;
+                timeline._mouseX = e.clientX;
+                if (dx !== 0) {
+                    var dsec = dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth;
+                    timeline.zoomTo(timeline._startJulian.addSeconds(dsec), timeline._endJulian.addSeconds(dsec));
+                }
+            } else if (timeline._mouseMode === timelineMouseMode.zoom) {
+                dx = timeline._mouseX - e.clientX;
+                timeline._mouseX = e.clientX;
+                if (dx !== 0) {
+                    timeline.zoomFrom(Math.pow(1.01, dx));
+                }
             }
-        }
-    };
+        };
+    }
+
+    function createMouseWheelCallback(timeline) {
+        return function(e) {
+            var dy = e.wheelDeltaY || e.wheelDelta || (-e.detail);
+            timelineWheelDelta = Math.max(Math.min(Math.abs(dy), timelineWheelDelta), 1);
+            dy /= timelineWheelDelta;
+            timeline.zoomFrom(Math.pow(1.05, -dy));
+        };
+    }
+
+    function createTouchStartCallback(timeline) {
+        return function(e) {
+            var len = e.touches.length, seconds, xPos, leftX = timeline._topDiv.getBoundingClientRect().left;
+            e.preventDefault();
+            timeline._mouseMode = timelineMouseMode.touchOnly;
+            if (len === 1) {
+                seconds = timeline._startJulian.getSecondsDifference(timeline._scrubJulian);
+                xPos = Math.round(seconds * timeline._topDiv.clientWidth / timeline._timeBarSecondsSpan + leftX);
+                if (Math.abs(e.touches[0].clientX - xPos) < 50) {
+                    timeline._touchMode = timelineTouchMode.scrub;
+                    if (timeline._scrubElement) {
+                        timeline._scrubElement.style.backgroundPosition = (len === 1) ? '-16px 0' : '0 0';
+                    }
+                } else {
+                    timeline._touchMode = timelineTouchMode.singleTap;
+                    timeline._touchState.centerX = e.touches[0].clientX - leftX;
+                }
+            } else if (len === 2) {
+                timeline._touchMode = timelineTouchMode.slideZoom;
+                timeline._touchState.centerX = (e.touches[0].clientX + e.touches[1].clientX) * 0.5 - leftX;
+                timeline._touchState.spanX = Math.abs(e.touches[0].clientX - e.touches[1].clientX);
+            } else {
+                timeline._touchMode = timelineTouchMode.ignore;
+            }
+        };
+    }
+
+    function createTouchEndCallback(timeline) {
+        return function(e) {
+            var len = e.touches.length, leftX = timeline._topDiv.getBoundingClientRect().left;
+            if (timeline._touchMode === timelineTouchMode.singleTap) {
+                timeline._touchMode = timelineTouchMode.scrub;
+                timeline._handleTouchMove(e);
+            } else if (timeline._touchMode === timelineTouchMode.scrub) {
+                timeline._handleTouchMove(e);
+            }
+            timeline._mouseMode = timelineMouseMode.touchOnly;
+            if (len !== 1) {
+                timeline._touchMode = (len > 0) ? timelineTouchMode.ignore : timelineTouchMode.none;
+            } else if (timeline._touchMode === timelineTouchMode.slideZoom) {
+                timeline._touchState.centerX = e.touches[0].clientX - leftX;
+            }
+            if (timeline._scrubElement) {
+                timeline._scrubElement.style.backgroundPosition = '0 0';
+            }
+        };
+    }
+
+    function createTouchMoveCallback(timeline) {
+        return function(e) {
+            var dx, x, len, newCenter, newSpan, newStartTime, zoom = 1, leftX = timeline._topDiv.getBoundingClientRect().left;
+            if (timeline._touchMode === timelineTouchMode.singleTap) {
+                timeline._touchMode = timelineTouchMode.slideZoom;
+            }
+            timeline._mouseMode = timelineMouseMode.touchOnly;
+            if (timeline._touchMode === timelineTouchMode.scrub) {
+                e.preventDefault();
+                if (e.changedTouches.length === 1) {
+                    x = e.changedTouches[0].clientX - leftX;
+                    if ((x >= 0) && (x <= timeline._topDiv.clientWidth)) {
+                        timeline._setTimeBarTime(x, x * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth);
+                    }
+                }
+            } else if (timeline._touchMode === timelineTouchMode.slideZoom) {
+                len = e.touches.length;
+                if (len === 2) {
+                    newCenter = (e.touches[0].clientX + e.touches[1].clientX) * 0.5 - leftX;
+                    newSpan = Math.abs(e.touches[0].clientX - e.touches[1].clientX);
+                } else if (len === 1) {
+                    newCenter = e.touches[0].clientX - leftX;
+                    newSpan = 0;
+                }
+
+                if (typeof newCenter !== 'undefined') {
+                    if ((newSpan > 0) && (timeline._touchState.spanX > 0)) {
+                        // Zoom and slide
+                        zoom = (timeline._touchState.spanX / newSpan);
+                        newStartTime = timeline._startJulian.addSeconds(((timeline._touchState.centerX * timeline._timeBarSecondsSpan) - (newCenter * timeline._timeBarSecondsSpan * zoom)) / timeline._topDiv.clientWidth);
+                    } else {
+                        // Slide to newCenter
+                        dx = timeline._touchState.centerX - newCenter;
+                        newStartTime = timeline._startJulian.addSeconds(dx * timeline._timeBarSecondsSpan / timeline._topDiv.clientWidth);
+                    }
+
+                    timeline.zoomTo(newStartTime, newStartTime.addSeconds(timeline._timeBarSecondsSpan * zoom));
+                    timeline._touchState.centerX = newCenter;
+                    timeline._touchState.spanX = newSpan;
+                }
+            }
+        };
+    }
 
     Timeline.prototype.resize = function() {
         var width = this.container.clientWidth;
