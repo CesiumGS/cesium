@@ -454,6 +454,8 @@ define([
 
         var colorCommands = this._commandLists.colorList;
         var pickCommands = this._commandLists.pickList;
+        var colorCommand;
+        var pickCommand;
         var length;
         var i;
 
@@ -490,13 +492,13 @@ define([
 
                 // renderState, shaderProgram, and uniformMap for commands are set below.
 
-                var command = new DrawCommand();
-                command.primitiveType = geometry.primitiveType;
-                command.vertexArray = this._va[i];
-                command.boundingVolume = geometry.boundingSphere;
-                colorCommands.push(command);
+                colorCommand = new DrawCommand();
+                colorCommand.primitiveType = geometry.primitiveType;
+                colorCommand.vertexArray = this._va[i];
+                colorCommand.boundingVolume = geometry.boundingSphere;
+                colorCommands.push(colorCommand);
 
-                var pickCommand = new DrawCommand();
+                pickCommand = new DrawCommand();
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
                 pickCommand.boundingVolume = geometry.boundingSphere;
@@ -563,12 +565,12 @@ define([
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
 
-                var colorCommand = colorCommands[i];
+                colorCommand = colorCommands[i];
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
-                var pickCommand = pickCommands[i];
+                pickCommand = pickCommands[i];
                 pickCommand.renderState = this._pickRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
