@@ -81,6 +81,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -96,6 +98,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -111,6 +115,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -126,6 +132,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -141,6 +149,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -156,6 +166,45 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
+        viewer.destroy();
+    });
+
+    it('can shut off FullscreenButton and Timeline', function() {
+        var viewer = new Viewer(container, {
+            timeline: false,
+            fullscreenButton : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeUndefined();
+        expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
+        viewer.destroy();
+    });
+
+    it('can shut off FullscreenButton, Timeline, and Animation', function() {
+        var viewer = new Viewer(container, {
+            timeline: false,
+            fullscreenButton : false,
+            animation : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeUndefined(Animation);
+        expect(viewer.timeline).toBeUndefined();
+        expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -238,6 +287,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
         expect(viewer.baseLayerPicker.viewModel.imageryProviderViewModels).toEqual(models);
+        viewer.destroy();
+    });
+
+    it('can disable render loop', function() {
+        var viewer = new Viewer(container, {
+            useDefaultRenderLoop : false
+        });
+        expect(viewer.useDefaultRenderLoop).toBe(false);
         viewer.destroy();
     });
 

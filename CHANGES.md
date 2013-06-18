@@ -27,6 +27,9 @@ Beta Releases
 * Fixed an issue in `BaseLayerPicker` where destroy wasn't properly cleaning everything up.
 * Added the ability to unsubscribe to `Timeline` update event.
 * Added a `screenSpaceEventHandler` property to `CesiumWidget`. Also added a `sceneMode` option to the constructor to set the initial scene mode.
+* Added `useDefaultRenderLoop` property to `CesiumWidget` that allows the default render loop to be disabled so that a custom render loop can be used.
+* Fix resizing issues in `CesiumWidget` ([#608](https://github.com/AnalyticalGraphicsInc/cesium/issues/608)) by having the default render loop force a resize event every 60 frames.
+* Added `CesiumWidget.onRenderLoopError` which is an `Event` that is raised if an exception is generated inside of the default render loop.
 
 ### b17 - 2013-06-03
 

@@ -191,6 +191,11 @@ define(['dojo',
         }
     }
 
+    window.addEventListener('resize', function() {
+        timeline.resize();
+        animation.resize();
+    }, false);
+
     dojo.ready(function() {
         endBeforeStart = document.getElementById('endBeforeStart');
         containerElement = document.getElementById('timelineAndAnimation');
