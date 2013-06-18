@@ -103,6 +103,7 @@ defineSuite([
         c.execute = function() {};
         spyOn(c, 'execute');
 
+        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive(c));
 
         scene.debugCommandFilter = function(command) {
@@ -113,8 +114,7 @@ defineSuite([
         scene.render();
         expect(c.execute).not.toHaveBeenCalled();
 
-        scene.getPrimitives().removeAll();
-        scene.debugCommandFilter = undefined;
+        destroyScene(scene);
     });
 
     it('debugCommandFilter does not filter commands', function() {
@@ -122,6 +122,7 @@ defineSuite([
         c.execute = function() {};
         spyOn(c, 'execute');
 
+        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive(c));
 
         expect(scene.debugCommandFilter).toBeUndefined();
@@ -129,7 +130,7 @@ defineSuite([
         scene.render();
         expect(c.execute).toHaveBeenCalled();
 
-        scene.getPrimitives().removeAll();
+        destroyScene(scene);
     });
 
     it('debugShowBoundingVolume draws a bounding sphere', function() {
@@ -138,13 +139,14 @@ defineSuite([
         c.debugShowBoundingVolume = true;
         c.boundingVolume = new BoundingSphere(Cartesian3.ZERO, 7000000.0);
 
+        var scene = createScene();
         scene.getPrimitives().add(getMockPrimitive(c));
 
         scene.initializeFrame();
         scene.render();
         expect(scene.getContext().readPixels()[0]).not.toEqual(0);  // Red bounding sphere
 
-        scene.getPrimitives().removeAll();
+        destroyScene(scene);
     });
 
     it('isDestroyed', function() {
