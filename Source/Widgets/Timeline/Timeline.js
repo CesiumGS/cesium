@@ -87,6 +87,11 @@ define([
          */
         this.container = container;
 
+        var topDiv = document.createElement('div');
+        topDiv.className = 'cesium-timeline-main';
+        container.appendChild(topDiv);
+        this._topDiv = topDiv;
+
         this._endJulian = undefined;
         this._epochJulian = undefined;
         this._lastXPos = undefined;
@@ -105,23 +110,25 @@ define([
         this._mouseX = 0;
         this._timelineDrag = 0;
         this._timelineDragLocation = undefined;
-        var widget = this;
+        this._lastHeight = undefined;
+        this._lastWidth = undefined;
 
-        this.container.classList.add('cesium-timeline-main');
-        this.container.innerHTML = '<div class="cesium-timeline-bar"></div><div class="cesium-timeline-trackContainer">' +
+        this._topDiv.innerHTML = '<div class="cesium-timeline-bar"></div><div class="cesium-timeline-trackContainer">' +
                                      '<canvas class="cesium-timeline-tracks" width="10" height="1">' +
                                      '</canvas></div><div class="cesium-timeline-needle"></div><span class="cesium-timeline-ruler"></span>';
-        this._timeBarEle = this.container.childNodes[0];
-        this._trackContainer = this.container.childNodes[1];
-        this._trackListEle = this.container.childNodes[1].childNodes[0];
-        this._needleEle = this.container.childNodes[2];
-        this._rulerEle = this.container.childNodes[3];
+        this._timeBarEle = this._topDiv.childNodes[0];
+        this._trackContainer = this._topDiv.childNodes[1];
+        this._trackListEle = this._topDiv.childNodes[1].childNodes[0];
+        this._needleEle = this._topDiv.childNodes[2];
+        this._rulerEle = this._topDiv.childNodes[3];
         this._context = this._trackListEle.getContext('2d');
 
         this._trackList = [];
         this._highlightRanges = [];
 
         this.zoomTo(clock.startTime, clock.stopTime);
+
+        var widget = this;
 
         this._timeBarEle.addEventListener('mousedown', function(e) {
             widget._handleMouseDown(e);
@@ -147,13 +154,9 @@ define([
         document.addEventListener('touchend', function(e) {
             widget._handleTouchEnd(e);
         }, false);
-        this.container.oncontextmenu = function() {
+        this._topDiv.oncontextmenu = function() {
             return false;
         };
-
-        window.addEventListener('resize', function() {
-            widget.handleResize();
-        }, false);
 
         this.addEventListener = function(type, listener, useCapture) {
             widget.container.addEventListener(type, listener, useCapture);
@@ -168,21 +171,20 @@ define([
     }
 
     Timeline.prototype.destroy = function() {
-        this.container.classList.remove('cesium-timeline-main');
         this.container.innerHTML = '';
     };
 
     Timeline.prototype.addHighlightRange = function(color, heightInPx) {
         var newHighlightRange = new TimelineHighlightRange(color, heightInPx);
         this._highlightRanges.push(newHighlightRange);
-        this.handleResize();
+        this.resize();
         return newHighlightRange;
     };
 
     Timeline.prototype.addTrack = function(interval, heightInPx, color, backgroundColor) {
         var newTrack = new TimelineTrack(interval, heightInPx, color, backgroundColor);
         this._trackList.push(newTrack);
-        this.handleResize();
+        this.resize();
         return newTrack;
     };
 
@@ -220,7 +222,7 @@ define([
             }
         }
 
-        this.handleResize();
+        this.resize();
 
         var evt = document.createEvent('Event');
         evt.initEvent('setzoom', true, true);
@@ -229,7 +231,7 @@ define([
         evt.epochJulian = this._epochJulian;
         evt.totalSpan = this._timeBarSecondsSpan;
         evt.mainTicSpan = this._mainTicSpan;
-        this.container.dispatchEvent(evt);
+        this._topDiv.dispatchEvent(evt);
     };
 
     Timeline.prototype.zoomFrom = function(amount) {
@@ -275,7 +277,7 @@ define([
         var timeBar = this._timeBarEle;
 
         var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-        var xPos = Math.round(seconds * this.container.clientWidth / this._timeBarSecondsSpan);
+        var xPos = Math.round(seconds * this._topDiv.clientWidth / this._timeBarSecondsSpan);
         var scrubX = xPos - 8, tic;
         var widget = this;
 
@@ -479,7 +481,7 @@ define([
         var scrubElement = this._scrubElement;
         if (typeof this._scrubElement !== 'undefined') {
             var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-            var xPos = Math.round(seconds * this.container.clientWidth / this._timeBarSecondsSpan);
+            var xPos = Math.round(seconds * this._topDiv.clientWidth / this._timeBarSecondsSpan);
 
             if (this._lastXPos !== xPos) {
                 this._lastXPos = xPos;
@@ -489,7 +491,7 @@ define([
             }
         }
         if (typeof this._timelineDragLocation !== 'undefined') {
-            this._setTimeBarTime(this._timelineDragLocation, this._timelineDragLocation * this._timeBarSecondsSpan / this.container.clientWidth);
+            this._setTimeBarTime(this._timelineDragLocation, this._timelineDragLocation * this._timeBarSecondsSpan / this._topDiv.clientWidth);
             this.zoomTo(this._startJulian.addSeconds(this._timelineDrag), this._endJulian.addSeconds(this._timelineDrag));
         }
     };
@@ -509,7 +511,7 @@ define([
         evt.timeSeconds = seconds;
         evt.timeJulian = this._scrubJulian;
         evt.clock = this._clock;
-        this.container.dispatchEvent(evt);
+        this._topDiv.dispatchEvent(evt);
     };
 
     Timeline.prototype._handleMouseDown = function(e) {
@@ -543,24 +545,24 @@ define([
         var dx;
         if (this._mouseMode === timelineMouseMode.scrub) {
             e.preventDefault();
-            var x = e.clientX - this.container.getBoundingClientRect().left;
+            var x = e.clientX - this._topDiv.getBoundingClientRect().left;
 
             if (x < 0) {
                 this._timelineDragLocation = 0;
                 this._timelineDrag = -0.01*this._timeBarSecondsSpan;
-            } else if (x > this.container.clientWidth) {
-                this._timelineDragLocation = this.container.clientWidth;
+            } else if (x > this._topDiv.clientWidth) {
+                this._timelineDragLocation = this._topDiv.clientWidth;
                 this._timelineDrag = 0.01*this._timeBarSecondsSpan;
             } else {
                 this._timelineDragLocation = undefined;
-                this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
+                this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this._topDiv.clientWidth);
             }
 
         } else if (this._mouseMode === timelineMouseMode.slide) {
             dx = this._mouseX - e.clientX;
             this._mouseX = e.clientX;
             if (dx !== 0) {
-                var dsec = dx * this._timeBarSecondsSpan / this.container.clientWidth;
+                var dsec = dx * this._timeBarSecondsSpan / this._topDiv.clientWidth;
                 this.zoomTo(this._startJulian.addSeconds(dsec), this._endJulian.addSeconds(dsec));
             }
         } else if (this._mouseMode === timelineMouseMode.zoom) {
@@ -579,12 +581,12 @@ define([
     };
 
     Timeline.prototype._handleTouchStart = function(e) {
-        var len = e.touches.length, seconds, xPos, leftX = this.container.getBoundingClientRect().left;
+        var len = e.touches.length, seconds, xPos, leftX = this._topDiv.getBoundingClientRect().left;
         e.preventDefault();
         this._mouseMode = timelineMouseMode.touchOnly;
         if (len === 1) {
             seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-            xPos = Math.round(seconds * this.container.clientWidth / this._timeBarSecondsSpan + leftX);
+            xPos = Math.round(seconds * this._topDiv.clientWidth / this._timeBarSecondsSpan + leftX);
             if (Math.abs(e.touches[0].clientX - xPos) < 50) {
                 this._touchMode = timelineTouchMode.scrub;
                 if (this._scrubElement) {
@@ -603,7 +605,7 @@ define([
         }
     };
     Timeline.prototype._handleTouchEnd = function(e) {
-        var len = e.touches.length, leftX = this.container.getBoundingClientRect().left;
+        var len = e.touches.length, leftX = this._topDiv.getBoundingClientRect().left;
         if (this._touchMode === timelineTouchMode.singleTap) {
             this._touchMode = timelineTouchMode.scrub;
             this._handleTouchMove(e);
@@ -621,7 +623,7 @@ define([
         }
     };
     Timeline.prototype._handleTouchMove = function(e) {
-        var dx, x, len, newCenter, newSpan, newStartTime, zoom = 1, leftX = this.container.getBoundingClientRect().left;
+        var dx, x, len, newCenter, newSpan, newStartTime, zoom = 1, leftX = this._topDiv.getBoundingClientRect().left;
         if (this._touchMode === timelineTouchMode.singleTap) {
             this._touchMode = timelineTouchMode.slideZoom;
         }
@@ -630,8 +632,8 @@ define([
             e.preventDefault();
             if (e.changedTouches.length === 1) {
                 x = e.changedTouches[0].clientX - leftX;
-                if ((x >= 0) && (x <= this.container.clientWidth)) {
-                    this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this.container.clientWidth);
+                if ((x >= 0) && (x <= this._topDiv.clientWidth)) {
+                    this._setTimeBarTime(x, x * this._timeBarSecondsSpan / this._topDiv.clientWidth);
                 }
             }
         } else if (this._touchMode === timelineTouchMode.slideZoom) {
@@ -649,11 +651,11 @@ define([
                     // Zoom and slide
                     zoom = (this._touchState.spanX / newSpan);
                     newStartTime = this._startJulian.addSeconds(((this._touchState.centerX * this._timeBarSecondsSpan) - (newCenter * this._timeBarSecondsSpan * zoom)) /
-                            this.container.clientWidth);
+                            this._topDiv.clientWidth);
                 } else {
                     // Slide to newCenter
                     dx = this._touchState.centerX - newCenter;
-                    newStartTime = this._startJulian.addSeconds(dx * this._timeBarSecondsSpan / this.container.clientWidth);
+                    newStartTime = this._startJulian.addSeconds(dx * this._timeBarSecondsSpan / this._topDiv.clientWidth);
                 }
 
                 this.zoomTo(newStartTime, newStartTime.addSeconds(this._timeBarSecondsSpan * zoom));
@@ -663,9 +665,15 @@ define([
         }
     };
 
-    Timeline.prototype.handleResize = function() {
-        var containerHeight = this.container.getBoundingClientRect().height - this._timeBarEle.getBoundingClientRect().height - 2;
-        this._trackContainer.style.height = containerHeight.toString() + 'px';
+    Timeline.prototype.resize = function() {
+        var width = this.container.clientWidth;
+        var height = this.container.clientHeight;
+
+        if (width === this._lastWidth && height === this._lastHeight) {
+            return;
+        }
+
+        this._trackContainer.style.height = height + 'px';
 
         var trackListHeight = 1;
         this._trackList.forEach(function(track) {
@@ -675,6 +683,9 @@ define([
         this._trackListEle.width = this._trackListEle.clientWidth;
         this._trackListEle.height = trackListHeight;
         this._makeTics();
+
+        this._lastWidth = width;
+        this._lastHeight = height;
     };
 
     return Timeline;
