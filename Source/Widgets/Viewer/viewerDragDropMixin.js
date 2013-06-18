@@ -6,6 +6,7 @@ define([
         '../../Core/Event',
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
+        '../../DynamicScene/GeoJsonDataSource',
         '../getElement'
     ], function(
         defaultValue,
@@ -14,8 +15,10 @@ define([
         Event,
         wrapFunction,
         CzmlDataSource,
+        GeoJsonDataSource,
         getElement) {
     "use strict";
+    /*global console*/
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -191,26 +194,45 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
+    function endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }
+
     function createOnLoadCallback(viewer, source, firstTime) {
-        return function(evt) {
-            var czmlSource = new CzmlDataSource();
-            try {
-                czmlSource.load(JSON.parse(evt.target.result), source);
-                viewer.dataSources.add(czmlSource);
-                if (firstTime) {
-                    var dataClock = czmlSource.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        if (typeof viewer.timeline !== 'undefined') {
-                            viewer.timeline.updateFromClock();
-                            viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+        if (endsWith(source, "czml")) {
+            return function(evt) {
+                var czmlSource = new CzmlDataSource();
+                try {
+                    czmlSource.load(JSON.parse(evt.target.result), source);
+                    viewer.dataSources.add(czmlSource);
+                    if (firstTime) {
+                        var dataClock = czmlSource.getClock();
+                        if (typeof dataClock !== 'undefined') {
+                            dataClock.clone(viewer.clock);
+                            if (typeof viewer.timeline !== 'undefined') {
+                                viewer.timeline.updateFromClock();
+                                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                            }
                         }
                     }
+                } catch (error) {
+                    viewer.onDropError.raiseEvent(viewer, source, error);
                 }
-            } catch (error) {
-                viewer.onDropError.raiseEvent(viewer, source, error);
-            }
-        };
+            };
+        } else if (endsWith(source, "geojson")) {
+            return function(evt) {
+                var geoJsonSource = new GeoJsonDataSource();
+                try {
+                    geoJsonSource.load(JSON.parse(evt.target.result), source);
+                    viewer.dataSources.add(geoJsonSource);
+                } catch (error) {
+                    viewer.onDropError.raiseEvent(viewer, source, error);
+                }
+            };
+        } else {
+            console.log('Unrecognized file extension: ' + source);
+            window.alert('Unrecognized file extension: ' + source);
+        }
     }
 
     function createOnDropErrorCallback(viewer, name) {
