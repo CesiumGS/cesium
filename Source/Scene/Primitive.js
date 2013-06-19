@@ -378,20 +378,6 @@ define([
         }
     }
 
-    function createPickVertexShaderSource(vertexShaderSource) {
-        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-        var pickMain =
-            'attribute vec4 pickColor; \n' +
-            'varying vec4 czm_pickColor; \n' +
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    czm_pickColor = pickColor; \n' +
-            '}';
-
-        return renamedVS + '\n' + pickMain;
-    }
-
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context) {
         // Copy instances first since most pipeline operations modify the geometry and instance in-place.
@@ -429,6 +415,20 @@ define([
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];
+    }
+
+    function createPickVertexShaderSource(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
     }
 
     /**
