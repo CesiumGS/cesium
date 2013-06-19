@@ -378,6 +378,20 @@ define([
         }
     }
 
+    function createPickVertexShaderSource(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
+    }
+
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context) {
         // Copy instances first since most pipeline operations modify the geometry and instance in-place.
@@ -517,7 +531,10 @@ define([
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
+                createPickVertexShaderSource(vs),
+                createPickFragmentShaderSource(fs, 'varying'),
+                this._attributeIndices);
         }
 
         if (createRS || createSP) {
