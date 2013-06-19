@@ -2,6 +2,7 @@
 define([
         '../Core/clone',
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/Color',
@@ -20,6 +21,7 @@ define([
     ], function(
         clone,
         defaultValue,
+        DeveloperError,
         destroyObject,
         Matrix4,
         Color,
@@ -183,10 +185,8 @@ define([
         this._rs = undefined;
         this._sp = undefined;
 
-        this._pickRS = undefined;
         this._pickSP = undefined;
         this._pickIds = [];
-        this._isPickable = false;
 
         this._commandLists = new CommandLists();
     };
@@ -240,19 +240,6 @@ define([
         }
     }
 
-    function isPickable(instances) {
-        var pickable = false;
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof instances[i].pickData !== 'undefined') {
-                pickable = true;
-                break;
-            }
-        }
-
-        return pickable;
-    }
-
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
 
@@ -270,103 +257,24 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            if (typeof instance.pickData !== 'undefined') {
-                var pickId = context.createPickId({
-                    primitive : primitive,
-                    pickData : instance.pickData
-                });
-                primitive._pickIds.push(pickId);
+            var pickId = context.createPickId({
+                primitive : primitive,
+                pickData : instance.pickData    // may be undefined
+            });
+            primitive._pickIds.push(pickId);
 
-                var pickColor = pickId.color;
-                var red = Color.floatToByte(pickColor.red);
-                var green = Color.floatToByte(pickColor.green);
-                var blue = Color.floatToByte(pickColor.blue);
-                var alpha = Color.floatToByte(pickColor.alpha);
-                var values = attributes.pickColor.values;
+            var pickColor = pickId.color;
+            var red = Color.floatToByte(pickColor.red);
+            var green = Color.floatToByte(pickColor.green);
+            var blue = Color.floatToByte(pickColor.blue);
+            var alpha = Color.floatToByte(pickColor.alpha);
+            var values = attributes.pickColor.values;
 
-                for (var j = 0; j < numberOfComponents; j += 4) {
-                    values[j] = red;
-                    values[j + 1] = green;
-                    values[j + 2] = blue;
-                    values[j + 3] = alpha;
-                }
-            }
-        }
-    }
-
-    function addDefaultAttributes(instances) {
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            var geometry = instances[i].geometry;
-            var attributes = geometry.attributes;
-            var positionAttr = attributes.position;
-            var positionLength = positionAttr.values.length / positionAttr.componentsPerAttribute;
-
-            var numberOfComponents;
-            var values;
-            var j;
-
-            if (typeof attributes.normal === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.normal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 0.0;
-                    values[j + 1] = 0.0;
-                    values[j + 2] = 1.0;
-                }
-            }
-
-            if (typeof attributes.tangent === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 1.0;
-                    values[j + 1] = 0.0;
-                    values[j + 2] = 0.0;
-                }
-            }
-
-            if (typeof attributes.binormal === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 0.0;
-                    values[j + 1] = 1.0;
-                    values[j + 2] = 0.0;
-                }
-            }
-
-            if (typeof attributes.st === 'undefined') {
-                numberOfComponents = 2 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 2) {
-                    values[j] = 0.0;
-                    values[j + 1] = 0.0;
-                }
+            for (var j = 0; j < numberOfComponents; j += 4) {
+                values[j] = red;
+                values[j + 1] = green;
+                values[j + 2] = blue;
+                values[j + 3] = alpha;
             }
         }
     }
@@ -406,9 +314,6 @@ define([
             insts[i] = instances[i].clone();
         }
 
-        // Add default values for any undefined attributes
-        addDefaultAttributes(insts);
-
         // Unify to world coordinates before combining.  If there is only one geometry or all
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
         transformToWorldCoordinates(primitive, insts);
@@ -425,10 +330,8 @@ define([
             addColorAttribute(primitive, insts, context);
         }
 
-        // Add pickColor attribute if any geometries are pickable
-        if (isPickable(insts)) {
-            addPickColorAttribute(primitive, insts, context);
-        }
+        // Add pickColor attribute for picking individual instances
+        addPickColorAttribute(primitive, insts, context);
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
@@ -442,7 +345,7 @@ define([
             GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
         } else {
             // Split 3D position for GPU RTE
-            GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
 
         if (!context.getElementIndexUint()) {
@@ -452,6 +355,43 @@ define([
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];
+    }
+
+    function createPickVertexShaderSource(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
+    }
+
+    function validateShaderMatching(shaderProgram, attributeIndices) {
+        // For a VAO and shader program to be compatible, the VAO must have
+        // all active attribute in the shader program.  The VAO may have
+        // extra attributes with the only concern being a potential
+        // performance hit due to extra memory bandwidth and cache pollution.
+        // The shader source could have extra attributes that are not used,
+        // but there is no guarantee they will be optimized out.
+        //
+        // Here, we validate that the VAO has all attributes required
+        // to match the shader program.
+        var shaderAttributes = shaderProgram.getVertexAttributes();
+
+        for (var name in shaderAttributes) {
+            if (shaderAttributes.hasOwnProperty(name)) {
+                if (typeof attributeIndices[name] === 'undefined') {
+                    throw new DeveloperError('Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input \'' + name +
+                        '\', which was not computed as part of the Geometry.  Use the appearance\'s vertexFormat property when constructing the geometry.');
+                }
+            }
+        }
+
     }
 
     /**
@@ -501,7 +441,6 @@ define([
             }
 
             this._va = va;
-            this._isPickable = isPickable(instances);
 
             for (i = 0; i < length; ++i) {
                 var geometry = geometries[i];
@@ -528,36 +467,23 @@ define([
 
         // Create or recreate render state and shader program if appearance/material changed
         var appearance = this.appearance;
+        var material = appearance.material;
         var createRS = false;
         var createSP = false;
 
         if (this._appearance !== appearance) {
 
             this._appearance = appearance;
-            this._material = appearance.material;
+            this._material = material;
             createRS = true;
             createSP = true;
-        } else if (this._material !== appearance.material ) {
-            this._material = appearance.material;
+        } else if (this._material !== material ) {
+            this._material = material;
             createSP = true;
         }
 
         if (createRS) {
             this._rs = context.createRenderState(appearance.renderState);
-
-            if (this._isPickable) {
-                this._pickRS = this._rs;
-            } else {
-                // Still render during pick pass, but depth-only.
-                var appearanceRS = clone(appearance.renderState, true);
-                appearanceRS.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-                this._pickRS = context.createRenderState(appearanceRS);
-            }
         }
 
         if (createSP) {
@@ -565,18 +491,18 @@ define([
             var vs = appearance.vertexShaderSource;
             var fs = appearance.getFragmentShaderSource();
 
-            this._sp = shaderCache.replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, this._attributeIndices);
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
+                createPickVertexShaderSource(vs),
+                createPickFragmentShaderSource(fs, 'varying'),
+                this._attributeIndices);
 
-            if (this._isPickable) {
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
-            } else {
-                // Color pass shader, but rendered with depth-only for correct occlusion
-                this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, fs, this._attributeIndices);
-            }
+            validateShaderMatching(this._sp, this._attributeIndices);
+            validateShaderMatching(this._pickSP, this._attributeIndices);
         }
 
         if (createRS || createSP) {
-            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
+            var uniforms = (typeof material !== 'undefined') ? material._uniforms : undefined;
 
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
@@ -587,7 +513,7 @@ define([
                 colorCommand.uniformMap = uniforms;
 
                 pickCommand = pickCommands[i];
-                pickCommand.renderState = this._pickRS;
+                pickCommand.renderState = this._rs;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
             }

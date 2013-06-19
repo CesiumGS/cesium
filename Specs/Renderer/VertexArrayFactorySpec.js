@@ -120,12 +120,12 @@ defineSuite([
     it('creates a homogeneous multiple-attribute vertex (non-interleaved)', function() {
         var geometry = new Geometry({
             attributes : {
-                position : new GeometryAttribute({
+                customPosition : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 2.0, 2.0, 2.0]
                 }),
-                normal : new GeometryAttribute({
+                customNormal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
@@ -141,14 +141,14 @@ defineSuite([
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = geometry.attributes.position;
+        var position = geometry.attributes.customPosition;
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
-        var normal = geometry.attributes.position;
+        var normal = geometry.attributes.customNormal;
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
@@ -161,12 +161,12 @@ defineSuite([
     it('creates a homogeneous multiple-attribute vertex (interleaved)', function() {
         var geometry = new Geometry({
             attributes : {
-                position : new GeometryAttribute({
+                customPosition : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 2.0, 2.0, 2.0]
                 }),
-                normal : new GeometryAttribute({
+                customNormal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
@@ -183,8 +183,8 @@ defineSuite([
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = geometry.attributes.position;
-        var normal = geometry.attributes.position;
+        var position = geometry.attributes.customPosition;
+        var normal = geometry.attributes.customNormal;
         var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + normal.componentDatatype.sizeInBytes * normal.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);

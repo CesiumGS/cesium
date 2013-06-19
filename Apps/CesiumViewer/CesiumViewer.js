@@ -27,8 +27,8 @@ define([
         'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
-        'Scene/ClosedTranslucentAppearance',
         'Scene/PerInstanceColorClosedTranslucentAppearance',
+        'Scene/PerInstanceFlatColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Widgets/checkForChromeFrame',
@@ -64,8 +64,8 @@ define([
         WallGeometry,
         Primitive,
         Appearance,
-        ClosedTranslucentAppearance,
         PerInstanceColorClosedTranslucentAppearance,
+        PerInstanceFlatColorAppearance,
         EllipsoidSurfaceAppearance,
         Material,
         checkForChromeFrame,
@@ -179,7 +179,7 @@ define([
 
         var geometry = new GeometryInstance({
             geometry : new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT,
                 extent : new Extent(
                     CesiumMath.toRadians(-180.0),
                     CesiumMath.toRadians(50.0),
@@ -192,7 +192,7 @@ define([
         });
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -203,7 +203,7 @@ define([
         geometry2.color.alpha = 0.5;
         var geometry3 = new GeometryInstance({
             geometry : new BoxGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT,
                 dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -213,7 +213,7 @@ define([
         });
         var geometry4 = new GeometryInstance({
             geometry : new EllipseGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT,
                 ellipsoid : ellipsoid,
                 //center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                 center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-180, 0)),
@@ -231,60 +231,61 @@ define([
         });
         scene.getPrimitives().add(primitive);
 
-        var m = new Material({
-            context : viewer.scene.getContext(),
-            fabric : {
-                materials : {
-                    diffuseMaterial : {
-                        type : 'DiffuseMap',
-                        uniforms : {
-                            image : '../Sandcastle/images/bumpmap.png'
-                        }
-                    },
-                    normalMap : {
-                        type : 'NormalMap',
-                        uniforms : {
-                            image : '../Sandcastle/images/normalmap.png',
-                            strength : 0.6
-                        }
-                    }
-                },
-                components : {
-                    diffuse : 'diffuseMaterial.diffuse',
-                    specular : 0.01,
-                    normal : 'normalMap.normal'
-                }
-            }
-        });
-        var rs = {
-            depthTest : {
-                enabled : true
-            }
-        };
-        var appearance = new Appearance({
-            material : m,
-            renderState : rs
-        });
-        var geometry5 = new GeometryInstance({
-            geometry : new EllipsoidGeometry({
-                vertexFormat : VertexFormat.ALL,
-                ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
-            }),
-            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
-            pickData : 'geometry5'
-        });
-        scene.getPrimitives().add(new Primitive({
-            geometryInstances : geometry5,
-            appearance :appearance,
-            vertexCacheOptimize : false,
-            releaseGeometries : true,
-            transformToWorldCoordinates : false
-        }));
+
+//        var m = new Material({
+//            context : viewer.scene.getContext(),
+//            fabric : {
+//                materials : {
+//                    diffuseMaterial : {
+//                        type : 'DiffuseMap',
+//                        uniforms : {
+//                            image : '../Sandcastle/images/bumpmap.png'
+//                        }
+//                    },
+//                    normalMap : {
+//                        type : 'NormalMap',
+//                        uniforms : {
+//                            image : '../Sandcastle/images/normalmap.png',
+//                            strength : 0.6
+//                        }
+//                    }
+//                },
+//                components : {
+//                    diffuse : 'diffuseMaterial.diffuse',
+//                    specular : 0.01,
+//                    normal : 'normalMap.normal'
+//                }
+//            }
+//        });
+//        var rs = {
+//            depthTest : {
+//                enabled : true
+//            }
+//        };
+//        var appearance = new Appearance({
+//            material : m,
+//            renderState : rs
+//        });
+//        var geometry5 = new GeometryInstance({
+//            geometry : new EllipsoidGeometry({
+//                vertexFormat : VertexFormat.ALL,
+//                ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
+//            }),
+//            modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+//                ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
+//            pickData : 'geometry5'
+//        });
+//        scene.getPrimitives().add(new Primitive({
+//            geometryInstances : geometry5,
+//            appearance :appearance,
+//            vertexCacheOptimize : false,
+//            releaseGeometries : true,
+//            transformToWorldCoordinates : false
+//        }));
 
         var polygonGeometry = new GeometryInstance({
             geometry : new PolygonGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_ST,
+                vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
 /*
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-72.0, 40.0),
@@ -326,6 +327,7 @@ define([
                         }]
                     }]
                 },
+                height : 3000000.0,
                 stRotation : 0.523598776
             }),
             pickData : 'polygon3'
@@ -333,14 +335,16 @@ define([
         var polygonPrimitive = new Primitive({
             geometryInstances : polygonGeometry,
             appearance : new EllipsoidSurfaceAppearance({
-                material : Material.fromType(scene.getContext(), 'Stripe')
+                material : Material.fromType(scene.getContext(), 'Stripe'),
+                aboveGround : true,
+                translucent : false
             })
         });
         scene.getPrimitives().add(polygonPrimitive);
 
         var wall = new GeometryInstance({
             geometry : new WallGeometry({
-                vertexFormat : VertexFormat.ALL,
+                vertexFormat : Appearance.MaterialSupport.TEXTURED.vertexFormat,
                 positions    : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
@@ -348,20 +352,17 @@ define([
                     Cartographic.fromDegrees(-120.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
                 ])
-            }),
-            pickData : 'wall'
+            })
+            // pickData is undefined here for testing
         });
         var wallPrimitive = new Primitive({
             geometryInstances : wall,
             appearance : new Appearance({
-                material : Material.fromType(scene.getContext(), 'Wood'),
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    }
-                }
+                materialSupport : Appearance.MaterialSupport.TEXTURED,
+                material : Material.fromType(scene.getContext(), 'Checkerboard')
             })
         });
+        wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
 
         /*
@@ -383,7 +384,17 @@ define([
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array(flatPositions)
-                   })
+                   }),
+                   color : new GeometryAttribute({
+                       componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                       componentsPerAttribute : 4,
+                       normalize : true,
+                       values : new Uint8Array([
+                           255, 255, 255, 255,
+                           255, 255, 255, 255,
+                           255, 255, 255, 255
+                       ])
+                  })
                },
                indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
@@ -392,7 +403,7 @@ define([
         });
         scene.getPrimitives().add(new Primitive({
             geometryInstances : customWithIndices,
-            appearance : new Appearance()
+            appearance : new PerInstanceFlatColorAppearance()
         }));
 
         positions = ellipsoid.cartographicArrayToCartesianArray([
@@ -412,7 +423,17 @@ define([
                          componentDatatype : ComponentDatatype.DOUBLE,
                          componentsPerAttribute : 3,
                          values : new Float64Array(flatPositions)
-                    })
+                    }),
+                    color : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                        componentsPerAttribute : 4,
+                        normalize : true,
+                        values : new Uint8Array([
+                            255, 255, 0, 255,
+                            255, 255, 0, 255,
+                            255, 255, 0, 255
+                        ])
+                   })
                 },
                 primitiveType : PrimitiveType.LINE_LOOP
             }),
@@ -420,7 +441,7 @@ define([
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,
-             appearance : new Appearance()
+             appearance : new PerInstanceFlatColorAppearance()
          }));
          */
 
@@ -437,7 +458,7 @@ define([
         handler.setInputAction(
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
-                wallPrimitive.appearance = new ClosedTranslucentAppearance();
+                wallPrimitive.appearance = new Appearance();
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

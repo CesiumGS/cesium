@@ -180,13 +180,47 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        var indices = {};
+        // There can be a WebGL performance hit when attribute 0 is disabled, so
+        // assign attribute locations to well-known attributes.
+        var semantics = [
+            'position',
+            'positionHigh',
+            'positionLow',
+
+            // From VertexFormat.position - after 2D projection and high-precision encoding
+            'position3DHigh',
+            'position3DLow',
+            'position2DHigh',
+            'position2DLow',
+
+            // From Primitive
+            'pickColor',
+
+            // From VertexFormat
+            'normal',
+            'st',
+            'binormal',
+            'tangent'
+        ];
 
         var attributes = geometry.attributes;
+        var indices = {};
         var j = 0;
+        var i;
+        var len = semantics.length;
 
-        for ( var name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
+        // Attribute locations for well-known attributes
+        for (i = 0; i < len; ++i) {
+            var semantic = semantics[i];
+
+            if (typeof attributes[semantic] !== 'undefined') {
+                indices[semantic] = j++;
+            }
+        }
+
+        // Locations for custom attributes
+        for (var name in attributes) {
+            if (attributes.hasOwnProperty(name) && (typeof indices[name] === 'undefined')) {
                 indices[name] = j++;
             }
         }

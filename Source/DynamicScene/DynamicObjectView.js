@@ -99,7 +99,16 @@ define([
             if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
-                var toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+                var toFixed;
+
+                if (typeof toInertial === 'undefined' || typeof toInertialDelta === 'undefined') {
+                    toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, update3DMatrix3Scratch3);
+                    toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
+                    toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, update3DMatrix3Scratch2);
+                    Matrix3.transpose(toInertialDelta, toInertialDelta);
+                } else {
+                    toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+                }
 
                 // Z along the position
                 var zBasis = update3DCartesian3Scratch2;
