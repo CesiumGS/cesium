@@ -53,11 +53,12 @@ define([
     var proj = new GeographicProjection();
     var position = new Cartesian3();
     var normal = new Cartesian3();
+    var surfaceNormal = new Cartesian3();
     var tangent = new Cartesian3();
     var binormal = new Cartesian3();
     var extrudedPosition = new Cartesian3();
     var extrudedNormal = new Cartesian3();
-    var extrudedTangent = new Cartesian3();
+    var extrudedBinormal = new Cartesian3();
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
 
@@ -223,7 +224,77 @@ define([
         };
     }
 
-    function addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, offset, extrudedOffset, top, bottom, setNormal) {
+    function addAttributesWall(attrIndex, vertexFormat, attributes, ellipsoid, offset, extrudedOffset, direction, setNormal) {
+        var threeExtrudedOffset = extrudedOffset*3;
+        var threeOffset = offset*3;
+
+        var attrIndex1 = attrIndex + 1;
+        var attrIndex2 = attrIndex + 2;
+
+        if (vertexFormat.position) {
+            attributes.positions[attrIndex + threeExtrudedOffset ] = extrudedPosition.x;
+            attributes.positions[attrIndex1 + threeExtrudedOffset] = extrudedPosition.y;
+            attributes.positions[attrIndex2 + threeExtrudedOffset] = extrudedPosition.z;
+
+            attributes.positions[attrIndex + threeOffset] = position.x;
+            attributes.positions[attrIndex1 + threeOffset] = position.y;
+            attributes.positions[attrIndex2 + threeOffset] = position.z;
+        }
+
+        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+            setNormal.clone(normal);
+            if (vertexFormat.tangent || vertexFormat.binormal) {
+                ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
+                if (direction === 'n' || direction === 's') {
+                    Cartesian3.cross(Cartesian3.UNIT_Z, surfaceNormal, tangent).normalize(tangent);
+                    if (vertexFormat.binormal) {
+                        Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                    }
+                } else {
+                    Cartesian3.cross(Cartesian3.UNIT_Z, surfaceNormal, tangent).normalize(tangent);
+                    if (vertexFormat.binormal) {
+                        Cartesian3.cross(surfaceNormal, tangent, binormal).normalize(binormal);
+                    }
+                    if (vertexFormat.tangent) {
+                        Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                    }
+                }
+            }
+
+            if (vertexFormat.normal) {
+                attributes.normals[attrIndex + threeOffset] = normal.x;
+                attributes.normals[attrIndex1 + threeOffset] = normal.y;
+                attributes.normals[attrIndex2 + threeOffset] = normal.z;
+
+                attributes.normals[attrIndex + threeExtrudedOffset] = normal.x;
+                attributes.normals[attrIndex1 + threeExtrudedOffset] = normal.y;
+                attributes.normals[attrIndex2 + threeExtrudedOffset] = normal.z;
+            }
+
+            if (vertexFormat.tangent) {
+                attributes.tangents[attrIndex + threeOffset] = tangent.x;
+                attributes.tangents[attrIndex1 + threeOffset] = tangent.y;
+                attributes.tangents[attrIndex2 + threeOffset] = tangent.z;
+
+                attributes.tangents[attrIndex + threeExtrudedOffset] = tangent.x;
+                attributes.tangents[attrIndex1 + threeExtrudedOffset] = tangent.y;
+                attributes.tangents[attrIndex2 + threeExtrudedOffset] = tangent.z;
+
+            }
+
+            if (vertexFormat.binormal) {
+                attributes.binormals[attrIndex + threeOffset] = binormal.x;
+                attributes.binormals[attrIndex1 + threeOffset] = binormal.y;
+                attributes.binormals[attrIndex2 + threeOffset] = binormal.z;
+
+                attributes.binormals[attrIndex + threeExtrudedOffset] = binormal.x;
+                attributes.binormals[attrIndex1 + threeExtrudedOffset] = binormal.y;
+                attributes.binormals[attrIndex2 + threeExtrudedOffset] = binormal.z;
+            }
+        }
+    }
+
+    function addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, offset, extrudedOffset, top, bottom) {
         if (!top) {
             extrudedOffset = offset;
         }
@@ -249,22 +320,13 @@ define([
         }
 
         if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-            if (typeof setNormal !== 'undefined') { //if wall
-                setNormal.clone(normal);
-                setNormal.clone(extrudedNormal);
-            } else {
-                ellipsoid.geodeticSurfaceNormal(position, normal);
-                Cartesian3.negate(normal, extrudedNormal);
-            }
+            ellipsoid.geodeticSurfaceNormal(position, normal);
+            Cartesian3.negate(normal, extrudedNormal);
             if (vertexFormat.tangent || vertexFormat.binormal) {
                 Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
                 if (vertexFormat.binormal) {
                     Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                }
-                if (typeof setNormal !== 'undefined') { // if wall
-                    tangent.clone(extrudedTangent);
-                } else {
-                    Cartesian3.negate(tangent, extrudedTangent);
+                    binormal.negate(extrudedBinormal);
                 }
             }
 
@@ -296,15 +358,15 @@ define([
                 }
 
                 if (vertexFormat.tangent) {
-                    attributes.tangents[attrIndex + threeExtrudedOffset] = extrudedTangent.x;
-                    attributes.tangents[attrIndex1 + threeExtrudedOffset] = extrudedTangent.y;
-                    attributes.tangents[attrIndex2 + threeExtrudedOffset] = extrudedTangent.z;
+                    attributes.tangents[attrIndex + threeExtrudedOffset] = tangent.x;
+                    attributes.tangents[attrIndex1 + threeExtrudedOffset] = tangent.y;
+                    attributes.tangents[attrIndex2 + threeExtrudedOffset] = tangent.z;
                 }
 
                 if (vertexFormat.binormal) {
-                    attributes.binormals[attrIndex + threeExtrudedOffset] = binormal.x;
-                    attributes.binormals[attrIndex1 + threeExtrudedOffset] = binormal.y;
-                    attributes.binormals[attrIndex2 + threeExtrudedOffset] = binormal.z;
+                    attributes.binormals[attrIndex + threeExtrudedOffset] = extrudedBinormal.x;
+                    attributes.binormals[attrIndex1 + threeExtrudedOffset] = extrudedBinormal.y;
+                    attributes.binormals[attrIndex2 + threeExtrudedOffset] = extrudedBinormal.z;
                 }
             }
         }
@@ -355,7 +417,7 @@ define([
                 attributes.textureCoordinates[stIndex + offset*2 + 1] = stlat;
             }
             if (closeBottom) {
-                attributes.textureCoordinates[stIndex +  extrudedOffset*2] = 1 - stLon;
+                attributes.textureCoordinates[stIndex +  extrudedOffset*2] = stLon;
                 attributes.textureCoordinates[stIndex + 1 +  extrudedOffset*2] = stlat;
             }
         }
@@ -406,7 +468,6 @@ define([
                 binormals: binormals
         };
 
-        var vertexIndex = 0;
         var attrIndex = 0;
         var stIndex = 0;
 
@@ -436,12 +497,12 @@ define([
         southWestTop.subtract(northWestTop, v2Scratch);
         Cartesian3.cross(v1Scratch, v2Scratch, westNormal).normalize(westNormal);
 
-        southEastTop.subtract(southWestTop, v1Scratch);
-        southWestBottom.subtract(southWestTop, v2Scratch);
+        southWestBottom.subtract(southWestTop, v1Scratch);
+        southEastTop.subtract(southWestTop, v2Scratch);
         Cartesian3.cross(v1Scratch, v2Scratch, southNormal).normalize(southNormal);
 
-        northEastTop.subtract(southEastTop, v1Scratch);
-        northEastBottom.subtract(southEastTop, v2Scratch);
+        southEastTop.subtract(northEastTop, v1Scratch);
+        northEastBottom.subtract(northEastTop, v2Scratch);
         Cartesian3.cross(v1Scratch, v2Scratch, eastNormal).normalize(eastNormal);
 
         var countSides = (height - 2) * 2 + width;
@@ -450,14 +511,14 @@ define([
             computePosition(params, row, col, maxHeight, minHeight);
 
             if (col === 0) { //duplicate corners
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, twoPP - vertexIndex, (twoPP + 4) - vertexIndex, true, true, westNormal);
-                stWall(vertexFormat, stIndex, attributes, twoPP - vertexIndex, twoPP + 4 - vertexIndex, 'w', params);
+                addAttributesWall(0, vertexFormat, attributes, ellipsoid, twoPP, (twoPP + 4), 'w', westNormal);
+                stWall(vertexFormat, 0, attributes, twoPP, twoPP + 4, 'w', params);
             } else if (col === width - 1) {
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 1)- vertexIndex, (twoPP + 5)- vertexIndex, true, true, eastNormal);
-                stWall(vertexFormat, stIndex, attributes, twoPP + 1 - vertexIndex, twoPP + 5 - vertexIndex, 'e', params);
+                addAttributesWall(0, vertexFormat, attributes, ellipsoid, twoPP + 1, twoPP + 5, 'e', eastNormal);
+                stWall(vertexFormat, 0, attributes, twoPP + 1, twoPP + 5, 'e', params);
             }
 
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, northNormal); // add north row
+            addAttributesWall(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, 'n', northNormal); // add north row
             stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'n', params);
 
 
@@ -465,17 +526,15 @@ define([
             computePosition(params, row, col, maxHeight, minHeight);
 
             if (col === 0) { //duplicate corners
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 2)- vertexIndex, (twoPP + 6)- vertexIndex, true, true, westNormal);
-                stWall(vertexFormat, stIndex, attributes, twoPP + 2 - vertexIndex, twoPP + 6 - vertexIndex, 'w', params);
+                addAttributesWall(0, vertexFormat, attributes, ellipsoid, twoPP + 2, twoPP + 6, 'w', westNormal);
+                stWall(vertexFormat, 0, attributes, twoPP + 2, twoPP + 6, 'w', params);
             } else if (col === width - 1) {
-                addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, (twoPP + 3)- vertexIndex, (twoPP + 7)- vertexIndex, true, true, eastNormal);
-                stWall(vertexFormat, stIndex, attributes, twoPP + 3 - vertexIndex, twoPP + 7 - vertexIndex, 'e', params);
+                addAttributesWall(0, vertexFormat, attributes, ellipsoid, twoPP + 3, twoPP + 7, 'e', eastNormal);
+                stWall(vertexFormat, 0, attributes, twoPP + 3, twoPP + 7, 'e', params);
             }
 
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, true, true, southNormal); // add south row
+            addAttributesWall(attrIndex, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, 's', southNormal); // add south row
             stWall(vertexFormat, stIndex, attributes, countSides, countSides + perimeterPositions, 's', params);
-
-            vertexIndex ++;
             attrIndex += 3;
             stIndex += 2;
         }
@@ -483,14 +542,13 @@ define([
         for (row = 1; row < height - 1; ++row) {
             col = 0;
             computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, westNormal); // add west side
+            addAttributesWall(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, 'w', westNormal); // add west side
             stWall(vertexFormat, stIndex, attributes, 0, perimeterPositions, 'w', params);
 
             col = width - 1;
             computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, height - 2, height - 2 + perimeterPositions, true, true, eastNormal); // add east side
+            addAttributesWall(attrIndex, vertexFormat, attributes, ellipsoid, height - 2, height - 2 + perimeterPositions, 'e', eastNormal); // add east side
             stWall(vertexFormat, stIndex, attributes, height - 2, height - 2 + perimeterPositions, 'e', params);
-            vertexIndex ++;
             attrIndex += 3;
             stIndex += 2;
         }
@@ -499,7 +557,6 @@ define([
             var maxH = (closeTop) ? maxHeight : undefined;
             var minH = (closeBottom) ? minHeight : undefined;
             var incAmount = width + perimeterPositions + 8 + height - 2;
-            vertexIndex += incAmount;
             attrIndex += 3 * incAmount;
             stIndex += 2 * incAmount;
             for (row = 0; row < height; ++row) { // fill in middle
@@ -507,7 +564,6 @@ define([
                     computePosition(params, row, col, maxH, minH);
                     addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, size, closeTop, closeBottom);
                     stTopBottom(vertexFormat, stIndex, attributes, 0, size, closeTop, closeBottom, params);
-                    vertexIndex ++;
                     attrIndex += 3;
                     stIndex += 2;
                 }
@@ -544,6 +600,10 @@ define([
         upperRight = width;
         upperLeft = twoPP;
         lowerLeft = upperLeft + 4;
+        if (upperRight === perimeterPositions - width) {
+            upperRight = twoPP + 2; //get clone of corner point
+            lowerRight = upperRight + 4;
+        }
         indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
         indicesIndex += 6;
 
@@ -551,6 +611,10 @@ define([
         upperRight =  perimeterPositions - 1 - width;
         upperLeft = twoPP + 3;
         lowerLeft = upperLeft + 4;
+        if (upperRight === width - 1) {
+            upperRight = twoPP + 1; //get clone of corner point
+            lowerRight = upperRight + 4;
+        }
         indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
         indicesIndex += 6;
 
@@ -675,7 +739,7 @@ define([
 
         extent.validate();
 
-        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var granularity = 1;//defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
