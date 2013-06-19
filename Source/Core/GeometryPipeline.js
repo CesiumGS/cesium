@@ -2,10 +2,13 @@
 define([
         './defaultValue',
         './DeveloperError',
-        './Cartesian3',
         './Cartesian2',
+        './Cartesian3',
+        './Cartesian4',
         './Cartographic',
         './EncodedCartesian3',
+        './Intersect',
+        './Math',
         './Matrix3',
         './Matrix4',
         './GeographicProjection',
@@ -19,10 +22,13 @@ define([
     ], function(
         defaultValue,
         DeveloperError,
-        Cartesian3,
         Cartesian2,
+        Cartesian3,
+        Cartesian4,
         Cartographic,
         EncodedCartesian3,
+        Intersect,
+        CesiumMath,
         Matrix3,
         Matrix4,
         GeographicProjection,
@@ -881,7 +887,7 @@ define([
      * @exception {DeveloperError} geometry is required
      *
      * @example
-     * geometry = GeometryPipeline.computeNormal(geometry);
+     * GeometryPipeline.computeNormal(geometry);
      */
     GeometryPipeline.computeNormal = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -1014,18 +1020,19 @@ define([
      * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have
      * <code>position</code>, <code>normal</code>, and <code>st</code> attributes.
      * </p>
+     * <p>
      * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
      * for an Arbitrary Mesh</a> by Eric Lengyel.
-     * <p>
+     * </p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
-     * @returns {Geometry} The modified <code>geometry</code> argument with the compute <code>binormal</code> and <code>tangent</code> attributes.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
      *
      * @exception {DeveloperError} geometry is required.
      *
      * @example
-     * geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+     * GeometryPipeline.computeBinormalAndTangent(geometry);
      */
     GeometryPipeline.computeBinormalAndTangent = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -1134,6 +1141,425 @@ define([
             componentsPerAttribute : 3,
             values : binormalValues
         });
+
+        return geometry;
+    };
+
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON11){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON11;
+            } else {
+                p.y = CesiumMath.EPSILON11;
+            }
+        }
+    }
+
+    var c3 = new Cartesian3();
+    function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
+        p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
+        Cartesian3.clone(u1, v1);
+        offsetPointFromXZPlane(u1, true);
+        offsetPointFromXZPlane(v1, false);
+    }
+
+    var u1 = new Cartesian3();
+    var u2 = new Cartesian3();
+    var q1 = new Cartesian3();
+    var q2 = new Cartesian3();
+
+    var splitTriangleResult = {
+        positions : new Array(7),
+        indices : new Array(3 * 3)
+    };
+
+    function splitTriangle(p0, p1, p2) {
+        // In WGS84 coordinates, for a triangle approximately on the
+        // ellipsoid to cross the IDL, first it needs to be on the
+        // negative side of the plane x = 0.
+        if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
+            var p0Behind = p0.y < 0.0;
+            var p1Behind = p1.y < 0.0;
+            var p2Behind = p2.y < 0.0;
+
+            offsetPointFromXZPlane(p0, p0Behind);
+            offsetPointFromXZPlane(p1, p1Behind);
+            offsetPointFromXZPlane(p2, p2Behind);
+
+            var numBehind = 0;
+            numBehind += p0Behind ? 1 : 0;
+            numBehind += p1Behind ? 1 : 0;
+            numBehind += p2Behind ? 1 : 0;
+
+            var indices = splitTriangleResult.indices;
+
+            if (numBehind === 1) {
+                indices[1] = 3;
+                indices[2] = 4;
+                indices[5] = 6;
+                indices[7] = 6;
+                indices[8] = 5;
+
+                if (p0Behind) {
+                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                    indices[0] = 0;
+                    indices[3] = 1;
+                    indices[4] = 2;
+                    indices[6] = 1;
+                } else if (p1Behind) {
+                    getXZIntersectionOffsetPoints(p1, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p1, p2, u2, q2);
+
+                    indices[0] = 1;
+                    indices[3] = 2;
+                    indices[4] = 0;
+                    indices[6] = 2;
+                } else if (p2Behind) {
+                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                    indices[0] = 2;
+                    indices[3] = 0;
+                    indices[4] = 1;
+                    indices[6] = 0;
+                }
+            } else if (numBehind === 2) {
+                indices[2] = 4;
+                indices[4] = 4;
+                indices[5] = 3;
+                indices[7] = 5;
+                indices[8] = 6;
+
+                if (!p0Behind) {
+                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                    indices[0] = 1;
+                    indices[1] = 2;
+                    indices[3] = 1;
+                    indices[6] = 0;
+                } else if (!p1Behind) {
+                    getXZIntersectionOffsetPoints(p1, p2, u1, q1);
+                    getXZIntersectionOffsetPoints(p1, p0, u2, q2);
+
+                    indices[0] = 2;
+                    indices[1] = 0;
+                    indices[3] = 2;
+                    indices[6] = 1;
+                } else if (!p2Behind) {
+                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                    indices[0] = 0;
+                    indices[1] = 1;
+                    indices[3] = 0;
+                    indices[6] = 2;
+                }
+            }
+
+            if (numBehind === 1 || numBehind === 2) {
+                var positions = splitTriangleResult.positions;
+                positions[0] = p0;
+                positions[1] = p1;
+                positions[2] = p2;
+                positions[3] = u1;
+                positions[4] = u2;
+                positions[5] = q1;
+                positions[6] = q2;
+
+                return splitTriangleResult;
+            }
+        }
+
+        return undefined;
+    }
+
+    function barycentricCoordinates(p, a, b, c, result) {
+        if (typeof result === 'undefined') {
+            result = new Cartesian3();
+        }
+
+        // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
+        var v0 = b.subtract(a);
+        var v1 = c.subtract(a);
+        var v2 = p.subtract(a);
+
+        var dot00 = v0.dot(v0);
+        var dot01 = v0.dot(v1);
+        var dot02 = v0.dot(v2);
+        var dot11 = v1.dot(v1);
+        var dot12 = v1.dot(v2);
+
+        var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
+        result.x = (dot11 * dot02 - dot01 * dot12) * q;
+        result.y = (dot00 * dot12 - dot01 * dot02) * q;
+        result.z = 1.0 - result.x - result.y;
+        return result;
+    }
+
+    function computeIndexedTriangleAttributes(indices, offset, dividedTriangle, normals, binormals, tangents, texCoords) {
+        if (typeof normals === 'undefined' && typeof binormals === 'undefined' &&
+                typeof tangents === 'undefined' && typeof texCoords === 'undefined') {
+            return;
+        }
+
+        var positions = dividedTriangle.positions;
+        var p0 = positions[0];
+        var p1 = positions[1];
+        var p2 = positions[2];
+
+        var i0 = indices[offset];
+        var i1 = indices[offset + 1];
+        var i2 = indices[offset + 2];
+
+        var n0, n1, n2;
+        var b0, b1, b2;
+        var t0, t1, t2;
+        var s0, s1, s2;
+        var v0, v1, v2;
+        var u0, u1, u2;
+
+        if (typeof normals !== 'undefined') {
+            n0 = Cartesian3.fromArray(normals, i0 * 3);
+            n1 = Cartesian3.fromArray(normals, i1 * 3);
+            n2 = Cartesian3.fromArray(normals, i2 * 3);
+        }
+
+        if (typeof binormals !== 'undefined') {
+            b0 = Cartesian3.fromArray(binormals, i0 * 3);
+            b1 = Cartesian3.fromArray(binormals, i1 * 3);
+            b2 = Cartesian3.fromArray(binormals, i2 * 3);
+        }
+
+        if (typeof tangents !== 'undefined') {
+            t0 = Cartesian3.fromArray(tangents, i0 * 3);
+            t1 = Cartesian3.fromArray(tangents, i1 * 3);
+            t2 = Cartesian3.fromArray(tangents, i2 * 3);
+        }
+
+        if (typeof texCoords !== 'undefined') {
+            s0 = Cartesian2.fromArray(texCoords, i0 * 2);
+            s1 = Cartesian2.fromArray(texCoords, i1 * 2);
+            s2 = Cartesian2.fromArray(texCoords, i2 * 2);
+        }
+
+        for (var i = 3; i < positions.length; ++i) {
+            var point = positions[i];
+            var coords = barycentricCoordinates(point, p0, p1, p2);
+
+            if (typeof normals !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(n0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
+
+                var normal = Cartesian3.add(v0, v1);
+                Cartesian3.add(normal, v2, normal);
+
+                normals.push(normal.x, normal.y, normal.z);
+            }
+
+            if (typeof binormals !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(b0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
+
+                var binormal = Cartesian3.add(v0, v1);
+                Cartesian3.add(binormal, v2, binormal);
+
+                binormals.push(binormal.x, binormal.y, binormal.z);
+            }
+
+            if (typeof tangents !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(t0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
+
+                var tangent = Cartesian3.add(v0, v1);
+                Cartesian3.add(tangent, v2, tangent);
+
+                tangents.push(tangent.x, tangent.y, tangent.z);
+            }
+
+            if (typeof texCoords !== 'undefined') {
+                u0 = Cartesian2.multiplyByScalar(s0, coords.x, u0);
+                u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
+                u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
+
+                var texCoord = Cartesian2.add(u0, u1);
+                Cartesian2.add(texCoord, u2, texCoord);
+
+                texCoords.push(texCoord.x, texCoord.y);
+            }
+        }
+    }
+
+    function wrapLongitudeTriangles(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var normals = (typeof attributes.normal !== 'undefined') ? attributes.normal.values : undefined;
+        var binormals = (typeof attributes.binormal !== 'undefined') ? attributes.binormal.values : undefined;
+        var tangents = (typeof attributes.tangent !== 'undefined') ? attributes.tangent.values : undefined;
+        var texCoords = (typeof attributes.st !== 'undefined') ? attributes.st.values : undefined;
+        var indices = geometry.indices;
+
+        var newPositions;
+        var newNormals;
+        var newBinormals;
+        var newTangents;
+        var newTexCoords;
+        var newIndices;
+
+        var len;
+        var i;
+        var j;
+        var index;
+
+        var p0;
+        var p1;
+        var p2;
+        var result;
+
+        /*
+        if (typeof indices === 'undefined') {
+            newPositions = [];
+            newNormals = (typeof normals !== 'undefined') ? [] : undefined;
+            newBinormals = (typeof binormals !== 'undefined') ? [] : undefined;
+            newTangents = (typeof tangents !== 'undefined') ? [] : undefined;
+            newTexCoords = (typeof texCoords !== 'undefined') ? [] : undefined;
+
+            len = positions.length;
+            for (i = 0; i < len; i += 9) {
+                p0 = Cartesian3.fromArray(positions, i);
+                p1 = Cartesian3.fromArray(positions, i + 3);
+                p2 = Cartesian3.fromArray(positions, i + 6);
+
+                result = splitTriangle(p0, p1, p2);
+                if (typeof result !== 'undefined') {
+                    for (j = 0; j < result.indices.length; ++j) {
+                        index = result.indices[j];
+                        var position = result.positions[index];
+                        newPositions.push(position.x, position.y, position.z);
+                    }
+                    computeTriangleNormals(i, result, normals, newNormals);
+                    computeTriangleBinormals(i, result, binormals, newBinormals);
+                    computeTriangleTangents(i, result, tangents, newTangents);
+                    computeTriangleTextureCoordinates(i, result, texCoords, newTexCoords);
+                } else {
+                    Array.prototype.push.apply(newPositions, positions.subarray(i, i + 9));
+
+                    if (typeof normals !== 'undefined') {
+                        Array.prototype.push.apply(newNormals, normals.subarray(i, i + 9));
+                    }
+
+                    if (typeof binormals !== 'undefined') {
+                        Array.prototype.push.apply(newBinormals, binormals.subarray(i, i + 9));
+                    }
+
+                    if (typeof tangents !== 'undefined') {
+                        Array.prototype.push.apply(newTangents, tangents.subarray(i, i + 9));
+                    }
+
+                    if (typeof texCoords !== 'undefined') {
+                        Array.prototype.push.apply(newTexCoords, texCoords.subarray(i, i + 9));
+                    }
+                }
+            }
+        } else {
+        */
+            newPositions = Array.prototype.slice.call(positions);
+            newNormals = (typeof normals !== 'undefined') ? Array.prototype.slice.call(normals) : undefined;
+            newBinormals = (typeof binormals !== 'undefined') ? Array.prototype.slice.call(binormals) : undefined;
+            newTangents = (typeof tangents !== 'undefined') ? Array.prototype.slice.call(tangents) : undefined;
+            newTexCoords = (typeof texCoords !== 'undefined') ? Array.prototype.slice.call(texCoords) : undefined;
+            newIndices = [];
+
+            len = indices.length;
+            for (i = 0; i < len; i += 3) {
+                var i0 = indices[i];
+                var i1 = indices[i + 1];
+                var i2 = indices[i + 2];
+
+                p0 = Cartesian3.fromArray(positions, i0 * 3);
+                p1 = Cartesian3.fromArray(positions, i1 * 3);
+                p2 = Cartesian3.fromArray(positions, i2 * 3);
+
+                result = splitTriangle(p0, p1, p2);
+                if (typeof result !== 'undefined') {
+                    var positionsLength = newPositions.length / 3;
+                    for(j = 0; j < result.indices.length; ++j) {
+                        index = result.indices[j];
+                        if (index < 3) {
+                            newIndices.push(indices[i + index]);
+                        } else {
+                            newIndices.push(index - 3 + positionsLength);
+                        }
+                    }
+
+                    for (var k = 3; k < result.positions.length; ++k) {
+                        var position = result.positions[k];
+                        newPositions.push(position.x, position.y, position.z);
+                    }
+                    computeIndexedTriangleAttributes(indices, i, result, newNormals, newBinormals, newTangents, newTexCoords);
+                } else {
+                    newIndices.push(i0, i1, i2);
+                }
+            }
+        //}
+
+        geometry.attributes.position.values = new Float64Array(newPositions);
+
+        if (typeof newNormals !== 'undefined') {
+            attributes.normal.values = attributes.normal.componentDatatype.createTypedArray(newNormals);
+        }
+
+        if (typeof newBinormals !== 'undefined') {
+            attributes.binormal.values = attributes.binormal.componentDatatype.createTypedArray(newBinormals);
+        }
+
+        if (typeof newTangents !== 'undefined') {
+            attributes.tangent.values = attributes.tangent.componentDatatype.createTypedArray(newTangents);
+        }
+
+        if (typeof newTexCoords !== 'undefined') {
+            attributes.st.values = attributes.st.componentDatatype.createTypedArray(newTexCoords);
+        }
+
+        if (typeof newIndices !== 'undefined') {
+            var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+            geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+        }
+    }
+
+    /**
+     * Subdivides a {@link Geometry} so it does not cross the &plusmn;180 degree meridian of an ellipsoid.
+     *
+     * @param {Geometry} geometry The geometry to subdivide, which is modified in place.
+     *
+     * @return {Geometry} The modified <code>geometry</code>.
+     *
+     * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry.primitiveType is unsupported.
+     */
+    GeometryPipeline.wrapLongitude = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        var boundingSphere = geometry.boundingSphere;
+        if (typeof boundingSphere !== 'undefined') {
+            var minX = boundingSphere.center.x - boundingSphere.radius;
+            if (minX > 0 || BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
+                return geometry;
+            }
+        }
+
+        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+            wrapLongitudeTriangles(geometry);
+        } else {
+            throw new DeveloperError('geometry.primitiveType is unsupported.');
+        }
 
         return geometry;
     };

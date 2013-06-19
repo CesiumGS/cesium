@@ -215,7 +215,8 @@ define([
             geometry : new EllipseGeometry({
                 vertexFormat : VertexFormat.POSITION_AND_NORMAL,
                 ellipsoid : ellipsoid,
-                center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+                //center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+                center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-180, 0)),
                 semiMinorAxis : 500000.0,
                 semiMajorAxis : 1000000.0,
                 bearing : CesiumMath.PI_OVER_FOUR,
@@ -363,6 +364,7 @@ define([
         });
         scene.getPrimitives().add(wallPrimitive);
 
+        /*
         var positions = ellipsoid.cartographicArrayToCartesianArray([
             Cartographic.fromDegrees(-70.0, 20.0),
             Cartographic.fromDegrees(-70.0, 0.0),
@@ -420,6 +422,7 @@ define([
              geometryInstances : customWithoutIndices,
              appearance : new Appearance()
          }));
+         */
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

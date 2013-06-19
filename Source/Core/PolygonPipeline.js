@@ -157,7 +157,7 @@ define([
      * Returns true if the given point is contained in the list of positions.
      *
      * @param {Array} positions A list of Cartesian elements defining a polygon.
-     * @param {Cartesian} point The point to check.
+     * @param {Cartesian2} point The point to check.
      * @returns {Boolean} <code>true></code> if <code>point</code> is found in <code>polygon</code>, <code>false</code> otherwise.
      *
      * @private
@@ -174,11 +174,11 @@ define([
     /**
      * Given a point inside a polygon, find the nearest point directly to the right that lies on one of the polygon's edges.
      *
-     * @param {Cartesian} point A point inside the polygon defined by <code>ring</code>.
+     * @param {Cartesian2} point A point inside the polygon defined by <code>ring</code>.
      * @param {Array} ring A list of Cartesian points defining a polygon.
      * @param {Array} [edgeIndices]  An array containing the indices two endpoints of the edge containing the intersection.
      *
-     * @returns {Cartesian} The intersection point.
+     * @returns {Cartesian2} The intersection point.
      * @private
      */
     function intersectPointWithRing(point, ring, edgeIndices) {
@@ -186,7 +186,7 @@ define([
 
         var minDistance = Number.MAX_VALUE;
         var rightmostVertexIndex = getRightmostPositionIndex(ring);
-        var intersection = new Cartesian3(ring[rightmostVertexIndex].x, point.y, 0.0);
+        var intersection = new Cartesian2(ring[rightmostVertexIndex].x, point.y);
         edgeIndices.push(rightmostVertexIndex);
         edgeIndices.push((rightmostVertexIndex + 1) % ring.length);
 
@@ -303,7 +303,7 @@ define([
      * @param {Array} outerRing An array of Cartesian points defining the outer boundary of the polygon.
      * @param {Array} innerRings An array of arrays of Cartesian points, where each array represents a hole in the polygon.
      *
-     * @return A single list of Cartesian points defining the polygon, including the eliminated inner ring.
+     * @return {Array} A single list of Cartesian points defining the polygon, including the eliminated inner ring.
      *
      * @private
      */
@@ -580,7 +580,6 @@ define([
          * var indices = [0, 1, 2];
          * indices = PolygonPipeline.wrapLongitude(positions, indices);
          */
-
         wrapLongitude : function(positions, indices) {
             if ((typeof positions === 'undefined') ||
                 (typeof indices === 'undefined')) {

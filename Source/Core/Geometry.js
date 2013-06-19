@@ -93,7 +93,7 @@ define([
          * @default undefined
          *
          * @example
-         * geometry.attributes = new GeometryAttribute({
+         * geometry.attributes.position = new GeometryAttribute({
          *   componentDatatype : ComponentDatatype.FLOAT,
          *   componentsPerAttribute : 3,
          *   values : new Float32Array()

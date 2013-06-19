@@ -406,6 +406,20 @@ define([
             insts[i] = instances[i].clone();
         }
 
+        // Add default values for any undefined attributes
+        addDefaultAttributes(insts);
+
+        // Unify to world coordinates before combining.  If there is only one geometry or all
+        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
+        transformToWorldCoordinates(primitive, insts);
+
+        if (primitive._allowColumbusView) {
+            // Clip to IDL
+            for (var j = 0; j < length; ++j) {
+                GeometryPipeline.wrapLongitude(insts[j].geometry);
+            }
+        }
+
         // Add color attribute if any geometries have per-instance color
         if (hasPerInstanceColor(insts)) {
             addColorAttribute(primitive, insts, context);
@@ -415,13 +429,6 @@ define([
         if (isPickable(insts)) {
             addPickColorAttribute(primitive, insts, context);
         }
-
-        // Add default values for any undefined attributes
-        addDefaultAttributes(insts);
-
-        // Unify to world coordinates before combining.  If there is only one geometry or all
-        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, insts);
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
