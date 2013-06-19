@@ -177,6 +177,10 @@ define([
         // There can be a WebGL performance hit when attribute 0 is disabled, so
         // assign attribute locations to well-known attributes.
         var semantics = [
+            'position',
+            'positionHigh',
+            'positionLow',
+
             // From VertexFormat.position - after 2D projection and high-precision encoding
             'position3DHigh',
             'position3DLow',
