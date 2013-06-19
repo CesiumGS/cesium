@@ -53,11 +53,16 @@ define([
         }
 
         if (typeof dataSource._name === 'undefined') {
+            var name;
             if (typeof documentObject !== 'undefined') {
-                //dataSource._name = documentObject.name;
-            } else {
-                dataSource._name = sourceUri.substr(sourceUri.lastIndexOf('/') + 1);
+                //name = documentObject.name;
             }
+
+            if (typeof name === 'undefined') {
+                name = sourceUri.substr(sourceUri.lastIndexOf('/') + 1);
+            }
+
+            dataSource._name = name;
         }
 
         return clock;
