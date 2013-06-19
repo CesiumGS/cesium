@@ -252,7 +252,7 @@ define([
                     Cartesian2.subtract(st, origin, st);
 
                     if (bottom){
-                        textureCoordinates[textureCoordIndex + bottomOffset2] = 1 - st.x / boundingRectangle.width;
+                        textureCoordinates[textureCoordIndex + bottomOffset2] = st.x / boundingRectangle.width;
                         textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = st.y / boundingRectangle.height;
                     }
 
@@ -460,8 +460,13 @@ define([
 
     function subdivideLine(p0, p1, granularity) {
         var length = Cartesian3.distance(p0, p1);
-        var a = Cartesian3.angleBetween(p0, p1);
-        var numVertices = Math.ceil(a / granularity);
+        var angleBetween = Cartesian3.angleBetween(p0, p1);
+        var n = angleBetween/granularity;
+        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
+        if (countDivide < 1) {
+            countDivide = 0;
+        }
+        var numVertices = Math.pow(2, countDivide) + 1;
 
         var distanceBetweenVertices = length / numVertices;
 
