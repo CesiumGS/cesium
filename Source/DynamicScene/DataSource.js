@@ -1,7 +1,8 @@
 /*global define*/
-define(['../Core/DeveloperError'
-        ], function(
-                DeveloperError) {
+define([
+        '../Core/DeveloperError'
+    ], function(
+        DeveloperError) {
     "use strict";
 
     function throwInstantiationError() {
@@ -16,6 +17,14 @@ define(['../Core/DeveloperError'
      * @constructor
      */
     var DataSource = throwInstantiationError;
+
+    /**
+     * Gets the name of this data source.
+     * @memberof DataSource
+     *
+     * @returns {String} The name.
+     */
+    DataSource.prototype.getName = throwInstantiationError;
 
     /**
      * Gets an event that will be raised when non-time-Varying data changes
