@@ -170,6 +170,28 @@ define([
      * @see ShaderCache
      */
     GeometryPipeline.createAttributeIndices = function(geometry) {
+
+
+/*
+        var indices = {};
+
+        if (typeof geometry !== 'undefined') {
+            var attributes = geometry.attributes;
+            var j = 0;
+
+            for ( var name in attributes) {
+                if (attributes.hasOwnProperty(name)) {
+                    indices[name] = j++;
+                }
+            }
+        }
+
+        return indices;
+*/
+
+
+
+
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
@@ -177,6 +199,10 @@ define([
         // There can be a WebGL performance hit when attribute 0 is disabled, so
         // assign attribute locations to well-known attributes.
         var semantics = [
+            'position',
+            'positionHigh',
+            'positionLow',
+
             // From VertexFormat.position - after 2D projection and high-precision encoding
             'position3DHigh',
             'position3DLow',
