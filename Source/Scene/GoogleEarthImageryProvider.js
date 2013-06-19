@@ -53,6 +53,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      * @exception {DeveloperError} <code>description.channel</code> is required.
      * @exception {DeveloperError} Could not find layer with channel (id) of <code>description.channel</code>.
+     * @exception {DeveloperError} Unsupported projection <code>data.projection</code>.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -144,11 +145,13 @@ define([
                   numberOfLevelZeroTilesY : 2,
                   extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
               });
-            } else {
+            } else if(typeof data.projection === 'undefined' || data.projection === 'mercator') {
               that._tilingScheme = new WebMercatorTilingScheme({
                   numberOfLevelZeroTilesX : 2,
                   numberOfLevelZeroTilesY : 2
               });
+            } else {
+              throw new DeveloperError('Unsupported projection ' + data.projection + '.');
             }
 
             that._version = layer.version;
