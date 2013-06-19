@@ -1,8 +1,10 @@
 /*global defineSuite*/
 defineSuite([
-             'Core/requestAnimationFrame'
-         ], function(
-             requestAnimationFrame) {
+         'Core/requestAnimationFrame',
+         'Core/cancelAnimationFrame'
+     ], function(
+         requestAnimationFrame,
+         cancelAnimationFrame) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -10,9 +12,10 @@ defineSuite([
         var callbackRan = false;
 
         runs(function() {
-            requestAnimationFrame(function() {
+            var requestID = requestAnimationFrame(function() {
                 callbackRan = true;
             });
+            expect(requestID).toBeDefined();
         });
 
         waitsFor(function() {
@@ -41,6 +44,35 @@ defineSuite([
         runs(function() {
             expect(callbackTimestamps[0]).toBeLessThanOrEqualTo(callbackTimestamps[1]);
             expect(callbackTimestamps[1]).toBeLessThanOrEqualTo(callbackTimestamps[2]);
+        });
+    });
+
+    it('can cancel a callback', function() {
+        var cancelledCallbackRan = false;
+
+        runs(function() {
+            var requestID = requestAnimationFrame(function() {
+                cancelledCallbackRan = true;
+            });
+            cancelAnimationFrame(requestID);
+        });
+
+        // schedule and wait for another callback
+
+        var secondCallbackRan = false;
+        runs(function() {
+            requestAnimationFrame(function() {
+                secondCallbackRan = true;
+            });
+        });
+
+        waitsFor(function() {
+            return secondCallbackRan;
+        });
+
+        runs(function() {
+            // make sure cancelled callback didn't run
+            expect(cancelledCallbackRan).toBe(false);
         });
     });
 });
