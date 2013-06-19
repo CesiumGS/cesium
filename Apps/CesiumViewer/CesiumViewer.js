@@ -177,10 +177,6 @@ define([
             }
         }
 
-
-
-
-
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         var geometry = new GeometryInstance({
@@ -202,8 +198,8 @@ define([
                 vertexFormat : VertexFormat.ALL,
                 extent : new Extent(
                         CesiumMath.toRadians(-90.0),
-                        CesiumMath.toRadians(0.0),
-                        CesiumMath.toRadians(-80.0),
+                        CesiumMath.toRadians(10.0),
+                        CesiumMath.toRadians(-70.0),
                         CesiumMath.toRadians(20.0)),
                 rotation: CesiumMath.toRadians(30),
                 surfaceHeight: 300000,
@@ -212,8 +208,9 @@ define([
                 }
             }),
             pickData: 'geometry1',
-            color: Color.BLUEVIOLET
+            color: Color.BLUEVIOLET.clone()
         });
+        geometry1.color.alpha = 0.5;
 
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
@@ -250,7 +247,7 @@ define([
             color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         var primitive = new Primitive({
-            geometryInstances : [geometry, geometry2, geometry3, geometry4],
+            geometryInstances : [geometry, geometry1, geometry2, geometry3, geometry4],
             appearance : new PerInstanceColorClosedTranslucentAppearance()
         });
         scene.getPrimitives().add(primitive);
@@ -285,10 +282,12 @@ define([
                 enabled : true
             }
         };
+
         var appearance = new Appearance({
             material : m,
             renderState : rs
         });
+
         var geometry5 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
                 vertexFormat : VertexFormat.ALL,
@@ -299,7 +298,7 @@ define([
             pickData : 'geometry5'
         });
         scene.getPrimitives().add(new Primitive({
-            geometryInstances : [geometry1, geometry5],
+            geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
             releasegeometryInstances : true,

@@ -381,27 +381,10 @@ define([
             var stLon = (stLongitude - extent.west) * params.lonScalar;
             var stLat = (stLatitude - extent.south) * params.latScalar;
 
-            if (direction === 'n') {
-                attributes.textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLon;
-                attributes.textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-                attributes.textureCoordinates[stIndex + twoOffset] =  1 - stLon;
-                attributes.textureCoordinates[stIndex + twoOffset + 1] = 1;
-            } else if (direction === 's') {
-                attributes.textureCoordinates[stIndex + twoExtrudedOffset] = stLon;
-                attributes.textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-                attributes.textureCoordinates[stIndex + twoOffset] = stLon;
-                attributes.textureCoordinates[stIndex + twoOffset + 1] = 1;
-            } else if (direction === 'e') {
-                attributes.textureCoordinates[stIndex + twoExtrudedOffset] = stLat;
-                attributes.textureCoordinates[stIndex + 1 + twoExtrudedOffset] = 0;
-                attributes.textureCoordinates[stIndex + twoOffset] = stLat;
-                attributes.textureCoordinates[stIndex + twoOffset + 1] = 1;
-            } else if (direction === 'w') {
-                attributes.textureCoordinates[stIndex + twoExtrudedOffset] = 1 - stLat;
-                attributes.textureCoordinates[stIndex + 1 + twoExtrudedOffset] =  0;
-                attributes.textureCoordinates[stIndex + twoOffset] = 1 - stLat;
-                attributes.textureCoordinates[stIndex + twoOffset + 1] = 1;
-            }
+            attributes.textureCoordinates[stIndex + twoExtrudedOffset] =  stLon;
+            attributes.textureCoordinates[stIndex + 1 + twoExtrudedOffset] = stLat;
+            attributes.textureCoordinates[stIndex + twoOffset] =  stLon;
+            attributes.textureCoordinates[stIndex + twoOffset + 1] = stLat;
         }
     }
 
@@ -671,8 +654,12 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        indices = addIndices(indices, indicesIndex, upperLeft + bottomOffset, lowerLeft + bottomOffset, upperRight + bottomOffset, lowerRight + bottomOffset);
-                        indicesIndex += 6;
+                        indices[indicesIndex++] = upperRight + bottomOffset;
+                        indices[indicesIndex++] = lowerLeft + bottomOffset;
+                        indices[indicesIndex++] = upperLeft + bottomOffset;
+                        indices[indicesIndex++] = lowerRight + bottomOffset;
+                        indices[indicesIndex++] = lowerLeft + bottomOffset;
+                        indices[indicesIndex++] = upperRight + bottomOffset;
                     }
 
                     if (closeTop) {
