@@ -69,6 +69,10 @@ define([
         this._scale = defaultValue(description.scale, 1.0);
         this._imageIndex = defaultValue(description.imageIndex, -1);
         this._color = Color.clone(defaultValue(description.color, Color.WHITE));
+        this._rotation = defaultValue(description.rotation, 0.0);
+        this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
+        this._width = description.width;
+        this._height = description.height;
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -86,7 +90,9 @@ define([
     var SCALE_INDEX = Billboard.SCALE_INDEX = 6;
     var IMAGE_INDEX_INDEX = Billboard.IMAGE_INDEX_INDEX = 7;
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
-    Billboard.NUMBER_OF_PROPERTIES = 9;
+    var ROTATION_INDEX = Billboard.ROTATION_INDEX = 9;
+    var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
+    Billboard.NUMBER_OF_PROPERTIES = 11;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -549,6 +555,167 @@ define([
         if (!Color.equals(color, value)) {
             Color.clone(value, color);
             makeDirty(this, COLOR_INDEX);
+        }
+    };
+
+    /**
+     * Gets the rotation angle in radians.
+     *
+     * @memberof Billboard
+     *
+     * @return {Number} The rotation angle in radians.
+     *
+     * @see Billboard#setRotation
+     * @see Billboard#getAlignedAxis
+     * @see Billboard#setAlignedAxis
+     */
+    Billboard.prototype.getRotation = function() {
+        return this._rotation;
+    };
+
+    /**
+     * Sets the rotation angle in radians.
+     *
+     * @memberof Billboard
+     *
+     * @param {Number} value The rotation angle in radians.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @see Billboard#getRotation
+     * @see Billboard#getAlignedAxis
+     * @see Billboard#setAlignedAxis
+     */
+    Billboard.prototype.setRotation = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        if (this._rotation !== value) {
+            this._rotation = value;
+            makeDirty(this, ROTATION_INDEX);
+        }
+    };
+
+    /**
+     * Gets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
+     * The default is the zero vector, which means the billboard is aligned to the screen up vector.
+     *
+     * @memberof Billboard
+     *
+     * @return {Cartesian3} The aligned axis.
+     *
+     * @see Billboard#setRotation
+     * @see Billboard#getRotation
+     * @see Billboard#setAlignedAxis
+     */
+    Billboard.prototype.getAlignedAxis = function() {
+        return this._alignedAxis;
+    };
+
+    /**
+     * Sets the aligned axis in world space. The aligned axis is the unit vector that the billboard up vector points towards.
+     * The default is the zero vector, which means the billboard is aligned to the screen up vector.
+     *
+     * @memberof Billboard
+     *
+     * @param {Cartesian3} value The aligned axis.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @see Billboard#setRotation
+     * @see Billboard#getRotation
+     * @see Billboard#setAlignedAxis
+     *
+     * @example
+     * // Example 1.
+     * // Have the billboard up vector point north
+     * billboard.setAlignedAxis(Cartesian3.UNIT_Z);
+     *
+     * // Example 2.
+     * // Have the billboard point east.
+     * billboard.setAlignedAxis(Cartesian3.UNIT_Z);
+     * billboard.setRotation(-Cesium.Math.PI_OVER_TWO);
+     *
+     * // Example 3.
+     * // Reset the aligned axis
+     * billboard.setAlignedAxis(Cartesian3.ZERO);
+     */
+    Billboard.prototype.setAlignedAxis = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+
+        var axis = this._alignedAxis;
+        if (!Cartesian3.equals(axis, value)) {
+            Cartesian3.clone(value, axis);
+            makeDirty(this, ALIGNED_AXIS_INDEX);
+        }
+    };
+
+    /**
+     * Gets the billboards custom width or undefined if the image width is used.
+     *
+     * @memberof Billboard
+     *
+     * @return {Number} The billboard's width or undefined.
+     *
+     * @see Billboard#setWidth
+     * @see Billboard#getHeight
+     * @see Billboard#setHeight
+     */
+    Billboard.prototype.getWidth = function() {
+        return this._width;
+    };
+
+    /**
+     * Sets a custom width for the billboard. If undefined, the image width will be used.
+     *
+     * @memberof Billboard
+     *
+     * @param {Number} value The width of the billboard or undefined to use the image width.
+     *
+     * @see Billboard#getWidth
+     * @see Billboard#getHeight
+     * @see Billboard#setHeight
+     */
+    Billboard.prototype.setWidth = function(value) {
+        if (this._width !== value) {
+            this._width = value;
+            makeDirty(this, IMAGE_INDEX_INDEX);
+        }
+    };
+
+    /**
+     * Gets the billboards custom height or undefined if the image height is used.
+     *
+     * @memberof Billboard
+     *
+     * @return {Number} The billboard's height or undefined.
+     *
+     * @see Billboard#setHeight
+     * @see Billboard#getWidth
+     * @see Billboard#setWidth
+     */
+    Billboard.prototype.getHeight = function() {
+        return this._height;
+    };
+
+    /**
+     * Sets a custom height for the billboard. If undefined, the image height will be used.
+     *
+     * @memberof Billboard
+     *
+     * @param {Number} value The height of the billboard or undefined to use the image height.
+     *
+     * @see Billboard#getHeight
+     * @see Billboard#getWidth
+     * @see Billboard#setWidth
+     */
+    Billboard.prototype.setHeight = function(value) {
+        if (this._height !== value) {
+            this._height = value;
+            makeDirty(this, IMAGE_INDEX_INDEX);
         }
     };
 

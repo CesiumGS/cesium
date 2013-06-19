@@ -29,6 +29,21 @@ defineSuite(['Widgets/Viewer/Viewer',
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    var testProvider = {
+            isReady : function() {
+                return false;
+            }
+        };
+
+    var testProviderViewModel = new ImageryProviderViewModel({
+        name : 'name',
+        tooltip : 'tooltip',
+        iconUrl : 'url',
+        creationFunction : function() {
+            return testProvider;
+        }
+    });
+
     var container;
     beforeEach(function(){
         container = document.createElement('span');
@@ -81,6 +96,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -96,6 +113,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -111,6 +130,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -126,6 +147,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeUndefined();
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -141,6 +164,8 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeUndefined();
         expect(viewer.fullscreenButton).toBeInstanceOf(FullscreenButton);
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -156,6 +181,45 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.animation).toBeInstanceOf(Animation);
         expect(viewer.timeline).toBeInstanceOf(Timeline);
         expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
+        viewer.destroy();
+    });
+
+    it('can shut off FullscreenButton and Timeline', function() {
+        var viewer = new Viewer(container, {
+            timeline: false,
+            fullscreenButton : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeInstanceOf(Animation);
+        expect(viewer.timeline).toBeUndefined();
+        expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
+        viewer.destroy();
+    });
+
+    it('can shut off FullscreenButton, Timeline, and Animation', function() {
+        var viewer = new Viewer(container, {
+            timeline: false,
+            fullscreenButton : false,
+            animation : false
+        });
+        expect(viewer.container).toBe(container);
+        expect(viewer.cesiumWidget).toBeInstanceOf(CesiumWidget);
+        expect(viewer.homeButton).toBeInstanceOf(HomeButton);
+        expect(viewer.sceneModePicker).toBeInstanceOf(SceneModePicker);
+        expect(viewer.baseLayerPicker).toBeInstanceOf(BaseLayerPicker);
+        expect(viewer.animation).toBeUndefined(Animation);
+        expect(viewer.timeline).toBeUndefined();
+        expect(viewer.fullscreenButton).toBeUndefined();
+        viewer.resize();
+        viewer.render();
         viewer.destroy();
     });
 
@@ -204,21 +268,6 @@ defineSuite(['Widgets/Viewer/Viewer',
         viewer.destroy();
     });
 
-    var testProvider = {
-            isReady : function() {
-                return false;
-            }
-        };
-
-    var testProviderViewModel = new ImageryProviderViewModel({
-        name : 'name',
-        tooltip : 'tooltip',
-        iconUrl : 'url',
-        creationFunction : function() {
-            return testProvider;
-        }
-    });
-
     it('can set selectedImageryProviderViewModel', function() {
         var viewer = new Viewer(container, {
             selectedImageryProviderViewModel : testProviderViewModel
@@ -226,6 +275,16 @@ defineSuite(['Widgets/Viewer/Viewer',
         expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
         expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
         expect(viewer.baseLayerPicker.viewModel.selectedItem).toBe(testProviderViewModel);
+        viewer.destroy();
+    });
+
+    it('can set imageryProvider when BaseLayerPicker is disabled', function() {
+        var viewer = new Viewer(container, {
+            baseLayerPicker : false,
+            imageryProvider : testProvider
+        });
+        expect(viewer.centralBody.getImageryLayers().getLength()).toEqual(1);
+        expect(viewer.centralBody.getImageryLayers().get(0).getImageryProvider()).toBe(testProvider);
         viewer.destroy();
     });
 
@@ -241,6 +300,14 @@ defineSuite(['Widgets/Viewer/Viewer',
         viewer.destroy();
     });
 
+    it('can disable render loop', function() {
+        var viewer = new Viewer(container, {
+            useDefaultRenderLoop : false
+        });
+        expect(viewer.useDefaultRenderLoop).toBe(false);
+        viewer.destroy();
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return new Viewer(undefined);
@@ -250,6 +317,23 @@ defineSuite(['Widgets/Viewer/Viewer',
     it('constructor throws with non-existant string container', function() {
         expect(function() {
             return new Viewer('doesNotExist');
+        }).toThrow();
+    });
+
+    it('constructor throws if using selectedImageryProviderViewModel with BaseLayerPicker disabled', function() {
+        expect(function() {
+            return new Viewer(container, {
+                baseLayerPicker : false,
+                selectedImageryProviderViewModel : testProviderViewModel
+            });
+        }).toThrow();
+    });
+
+    it('constructor throws if using imageryProvider with BaseLayerPicker enabled', function() {
+        expect(function() {
+            return new Viewer(container, {
+                imageryProvider : testProvider
+            });
         }).toThrow();
     });
 

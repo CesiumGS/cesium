@@ -4,15 +4,14 @@ attribute vec2 direction;                       // in screen space
 attribute vec4 textureCoordinatesAndImageSize;  // size in normalized texture coordinates
 attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (true)
 attribute vec2 pixelOffset;
-attribute vec4 eyeOffsetAndScale;                       // eye offset in meters
+attribute vec4 eyeOffsetAndScale;               // eye offset in meters
+attribute vec4 rotationAndAlignedAxis;
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
 #else
 attribute vec4 color;
 #endif
-
-uniform vec2 u_atlasSize;
 
 const vec2 czm_highResolutionSnapScale = vec2(1.0, 1.0);    // TODO
 
@@ -47,10 +46,35 @@ void main()
     
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
     
-    vec2 halfSize = u_atlasSize * imageSize * 0.5 * scale * czm_highResolutionSnapScale;
+    vec2 halfSize = imageSize * scale * czm_highResolutionSnapScale;
     halfSize *= ((direction * 2.0) - 1.0);
-
-    positionWC.xy += (origin * abs(halfSize)) + halfSize;
+    
+    positionWC.xy += (origin * abs(halfSize));
+    
+#ifdef ROTATION
+    float rotation = rotationAndAlignedAxis.x;
+    vec3 alignedAxis = rotationAndAlignedAxis.yzw;
+    
+    if (!all(equal(rotationAndAlignedAxis, vec4(0.0))))
+    {
+        float angle = rotation;
+        if (!all(equal(alignedAxis, vec3(0.0))))
+        {
+            vec3 pos = positionEC.xyz + czm_encodedCameraPositionMCHigh + czm_encodedCameraPositionMCLow;
+            vec3 normal = normalize(cross(alignedAxis, pos));
+            vec4 tangent = vec4(normalize(cross(pos, normal)), 0.0);
+            tangent = czm_modelViewProjection * tangent;
+            angle += sign(-tangent.x) * acos(tangent.y / length(tangent.xy));
+        }
+        
+        float cosTheta = cos(angle);
+        float sinTheta = sin(angle);
+        mat2 rotationMatrix = mat2(cosTheta, sinTheta, -sinTheta, cosTheta);
+        halfSize = rotationMatrix * halfSize;
+    }
+#endif
+    
+    positionWC.xy += halfSize;
     positionWC.xy += (pixelOffset * czm_highResolutionSnapScale);
 
     gl_Position = czm_viewportOrthographic * vec4(positionWC.xy, -positionWC.z, 1.0);
