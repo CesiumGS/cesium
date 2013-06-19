@@ -91,8 +91,9 @@ define([
      * @param {Boolean} [options.homeButton=true] If set to false, the HomeButton widget will not be created.
      * @param {Boolean} [options.sceneModePicker=true] If set to false, the SceneModePicker widget will not be created.
      * @param {Boolean} [options.timeline=true] If set to false, the Timeline widget will not be created.
-     * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.
-     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.
+     * @param {ImageryProviderViewModel} [options.selectedImageryProviderViewModel] The view model for the current base imagery layer, if not supplied the first available base layer is used.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {Array} [options.imageryProviderViewModels=createDefaultBaseLayers()] The array of ImageryProviderViewModels to be selectable from the BaseLayerPicker.  This value is only valid if options.baseLayerPicker is set to true.
+     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
      * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
@@ -101,6 +102,8 @@ define([
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
+     * @exception {DeveloperError} options.imageryProvider is not available when using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.
+     * @exception {DeveloperError} options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget, specify options.imageryProvider instead.
      *
      * @see Animation
      * @see BaseLayerPicker
@@ -220,6 +223,11 @@ define([
         //BaseLayerPicker
         var baseLayerPicker;
         if (createBaseLayerPicker) {
+            if (typeof options.imageryProvider !== 'undefined') {
+                throw new DeveloperError('options.imageryProvider is not available when \
+using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.');
+            }
+
             var baseLayerPickerContainer = document.createElement('div');
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
@@ -230,6 +238,13 @@ define([
             //Grab the dropdown for resize code.
             var elements = baseLayerPickerContainer.getElementsByClassName('cesium-baseLayerPicker-dropDown');
             this._baseLayerPickerDropDown = elements[0];
+        } else if (typeof options.selectedImageryProviderViewModel !== 'undefined') {
+            throw new DeveloperError('options.selectedImageryProviderViewModel is not available when \
+not using the BaseLayerPicker widget, specify options.imageryProvider instead.');
+        } else if (options.imageryProvider) {
+            var imageryLayers = cesiumWidget.centralBody.getImageryLayers();
+            imageryLayers.removeAll();
+            imageryLayers.addImageryProvider(options.imageryProvider);
         }
 
         //Animation
