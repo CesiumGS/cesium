@@ -93,18 +93,23 @@ define([
             var binormal = scratchBinormal;
             var recomputeNormal = true;
 
+            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
+            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
+
             length /= 2;
             var stOffset = length * 2 / 3;
-            var stValue = 1 / (length - 1);
             for (var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
                 if (vertexFormat.st) {
+                    var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
+                    var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
+                    Cartesian2.subtract(st, origin, st);
 
-                    textureCoordinates[textureCoordIndex + stOffset] = stValue * i;
-                    textureCoordinates[textureCoordIndex + stOffset + 1] = 0;
+                    textureCoordinates[textureCoordIndex + stOffset] = st.x / boundingRectangle.width;
+                    textureCoordinates[textureCoordIndex + stOffset + 1] = st.y / boundingRectangle.height;
 
-                    textureCoordinates[textureCoordIndex++] = stValue * i;
-                    textureCoordinates[textureCoordIndex++] = 1;
+                    textureCoordinates[textureCoordIndex++] = st.x / boundingRectangle.width;
+                    textureCoordinates[textureCoordIndex++] = st.y / boundingRectangle.height;
                 }
 
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {

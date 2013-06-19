@@ -12,7 +12,8 @@ define(['./Enumeration'], function(Enumeration) {
     }
 
     /**
-     * DOC_TBA
+     * Enumerations for WebGL component datatypes.  Components are intrinsics,
+     * which form attributes, which form vertices.
      *
      * @alias ComponentDatatype
      * @enumeration
@@ -20,11 +21,13 @@ define(['./Enumeration'], function(Enumeration) {
     var ComponentDatatype = {};
 
     /**
-     * DOC_TBA
+     * 8-bit signed byte enumeration corresponding to <code>gl.BYTE</code> and the type
+     * of an element in <code>Int8Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.BYTE = new Enumeration(0x1400, 'BYTE');
     ComponentDatatype.BYTE.sizeInBytes = Int8Array.BYTES_PER_ELEMENT;
@@ -37,11 +40,13 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * 8-bit unsigned byte enumeration corresponding to <code>UNSIGNED_BYTE</code> and the type
+     * of an element in <code>Uint8Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.UNSIGNED_BYTE = new Enumeration(0x1401, 'UNSIGNED_BYTE');
     ComponentDatatype.UNSIGNED_BYTE.sizeInBytes = Uint8Array.BYTES_PER_ELEMENT;
@@ -54,11 +59,13 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * 16-bit signed short enumeration corresponding to <code>SHORT</code> and the type
+     * of an element in <code>Int16Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.SHORT = new Enumeration(0x1402, 'SHORT');
     ComponentDatatype.SHORT.sizeInBytes = Int16Array.BYTES_PER_ELEMENT;
@@ -71,11 +78,13 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
+     * of an element in <code>Uint16Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.UNSIGNED_SHORT = new Enumeration(0x1403, 'UNSIGNED_SHORT');
     ComponentDatatype.UNSIGNED_SHORT.sizeInBytes = Uint16Array.BYTES_PER_ELEMENT;
@@ -88,11 +97,13 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * 32-bit floating-point enumeration corresponding to <code>FLOAT</code> and the type
+     * of an element in <code>Float32Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.FLOAT = new Enumeration(0x1406, 'FLOAT');
     ComponentDatatype.FLOAT.sizeInBytes = Float32Array.BYTES_PER_ELEMENT;
@@ -105,11 +116,14 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * 64-bit floating-point enumeration corresponding to <code>gl.DOUBLE</code> (in Desktop OpenGL;
+     * this is not supported in WebGL, and is emulated in Cesium via {@link GeometryPipeline.encodeAttribute})
+     * and the type of an element in <code>Float64Array</code>.
+     *
+     * @memberOf ComponentDatatype
      *
      * @constant
      * @type {Enumeration}
-     * @memberOf ComponentDatatype
      */
     ComponentDatatype.DOUBLE = new Enumeration(0x140A, 'DOUBLE');
     ComponentDatatype.DOUBLE.sizeInBytes = Float64Array.BYTES_PER_ELEMENT;
@@ -122,7 +136,16 @@ define(['./Enumeration'], function(Enumeration) {
     };
 
     /**
-     * DOC_TBA
+     * Validates that the provided component datatype is a valid {@link ComponentDatatype}
+     *
+     * @param {ComponentDatatype} componentDatatype The component datatype to validate.
+     *
+     * @return {Boolean} <code>true</code> if the provided component datatype is a valid enumeration value; otherwise, <code>false</code>.
+     *
+     * @example
+     * if (!ComponentDatatype.validate(componentDatatype)) {
+     *   throw new DeveloperError('componentDatatype must be a valid enumeration value.');
+     * }
      */
     ComponentDatatype.validate = function(componentDatatype) {
         return ((componentDatatype === ComponentDatatype.BYTE) ||

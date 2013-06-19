@@ -66,7 +66,9 @@ define(['../../Core/defaultValue',
         //Subscribe to left clicks and zoom to the picked object.
         function _onLeftClick(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
+            if (typeof pickedPrimitive !== 'undefined' &&
+                typeof pickedPrimitive.dynamicObject !== 'undefined' &&
+                typeof pickedPrimitive.dynamicObject.position !== 'undefined') {
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
             }
         }
