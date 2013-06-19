@@ -290,6 +290,25 @@ define([
     };
 
     /**
+     * Gets the tiling scheme used by this provider.  This function should
+     * not be called before {@link GoogleEarthImageryProvider#isReady} returns true.
+     *
+     * @memberof GoogleEarthImageryProvider
+     *
+     * @returns {TilingScheme} The tiling scheme.
+     * @see WebMercatorTilingScheme
+     * @see GeographicTilingScheme
+     *
+     * @exception {DeveloperError} <code>getTilingScheme</code> must not be called before the imagery provider is ready.
+     */
+    GoogleEarthImageryProvider.prototype.getTilingScheme = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getTilingScheme must not be called before the imagery provider is ready.');
+        }
+        return this._tilingScheme;
+    };
+
+    /**
      * Gets the version of the data used by this provider.  This function should
      * not be called before {@link GoogleEarthImageryProvider#isReady} returns true.
      *
