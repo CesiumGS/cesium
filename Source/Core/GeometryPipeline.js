@@ -170,28 +170,6 @@ define([
      * @see ShaderCache
      */
     GeometryPipeline.createAttributeIndices = function(geometry) {
-
-
-/*
-        var indices = {};
-
-        if (typeof geometry !== 'undefined') {
-            var attributes = geometry.attributes;
-            var j = 0;
-
-            for ( var name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
-                    indices[name] = j++;
-                }
-            }
-        }
-
-        return indices;
-*/
-
-
-
-
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
         }
