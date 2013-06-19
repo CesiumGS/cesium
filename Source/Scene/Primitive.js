@@ -406,7 +406,7 @@ define([
         var geometry = GeometryPipeline.combine(insts);
 
         // Split position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -415,6 +415,20 @@ define([
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];
+    }
+
+    function createPickVertexShaderSource(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
     }
 
     /**
@@ -519,7 +533,10 @@ define([
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
+                createPickVertexShaderSource(vs),
+                createPickFragmentShaderSource(fs, 'varying'),
+                this._attributeIndices);
         }
 
         if (createRS || createSP) {
