@@ -377,7 +377,7 @@ jasmine.HtmlReporter = function(_doc) {
         self.createDom('span', { className: 'title' }, "Jasmine "),
         self.createDom('span', { className: 'version' }, version)),
 
-      dom.symbolSummary = self.createDom('ul', {className: 'symbolSummary'}),
+      //dom.symbolSummary = self.createDom('ul', {className: 'symbolSummary'}),
       dom.alert = self.createDom('div', {className: 'alert'},
         self.createDom('div', {className: 'progressContainer'},
         dom.progress = self.createDom('div', {className: 'progressBar', style: 'width: 0%'})),
@@ -638,6 +638,16 @@ jasmine.HtmlReporter.ReporterView = function(dom) {
                 window.encodeURIComponent('?baseUrl=../Instrumented&spec=' + name), target: '_top' }, "coverage"),
 	runTime), suiteView.element.getElementsByTagName('a')[2].nextSibling);
 
+	if (suite.beforeSpec_ && !suite.beforeSpec_.results().passed()) {
+        var beforeSpecView = new jasmine.HtmlReporter.SpecView(suite.beforeSpec_, dom, this.views);
+        this.failedCount++;
+        beforeSpecView.refresh();
+    }
+    if (suite.afterSpec_ && !suite.afterSpec_.results().passed()) {
+        var afterSpecView = new jasmine.HtmlReporter.SpecView(suite.afterSpec_, dom, this.views);
+        this.failedCount++;
+        afterSpecView.refresh();
+    }
 
     suiteView.refresh();
   };
@@ -759,8 +769,8 @@ jasmine.HtmlReporter.SpecView = function(spec, dom, views) {
   this.dom = dom;
   this.views = views;
 
-  this.symbol = this.createDom('li', { className: 'pending' });
-  // this.dom.symbolSummary.appendChild(this.symbol);
+  //this.symbol = this.createDom('li', { className: 'pending' });
+  //this.dom.symbolSummary.appendChild(this.symbol);
 
   this.summary = this.createDom('div', { className: 'specSummary' },
     this.createDom('a', {
@@ -795,7 +805,7 @@ jasmine.HtmlReporter.SpecView.prototype.status = function() {
 };
 
 jasmine.HtmlReporter.SpecView.prototype.refresh = function() {
-  this.symbol.className = this.status();
+  //this.symbol.className = this.status();
 
   switch (this.status()) {
     case 'skipped':
