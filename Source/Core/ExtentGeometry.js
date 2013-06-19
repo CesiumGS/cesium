@@ -645,13 +645,10 @@ define([
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
-     * @param {Matrix4} [options.modelMatrix] The model matrix for this geometry.
-     * @param {Color} [options.color] The color of the geometry when a per-geometry color appearance is used.
      * @param {Object} [options.extrudedOptions] Extruded options
      * @param {Number} [options.extrudedOptions.height] Height of extruded surface
      * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
      * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
-     * @param {DOC_TBA} [options.pickData] DOC_TBA
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -673,7 +670,6 @@ define([
      *         CesiumMath.toRadians(-74.0),
      *         CesiumMath.toRadians(42.0)
      *     ),
-     *     granularity : 0.01,
      *     surfaceHeight : 10000.0
      * });
      */

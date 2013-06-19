@@ -91,21 +91,6 @@ define([
     };
 
     /**
-     * An immutable vertex format with position, normal, and st attributes.
-     *
-     * @memberof VertexFormat
-     *
-     * @see VertexFormat#position
-     * @see VertexFormat#normal
-     * @see VertexFormat#st
-     */
-    VertexFormat.DEFAULT = freezeObject(new VertexFormat({
-        position : true,
-        normal : true,
-        st : true
-    }));
-
-    /**
      * An immutable vertex format with only a position attribute.
      *
      * @memberof VertexFormat
@@ -128,6 +113,21 @@ define([
     VertexFormat.POSITION_AND_NORMAL = freezeObject(new VertexFormat({
         position : true,
         normal : true
+    }));
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof VertexFormat
+     *
+     * @see VertexFormat#position
+     * @see VertexFormat#normal
+     * @see VertexFormat#st
+     */
+    VertexFormat.POSITION_NORMAL_AND_ST = freezeObject(new VertexFormat({
+        position : true,
+        normal : true,
+        st : true
     }));
 
     /**
@@ -162,6 +162,16 @@ define([
         binormal : true,
         tangent  : true
     }));
+
+    /**
+     * An immutable vertex format with position and normal attributes.
+     *
+     * @memberof VertexFormat
+     *
+     * @see VertexFormat#position
+     * @see VertexFormat#normal
+     */
+    VertexFormat.DEFAULT = VertexFormat.POSITION_AND_NORMAL;
 
     return VertexFormat;
 });
