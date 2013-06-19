@@ -57,7 +57,7 @@ define([
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
      *          return new OpenStreetMapImageryProvider({
-     *              url : 'http://tile.openstreetmap.org/',
+     *              url : 'http://tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
@@ -71,7 +71,7 @@ define([
      *          return new TileMapServiceImageryProvider({
      *              url : 'http://cesium.agi.com/blackmarble',
      *              maximumLevel : 8,
-     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
      *          });
      *      }
      *  }));
@@ -82,7 +82,7 @@ define([
      *      tooltip : 'Uses a single image for the entire world.',
      *      creationFunction : function() {
      *          return new SingleTileImageryProvider({
-     *              url : 'NE2_LR_LC_SR_W_DR_2048.jpg',
+     *              url : 'NE2_LR_LC_SR_W_DR_2048.jpg'
      *          });
      *      }
      *  }));

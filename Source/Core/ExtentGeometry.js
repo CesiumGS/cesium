@@ -739,7 +739,7 @@ define([
 
         extent.validate();
 
-        var granularity = 1;//defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);

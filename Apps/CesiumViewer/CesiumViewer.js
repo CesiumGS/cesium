@@ -27,6 +27,7 @@ define([
         'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
+        'Scene/TranslucentAppearance',
         'Scene/ClosedTranslucentAppearance',
         'Scene/PerInstanceColorClosedTranslucentAppearance',
         'Scene/EllipsoidSurfaceAppearance',
@@ -64,6 +65,7 @@ define([
         WallGeometry,
         Primitive,
         Appearance,
+        TranslucentAppearance,
         ClosedTranslucentAppearance,
         PerInstanceColorClosedTranslucentAppearance,
         EllipsoidSurfaceAppearance,
@@ -103,6 +105,9 @@ define([
         } else {
             loadingIndicator.style.display = 'none';
         }
+    }).otherwise(function(e) {
+        console.error(e);
+        window.alert(e);
     });
 
     function startup() {
@@ -110,7 +115,12 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
-        viewer.onDropError.addEventListener(function(dropHandler, name, error) {
+        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
+            console.log(error);
+            window.alert(error);
+        });
+
+        viewer.onDropError.addEventListener(function(viewerArg, name, error) {
             console.log(error);
             window.alert(error);
         });
@@ -344,12 +354,13 @@ define([
             }),
             pickData : 'polygon3'
         });
-        scene.getPrimitives().add(new Primitive({
+        var polygonPrimitive = new Primitive({
             geometryInstances : polygonGeometry,
             appearance : new EllipsoidSurfaceAppearance({
                 material : Material.fromType(scene.getContext(), 'Stripe')
             })
-        }));
+        });
+        scene.getPrimitives().add(polygonPrimitive);
 
         var wall = new GeometryInstance({
             geometry : new WallGeometry({
@@ -361,10 +372,10 @@ define([
                     Cartographic.fromDegrees(-120.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
                 ])
-            }),
-            pickData : 'wall'
+            })
+            // pickData is undefined here for testing
         });
-        scene.getPrimitives().add(new Primitive({
+        var wallPrimitive = new Primitive({
             geometryInstances : wall,
             appearance : new Appearance({
                 material : Material.fromType(scene.getContext(), 'Wood'),
@@ -374,7 +385,8 @@ define([
                     }
                 }
             })
-        }));
+        });
+        scene.getPrimitives().add(wallPrimitive);
 
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({

@@ -136,6 +136,8 @@ define([
          * DOC_TBA
          */
         this.appearance = options.appearance;
+        this._appearance = undefined;
+        this._material = undefined;
 
         /**
          * The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
@@ -173,8 +175,11 @@ define([
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
 
-        this._sp = undefined;
         this._va = [];
+        this._attributeIndices = undefined;
+
+        this._rs = undefined;
+        this._sp = undefined;
 
         this._pickSP = undefined;
         this._pickIds = [];
@@ -231,19 +236,6 @@ define([
         }
     }
 
-    function isPickable(instances) {
-        var pickable = false;
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof instances[i].pickData !== 'undefined') {
-                pickable = true;
-                break;
-            }
-        }
-
-        return pickable;
-    }
-
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
 
@@ -261,26 +253,24 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            if (typeof instance.pickData !== 'undefined') {
-                var pickId = context.createPickId({
-                    primitive : primitive,
-                    pickData : instance.pickData
-                });
-                primitive._pickIds.push(pickId);
+            var pickId = context.createPickId({
+                primitive : primitive,
+                pickData : instance.pickData    // may be undefined
+            });
+            primitive._pickIds.push(pickId);
 
-                var pickColor = pickId.color;
-                var red = Color.floatToByte(pickColor.red);
-                var green = Color.floatToByte(pickColor.green);
-                var blue = Color.floatToByte(pickColor.blue);
-                var alpha = Color.floatToByte(pickColor.alpha);
-                var values = attributes.pickColor.values;
+            var pickColor = pickId.color;
+            var red = Color.floatToByte(pickColor.red);
+            var green = Color.floatToByte(pickColor.green);
+            var blue = Color.floatToByte(pickColor.blue);
+            var alpha = Color.floatToByte(pickColor.alpha);
+            var values = attributes.pickColor.values;
 
-                for (var j = 0; j < numberOfComponents; j += 4) {
-                    values[j] = red;
-                    values[j + 1] = green;
-                    values[j + 2] = blue;
-                    values[j + 3] = alpha;
-                }
+            for (var j = 0; j < numberOfComponents; j += 4) {
+                values[j] = red;
+                values[j + 1] = green;
+                values[j + 2] = blue;
+                values[j + 3] = alpha;
             }
         }
     }
@@ -402,10 +392,8 @@ define([
             addColorAttribute(primitive, insts, context);
         }
 
-        // Add pickColor attribute if any geometries are pickable
-        if (isPickable(insts)) {
-            addPickColorAttribute(primitive, insts, context);
-        }
+        // Add pickColor attribute for picking individual instances
+        addPickColorAttribute(primitive, insts, context);
 
         // Add default values for any undefined attributes
         addDefaultAttributes(insts);
@@ -418,7 +406,7 @@ define([
         var geometry = GeometryPipeline.combine(insts);
 
         // Split position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -427,6 +415,20 @@ define([
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];
+    }
+
+    function createPickVertexShaderSource(vertexShaderSource) {
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'attribute vec4 pickColor; \n' +
+            'varying vec4 czm_pickColor; \n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    czm_pickColor = pickColor; \n' +
+            '}';
+
+        return renamedVS + '\n' + pickMain;
     }
 
     /**
@@ -441,8 +443,14 @@ define([
             return;
         }
 
+        if (!frameState.passes.color && !frameState.passes.pick) {
+            return;
+        }
+
         var colorCommands = this._commandLists.colorList;
         var pickCommands = this._commandLists.pickList;
+        var colorCommand;
+        var pickCommand;
         var length;
         var i;
 
@@ -459,65 +467,34 @@ define([
                 }
             }
 
-            var attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
+            this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             var va = [];
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
-                    attributeIndices : attributeIndices,
+                    attributeIndices : this._attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
                     vertexLayout : VertexLayout.INTERLEAVED
                 }));
             }
 
-            var appearance = this.appearance;
-            var vs = appearance.vertexShaderSource;
-            var fs = appearance.getFragmentShaderSource();
-
             this._va = va;
-// TODO: recompile on material change.
-            this._sp = context.getShaderCache().replaceShaderProgram(this._sp, appearance.vertexShaderSource, fs, attributeIndices);
-            var rs = context.createRenderState(appearance.renderState);
-            var pickRS;
-
-            if (isPickable(instances)) {
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, vs, createPickFragmentShaderSource(fs, 'varying'), attributeIndices);
-                pickRS = rs;
-            } else {
-                this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, appearance.vertexShaderSource, fs, attributeIndices);
-
-                // Still render during pick pass, but depth-only.
-                var appearanceRS = clone(appearance.renderState, true);
-                appearanceRS.colorMask = {
-                    red : false,
-                    green : false,
-                    blue : false,
-                    alpha : false
-                };
-                pickRS = context.createRenderState(appearanceRS);
-            }
-
-            var uniforms = (typeof appearance.material !== 'undefined') ? appearance.material._uniforms : undefined;
 
             for (i = 0; i < length; ++i) {
                 var geometry = geometries[i];
 
-                var command = new DrawCommand();
-                command.primitiveType = geometry.primitiveType;
-                command.vertexArray = this._va[i];
-                command.renderState = rs;
-                command.shaderProgram = this._sp;
-                command.uniformMap = uniforms;
-                command.boundingVolume = geometry.boundingSphere;
-                colorCommands.push(command);
+                // renderState, shaderProgram, and uniformMap for commands are set below.
 
-                var pickCommand = new DrawCommand();
+                colorCommand = new DrawCommand();
+                colorCommand.primitiveType = geometry.primitiveType;
+                colorCommand.vertexArray = this._va[i];
+                colorCommand.boundingVolume = geometry.boundingSphere;
+                colorCommands.push(colorCommand);
+
+                pickCommand = new DrawCommand();
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
-                pickCommand.renderState = pickRS;
-                pickCommand.shaderProgram = this._pickSP;
-                pickCommand.uniformMap = uniforms;
                 pickCommand.boundingVolume = geometry.boundingSphere;
                 pickCommands.push(pickCommand);
             }
@@ -527,16 +504,65 @@ define([
             }
         }
 
-        // The geometry is static but the model matrix can change
-        if (frameState.passes.color || frameState.passes.pick) {
+        // Create or recreate render state and shader program if appearance/material changed
+        var appearance = this.appearance;
+        var material = appearance.material;
+        var createRS = false;
+        var createSP = false;
+
+        if (this._appearance !== appearance) {
+
+            this._appearance = appearance;
+            this._material = material;
+            createRS = true;
+            createSP = true;
+        } else if (this._material !== material ) {
+            this._material = material;
+            createSP = true;
+        }
+
+        if (createRS) {
+            this._rs = context.createRenderState(appearance.renderState);
+        }
+
+        if (createSP) {
+            var shaderCache = context.getShaderCache();
+            var vs = appearance.vertexShaderSource;
+            var fs = appearance.getFragmentShaderSource();
+
+            this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
+                createPickVertexShaderSource(vs),
+                createPickFragmentShaderSource(fs, 'varying'),
+                this._attributeIndices);
+        }
+
+        if (createRS || createSP) {
+            var uniforms = (typeof material !== 'undefined') ? material._uniforms : undefined;
+
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
-                colorCommands[i].modelMatrix = this.modelMatrix;
-                pickCommands[i].modelMatrix = this.modelMatrix;
-            }
 
-            commandList.push(this._commandLists);
+                colorCommand = colorCommands[i];
+                colorCommand.renderState = this._rs;
+                colorCommand.shaderProgram = this._sp;
+                colorCommand.uniformMap = uniforms;
+
+                pickCommand = pickCommands[i];
+                pickCommand.renderState = this._rs;
+                pickCommand.shaderProgram = this._pickSP;
+                pickCommand.uniformMap = uniforms;
+            }
         }
+
+        // modelMatrix can change from frame to frame
+        length = colorCommands.length;
+        for (i = 0; i < length; ++i) {
+            colorCommands[i].modelMatrix = this.modelMatrix;
+            pickCommands[i].modelMatrix = this.modelMatrix;
+        }
+
+        commandList.push(this._commandLists);
     };
 
     /**
