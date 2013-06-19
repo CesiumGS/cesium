@@ -260,14 +260,7 @@ define([
 
     Timeline.prototype.makeLabel = function(julianDate) {
         var gregorian = julianDate.toGregorianDate();
-        var hour = gregorian.hour;
-        var ampm = (hour < 12) ? ' AM' : ' PM';
-        if (hour >= 13) {
-            hour -= 12;
-        } else if (hour === 0) {
-            hour = 12;
-        }
-        var millisecond = gregorian.millisecond, millisecondString = '';
+        var millisecond = gregorian.millisecond, millisecondString = ' UTC';
         if ((millisecond > 0) && (this._timeBarSecondsSpan < 3600)) {
             millisecondString = Math.floor(millisecond).toString();
             while (millisecondString.length < 3) {
@@ -276,8 +269,8 @@ define([
             millisecondString = '.' + millisecondString;
         }
 
-        return timelineMonthNames[gregorian.month - 1] + ' ' + gregorian.day + ' ' + gregorian.year + ' ' + twoDigits(hour) + ':' +
-            twoDigits(gregorian.minute) + ':' + twoDigits(gregorian.second) + millisecondString + ampm;
+        return timelineMonthNames[gregorian.month - 1] + ' ' + gregorian.day + ' ' + gregorian.year + ' ' + twoDigits(gregorian.hour) +
+            ':' + twoDigits(gregorian.minute) + ':' + twoDigits(gregorian.second) + millisecondString;
     };
 
     Timeline.prototype.smallestTicInPixels = 7.0;
