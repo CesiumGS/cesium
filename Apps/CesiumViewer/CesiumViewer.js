@@ -27,8 +27,6 @@ define([
         'Core/WallGeometry',
         'Scene/Primitive',
         'Scene/Appearance',
-        'Scene/TranslucentAppearance',
-        'Scene/ClosedTranslucentAppearance',
         'Scene/PerInstanceColorClosedTranslucentAppearance',
         'Scene/PerInstanceFlatColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
@@ -66,8 +64,6 @@ define([
         WallGeometry,
         Primitive,
         Appearance,
-        TranslucentAppearance,
-        ClosedTranslucentAppearance,
         PerInstanceColorClosedTranslucentAppearance,
         PerInstanceFlatColorAppearance,
         EllipsoidSurfaceAppearance,
@@ -334,6 +330,7 @@ define([
                         }]
                     }]
                 },
+                height : 3000000.0,
                 stRotation : 0.523598776
             }),
             pickData : 'polygon3'
@@ -341,7 +338,9 @@ define([
         var polygonPrimitive = new Primitive({
             geometryInstances : polygonGeometry,
             appearance : new EllipsoidSurfaceAppearance({
-                material : Material.fromType(scene.getContext(), 'Stripe')
+                material : Material.fromType(scene.getContext(), 'Stripe'),
+                aboveGround : true,
+                translucent : false
             })
         });
         scene.getPrimitives().add(polygonPrimitive);
@@ -363,14 +362,10 @@ define([
             geometryInstances : wall,
             appearance : new Appearance({
                 materialSupport : Appearance.MaterialSupport.TEXTURED,
-                material : Material.fromType(scene.getContext(), 'Wood'),
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    }
-                }
+                material : Material.fromType(scene.getContext(), 'Checkerboard')
             })
         });
+        wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
 
         var customWithIndices = new GeometryInstance({
@@ -451,7 +446,7 @@ define([
         handler.setInputAction(
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
-                wallPrimitive.appearance = new TranslucentAppearance();
+                wallPrimitive.appearance = new Appearance();
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

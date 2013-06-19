@@ -50,17 +50,40 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            },
+        this.translucent = defaultValue(options.translucent, true);
+
+        /**
+         * DOC_TBA
+         */
+        this.closed = false;
+
+        /**
+         * DOC_TBA
+         */
+        this.aboveGround = defaultValue(options.aboveGround, false);
+
+        var rs = {
             depthTest : {
                 enabled : true
-            },
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND
-        });
+            }
+        };
+
+        if (!this.aboveGround) {
+            rs.cull = {
+                enabled : true,
+                face : CullFace.BACK
+            };
+        }
+
+        if (this.translucent) {
+            rs.depthMask = false;
+            rs.blending = BlendingState.ALPHA_BLEND;
+        }
+
+        /**
+         * DOC_TBA
+         */
+        this.renderState = defaultValue(options.renderState, rs);
     };
 
     /**

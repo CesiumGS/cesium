@@ -3,6 +3,8 @@ define([
         '../Core/defaultValue',
         '../Core/freezeObject',
         '../Core/VertexFormat',
+        '../Renderer/CullFace',
+        '../Renderer/BlendingState',
         './Material',
         '../Shaders/Appearances/BasicMaterialAppearanceVS',
         '../Shaders/Appearances/BasicMaterialAppearanceFS',
@@ -14,6 +16,8 @@ define([
         defaultValue,
         freezeObject,
         VertexFormat,
+        CullFace,
+        BlendingState,
         Material,
         BasicMaterialAppearanceVS,
         BasicMaterialAppearanceFS,
@@ -53,7 +57,35 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {});
+        this.translucent = defaultValue(options.translucent, true);
+
+        /**
+         * DOC_TBA
+         */
+        this.closed = defaultValue(options.closed, false);
+
+        var rs = {
+            depthTest : {
+                enabled : true
+            }
+        };
+
+        if (this.translucent) {
+            rs.depthMask = false;
+            rs.blending = BlendingState.ALPHA_BLEND;
+        }
+
+        if (this.closed) {
+            rs.cull = {
+                enabled : true,
+                face : CullFace.BACK
+            };
+        }
+
+        /**
+         * DOC_TBA
+         */
+        this.renderState = defaultValue(options.renderState, rs);
     };
 
     /**
