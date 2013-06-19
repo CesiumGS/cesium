@@ -16,13 +16,6 @@ void main()
     materialInput.st = v_st;
     czm_material material = czm_getMaterial(materialInput);
     
-<<<<<<< HEAD:Source/Shaders/Appearances/DefaultAppearanceFS.glsl
-    // material.specular = 0.2;
-    // material.shininess = 10.0;
-    
-    // gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
-=======
     //gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
->>>>>>> batching:Source/Shaders/Appearances/AllMaterialAppearanceFS.glsl
     gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
 }
