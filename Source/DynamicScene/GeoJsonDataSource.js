@@ -1,26 +1,76 @@
 /*global define*/
 define(['../Core/createGuid',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/loadJson',
-        './DynamicLabel',
+        './DynamicPoint',
+        './DynamicPolyline',
+        './DynamicPolygon',
+        './DynamicMaterialProperty',
         './DynamicObjectCollection',
         './StaticProperty',
         './StaticPositionProperty'
         ], function(
                 createGuid,
                 Cartographic,
+                Color,
                 DeveloperError,
                 Ellipsoid,
                 Event,
                 loadJson,
-                DynamicLabel,
+                DynamicPoint,
+                DynamicPolyline,
+                DynamicPolygon,
+                DynamicMaterialProperty,
                 DynamicObjectCollection,
                 StaticProperty,
                 StaticPositionProperty) {
     "use strict";
+
+    function applyPointDefaults(dynamicObject) {
+        var point = new DynamicPoint();
+        point.color = new StaticProperty(Color.BLUE);
+        point.pixelSize = new StaticProperty(10);
+        point.outlineColor = new StaticProperty(Color.BLACK);
+        point.outlineWidth = new StaticProperty(1);
+        dynamicObject.point = point;
+    }
+
+    function applyPolylineDefaults(dynamicObject) {
+        var polyline = new DynamicPolyline();
+        polyline.color = new StaticProperty(Color.BLUE);
+        polyline.width = new StaticProperty(2);
+        polyline.outlineColor = new StaticProperty(Color.BLACK);
+        polyline.outlineWidth = new StaticProperty(1);
+        dynamicObject.polyline = polyline;
+    }
+
+    var staticColorCzml = {
+        solidColor : {
+            color : {
+                rgba : [0, 0, 255, 25.5]
+            }
+        }
+    };
+
+    var material = new DynamicMaterialProperty();
+    material.processCzmlIntervals(staticColorCzml, undefined, undefined);
+
+    function applyPolygonDefaults(dynamicObject) {
+        var polyline = new DynamicPolyline();
+        polyline.color = new StaticProperty(Color.BLUE);
+        polyline.width = new StaticProperty(1);
+        polyline.outlineColor = new StaticProperty(Color.BLACK);
+        polyline.outlineWidth = new StaticProperty(0);
+        dynamicObject.polyline = polyline;
+
+        var polygon = new DynamicPolygon();
+        polygon.material = material;
+        dynamicObject.polygon = polygon;
+    }
 
     function processFeature(feature, dynamicObjectCollection) {
         processors[feature.geometry.type](feature, dynamicObjectCollection);
@@ -56,6 +106,7 @@ define(['../Core/createGuid',
             positions[i] = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1]);
         }
         dynamicObject.vertexPositions = new StaticPositionProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions));
+        applyPolylineDefaults(dynamicObject);
     }
 
     function processMultiLineString(feature, dynamicObjectCollection) {
@@ -72,6 +123,7 @@ define(['../Core/createGuid',
                     positions[index++] = Cartographic.fromDegrees(lineString[i][0], lineString[i][1]);
                 }
                 dynamicObject.vertexPositions = new StaticPositionProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions));
+                applyPolylineDefaults(dynamicObject);
             }
         }
     }
@@ -84,6 +136,7 @@ define(['../Core/createGuid',
 
             var position = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1]);
             dynamicObject.position = new StaticPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(position));
+            applyPointDefaults(dynamicObject);
         }
     }
 
@@ -103,6 +156,7 @@ define(['../Core/createGuid',
                     positions[index++] = Cartographic.fromDegrees(vertexPositions[i][0], vertexPositions[i][1]);
                 }
                 dynamicObject.vertexPositions = new StaticPositionProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions));
+                applyPolygonDefaults(dynamicObject);
             }
         }
     }
@@ -118,9 +172,7 @@ define(['../Core/createGuid',
         var coordinates = feature.geometry.coordinates;
         var position = Cartographic.fromDegrees(coordinates[0], coordinates[1]);
         dynamicObject.position = new StaticPositionProperty(Ellipsoid.WGS84.cartographicToCartesian(position));
-
-        dynamicObject.label = new DynamicLabel();
-        dynamicObject.label.text = new StaticProperty("This is GeoJSON!");
+        applyPointDefaults(dynamicObject);
     }
 
     function processPolygon(feature, dynamicObjectCollection) {
@@ -139,6 +191,7 @@ define(['../Core/createGuid',
             positions[index++] = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1]);
         }
         dynamicObject.vertexPositions = new StaticPositionProperty(Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions));
+        applyPolygonDefaults(dynamicObject);
     }
 
     var processors = {
