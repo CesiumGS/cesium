@@ -1,6 +1,8 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/freezeObject',
+        '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         './Material',
@@ -9,6 +11,8 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
+        freezeObject,
+        VertexFormat,
         CullFace,
         BlendingState,
         Material,
@@ -27,6 +31,11 @@ define([
          * DOC_TBA
          */
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
+
+        /**
+         * DOC_TBA
+         */
+        this.vertexFormat = EllipsoidSurfaceAppearance.VERTEX_FORMAT;
 
         /**
          * DOC_TBA
@@ -53,6 +62,11 @@ define([
             blending : BlendingState.ALPHA_BLEND
         });
     };
+
+    /**
+     * DOC_TBA
+     */
+    EllipsoidSurfaceAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_ST);
 
     /**
      * DOC_TBA

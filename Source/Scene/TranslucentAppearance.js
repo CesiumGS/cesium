@@ -3,16 +3,12 @@ define([
         '../Core/defaultValue',
         '../Renderer/BlendingState',
         './Material',
-        './Appearance',
-        '../Shaders/Appearances/DefaultAppearanceVS',
-        '../Shaders/Appearances/DefaultAppearanceFS'
+        './Appearance'
     ], function(
         defaultValue,
         BlendingState,
         Material,
-        Appearance,
-        DefaultAppearanceVS,
-        DefaultAppearanceFS) {
+        Appearance) {
     "use strict";
 
     /**
@@ -20,21 +16,27 @@ define([
      */
     var TranslucentAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var defaults = new Appearance(options);
 
         /**
          * DOC_TBA
          */
-        this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defaults.material;
 
         /**
          * DOC_TBA
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, DefaultAppearanceVS);
+        this.vertexFormat = defaults.vertexFormat;
 
         /**
          * DOC_TBA
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, DefaultAppearanceFS);
+        this.vertexShaderSource = defaults.vertexShaderSource;
+
+        /**
+         * DOC_TBA
+         */
+        this.fragmentShaderSource = defaults.fragmentShaderSource;
 
         /**
          * DOC_TBA
