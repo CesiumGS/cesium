@@ -2,6 +2,7 @@
 define(['../Core/createGuid',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -12,11 +13,12 @@ define(['../Core/createGuid',
         './DynamicMaterialProperty',
         './DynamicObjectCollection',
         './StaticProperty',
-        './StaticPositionProperty'
-        ], function(
+        './StaticPositionProperty',
+        '../ThirdParty/when'], function(
                 createGuid,
                 Cartographic,
                 Color,
+                defineProperties,
                 DeveloperError,
                 Ellipsoid,
                 Event,
@@ -27,14 +29,26 @@ define(['../Core/createGuid',
                 DynamicMaterialProperty,
                 DynamicObjectCollection,
                 StaticProperty,
-                StaticPositionProperty) {
-    "use strict";
+                StaticPositionProperty,
+                when) {
+      "use strict";
 
     var GeoJsonDataSource = function() {
         this._changed = new Event();
         this._error = new Event();
         this._dynamicObjectCollection = new DynamicObjectCollection();
+        this._crsNameHandlers = {};
+        this._crsLinkTypeHandlers = {};
+        this._crsLinkHrefHandlers = {};
     };
+
+    defineProperties(GeoJsonDataSource.prototype, {
+        crsTransformations : {
+            get : function() {
+                return this._crsNameHandlers;
+            }
+        }
+    });
 
     GeoJsonDataSource.prototype.getChangedEvent = function() {
         return this._changed;
@@ -61,21 +75,70 @@ define(['../Core/createGuid',
             throw new DeveloperError('geoJson is required.');
         }
 
-        this._dynamicObjectCollection.clear();
-
         if (typeof geoJson.type === 'undefined') {
             throw new DeveloperError('Invalid GeoJSON.  Type not defined');
         }
 
-        var callback = types[geoJson.type];
-        if (typeof callback === 'undefined') {
-            throw new DeveloperError('Unsupported feature type: ' + geoJson.type);
+        var typeHandler = types[geoJson.type];
+        if (typeof typeHandler === 'undefined') {
+            throw new DeveloperError('Unsupported GeoJSON object type: ' + geoJson.type);
         }
-        var crsFunction = defaultCrsFunction;
-        if (typeof geoJson.crs !== 'undefined') {
-            //TODO look up CRS transformation.
+
+        //Check for a custom Coordinate Reference System.
+        var crsPromise;
+        var crs = geoJson.crs;
+        if (typeof crs !== 'undefined') {
+            if (crs === null) {
+                throw new DeveloperError('crs is null.');
+            }
+            if (typeof crs.type === 'undefined') {
+                throw new DeveloperError('Invalid crs property, crs.type is undefined.');
+            } else if (typeof crs.properties === 'undefined') {
+                throw new DeveloperError('Invalid crs property, crs.properties is undefined.');
+            }
+
+            var properties = crs.properties;
+            if (crs.type === 'name') {
+                var crsFunction = this._crsNameHandlers[properties.name];
+                if (typeof crsFunction === 'undefined') {
+                    throw new DeveloperError('Unknown crs name: ' + properties.name);
+                }
+
+                crsPromise = when(crsFunction, function(crsFunction) {
+                    var deferred = when.defer();
+                    deferred.resolve(crsFunction);
+                    return deferred.promise;
+                });
+            } else if (crs.type === 'link') {
+                var handler = this._crsLinkHrefHandlers[properties.href];
+                if (typeof handler === 'undefined') {
+                    handler = this._crsLinkHandlers;
+                }
+
+                if (typeof handler === 'undefined') {
+                    throw new DeveloperError('Unable to resolve crs link: ' + properties);
+                }
+
+                crsPromise = handler(properties.href, properties.type);
+            } else {
+                throw new DeveloperError('Unknown crs type: ' + crs.type);
+            }
+        } else {
+            //Use the default
+            crsPromise = when(defaultCrsFunction, function(defaultCrsFunction) {
+                var deferred = when.defer();
+                deferred.resolve(defaultCrsFunction);
+                return deferred.promise;
+            });
         }
-        callback(geoJson, this._dynamicObjectCollection, crsFunction, source);
+
+        this._dynamicObjectCollection.clear();
+
+        var that = this;
+        return crsPromise.then(function(crsFunction) {
+            typeHandler(geoJson, that._dynamicObjectCollection, crsFunction, source);
+            that._changed.raiseEvent(that);
+        });
     };
 
     GeoJsonDataSource.prototype.loadUrl = function(url) {
@@ -137,14 +200,36 @@ define(['../Core/createGuid',
     }
 
     function processFeature(feature, dynamicObjectCollection, crsFunction, source) {
-        types[feature.geometry.type](feature, dynamicObjectCollection, crsFunction, source);
+        if (typeof feature.geometry !== 'object') {
+            throw new DeveloperError('feature.geometry is required to be an object.');
+        }
+
+        if (typeof feature.properties !== 'object') {
+            throw new DeveloperError('feature.properties is required to be an object.');
+        }
+
+        if (feature.geometry === null) {
+            //Null geometry is allowed, so just create an empty dynamicObject instance for it.
+            var id = feature.id;
+            if (typeof id === 'undefined') {
+                id = createGuid();
+            }
+            var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+            dynamicObject.geoJson = feature;
+        } else {
+            var geometryType = feature.geometry.type;
+            var geometryHandler = types[geometryType];
+            if (typeof geometryHandler === 'undefined') {
+                throw new DeveloperError('Unknown geometry type: ' + geometryType);
+            }
+            geometryHandler(feature, dynamicObjectCollection, crsFunction, source);
+        }
     }
 
     function processFeatureCollection(featureCollection, dynamicObjectCollection, crsFunction, source) {
         var features = featureCollection.features;
         for ( var i = 0, len = features.length; i < len; i++) {
-            var feature = features[i];
-            types[feature.type](feature, dynamicObjectCollection, crsFunction, source);
+            processFeature(features[i], dynamicObjectCollection, crsFunction, source);
         }
     }
 
@@ -162,7 +247,7 @@ define(['../Core/createGuid',
             id = createGuid();
         }
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.feature = feature;
+        dynamicObject.geoJson = feature;
 
         var coordinates = feature.geometry.coordinates;
         var positions = new Array(coordinates.length);
@@ -178,7 +263,7 @@ define(['../Core/createGuid',
         for ( var i = 0; i < lineStrings.length; i++) {
             var lineString = lineStrings[i];
             var dynamicObject = dynamicObjectCollection.getOrCreateObject(createGuid());
-            dynamicObject.feature = feature;
+            dynamicObject.geoJson = feature;
             var positions = new Array(lineString.length);
             for ( var z = 0; z < lineString.length; z++) {
                 positions[z] = crsFunction(lineString[z]);
@@ -192,7 +277,7 @@ define(['../Core/createGuid',
         var coordinates = feature.geometry.coordinates;
         for ( var i = 0; i < coordinates.length; i++) {
             var dynamicObject = dynamicObjectCollection.getOrCreateObject(createGuid());
-            dynamicObject.feature = feature;
+            dynamicObject.geoJson = feature;
             dynamicObject.position = new StaticPositionProperty(crsFunction(coordinates[i]));
             applyPointDefaults(dynamicObject);
         }
@@ -203,7 +288,7 @@ define(['../Core/createGuid',
         for ( var i = 0; i < polygons.length; i++) {
             var polygon = polygons[i];
             var dynamicObject = dynamicObjectCollection.getOrCreateObject(createGuid());
-            dynamicObject.feature = feature;
+            dynamicObject.geoJson = feature;
 
             //TODO holes
             var vertexPositions = polygon[0];
@@ -224,7 +309,7 @@ define(['../Core/createGuid',
             id = createGuid();
         }
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.feature = feature;
+        dynamicObject.geoJson = feature;
 
         dynamicObject.position = new StaticPositionProperty(crsFunction(feature.geometry.coordinates));
         applyPointDefaults(dynamicObject);
@@ -236,7 +321,7 @@ define(['../Core/createGuid',
             id = createGuid();
         }
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.feature = feature;
+        dynamicObject.geoJson = feature;
 
         //TODO Holes
         var coordinates = feature.geometry.coordinates[0];
