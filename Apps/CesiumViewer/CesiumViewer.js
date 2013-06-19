@@ -215,8 +215,7 @@ define([
             geometry : new EllipseGeometry({
                 vertexFormat : PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT,
                 ellipsoid : ellipsoid,
-                //center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
-                center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-180, 0)),
+                center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                 semiMinorAxis : 500000.0,
                 semiMajorAxis : 1000000.0,
                 bearing : CesiumMath.PI_OVER_FOUR,
@@ -365,12 +364,16 @@ define([
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
 
-        /*
+        var lat = 0.0;
+        var lon = 175.0;
+
         var positions = ellipsoid.cartographicArrayToCartesianArray([
-            Cartographic.fromDegrees(-70.0, 20.0),
-            Cartographic.fromDegrees(-70.0, 0.0),
-            Cartographic.fromDegrees(-60.0, 10.0)
+            Cartographic.fromDegrees(lon, lat + 20.0),
+            Cartographic.fromDegrees(lon, lat),
+            //Cartographic.fromDegrees(lon - 10.0, lat + 10.0)
+            Cartographic.fromDegrees(-lon, lat + 10.0)
         ]);
+        /*
         var flatPositions = [];
         var p, i;
         for (i = 0; i < positions.length; ++i) {
@@ -405,25 +408,45 @@ define([
             geometryInstances : customWithIndices,
             appearance : new PerInstanceFlatColorAppearance()
         }));
+        */
 
+        var height = 200000.0;
+        /*
         positions = ellipsoid.cartographicArrayToCartesianArray([
-            Cartographic.fromDegrees(-70.0, 20.0, 200000.0),
-            Cartographic.fromDegrees(-70.0,  0.0, 200000.0),
-            Cartographic.fromDegrees(-60.0, 10.0, 200000.0)
+            Cartographic.fromDegrees(lon, lat + 20.0, height),
+            Cartographic.fromDegrees(lon, lat, height),
+            Cartographic.fromDegrees(lon + 10.0, lat + 10.0, height)
         ]);
-        flatPositions = [];
+        */
+        positions = positions.concat(ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees(lon, lat + 20.0, height),
+            Cartographic.fromDegrees(lon, lat, height),
+            //Cartographic.fromDegrees(lon - 10.0, lat + 10.0, height)
+            Cartographic.fromDegrees(-lon, lat + 10.0, height)
+        ]));
+        //positions = positions.reverse();
+        var flatPositions = [];
+        var normals = [];
         for (i = 0; i < positions.length; ++i) {
-            p = positions[i];
+            var p = positions[i];
             flatPositions.push(p.x, p.y, p.z);
+            var n = p.normalize();
+            normals.push(n.x, n.y, n.z);
         }
         var customWithoutIndices = new GeometryInstance({
             geometry : new Geometry({
                 attributes : {
                     position : new GeometryAttribute({
-                         componentDatatype : ComponentDatatype.DOUBLE,
-                         componentsPerAttribute : 3,
-                         values : new Float64Array(flatPositions)
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : new Float64Array(flatPositions)
                     }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : new Float32Array(normals)
+                    })
+                    /*
                     color : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                         componentsPerAttribute : 4,
@@ -431,19 +454,25 @@ define([
                         values : new Uint8Array([
                             255, 255, 0, 255,
                             255, 255, 0, 255,
+                            255, 255, 0, 255,
+                            255, 255, 0, 255,
+                            255, 255, 0, 255,
                             255, 255, 0, 255
                         ])
-                   })
+                    })
+                    */
                 },
-                primitiveType : PrimitiveType.LINE_LOOP
+                //primitiveType : PrimitiveType.LINE_LOOP
+                primitiveType : PrimitiveType.TRIANGLES
             }),
-            pickData : 'customWithoutIndices'
-         });
-         scene.getPrimitives().add(new Primitive({
-             geometryInstances : customWithoutIndices,
-             appearance : new PerInstanceFlatColorAppearance()
-         }));
-         */
+            pickData : 'customWithoutIndices',
+            color : new Color(1.0, 1.0, 0.0, 0.5)
+        });
+        scene.getPrimitives().add(new Primitive({
+            geometryInstances : customWithoutIndices,
+            //appearance : new PerInstanceFlatColorAppearance()
+            appearance : new PerInstanceColorClosedTranslucentAppearance()
+        }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

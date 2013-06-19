@@ -1333,7 +1333,7 @@ define([
         return result;
     }
 
-    function computeIndexedTriangleAttributes(indices, offset, dividedTriangle, normals, binormals, tangents, texCoords) {
+    function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
         if (typeof normals === 'undefined' && typeof binormals === 'undefined' &&
                 typeof tangents === 'undefined' && typeof texCoords === 'undefined') {
             return;
@@ -1343,10 +1343,6 @@ define([
         var p0 = positions[0];
         var p1 = positions[1];
         var p2 = positions[2];
-
-        var i0 = indices[offset];
-        var i1 = indices[offset + 1];
-        var i2 = indices[offset + 2];
 
         var n0, n1, n2;
         var b0, b1, b2;
@@ -1429,6 +1425,14 @@ define([
         }
     }
 
+    function triangleIndices(numberOfPositions) {
+        var indices = new Array(numberOfPositions);
+        for (var i = 0; i < numberOfPositions; ++i) {
+            indices[i] = i;
+        }
+        return indices;
+    }
+
     function wrapLongitudeTriangles(geometry) {
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
@@ -1438,109 +1442,48 @@ define([
         var texCoords = (typeof attributes.st !== 'undefined') ? attributes.st.values : undefined;
         var indices = geometry.indices;
 
-        var newPositions;
-        var newNormals;
-        var newBinormals;
-        var newTangents;
-        var newTexCoords;
-        var newIndices;
-
-        var len;
-        var i;
-        var j;
-        var index;
-
-        var p0;
-        var p1;
-        var p2;
-        var result;
-
-        /*
         if (typeof indices === 'undefined') {
-            newPositions = [];
-            newNormals = (typeof normals !== 'undefined') ? [] : undefined;
-            newBinormals = (typeof binormals !== 'undefined') ? [] : undefined;
-            newTangents = (typeof tangents !== 'undefined') ? [] : undefined;
-            newTexCoords = (typeof texCoords !== 'undefined') ? [] : undefined;
+            indices = triangleIndices(positions.length / 3);
+        }
 
-            len = positions.length;
-            for (i = 0; i < len; i += 9) {
-                p0 = Cartesian3.fromArray(positions, i);
-                p1 = Cartesian3.fromArray(positions, i + 3);
-                p2 = Cartesian3.fromArray(positions, i + 6);
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newNormals = (typeof normals !== 'undefined') ? Array.prototype.slice.call(normals, 0) : undefined;
+        var newBinormals = (typeof binormals !== 'undefined') ? Array.prototype.slice.call(binormals, 0) : undefined;
+        var newTangents = (typeof tangents !== 'undefined') ? Array.prototype.slice.call(tangents, 0) : undefined;
+        var newTexCoords = (typeof texCoords !== 'undefined') ? Array.prototype.slice.call(texCoords, 0) : undefined;
+        var newIndices = [];
 
-                result = splitTriangle(p0, p1, p2);
-                if (typeof result !== 'undefined') {
-                    for (j = 0; j < result.indices.length; ++j) {
-                        index = result.indices[j];
-                        var position = result.positions[index];
-                        newPositions.push(position.x, position.y, position.z);
-                    }
-                    computeTriangleNormals(i, result, normals, newNormals);
-                    computeTriangleBinormals(i, result, binormals, newBinormals);
-                    computeTriangleTangents(i, result, tangents, newTangents);
-                    computeTriangleTextureCoordinates(i, result, texCoords, newTexCoords);
-                } else {
-                    Array.prototype.push.apply(newPositions, positions.subarray(i, i + 9));
+        var len = indices.length;
+        for (var i = 0; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
 
-                    if (typeof normals !== 'undefined') {
-                        Array.prototype.push.apply(newNormals, normals.subarray(i, i + 9));
-                    }
+            var p0 = Cartesian3.fromArray(positions, i0 * 3);
+            var p1 = Cartesian3.fromArray(positions, i1 * 3);
+            var p2 = Cartesian3.fromArray(positions, i2 * 3);
 
-                    if (typeof binormals !== 'undefined') {
-                        Array.prototype.push.apply(newBinormals, binormals.subarray(i, i + 9));
-                    }
-
-                    if (typeof tangents !== 'undefined') {
-                        Array.prototype.push.apply(newTangents, tangents.subarray(i, i + 9));
-                    }
-
-                    if (typeof texCoords !== 'undefined') {
-                        Array.prototype.push.apply(newTexCoords, texCoords.subarray(i, i + 9));
+            var result = splitTriangle(p0, p1, p2);
+            if (typeof result !== 'undefined') {
+                var positionsLength = newPositions.length / 3;
+                for(var j = 0; j < result.indices.length; ++j) {
+                    var index = result.indices[j];
+                    if (index < 3) {
+                        newIndices.push(indices[i + index]);
+                    } else {
+                        newIndices.push(index - 3 + positionsLength);
                     }
                 }
-            }
-        } else {
-        */
-            newPositions = Array.prototype.slice.call(positions);
-            newNormals = (typeof normals !== 'undefined') ? Array.prototype.slice.call(normals) : undefined;
-            newBinormals = (typeof binormals !== 'undefined') ? Array.prototype.slice.call(binormals) : undefined;
-            newTangents = (typeof tangents !== 'undefined') ? Array.prototype.slice.call(tangents) : undefined;
-            newTexCoords = (typeof texCoords !== 'undefined') ? Array.prototype.slice.call(texCoords) : undefined;
-            newIndices = [];
 
-            len = indices.length;
-            for (i = 0; i < len; i += 3) {
-                var i0 = indices[i];
-                var i1 = indices[i + 1];
-                var i2 = indices[i + 2];
-
-                p0 = Cartesian3.fromArray(positions, i0 * 3);
-                p1 = Cartesian3.fromArray(positions, i1 * 3);
-                p2 = Cartesian3.fromArray(positions, i2 * 3);
-
-                result = splitTriangle(p0, p1, p2);
-                if (typeof result !== 'undefined') {
-                    var positionsLength = newPositions.length / 3;
-                    for(j = 0; j < result.indices.length; ++j) {
-                        index = result.indices[j];
-                        if (index < 3) {
-                            newIndices.push(indices[i + index]);
-                        } else {
-                            newIndices.push(index - 3 + positionsLength);
-                        }
-                    }
-
-                    for (var k = 3; k < result.positions.length; ++k) {
-                        var position = result.positions[k];
-                        newPositions.push(position.x, position.y, position.z);
-                    }
-                    computeIndexedTriangleAttributes(indices, i, result, newNormals, newBinormals, newTangents, newTexCoords);
-                } else {
-                    newIndices.push(i0, i1, i2);
+                for (var k = 3; k < result.positions.length; ++k) {
+                    var position = result.positions[k];
+                    newPositions.push(position.x, position.y, position.z);
                 }
+                computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
+            } else {
+                newIndices.push(i0, i1, i2);
             }
-        //}
+        }
 
         geometry.attributes.position.values = new Float64Array(newPositions);
 
