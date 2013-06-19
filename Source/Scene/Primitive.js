@@ -420,7 +420,7 @@ define([
         var geometry = GeometryPipeline.combine(insts);
 
         // Split position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
+        GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed

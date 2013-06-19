@@ -1,5 +1,5 @@
-attribute vec3 positionHigh;
-attribute vec3 positionLow;
+attribute vec3 position3DHigh;
+attribute vec3 position3DLow;
 attribute vec2 st;
 
 varying vec3 v_positionMC;
@@ -8,9 +8,9 @@ varying vec2 v_st;
 
 void main() 
 {
-    vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);   
+    vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);   
 
-    v_positionMC = positionHigh + positionLow;               // position in model coordinates
+    v_positionMC = position3DHigh + position3DLow;           // position in model coordinates
     v_positionEC = (czm_modelViewRelativeToEye * p).xyz;     // position in eye coordinates
     v_st = st;
     
