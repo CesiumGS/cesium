@@ -199,7 +199,7 @@ define([
     }
 
     function createOnLoadCallback(viewer, source, firstTime) {
-        if (endsWith(source, "czml")) {
+        if (endsWith(source.toUpperCase(), "CZML")) {
             return function(evt) {
                 var czmlSource = new CzmlDataSource();
                 try {
@@ -219,7 +219,7 @@ define([
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 }
             };
-        } else if (endsWith(source, 'geojson')) {
+        } else if (endsWith(source.toUpperCase(), 'GEOJSON')) {
             return function(evt) {
                 var geoJsonSource = new GeoJsonDataSource();
                 try {

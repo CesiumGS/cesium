@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'DynamicScene/CzmlDataSource',
+        'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
@@ -9,6 +10,7 @@ define([
         'domReady!'
     ], function(
         CzmlDataSource,
+        GeoJsonDataSource,
         PerformanceDisplay,
         checkForChromeFrame,
         Viewer,
@@ -50,6 +52,10 @@ define([
         window.alert(e);
     });
 
+    function endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }
+
     function startup() {
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);
@@ -75,7 +81,12 @@ define([
         }
 
         if (typeof endUserOptions.source !== 'undefined') {
-            var source = new CzmlDataSource();
+            var source;
+            if (endsWith(endUserOptions.source.toUpperCase(), "GEOJSON")) {
+                source = new GeoJsonDataSource();
+            } else {
+                source = new CzmlDataSource();
+            }
             source.loadUrl(endUserOptions.source).then(function() {
                 viewer.dataSources.add(source);
 
