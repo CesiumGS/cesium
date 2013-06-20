@@ -106,12 +106,6 @@ define([
         }
 
         var indices = PolygonPipeline.earClip2D(positions2D);
-
-        // Checking bounding sphere with plane for quick reject
-        var minX = boundingSphere.center.x - boundingSphere.radius;
-        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
-            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
-        }
         return new GeometryInstance({
             geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
         });
