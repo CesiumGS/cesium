@@ -17,10 +17,13 @@ Beta Releases
       * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Removed `Polygon.configureExtent`.
+   * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
+   * Removed `Polygon.bufferUsage`.  It is no longer needed.
+   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
+* Added `ExtentPrimitive`.
 * Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
    * `PolygonGeometry`
    * `ExtentGeometry`
@@ -29,11 +32,11 @@ Beta Releases
    * `WallGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-* Added `Appearance`, which describe the visual characteristics for geometry instances.  Added the following types:
-   * `TranslucentAppearance`
+   * `SimplePolylineGeometry`
+* Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
+   * `Appearance`
+   * `PerInstanceColorAppearance`
    * `EllipsoidSurfaceAppearance`
-   * `ClosedTranslucentAppearance`
-   * `PerInstanceColorClosedTranslucentAppearance`
 * Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
 * Added `GeometryPipeline.computeNormal` to compute normals for a geometry.

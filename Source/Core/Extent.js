@@ -98,6 +98,10 @@ define([
      * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
     Extent.clone = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            return undefined;
+        }
+
         if (typeof result === 'undefined') {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }
@@ -129,11 +133,20 @@ define([
      * @return {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
      */
     Extent.prototype.equals = function(other) {
-        return typeof other !== 'undefined' &&
-               this.west === other.west &&
-               this.south === other.south &&
-               this.east === other.east &&
-               this.north === other.north;
+        return Extent.equals(this, other);
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Extent.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.west === right.west) &&
+                (left.south === right.south) &&
+                (left.east === right.east) &&
+                (left.north === right.north));
     };
 
     /**

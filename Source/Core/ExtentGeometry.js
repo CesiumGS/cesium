@@ -63,7 +63,7 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.surfaceHeight=0.0] The height from the surface of the ellipsoid.
+     * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
@@ -86,7 +86,7 @@ define([
      *         CesiumMath.toRadians(-74.0),
      *         CesiumMath.toRadians(42.0)
      *     ),
-     *     surfaceHeight : 10000.0
+     *     height : 10000.0
      * });
      */
     var ExtentGeometry = function(options) {
@@ -111,7 +111,7 @@ define([
         var radiiSquaredY = radiiSquared.y;
         var radiiSquaredZ = radiiSquared.z;
 
-        var surfaceHeight = defaultValue(options.surfaceHeight, 0.0);
+        var surfaceHeight = defaultValue(options.height, 0.0);
         var rotation = defaultValue(options.rotation, 0.0);
 
         var cos = Math.cos;

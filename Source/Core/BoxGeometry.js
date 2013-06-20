@@ -338,7 +338,7 @@ define([
             positions[21] = min.x; positions[22] = max.y; positions[23] = max.z;
 
             attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
+                componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
             });
