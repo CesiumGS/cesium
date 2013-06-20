@@ -59,11 +59,18 @@ define(['../Core/createGuid',
      * @alias GeoJsonDataSource
      * @constructor
      *
-     * @see <a href='http://www.geojson.org/'>http://www.geojson.org/</a>.
+     * @see DataSourceDisplay
+     * @see <a href='http://www.geojson.org/'>GeoJSON specification</a>.
      *
      * @example
+     * //Use a billboard instead of a point.
      * var dataSource = new GeoJsonDataSource();
-     * dataSource.loadUrl('http://example.invalid/sample.geojson');
+     * var defaultPoint = dataSource.defaulPoint;
+     * defaultPoint.point = undefined;
+     * var billboard = new DynamicBillboard();
+     * billboard.image = new ConstantProperty('image.png');
+     * defaultPoint.billboard = billboard;
+     * dataSource.loadUrl('sample.geojson');
      */
     var GeoJsonDataSource = function() {
         //default point
@@ -110,21 +117,18 @@ define(['../Core/createGuid',
 
         /**
          * Gets or sets the default graphics to be applied to GeoJson Point and MultiPoint geometries.
-         * @memberof GeoJsonDataSource
          * @type DynamicObject
          */
         this.defaultPoint = defaultPoint;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJson LineString and MultiLineString geometries.
-         * @memberof GeoJsonDataSource
          * @type DynamicObject
          */
         this.defaultLine = defaultLine;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJson Polygon and MultiPolygon geometries.
-         * @memberof GeoJsonDataSource
          * @type DynamicObject
          */
         this.defaultPolygon = defaultPolygon;
