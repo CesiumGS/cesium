@@ -13,6 +13,7 @@ define([
         './GeometryAttribute',
         './GeometryInstance',
         './GeometryPipeline',
+        './IndexDatatype',
         './Intersect',
         './Math',
         './Matrix3',
@@ -35,6 +36,7 @@ define([
         GeometryAttribute,
         GeometryInstance,
         GeometryPipeline,
+        IndexDatatype,
         Intersect,
         CesiumMath,
         Matrix3,
@@ -423,7 +425,7 @@ define([
          *
          * @type Array
          */
-        this.indices = geometry.indices;
+        this.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values / 3, geometry.indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.

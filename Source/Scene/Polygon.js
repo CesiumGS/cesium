@@ -8,6 +8,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
         '../Core/PolygonGeometry',
+        '../Core/PolygonPipeline',
+        '../Core/Queue',
         './EllipsoidSurfaceAppearance',
         './Primitive',
         './Material'
@@ -20,6 +22,8 @@ define([
         Ellipsoid,
         GeometryInstance,
         PolygonGeometry,
+        PolygonPipeline,
+        Queue,
         EllipsoidSurfaceAppearance,
         Primitive,
         Material) {
@@ -236,7 +240,6 @@ define([
             }
         }
 
-        this.height = defaultValue(height, 0.0);
         this._positions = undefined;
         this._polygonHierarchy = polygons;
         this._createPrimitive = true;
