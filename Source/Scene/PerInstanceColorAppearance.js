@@ -68,6 +68,12 @@ define([
          * DOC_TBA
          * @readonly
          */
+        this.faceForward = defaults.faceForward;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
         this.translucent = defaults.translucent;
 
         /**

@@ -76,6 +76,12 @@ define([
          * DOC_TBA
          * @readonly
          */
+        this.faceForward = defaultValue(options.faceForward, false);
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
         this.translucent = defaultValue(options.translucent, true);
 
         /**
@@ -114,6 +120,7 @@ define([
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
+        var faceForward = this.faceForward ? '#define FACE_FORWARD \n#line 0 \n' : '#line 0 \n';
 
         if (typeof this.material !== 'undefined') {
             return '#line 0\n' +
@@ -122,7 +129,7 @@ define([
                 this.fragmentShaderSource;
         }
 
-        return flat + this.fragmentShaderSource;
+        return flat + faceForward + this.fragmentShaderSource;
     };
 
     /**

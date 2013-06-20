@@ -64,6 +64,12 @@ define([
          * DOC_TBA
          * @readonly
          */
+        this.faceForward = defaultValue(options.faceForward, false);
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
         this.translucent = defaultValue(options.translucent, true);
 
         /**

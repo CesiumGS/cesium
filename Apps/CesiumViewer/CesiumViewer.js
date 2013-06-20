@@ -359,7 +359,8 @@ define([
             geometryInstances : wall,
             appearance : new Appearance({
                 materialSupport : Appearance.MaterialSupport.TEXTURED,
-                material : Material.fromType(scene.getContext(), 'Checkerboard')
+                material : Material.fromType(scene.getContext(), 'Checkerboard'),
+                faceForward : true
             })
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
