@@ -24,7 +24,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var defaults = new Appearance(options);
 
-        var flat = defaultValue(options.flat, false);
+        var flat = defaults.flat;
         var vs = flat ? PerInstanceFlatColorAppearanceVS : PerInstanceColorAppearanceVS;
         var fs = flat ? PerInstanceFlatColorAppearanceFS : PerInstanceColorAppearanceFS;
         var vertexFormat = flat ? VertexFormat.POSITION_ONLY : VertexFormat.POSITION_AND_NORMAL;
@@ -52,6 +52,11 @@ define([
         /**
          * DOC_TBA
          */
+        this.flat = flat;
+
+        /**
+         * DOC_TBA
+         */
         this.translucent = defaults.translucent;
 
         /**
@@ -63,13 +68,6 @@ define([
          * DOC_TBA
          */
         this.renderState = defaults.renderState;
-
-        // Non-derived members
-
-        /**
-         * DOC_TBA
-         */
-        this.flat = flat;
     };
 
     /**

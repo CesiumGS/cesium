@@ -57,6 +57,11 @@ define([
         /**
          * DOC_TBA
          */
+        this.flat = defaultValue(options.flat, false);
+
+        /**
+         * DOC_TBA
+         */
         this.translucent = defaultValue(options.translucent, true);
 
         /**
@@ -92,14 +97,16 @@ define([
      * DOC_TBA
      */
     Appearance.prototype.getFragmentShaderSource = function() {
+        var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
+
         if (typeof this.material !== 'undefined') {
             return '#line 0\n' +
                 this.material.shaderSource +
-                '#line 0\n' +
+                flat +
                 this.fragmentShaderSource;
         }
 
-        return this.fragmentShaderSource;
+        return flat + this.fragmentShaderSource;
     };
 
     /**

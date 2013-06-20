@@ -341,7 +341,8 @@ define([
             appearance : new EllipsoidSurfaceAppearance({
                 material : Material.fromType(scene.getContext(), 'Stripe'),
                 aboveGround : true,
-                translucent : false
+                translucent : false,
+                flat : true
             })
         });
         scene.getPrimitives().add(polygonPrimitive);

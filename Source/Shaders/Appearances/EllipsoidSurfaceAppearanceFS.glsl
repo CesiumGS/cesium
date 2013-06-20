@@ -20,6 +20,9 @@ void main()
 
     czm_material material = czm_getMaterial(materialInput);
     
-    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);   
-//    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+#ifdef FLAT    
+    gl_FragColor = vec4(material.diffuse + material.emission, material.alpha);
+#else
+    gl_FragColor = czm_phong(normalize(positionToEyeEC), material);
+#endif
 }

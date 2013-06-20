@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/freezeObject',
         '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
@@ -11,7 +10,6 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
-        freezeObject,
         VertexFormat,
         CullFace,
         BlendingState,
@@ -46,6 +44,11 @@ define([
          * DOC_TBA
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
+
+        /**
+         * DOC_TBA
+         */
+        this.flat = defaultValue(options.flat, false);
 
         /**
          * DOC_TBA
@@ -89,7 +92,7 @@ define([
     /**
      * DOC_TBA
      */
-    EllipsoidSurfaceAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_ST);
+    EllipsoidSurfaceAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
 
     /**
      * DOC_TBA
