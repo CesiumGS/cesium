@@ -3,133 +3,27 @@ define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
         '../Core/Color',
-        '../Core/combine',
         '../Core/destroyObject',
-        '../Core/Cartesian2',
         '../Core/Math',
         '../Core/Ellipsoid',
-        '../Core/BoundingRectangle',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/ComponentDatatype',
-        '../Core/GeometryPipeline',
         '../Core/GeometryInstance',
-        '../Core/PrimitiveType',
-        '../Core/EllipsoidTangentPlane',
-        '../Core/PolygonPipeline',
-        '../Core/WindingOrder',
-        '../Core/Intersect',
-        '../Core/Queue',
-        '../Core/Matrix3',
-        '../Core/Quaternion',
-        '../Renderer/BlendingState',
-        '../Renderer/BufferUsage',
-        '../Renderer/CommandLists',
-        '../Renderer/CullFace',
-        '../Renderer/DrawCommand',
-        '../Renderer/VertexLayout',
-        '../Renderer/createPickFragmentShaderSource',
-        './Material',
-        './SceneMode',
-        '../Shaders/PolygonVS',
-        '../Shaders/PolygonFS'
+        '../Core/PolygonGeometry',
+        './EllipsoidSurfaceAppearance',
+        './Primitive',
+        './Material'
     ], function(
         DeveloperError,
         defaultValue,
         Color,
-        combine,
         destroyObject,
-        Cartesian2,
         CesiumMath,
         Ellipsoid,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        ComponentDatatype,
-        GeometryPipeline,
         GeometryInstance,
-        PrimitiveType,
-        EllipsoidTangentPlane,
-        PolygonPipeline,
-        WindingOrder,
-        Intersect,
-        Queue,
-        Matrix3,
-        Quaternion,
-        BlendingState,
-        BufferUsage,
-        CommandLists,
-        CullFace,
-        DrawCommand,
-        VertexLayout,
-        createPickFragmentShaderSource,
-        Material,
-        SceneMode,
-        PolygonVS,
-        PolygonFS) {
+        PolygonGeometry,
+        EllipsoidSurfaceAppearance,
+        Primitive,
+        Material) {
     "use strict";
-
-    var attributeIndices = {
-        position3DHigh : 0,
-        position3DLow : 1,
-        position2DHigh : 2,
-        position2DLow : 3,
-        textureCoordinates : 4
-    };
-
-    function PositionVertices() {
-        this._va = undefined;
-    }
-
-    PositionVertices.prototype.getVertexArrays = function() {
-        return this._va;
-    };
-
-    PositionVertices.prototype.update = function(context, geometries, bufferUsage) {
-        if (typeof geometries !== 'undefined') {
-            // Initially create or recreate vertex array and buffers
-            this._destroyVA();
-
-            var va = [];
-
-            var length = geometries.length;
-            for ( var i = 0; i < length; ++i) {
-                va.push(context.createVertexArrayFromGeometry({
-                    geometry : geometries[i],
-                    attributeIndices : attributeIndices,
-                    bufferUsage : bufferUsage,
-                    vertexLayout : VertexLayout.INTERLEAVED
-                }));
-            }
-
-            this._va = va;
-        } else {
-            this._destroyVA();
-        }
-    };
-
-    PositionVertices.prototype._destroyVA = function() {
-        var va = this._va;
-        if (typeof va !== 'undefined') {
-            this._va = undefined;
-
-            var length = va.length;
-            for ( var i = 0; i < length; ++i) {
-                va[i].destroy();
-            }
-        }
-    };
-
-    PositionVertices.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    PositionVertices.prototype.destroy = function() {
-        this._destroyVA();
-        return destroyObject(this);
-    };
 
     /**
      * DOC_TBA
@@ -153,88 +47,45 @@ define([
      *
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Polygons.html">Cesium Sandcastle Polygons Demo</a>
      */
-    var Polygon = function() {
-        this._sp = undefined;
-        this._rs = undefined;
-
-        this._spPick = undefined;
-
-        this._vertices = new PositionVertices();
-        this._pickId = undefined;
-
-        this._boundingVolume = new BoundingSphere();
-        this._boundingVolume2D = new BoundingSphere();
-
-        this._commandLists = new CommandLists();
+    var Polygon = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * DOC_TBA
          */
-        this.ellipsoid = Ellipsoid.WGS84;
+        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = undefined;
 
         /**
          * DOC_TBA
          */
-        this.height = 0.0;
-        this._height = undefined;
-
-        /**
-         * DOC_TBA
-         */
-        this.granularity = CesiumMath.toRadians(1.0);
+        this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         this._granularity = undefined;
 
         /**
          * DOC_TBA
          */
-        this.scene2D = {
-            /**
-             * DOC_TBA
-             */
-            granularity : CesiumMath.toRadians(30.0)
-        };
+        this.height = defaultValue(options.height, 0.0);
+        this._height = undefined;
 
         /**
          * DOC_TBA
          */
-        this.scene3D = {
-        /**
-         * DOC_TBA
-         *
-         * granularity can override object-level granularity
-         */
-        };
-
-        this._positions = undefined;
+        this.textureRotationAngle = options.textureRotationAngle;
         this._textureRotationAngle = undefined;
-        this._polygonHierarchy = undefined;
-        this._createVertexArray = false;
 
         /**
-         * Determines if this polygon will be shown.
+         * Determines if this primitive will be shown.
          *
          * @type Boolean
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
+
+        var material = Material.fromType(undefined, Material.ColorType);
+        material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
 
         /**
-         * The usage hint for the polygon's vertex buffer.
-         *
-         * @type BufferUsage
-         *
-         * @performance If <code>bufferUsage</code> changes, the next time
-         * {@link Polygon#update} is called, the polygon's vertex buffer
-         * is rewritten - an <code>O(n)</code> operation that also incurs CPU to GPU overhead.
-         * For best performance, it is important to provide the proper usage hint.  If the polygon
-         * will not change over several frames, use <code>BufferUsage.STATIC_DRAW</code>.
-         * If the polygon will change every frame, use <code>BufferUsage.STREAM_DRAW</code>.
-         */
-        this.bufferUsage = BufferUsage.STATIC_DRAW;
-        this._bufferUsage = BufferUsage.STATIC_DRAW;
-
-        /**
-         * The surface appearance of the polygon.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
+         * The surface appearance of the primitive.  This can be one of several built-in {@link Material} objects or a custom material, scripted with
          * <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>.
          * <p>
          * The default material is <code>Material.ColorType</code>.
@@ -251,28 +102,13 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = Material.fromType(undefined, Material.ColorType);
-        this.material.uniforms.color = new Color(1.0, 1.0, 0.0, 0.5);
-        this._material = undefined;
+        this.material = defaultValue(options.material, material);
 
-        this._mode = SceneMode.SCENE3D;
-        this._projection = undefined;
+        this._positions = options.positions;
+        this._polygonHierarchy = options.polygonHierarchy;
+        this._createPrimitive = false;
 
-        var that = this;
-        this._uniforms = {
-            u_height : function() {
-                return (that._mode !== SceneMode.SCENE2D) ? that.height : 0.0;
-            }
-        };
-
-        this._pickColorUniform = {
-            czm_pickColor : function() {
-                return that._pickId.color;
-            }
-        };
-
-        this._pickUniforms = undefined;
-        this._drawUniforms = undefined;
+        this._primitive = undefined;
     };
 
     /**
@@ -299,26 +135,22 @@ define([
      * @see Polygon#getPositions
      *
      * @param {Array} positions The cartesian positions of the polygon.
-     * @param {Number} [height=0.0] The height of the polygon.
-     * @param {Number} [textureRotationAngle=0.0] The angle, in radians, to rotate the texture.  Positive angles are counter-clockwise.
      *
      * @example
      * polygon.setPositions([
      *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cartographic(...)),
      *   ellipsoid.cartographicToCartesian(new Cartographic(...))
-     * ], 10.0);
+     * ]);
      */
-    Polygon.prototype.setPositions = function(positions, height, textureRotationAngle) {
+    Polygon.prototype.setPositions = function(positions) {
         // positions can be undefined
         if (typeof positions !== 'undefined' && (positions.length < 3)) {
             throw new DeveloperError('At least three positions are required.');
         }
-        this.height = defaultValue(height, 0.0);
-        this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
-        this._polygonHierarchy = undefined;
         this._positions = positions;
-        this._createVertexArray = true;
+        this._polygonHierarchy = undefined;
+        this._createPrimitive = true;
     };
 
     /**
@@ -349,8 +181,6 @@ define([
      * }
      * </code>
      * </pre>
-     * @param {Number} [height=0.0] The height of the polygon.
-     * @param {Number} [textureRotationAngle=0.0] The angle to rotate the texture in radians.
      *
      * @exception {DeveloperError} At least three positions are required.
      *
@@ -367,7 +197,7 @@ define([
      *      }]
      *  };
      */
-    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy, height, textureRotationAngle) {
+    Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy) {
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var polygons = [];
         var queue = new Queue();
@@ -407,208 +237,13 @@ define([
         }
 
         this.height = defaultValue(height, 0.0);
-        this._textureRotationAngle = defaultValue(textureRotationAngle, 0.0);
         this._positions = undefined;
         this._polygonHierarchy = polygons;
-        this._createVertexArray = true;
+        this._createPrimitive = true;
     };
 
-    var appendTextureCoordinatesCartesian2 = new Cartesian2();
-    var appendTextureCoordinatesCartesian3 = new Cartesian3();
-    var appendTextureCoordinatesQuaternion = new Quaternion();
-    var appendTextureCoordinatesMatrix3 = new Matrix3();
-
-    function appendTextureCoordinates(tangentPlane, boundingRectangle, geometry, angle) {
-        var origin = new Cartesian2(boundingRectangle.x, boundingRectangle.y);
-
-        var positions = geometry.attributes.position.values;
-        var length = positions.length;
-
-        var textureCoordinates = new Float32Array(2 * (length / 3));
-        var j = 0;
-
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, appendTextureCoordinatesQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
-
-        for ( var i = 0; i < length; i += 3) {
-            var p = appendTextureCoordinatesCartesian3;
-            p.x = positions[i];
-            p.y = positions[i + 1];
-            p.z = positions[i + 2];
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
-            st.subtract(origin, st);
-
-            textureCoordinates[j++] = st.x / boundingRectangle.width;
-            textureCoordinates[j++] = st.y / boundingRectangle.height;
-        }
-
-        geometry.attributes.textureCoordinates = {
-            componentDatatype : ComponentDatatype.FLOAT,
-            componentsPerAttribute : 2,
-            values : textureCoordinates
-        };
-
-        return geometry;
-    }
-
-    var computeBoundingRectangleCartesian2 = new Cartesian2();
-    var computeBoundingRectangleCartesian3 = new Cartesian3();
-    var computeBoundingRectangleQuaternion = new Quaternion();
-    var computeBoundingRectangleMatrix3 = new Matrix3();
-
-    function computeBoundingRectangle(tangentPlane, positions, angle, result) {
-        var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation,computeBoundingRectangleMatrix3);
-
-        var minX = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-
-        var length = positions.length;
-        for ( var i = 0; i < length; ++i) {
-            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = tangentPlane.projectPointOntoPlane(p, computeBoundingRectangleCartesian2);
-
-            if (typeof st !== 'undefined') {
-                minX = Math.min(minX, st.x);
-                maxX = Math.max(maxX, st.x);
-
-                minY = Math.min(minY, st.y);
-                maxY = Math.max(maxY, st.y);
-            }
-        }
-
-        if (typeof result === 'undefined') {
-            result = new BoundingRectangle();
-        }
-
-        result.x = minX;
-        result.y = minY;
-        result.width = maxX - minX;
-        result.height = maxY - minY;
-        return result;
-    }
-
-    var createGeometryFromPositionsPositions = [];
-    var createGeometryFromPositionsBoundingRectangle = new BoundingRectangle();
-
-    function createGeometryFromPositions(polygon, positions, angle, boundingSphere, outerPositions) {
-        var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
-        if (cleanedPositions.length < 3) {
-            // Duplicate positions result in not enough positions to form a polygon.
-            return undefined;
-        }
-
-        var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, polygon.ellipsoid);
-        var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
-
-        var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
-        if (originalWindingOrder === WindingOrder.CLOCKWISE) {
-            positions2D.reverse();
-            cleanedPositions.reverse();
-        }
-        var indices = PolygonPipeline.earClip2D(positions2D);
-        // Checking bounding sphere with plane for quick reject
-        var minX = boundingSphere.center.x - boundingSphere.radius;
-        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
-            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
-        }
-        var geometry = PolygonPipeline.computeSubdivision(cleanedPositions, indices, polygon._granularity);
-        var boundary = outerPositions || cleanedPositions;
-        var boundingRectangle = computeBoundingRectangle(tangentPlane, boundary, angle, createGeometryFromPositionsBoundingRectangle);
-        geometry = appendTextureCoordinates(tangentPlane, boundingRectangle, geometry, angle);
-
-        return new GeometryInstance({
-            geometry : geometry
-        });
-    }
-
-    function createGeometries(polygon) {
-        // PERFORMANCE_IDEA:  Move this to a web-worker.
-        var i;
-        var geometries = [];
-        var geometry;
-
-        if (typeof polygon._positions !== 'undefined') {
-            polygon._boundingVolume = BoundingSphere.fromPoints(polygon._positions, polygon._boundingVolume);
-            geometry = createGeometryFromPositions(polygon, polygon._positions, polygon._textureRotationAngle, polygon._boundingVolume);
-            if (typeof geometry !== 'undefined') {
-                geometries.push(geometry);
-            }
-        } else if (typeof polygon._polygonHierarchy !== 'undefined') {
-            var outerPositions =  polygon._polygonHierarchy[0];
-            // The bounding volume is just around the boundary points, so there could be cases for
-            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-            // volume doesn't cover the polygon.
-            polygon._boundingVolume = BoundingSphere.fromPoints(outerPositions, polygon._boundingVolume);
-            for (i = 0; i < polygon._polygonHierarchy.length; i++) {
-                geometry = createGeometryFromPositions(polygon, polygon._polygonHierarchy[i], polygon._textureRotationAngle, polygon._boundingVolume, outerPositions);
-                if (typeof geometry !== 'undefined') {
-                    geometries.push(geometry);
-                }
-            }
-        }
-
-        if (geometries.length === 0) {
-            return undefined;
-        }
-
-        geometry = GeometryPipeline.combine(geometries);
-        geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, polygon.height, polygon.ellipsoid);
-        geometry = GeometryPipeline.reorderForPostVertexCache(geometry);
-        geometry = GeometryPipeline.reorderForPreVertexCache(geometry);
-
-        if (polygon._mode === SceneMode.SCENE3D) {
-            geometry.attributes.position2DHigh = { // Not actually used in shader
-                value : [0.0, 0.0]
-            };
-            geometry.attributes.position2DLow = { // Not actually used in shader
-                value : [0.0, 0.0]
-            };
-            geometry = GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
-        } else {
-            geometry = GeometryPipeline.projectTo2D(geometry, polygon._projection);
-
-            if (polygon._mode !== SceneMode.SCENE3D) {
-                var projectedPositions = geometry.attributes.position2D.values;
-                var positions = [];
-
-                for (var j = 0; j < projectedPositions.length; j += 2) {
-                    positions.push(new Cartesian3(projectedPositions[j], projectedPositions[j + 1], 0.0));
-                }
-
-                polygon._boundingVolume2D = BoundingSphere.fromPoints(positions, polygon._boundingVolume2D);
-                var center2DPositions = polygon._boundingVolume2D.center;
-                polygon._boundingVolume2D.center = new Cartesian3(0.0, center2DPositions.x, center2DPositions.y);
-            }
-
-            geometry = GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-            geometry = GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
-        }
-
-        return GeometryPipeline.fitToUnsignedShortIndices(geometry);
-    }
-
-    function getGranularity(polygon, mode) {
-        if (mode === SceneMode.SCENE3D) {
-            return polygon.scene3D.granularity || polygon.granularity;
-        }
-
-        return polygon.scene2D.granularity || polygon.granularity;
-    }
-
     /**
-     * Commits changes to properties before rendering by updating the object's WebGL resources.
-     *
-     * @memberof Polygon
-     *
-     * @exception {DeveloperError} this.ellipsoid must be defined.
-     * @exception {DeveloperError} this.material must be defined.
-     * @exception {DeveloperError} this.granularity must be greater than zero.
-     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     * @private
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
         if (typeof this.ellipsoid === 'undefined') {
@@ -619,10 +254,7 @@ define([
             throw new DeveloperError('this.material must be defined.');
         }
 
-        var mode = frameState.mode;
-        var granularity = getGranularity(this, mode);
-
-        if (granularity < 0.0) {
+        if (this.granularity < 0.0) {
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
@@ -630,149 +262,45 @@ define([
             return;
         }
 
-        if (this._ellipsoid !== this.ellipsoid) {
-            this._createVertexArray = true;
+        if (this._createPrimitive ||
+            (this._ellipsoid !== this.ellipsoid) ||
+            (this._granularity !== this.granularity) ||
+            (this._height !== this.height) ||
+            (this._textureRotationAngle !== this.textureRotationAngle)) {
+
+            this._createPrimitive = false;
             this._ellipsoid = this.ellipsoid;
-        }
-
-        if (this._height !== this.height) {
-            this._createVertexArray = true;
+            this._granularity = this.granularity;
             this._height = this.height;
-        }
+            this._textureRotationAngle = this.textureRotationAngle;
 
-        if (this._granularity !== granularity) {
-            this._createVertexArray = true;
-            this._granularity = granularity;
-        }
+            var instance = new GeometryInstance({
+                geometry : new PolygonGeometry({
+                    positions : this._positions,
+                    polygonHierarchy : this._polygonHierarchy,
+                    height : this.height,
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    stRotation : this.textureRotationAngle,
+                    ellipsoid : this.ellipsoid,
+                    granularity : this.granularity
+                }),
+                pickData : this
+            });
 
-        if (this._bufferUsage !== this.bufferUsage) {
-            this._createVertexArray = true;
-            this._bufferUsage = this.bufferUsage;
-        }
-
-        var projection = frameState.scene2D.projection;
-        if (this._projection !== projection) {
-            this._createVertexArray = true;
-            this._projection = projection;
-        }
-
-        if (this._mode !== mode) {
-            // SCENE2D, COLUMBUS_VIEW, and MORPHING use the same rendering path, so a
-            // transition only occurs when switching from/to SCENE3D
-            this._createVertexArray = this._mode === SceneMode.SCENE3D || mode === SceneMode.SCENE3D;
-            this._mode = mode;
-        }
-
-        if (this._createVertexArray) {
-            this._createVertexArray = false;
-            this._vertices.update(context, createGeometries(this), this.bufferUsage);
-        }
-
-        if (typeof this._vertices.getVertexArrays() === 'undefined') {
-            return;
-        }
-
-        var boundingVolume;
-        if (mode === SceneMode.SCENE3D) {
-            boundingVolume = this._boundingVolume;
-        } else if (mode === SceneMode.COLUMBUS_VIEW || mode === SceneMode.SCENE2D) {
-            boundingVolume = this._boundingVolume2D;
-        } else {
-            boundingVolume = this._boundingVolume.union(this._boundingVolume2D);
-        }
-
-        var pass = frameState.passes;
-        var vas = this._vertices.getVertexArrays();
-        var length = vas.length;
-        var commands;
-        var command;
-
-        var materialChanged = (this._material !== this.material);
-
-        this._commandLists.removeAll();
-        if (pass.color) {
-            if (typeof this._rs === 'undefined') {
-                // TODO: Should not need this in 2D/columbus view, but is hiding a triangulation issue.
-                this._rs = context.createRenderState({
-                    cull : {
-                        enabled : true,
-                        face : CullFace.BACK
-                    },
-                    blending : BlendingState.ALPHA_BLEND
-                });
+            if (typeof this._primitive !== 'undefined') {
+                this._primitive.destroy();
             }
 
-            // Recompile shader when material changes
-            if (materialChanged) {
-                this._material = this.material;
-
-                var fsSource =
-                    '#line 0\n' +
-                    this.material.shaderSource +
-                    '#line 0\n' +
-                    PolygonFS;
-
-                this._sp = context.getShaderCache().replaceShaderProgram(this._sp, PolygonVS, fsSource, attributeIndices);
-
-                this._drawUniforms = combine([this._uniforms, this.material._uniforms], false, false);
-            }
-
-            commands = this._commandLists.colorList;
-            commands.length = length;
-
-            for (var i = 0; i < length; ++i) {
-                command = commands[i];
-                if (typeof command === 'undefined') {
-                    command = commands[i] = new DrawCommand();
-                }
-
-                command.boundingVolume = boundingVolume;
-                command.primitiveType = PrimitiveType.TRIANGLES;
-                command.shaderProgram = this._sp;
-                command.uniformMap = this._drawUniforms;
-                command.vertexArray = vas[i];
-                command.renderState = this._rs;
-            }
+            this._primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : new EllipsoidSurfaceAppearance({
+                    aboveGround : (this.height > 0.0)
+                })
+            });
         }
 
-        if (pass.pick) {
-            if (typeof this._pickId === 'undefined') {
-                this._pickId = context.createPickId(this);
-            }
-
-            // Recompile shader when material changes
-            if (materialChanged || typeof this._spPick === 'undefined') {
-                var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
-                    this.material.shaderSource +
-                    '#line 0\n' +
-                    PolygonFS, 'uniform');
-
-                this._spPick = context.getShaderCache().replaceShaderProgram(this._spPick, PolygonVS, pickFS, attributeIndices);
-                this._pickUniforms = combine([this._uniforms, this._pickColorUniform, this.material._uniforms], false, false);
-            }
-
-            commands = this._commandLists.pickList;
-            commands.length = length;
-
-            for (var j = 0; j < length; ++j) {
-                command = commands[j];
-                if (typeof command === 'undefined') {
-                    command = commands[j] = new DrawCommand();
-                }
-
-                command.boundingVolume = boundingVolume;
-                command.primitiveType = PrimitiveType.TRIANGLES;
-                command.shaderProgram = this._spPick;
-                command.uniformMap = this._pickUniforms;
-                command.vertexArray = vas[j];
-                command.renderState = this._rs;
-            }
-        }
-
-        if (!this._commandLists.empty()) {
-            commandList.push(this._commandLists);
-        }
+        this._primitive.appearance.material = this.material;
+        this._primitive.update(context, frameState, commandList);
     };
 
     /**
@@ -781,11 +309,11 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Polygon
+     * @memberof Extent
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see Polygon#destroy
+     * @see Extent#destroy
      */
     Polygon.prototype.isDestroyed = function() {
         return false;
@@ -805,16 +333,13 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Polygon#isDestroyed
+     * @see Extent#isDestroyed
      *
      * @example
-     * polygon = polygon && polygon.destroy();
+     * extent = extent && extent.destroy();
      */
     Polygon.prototype.destroy = function() {
-        this._sp = this._sp && this._sp.release();
-        this._spPick = this._spPick && this._spPick.release();
-        this._vertices = this._vertices.destroy();
-        this._pickId = this._pickId && this._pickId.destroy();
+        this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
 

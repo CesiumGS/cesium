@@ -31,6 +31,7 @@ define([
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Scene/ExtentPrimitive',
+        'Scene/Polygon',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -68,6 +69,7 @@ define([
         EllipsoidSurfaceAppearance,
         Material,
         ExtentPrimitive,
+        Polygon,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -292,15 +294,6 @@ define([
         var polygonGeometry = new GeometryInstance({
             geometry : new PolygonGeometry({
                 vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-/*
-                positions : ellipsoid.cartographicArrayToCartesianArray([
-                    Cartographic.fromDegrees(-72.0, 40.0),
-                    Cartographic.fromDegrees(-70.0, 35.0),
-                    Cartographic.fromDegrees(-75.0, 30.0),
-                    Cartographic.fromDegrees(-70.0, 30.0),
-                    Cartographic.fromDegrees(-68.0, 40.0)
-                ]),
-*/
                 polygonHierarchy : {
                     positions : ellipsoid.cartographicArrayToCartesianArray([
                         Cartographic.fromDegrees(-109.0, 30.0),
@@ -482,6 +475,49 @@ define([
          });
          scene.getPrimitives().add(extentPrimitive);
 
+         var pp = new Polygon({
+             /*
+             positions : ellipsoid.cartographicArrayToCartesianArray([
+                 Cartographic.fromDegrees(0.0, 45.0),
+                 Cartographic.fromDegrees(10.0, 45.0),
+                 Cartographic.fromDegrees(10.0, 55.0)
+             ])
+             */
+             polygonHierarchy : {
+                 positions : ellipsoid.cartographicArrayToCartesianArray([
+                     Cartographic.fromDegrees(-109.0, 30.0),
+                     Cartographic.fromDegrees(-95.0, 30.0),
+                     Cartographic.fromDegrees(-95.0, 40.0),
+                     Cartographic.fromDegrees(-109.0, 40.0)
+                 ]),
+                 holes : [{
+                     positions : ellipsoid.cartographicArrayToCartesianArray([
+                         Cartographic.fromDegrees(-107.0, 31.0),
+                         Cartographic.fromDegrees(-107.0, 39.0),
+                         Cartographic.fromDegrees(-97.0, 39.0),
+                         Cartographic.fromDegrees(-97.0, 31.0)
+                     ]),
+                     holes : [{
+                         positions : ellipsoid.cartographicArrayToCartesianArray([
+                             Cartographic.fromDegrees(-105.0, 33.0),
+                             Cartographic.fromDegrees(-99.0, 33.0),
+                             Cartographic.fromDegrees(-99.0, 37.0),
+                             Cartographic.fromDegrees(-105.0, 37.0)
+                             ]),
+                         holes : [{
+                             positions : ellipsoid.cartographicArrayToCartesianArray([
+                                 Cartographic.fromDegrees(-103.0, 34.0),
+                                 Cartographic.fromDegrees(-101.0, 34.0),
+                                 Cartographic.fromDegrees(-101.0, 36.0),
+                                 Cartographic.fromDegrees(-103.0, 36.0)
+                             ])
+                         }]
+                     }]
+                 }]
+             }
+
+          });
+         scene.getPrimitives().add(pp);
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
@@ -501,6 +537,10 @@ define([
                 extentPrimitive.material = Material.fromType(scene.getContext(), 'Dot');
                 extentPrimitive.rotation = CesiumMath.toRadians(45.0);
                 extentPrimitive.height = 1500000.0;
+
+                pp.material = Material.fromType(scene.getContext(), 'Dot');
+                pp.textureRotationAngle = CesiumMath.toRadians(30.0);
+                pp.height = 1500000.0;
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

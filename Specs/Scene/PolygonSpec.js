@@ -17,7 +17,6 @@ defineSuite([
          'Core/Matrix4',
          'Core/Math',
          'Core/JulianDate',
-         'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
@@ -38,7 +37,6 @@ defineSuite([
          Matrix4,
          CesiumMath,
          JulianDate,
-         BufferUsage,
          ClearCommand,
          SceneMode) {
     "use strict";
@@ -185,10 +183,6 @@ defineSuite([
             blue : 0.0,
             alpha : 0.5
         });
-    });
-
-    it('gets default buffer usage', function() {
-        expect(polygon.bufferUsage).toEqual(BufferUsage.STATIC_DRAW);
     });
 
     it('has a default ellipsoid', function() {

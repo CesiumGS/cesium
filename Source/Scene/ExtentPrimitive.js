@@ -30,7 +30,7 @@ define([
     /**
      * DOC_TBA
      *
-     * @alias Extent
+     * @alias ExtentPrimitive
      * @constructor
      */
     var ExtentPrimitive = function(options) {
