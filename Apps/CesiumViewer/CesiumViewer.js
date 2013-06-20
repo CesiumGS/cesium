@@ -30,6 +30,7 @@ define([
         'Scene/PerInstanceColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
+        'Scene/ExtentPrimitive',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -66,6 +67,7 @@ define([
         PerInstanceColorAppearance,
         EllipsoidSurfaceAppearance,
         Material,
+        ExtentPrimitive,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -471,6 +473,15 @@ define([
              })
          }));
 
+         var extentPrimitive = new ExtentPrimitive({
+             extent : new Extent(
+                 CesiumMath.toRadians(0.0),
+                 CesiumMath.toRadians(20.0),
+                 CesiumMath.toRadians(10.0),
+                 CesiumMath.toRadians(40.0))
+         });
+         scene.getPrimitives().add(extentPrimitive);
+
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(
@@ -486,6 +497,10 @@ define([
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
                 wallPrimitive.appearance = new Appearance();
+
+                extentPrimitive.material = Material.fromType(scene.getContext(), 'Dot');
+                extentPrimitive.rotation = CesiumMath.toRadians(45.0);
+                extentPrimitive.height = 1500000.0;
             },
             ScreenSpaceEventType.LEFT_CLICK
         );

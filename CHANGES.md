@@ -17,10 +17,11 @@ Beta Releases
       * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Removed `Polygon.configureExtent`.
+   * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
+* Added `ExtentPrimitive`.
 * Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
    * `PolygonGeometry`
    * `ExtentGeometry`

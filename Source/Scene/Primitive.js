@@ -255,10 +255,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var pickId = context.createPickId({
-                primitive : primitive,
-                pickData : instance.pickData    // may be undefined
-            });
+            var pickId = context.createPickId(defaultValue(instance.pickData, primitive));
             primitive._pickIds.push(pickId);
 
             var pickColor = pickId.color;
