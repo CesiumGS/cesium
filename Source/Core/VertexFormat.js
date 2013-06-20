@@ -103,7 +103,7 @@ define([
 
     /**
      * An immutable vertex format with position and normal attributes.
-     * This is compatible with per-instance color appearances like {@link PerInstanceColorClosedTranslucentAppearance}.
+     * This is compatible with per-instance color appearances like {@link PerInstanceColorAppearance}.
      *
      * @memberof VertexFormat
      *

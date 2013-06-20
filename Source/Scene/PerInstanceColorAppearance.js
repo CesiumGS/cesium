@@ -5,6 +5,7 @@ define([
         '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
+        './Appearance',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS'
     ], function(
@@ -13,6 +14,7 @@ define([
         VertexFormat,
         CullFace,
         BlendingState,
+        Appearance,
         PerInstanceColorAppearanceVS,
         PerInstanceColorDefaultAppearanceFS) {
     "use strict";
@@ -20,8 +22,9 @@ define([
     /**
      * DOC_TBA
      */
-    var PerInstanceColorClosedTranslucentAppearance = function(options) {
+    var PerInstanceColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var defaults = new Appearance(options);
 
         /**
          * DOC_TBA
@@ -31,7 +34,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.vertexFormat = PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT;
+        this.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
 
         /**
          * DOC_TBA
@@ -46,31 +49,31 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            },
-            depthTest : {
-                enabled : true
-            },
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND
-        });
+        this.translucent = defaults.translucent;
+
+        /**
+         * DOC_TBA
+         */
+        this.closed = defaults.closed;
+
+        /**
+         * DOC_TBA
+         */
+        this.renderState = defaults.renderState;
     };
 
     /**
      * DOC_TBA
      */
-    PerInstanceColorClosedTranslucentAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_NORMAL);
+    PerInstanceColorAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_NORMAL);
 
     /**
      * DOC_TBA
      */
-    PerInstanceColorClosedTranslucentAppearance.prototype.getFragmentShaderSource = function() {
+    PerInstanceColorAppearance.prototype.getFragmentShaderSource = function() {
         // Unlike other appearances, this does not have a material
         return this.fragmentShaderSource;
     };
 
-    return PerInstanceColorClosedTranslucentAppearance;
+    return PerInstanceColorAppearance;
 });
