@@ -45,6 +45,12 @@ define([
         knockout) {
     "use strict";
 
+    function createOnTick(dataSourceDisplay) {
+        return function(clock) {
+            dataSourceDisplay.update(clock.currentTime);
+        };
+    }
+
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
@@ -198,11 +204,12 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         };
         window.addEventListener('resize', this._resizeCallback, false);
 
-        var clock = cesiumWidget.clock;
-
         //Data source display
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
         this._dataSourceDisplay = dataSourceDisplay;
+
+        var clock = cesiumWidget.clock;
+        clock.onTick.addEventListener(createOnTick(dataSourceDisplay));
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -658,9 +665,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @memberof Viewer
      */
     Viewer.prototype.render = function() {
-        var cesiumWidget = this._cesiumWidget;
-        cesiumWidget.render();
-        this._dataSourceDisplay.update(cesiumWidget.clock.currentTime);
+        this._cesiumWidget.render();
     };
 
     /**
