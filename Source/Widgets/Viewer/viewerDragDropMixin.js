@@ -219,12 +219,15 @@ define([
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 }
             };
-        } else if (endsWith(source, "geojson")) {
+        } else if (endsWith(source, 'geojson')) {
             return function(evt) {
                 var geoJsonSource = new GeoJsonDataSource();
                 try {
-                    geoJsonSource.load(JSON.parse(evt.target.result), source);
-                    viewer.dataSources.add(geoJsonSource);
+                    geoJsonSource.load(JSON.parse(evt.target.result), source).then(function() {
+                        viewer.dataSources.add(geoJsonSource);
+                    }, function(error) {
+                        viewer.onDropError.raiseEvent(viewer, source, error);
+                    });
                 } catch (error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 }
