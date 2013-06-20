@@ -17,6 +17,7 @@ define([
         'Core/EllipsoidGeometry',
         'Core/PolygonGeometry',
         'Core/BoxGeometry',
+        'Core/SimplePolylineGeometry',
         'Core/GeometryPipeline',
         'Core/Transforms',
         'Core/PrimitiveType',
@@ -52,6 +53,7 @@ define([
         EllipsoidGeometry,
         PolygonGeometry,
         BoxGeometry,
+        SimplePolylineGeometry,
         GeometryPipeline,
         Transforms,
         PrimitiveType,
@@ -437,6 +439,38 @@ define([
                  flat : true
              })
          }));
+
+         scene.getPrimitives().add(new Primitive({
+             geometryInstances : [
+                 new GeometryInstance({
+                     geometry : new SimplePolylineGeometry({
+                         positions : ellipsoid.cartographicArrayToCartesianArray([
+                             Cartographic.fromDegrees(0.0, 0.0),
+                             Cartographic.fromDegrees(5.0, 0.0),
+                             Cartographic.fromDegrees(5.0, 5.0)
+                         ])
+                     }),
+                     color : new Color(1.0, 1.0, 1.0, 1.0),
+                     pickData : 'simple polyline'
+                 }),
+                 new GeometryInstance({
+                     geometry : new SimplePolylineGeometry({
+                         positions : ellipsoid.cartographicArrayToCartesianArray([
+                             Cartographic.fromDegrees(0.0, 0.0),
+                             Cartographic.fromDegrees(0.0, 5.0),
+                             Cartographic.fromDegrees(5.0, 5.0)
+                         ])
+                     }),
+                     color : new Color(1.0, 0.0, 1.0, 1.0),
+                     pickData : 'another simple polyline'
+                 })
+             ],
+             appearance : new PerInstanceColorAppearance({
+                 flat : true,
+                 translucent : false
+             })
+         }));
+
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

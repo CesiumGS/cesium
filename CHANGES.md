@@ -29,11 +29,11 @@ Beta Releases
    * `WallGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-* Added `Appearance`, which describe the visual characteristics for geometry instances.  Added the following types:
-   * `TranslucentAppearance`
+   * `SimplePolylineGeometry`
+* Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
+   * `Appearance`
+   * `PerInstanceColorAppearance`
    * `EllipsoidSurfaceAppearance`
-   * `ClosedTranslucentAppearance`
-   * `PerInstanceColorClosedTranslucentAppearance`
 * Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
 * Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
