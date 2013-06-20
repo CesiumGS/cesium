@@ -1,18 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/freezeObject',
         '../Core/VertexFormat',
         './Appearance',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
-        '../Shaders/Appearances/PerInstanceColorAppearanceFS'
+        '../Shaders/Appearances/PerInstanceColorAppearanceFS',
+        '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
+        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS'
     ], function(
         defaultValue,
-        freezeObject,
         VertexFormat,
         Appearance,
         PerInstanceColorAppearanceVS,
-        PerInstanceColorAppearanceFS) {
+        PerInstanceColorAppearanceFS,
+        PerInstanceFlatColorAppearanceVS,
+        PerInstanceFlatColorAppearanceFS) {
     "use strict";
 
     /**
@@ -22,6 +24,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var defaults = new Appearance(options);
 
+        var flat = defaultValue(options.flat, false);
+        var vs = flat ? PerInstanceFlatColorAppearanceVS : PerInstanceColorAppearanceVS;
+        var fs = flat ? PerInstanceFlatColorAppearanceFS : PerInstanceColorAppearanceFS;
+        var vertexFormat = flat ? VertexFormat.POSITION_ONLY : VertexFormat.POSITION_AND_NORMAL;
+
         /**
          * DOC_TBA
          */
@@ -30,17 +37,17 @@ define([
         /**
          * DOC_TBA
          */
-        this.vertexFormat = PerInstanceColorAppearance.VERTEX_FORMAT;
+        this.vertexFormat = vertexFormat;
 
         /**
          * DOC_TBA
          */
-        this.vertexShaderSource = defaultValue(options.vertexShaderSource, PerInstanceColorAppearanceVS);
+        this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
 
         /**
          * DOC_TBA
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, PerInstanceColorAppearanceFS);
+        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
 
         /**
          * DOC_TBA
@@ -56,12 +63,14 @@ define([
          * DOC_TBA
          */
         this.renderState = defaults.renderState;
-    };
 
-    /**
-     * DOC_TBA
-     */
-    PerInstanceColorAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_NORMAL);
+        // Non-derived members
+
+        /**
+         * DOC_TBA
+         */
+        this.flat = flat;
+    };
 
     /**
      * DOC_TBA
