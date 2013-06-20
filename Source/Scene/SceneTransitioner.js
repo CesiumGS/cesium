@@ -295,7 +295,6 @@ define([
             return;
         }
         this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
-        this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;
