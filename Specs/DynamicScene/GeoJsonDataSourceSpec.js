@@ -2,14 +2,18 @@
 defineSuite(['DynamicScene/GeoJsonDataSource',
              'DynamicScene/DynamicObjectCollection',
              'Core/Cartographic',
+             'Core/Cartesian3',
              'Core/Ellipsoid',
-             'Core/Event'
+             'Core/Event',
+             'ThirdParty/when'
             ], function(
                     GeoJsonDataSource,
                     DynamicObjectCollection,
                     Cartographic,
+                    Cartesian3,
                     Ellipsoid,
-                    Event) {
+                    Event,
+                    when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -46,10 +50,31 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         return result;
     }
 
-    //All values are lon/lat degrees
     var point = {
         type : 'Point',
         coordinates : [102.0, 0.5]
+    };
+
+    var pointNamedCrs = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'name',
+            properties : {
+                name : 'EPSG:4326'
+            }
+        }
+    };
+
+    var pointCrsLinkHref = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'link',
+            properties : {
+                href : 'http://crs.invalid'
+            }
+        }
     };
 
     var lineString = {
@@ -103,7 +128,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
     var featureWithId = {
         id : 'myId',
         type : 'Feature',
-        geometry : point
+        geometry : geometryCollection
     };
 
     var featureUndefinedGeometry = {
@@ -177,11 +202,13 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
 
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         waitsFor(function() {
-            return dynamicObjectCollection.getObjects().length === 1;
+            return dynamicObjectCollection.getObjects().length === 2;
         });
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
             expect(pointObject.id).toEqual(featureWithId.id);
+            var lineString = dynamicObjectCollection.getObjects()[1];
+            expect(lineString.id).toEqual(featureWithId.id + '_2');
         });
     });
 
@@ -333,6 +360,45 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
     });
 
+    it('Works with named crs', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(pointNamedCrs);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 1;
+        });
+        runs(function() {
+            var pointObject = dynamicObjectCollection.getObjects()[0];
+            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
+    it('Works with link crs href', function() {
+        var projectedPosition = new Cartesian3(1, 2, 3);
+
+        var dataSource = new GeoJsonDataSource();
+        GeoJsonDataSource.crsLinkHrefs[pointCrsLinkHref.crs.properties.href] = function(properties) {
+            expect(properties).toBe(pointCrsLinkHref.crs.properties);
+            return when(properties.href, function(href) {
+                return function(coordinate) {
+                    expect(coordinate).toBe(pointCrsLinkHref.coordinates);
+                    return projectedPosition;
+                };
+            });
+        };
+        dataSource.load(pointCrsLinkHref);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 1;
+        });
+        runs(function() {
+            var pointObject = dynamicObjectCollection.getObjects()[0];
+            expect(pointObject.position.getValueCartesian()).toEqual(projectedPosition);
+        });
+    });
+
     it('loadUrl works', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.loadUrl('Data/test.geojson');
@@ -402,6 +468,18 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         }).toThrow();
     });
 
+    it('loadUrl raises error with invalud url', function() {
+        var dataSource = new GeoJsonDataSource();
+        var thrown = false;
+        dataSource.getErrorEvent().addEventListener(function() {
+            thrown = true;
+        });
+        dataSource.loadUrl('invalid.geojson');
+        waitsFor(function() {
+            return thrown;
+        });
+    });
+
     it('load throws with null crs', function() {
         var featureWithNullCrs = {
             type : 'Feature',
@@ -420,7 +498,8 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             type : 'Feature',
             geometry : point,
             crs : {
-                type : 'potato'
+                type : 'potato',
+                properties : {}
             }
         };
 

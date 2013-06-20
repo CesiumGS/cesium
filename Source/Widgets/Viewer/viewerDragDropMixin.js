@@ -233,8 +233,7 @@ define([
                 }
             };
         } else {
-            console.log('Unrecognized file extension: ' + source);
-            window.alert('Unrecognized file extension: ' + source);
+            viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
         }
     }
 

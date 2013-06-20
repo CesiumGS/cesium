@@ -193,6 +193,24 @@ define([
     };
 
     /**
+     * Merge all of the properties of the supplied object onto this object.
+     * Properties which are already defined are not overwritten.
+     * @param other
+     */
+    DynamicObject.prototype.merge = function(other) {
+        if (typeof other === 'undefined') {
+            throw new DeveloperError('other is required');
+        }
+        for ( var property in other) {
+            if (other.hasOwnProperty(property)) {
+                if (this.hasOwnProperty(property) && (typeof this[property] === 'undefined')) {
+                    this[property] = other[property];
+                }
+            }
+        }
+    };
+
+    /**
      * Processes a single CZML packet and merges its data into the provided DynamicObject's position
      * property. This method is not normally called directly, but is part of the array of CZML processing
      * functions that is passed into the DynamicObjectCollection constructor.
