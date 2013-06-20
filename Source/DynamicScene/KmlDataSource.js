@@ -6,7 +6,6 @@ define(['../Core/ClockRange',
         '../Core/Iso8601',
         '../Core/loadXML',
         '../DynamicScene/DynamicClock',
-        '../DynamicScene/processKml',
         '../DynamicScene/DynamicObjectCollection'
         ], function(
                 ClockRange,
@@ -16,14 +15,13 @@ define(['../Core/ClockRange',
                 Iso8601,
                 loadXML,
                 DynamicClock,
-                processKml,
                 DynamicObjectCollection) {
     "use strict";
 
     /* Function copied from KmlDataSource.js, must be adapted */
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        processKml(kml, dynamicObjectCollection, sourceUri);
+        //processKml(kml, dynamicObjectCollection, sourceUri);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
