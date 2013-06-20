@@ -2,6 +2,7 @@
 define([
         '../Core/clone',
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
         '../Core/Color',
@@ -20,6 +21,7 @@ define([
     ], function(
         clone,
         defaultValue,
+        DeveloperError,
         destroyObject,
         Matrix4,
         Color,
@@ -275,83 +277,6 @@ define([
         }
     }
 
-    function addDefaultAttributes(instances) {
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            var geometry = instances[i].geometry;
-            var attributes = geometry.attributes;
-            var positionAttr = attributes.position;
-            var positionLength = positionAttr.values.length / positionAttr.componentsPerAttribute;
-
-            var numberOfComponents;
-            var values;
-            var j;
-
-            if (typeof attributes.normal === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.normal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 0.0;
-                    values[j + 1] = 0.0;
-                    values[j + 2] = 1.0;
-                }
-            }
-
-            if (typeof attributes.tangent === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 1.0;
-                    values[j + 1] = 0.0;
-                    values[j + 2] = 0.0;
-                }
-            }
-
-            if (typeof attributes.binormal === 'undefined') {
-                numberOfComponents = 3 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 3) {
-                    values[j] = 0.0;
-                    values[j + 1] = 1.0;
-                    values[j + 2] = 0.0;
-                }
-            }
-
-            if (typeof attributes.st === 'undefined') {
-                numberOfComponents = 2 * positionLength;
-                values = new Float32Array(numberOfComponents);
-                attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : values
-                });
-
-                for (j = 0; j < numberOfComponents; j += 2) {
-                    values[j] = 0.0;
-                    values[j + 1] = 0.0;
-                }
-            }
-        }
-    }
-
     function transformToWorldCoordinates(primitive, instances) {
         var toWorld = primitive._transformToWorldCoordinates;
         var length = instances.length;
@@ -395,9 +320,6 @@ define([
         // Add pickColor attribute for picking individual instances
         addPickColorAttribute(primitive, insts, context);
 
-        // Add default values for any undefined attributes
-        addDefaultAttributes(insts);
-
         // Unify to world coordinates before combining.  If there is only one geometry or all
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
         transformToWorldCoordinates(primitive, insts);
@@ -429,6 +351,29 @@ define([
             '}';
 
         return renamedVS + '\n' + pickMain;
+    }
+
+    function validateShaderMatching(shaderProgram, attributeIndices) {
+        // For a VAO and shader program to be compatible, the VAO must have
+        // all active attribute in the shader program.  The VAO may have
+        // extra attributes with the only concern being a potential
+        // performance hit due to extra memory bandwidth and cache pollution.
+        // The shader source could have extra attributes that are not used,
+        // but there is no guarantee they will be optimized out.
+        //
+        // Here, we validate that the VAO has all attributes required
+        // to match the shader program.
+        var shaderAttributes = shaderProgram.getVertexAttributes();
+
+        for (var name in shaderAttributes) {
+            if (shaderAttributes.hasOwnProperty(name)) {
+                if (typeof attributeIndices[name] === 'undefined') {
+                    throw new DeveloperError('Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input \'' + name +
+                        '\', which was not computed as part of the Geometry.  Use the appearance\'s vertexFormat property when constructing the geometry.');
+                }
+            }
+        }
+
     }
 
     /**
@@ -537,6 +482,9 @@ define([
                 createPickVertexShaderSource(vs),
                 createPickFragmentShaderSource(fs, 'varying'),
                 this._attributeIndices);
+
+            validateShaderMatching(this._sp, this._attributeIndices);
+            validateShaderMatching(this._pickSP, this._attributeIndices);
         }
 
         if (createRS || createSP) {

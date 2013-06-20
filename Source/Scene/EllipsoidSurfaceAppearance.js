@@ -1,6 +1,8 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/freezeObject',
+        '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         './Material',
@@ -9,6 +11,8 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
+        freezeObject,
+        VertexFormat,
         CullFace,
         BlendingState,
         Material,
@@ -31,6 +35,11 @@ define([
         /**
          * DOC_TBA
          */
+        this.vertexFormat = EllipsoidSurfaceAppearance.VERTEX_FORMAT;
+
+        /**
+         * DOC_TBA
+         */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
 
         /**
@@ -41,18 +50,46 @@ define([
         /**
          * DOC_TBA
          */
-        this.renderState = defaultValue(options.renderState, {
-            cull : {
-                enabled : true,
-                face : CullFace.BACK
-            },
+        this.translucent = defaultValue(options.translucent, true);
+
+        /**
+         * DOC_TBA
+         */
+        this.closed = false;
+
+        /**
+         * DOC_TBA
+         */
+        this.aboveGround = defaultValue(options.aboveGround, false);
+
+        var rs = {
             depthTest : {
                 enabled : true
-            },
-            depthMask : false,
-            blending : BlendingState.ALPHA_BLEND
-        });
+            }
+        };
+
+        if (!this.aboveGround) {
+            rs.cull = {
+                enabled : true,
+                face : CullFace.BACK
+            };
+        }
+
+        if (this.translucent) {
+            rs.depthMask = false;
+            rs.blending = BlendingState.ALPHA_BLEND;
+        }
+
+        /**
+         * DOC_TBA
+         */
+        this.renderState = defaultValue(options.renderState, rs);
     };
+
+    /**
+     * DOC_TBA
+     */
+    EllipsoidSurfaceAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_ST);
 
     /**
      * DOC_TBA
