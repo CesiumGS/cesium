@@ -430,7 +430,9 @@ define([
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,
-             appearance : new PerInstanceFlatColorAppearance()
+             appearance : new PerInstanceFlatColorAppearance({
+                 renderState : {} // No depth test
+             })
          }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());

@@ -3,8 +3,6 @@ define([
         '../Core/defaultValue',
         '../Core/freezeObject',
         '../Core/VertexFormat',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
         './Appearance',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS'
@@ -12,11 +10,9 @@ define([
         defaultValue,
         freezeObject,
         VertexFormat,
-        CullFace,
-        BlendingState,
         Appearance,
         PerInstanceColorAppearanceVS,
-        PerInstanceColorDefaultAppearanceFS) {
+        PerInstanceColorAppearanceFS) {
     "use strict";
 
     /**
@@ -44,7 +40,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, PerInstanceColorDefaultAppearanceFS);
+        this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, PerInstanceColorAppearanceFS);
 
         /**
          * DOC_TBA
@@ -70,10 +66,7 @@ define([
     /**
      * DOC_TBA
      */
-    PerInstanceColorAppearance.prototype.getFragmentShaderSource = function() {
-        // Unlike other appearances, this does not have a material
-        return this.fragmentShaderSource;
-    };
+    PerInstanceColorAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     return PerInstanceColorAppearance;
 });

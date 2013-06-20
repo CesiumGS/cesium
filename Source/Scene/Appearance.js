@@ -92,12 +92,15 @@ define([
      * DOC_TBA
      */
     Appearance.prototype.getFragmentShaderSource = function() {
-        return '#line 0\n' +
-            this.material.shaderSource +
-            '#line 0\n' +
-            this.fragmentShaderSource;
-    };
+        if (typeof this.material !== 'undefined') {
+            return '#line 0\n' +
+                this.material.shaderSource +
+                '#line 0\n' +
+                this.fragmentShaderSource;
+        }
 
+        return this.fragmentShaderSource;
+    };
 
     /**
      * DOC_TBA
