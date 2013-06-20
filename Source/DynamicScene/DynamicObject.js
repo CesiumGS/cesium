@@ -195,7 +195,8 @@ define([
     /**
      * Merge all of the properties of the supplied object onto this object.
      * Properties which are already defined are not overwritten.
-     * @param other
+     * @param other {DynamicObject} The object to merge.
+     * @private
      */
     DynamicObject.prototype.merge = function(other) {
         if (typeof other === 'undefined') {

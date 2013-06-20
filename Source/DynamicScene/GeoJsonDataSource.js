@@ -13,8 +13,6 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicMaterialProperty',
         './DynamicObjectCollection',
-        './StaticProperty',
-        './StaticPositionProperty',
         '../ThirdParty/when'], function(
                 createGuid,
                 Cartographic,
@@ -30,10 +28,40 @@ define(['../Core/createGuid',
                 DynamicPolygon,
                 DynamicMaterialProperty,
                 DynamicObjectCollection,
-                StaticProperty,
-                StaticPositionProperty,
                 when) {
       "use strict";
+
+    var ConstantProperty = function(value) {
+        this._value = value;
+    };
+
+    ConstantProperty.prototype.getValue = function(time, result) {
+        var value = this._value;
+        if (typeof value.clone === 'function') {
+            return value.clone(result);
+        }
+        return value;
+    };
+
+    ConstantProperty.prototype.setValue = function(value) {
+        this._value = value;
+    };
+
+    var ConstantPositionProperty = function(value) {
+        this._value = value;
+    };
+
+    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
+        var value = this._value;
+        if (typeof value.clone === 'function') {
+            return value.clone(result);
+        }
+        return value;
+    };
+
+    ConstantPositionProperty.prototype.setValue = function(value) {
+        this._value = value;
+    };
 
     /**
      * A {@link DataSource} which processes GeoJSON.
@@ -263,29 +291,29 @@ define(['../Core/createGuid',
     //Configure default point
     var defaultPoint = GeoJsonDataSource.defaultPoint;
     var point = new DynamicPoint();
-    point.color = new StaticProperty(Color.BLUE);
-    point.pixelSize = new StaticProperty(10);
-    point.outlineColor = new StaticProperty(Color.BLACK);
-    point.outlineWidth = new StaticProperty(1);
+    point.color = new ConstantProperty(Color.BLUE);
+    point.pixelSize = new ConstantProperty(10);
+    point.outlineColor = new ConstantProperty(Color.BLACK);
+    point.outlineWidth = new ConstantProperty(1);
     defaultPoint.point = point;
 
     //Configure default line
     var defaultLine = GeoJsonDataSource.defaultLine;
     var polyline = new DynamicPolyline();
-    polyline.color = new StaticProperty(Color.BLUE);
-    polyline.width = new StaticProperty(2);
-    polyline.outlineColor = new StaticProperty(Color.BLACK);
-    polyline.outlineWidth = new StaticProperty(1);
+    polyline.color = new ConstantProperty(Color.BLUE);
+    polyline.width = new ConstantProperty(2);
+    polyline.outlineColor = new ConstantProperty(Color.BLACK);
+    polyline.outlineWidth = new ConstantProperty(1);
     defaultLine.polyline = polyline;
 
     //Configure default polygon
     var defaultPolygon = GeoJsonDataSource.defaultPolygon;
     var polygonMaterial = new DynamicMaterialProperty();
     polyline = new DynamicPolyline();
-    polyline.color = new StaticProperty(Color.BLUE);
-    polyline.width = new StaticProperty(1);
-    polyline.outlineColor = new StaticProperty(Color.BLACK);
-    polyline.outlineWidth = new StaticProperty(0);
+    polyline.color = new ConstantProperty(Color.BLUE);
+    polyline.width = new ConstantProperty(1);
+    polyline.outlineColor = new ConstantProperty(Color.BLACK);
+    polyline.outlineWidth = new ConstantProperty(0);
     defaultPolygon.polyline = polyline;
     var polygon = new DynamicPolygon();
     polygon.material = polygonMaterial;
@@ -368,7 +396,7 @@ define(['../Core/createGuid',
             positions[i] = crsFunction(coordinates[i]);
         }
         dynamicObject.merge(GeoJsonDataSource.defaultLine);
-        dynamicObject.vertexPositions = new StaticPositionProperty(positions);
+        dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
     }
 
     function processMultiLineString(geojson, geometry, dynamicObjectCollection, crsFunction, source) {
@@ -381,7 +409,7 @@ define(['../Core/createGuid',
                 positions[z] = crsFunction(lineString[z]);
             }
             dynamicObject.merge(GeoJsonDataSource.defaultLine);
-            dynamicObject.vertexPositions = new StaticPositionProperty(positions);
+            dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
         }
     }
 
@@ -390,7 +418,7 @@ define(['../Core/createGuid',
         for ( var i = 0; i < coordinates.length; i++) {
             var dynamicObject = createObject(geojson, dynamicObjectCollection);
             dynamicObject.merge(GeoJsonDataSource.defaultPoint);
-            dynamicObject.position = new StaticPositionProperty(crsFunction(coordinates[i]));
+            dynamicObject.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
         }
     }
 
@@ -408,7 +436,7 @@ define(['../Core/createGuid',
                     positions[z] = crsFunction(vertexPositions[z]);
                 }
                 dynamicObject.merge(GeoJsonDataSource.defaultPolygon);
-                dynamicObject.vertexPositions = new StaticPositionProperty(positions);
+                dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
             }
         }
     }
@@ -416,7 +444,7 @@ define(['../Core/createGuid',
     function processPoint(geojson, geometry, dynamicObjectCollection, crsFunction, source) {
         var dynamicObject = createObject(geojson, dynamicObjectCollection);
         dynamicObject.merge(GeoJsonDataSource.defaultPoint);
-        dynamicObject.position = new StaticPositionProperty(crsFunction(geometry.coordinates));
+        dynamicObject.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
     }
 
     function processPolygon(geojson, geometry, dynamicObjectCollection, crsFunction, source) {
@@ -429,7 +457,7 @@ define(['../Core/createGuid',
             positions[i] = crsFunction(coordinates[i]);
         }
         dynamicObject.merge(GeoJsonDataSource.defaultPolygon);
-        dynamicObject.vertexPositions = new StaticPositionProperty(positions);
+        dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
     }
 
     var geoJsonObjectTypes = {
