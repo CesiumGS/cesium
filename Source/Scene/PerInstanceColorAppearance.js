@@ -27,7 +27,13 @@ define([
         var flat = defaults.flat;
         var vs = flat ? PerInstanceFlatColorAppearanceVS : PerInstanceColorAppearanceVS;
         var fs = flat ? PerInstanceFlatColorAppearanceFS : PerInstanceColorAppearanceFS;
-        var vertexFormat = flat ? VertexFormat.POSITION_ONLY : VertexFormat.POSITION_AND_NORMAL;
+        var vertexFormat = flat ? PerInstanceColorAppearance.FLAT_VERTEX_FORMAT : PerInstanceColorAppearance.VERTEX_FORMAT;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.materialSupport = Appearance.MaterialSupport.NONE;
 
         /**
          * DOC_TBA
@@ -36,39 +42,58 @@ define([
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.vertexFormat = vertexFormat;
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.flat = flat;
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.translucent = defaults.translucent;
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.closed = defaults.closed;
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.renderState = defaults.renderState;
     };
+
+    /**
+     * DOC_TBA
+     * @constant
+     */
+    PerInstanceColorAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_NORMAL;
+
+    /**
+     * DOC_TBA
+     * @constant
+     */
+    PerInstanceColorAppearance.FLAT_VERTEX_FORMAT = VertexFormat.POSITION_ONLY;
 
     /**
      * DOC_TBA

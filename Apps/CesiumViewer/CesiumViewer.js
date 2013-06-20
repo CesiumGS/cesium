@@ -18,7 +18,6 @@ define([
         'Core/PolygonGeometry',
         'Core/BoxGeometry',
         'Core/GeometryPipeline',
-        'Core/VertexFormat',
         'Core/Transforms',
         'Core/PrimitiveType',
         'Core/ComponentDatatype',
@@ -54,7 +53,6 @@ define([
         PolygonGeometry,
         BoxGeometry,
         GeometryPipeline,
-        VertexFormat,
         Transforms,
         PrimitiveType,
         ComponentDatatype,
@@ -181,7 +179,7 @@ define([
 
         var geometry = new GeometryInstance({
             geometry : new ExtentGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 extent : new Extent(
                     CesiumMath.toRadians(-180.0),
                     CesiumMath.toRadians(50.0),
@@ -194,7 +192,7 @@ define([
         });
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -205,7 +203,7 @@ define([
         geometry2.color.alpha = 0.5;
         var geometry3 = new GeometryInstance({
             geometry : new BoxGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -215,7 +213,7 @@ define([
         });
         var geometry4 = new GeometryInstance({
             geometry : new EllipseGeometry({
-                vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 ellipsoid : ellipsoid,
                 center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                 semiMinorAxis : 500000.0,

@@ -55,7 +55,7 @@ define([
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      *
-     * @alias Geometry
+     * @alias Primitive
      * @constructor
      *
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
