@@ -6,7 +6,7 @@ define(['../Core/ClockRange',
         '../Core/Iso8601',
         '../Core/loadXML',
         '../DynamicScene/DynamicClock',
-        '../DynamicScene/processKML',
+        '../DynamicScene/processKml',
         '../DynamicScene/DynamicObjectCollection'
         ], function(
                 ClockRange,
@@ -16,14 +16,14 @@ define(['../Core/ClockRange',
                 Iso8601,
                 loadXML,
                 DynamicClock,
-                processKML,
+                processKml,
                 DynamicObjectCollection) {
     "use strict";
 
     /* Function copied from KmlDataSource.js, must be adapted */
-    function loadKML(dataSource, KML, sourceUri) {
+    function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        processKML(KML, dynamicObjectCollection, sourceUri);
+        processKml(kml, dynamicObjectCollection, sourceUri);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
@@ -56,7 +56,11 @@ define(['../Core/ClockRange',
      * @constructor
      */
     var KmlDataSource = function(){
-        /* not sure what attributes will be needed yet */
+        this._changed = new Event();
+        this._error = new Event();
+        this._clock = undefined;
+        this._dynamicObjectCollection = new DynamicObjectCollection();
+        this._timeVarying = true;
     };
 
     /* The following functions were copied from CzmlDataSource.js, just replaced CZML with KML */
@@ -117,17 +121,17 @@ define(['../Core/ClockRange',
     /**
      * Processes the provided KML without clearing any existing data.
      *
-     * @param {Object} KML The KML to be processed.
+     * @param {Object} kml The KML to be processed.
      * @param {String} source The source of the KML.
      *
      * @exception {DeveloperError} KML is required.
      */
-    KmlDataSource.prototype.process = function(KML, source) {
+    KmlDataSource.prototype.process = function(kml, source) {
         if (typeof KML === 'undefined') {
             throw new DeveloperError('KML is required.');
         }
 
-        this._clock = loadKML(this, KML, source);
+        this._clock = loadKML(this, kml, source);
     };
 
     /**
@@ -138,13 +142,13 @@ define(['../Core/ClockRange',
      *
      * @exception {DeveloperError} KML is required.
      */
-    KmlDataSource.prototype.load = function(KML, source) {
+    KmlDataSource.prototype.load = function(kml, source) {
         if (typeof KML === 'undefined') {
             throw new DeveloperError('KML is required.');
         }
 
         this._dynamicObjectCollection.clear();
-        this._clock = loadKML(this, KML, source);
+        this._clock = loadKML(this, kml, source);
     };
 
     /**
@@ -162,8 +166,8 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        return loadXML(url).then(function(KML) {
-            dataSource.process(KML, url);
+        return loadXML(url).then(function(kml) {
+            dataSource.process(kml, url);
         }, function(error) {
             this._error.raiseEvent(this, error);
         });
@@ -184,8 +188,8 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        return loadXML(url).then(function(KML) {
-            dataSource.load(KML, url);
+        return loadXML(url).then(function(kml) {
+            dataSource.load(kml, url);
         }, function(error) {
             this._error.raiseEvent(this, error);
         });
