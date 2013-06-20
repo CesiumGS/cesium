@@ -1425,11 +1425,56 @@ define([
         }
     }
 
-    function triangleIndices(numberOfPositions) {
+    function indexTriangles(numberOfPositions) {
         var indices = new Array(numberOfPositions);
         for (var i = 0; i < numberOfPositions; ++i) {
             indices[i] = i;
         }
+        return indices;
+    }
+
+    function indexTriangleFan(numberOfPositions) {
+        var indices = new Array((numberOfPositions - 2) * 3);
+        indices[0] = 1;
+        indices[1] = 0;
+        indices[2] = 2;
+
+        var indicesIndex = 3;
+        for (var i = 3; i < numberOfPositions; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = 0;
+            indices[indicesIndex++] = i;
+        }
+
+        return indices;
+    }
+
+    function indexTriangleStrip(numberOfPositions) {
+        var indices = new Array((numberOfPositions - 2) * 3);
+
+        indices[0] = 0;
+        indices[1] = 1;
+        indices[2] = 2;
+
+        if (numberOfPositions > 3) {
+            indices[3] = 0;
+            indices[4] = 2;
+            indices[5] = 3;
+        }
+
+        var indicesIndex = 6;
+        for (var i = 3; i < numberOfPositions - 1; i += 2) {
+            indices[indicesIndex++] = i;
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i + 1;
+
+            if (i + 2 < numberOfPositions) {
+                indices[indicesIndex++] = i;
+                indices[indicesIndex++] = i + 1;
+                indices[indicesIndex++] = i + 2;
+            }
+        }
+
         return indices;
     }
 
@@ -1443,7 +1488,7 @@ define([
         var indices = geometry.indices;
 
         if (typeof indices === 'undefined') {
-            indices = triangleIndices(positions.length / 3);
+            indices = indexTriangles(positions.length / 3);
         }
 
         var newPositions = Array.prototype.slice.call(positions, 0);
@@ -1532,9 +1577,25 @@ define([
             }
         }
 
-        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+        var numberOfPositions = geometry.attributes.position.values.length / 3;
+
+        switch (geometry.primitiveType) {
+        case PrimitiveType.POINTS:
+            break;
+        case PrimitiveType.TRIANGLES:
             wrapLongitudeTriangles(geometry);
-        } else {
+            break;
+        case PrimitiveType.TRIANGLE_FAN:
+            geometry.indices = indexTriangleFan(numberOfPositions);
+            geometry.primitiveType = PrimitiveType.TRIANGLES;
+            wrapLongitudeTriangles(geometry);
+            break;
+        case PrimitiveType.TRIANGLE_STRIP:
+            geometry.indices = indexTriangleStrip(numberOfPositions);
+            geometry.primitiveType = PrimitiveType.TRIANGLES;
+            wrapLongitudeTriangles(geometry);
+            break;
+        default:
             throw new DeveloperError('geometry.primitiveType is unsupported.');
         }
 

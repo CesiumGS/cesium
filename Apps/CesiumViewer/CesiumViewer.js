@@ -418,13 +418,20 @@ define([
             Cartographic.fromDegrees(lon + 10.0, lat + 10.0, height)
         ]);
         */
+        /*
         positions = positions.concat(ellipsoid.cartographicArrayToCartesianArray([
             Cartographic.fromDegrees(lon, lat + 20.0, height),
             Cartographic.fromDegrees(lon, lat, height),
             //Cartographic.fromDegrees(lon - 10.0, lat + 10.0, height)
             Cartographic.fromDegrees(-lon, lat + 10.0, height)
         ]));
-        //positions = positions.reverse();
+        */
+        positions = ellipsoid.cartographicArrayToCartesianArray([
+            Cartographic.fromDegrees( 175.0,  0.0, height),
+            Cartographic.fromDegrees( 175.0, 20.0, height),
+            Cartographic.fromDegrees(-175.0, 20.0, height),
+            Cartographic.fromDegrees(-175.0,  0.0, height)
+        ]);
         var flatPositions = [];
         var normals = [];
         for (i = 0; i < positions.length; ++i) {
@@ -463,7 +470,7 @@ define([
                     */
                 },
                 //primitiveType : PrimitiveType.LINE_LOOP
-                primitiveType : PrimitiveType.TRIANGLES
+                primitiveType : PrimitiveType.TRIANGLE_FAN
             }),
             pickData : 'customWithoutIndices',
             color : new Color(1.0, 1.0, 0.0, 0.5)
