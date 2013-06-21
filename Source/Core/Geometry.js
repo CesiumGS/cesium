@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError'
+        './DeveloperError',
+        './BoundingSphere'
     ], function(
         defaultValue,
-        DeveloperError) {
+        DeveloperError,
+        BoundingSphere) {
     "use strict";
 
     /**
@@ -186,7 +188,7 @@ define([
             result.indices = undefined;
         }
         result.primitiveType = geometry.primitiveType;
-        result.boundingSphere = geometry.boundingSphere.clone(result.boundingSphere);
+        result.boundingSphere = BoundingSphere.clone(geometry.boundingSphere, result.boundingSphere);
 
         return result;
     };
