@@ -144,13 +144,11 @@ define([
      *
      * @param {BoundingRectangle} rectangle The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     *
-     * @exception {DeveloperError} rectangle is required.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided. (Returns undefined if rectangle is undefined)
      */
     BoundingRectangle.clone = function(rectangle, result) {
         if (typeof rectangle === 'undefined') {
-            throw new DeveloperError('rectangle is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

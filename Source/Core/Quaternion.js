@@ -174,13 +174,11 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to duplicate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} quaternion is required.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided. (Returns undefined if quaternion is undefined)
      */
     Quaternion.clone = function(quaternion, result) {
         if (typeof quaternion === 'undefined') {
-            throw new DeveloperError('quaternion is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {
