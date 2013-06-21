@@ -92,10 +92,8 @@ defineSuite([
         expect(cartographic.toString()).toEqual('(1.123, 2.345, 6.789)');
     });
 
-    it('static clone throws without cartographic parameter', function() {
-        expect(function() {
-            Cartographic.clone(undefined);
-        }).toThrow();
+    it('static clone returns undefined without cartographic parameter', function() {
+        expect(typeof Cartographic.clone(undefined)).toEqual('undefined');
     });
 
     it('static toString throws without cartographic parameter', function() {
