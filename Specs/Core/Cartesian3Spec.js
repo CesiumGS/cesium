@@ -517,10 +517,8 @@ defineSuite([
     });
 
 
-    it('static clone throws with no parameter', function() {
-        expect(function() {
-            Cartesian3.clone();
-        }).toThrow();
+    it('static clone returns undefined with no parameter', function() {
+        expect(typeof Cartesian3.clone()).toEqual('undefined');
     });
 
     it('static getMaximumComponent throws with no parameter', function() {

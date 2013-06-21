@@ -78,9 +78,12 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid to duplicate.
      * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
      *                    instance should be created.
-     * @returns {Ellipsoid} The cloned Ellipsoid.
+     * @returns {Ellipsoid} The cloned Ellipsoid. (Returns undefined if ellipsoid is undefined)
      */
     Ellipsoid.clone = function(ellipsoid, result) {
+        if (typeof ellipsoid === 'undefined') {
+            return undefined;
+        }
         var radii = ellipsoid._radii;
 
         if (typeof result === 'undefined') {
@@ -185,6 +188,19 @@ define([
      */
     Ellipsoid.prototype.getMaximumRadius = function() {
         return this._maximumRadius;
+    };
+
+    /**
+     * Duplicates an Ellipsoid instance.
+     *
+     * @memberof Ellipsoid
+     *
+     * @param {Ellipsoid} [result] The object onto which to store the result, or undefined if a new
+     *                    instance should be created.
+     * @returns {Ellipsoid} The cloned Ellipsoid.
+     */
+    Ellipsoid.prototype.clone = function(result) {
+        return Ellipsoid.clone(this, result);
     };
 
     /**
