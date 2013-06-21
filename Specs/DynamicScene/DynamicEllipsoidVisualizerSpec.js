@@ -151,7 +151,7 @@ defineSuite([
         expect(p.radii).toEqual(testObject.ellipsoid.radii.getValue(time));
         expect(p.show).toEqual(testObject.ellipsoid.show.getValue(time));
         expect(p.material).toEqual(testObject.ellipsoid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         ellipsoid.show.value = false;
         visualizer.update(time);

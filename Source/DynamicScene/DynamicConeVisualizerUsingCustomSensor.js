@@ -344,7 +344,7 @@ define([
             }
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), cone._visualizerPosition);
         orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&

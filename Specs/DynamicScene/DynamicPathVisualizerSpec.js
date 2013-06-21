@@ -123,7 +123,7 @@ defineSuite([
         expect(testObject.position.lastStart).toEqual(time.addSeconds(-path.trailTime.getValue()));
         expect(testObject.position.lastStop).toEqual(time.addSeconds(path.leadTime.getValue()));
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
-        expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
+        expect(primitive.getPositions()).toEqual(testObject.position.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
 
         var material = primitive.getMaterial();
@@ -139,7 +139,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.path.show.getValue(time));
-        expect(primitive.getPositions()).toEqual(testObject.position.getValueRangeCartesian(time));
+        expect(primitive.getPositions()).toEqual(testObject.position.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.path.width.getValue(time));
 
         expect(material.uniforms.color).toEqual(testObject.path.color.getValue(time));

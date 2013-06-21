@@ -40,7 +40,7 @@ define(['../Core/createGuid',
         this._value = value;
     };
 
-    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
+    ConstantPositionProperty.prototype.getValue = function(time, result) {
         var value = this._value;
         if (typeof value.clone === 'function') {
             return value.clone(result);

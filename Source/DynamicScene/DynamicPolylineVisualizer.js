@@ -231,9 +231,9 @@ define([
 
         var vertexPositions;
         if (typeof ellipseProperty !== 'undefined') {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
         } else {
-            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+            vertexPositions = vertexPositionsProperty.getValue(time);
         }
 
         if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {

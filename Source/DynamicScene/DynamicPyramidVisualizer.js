@@ -249,7 +249,7 @@ define([
             pyramid._visualizerDirections = directions;
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), pyramid._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), pyramid._visualizerPosition);
         orientation = defaultValue(orientationProperty.getValue(time, orientation), pyramid._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&

@@ -245,7 +245,7 @@ define([
             label.setText(text);
         }
 
-        position = positionProperty.getValueCartesian(time, position);
+        position = positionProperty.getValue(time, position);
         if (typeof position !== 'undefined') {
             label.setPosition(position);
         }

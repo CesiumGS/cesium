@@ -166,7 +166,7 @@ defineSuite([
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
         expect(c.material).toEqual(testObject.cone.outerMaterial.getValue(time));
-        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
+        expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         cone.show.value = false;
         visualizer.update(time);

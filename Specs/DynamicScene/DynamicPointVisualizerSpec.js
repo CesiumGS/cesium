@@ -127,7 +127,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
-        expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+        expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
         expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));
@@ -144,7 +144,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(bb.getShow()).toEqual(testObject.point.show.getValue(time));
-        expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+        expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
         expect(bb._visualizerColor).toEqual(testObject.point.color.getValue(time));
         expect(bb._visualizerOutlineColor).toEqual(testObject.point.outlineColor.getValue(time));
         expect(bb._visualizerOutlineWidth).toEqual(testObject.point.outlineWidth.getValue(time));

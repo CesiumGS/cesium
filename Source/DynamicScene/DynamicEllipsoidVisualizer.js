@@ -238,7 +238,7 @@ define([
 
         ellipsoid.radii = radiiProperty.getValue(time, ellipsoid.radii);
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), ellipsoid._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), ellipsoid._visualizerPosition);
         orientation = defaultValue(orientationProperty.getValue(time, orientation), ellipsoid._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&

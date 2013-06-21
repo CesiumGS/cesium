@@ -115,19 +115,6 @@ define([
     };
 
     /**
-     * Retrieves the Cartographic value or values of the property at the specified time if the linked property
-     * is a DynamicPositionProperty or DynamicVertexPositionsProperty.
-     *
-     * @param time The time to evaluate the property.
-     * @param [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns The result parameter or a new instance if the parameter was omitted.
-     */
-    ReferenceProperty.prototype.getValueCartographic = function(time, result) {
-        var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueCartographic(time, result) : undefined;
-    };
-
-    /**
      * Retrieves the Cartesian value or values of the property at the specified time if the linked property
      * is a DynamicPositionProperty, DynamicVertexPositionsProperty, or DynamicDirectionsProperty.
      *
@@ -135,9 +122,9 @@ define([
      * @param [result] The object to store the result in, if undefined a new instance will be created.
      * @returns The result parameter or a new instance if the parameter was omitted.
      */
-    ReferenceProperty.prototype.getValueCartesian = function(time, result) {
+    ReferenceProperty.prototype.getValue = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueCartesian(time, result) : undefined;
+        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
     /**

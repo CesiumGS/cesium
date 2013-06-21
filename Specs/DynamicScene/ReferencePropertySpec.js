@@ -73,14 +73,9 @@ defineSuite([
         expect(property.getValue()).toBeUndefined();
     });
 
-    it('getValueCartographic returned undefined for unresolved property', function() {
+    it('getValue returned undefined for unresolved property', function() {
         var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
-        expect(property.getValueCartographic()).toBeUndefined();
-    });
-
-    it('getValueCartesian returned undefined for unresolved property', function() {
-        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
-        expect(property.getValueCartesian()).toBeUndefined();
+        expect(property.getValue()).toBeUndefined();
     });
 
     it('getValueSpherical returned undefined for unresolved property', function() {
@@ -123,26 +118,15 @@ defineSuite([
         expect(property.getValue(invalidTime, result)).toBeUndefined();
     });
 
-    it('Resolves getValueCartographic property on direct collection', function() {
+    it('Resolves getValue property on direct collection', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
-        createTestObject(dynamicObjectCollection, 'getValueCartographic');
+        createTestObject(dynamicObjectCollection, 'getValue');
         var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
         var result = {};
-        expect(property.getValueCartographic(validTime, result)).toEqual(result);
+        expect(property.getValue(validTime, result)).toEqual(result);
         expect(result.expectedValue).toEqual(true);
         expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValueCartographic(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves getValueCartesian property on direct collection', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        createTestObject(dynamicObjectCollection, 'getValueCartesian');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
-        var result = {};
-        expect(property.getValueCartesian(validTime, result)).toEqual(result);
-        expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValueCartesian(invalidTime, result)).toBeUndefined();
+        expect(property.getValue(invalidTime, result)).toBeUndefined();
     });
 
     it('Resolves getValueSpherical property on direct collection', function() {

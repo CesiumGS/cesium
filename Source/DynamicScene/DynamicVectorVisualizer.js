@@ -226,7 +226,7 @@ define([
         polyline.setShow(true);
 
         var positions = polyline._visualizerPositions;
-        var position = positionProperty.getValueCartesian(time, positions[0]);
+        var position = positionProperty.getValue(time, positions[0]);
         var direction = directionProperty.getValue(time, positions[1]);
         var length = lengthProperty.getValue(time);
         if (typeof position !== 'undefined' && typeof direction !== 'undefined' && typeof length !== 'undefined') {

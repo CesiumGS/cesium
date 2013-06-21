@@ -198,7 +198,7 @@ defineSuite([
         var primitive = polylineCollection.get(0);
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
-        expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
+        expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         var material = primitive.getMaterial();
@@ -214,7 +214,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.getShow()).toEqual(testObject.polyline.show.getValue(time));
-        expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValueCartesian(time));
+        expect(primitive.getPositions()).toEqual(testObject.vertexPositions.getValue(time));
         expect(primitive.getWidth()).toEqual(testObject.polyline.width.getValue(time));
 
         material = primitive.getMaterial();

@@ -26,7 +26,6 @@ define([
     "use strict";
 
     var scratchMatrix3 = new Matrix3();
-    var wgs84 = Ellipsoid.WGS84;
 
     function convertToFixed(time, value) {
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
@@ -80,42 +79,6 @@ define([
     };
 
     /**
-     * Retrieves the value of the object at the supplied time as a Cartographic.
-     * @memberof DynamicPositionProperty
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @param {Cartographic} [result] The object to store the result onto, if undefined a new instance will be created.
-     * @returns The modified result property, or a new instance if result was undefined.
-     */
-    DynamicPositionProperty.prototype.getValueCartographic = function(time, result) {
-        if (typeof time === 'undefined') {
-            throw new DeveloperError('time is required.');
-        }
-
-        var interval = this._cachedInterval;
-        if (!JulianDate.equals(this._cachedTime, time)) {
-            this._cachedTime = JulianDate.clone(time, this._cachedTime);
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
-                interval = this._propertyIntervals.findIntervalContainingDate(time);
-                this._cachedInterval = interval;
-            }
-        }
-
-        if (typeof interval === 'undefined') {
-            return undefined;
-        }
-        var property = interval.data;
-        result = interval.cachedValue = property.getValue(time, interval.cachedValue);
-        if (typeof result !== 'undefined') {
-            if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
-                result = convertToFixed(time, result);
-            }
-            result = wgs84.cartesianToCartographic(result);
-        }
-        return result;
-    };
-
-    /**
      * Retrieves the value of the object at the supplied time as a Cartesian3.
      * @memberof DynamicPositionProperty
      *
@@ -123,7 +86,7 @@ define([
      * @param {Cartesian3} [result] The object to store the result onto, if undefined a new instance will be created.
      * @returns The modified result property, or a new instance if result was undefined.
      */
-    DynamicPositionProperty.prototype.getValueCartesian = function(time, result) {
+    DynamicPositionProperty.prototype.getValue = function(time, result) {
         if (typeof time === 'undefined') {
             throw new DeveloperError('time is required.');
         }
@@ -145,122 +108,6 @@ define([
         if (interval.data.referenceFrame === ReferenceFrame.INERTIAL) {
             return convertToFixed(time, result);
         }
-        return result;
-    };
-
-    /**
-     * Retrieves all values in the provided time range.  Rather than sampling, this
-     * method returns the actual data points used in the source data, with the exception
-     * of start, stop and currentTime parameters, which will be sampled.
-     *
-     * @param {JulianDate} start The first time to retrieve values for.
-     * @param {JulianDate} stop The last time to retrieve values for .
-     * @param {JulianDate} [currentTime] If provided, causes the algorithm to always sample the provided time, assuming it is between start and stop.
-     * @param {Array} [result] The array into which to store the result.
-     * @returns The modified result array or a new instance if one was not provided.
-     */
-    DynamicPositionProperty.prototype.getValueRangeCartesian = function(start, stop, currentTime, result) {
-        if (typeof start === 'undefined') {
-            throw new DeveloperError('start is required');
-        }
-
-        if (typeof stop === 'undefined') {
-            throw new DeveloperError('stop is required');
-        }
-
-        if (typeof result === 'undefined') {
-            result = [];
-        }
-
-        var propertyIntervals = this._propertyIntervals;
-
-        var startIndex = typeof start !== 'undefined' ? propertyIntervals.indexOf(start) : 0;
-        var stopIndex = typeof stop !== 'undefined' ? propertyIntervals.indexOf(stop) : propertyIntervals.length - 1;
-        if (startIndex < 0) {
-            startIndex = ~startIndex;
-        }
-
-        if (startIndex === propertyIntervals.getLength()) {
-            result.length = 0;
-            return result;
-        }
-
-        if (stopIndex < 0) {
-            stopIndex = ~stopIndex;
-            if (stopIndex !== propertyIntervals.getLength()) {
-                result.length = 0;
-                return result;
-            }
-            stopIndex -= 1;
-        }
-
-        var r = 0;
-        //Always step exactly on start (but only use it if it exists.)
-        var tmp;
-        tmp = this.getValueCartesian(start, result[r]);
-        if (typeof tmp !== 'undefined') {
-            result[r++] = tmp;
-        }
-
-        var steppedOnNow = typeof currentTime === 'undefined' || currentTime.lessThan(start) || currentTime.greaterThan(stop);
-        for ( var i = startIndex; i < stopIndex + 1; i++) {
-            var current;
-            var interval = propertyIntervals.get(i);
-            var nextInterval = propertyIntervals.get(i + 1);
-            var loopStop = stop;
-            if (typeof nextInterval !== 'undefined' && stop.greaterThan(nextInterval.start)) {
-                loopStop = nextInterval.start;
-            }
-            var property = interval.data;
-            var currentInterval = property._intervals.get(0);
-            var times = currentInterval.data.times;
-            if (typeof times !== 'undefined') {
-                //Iterate over all interval times and add the ones that fall in our
-                //time range.  Note that times can contain data outside of
-                //the intervals range.  This is by design for use with interpolation.
-                var t;
-                for (t = 0; t < times.length; t++) {
-                    current = times[t];
-                    if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                        tmp = property.getValue(currentTime, result[r]);
-                        if (typeof tmp !== 'undefined') {
-                            result[r++] = tmp;
-                        }
-                        steppedOnNow = true;
-                    }
-                    if (current.greaterThan(start) && current.lessThan(loopStop)) {
-                        tmp = property.getValue(current, result[r]);
-                        if (typeof tmp !== 'undefined') {
-                            result[r++] = tmp;
-                        }
-                    }
-                }
-            } else {
-                //If times is undefined, it's because the interval contains a single position
-                //at which it stays for the duration of the interval.
-                current = interval.start;
-
-                //We don't need to actually step on now in this case, since the next value
-                //will be the same; but we do still need to check for it.
-                steppedOnNow = steppedOnNow || current.greaterThanOrEquals(currentTime);
-
-                //Finally, get the value at this non-sampled interval.
-                if (current.lessThan(loopStop)) {
-                    tmp = property.getValue(current, result[r]);
-                    if (typeof tmp !== 'undefined') {
-                        result[r++] = tmp;
-                    }
-                }
-            }
-        }
-
-        //Always step exactly on stop (but only use it if it exists.)
-        tmp = this.getValueCartesian(stop, result[r]);
-        if (typeof tmp !== 'undefined') {
-            result[r++] = tmp;
-        }
-
-        result.length = r;
         return result;
     };
 

@@ -156,7 +156,7 @@ defineSuite([
         l = labelCollection.get(0);
 
         visualizer.update(time);
-        expect(l.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+        expect(l.getPosition()).toEqual(testObject.position.getValue(time));
         expect(l.getText()).toEqual(testObject.label.text.getValue(time));
         expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));
@@ -185,7 +185,7 @@ defineSuite([
         label.show = new MockProperty(true);
 
         visualizer.update(time);
-        expect(l.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+        expect(l.getPosition()).toEqual(testObject.position.getValue(time));
         expect(l.getText()).toEqual(testObject.label.text.getValue(time));
         expect(l.getFont()).toEqual(testObject.label.font.getValue(time));
         expect(l.getStyle()).toEqual(testObject.label.style.getValue(time));

@@ -49,7 +49,7 @@ defineSuite([
 
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicObject.processCzmlPacketPosition(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.position.getValueCartesian(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(dynamicObject.position.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
     });
 
     it('processCzmlPacketPosition returns false if no data.', function() {
@@ -87,7 +87,7 @@ defineSuite([
 
         var dynamicObject = new DynamicObject('dynamicObject');
         expect(DynamicObject.processCzmlPacketVertexPositions(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.vertexPositions.getValueCartesian(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
+        expect(dynamicObject.vertexPositions.getValue(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
     });
 
     it('processCzmlPacketVertexPositions returns false if no data.', function() {

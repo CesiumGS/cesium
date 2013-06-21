@@ -221,9 +221,9 @@ define(['../Core/Cartesian3',
 
         var vertexPositions;
         if (hasVertexPostions) {
-            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+            vertexPositions = vertexPositionsProperty.getValue(time);
         } else {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
         }
 
         if (polygon._visualizerPositions !== vertexPositions && //

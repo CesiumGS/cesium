@@ -191,7 +191,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
             expect(pointObject.geoJson).toBe(feature);
-            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
+            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(feature.geometry.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
@@ -223,7 +223,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
             expect(pointObject.geoJson).toBe(point);
-            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
             expect(pointObject.point).toBeDefined();
         });
     });
@@ -242,7 +242,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             for ( var i = 0; i < multiPoint.coordinates.length; i++) {
                 var object = objects[i];
                 expect(object.geoJson).toBe(multiPoint);
-                expect(object.position.getValueCartesian()).toEqual(expectedPositions[i]);
+                expect(object.position.getValue()).toEqual(expectedPositions[i]);
                 expect(object.point).toBeDefined();
             }
         });
@@ -259,7 +259,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var object = dynamicObjectCollection.getObjects()[0];
             expect(object.geoJson).toBe(lineString);
-            expect(object.vertexPositions.getValueCartesian()).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
+            expect(object.vertexPositions.getValue()).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(object.polyline).toBeDefined();
         });
     });
@@ -278,7 +278,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             for ( var i = 0; i < multiLineString.coordinates.length; i++) {
                 var object = objects[i];
                 expect(object.geoJson).toBe(multiLineString);
-                expect(object.vertexPositions.getValueCartesian()).toEqual(lines[i]);
+                expect(object.vertexPositions.getValue()).toEqual(lines[i]);
                 expect(object.polyline).toBeDefined();
             }
         });
@@ -295,7 +295,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var object = dynamicObjectCollection.getObjects()[0];
             expect(object.geoJson).toBe(polygon);
-            expect(object.vertexPositions.getValueCartesian()).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
+            expect(object.vertexPositions.getValue()).toEqual(polygonCoordinatesToCartesian(polygon.coordinates));
             expect(object.polyline).toBeDefined();
             expect(object.polygon).toBeDefined();
         });
@@ -312,7 +312,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var object = dynamicObjectCollection.getObjects()[0];
             expect(object.geoJson).toBe(polygonWithHoles);
-            expect(object.vertexPositions.getValueCartesian()).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
+            expect(object.vertexPositions.getValue()).toEqual(polygonCoordinatesToCartesian(polygonWithHoles.coordinates));
             expect(object.polyline).toBeDefined();
             expect(object.polygon).toBeDefined();
         });
@@ -332,7 +332,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             for ( var i = 0; i < multiPolygon.coordinates.length; i++) {
                 var object = objects[i];
                 expect(object.geoJson).toBe(multiPolygon);
-                expect(object.vertexPositions.getValueCartesian()).toEqual(positions[i]);
+                expect(object.vertexPositions.getValue()).toEqual(positions[i]);
                 expect(object.polyline).toBeDefined();
                 expect(object.polygon).toBeDefined();
             }
@@ -350,12 +350,12 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var object = dynamicObjectCollection.getObjects()[0];
             expect(object.geoJson).toBe(geometryCollection);
-            expect(object.position.getValueCartesian()).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
+            expect(object.position.getValue()).toEqual(coordinatesToCartesian(geometryCollection.geometries[0].coordinates));
             expect(object.point).toBeDefined();
 
             object = dynamicObjectCollection.getObjects()[1];
             expect(object.geoJson).toBe(geometryCollection);
-            expect(object.vertexPositions.getValueCartesian()).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
+            expect(object.vertexPositions.getValue()).toEqual(coordinatesArrayToCartesian(geometryCollection.geometries[1].coordinates));
             expect(object.polyline).toBeDefined();
         });
     });
@@ -370,7 +370,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
-            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
 
@@ -395,7 +395,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
-            expect(pointObject.position.getValueCartesian()).toEqual(projectedPosition);
+            expect(pointObject.position.getValue()).toEqual(projectedPosition);
         });
     });
 

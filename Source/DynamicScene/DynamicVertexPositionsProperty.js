@@ -47,14 +47,7 @@ define([
         }
     }
 
-    ValueHolder.prototype.getValueCartographic = function() {
-        if (typeof this.cartographic === 'undefined') {
-            this.cartographic = wgs84.cartesianArrayToCartographicArray(this.cartesian);
-        }
-        return this.cartographic;
-    };
-
-    ValueHolder.prototype.getValueCartesian = function() {
+    ValueHolder.prototype.getValue = function() {
         if (typeof this.cartesian === 'undefined') {
             this.cartesian = wgs84.cartographicArrayToCartesianArray(this.cartographic);
         }
@@ -103,41 +96,13 @@ define([
     };
 
     /**
-     * Retrieves the values at the supplied time as Cartographic coordinates.
-     * @memberof DynamicVertexPositionsProperty
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @returns An array of Cartographic coordinates for the provided time.
-     */
-    DynamicVertexPositionsProperty.prototype.getValueCartographic = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
-        if (typeof interval === 'undefined') {
-            return undefined;
-        }
-        var interval_data = interval.data;
-        if (Array.isArray(interval_data)) {
-            var result = [];
-            for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var value = interval_data[i].getValueCartographic(time);
-                if (typeof value !== 'undefined') {
-                    result.push(value);
-                }
-            }
-            return result;
-        }
-
-        return interval_data.getValueCartographic();
-
-    };
-
-    /**
      * Retrieves the values at the supplied time as Cartesian coordinates.
      * @memberof DynamicVertexPositionsProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @returns An array of Cartesian coordinates for the provided time.
      */
-    DynamicVertexPositionsProperty.prototype.getValueCartesian = function(time) {
+    DynamicVertexPositionsProperty.prototype.getValue = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {
             return undefined;
@@ -146,7 +111,7 @@ define([
         if (Array.isArray(interval_data)) {
             var result = [];
             for ( var i = 0, len = interval_data.length; i < len; i++) {
-                var value = interval_data[i].getValueCartesian(time);
+                var value = interval_data[i].getValue(time);
                 if (typeof value !== 'undefined') {
                     result.push(value);
                 }
@@ -154,7 +119,7 @@ define([
             return result;
         }
 
-        return interval_data.getValueCartesian();
+        return interval_data.getValue();
     };
 
     DynamicVertexPositionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {

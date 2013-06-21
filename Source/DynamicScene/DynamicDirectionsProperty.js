@@ -47,7 +47,7 @@ define([
         return sphericals;
     };
 
-    ValueHolder.prototype.getValueCartesian = function() {
+    ValueHolder.prototype.getValue = function() {
         var cartesians = this.cartesian;
         if (typeof cartesians === 'undefined') {
             cartesians = [];
@@ -124,12 +124,12 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.
      * @returns An array of unit cartesian coordinates for the provided time.
      */
-    DynamicDirectionsProperty.prototype.getValueCartesian = function(time) {
+    DynamicDirectionsProperty.prototype.getValue = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (typeof interval === 'undefined') {
             return undefined;
         }
-        return interval.data.getValueCartesian();
+        return interval.data.getValue();
     };
 
     function addCzmlInterval(dynamicDirectionsProperty, czmlInterval, constrainedInterval, dynamicObjectCollection) {

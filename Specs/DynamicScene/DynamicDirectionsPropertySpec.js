@@ -20,22 +20,22 @@ defineSuite([
         unitCartesian : [1, 0, 0, 0, 1, 0, 0, 0, 1]
     };
 
-    it('getValueCartesian returns undefined if no data exists', function() {
+    it('getValue returns undefined if no data exists', function() {
         var property = new DynamicDirectionsProperty();
-        expect(property.getValueCartesian(new JulianDate())).toBeUndefined();
+        expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
-    it('getValueCartesian throw if no time supplied', function() {
+    it('getValue throw if no time supplied', function() {
         var property = new DynamicDirectionsProperty();
         expect(function() {
-            property.getValueCartesian();
+            property.getValue();
         }).toThrow();
     });
 
-    it('getValueCartesian works for cartesian data', function() {
+    it('getValue works for cartesian data', function() {
         var property = new DynamicDirectionsProperty();
         property.processCzmlIntervals(cartesianInterval);
-        var result = property.getValueCartesian(new JulianDate());
+        var result = property.getValue(new JulianDate());
         expect(result.length).toEqual(3);
         expect(result[0].x).toEqual(cartesianInterval.unitCartesian[0]);
         expect(result[0].y).toEqual(cartesianInterval.unitCartesian[1]);
@@ -50,10 +50,10 @@ defineSuite([
         expect(result[2].z).toEqual(cartesianInterval.unitCartesian[8]);
     });
 
-    it('getValueCartesian works for spherical data', function() {
+    it('getValue works for spherical data', function() {
         var property = new DynamicDirectionsProperty();
         property.processCzmlIntervals(sphericalInterval);
-        var result = property.getValueCartesian(new JulianDate());
+        var result = property.getValue(new JulianDate());
 
         var expected = property.getValueSpherical(new JulianDate());
         for ( var i = expected.length - 1; i > -1; i--) {
@@ -79,7 +79,7 @@ defineSuite([
         property.processCzmlIntervals(cartesianInterval);
         var result = property.getValueSpherical(new JulianDate());
 
-        var expected = property.getValueCartesian(new JulianDate());
+        var expected = property.getValue(new JulianDate());
         for ( var i = expected.length - 1; i > -1; i--) {
             expected[i] = Spherical.fromCartesian3(expected[i]);
         }
