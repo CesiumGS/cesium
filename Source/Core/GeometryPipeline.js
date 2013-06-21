@@ -1705,6 +1705,26 @@ define([
             var prev = Cartesian3.fromArray(positions, i0 * 3);
             var cur = Cartesian3.fromArray(positions, i1 * 3);
 
+            if (Math.abs(prev.y) < CesiumMath.EPSILON6){
+                if (prev.y < 0.0) {
+                    prev.y = -CesiumMath.EPSILON6;
+                } else {
+                    prev.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i0 * 3 + 1] = prev.y;
+            }
+
+            if (Math.abs(cur.y) < CesiumMath.EPSILON6){
+                if (cur.y < 0.0) {
+                    cur.y = -CesiumMath.EPSILON6;
+                } else {
+                    cur.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i1 * 3 + 1] = cur.y;
+            }
+
             newIndices.push(i0);
 
             // intersects the IDL if either endpoint is on the negative side of the yz-plane
