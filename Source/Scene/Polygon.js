@@ -245,6 +245,10 @@ define([
         this._createPrimitive = true;
     };
 
+    function defined(value) {
+        return typeof value !== 'undefined';
+    }
+
     /**
      * @private
      */
@@ -265,6 +269,11 @@ define([
             return;
         }
 
+        if (!this._createPrimitive && (typeof this._primitive === undefined)) {
+            // No positions/hierarchy to draw
+            return;
+        }
+
         if (this._createPrimitive ||
             (this._ellipsoid !== this.ellipsoid) ||
             (this._granularity !== this.granularity) ||
@@ -276,6 +285,12 @@ define([
             this._granularity = this.granularity;
             this._height = this.height;
             this._textureRotationAngle = this.textureRotationAngle;
+
+            this._primitive = this._primitive && this._primitive.destroy();
+
+            if (!defined(this._positions) && !defined(this._polygonHierarchy)) {
+                return;
+            }
 
             var instance = new GeometryInstance({
                 geometry : new PolygonGeometry({
@@ -289,10 +304,6 @@ define([
                 }),
                 pickData : this
             });
-
-            if (typeof this._primitive !== 'undefined') {
-                this._primitive.destroy();
-            }
 
             this._primitive = new Primitive({
                 geometryInstances : instance,

@@ -186,12 +186,7 @@ define([
             result.indices = undefined;
         }
         result.primitiveType = geometry.primitiveType;
-
-        if (typeof geometry.boundingSphere !== 'undefined') {
-            geometry.boundingSphere.clone(result.boundingSphere);
-        } else {
-            result.boundingSphere = undefined;
-        }
+        result.boundingSphere = geometry.boundingSphere.clone(result.boundingSphere);
 
         return result;
     };
