@@ -30,9 +30,9 @@ Beta Releases
    * `EllipseGeometry`
    * `CircleGeometry`
    * `WallGeometry`
+   * `SimplePolylineGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-   * `SimplePolylineGeometry`
 * Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
    * `Appearance`
    * `PerInstanceColorAppearance`
