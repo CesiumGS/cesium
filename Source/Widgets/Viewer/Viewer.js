@@ -45,6 +45,12 @@ define([
         knockout) {
     "use strict";
 
+    function createOnTick(dataSourceDisplay) {
+        return function(clock) {
+            dataSourceDisplay.update(clock.currentTime);
+        };
+    }
+
     function onTimelineScrubfunction(e) {
         var clock = e.clock;
         clock.currentTime = e.timeJulian;
@@ -158,19 +164,25 @@ define([
         }
 
         container = getElement(container);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var createBaseLayerPicker = typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false;
+
+        //If using BaseLayerPicker, imageryProvider is an invalid option
+        if (createBaseLayerPicker && typeof options.imageryProvider !== 'undefined') {
+            throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
+Either specify options.selectedImageryProviderViewModel instead or set options.baseLayerPicker to false.');
+        }
+
+        //If not using BaseLayerPicker, selectedImageryProviderViewModel is an invalid option
+        if (!createBaseLayerPicker && typeof options.selectedImageryProviderViewModel !== 'undefined') {
+            throw new DeveloperError('options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
+Either specify options.imageryProvider instead or set options.baseLayerPicker to true.');
+        }
 
         var viewerContainer = document.createElement('div');
         viewerContainer.className = 'cesium-viewer';
         container.appendChild(viewerContainer);
-
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var createBaseLayerPicker = typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false;
-        var imageryProvider;
-        if (createBaseLayerPicker) {
-            // BaseLayerPicker will add the base layer later
-            imageryProvider = false;
-        }
 
         //Cesium widget
         var cesiumWidgetContainer = document.createElement('div');
@@ -178,7 +190,7 @@ define([
         viewerContainer.appendChild(cesiumWidgetContainer);
         var cesiumWidget = new CesiumWidget(cesiumWidgetContainer, {
             terrainProvider : options.terrainProvider,
-            imageryProvider : imageryProvider,
+            imageryProvider : createBaseLayerPicker ? false : options.imageryProvider,
             sceneMode : options.sceneMode,
             contextOptions : options.contextOptions,
             useDefaultRenderLoop : false
@@ -192,11 +204,12 @@ define([
         };
         window.addEventListener('resize', this._resizeCallback, false);
 
-        var clock = cesiumWidget.clock;
-
         //Data source display
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
         this._dataSourceDisplay = dataSourceDisplay;
+
+        var clock = cesiumWidget.clock;
+        clock.onTick.addEventListener(createOnTick(dataSourceDisplay));
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -223,11 +236,6 @@ define([
         //BaseLayerPicker
         var baseLayerPicker;
         if (createBaseLayerPicker) {
-            if (typeof options.imageryProvider !== 'undefined') {
-                throw new DeveloperError('options.imageryProvider is not available when \
-using the BaseLayerPicker widget, specify options.selectedImageryProviderViewModel instead.');
-            }
-
             var baseLayerPickerContainer = document.createElement('div');
             baseLayerPickerContainer.className = 'cesium-viewer-baseLayerPickerContainer';
             toolbar.appendChild(baseLayerPickerContainer);
@@ -238,13 +246,6 @@ using the BaseLayerPicker widget, specify options.selectedImageryProviderViewMod
             //Grab the dropdown for resize code.
             var elements = baseLayerPickerContainer.getElementsByClassName('cesium-baseLayerPicker-dropDown');
             this._baseLayerPickerDropDown = elements[0];
-        } else if (typeof options.selectedImageryProviderViewModel !== 'undefined') {
-            throw new DeveloperError('options.selectedImageryProviderViewModel is not available when \
-not using the BaseLayerPicker widget, specify options.imageryProvider instead.');
-        } else if (options.imageryProvider) {
-            var imageryLayers = cesiumWidget.centralBody.getImageryLayers();
-            imageryLayers.removeAll();
-            imageryLayers.addImageryProvider(options.imageryProvider);
         }
 
         //Animation
@@ -664,9 +665,7 @@ not using the BaseLayerPicker widget, specify options.imageryProvider instead.')
      * @memberof Viewer
      */
     Viewer.prototype.render = function() {
-        var cesiumWidget = this._cesiumWidget;
-        cesiumWidget.render();
-        this._dataSourceDisplay.update(cesiumWidget.clock.currentTime);
+        this._cesiumWidget.render();
     };
 
     /**

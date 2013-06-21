@@ -75,13 +75,11 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
+     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided. (Returns undefined if cartographic is undefined)
      */
     Cartographic.clone = function(cartographic, result) {
         if (typeof cartographic === 'undefined') {
-            throw new DeveloperError('cartographic is required');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new Cartographic(cartographic.longitude, cartographic.latitude, cartographic.height);
