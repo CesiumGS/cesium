@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/freezeObject',
         '../Core/VertexFormat',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
@@ -11,7 +10,6 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
-        freezeObject,
         VertexFormat,
         CullFace,
         BlendingState,
@@ -29,38 +27,56 @@ define([
 
         /**
          * DOC_TBA
+         * @readonly
+         */
+        this.materialSupport = Appearance.MaterialSupport.NONE;
+
+        /**
+         * DOC_TBA
          */
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.vertexFormat = EllipsoidSurfaceAppearance.VERTEX_FORMAT;
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
 
         /**
          * DOC_TBA
+         * @readonly
+         */
+        this.flat = defaultValue(options.flat, false);
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.faceForward = defaultValue(options.faceForward, false);
+
+        /**
+         * DOC_TBA
+         * @readonly
          */
         this.translucent = defaultValue(options.translucent, true);
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.closed = false;
-
-        /**
-         * DOC_TBA
-         */
-        this.aboveGround = defaultValue(options.aboveGround, false);
 
         var rs = {
             depthTest : {
@@ -82,14 +98,24 @@ define([
 
         /**
          * DOC_TBA
+         * @readonly
          */
         this.renderState = defaultValue(options.renderState, rs);
+
+        // Non-derived members
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.aboveGround = defaultValue(options.aboveGround, false);
     };
 
     /**
      * DOC_TBA
+     * @constant
      */
-    EllipsoidSurfaceAppearance.VERTEX_FORMAT = freezeObject(VertexFormat.POSITION_AND_ST);
+    EllipsoidSurfaceAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
 
     /**
      * DOC_TBA
