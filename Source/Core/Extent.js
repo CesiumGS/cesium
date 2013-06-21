@@ -52,6 +52,27 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Extent.fromDegrees = function(west, south, east, north, result) {
+        west = CesiumMath.toRadians(defaultValue(west, 0.0));
+        south = CesiumMath.toRadians(defaultValue(south, 0.0));
+        east = CesiumMath.toRadians(defaultValue(east, 0.0));
+        north = CesiumMath.toRadians(defaultValue(north, 0.0));
+
+        if (typeof result === 'undefined') {
+            return new Extent(west, south, east, north);
+        }
+
+        result.west = west;
+        result.south = south;
+        result.east = east;
+        result.north = north;
+
+        return result;
+    };
+
+    /**
      * Creates the smallest possible Extent that encloses all positions in the provided array.
      * @memberof Extent
      *

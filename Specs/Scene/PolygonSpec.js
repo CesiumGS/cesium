@@ -296,7 +296,7 @@ defineSuite([
         var commandList = [];
         polygon.update(context, frameState, commandList);
         var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon._positions));
+        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
@@ -332,7 +332,7 @@ defineSuite([
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     }
 
-    it('test 2D bounding sphere from positions', function() {
+    it('test Columbus view bounding sphere from positions', function() {
         test2DBoundingSphereFromPositions(SceneMode.COLUMBUS_VIEW);
     });
 

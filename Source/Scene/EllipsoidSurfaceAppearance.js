@@ -21,6 +21,9 @@ define([
 
     /**
      * DOC_TBA
+     *
+     * @alias EllipsoidSurfaceAppearance
+     * @constructor
      */
     var EllipsoidSurfaceAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

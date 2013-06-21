@@ -19,6 +19,9 @@ define([
 
     /**
      * DOC_TBA
+     *
+     * @alias PerInstanceColorAppearance
+     * @constructor
      */
     var PerInstanceColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

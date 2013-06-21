@@ -14,7 +14,7 @@ define([
     /**
      * Computes vertices and indices for a circle on the ellipsoid.
      *
-     * @alias EllipseGeometry
+     * @alias CircleGeometry
      * @constructor
      *
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.

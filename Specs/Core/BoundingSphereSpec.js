@@ -105,6 +105,10 @@ defineSuite([
         expect(sphere.radius).toEqual(expectedRadius);
     });
 
+    it('static clone clones undefined', function() {
+        expect(BoundingSphere.clone(undefined)).toBe(undefined);
+    });
+
     it('equals', function() {
         var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         expect(sphere.equals(new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0))).toEqual(true);
@@ -377,12 +381,6 @@ defineSuite([
         var direction = Cartesian3.UNIT_X;
         var expected = new Interval(1.0, 3.0);
         expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
-    });
-
-    it('static clone throws with no parameter', function() {
-        expect(function() {
-            BoundingSphere.clone();
-        }).toThrow();
     });
 
     it('static union throws with no left parameter', function() {

@@ -30,9 +30,9 @@ Beta Releases
    * `EllipseGeometry`
    * `CircleGeometry`
    * `WallGeometry`
+   * `SimplePolylineGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-   * `SimplePolylineGeometry`
 * Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
    * `Appearance`
    * `PerInstanceColorAppearance`
@@ -43,6 +43,7 @@ Beta Releases
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
