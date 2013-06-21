@@ -468,11 +468,7 @@ define([
          }));
 
          var extentPrimitive = new ExtentPrimitive({
-             extent : new Extent(
-                 CesiumMath.toRadians(0.0),
-                 CesiumMath.toRadians(20.0),
-                 CesiumMath.toRadians(10.0),
-                 CesiumMath.toRadians(40.0))
+             extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
          });
          scene.getPrimitives().add(extentPrimitive);
 
