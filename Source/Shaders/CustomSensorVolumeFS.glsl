@@ -87,7 +87,7 @@ void main()
 	    }
 
 	    // Discard if in the sensor's shadow
-	    if (inSensorShadow(sensorVertexWC, ellipsoid, v_positionEC))
+	    if (inSensorShadow(sensorVertexWC, ellipsoid, v_positionWC))
 	    {
 	        discard;
 	    }
