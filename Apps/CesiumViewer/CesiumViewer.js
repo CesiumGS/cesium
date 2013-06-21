@@ -427,18 +427,14 @@ define([
         ]));
         */
         positions = ellipsoid.cartographicArrayToCartesianArray([
-            Cartographic.fromDegrees( 175.0,  0.0, height),
             Cartographic.fromDegrees( 175.0, 20.0, height),
-            Cartographic.fromDegrees(-175.0, 20.0, height),
+            Cartographic.fromDegrees( 175.0,  0.0, height),
             Cartographic.fromDegrees(-175.0,  0.0, height)
         ]);
         var flatPositions = [];
-        var normals = [];
         for (i = 0; i < positions.length; ++i) {
             var p = positions[i];
             flatPositions.push(p.x, p.y, p.z);
-            var n = p.normalize();
-            normals.push(n.x, n.y, n.z);
         }
         var customWithoutIndices = new GeometryInstance({
             geometry : new Geometry({
@@ -447,11 +443,6 @@ define([
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array(flatPositions)
-                    }),
-                    normal : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.FLOAT,
-                        componentsPerAttribute : 3,
-                        values : new Float32Array(normals)
                     })
                     /*
                     color : new GeometryAttribute({
@@ -469,19 +460,28 @@ define([
                     })
                     */
                 },
-                //primitiveType : PrimitiveType.LINE_LOOP
-                primitiveType : PrimitiveType.TRIANGLE_FAN
+                primitiveType : PrimitiveType.LINE_LOOP
             }),
-            pickData : 'customWithoutIndices'
+            pickData : 'customWithoutIndices',
+            color : new Color(1.0, 1.0, 0.0, 0.5)
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,
-             appearance : new PerInstanceColorAppearance({
+             /*appearance : new PerInstanceColorAppearance({
                  renderState : {}, // No depth test
                  flat : true
+             })*/
+             /*
+             appearance : new PerInstanceColorAppearance({
+                 closed : true
+             })*/
+             appearance : new PerInstanceColorAppearance({
+                 flat : true,
+                 translucent : false
              })
          }));
 
+         /*
          scene.getPrimitives().add(new Primitive({
              geometryInstances : [
                  new GeometryInstance({
@@ -512,6 +512,7 @@ define([
                  translucent : false
              })
          }));
+         */
 
          var extentPrimitive = new ExtentPrimitive({
              extent : new Extent(

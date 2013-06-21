@@ -302,6 +302,50 @@ define([
         }
     }
 
+    var indexFunctions = [
+        function(geometry) { return geometry; },
+        GeometryPipeline.indexLines,
+        GeometryPipeline.indexLineLoop,
+        GeometryPipeline.indexLineStrip,
+        GeometryPipeline.indexTriangles,
+        GeometryPipeline.indexTriangleStrip,
+        GeometryPipeline.indexTriangleFan
+    ];
+
+    function wrapLongitude(primitive, instances) {
+        if (!primitive._allowColumbusView) {
+            return;
+        }
+
+        var length = instances.length;
+        var primitiveType = instances[0].geometry.primitiveType;
+
+        for (var i = 1; i < length; ++i) {
+            if (instances[i].geometry.primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
+            }
+        }
+
+        var indexFunction = indexFunctions[primitiveType.value];
+        for (var j = 0; j < length; ++j) {
+            var geometry = instances[j].geometry;
+            indexFunction(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
+        }
+    }
+
+    function encodePositions(primitive, geometry) {
+        if (primitive._allowColumbusView) {
+            // Compute 2D positions
+            GeometryPipeline.projectTo2D(geometry);
+
+            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+        } else {
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+        }
+    }
+
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context) {
         // Copy instances first since most pipeline operations modify the geometry and instance in-place.
@@ -315,12 +359,8 @@ define([
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
         transformToWorldCoordinates(primitive, insts);
 
-        if (primitive._allowColumbusView) {
-            // Clip to IDL
-            for (var j = 0; j < length; ++j) {
-                GeometryPipeline.wrapLongitude(insts[j].geometry);
-            }
-        }
+        // Clip to IDL
+        wrapLongitude(primitive, insts);
 
         // Add color attribute if any geometries have per-instance color
         if (hasPerInstanceColor(insts)) {
@@ -333,17 +373,8 @@ define([
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
 
-        if (primitive._allowColumbusView) {
-            // Compute 2D positions
-            GeometryPipeline.projectTo2D(geometry);
-
-            // Split 3D and 2D position for GPU RTE
-            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
-        } else {
-            // Split 3D position for GPU RTE
-            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
-        }
+        // Split positions for GPU RTE
+        encodePositions(primitive, geometry);
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed

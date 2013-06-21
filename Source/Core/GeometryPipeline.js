@@ -8,9 +8,11 @@ define([
         './Cartographic',
         './EncodedCartesian3',
         './Intersect',
+        './IntersectionTests',
         './Math',
         './Matrix3',
         './Matrix4',
+        './Plane',
         './GeographicProjection',
         './ComponentDatatype',
         './IndexDatatype',
@@ -28,9 +30,11 @@ define([
         Cartographic,
         EncodedCartesian3,
         Intersect,
+        IntersectionTests,
         CesiumMath,
         Matrix3,
         Matrix4,
+        Plane,
         GeographicProjection,
         ComponentDatatype,
         IndexDatatype,
@@ -1179,6 +1183,194 @@ define([
         return geometry;
     };
 
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexTriangles = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
+        }
+
+        if (typeof geometry.indices !== 'undefined') {
+            return geometry;
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions);
+
+        for (var i = 0; i < numberOfPositions; ++i) {
+            indices[i] = i;
+        }
+
+        geometry.indices = indices;
+        return geometry;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexTriangleFan = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLE_FAN) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_FAN.');
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 2) * 3);
+        indices[0] = 1;
+        indices[1] = 0;
+        indices[2] = 2;
+
+        var indicesIndex = 3;
+        for (var i = 3; i < numberOfPositions; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = 0;
+            indices[indicesIndex++] = i;
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.TRIANGLES;
+        return geometry;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexTriangleStrip = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLE_STRIP) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_STRIP.');
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 2) * 3);
+
+        indices[0] = 0;
+        indices[1] = 1;
+        indices[2] = 2;
+
+        if (numberOfPositions > 3) {
+            indices[3] = 0;
+            indices[4] = 2;
+            indices[5] = 3;
+        }
+
+        var indicesIndex = 6;
+        for (var i = 3; i < numberOfPositions - 1; i += 2) {
+            indices[indicesIndex++] = i;
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i + 1;
+
+            if (i + 2 < numberOfPositions) {
+                indices[indicesIndex++] = i;
+                indices[indicesIndex++] = i + 1;
+                indices[indicesIndex++] = i + 2;
+            }
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.TRIANGLES;
+        return geometry;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexLines = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('undefined');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.LINES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINES.');
+        }
+
+        if (typeof geometry.indices !== 'undefined') {
+            return geometry;
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions);
+
+        for (var i = 0; i < numberOfPositions; ++i) {
+            indices[i] = i;
+        }
+
+        geometry.indices = indices;
+        return geometry;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexLineStrip = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.LINE_STRIP) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_STRIP.');
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 1) * 2);
+
+        indices[0] = 0;
+        indices[1] = 1;
+
+        var indicesIndex = 2;
+        for (var i = 2; i < numberOfPositions; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i;
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.LINES;
+        return geometry;
+    };
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.indexLineLoop = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.LINE_LOOP) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_LOOP.');
+        }
+
+        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
+        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions * 2);
+
+        indices[0] = 0;
+        indices[1] = 1;
+
+        var indicesIndex = 2;
+        for (var i = 2; i < numberOfPositions; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i;
+        }
+
+        indices[indicesIndex++] = numberOfPositions - 1;
+        indices[indicesIndex] = 0;
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.LINES;
+        return geometry;
+    };
+
     function offsetPointFromXZPlane(p, isBehind) {
         if (Math.abs(p.y) < CesiumMath.EPSILON11){
             if (isBehind) {
@@ -1425,59 +1617,6 @@ define([
         }
     }
 
-    function indexTriangles(numberOfPositions) {
-        var indices = new Array(numberOfPositions);
-        for (var i = 0; i < numberOfPositions; ++i) {
-            indices[i] = i;
-        }
-        return indices;
-    }
-
-    function indexTriangleFan(numberOfPositions) {
-        var indices = new Array((numberOfPositions - 2) * 3);
-        indices[0] = 1;
-        indices[1] = 0;
-        indices[2] = 2;
-
-        var indicesIndex = 3;
-        for (var i = 3; i < numberOfPositions; ++i) {
-            indices[indicesIndex++] = i - 1;
-            indices[indicesIndex++] = 0;
-            indices[indicesIndex++] = i;
-        }
-
-        return indices;
-    }
-
-    function indexTriangleStrip(numberOfPositions) {
-        var indices = new Array((numberOfPositions - 2) * 3);
-
-        indices[0] = 0;
-        indices[1] = 1;
-        indices[2] = 2;
-
-        if (numberOfPositions > 3) {
-            indices[3] = 0;
-            indices[4] = 2;
-            indices[5] = 3;
-        }
-
-        var indicesIndex = 6;
-        for (var i = 3; i < numberOfPositions - 1; i += 2) {
-            indices[indicesIndex++] = i;
-            indices[indicesIndex++] = i - 1;
-            indices[indicesIndex++] = i + 1;
-
-            if (i + 2 < numberOfPositions) {
-                indices[indicesIndex++] = i;
-                indices[indicesIndex++] = i + 1;
-                indices[indicesIndex++] = i + 2;
-            }
-        }
-
-        return indices;
-    }
-
     function wrapLongitudeTriangles(geometry) {
         var attributes = geometry.attributes;
         var positions = attributes.position.values;
@@ -1486,10 +1625,6 @@ define([
         var tangents = (typeof attributes.tangent !== 'undefined') ? attributes.tangent.values : undefined;
         var texCoords = (typeof attributes.st !== 'undefined') ? attributes.st.values : undefined;
         var indices = geometry.indices;
-
-        if (typeof indices === 'undefined') {
-            indices = indexTriangles(positions.length / 3);
-        }
 
         var newPositions = Array.prototype.slice.call(positions, 0);
         var newNormals = (typeof normals !== 'undefined') ? Array.prototype.slice.call(normals, 0) : undefined;
@@ -1548,25 +1683,71 @@ define([
             attributes.st.values = attributes.st.componentDatatype.createTypedArray(newTexCoords);
         }
 
-        if (typeof newIndices !== 'undefined') {
-            var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-            geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+    }
+
+    function wrapLongitudeLines(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var indices = geometry.indices;
+
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newIndices = [];
+
+        var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+
+        var length = indices.length;
+        for ( var i = 0; i < length; i += 2) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+
+            var prev = Cartesian3.fromArray(positions, i0 * 3);
+            var cur = Cartesian3.fromArray(positions, i1 * 3);
+
+            newIndices.push(i0);
+
+            // intersects the IDL if either endpoint is on the negative side of the yz-plane
+            if (prev.x < 0.0 || cur.x < 0.0) {
+                // and intersects the xz-plane
+                var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane);
+                if (typeof intersection !== 'undefined') {
+                    // move point on the xz-plane slightly away from the plane
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0e-9);
+                    if (prev.y < 0.0) {
+                        Cartesian3.negate(offset, offset);
+                    }
+
+                    var index = newPositions.length / 3;
+                    newIndices.push(index, index + 1);
+
+                    var offsetPoint = Cartesian3.add(intersection, offset);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    Cartesian3.negate(offset, offset);
+                    Cartesian3.add(intersection, offset, offsetPoint);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                }
+            }
+
+            newIndices.push(i1);
         }
+
+        geometry.attributes.position.values = new Float64Array(newPositions);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
     }
 
     /**
-     * Subdivides a {@link Geometry} so it does not cross the &plusmn;180 degree meridian of an ellipsoid.
-     *
-     * @param {Geometry} geometry The geometry to subdivide, which is modified in place.
-     *
-     * @return {Geometry} The modified <code>geometry</code>.
-     *
-     * @exception {DeveloperError} geometry is required.
-     * @exception {DeveloperError} geometry.primitiveType is unsupported.
+     * DOC_TBA
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
+        }
+
+        if (typeof geometry.indices === 'undefined') {
+            throw new DeveloperError('geometry.indices is required.');
         }
 
         var boundingSphere = geometry.boundingSphere;
@@ -1577,23 +1758,14 @@ define([
             }
         }
 
-        var numberOfPositions = geometry.attributes.position.values.length / 3;
-
         switch (geometry.primitiveType) {
         case PrimitiveType.POINTS:
             break;
         case PrimitiveType.TRIANGLES:
             wrapLongitudeTriangles(geometry);
             break;
-        case PrimitiveType.TRIANGLE_FAN:
-            geometry.indices = indexTriangleFan(numberOfPositions);
-            geometry.primitiveType = PrimitiveType.TRIANGLES;
-            wrapLongitudeTriangles(geometry);
-            break;
-        case PrimitiveType.TRIANGLE_STRIP:
-            geometry.indices = indexTriangleStrip(numberOfPositions);
-            geometry.primitiveType = PrimitiveType.TRIANGLES;
-            wrapLongitudeTriangles(geometry);
+        case PrimitiveType.LINES:
+            wrapLongitudeLines(geometry);
             break;
         default:
             throw new DeveloperError('geometry.primitiveType is unsupported.');
