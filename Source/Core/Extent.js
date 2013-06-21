@@ -95,9 +95,12 @@ define([
      *
      * @param {Extent} extent The extent to clone.
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
      */
     Extent.clone = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            return undefined;
+        }
         if (typeof result === 'undefined') {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }

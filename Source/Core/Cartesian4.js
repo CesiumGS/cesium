@@ -121,13 +121,11 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian to duplicate.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
+     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided. (Returns undefined if cartesian is undefined)
      */
     Cartesian4.clone = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

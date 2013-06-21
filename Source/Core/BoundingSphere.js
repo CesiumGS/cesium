@@ -525,13 +525,11 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
         if (typeof sphere === 'undefined') {
-            throw new DeveloperError('sphere is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {
