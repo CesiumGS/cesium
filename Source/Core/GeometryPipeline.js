@@ -1307,18 +1307,25 @@ define([
             throw new DeveloperError('undefined');
         }
 
-        if (geometry.primitiveType !== PrimitiveType.LINES) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINES.');
-        }
-
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions);
+        if (geometry.primitiveType !== PrimitiveType.LINES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINES.');
+        }
 
-        for (var i = 0; i < numberOfPositions; ++i) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+
+        if (numberOfVertices % 2 !== 0) {
+            throw new DeveloperError('The number of vertices must be a multiple of 2.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices);
+        for (var i = 0; i < numberOfVertices; ++i) {
             indices[i] = i;
         }
 
@@ -1338,14 +1345,17 @@ define([
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_STRIP.');
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 1) * 2);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 1) * 2);
 
         indices[0] = 0;
         indices[1] = 1;
 
         var indicesIndex = 2;
-        for (var i = 2; i < numberOfPositions; ++i) {
+        for (var i = 2; i < numberOfVertices; ++i) {
             indices[indicesIndex++] = i - 1;
             indices[indicesIndex++] = i;
         }
@@ -1367,19 +1377,23 @@ define([
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_LOOP.');
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions * 2);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices * 2);
 
         indices[0] = 0;
         indices[1] = 1;
 
         var indicesIndex = 2;
-        for (var i = 2; i < numberOfPositions; ++i) {
+        for (var i = 2; i < numberOfVertices; ++i) {
             indices[indicesIndex++] = i - 1;
             indices[indicesIndex++] = i;
         }
 
-        indices[indicesIndex++] = numberOfPositions - 1;
+        indices[indicesIndex++] = numberOfVertices - 1;
         indices[indicesIndex] = 0;
 
         geometry.indices = indices;

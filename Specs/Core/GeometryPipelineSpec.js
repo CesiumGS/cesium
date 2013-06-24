@@ -543,14 +543,16 @@ defineSuite([
         }).toThrow();
     });
 
-    it('encodeAttribute throws without ComponentDatatype.FLOAT', function() {
+    it('encodeAttribute throws without ComponentDatatype.DOUBLE', function() {
         expect(function() {
             var geometry = new Geometry({
-                attributes : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
-                    componentsPerAttribute : 1,
-                    values : [0.0]
-                })
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+                        componentsPerAttribute : 1,
+                        values : [0.0]
+                    })
+                }
             });
             GeometryPipeline.encodeAttribute(geometry);
         }).toThrow();
@@ -1232,6 +1234,216 @@ defineSuite([
 
         expect(function() {
             GeometryPipeline.indexTriangleStrip(geometry);
+        }).toThrow();
+    });
+
+    it('indexLines creates indices', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINES
+        });
+
+        GeometryPipeline.indexLines(geometry);
+        expect(geometry.indices).toEqual([0, 1, 2, 3]);
+    });
+
+    it('indexLines returns geometry unchanged if indices are provided', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINES,
+            indices : new Uint16Array([0, 1, 2, 3])
+        });
+
+        GeometryPipeline.indexLines(geometry);
+        expect(geometry.indices).toEqual([0, 1, 2, 3]);
+    });
+
+    it('indexLines throws with undefined geometry', function() {
+        expect(function() {
+            return GeometryPipeline.indexLines();
+        }).toThrow();
+    });
+
+    it('indexLines throws when primitive type is not LINES', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([
+                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLines(geometry);
+        }).toThrow();
+    });
+
+    it('indexLines throws number of vertices is less than 2', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINES
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLines(geometry);
+        }).toThrow();
+    });
+
+    it('indexLines throws number of vertices is not a multiple 2', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINES
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLines(geometry);
+        }).toThrow();
+    });
+
+    it('indexLineStrip creates indices', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINE_STRIP
+        });
+
+        GeometryPipeline.indexLineStrip(geometry);
+        expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3]);
+    });
+
+    it('indexLineStrip throws with undefined geometry', function() {
+        expect(function() {
+            return GeometryPipeline.indexLineStrip();
+        }).toThrow();
+    });
+
+    it('indexLineStrip throws when primitive type is not LINE_STRIP', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([
+                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLineStrip(geometry);
+        }).toThrow();
+    });
+
+    it('indexLineStrip throws number of vertices is less than 2', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINE_STRIP
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLineStrip(geometry);
+        }).toThrow();
+    });
+
+    it('indexLineLoop creates indices', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 8.0, 7.0, 6.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINE_LOOP
+        });
+
+        GeometryPipeline.indexLineLoop(geometry);
+        expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3, 3, 0]);
+    });
+
+    it('indexLineLoop throws with undefined geometry', function() {
+        expect(function() {
+            return GeometryPipeline.indexLineLoop();
+        }).toThrow();
+    });
+
+    it('indexLineLoop throws when primitive type is not LINE_LOOP', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([
+                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
+                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLineLoop(geometry);
+        }).toThrow();
+    });
+
+    it('indexLineLoop throws number of vertices is less than 2', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([0.0, 1.0, 2.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINE_LOOP
+        });
+
+        expect(function() {
+            GeometryPipeline.indexLineLoop(geometry);
         }).toThrow();
     });
 
