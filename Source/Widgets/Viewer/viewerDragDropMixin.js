@@ -7,6 +7,7 @@ define([
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
+        '../../ThirdParty/when',
         '../getElement'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
+        when,
         getElement) {
     "use strict";
     /*global console*/
@@ -201,14 +203,22 @@ define([
     }
 
     function createOnLoadCallback(viewer, source, firstTime) {
+        var DataSource;
         if (endsWith(source.toUpperCase(), ".CZML")) {
-            return function(evt) {
-                var czmlSource = new CzmlDataSource();
-                try {
-                    czmlSource.load(JSON.parse(evt.target.result), source);
-                    viewer.dataSources.add(czmlSource);
+            DataSource = CzmlDataSource;
+        } else if (endsWith(source.toUpperCase(), '.GEOJSON')) {
+            DataSource = GeoJsonDataSource;
+        } else {
+            viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+        }
+
+        return function(evt) {
+            var dataSource = new DataSource();
+            try {
+                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
+                    viewer.dataSources.add(dataSource);
                     if (firstTime) {
-                        var dataClock = czmlSource.getClock();
+                        var dataClock = dataSource.getClock();
                         if (typeof dataClock !== 'undefined') {
                             dataClock.clone(viewer.clock);
                             if (typeof viewer.timeline !== 'undefined') {
@@ -217,26 +227,13 @@ define([
                             }
                         }
                     }
-                } catch (error) {
+                }, function(error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
-                }
-            };
-        } else if (endsWith(source.toUpperCase(), '.GEOJSON')) {
-            return function(evt) {
-                var geoJsonSource = new GeoJsonDataSource();
-                try {
-                    geoJsonSource.load(JSON.parse(evt.target.result), source).then(function() {
-                        viewer.dataSources.add(geoJsonSource);
-                    }, function(error) {
-                        viewer.onDropError.raiseEvent(viewer, source, error);
-                    });
-                } catch (error) {
-                    viewer.onDropError.raiseEvent(viewer, source, error);
-                }
-            };
-        } else {
-            viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
-        }
+                });
+            } catch (error) {
+                viewer.onDropError.raiseEvent(viewer, source, error);
+            }
+        };
     }
 
     function createOnDropErrorCallback(viewer, name) {

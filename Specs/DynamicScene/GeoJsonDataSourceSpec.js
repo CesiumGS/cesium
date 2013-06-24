@@ -447,7 +447,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
     });
 
-    it('load throws with undefined geojson', function() {
+    it('load throws with undefined geoJson', function() {
         var dataSource = new GeoJsonDataSource();
         expect(function() {
             dataSource.load(undefined);
