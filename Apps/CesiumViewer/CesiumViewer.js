@@ -53,7 +53,9 @@ define([
     });
 
     function endsWith(str, suffix) {
-        return str.indexOf(suffix, -suffix.length) !== -1;
+        var strLength = str.length;
+        var suffixLength = suffix.length;
+        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
     function startup() {
@@ -82,7 +84,7 @@ define([
 
         if (typeof endUserOptions.source !== 'undefined') {
             var source;
-            if (endsWith(endUserOptions.source.toUpperCase(), "GEOJSON")) {
+            if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
                 source = new GeoJsonDataSource();
             } else {
                 source = new CzmlDataSource();
