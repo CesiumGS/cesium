@@ -947,7 +947,7 @@ define([
         return result;
     }
     /**
-     * Get the camera position neede to view an extent on an ellipsoid or map
+     * Get the camera position needed to view an extent on an ellipsoid or map
      * @memberof CameraController
      *
      * @param {Extent} extent The extent to view.
