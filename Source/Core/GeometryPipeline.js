@@ -1589,6 +1589,7 @@ define([
 
                 var normal = Cartesian3.add(v0, v1);
                 Cartesian3.add(normal, v2, normal);
+                Cartesian3.normalize(normal, normal);
 
                 normals.push(normal.x, normal.y, normal.z);
             }
@@ -1600,6 +1601,7 @@ define([
 
                 var binormal = Cartesian3.add(v0, v1);
                 Cartesian3.add(binormal, v2, binormal);
+                Cartesian3.normalize(binormal, binormal);
 
                 binormals.push(binormal.x, binormal.y, binormal.z);
             }
@@ -1611,6 +1613,7 @@ define([
 
                 var tangent = Cartesian3.add(v0, v1);
                 Cartesian3.add(tangent, v2, tangent);
+                Cartesian3.normalize(tangent, tangent);
 
                 tangents.push(tangent.x, tangent.y, tangent.z);
             }

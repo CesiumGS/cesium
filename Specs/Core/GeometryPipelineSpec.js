@@ -1646,4 +1646,58 @@ defineSuite([
         expect(positions).toEqual([1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 2.0, 2.0]);
         expect(positions.length).toEqual(3 * 3);
     });
+
+    it('wrapLongitude computes all attributes for a triangle crossing the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-2.0, -1.0, 0.0, -3.0, 1.0, 0.0, -1.0, 1.0, 0.0])
+                }),
+                normal : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0])
+                }),
+                tangent : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([-1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0])
+                }),
+                binormal : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : new Float32Array([0.0, -1.0, 0.0, 0.0, -1.0, 0.0, 0.0, -1.0, 0.0])
+                }),
+                st : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : new Float32Array([0.0, 0.0, 1.0, 0.0, 0.5, 0.5])
+                })
+            },
+            indices : new Uint16Array([1, 2, 0]),
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+        expect(geometry.indices).toEqual([0, 3, 4, 1, 2, 6, 1, 6, 5]);
+
+        var positions = geometry.attributes.position.values;
+        var normals = geometry.attributes.normal.values;
+        var binormals = geometry.attributes.binormal.values;
+        var tangents = geometry.attributes.tangent.values;
+        var texCoords = geometry.attributes.st.values;
+
+        expect(positions.length).toEqual(7 * 3);
+        expect(normals.length).toEqual(7 * 3);
+        expect(binormals.length).toEqual(7 * 3);
+        expect(tangents.length).toEqual(7 * 3);
+        expect(texCoords.length).toEqual(7 * 2);
+
+        for (var i = 0; i < positions.length; i += 3) {
+            expect(Cartesian3.fromArray(normals, i)).toEqual(Cartesian3.UNIT_Z);
+            expect(Cartesian3.fromArray(binormals, i)).toEqual(Cartesian3.UNIT_Y.negate());
+            expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.UNIT_X.negate());
+        }
+    });
 });
