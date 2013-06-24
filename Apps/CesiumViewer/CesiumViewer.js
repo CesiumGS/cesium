@@ -25,10 +25,12 @@ define([
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
+        'Core/VertexFormat',
         'Scene/Primitive',
         'Scene/Appearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/DebugAppearance',
         'Scene/Material',
         'Scene/ExtentPrimitive',
         'Scene/Polygon',
@@ -63,10 +65,12 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         WallGeometry,
+        VertexFormat,
         Primitive,
         Appearance,
         PerInstanceColorAppearance,
         EllipsoidSurfaceAppearance,
+        DebugAppearance,
         Material,
         ExtentPrimitive,
         Polygon,
@@ -365,6 +369,26 @@ define([
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
+
+        scene.getPrimitives().add(new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new WallGeometry({
+                    vertexFormat : VertexFormat.ALL,
+                    positions    : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0)
+                    ]),
+                    bottom : 400000.0
+                })
+            }),
+            appearance : new DebugAppearance({
+                attributeName : 'st',
+                glslDatatype : 'vec2'
+            })
+        }));
 
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
