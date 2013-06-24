@@ -472,7 +472,8 @@ define([
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
-            (typeof this.appearance === 'undefined')) {
+            (typeof this.appearance === 'undefined') ||
+            (frameState.mode !== SceneMode.SCENE3D && !this._allowColumbusView)) {
             return;
         }
 
