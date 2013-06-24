@@ -53,7 +53,7 @@ define([
     });
 
     function endsWith(str, suffix) {
-        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+        return str.indexOf(suffix, -suffix.length) !== -1;
     }
 
     function startup() {
