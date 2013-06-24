@@ -204,9 +204,7 @@ define([
         }
         for ( var property in other) {
             if (other.hasOwnProperty(property)) {
-                if (this.hasOwnProperty(property) && (typeof this[property] === 'undefined')) {
-                    this[property] = other[property];
-                }
+                this[property] = defaultValue(this[property], other[property]);
             }
         }
     };
