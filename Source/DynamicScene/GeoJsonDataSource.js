@@ -35,7 +35,7 @@ define(['../Core/createGuid',
                 when) {
     "use strict";
 
-    //DynamicPosiionProperty is pretty hard to use with non-CZML based data
+    //DynamicPositionProperty is pretty hard to use with non-CZML based data
     //For now we create two of our own properties for exposing GeoJSON
     //data.
     var ConstantPositionProperty = function(value) {
@@ -52,6 +52,144 @@ define(['../Core/createGuid',
 
     ConstantPositionProperty.prototype.setValue = function(value) {
         this._value = value;
+    };
+
+    //GeoJSON specifies only the Feature object has a usable id property
+    //But since "multi" geometries create multiple dynamicObject,
+    //we can't use it for them either.
+    function createObject(geoJson, dynamicObjectCollection) {
+        var id = geoJson.id;
+        if (typeof id === 'undefined' || geoJson.type !== 'Feature') {
+            id = createGuid();
+        } else {
+            var i = 2;
+            var finalId = id;
+            while (typeof dynamicObjectCollection.getObject(finalId) !== 'undefined') {
+                finalId = id + "_" + i;
+                i++;
+            }
+            id = finalId;
+        }
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+        dynamicObject.geoJson = geoJson;
+        return dynamicObject;
+    }
+
+    function coordinatesArrayToCartesianArray(coordinates, crsFunction) {
+        var positions = new Array(coordinates.length);
+        for ( var i = 0; i < coordinates.length; i++) {
+            positions[i] = crsFunction(coordinates[i]);
+        }
+        return positions;
+    }
+
+    // GeoJSON processing functions
+    function processFeature(dataSource, feature, notUsed, crsFunction, source) {
+        if (typeof feature.geometry === 'undefined') {
+            throw new RuntimeError('feature.geometry is required.');
+        }
+
+        if (feature.geometry === null) {
+            //Null geometry is allowed, so just create an empty dynamicObject instance for it.
+            createObject(feature, dataSource._dynamicObjectCollection);
+        } else {
+            var geometryType = feature.geometry.type;
+            var geometryHandler = geometryTypes[geometryType];
+            if (typeof geometryHandler === 'undefined') {
+                throw new RuntimeError('Unknown geometry type: ' + geometryType);
+            }
+            geometryHandler(dataSource, feature, feature.geometry, crsFunction, source);
+        }
+    }
+
+    function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, source) {
+        var features = featureCollection.features;
+        for ( var i = 0, len = features.length; i < len; i++) {
+            processFeature(dataSource, features[i], undefined, crsFunction, source);
+        }
+    }
+
+    function processGeometryCollection(dataSource, geoJson, geometryCollection, crsFunction, source) {
+        var geometries = geometryCollection.geometries;
+        for ( var i = 0, len = geometries.length; i < len; i++) {
+            var geometry = geometries[i];
+            var geometryType = geometry.type;
+            var geometryHandler = geometryTypes[geometryType];
+            if (typeof geometryHandler === 'undefined') {
+                throw new RuntimeError('Unknown geometry type: ' + geometryType);
+            }
+            geometryHandler(dataSource, geoJson, geometry, crsFunction, source);
+        }
+    }
+
+    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+        dynamicObject.merge(dataSource.defaultPoint);
+        dynamicObject.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
+    }
+
+    function processMultiPoint(dataSource, geoJson, geometry, crsFunction, source) {
+        var coordinates = geometry.coordinates;
+        for ( var i = 0; i < coordinates.length; i++) {
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+            dynamicObject.merge(dataSource.defaultPoint);
+            dynamicObject.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
+        }
+    }
+
+    function processLineString(dataSource, geoJson, geometry, crsFunction, source) {
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+        dynamicObject.merge(dataSource.defaultLine);
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
+    }
+
+    function processMultiLineString(dataSource, geoJson, geometry, crsFunction, source) {
+        var lineStrings = geometry.coordinates;
+        for ( var i = 0; i < lineStrings.length; i++) {
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+            dynamicObject.merge(dataSource.defaultLine);
+            dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
+        }
+    }
+
+    function processPolygon(dataSource, geoJson, geometry, crsFunction, source) {
+        //TODO Holes
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+        dynamicObject.merge(dataSource.defaultPolygon);
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
+    }
+
+    function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
+        //TODO holes
+        var polygons = geometry.coordinates;
+        for ( var i = 0; i < polygons.length; i++) {
+            var polygon = polygons[i];
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
+            dynamicObject.merge(dataSource.defaultPolygon);
+            dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
+        }
+    }
+
+    var geoJsonObjectTypes = {
+        Feature : processFeature,
+        FeatureCollection : processFeatureCollection,
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon
+    };
+
+    var geometryTypes = {
+        GeometryCollection : processGeometryCollection,
+        LineString : processLineString,
+        MultiLineString : processMultiLineString,
+        MultiPoint : processMultiPoint,
+        MultiPolygon : processMultiPolygon,
+        Point : processPoint,
+        Polygon : processPolygon
     };
 
     /**
@@ -313,161 +451,6 @@ define(['../Core/createGuid',
      * @type Object
      */
     GeoJsonDataSource.crsLinkTypes = {};
-
-    //GeoJSON specifies only the Feature object has a usable id property
-    //But since "multi" geometries create multiple dynamicObject,
-    //we can't use it for them either.
-    function createObject(geoJson, dynamicObjectCollection) {
-        var id = geoJson.id;
-        if (typeof id === 'undefined' || geoJson.type !== 'Feature') {
-            id = createGuid();
-        } else {
-            var i = 2;
-            var finalId = id;
-            while (typeof dynamicObjectCollection.getObject(finalId) !== 'undefined') {
-                finalId = id + "_" + i;
-                i++;
-            }
-            id = finalId;
-        }
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.geoJson = geoJson;
-        return dynamicObject;
-    }
-
-    // GeoJSON processing functions
-    function processFeature(dataSource, feature, notUsed, crsFunction, source) {
-        if (typeof feature.geometry === 'undefined') {
-            throw new RuntimeError('feature.geometry is required.');
-        }
-
-        if (feature.geometry === null) {
-            //Null geometry is allowed, so just create an empty dynamicObject instance for it.
-            createObject(feature, dataSource._dynamicObjectCollection);
-        } else {
-            var geometryType = feature.geometry.type;
-            var geometryHandler = geometryTypes[geometryType];
-            if (typeof geometryHandler === 'undefined') {
-                throw new RuntimeError('Unknown geometry type: ' + geometryType);
-            }
-            geometryHandler(dataSource, feature, feature.geometry, crsFunction, source);
-        }
-    }
-
-    function processFeatureCollection(dataSource, featureCollection, notUsed, crsFunction, source) {
-        var features = featureCollection.features;
-        for ( var i = 0, len = features.length; i < len; i++) {
-            processFeature(dataSource, features[i], undefined, crsFunction, source);
-        }
-    }
-
-    function processGeometryCollection(dataSource, geoJson, geometryCollection, crsFunction, source) {
-        var geometries = geometryCollection.geometries;
-        for ( var i = 0, len = geometries.length; i < len; i++) {
-            var geometry = geometries[i];
-            var geometryType = geometry.type;
-            var geometryHandler = geometryTypes[geometryType];
-            if (typeof geometryHandler === 'undefined') {
-                throw new RuntimeError('Unknown geometry type: ' + geometryType);
-            }
-            geometryHandler(dataSource, geoJson, geometry, crsFunction, source);
-        }
-    }
-
-    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-        dynamicObject.merge(dataSource.defaultPoint);
-        dynamicObject.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
-    }
-
-    function processMultiPoint(dataSource, geoJson, geometry, crsFunction, source) {
-        var coordinates = geometry.coordinates;
-        for ( var i = 0; i < coordinates.length; i++) {
-            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-            dynamicObject.merge(dataSource.defaultPoint);
-            dynamicObject.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
-        }
-    }
-
-    function processLineString(dataSource, geoJson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-
-        var coordinates = geometry.coordinates;
-        var positions = new Array(coordinates.length);
-        for ( var i = 0; i < coordinates.length; i++) {
-            positions[i] = crsFunction(coordinates[i]);
-        }
-        dynamicObject.merge(dataSource.defaultLine);
-        dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
-    }
-
-    function processMultiLineString(dataSource, geoJson, geometry, crsFunction, source) {
-        var lineStrings = geometry.coordinates;
-        for ( var i = 0; i < lineStrings.length; i++) {
-            var lineString = lineStrings[i];
-            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-            var positions = new Array(lineString.length);
-            for ( var z = 0; z < lineString.length; z++) {
-                positions[z] = crsFunction(lineString[z]);
-            }
-            dynamicObject.merge(dataSource.defaultLine);
-            dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
-        }
-    }
-
-    function processPolygon(dataSource, geoJson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-
-        //TODO Holes
-        var coordinates = geometry.coordinates[0];
-        var positions = new Array(coordinates.length);
-        for ( var i = 0; i < coordinates.length; i++) {
-            positions[i] = crsFunction(coordinates[i]);
-        }
-        dynamicObject.merge(dataSource.defaultPolygon);
-        dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
-    }
-
-    function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
-        var polygons = geometry.coordinates;
-        for ( var i = 0; i < polygons.length; i++) {
-            var polygon = polygons[i];
-            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
-
-            //TODO holes
-            var vertexPositions = polygon[0];
-            for ( var q = 0; q < vertexPositions.length; q++) {
-                var positions = new Array(vertexPositions.length);
-                for ( var z = 0; z < vertexPositions.length; z++) {
-                    positions[z] = crsFunction(vertexPositions[z]);
-                }
-                dynamicObject.merge(dataSource.defaultPolygon);
-                dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
-            }
-        }
-    }
-
-    var geoJsonObjectTypes = {
-        Feature : processFeature,
-        FeatureCollection : processFeatureCollection,
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon
-    };
-
-    var geometryTypes = {
-        GeometryCollection : processGeometryCollection,
-        LineString : processLineString,
-        MultiLineString : processMultiLineString,
-        MultiPoint : processMultiPoint,
-        MultiPolygon : processMultiPolygon,
-        Point : processPoint,
-        Polygon : processPolygon
-    };
 
     return GeoJsonDataSource;
 });
