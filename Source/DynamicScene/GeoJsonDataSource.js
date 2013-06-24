@@ -235,7 +235,7 @@ define(['../Core/createGuid',
         }
 
         //Check for a Coordinate Reference System.
-        var crsPromise;
+        var crsFunction = defaultCrsFunction;
         var crs = geoJson.crs;
         if (typeof crs !== 'undefined') {
             if (crs === null) {
@@ -247,16 +247,10 @@ define(['../Core/createGuid',
 
             var properties = crs.properties;
             if (crs.type === 'name') {
-                var crsFunction = GeoJsonDataSource.crsNames[properties.name];
+                crsFunction = GeoJsonDataSource.crsNames[properties.name];
                 if (typeof crsFunction === 'undefined') {
                     throw new RuntimeError('Unknown crs name: ' + properties.name);
                 }
-
-                crsPromise = when(crsFunction, function(crsFunction) {
-                    var deferred = when.defer();
-                    deferred.resolve(crsFunction);
-                    return deferred.promise;
-                });
             } else if (crs.type === 'link') {
                 var handler = GeoJsonDataSource.crsLinkHrefs[properties.href];
                 if (typeof handler === 'undefined') {
@@ -267,23 +261,16 @@ define(['../Core/createGuid',
                     throw new RuntimeError('Unable to resolve crs link: ' + JSON.stringify(properties));
                 }
 
-                crsPromise = handler(properties);
+                crsFunction = handler(properties);
             } else {
                 throw new RuntimeError('Unknown crs type: ' + crs.type);
             }
-        } else {
-            //Use the default
-            crsPromise = when(defaultCrsFunction, function(defaultCrsFunction) {
-                var deferred = when.defer();
-                deferred.resolve(defaultCrsFunction);
-                return deferred.promise;
-            });
         }
 
         this._dynamicObjectCollection.clear();
 
         var that = this;
-        return crsPromise.then(function(crsFunction) {
+        return when(crsFunction, function(crsFunction) {
             typeHandler(that, geoJson, geoJson, crsFunction, source);
             that._changed.raiseEvent(that);
         });
