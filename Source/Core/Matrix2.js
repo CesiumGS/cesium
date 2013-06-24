@@ -42,13 +42,11 @@ define([
      *
      * @param {Matrix2} matrix The matrix to duplicate.
      * @param {Matrix2} [result] The object onto which to store the result.
-     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
+     * @return {Matrix2} The modified result parameter or a new Matrix2 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
     Matrix2.clone = function(values, result) {
         if (typeof values === 'undefined') {
-            throw new DeveloperError('values is required');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new Matrix2(values[0], values[2],
@@ -72,7 +70,12 @@ define([
      *
      * @exception {DeveloperError} values is required.
      */
-    Matrix2.fromColumnMajorArray = Matrix2.clone;
+    Matrix2.fromColumnMajorArray = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values parameter is required');
+        }
+        return Matrix2.clone(values, result);
+    };
 
     /**
      * Creates a Matrix2 instance from a row-major order array.

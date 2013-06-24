@@ -246,9 +246,12 @@ define([
      *
      * @param {Color} color The Color to duplicate.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     * @return {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
      */
     Color.clone = function(color, result) {
+        if (typeof color === 'undefined'){
+            return undefined;
+        }
         if (typeof result === 'undefined') {
             return new Color(color.red, color.green, color.blue, color.alpha);
         }

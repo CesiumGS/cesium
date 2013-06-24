@@ -555,7 +555,7 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
         if (typeof sphere === 'undefined') {

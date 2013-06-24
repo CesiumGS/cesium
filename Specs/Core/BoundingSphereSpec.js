@@ -383,6 +383,10 @@ defineSuite([
         expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
     });
 
+    it('static clone returns undefined with no parameter', function() {
+        expect(typeof BoundingSphere.clone()).toEqual('undefined');
+    });
+
     it('static union throws with no left parameter', function() {
         var right = new BoundingSphere();
         expect(function() {
