@@ -9,7 +9,7 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './defaultValue',
-        './pointInsideTriangle2D',
+        './pointInsideTriangle',
         './ComponentDatatype',
         './PrimitiveType',
         './Queue',
@@ -24,7 +24,7 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         defaultValue,
-        pointInsideTriangle2D,
+        pointInsideTriangle,
         ComponentDatatype,
         PrimitiveType,
         Queue,
@@ -267,7 +267,7 @@ define([
             var pointsInside = [];
             for ( var i = 0; i < reflexVertices.length; i++) {
                 var vertex = reflexVertices[i];
-                if (pointInsideTriangle2D(vertex, innerRingVertex, intersection, p)) {
+                if (pointInsideTriangle(vertex, innerRingVertex, intersection, p)) {
                     pointsInside.push(vertex);
                 }
             }
@@ -504,7 +504,7 @@ define([
                     var isEar = true;
 
                     for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
-                        if (pointInsideTriangle2D(n.item.position, p0, p1, p2)) {
+                        if (pointInsideTriangle(n.item.position, p0, p1, p2)) {
                             isEar = false;
                             break;
                         }
