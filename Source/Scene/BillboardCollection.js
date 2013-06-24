@@ -1089,7 +1089,7 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
             boundingVolume = BoundingSphere.clone(this._baseVolume, this._boundingVolume);
-        } else if (typeof this._baseVolume2D !== 'undefined') {
+        } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
         updateBoundingVolume(this, context, frameState, boundingVolume);

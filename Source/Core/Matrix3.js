@@ -55,13 +55,11 @@ define([
      *
      * @param {Matrix3} matrix The matrix to duplicate.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
+     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
     Matrix3.clone = function(values, result) {
         if (typeof values === 'undefined') {
-            throw new DeveloperError('values is required');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new Matrix3(values[0], values[3], values[6],
@@ -91,7 +89,12 @@ define([
      *
      * @exception {DeveloperError} values is required.
      */
-    Matrix3.fromColumnMajorArray = Matrix3.clone;
+    Matrix3.fromColumnMajorArray = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values parameter is required');
+        }
+        return Matrix3.clone(values, result);
+    };
 
     /**
      * Creates a Matrix3 instance from a row-major order array.

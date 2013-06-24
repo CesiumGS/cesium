@@ -32,7 +32,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
-        './ClosedTranslucentAppearance',
+        './Appearance',
         './SunPostProcess'
     ], function(
         CesiumMath,
@@ -67,7 +67,7 @@ define([
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
-        ClosedTranslucentAppearance,
+        Appearance,
         SunPostProcess) {
     "use strict";
 
@@ -480,9 +480,11 @@ define([
                 var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
-                        geometry : GeometryPipeline.toWireframe(geometry),
+                        geometry : GeometryPipeline.toWireframe(geometry)
                     }),
-                    appearance : new ClosedTranslucentAppearance()
+                    appearance : new Appearance({
+                        closed : true
+                    })
                 });
             }
 

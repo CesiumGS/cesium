@@ -52,6 +52,27 @@ define([
     };
 
     /**
+     * DOC_TBA
+     */
+    Extent.fromDegrees = function(west, south, east, north, result) {
+        west = CesiumMath.toRadians(defaultValue(west, 0.0));
+        south = CesiumMath.toRadians(defaultValue(south, 0.0));
+        east = CesiumMath.toRadians(defaultValue(east, 0.0));
+        north = CesiumMath.toRadians(defaultValue(north, 0.0));
+
+        if (typeof result === 'undefined') {
+            return new Extent(west, south, east, north);
+        }
+
+        result.west = west;
+        result.south = south;
+        result.east = east;
+        result.north = north;
+
+        return result;
+    };
+
+    /**
      * Creates the smallest possible Extent that encloses all positions in the provided array.
      * @memberof Extent
      *
@@ -95,12 +116,17 @@ define([
      *
      * @param {Extent} extent The extent to clone.
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
      */
     Extent.clone = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            return undefined;
+        }
+
         if (typeof result === 'undefined') {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }
+
         result.west = extent.west;
         result.south = extent.south;
         result.east = extent.east;
@@ -129,11 +155,20 @@ define([
      * @return {Boolean} <code>true</code> if the Extents are equal, <code>false</code> otherwise.
      */
     Extent.prototype.equals = function(other) {
-        return typeof other !== 'undefined' &&
-               this.west === other.west &&
-               this.south === other.south &&
-               this.east === other.east &&
-               this.north === other.north;
+        return Extent.equals(this, other);
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Extent.equals = function(left, right) {
+        return (left === right) ||
+               ((typeof left !== 'undefined') &&
+                (typeof right !== 'undefined') &&
+                (left.west === right.west) &&
+                (left.south === right.south) &&
+                (left.east === right.east) &&
+                (left.north === right.north));
     };
 
     /**

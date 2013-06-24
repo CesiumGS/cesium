@@ -85,13 +85,11 @@ define([
      *
      * @param {Matrix4} matrix The matrix to duplicate.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} matrix is required.
+     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
     Matrix4.clone = function(matrix, result) {
         if (typeof matrix === 'undefined') {
-            throw new DeveloperError('matrix is required');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new Matrix4(matrix[0], matrix[4], matrix[8], matrix[12],
@@ -129,7 +127,12 @@ define([
      *
      * @exception {DeveloperError} values is required.
      */
-    Matrix4.fromColumnMajorArray = Matrix4.clone;
+    Matrix4.fromColumnMajorArray = function(values, result) {
+        if (typeof values === 'undefined') {
+            throw new DeveloperError('values parameter is required');
+        }
+        return Matrix4.clone(values, result);
+    };
 
     /**
      * Computes a Matrix4 instance from a row-major order array.

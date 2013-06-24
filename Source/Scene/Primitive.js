@@ -52,10 +52,10 @@ define([
      * <p>
      * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
      * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#pickData}.  Using
-     * per-instance appearances like {@link PerInstanceColorClosedTranslucentAppearance}, each instance can also have a unique color.
+     * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      *
-     * @alias Geometry
+     * @alias Primitive
      * @constructor
      *
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
@@ -110,7 +110,7 @@ define([
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
-     *   appearance : new PerInstanceColorClosedTranslucentAppearance()
+     *   appearance : new PerInstanceColorAppearance()
      * });
      * scene.getPrimitives().add(primitive);
      *
@@ -255,10 +255,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var pickId = context.createPickId({
-                primitive : primitive,
-                pickData : instance.pickData    // may be undefined
-            });
+            var pickId = context.createPickId(defaultValue(instance.pickData, primitive));
             primitive._pickIds.push(pickId);
 
             var pickColor = pickId.color;

@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError'
+        './DeveloperError',
+        './BoundingSphere'
     ], function(
         defaultValue,
-        DeveloperError) {
+        DeveloperError,
+        BoundingSphere) {
     "use strict";
 
     /**
@@ -46,11 +48,14 @@ define([
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
      *
-     * @see Appearance
-     * @see Context#createVertexArrayFromGeometry
-     * @see GeometryInstance
-     * @see GeometryPipeline
-     * @see Primitive
+     * @see PolygonGeometry
+     * @see ExtentGeometry
+     * @see EllipseGeometry
+     * @see CircleGeometry
+     * @see WallGeometry
+     * @see SimplePolylineGeometry
+     * @see BoxGeometry
+     * @see EllipsoidGeometry
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -186,12 +191,7 @@ define([
             result.indices = undefined;
         }
         result.primitiveType = geometry.primitiveType;
-
-        if (typeof geometry.boundingSphere !== 'undefined') {
-            geometry.boundingSphere.clone(result.boundingSphere);
-        } else {
-            result.boundingSphere = undefined;
-        }
+        result.boundingSphere = BoundingSphere.clone(geometry.boundingSphere, result.boundingSphere);
 
         return result;
     };

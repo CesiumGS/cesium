@@ -17,29 +17,33 @@ Beta Releases
       * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
       * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
-   * Removed `Polygon.configureExtent`.
+   * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
+   * Removed `Polygon.bufferUsage`.  It is no longer needed.
+   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
+* Added `ExtentPrimitive`.
 * Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
    * `PolygonGeometry`
    * `ExtentGeometry`
    * `EllipseGeometry`
    * `CircleGeometry`
    * `WallGeometry`
+   * `SimplePolylineGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-* Added `Appearance`, which describe the visual characteristics for geometry instances.  Added the following types:
-   * `TranslucentAppearance`
+* Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
+   * `Appearance`
+   * `PerInstanceColorAppearance`
    * `EllipsoidSurfaceAppearance`
-   * `ClosedTranslucentAppearance`
-   * `PerInstanceColorClosedTranslucentAppearance`
 * Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
 * Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Added `WallGeometry` and `PolygonGeometry`.
 * Added `EllipseGeometry` and `CircleGeometry`.
@@ -73,6 +77,7 @@ Beta Releases
 * Fix resizing issues in `CesiumWidget` ([#608](https://github.com/AnalyticalGraphicsInc/cesium/issues/608)) by having the default render loop force a resize event every 60 frames.
 * Added `CesiumWidget.onRenderLoopError` which is an `Event` that is raised if an exception is generated inside of the default render loop.
 * `ImageryProviderViewModel.creationCommand` can now return an array of ImageryProvider instances, which allows adding multiple layers when a single item is selected in the `BaseLayerPicker` widget.
+* Changed static `clone` functions in all objects such that if the object being cloned is undefined, the function will return undefined instead of throwing an exception
 
 ### b17 - 2013-06-03
 
