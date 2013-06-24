@@ -118,19 +118,19 @@ define(['../Core/createGuid',
         this._dynamicObjectCollection = new DynamicObjectCollection();
 
         /**
-         * Gets or sets the default graphics to be applied to GeoJson Point and MultiPoint geometries.
+         * Gets or sets the default graphics to be applied to GeoJSON Point and MultiPoint geometries.
          * @type DynamicObject
          */
         this.defaultPoint = defaultPoint;
 
         /**
-         * Gets or sets the default graphics to be applied to GeoJson LineString and MultiLineString geometries.
+         * Gets or sets the default graphics to be applied to GeoJSON LineString and MultiLineString geometries.
          * @type DynamicObject
          */
         this.defaultLine = defaultLine;
 
         /**
-         * Gets or sets the default graphics to be applied to GeoJson Polygon and MultiPolygon geometries.
+         * Gets or sets the default graphics to be applied to GeoJSON Polygon and MultiPolygon geometries.
          * @type DynamicObject
          */
         this.defaultPolygon = defaultPolygon;
@@ -158,7 +158,7 @@ define(['../Core/createGuid',
     };
 
     /**
-     * Since GeoJson is a static format, this function always returns undefined.
+     * Since GeoJSON is a static format, this function always returns undefined.
      * @memberof GeoJsonDataSource
      */
     GeoJsonDataSource.prototype.getClock = function() {
@@ -283,7 +283,7 @@ define(['../Core/createGuid',
 
     /**
      * An object that maps the name of a crs to a callback function
-     * which takes a GeoJson coordinate and transforms it into a
+     * which takes a GeoJSON coordinate and transforms it into a
      * WGS84 Earth-fixed Cartesian.
      * @memberof GeoJsonDataSource
      * @type Object
@@ -296,7 +296,7 @@ define(['../Core/createGuid',
     /**
      * An object that maps the href property of a crs link to a callback function
      * which takes the crs properties object and returns a Promise that resolves
-     * to a function that takes a GeoJson coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+     * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
      * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
      * the link has a type specified.
      * @memberof GeoJsonDataSource
@@ -307,19 +307,19 @@ define(['../Core/createGuid',
     /**
      * An object that maps the type property of a crs link to a callback function
      * which takes the crs properties object and returns a Promise that resolves
-     * to a function that takes a GeoJson coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
+     * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
      * Items in <code>crsLinkHrefs</code> take precedence over this object.
      * @memberof GeoJsonDataSource
      * @type Object
      */
     GeoJsonDataSource.crsLinkTypes = {};
 
-    //GeoJson specifies only the Feature object has a usable id property
+    //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple dynamicObject,
     //we can't use it for them either.
-    function createObject(geojson, dynamicObjectCollection) {
-        var id = geojson.id;
-        if (typeof id === 'undefined' || geojson.type !== 'Feature') {
+    function createObject(geoJson, dynamicObjectCollection) {
+        var id = geoJson.id;
+        if (typeof id === 'undefined' || geoJson.type !== 'Feature') {
             id = createGuid();
         } else {
             var i = 2;
@@ -331,11 +331,11 @@ define(['../Core/createGuid',
             id = finalId;
         }
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.geoJson = geojson;
+        dynamicObject.geoJson = geoJson;
         return dynamicObject;
     }
 
-    // GeoJson processing functions
+    // GeoJSON processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, source) {
         if (typeof feature.geometry === 'undefined') {
             throw new RuntimeError('feature.geometry is required.');
@@ -374,23 +374,23 @@ define(['../Core/createGuid',
         }
     }
 
-    function processPoint(dataSource, geojson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPoint);
         dynamicObject.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
     }
 
-    function processMultiPoint(dataSource, geojson, geometry, crsFunction, source) {
+    function processMultiPoint(dataSource, geoJson, geometry, crsFunction, source) {
         var coordinates = geometry.coordinates;
         for ( var i = 0; i < coordinates.length; i++) {
-            var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPoint);
             dynamicObject.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
         }
     }
 
-    function processLineString(dataSource, geojson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+    function processLineString(dataSource, geoJson, geometry, crsFunction, source) {
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
 
         var coordinates = geometry.coordinates;
         var positions = new Array(coordinates.length);
@@ -401,11 +401,11 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
     }
 
-    function processMultiLineString(dataSource, geojson, geometry, crsFunction, source) {
+    function processMultiLineString(dataSource, geoJson, geometry, crsFunction, source) {
         var lineStrings = geometry.coordinates;
         for ( var i = 0; i < lineStrings.length; i++) {
             var lineString = lineStrings[i];
-            var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             var positions = new Array(lineString.length);
             for ( var z = 0; z < lineString.length; z++) {
                 positions[z] = crsFunction(lineString[z]);
@@ -415,8 +415,8 @@ define(['../Core/createGuid',
         }
     }
 
-    function processPolygon(dataSource, geojson, geometry, crsFunction, source) {
-        var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+    function processPolygon(dataSource, geoJson, geometry, crsFunction, source) {
+        var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
 
         //TODO Holes
         var coordinates = geometry.coordinates[0];
@@ -428,11 +428,11 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantPositionProperty(positions);
     }
 
-    function processMultiPolygon(dataSource, geojson, geometry, crsFunction, source) {
+    function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
         var polygons = geometry.coordinates;
         for ( var i = 0; i < polygons.length; i++) {
             var polygon = polygons[i];
-            var dynamicObject = createObject(geojson, dataSource._dynamicObjectCollection);
+            var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
 
             //TODO holes
             var vertexPositions = polygon[0];
