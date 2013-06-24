@@ -2,11 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        './Appearance'
+        './MaterialAppearance'
     ], function(
         defaultValue,
         DeveloperError,
-        Appearance) {
+        MaterialAppearance) {
     "use strict";
 
     /**
@@ -68,13 +68,13 @@ define([
 
         options.flat = defaultValue(options.flat, true);
         options.translucent = defaultValue(options.translucent, false);
-        var defaults = new Appearance(options);
+        var defaults = new MaterialAppearance(options);
 
         /**
          * DOC_TBA
          * @readonly
          */
-        this.materialSupport = Appearance.MaterialSupport.NONE;
+        this.materialSupport = MaterialAppearance.MaterialSupport.NONE;
 
         /**
          * DOC_TBA
@@ -147,7 +147,7 @@ define([
     /**
      * DOC_TBA
      */
-    DebugAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
+    DebugAppearance.prototype.getFragmentShaderSource = MaterialAppearance.prototype.getFragmentShaderSource;
 
     return DebugAppearance;
 });

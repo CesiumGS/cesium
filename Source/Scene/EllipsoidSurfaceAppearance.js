@@ -5,7 +5,7 @@ define([
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
         './Material',
-        './Appearance',
+        './MaterialAppearance',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceVS',
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
@@ -14,7 +14,7 @@ define([
         CullFace,
         BlendingState,
         Material,
-        Appearance,
+        MaterialAppearance,
         EllipsoidSurfaceAppearanceVS,
         EllipsoidSurfaceAppearanceFS) {
     "use strict";
@@ -32,7 +32,7 @@ define([
          * DOC_TBA
          * @readonly
          */
-        this.materialSupport = Appearance.MaterialSupport.NONE;
+        this.materialSupport = MaterialAppearance.MaterialSupport.NONE;
 
         /**
          * DOC_TBA
@@ -123,7 +123,7 @@ define([
     /**
      * DOC_TBA
      */
-    EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
+    EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = MaterialAppearance.prototype.getFragmentShaderSource;
 
     return EllipsoidSurfaceAppearance;
 });

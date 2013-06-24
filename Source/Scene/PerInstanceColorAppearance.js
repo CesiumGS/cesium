@@ -2,7 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/VertexFormat',
-        './Appearance',
+        './MaterialAppearance',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
@@ -10,7 +10,7 @@ define([
     ], function(
         defaultValue,
         VertexFormat,
-        Appearance,
+        MaterialAppearance,
         PerInstanceColorAppearanceVS,
         PerInstanceColorAppearanceFS,
         PerInstanceFlatColorAppearanceVS,
@@ -25,7 +25,7 @@ define([
      */
     var PerInstanceColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var defaults = new Appearance(options);
+        var defaults = new MaterialAppearance(options);
 
         var flat = defaults.flat;
         var vs = flat ? PerInstanceFlatColorAppearanceVS : PerInstanceColorAppearanceVS;
@@ -36,7 +36,7 @@ define([
          * DOC_TBA
          * @readonly
          */
-        this.materialSupport = Appearance.MaterialSupport.NONE;
+        this.materialSupport = MaterialAppearance.MaterialSupport.NONE;
 
         /**
          * DOC_TBA
@@ -107,7 +107,7 @@ define([
     /**
      * DOC_TBA
      */
-    PerInstanceColorAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
+    PerInstanceColorAppearance.prototype.getFragmentShaderSource = MaterialAppearance.prototype.getFragmentShaderSource;
 
     return PerInstanceColorAppearance;
 });
