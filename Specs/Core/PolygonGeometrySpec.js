@@ -201,8 +201,8 @@ defineSuite([
             extrudedHeight: 30000
         });
 
-        expect(p.attributes.position.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.indices.length).toEqual(3 * 14 * 2 + 60);
+        expect(p.attributes.position.values.length).toEqual(3 * 21 * 2);
+        expect(p.indices.length).toEqual(3 * 20 * 2);
     });
 
     it('computes all attributes extruded', function() {
@@ -218,12 +218,12 @@ defineSuite([
             extrudedHeight: 30000
         });
 
-        expect(p.attributes.position.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.attributes.st.values.length).toEqual(2 * 11 * 2 + 40);
-        expect(p.attributes.normal.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.attributes.tangent.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.attributes.binormal.values.length).toEqual(3 * 11 * 2 + 60);
-        expect(p.indices.length).toEqual(3 * 14 * 2 + 60);
+        expect(p.attributes.position.values.length).toEqual(3 * 21 * 2);
+        expect(p.attributes.st.values.length).toEqual(2 * 21 * 2);
+        expect(p.attributes.normal.values.length).toEqual(3 * 21 * 2);
+        expect(p.attributes.tangent.values.length).toEqual(3 * 21 * 2);
+        expect(p.attributes.binormal.values.length).toEqual(3 * 21 * 2);
+        expect(p.indices.length).toEqual(3 * 20 * 2);
     });
 
     it('creates a polygon from hierarchy extruded', function() {
@@ -259,8 +259,8 @@ defineSuite([
             extrudedHeight: 30000
         });
 
-        expect(p.attributes.position.values.length).toEqual(3 * 14 * 2 + 168);
-        expect(p.indices.length).toEqual(3 * 10 * 2 + 168);
+        expect(p.attributes.position.values.length).toEqual(3 * 38 * 2);
+        expect(p.indices.length).toEqual(3 * 22 * 2);
     });
 
 }, 'WebGL');

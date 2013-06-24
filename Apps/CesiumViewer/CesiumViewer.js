@@ -305,11 +305,11 @@ define([
                     Cartographic.fromDegrees(-70.0, 30.0),
                     Cartographic.fromDegrees(-68.0, 40.0)
                 ]),
-                surfaceHeight: 600000,
+                height: 600000,
                 extrudedHeight: 300000,
                 stRotation : 0.523598776
             }),
-            pickData : 'polygon3'
+            pickData : 'polygon1'
         });
 
         var polygonGeometry1 = new GeometryInstance({
@@ -347,10 +347,10 @@ define([
                         }]
                     }]
                 },
-                surfaceHeight : 3000000.0,
+                height : 3000000.0,
                 stRotation : 0.523598776
             }),
-            pickData : 'polygon3'
+            pickData : 'polygon2'
         });
         var polygonPrimitive = new Primitive({
             geometryInstances : [polygonGeometry, polygonGeometry1],
