@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './barycentricCoordinates',
         './defaultValue',
         './DeveloperError',
         './Cartesian2',
@@ -22,6 +23,7 @@ define([
         './Geometry',
         './GeometryAttribute'
     ], function(
+        barycentricCoordinates,
         defaultValue,
         DeveloperError,
         Cartesian2,
@@ -1191,18 +1193,25 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
-        }
-
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, numberOfPositions);
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
+        }
 
-        for (var i = 0; i < numberOfPositions; ++i) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least three.');
+        }
+
+        if (numberOfVertices % 3 !== 0) {
+            throw new DeveloperError('The number of vertices must be a multiple of three.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices);
+        for (var i = 0; i < numberOfVertices; ++i) {
             indices[i] = i;
         }
 
@@ -1222,14 +1231,18 @@ define([
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_FAN.');
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 2) * 3);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least three.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
         indices[0] = 1;
         indices[1] = 0;
         indices[2] = 2;
 
         var indicesIndex = 3;
-        for (var i = 3; i < numberOfPositions; ++i) {
+        for (var i = 3; i < numberOfVertices; ++i) {
             indices[indicesIndex++] = i - 1;
             indices[indicesIndex++] = 0;
             indices[indicesIndex++] = i;
@@ -1252,26 +1265,29 @@ define([
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_STRIP.');
         }
 
-        var numberOfPositions = Geometry.computeNumberOfVertices(geometry);
-        var indices = IndexDatatype.createTypedArray(numberOfPositions, (numberOfPositions - 2) * 3);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least 3.');
+        }
 
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
         indices[0] = 0;
         indices[1] = 1;
         indices[2] = 2;
 
-        if (numberOfPositions > 3) {
+        if (numberOfVertices > 3) {
             indices[3] = 0;
             indices[4] = 2;
             indices[5] = 3;
         }
 
         var indicesIndex = 6;
-        for (var i = 3; i < numberOfPositions - 1; i += 2) {
+        for (var i = 3; i < numberOfVertices - 1; i += 2) {
             indices[indicesIndex++] = i;
             indices[indicesIndex++] = i - 1;
             indices[indicesIndex++] = i + 1;
 
-            if (i + 2 < numberOfPositions) {
+            if (i + 2 < numberOfVertices) {
                 indices[indicesIndex++] = i;
                 indices[indicesIndex++] = i + 1;
                 indices[indicesIndex++] = i + 2;
@@ -1485,44 +1501,25 @@ define([
                 }
             }
 
+
+            var positions = splitTriangleResult.positions;
+            positions[0] = p0;
+            positions[1] = p1;
+            positions[2] = p2;
+            splitTriangleResult.length = 3;
+
             if (numBehind === 1 || numBehind === 2) {
-                var positions = splitTriangleResult.positions;
-                positions[0] = p0;
-                positions[1] = p1;
-                positions[2] = p2;
                 positions[3] = u1;
                 positions[4] = u2;
                 positions[5] = q1;
                 positions[6] = q2;
-
-                return splitTriangleResult;
+                splitTriangleResult.length = 7;
             }
+
+            return splitTriangleResult;
         }
 
         return undefined;
-    }
-
-    function barycentricCoordinates(p, a, b, c, result) {
-        if (typeof result === 'undefined') {
-            result = new Cartesian3();
-        }
-
-        // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
-        var v0 = b.subtract(a);
-        var v1 = c.subtract(a);
-        var v2 = p.subtract(a);
-
-        var dot00 = v0.dot(v0);
-        var dot01 = v0.dot(v1);
-        var dot02 = v0.dot(v2);
-        var dot11 = v1.dot(v1);
-        var dot12 = v1.dot(v2);
-
-        var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
-        result.x = (dot11 * dot02 - dot01 * dot12) * q;
-        result.y = (dot00 * dot12 - dot01 * dot02) * q;
-        result.z = 1.0 - result.x - result.y;
-        return result;
     }
 
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
@@ -1645,21 +1642,29 @@ define([
 
             var result = splitTriangle(p0, p1, p2);
             if (typeof result !== 'undefined') {
-                var positionsLength = newPositions.length / 3;
-                for(var j = 0; j < result.indices.length; ++j) {
-                    var index = result.indices[j];
-                    if (index < 3) {
-                        newIndices.push(indices[i + index]);
-                    } else {
-                        newIndices.push(index - 3 + positionsLength);
-                    }
-                }
+                newPositions[i0 * 3 + 1] = result.positions[0].y;
+                newPositions[i1 * 3 + 1] = result.positions[1].y;
+                newPositions[i2 * 3 + 1] = result.positions[2].y;
 
-                for (var k = 3; k < result.positions.length; ++k) {
-                    var position = result.positions[k];
-                    newPositions.push(position.x, position.y, position.z);
+                if (result.length > 3) {
+                    var positionsLength = newPositions.length / 3;
+                    for(var j = 0; j < result.indices.length; ++j) {
+                        var index = result.indices[j];
+                        if (index < 3) {
+                            newIndices.push(indices[i + index]);
+                        } else {
+                            newIndices.push(index - 3 + positionsLength);
+                        }
+                    }
+
+                    for (var k = 3; k < result.positions.length; ++k) {
+                        var position = result.positions[k];
+                        newPositions.push(position.x, position.y, position.z);
+                    }
+                    computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
+                } else {
+                    newIndices.push(i0, i1, i2);
                 }
-                computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
             } else {
                 newIndices.push(i0, i1, i2);
             }
