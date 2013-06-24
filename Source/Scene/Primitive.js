@@ -178,6 +178,8 @@ define([
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
         this._allowColumbusView = defaultValue(options.allowColumbusView, true);
+        this._boundingSphere = undefined;
+        this._boundingSphere2D = undefined;
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -339,6 +341,16 @@ define([
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry);
 
+            // Find bounding sphere
+            primitive._boundingSphere2D = BoundingSphere.fromVertices(geometry.attributes.position2D.values);
+            var center = primitive._boundingSphere2D.center;
+            var x = center.x;
+            var y = center.y;
+            var z = center.z;
+            center.x = z;
+            center.y = x;
+            center.z = y;
+
             GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
             GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
         } else {
@@ -372,6 +384,7 @@ define([
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
+        primitive._boundingSphere = geometry.boundingSphere;
 
         // Split positions for GPU RTE
         encodePositions(primitive, geometry);
@@ -523,13 +536,11 @@ define([
                 colorCommand = new DrawCommand();
                 colorCommand.primitiveType = geometry.primitiveType;
                 colorCommand.vertexArray = this._va[i];
-                colorCommand.boundingVolume = geometry.boundingSphere;
                 colorCommands.push(colorCommand);
 
                 pickCommand = new DrawCommand();
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
-                pickCommand.boundingVolume = geometry.boundingSphere;
                 pickCommands.push(pickCommand);
             }
 
@@ -592,11 +603,26 @@ define([
             }
         }
 
+        var boundingSphere;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSphere = this._boundingSphere;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSphere = this._boundingSphere2D;
+        } else if (frameState.mode === SceneMode.SCENE2D && this._boundingSphere2D !== 'undefined') {
+            boundingSphere = BoundingSphere.clone(this._boundingSphere2D);
+            boundingSphere.center.x = 0.0;
+        } else if (typeof this._boundingSphere !== 'undefined' && this._boundingSphere2D !== 'undefined') {
+            boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
+        }
+
         // modelMatrix can change from frame to frame
         length = colorCommands.length;
         for (i = 0; i < length; ++i) {
             colorCommands[i].modelMatrix = this.modelMatrix;
             pickCommands[i].modelMatrix = this.modelMatrix;
+
+            colorCommands[i].boundingVolume = boundingSphere;
+            pickCommands[i].boundingVolume = boundingSphere;
         }
 
         commandList.push(this._commandLists);

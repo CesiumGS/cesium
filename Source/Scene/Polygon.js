@@ -269,7 +269,7 @@ define([
             return;
         }
 
-        if (!this._createPrimitive && (typeof this._primitive === undefined)) {
+        if (!this._createPrimitive && !defined(this._primitive)) {
             // No positions/hierarchy to draw
             return;
         }
