@@ -3,7 +3,7 @@ defineSuite([
          'Core/pointInsideTriangle',
          'Core/Cartesian2'
      ], function(
-             pointInsideTriangle,
+         pointInsideTriangle,
          Cartesian2) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

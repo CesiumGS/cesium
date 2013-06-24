@@ -31,9 +31,9 @@ define([
         var dot12 = v1.dot(v2);
 
         var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
-        result.x = (dot11 * dot02 - dot01 * dot12) * q;
-        result.y = (dot00 * dot12 - dot01 * dot02) * q;
-        result.z = 1.0 - result.x - result.y;
+        result.y = (dot11 * dot02 - dot01 * dot12) * q;
+        result.z = (dot00 * dot12 - dot01 * dot02) * q;
+        result.x = 1.0 - result.y - result.z;
         return result;
     };
 
