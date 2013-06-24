@@ -357,7 +357,8 @@ define([
                 materialSupport : Appearance.MaterialSupport.TEXTURED,
                 material : Material.fromType(scene.getContext(), 'Checkerboard'),
                 faceForward : true
-            })
+            }),
+            allowColumbusView : false
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);

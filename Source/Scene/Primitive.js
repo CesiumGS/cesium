@@ -385,6 +385,50 @@ define([
         return [geometry];
     }
 
+    function createColumbusViewShader(primitive, vertexShaderSource) {
+        if (!primitive._allowColumbusView) {
+            return vertexShaderSource;
+        }
+
+        var attributes =
+            'attribute vec3 position2DHigh;\n' +
+            'attribute vec3 position2DLow;';
+        var computePosition =
+            'vec4 p;\n' +
+            'if (czm_morphTime == 1.0)\n' +
+            '{\n' +
+            '    p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
+            '}\n' +
+            'else if (czm_morphTime == 0.0)\n' +
+            '{\n' +
+            '    p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
+            '}\n' +
+            'else\n' +
+            '{\n' +
+            '    p = czm_columbusViewMorph(\n' +
+            '            czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
+            '            czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
+            '            czm_morphTime);\n' +
+            '}';
+
+        var position3DLow = 'position3DLow;';
+        var positionLowIndex = vertexShaderSource.indexOf(position3DLow);
+        positionLowIndex += position3DLow.length;
+
+        var position = 'czm_translateRelativeToEye(position3DHigh, position3DLow);';
+        var positionEndIndex = vertexShaderSource.indexOf(position);
+        var positionStartIndex = vertexShaderSource.lastIndexOf('vec', positionEndIndex);
+        positionEndIndex += position.length;
+
+        var shaderSource =
+            vertexShaderSource.substring(0, positionLowIndex) + '\n' +
+            attributes +
+            vertexShaderSource.substring(positionLowIndex, positionStartIndex) +
+            computePosition +
+            vertexShaderSource.substring(positionEndIndex);
+        return shaderSource;
+    }
+
     function createPickVertexShaderSource(vertexShaderSource) {
         var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
         var pickMain =
@@ -516,7 +560,7 @@ define([
 
         if (createSP) {
             var shaderCache = context.getShaderCache();
-            var vs = appearance.vertexShaderSource;
+            var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
