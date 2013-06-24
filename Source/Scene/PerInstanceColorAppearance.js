@@ -2,7 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/VertexFormat',
-        './MaterialAppearance',
+        './Appearance',
         '../Shaders/Appearances/PerInstanceColorAppearanceVS',
         '../Shaders/Appearances/PerInstanceColorAppearanceFS',
         '../Shaders/Appearances/PerInstanceFlatColorAppearanceVS',
@@ -10,7 +10,7 @@ define([
     ], function(
         defaultValue,
         VertexFormat,
-        MaterialAppearance,
+        Appearance,
         PerInstanceColorAppearanceVS,
         PerInstanceColorAppearanceFS,
         PerInstanceFlatColorAppearanceVS,
@@ -25,29 +25,18 @@ define([
      */
     var PerInstanceColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var defaults = new MaterialAppearance(options);
 
-        var flat = defaults.flat;
+        var translucent = defaultValue(options.translucent, true);
+        var closed = defaultValue(options.closed, false);
+        var flat = defaultValue(options.flat, false);
         var vs = flat ? PerInstanceFlatColorAppearanceVS : PerInstanceColorAppearanceVS;
         var fs = flat ? PerInstanceFlatColorAppearanceFS : PerInstanceColorAppearanceFS;
         var vertexFormat = flat ? PerInstanceColorAppearance.FLAT_VERTEX_FORMAT : PerInstanceColorAppearance.VERTEX_FORMAT;
 
         /**
          * DOC_TBA
-         * @readonly
-         */
-        this.materialSupport = MaterialAppearance.MaterialSupport.NONE;
-
-        /**
-         * DOC_TBA
          */
         this.material = undefined;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.vertexFormat = vertexFormat;
 
         /**
          * DOC_TBA
@@ -65,31 +54,39 @@ define([
          * DOC_TBA
          * @readonly
          */
+        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+
+        // Non-derived members
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.vertexFormat = vertexFormat;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
         this.flat = flat;
 
         /**
          * DOC_TBA
          * @readonly
          */
-        this.faceForward = defaults.faceForward;
+        this.faceForward = defaultValue(options.faceForward, false);
 
         /**
          * DOC_TBA
          * @readonly
          */
-        this.translucent = defaults.translucent;
+        this.translucent = translucent;
 
         /**
          * DOC_TBA
          * @readonly
          */
-        this.closed = defaults.closed;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.renderState = defaults.renderState;
+        this.closed = closed;
     };
 
     /**
@@ -107,7 +104,7 @@ define([
     /**
      * DOC_TBA
      */
-    PerInstanceColorAppearance.prototype.getFragmentShaderSource = MaterialAppearance.prototype.getFragmentShaderSource;
+    PerInstanceColorAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     return PerInstanceColorAppearance;
 });

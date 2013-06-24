@@ -2,11 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
-        './MaterialAppearance'
+        './Appearance'
     ], function(
         defaultValue,
         DeveloperError,
-        MaterialAppearance) {
+        Appearance) {
     "use strict";
 
     /**
@@ -68,24 +68,11 @@ define([
 
         options.flat = defaultValue(options.flat, true);
         options.translucent = defaultValue(options.translucent, false);
-        var defaults = new MaterialAppearance(options);
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.materialSupport = MaterialAppearance.MaterialSupport.NONE;
 
         /**
          * DOC_TBA
          */
         this.material = undefined;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.vertexFormat = undefined;
 
         /**
          * DOC_TBA
@@ -103,31 +90,7 @@ define([
          * DOC_TBA
          * @readonly
          */
-        this.flat = defaults.flat;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.faceForward = defaults.faceForward;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.translucent = defaults.translucent;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.closed = defaults.closed;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.renderState = defaults.renderState;
+        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(false, false));
 
         // Non-derived members
 
@@ -147,7 +110,7 @@ define([
     /**
      * DOC_TBA
      */
-    DebugAppearance.prototype.getFragmentShaderSource = MaterialAppearance.prototype.getFragmentShaderSource;
+    DebugAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     return DebugAppearance;
 });

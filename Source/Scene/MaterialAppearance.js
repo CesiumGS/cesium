@@ -3,9 +3,8 @@ define([
         '../Core/defaultValue',
         '../Core/freezeObject',
         '../Core/VertexFormat',
-        '../Renderer/CullFace',
-        '../Renderer/BlendingState',
         './Material',
+        './Appearance',
         '../Shaders/Appearances/BasicMaterialAppearanceVS',
         '../Shaders/Appearances/BasicMaterialAppearanceFS',
         '../Shaders/Appearances/TexturedMaterialAppearanceVS',
@@ -16,9 +15,8 @@ define([
         defaultValue,
         freezeObject,
         VertexFormat,
-        CullFace,
-        BlendingState,
         Material,
+        Appearance,
         BasicMaterialAppearanceVS,
         BasicMaterialAppearanceFS,
         TexturedMaterialAppearanceVS,
@@ -30,29 +28,20 @@ define([
     /**
      * DOC_TBA
      *
-     * @alias Appearance
+     * @alias MaterialAppearance
      * @constructor
      */
-    var Appearance = function(options) {
+    var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var materialSupport = defaultValue(options.materialSupport, Appearance.MaterialSupport.BASIC);
 
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.materialSupport = materialSupport;
+        var translucent = defaultValue(options.translucent, true);
+        var closed = defaultValue(options.closed, false);
+        var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.BASIC);
 
         /**
          * DOC_TBA
          */
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.vertexFormat = defaultValue(options.vertexFormat, materialSupport.vertexFormat);
 
         /**
          * DOC_TBA
@@ -70,6 +59,26 @@ define([
          * DOC_TBA
          * @readonly
          */
+        this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
+
+        // Non-derived members
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.materialSupport = materialSupport;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.vertexFormat = defaultValue(options.vertexFormat, materialSupport.vertexFormat);
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
         this.flat = defaultValue(options.flat, false);
 
         /**
@@ -82,61 +91,25 @@ define([
          * DOC_TBA
          * @readonly
          */
-        this.translucent = defaultValue(options.translucent, true);
+        this.translucent = translucent;
 
         /**
          * DOC_TBA
          * @readonly
          */
-        this.closed = defaultValue(options.closed, false);
-
-        var rs = {
-            depthTest : {
-                enabled : true
-            }
-        };
-
-        if (this.translucent) {
-            rs.depthMask = false;
-            rs.blending = BlendingState.ALPHA_BLEND;
-        }
-
-        if (this.closed) {
-            rs.cull = {
-                enabled : true,
-                face : CullFace.BACK
-            };
-        }
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.renderState = defaultValue(options.renderState, rs);
+        this.closed = closed;
     };
 
     /**
      * DOC_TBA
      */
-    Appearance.prototype.getFragmentShaderSource = function() {
-        var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
-        var faceForward = this.faceForward ? '#define FACE_FORWARD \n#line 0 \n' : '#line 0 \n';
-
-        if (typeof this.material !== 'undefined') {
-            return '#line 0\n' +
-                this.material.shaderSource +
-                flat +
-                this.fragmentShaderSource;
-        }
-
-        return flat + faceForward + this.fragmentShaderSource;
-    };
+    MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     /**
      * DOC_TBA
      * @enumeration
      */
-    Appearance.MaterialSupport = {
+    MaterialAppearance.MaterialSupport = {
         /**
          * DOC_TBA
          * @readonly
@@ -177,5 +150,5 @@ define([
         })
     };
 
-    return Appearance;
+    return MaterialAppearance;
 });
