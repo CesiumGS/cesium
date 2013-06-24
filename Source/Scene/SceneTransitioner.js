@@ -234,18 +234,19 @@ define([
             this._completeMorph();
         }
 
-        var currentMode = this._scene.mode;
-        if (currentMode === SceneMode.SCENE2D || currentMode === SceneMode.MORPHING) {
+        var scene = this._scene;
+        this._previousMode = scene.mode;
+
+        if (this._previousMode === SceneMode.SCENE2D || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, currentMode, SceneMode.SCENE2D, true);
-        this._previousMode = SceneMode.MORPHING;
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE2D, true);
 
         updateFrustums(this);
-        this._scene.mode = SceneMode.MORPHING;
+        scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, complete2DCallback);
 
-        if (currentMode === SceneMode.COLUMBUS_VIEW) {
+        if (this._previousMode === SceneMode.COLUMBUS_VIEW) {
             morphFromColumbusViewTo2D(this, this.morphDuration, complete2DCallback);
         } else {
             morphFrom3DTo2D(this, this.morphDuration, complete2DCallback);
@@ -261,18 +262,19 @@ define([
             this._completeMorph();
         }
 
-        var currentMode = this._scene.mode;
-        if (currentMode === SceneMode.COLUMBUS_VIEW || currentMode === SceneMode.MORPHING) {
+        var scene = this._scene;
+        this._previousMode = scene.mode;
+
+        if (this._previousMode === SceneMode.COLUMBUS_VIEW || this._previousMode === SceneMode.MORPHING) {
             return;
         }
-        this.onTransitionStart.raiseEvent(this, currentMode, SceneMode.COLUMBUS_VIEW, true);
-        this._previousMode = SceneMode.MORPHING;
+        this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.COLUMBUS_VIEW, true);
 
         updateFrustums(this);
-        this._scene.mode = SceneMode.MORPHING;
+        scene.mode = SceneMode.MORPHING;
         createMorphHandler(this, completeColumbusViewCallback);
 
-        if (currentMode === SceneMode.SCENE2D) {
+        if (this._previousMode === SceneMode.SCENE2D) {
             morphFrom2DToColumbusView(this, this.morphDuration, completeColumbusViewCallback);
         } else {
             morphFrom3DToColumbusView(this, this.morphDuration, this._cameraCV, completeColumbusViewCallback);
@@ -295,7 +297,6 @@ define([
             return;
         }
         this.onTransitionStart.raiseEvent(this, this._previousMode, SceneMode.SCENE3D, true);
-        this._previousMode = SceneMode.MORPHING;
 
         updateFrustums(this);
         scene.mode = SceneMode.MORPHING;

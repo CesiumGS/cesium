@@ -139,10 +139,8 @@ defineSuite([
         expect(box.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 
-    it('static clone throws with no parameter', function() {
-        expect(function() {
-            AxisAlignedBoundingBox.clone();
-        }).toThrow();
+    it('static clone returns undefined with no parameter', function() {
+        expect(typeof AxisAlignedBoundingBox.clone()).toEqual('undefined');
     });
 
     it('static intersect throws without a box', function() {

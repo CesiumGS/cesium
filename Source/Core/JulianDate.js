@@ -295,13 +295,11 @@ define([
      *
      * @param {Cartesian3} date The JulianDate to duplicate.
      * @param {Cartesian3} [result] The object onto which to store the JulianDate.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} date is required.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if date is undefined)
      */
     JulianDate.clone = function(date, result) {
         if (typeof date === 'undefined') {
-            throw new DeveloperError('date is required.');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new JulianDate(date._julianDayNumber, date._secondsOfDay, TimeStandard.TAI);
