@@ -34,7 +34,7 @@ define([
         }
     }
 
-    ValueHolder.prototype.getValueSpherical = function() {
+    ValueHolder.prototype.getValue = function() {
         var sphericals = this.spherical;
         if (typeof sphericals === 'undefined') {
             sphericals = [];
@@ -45,19 +45,6 @@ define([
             }
         }
         return sphericals;
-    };
-
-    ValueHolder.prototype.getValue = function() {
-        var cartesians = this.cartesian;
-        if (typeof cartesians === 'undefined') {
-            cartesians = [];
-            this.cartesian = cartesians;
-            var sphericals = this.spherical;
-            for ( var i = 0, len = sphericals.length; i < len; i++) {
-                cartesians.push(Cartesian3.fromSpherical(sphericals[i]));
-            }
-        }
-        return cartesians;
     };
 
     /**
@@ -108,21 +95,6 @@ define([
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @returns An array of spherical coordinates for the provided time.
-     */
-    DynamicDirectionsProperty.prototype.getValueSpherical = function(time) {
-        var interval = this._propertyIntervals.findIntervalContainingDate(time);
-        if (typeof interval === 'undefined') {
-            return undefined;
-        }
-        return interval.data.getValueSpherical();
-    };
-
-    /**
-     * Retrieves the values at the supplied time as unit cartesian coordinates.
-     * @memberof DynamicDirectionsProperty
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @returns An array of unit cartesian coordinates for the provided time.
      */
     DynamicDirectionsProperty.prototype.getValue = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);

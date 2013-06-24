@@ -243,7 +243,7 @@ define([
 
         pyramid.show = true;
 
-        var directions = directionsProperty.getValueSpherical(time);
+        var directions = directionsProperty.getValue(time);
         if (typeof directions !== 'undefined' && pyramid._visualizerDirections !== directions) {
             pyramid.setDirections(directions);
             pyramid._visualizerDirections = directions;

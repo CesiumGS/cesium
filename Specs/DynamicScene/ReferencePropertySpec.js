@@ -73,16 +73,6 @@ defineSuite([
         expect(property.getValue()).toBeUndefined();
     });
 
-    it('getValue returned undefined for unresolved property', function() {
-        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
-        expect(property.getValue()).toBeUndefined();
-    });
-
-    it('getValueSpherical returned undefined for unresolved property', function() {
-        var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
-        expect(property.getValueSpherical()).toBeUndefined();
-    });
-
     it('Resolves getValue property on direct collection', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         createTestObject(dynamicObjectCollection, 'getValue');
@@ -127,16 +117,5 @@ defineSuite([
         expect(result.expectedValue).toEqual(true);
         expect(result.expectedTime).toEqual(validTime);
         expect(property.getValue(invalidTime, result)).toBeUndefined();
-    });
-
-    it('Resolves getValueSpherical property on direct collection', function() {
-        var dynamicObjectCollection = new DynamicObjectCollection();
-        createTestObject(dynamicObjectCollection, 'getValueSpherical');
-        var property = ReferenceProperty.fromString(dynamicObjectCollection, testObjectLink);
-        var result = {};
-        expect(property.getValueSpherical(validTime, result)).toEqual(result);
-        expect(result.expectedValue).toEqual(true);
-        expect(result.expectedTime).toEqual(validTime);
-        expect(property.getValueSpherical(invalidTime, result)).toBeUndefined();
     });
 });

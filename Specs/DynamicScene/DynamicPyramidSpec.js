@@ -44,7 +44,7 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(Iso8601.MINIMUM_VALUE)).toEqual(
+        expect(dynamicObject.pyramid.directions.getValue(Iso8601.MINIMUM_VALUE)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
@@ -84,7 +84,7 @@ defineSuite([
         expect(DynamicPyramid.processCzmlPacket(dynamicObject, pyramidPacket)).toEqual(true);
 
         expect(dynamicObject.pyramid).toBeDefined();
-        expect(dynamicObject.pyramid.directions.getValueSpherical(validTime)).toEqual(
+        expect(dynamicObject.pyramid.directions.getValue(validTime)).toEqual(
                 [new Spherical(pyramidPacket.pyramid.directions.unitSpherical[0], pyramidPacket.pyramid.directions.unitSpherical[1]),
                         new Spherical(pyramidPacket.pyramid.directions.unitSpherical[2], pyramidPacket.pyramid.directions.unitSpherical[3])]);
         expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
@@ -93,7 +93,7 @@ defineSuite([
         expect(dynamicObject.pyramid.material.getValue(validTime).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
 
-        expect(dynamicObject.pyramid.directions.getValueSpherical(invalidTime)).toBeUndefined();
+        expect(dynamicObject.pyramid.directions.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.pyramid.radius.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.pyramid.show.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.pyramid.showIntersection.getValue(invalidTime)).toBeUndefined();

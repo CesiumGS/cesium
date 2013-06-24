@@ -114,31 +114,5 @@ define([
         return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
-    /**
-     * Retrieves the Cartesian value or values of the property at the specified time if the linked property
-     * is a DynamicPositionProperty, DynamicVertexPositionsProperty, or DynamicDirectionsProperty.
-     *
-     * @param time The time to evaluate the property.
-     * @param [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns The result parameter or a new instance if the parameter was omitted.
-     */
-    ReferenceProperty.prototype.getValue = function(time, result) {
-        var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
-    };
-
-    /**
-     * Retrieves the Spherical value or values of the property at the specified time if the linked property
-     * is a DynamicDirectionsProperty.
-     *
-     * @param time The time to evaluate the property.
-     * @param [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns The result parameter or a new instance if the parameter was omitted.
-     */
-    ReferenceProperty.prototype.getValueSpherical = function(time, result) {
-        var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValueSpherical(time, result) : undefined;
-    };
-
     return ReferenceProperty;
 });
