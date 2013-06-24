@@ -4,6 +4,7 @@ define(['../Core/createGuid',
         '../Core/Color',
         '../Core/defineProperties',
         '../Core/DeveloperError',
+        '../Core/RuntimeError',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/loadJson',
@@ -20,6 +21,7 @@ define(['../Core/createGuid',
                 Color,
                 defineProperties,
                 DeveloperError,
+                RuntimeError,
                 Ellipsoid,
                 Event,
                 loadJson,
@@ -216,11 +218,11 @@ define(['../Core/createGuid',
      *
      * @exception {DeveloperError} geoJson is required.
      * @exception {DeveloperError} Unsupported GeoJSON object type.
-     * @exception {DeveloperError} crs is null.
-     * @exception {DeveloperError} crs.properties is undefined.
-     * @exception {DeveloperError} Unknown crs name.
-     * @exception {DeveloperError} Unable to resolve crs link.
-     * @exception {DeveloperError} Unknown crs type.
+     * @exception {RuntimeError} crs is null.
+     * @exception {RuntimeError} crs.properties is undefined.
+     * @exception {RuntimeError} Unknown crs name.
+     * @exception {RuntimeError} Unable to resolve crs link.
+     * @exception {RuntimeError} Unknown crs type.
      */
     GeoJsonDataSource.prototype.load = function(geoJson, source) {
         if (typeof geoJson === 'undefined') {
@@ -237,17 +239,17 @@ define(['../Core/createGuid',
         var crs = geoJson.crs;
         if (typeof crs !== 'undefined') {
             if (crs === null) {
-                throw new DeveloperError('crs is null.');
+                throw new RuntimeError('crs is null.');
             }
             if (typeof crs.properties === 'undefined') {
-                throw new DeveloperError('crs.properties is undefined.');
+                throw new RuntimeError('crs.properties is undefined.');
             }
 
             var properties = crs.properties;
             if (crs.type === 'name') {
                 var crsFunction = GeoJsonDataSource.crsNames[properties.name];
                 if (typeof crsFunction === 'undefined') {
-                    throw new DeveloperError('Unknown crs name: ' + properties.name);
+                    throw new RuntimeError('Unknown crs name: ' + properties.name);
                 }
 
                 crsPromise = when(crsFunction, function(crsFunction) {
@@ -262,12 +264,12 @@ define(['../Core/createGuid',
                 }
 
                 if (typeof handler === 'undefined') {
-                    throw new DeveloperError('Unable to resolve crs link: ' + JSON.stringify(properties));
+                    throw new RuntimeError('Unable to resolve crs link: ' + JSON.stringify(properties));
                 }
 
                 crsPromise = handler(properties);
             } else {
-                throw new DeveloperError('Unknown crs type: ' + crs.type);
+                throw new RuntimeError('Unknown crs type: ' + crs.type);
             }
         } else {
             //Use the default
@@ -349,7 +351,7 @@ define(['../Core/createGuid',
     // GeoJson processing functions
     function processFeature(dataSource, feature, notUsed, crsFunction, source) {
         if (typeof feature.geometry === 'undefined') {
-            throw new DeveloperError('feature.geometry is required.');
+            throw new RuntimeError('feature.geometry is required.');
         }
 
         if (feature.geometry === null) {
@@ -359,7 +361,7 @@ define(['../Core/createGuid',
             var geometryType = feature.geometry.type;
             var geometryHandler = geometryTypes[geometryType];
             if (typeof geometryHandler === 'undefined') {
-                throw new DeveloperError('Unknown geometry type: ' + geometryType);
+                throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, feature, feature.geometry, crsFunction, source);
         }
@@ -379,7 +381,7 @@ define(['../Core/createGuid',
             var geometryType = geometry.type;
             var geometryHandler = geometryTypes[geometryType];
             if (typeof geometryHandler === 'undefined') {
-                throw new DeveloperError('Unknown geometry type: ' + geometryType);
+                throw new RuntimeError('Unknown geometry type: ' + geometryType);
             }
             geometryHandler(dataSource, geoJson, geometry, crsFunction, source);
         }
