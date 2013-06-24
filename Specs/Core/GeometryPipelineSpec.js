@@ -1700,4 +1700,122 @@ defineSuite([
             expect(Cartesian3.fromArray(tangents, i)).toEqual(Cartesian3.UNIT_X.negate());
         }
     });
+
+    it('wrapLongitude subdivides line crossing the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, 1.0, 2.0])
+                })
+            },
+            indices : new Uint16Array([0, 1]),
+            primitiveType : PrimitiveType.LINES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+        expect(geometry.indices).toEqual([0, 2, 3, 1]);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions.subarray(0, 2 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, 1.0, 2.0]);
+        expect(positions.length).toEqual(4 * 3);
+    });
+
+    it('wrapLongitude returns offset line that touches the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([-1.0, 0.0, 0.0, -1.0, 1.0, 2.0])
+                })
+            },
+            indices : new Uint16Array([0, 1]),
+            primitiveType : PrimitiveType.LINES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+        expect(geometry.indices).toEqual([0, 1]);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions).toEqual([-1.0, CesiumMath.EPSILON6, 0.0, -1.0, 1.0, 2.0]);
+        expect(positions.length).toEqual(2 * 3);
+    });
+
+    it('wrapLongitude returns the same points if the line doesn\'t cross the international date line', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
+                })
+            },
+            indices : new Uint16Array([0, 1]),
+            primitiveType : PrimitiveType.LINES
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+        expect(geometry.indices).toEqual([0, 1]);
+
+        var positions = geometry.attributes.position.values;
+        expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
+        expect(positions.length).toEqual(2 * 3);
+    });
+
+    it('wrapLongitude does nothing for points', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
+        geometry = GeometryPipeline.wrapLongitude(geometry);
+        expect(geometry.indices).not.toBeDefined();
+
+        var positions = geometry.attributes.position.values;
+        expect(positions).toEqual([1.0, 1.0, 0.0, 1.0, 1.0, 2.0]);
+        expect(positions.length).toEqual(2 * 3);
+    });
+
+    it('wrapLongitude throws when geometry is undefined', function() {
+        expect(function() {
+            return GeometryPipeline.wrapLongitude();
+        }).toThrow();
+    });
+
+    it('wrapLongitude throws when geometry.indices is undefined', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
+                })
+            },
+            primitiveType : PrimitiveType.LINES
+        });
+        expect(function() {
+            return GeometryPipeline.wrapLongitude(geometry);
+        }).toThrow();
+    });
+
+    it('wrapLongitude throws when geometry.primitiveType is unsupported', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
+                })
+            },
+            indices : new Uint16Array([0, 1]),
+            primitiveType : PrimitiveType.LINE_LOOP
+        });
+        expect(function() {
+            return GeometryPipeline.wrapLongitude(geometry);
+        }).toThrow();
+    });
 });

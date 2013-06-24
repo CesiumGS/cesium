@@ -1788,7 +1788,7 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        if (typeof geometry.indices === 'undefined') {
+        if (typeof geometry.indices === 'undefined' && geometry.primitiveType !== PrimitiveType.POINTS) {
             throw new DeveloperError('geometry.indices is required.');
         }
 
