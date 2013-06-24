@@ -25,10 +25,12 @@ define([
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
+        'Core/VertexFormat',
         'Scene/Primitive',
-        'Scene/Appearance',
+        'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/DebugAppearance',
         'Scene/Material',
         'Scene/ExtentPrimitive',
         'Scene/Polygon',
@@ -63,10 +65,12 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         WallGeometry,
+        VertexFormat,
         Primitive,
-        Appearance,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         EllipsoidSurfaceAppearance,
+        DebugAppearance,
         Material,
         ExtentPrimitive,
         Polygon,
@@ -269,14 +273,14 @@ define([
                 enabled : true
             }
         };
-        var appearance = new Appearance({
-            materialSupport :  Appearance.MaterialSupport.ALL,
+        var appearance = new MaterialAppearance({
+            materialSupport :  MaterialAppearance.MaterialSupport.ALL,
             material : m,
             renderState : rs
         });
         var geometry5 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : Appearance.MaterialSupport.ALL.vertexFormat,
+                vertexFormat : MaterialAppearance.MaterialSupport.ALL.vertexFormat,
                 ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -361,7 +365,7 @@ define([
 
         var wall = new GeometryInstance({
             geometry : new WallGeometry({
-                vertexFormat : Appearance.MaterialSupport.TEXTURED.vertexFormat,
+                vertexFormat : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
                 positions    : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
@@ -374,14 +378,34 @@ define([
         });
         var wallPrimitive = new Primitive({
             geometryInstances : wall,
-            appearance : new Appearance({
-                materialSupport : Appearance.MaterialSupport.TEXTURED,
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
                 material : Material.fromType(scene.getContext(), 'Checkerboard'),
                 faceForward : true
             })
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
+
+        scene.getPrimitives().add(new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new WallGeometry({
+                    vertexFormat : VertexFormat.ALL,
+                    positions    : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0)
+                    ]),
+                    bottom : 400000.0
+                })
+            }),
+            appearance : new DebugAppearance({
+                attributeName : 'st',
+                glslDatatype : 'vec2'
+            })
+        }));
 
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
@@ -485,11 +509,7 @@ define([
          }));
 
          var extentPrimitive = new ExtentPrimitive({
-             extent : new Extent(
-                 CesiumMath.toRadians(0.0),
-                 CesiumMath.toRadians(20.0),
-                 CesiumMath.toRadians(10.0),
-                 CesiumMath.toRadians(40.0))
+             extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
          });
          scene.getPrimitives().add(extentPrimitive);
 
@@ -515,7 +535,7 @@ define([
         handler.setInputAction(
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
-                wallPrimitive.appearance = new Appearance();
+                wallPrimitive.appearance = new MaterialAppearance();
 
                 extentPrimitive.material = Material.fromType(scene.getContext(), 'Dot');
                 extentPrimitive.rotation = CesiumMath.toRadians(45.0);

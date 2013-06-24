@@ -30,9 +30,9 @@ Beta Releases
    * `EllipseGeometry`
    * `CircleGeometry`
    * `WallGeometry`
+   * `SimplePolylineGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-   * `SimplePolylineGeometry`
 * Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
    * `Appearance`
    * `PerInstanceColorAppearance`
@@ -43,6 +43,7 @@ Beta Releases
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
@@ -73,6 +74,7 @@ Beta Releases
 * Fix resizing issues in `CesiumWidget` ([#608](https://github.com/AnalyticalGraphicsInc/cesium/issues/608)) by having the default render loop force a resize event every 60 frames.
 * Added `CesiumWidget.onRenderLoopError` which is an `Event` that is raised if an exception is generated inside of the default render loop.
 * `ImageryProviderViewModel.creationCommand` can now return an array of ImageryProvider instances, which allows adding multiple layers when a single item is selected in the `BaseLayerPicker` widget.
+* Changed static `clone` functions in all objects such that if the object being cloned is undefined, the function will return undefined instead of throwing an exception
 
 ### b17 - 2013-06-03
 

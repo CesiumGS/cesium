@@ -59,6 +59,9 @@ define([
     /**
      * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
+     * @alias ExtentGeometry
+     * @constructor
+     *
      * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
@@ -75,18 +78,11 @@ define([
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
      * @exception {DeveloperError} Rotated extent is invalid.
      *
-     * @see Extent
-     *
      * @example
      * var extent = new ExtentGeometry({
-     *     ellipsoid : Ellipsoid.WGS84,
-     *     extent : new Extent(
-     *         CesiumMath.toRadians(-80.0),
-     *         CesiumMath.toRadians(39.0),
-     *         CesiumMath.toRadians(-74.0),
-     *         CesiumMath.toRadians(42.0)
-     *     ),
-     *     height : 10000.0
+     *   ellipsoid : Ellipsoid.WGS84,
+     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     *   height : 10000.0
      * });
      */
     var ExtentGeometry = function(options) {
