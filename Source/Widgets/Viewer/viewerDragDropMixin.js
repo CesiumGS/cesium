@@ -195,11 +195,13 @@ define([
     }
 
     function endsWith(str, suffix) {
-        return str.indexOf(suffix, -suffix.length) !== -1;
+        var strLength = str.length;
+        var suffixLength = suffix.length;
+        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
     function createOnLoadCallback(viewer, source, firstTime) {
-        if (endsWith(source.toUpperCase(), "CZML")) {
+        if (endsWith(source.toUpperCase(), ".CZML")) {
             return function(evt) {
                 var czmlSource = new CzmlDataSource();
                 try {
@@ -219,7 +221,7 @@ define([
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 }
             };
-        } else if (endsWith(source.toUpperCase(), 'GEOJSON')) {
+        } else if (endsWith(source.toUpperCase(), '.GEOJSON')) {
             return function(evt) {
                 var geoJsonSource = new GeoJsonDataSource();
                 try {

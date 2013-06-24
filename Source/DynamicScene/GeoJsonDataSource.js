@@ -76,7 +76,7 @@ define(['../Core/createGuid',
         //default point
         var defaultPoint = new DynamicObject('GeoJsonDataSource.defaultPoint');
         var point = new DynamicPoint();
-        point.color = new ConstantProperty(Color.CYAN);
+        point.color = new ConstantProperty(Color.YELLOW);
         point.pixelSize = new ConstantProperty(10);
         point.outlineColor = new ConstantProperty(Color.BLACK);
         point.outlineWidth = new ConstantProperty(1);
@@ -85,7 +85,7 @@ define(['../Core/createGuid',
         //default line
         var defaultLine = new DynamicObject('GeoJsonDataSource.defaultLine');
         var polyline = new DynamicPolyline();
-        polyline.color = new ConstantProperty(Color.CYAN);
+        polyline.color = new ConstantProperty(Color.YELLOW);
         polyline.width = new ConstantProperty(2);
         polyline.outlineColor = new ConstantProperty(Color.BLACK);
         polyline.outlineWidth = new ConstantProperty(1);
@@ -95,7 +95,7 @@ define(['../Core/createGuid',
         var defaultPolygon = new DynamicObject('GeoJsonDataSource.defaultPolygon');
         var polygonMaterial = new DynamicMaterialProperty();
         polyline = new DynamicPolyline();
-        polyline.color = new ConstantProperty(Color.CYAN);
+        polyline.color = new ConstantProperty(Color.YELLOW);
         polyline.width = new ConstantProperty(1);
         polyline.outlineColor = new ConstantProperty(Color.BLACK);
         polyline.outlineWidth = new ConstantProperty(0);
@@ -105,7 +105,7 @@ define(['../Core/createGuid',
         polygonMaterial.processCzmlIntervals({
             solidColor : {
                 color : {
-                    rgba : [0, 255, 255, 25]
+                    rgba : [255, 255, 0, 25]
                 }
             }
         }, undefined, undefined);
