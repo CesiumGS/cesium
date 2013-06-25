@@ -1515,7 +1515,6 @@ define([
                 }
             }
 
-
             var positions = splitTriangleResult.positions;
             positions[0] = p0;
             positions[1] = p1;
@@ -1755,7 +1754,7 @@ define([
                 var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane);
                 if (typeof intersection !== 'undefined') {
                     // move point on the xz-plane slightly away from the plane
-                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0e-9);
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9);
                     if (prev.y < 0.0) {
                         Cartesian3.negate(offset, offset);
                     }
@@ -1788,10 +1787,6 @@ define([
             throw new DeveloperError('geometry is required.');
         }
 
-        if (typeof geometry.indices === 'undefined' && geometry.primitiveType !== PrimitiveType.POINTS) {
-            throw new DeveloperError('geometry.indices is required.');
-        }
-
         var boundingSphere = geometry.boundingSphere;
         if (typeof boundingSphere !== 'undefined') {
             var minX = boundingSphere.center.x - boundingSphere.radius;
@@ -1800,17 +1795,29 @@ define([
             }
         }
 
-        switch (geometry.primitiveType) {
-        case PrimitiveType.POINTS:
-            break;
-        case PrimitiveType.TRIANGLES:
+        var primitiveType = geometry.primitiveType;
+        if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
+            GeometryPipeline.indexTriangleFan(primitiveType);
             wrapLongitudeTriangles(geometry);
-            break;
-        case PrimitiveType.LINES:
+        } else if (primitiveType === PrimitiveType.TRIANGLE_STRIP) {
+            GeometryPipeline.indexTriangleStrip(geometry);
+            wrapLongitudeTriangles(geometry);
+        } else if (primitiveType === PrimitiveType.TRIANGLES) {
+            if (typeof geometry.indices === 'undefined') {
+                GeometryPipeline.indexTriangles(geometry);
+            }
+            wrapLongitudeTriangles(geometry);
+        } else if (primitiveType === PrimitiveType.LINE_STRIP) {
+            GeometryPipeline.indexLineStrip(geometry);
             wrapLongitudeLines(geometry);
-            break;
-        default:
-            throw new DeveloperError('geometry.primitiveType is unsupported.');
+        } else if (primitiveType === PrimitiveType.LINE_LOOP) {
+            GeometryPipeline.indexLineLoop(geometry);
+            wrapLongitudeLines(geometry);
+        } else if (primitiveType === PrimitiveType.LINES) {
+            if (typeof geometry.indices === 'undefined') {
+                GeometryPipeline.indexLines(geometry);
+            }
+            wrapLongitudeLines(geometry);
         }
 
         return geometry;

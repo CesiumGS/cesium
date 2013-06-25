@@ -61,7 +61,7 @@ define([
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
-     * @param {Boolean} [options.releaseGeometries=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+     * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.transformToWorldCoordinates=true] When <code>true</code>, each geometry instance is transform to world coordinates even if they are already in the same coordinate system.
      * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
      *
@@ -123,7 +123,7 @@ define([
 
         /**
          * The geometry instances rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometries</code>
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
@@ -173,7 +173,7 @@ define([
         this.show = true;
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
-        this._releaseGeometries = defaultValue(options.releaseGeometries, true);
+        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
         this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
@@ -304,39 +304,46 @@ define([
         }
     }
 
-    var indexFunctions = [
-        function(geometry) { return geometry; },
-        GeometryPipeline.indexLines,
-        GeometryPipeline.indexLineLoop,
-        GeometryPipeline.indexLineStrip,
-        GeometryPipeline.indexTriangles,
-        GeometryPipeline.indexTriangleStrip,
-        GeometryPipeline.indexTriangleFan
-    ];
-
-    function wrapLongitude(primitive, instances) {
-        if (!primitive._allowColumbusView) {
-            return;
+    // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
+    function geometryPipeline(primitive, instances, context) {
+        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+        var length = instances.length;
+        var insts = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            insts[i] = instances[i].clone();
         }
 
-        var length = instances.length;
-        var primitiveType = instances[0].geometry.primitiveType;
+        // Unify to world coordinates before combining.  If there is only one geometry or all
+        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
+        transformToWorldCoordinates(primitive, insts);
 
-        for (var i = 1; i < length; ++i) {
-            if (instances[i].geometry.primitiveType !== primitiveType) {
+        var primitiveType = instances[0].geometry.primitiveType;
+        for (var j = 1; j < length; ++j) {
+            if (instances[j].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
 
-        var indexFunction = indexFunctions[primitiveType.value];
-        for (var j = 0; j < length; ++j) {
-            var geometry = instances[j].geometry;
-            indexFunction(geometry);
-            GeometryPipeline.wrapLongitude(geometry);
+        // Clip to IDL
+        if (primitive._allowColumbusView) {
+            for (var k = 0; k < length; ++k) {
+                GeometryPipeline.wrapLongitude(instances[k].geometry);
+            }
         }
-    }
 
-    function encodePositions(primitive, geometry) {
+        // Add color attribute if any geometries have per-instance color
+        if (hasPerInstanceColor(insts)) {
+            addColorAttribute(primitive, insts, context);
+        }
+
+        // Add pickColor attribute for picking individual instances
+        addPickColorAttribute(primitive, insts, context);
+
+        // Combine into single geometry for better rendering performance.
+        var geometry = GeometryPipeline.combine(insts);
+        primitive._boundingSphere = geometry.boundingSphere;
+
+        // Split positions for GPU RTE
         if (primitive._allowColumbusView) {
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry);
@@ -356,38 +363,6 @@ define([
         } else {
             GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
-    }
-
-    // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
-    function geometryPipeline(primitive, instances, context) {
-        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
-        var length = instances.length;
-        var insts = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            insts[i] = instances[i].clone();
-        }
-
-        // Unify to world coordinates before combining.  If there is only one geometry or all
-        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, insts);
-
-        // Clip to IDL
-        wrapLongitude(primitive, insts);
-
-        // Add color attribute if any geometries have per-instance color
-        if (hasPerInstanceColor(insts)) {
-            addColorAttribute(primitive, insts, context);
-        }
-
-        // Add pickColor attribute for picking individual instances
-        addPickColorAttribute(primitive, insts, context);
-
-        // Combine into single geometry for better rendering performance.
-        var geometry = GeometryPipeline.combine(insts);
-        primitive._boundingSphere = geometry.boundingSphere;
-
-        // Split positions for GPU RTE
-        encodePositions(primitive, geometry);
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -403,13 +378,13 @@ define([
         if (primitive._allowColumbusView) {
             attributes =
                 'attribute vec3 position2DHigh;\n' +
-                'attribute vec3 position2DLow;';
+                'attribute vec3 position2DLow;\n';
         } else {
             attributes = '';
         }
 
         var computePosition =
-            'vec4 czm_computePosition()\n' +
+            '\nvec4 czm_computePosition()\n' +
             '{\n';
         if (primitive._allowColumbusView) {
             computePosition +=
@@ -435,21 +410,7 @@ define([
         }
         computePosition += '}\n\n';
 
-
-        var position3DLow = 'position3DLow;';
-        var positionLowIndex = vertexShaderSource.indexOf(position3DLow);
-        positionLowIndex += position3DLow.length;
-
-        var main = vertexShaderSource.match(/void\s+main\s*\(\s*(?:void)?\s*\)/);
-        var mainIndex = vertexShaderSource.indexOf(main[0]);
-
-        var shaderSource =
-            vertexShaderSource.substring(0, positionLowIndex) + '\n' +
-            attributes +
-            vertexShaderSource.substring(positionLowIndex, mainIndex) +
-            computePosition +
-            vertexShaderSource.substring(mainIndex);
-        return shaderSource;
+        return attributes + vertexShaderSource + computePosition;
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -554,7 +515,7 @@ define([
                 pickCommands.push(pickCommand);
             }
 
-            if (this._releaseGeometries) {
+            if (this._releaseGeometryInstances) {
                 this.geometryInstances = undefined;
             }
         }
