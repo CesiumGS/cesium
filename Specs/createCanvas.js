@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        'Core/defaultValue'
+        'Core/defaultValue',
+        'Core/RuntimeError'
     ], function(
-        defaultValue) {
+        defaultValue,
+        RuntimeError) {
     "use strict";
 
     function createCanvas(width, height) {
@@ -10,13 +12,14 @@ define([
         height = defaultValue(height, 1);
 
         var canvas = document.createElement('canvas');
-        canvas.id = 'glCanvas';
-        canvas.setAttribute('width', width);
-        canvas.setAttribute('clientWidth', width);
-        canvas.setAttribute('height', height);
-        canvas.setAttribute('clientHeight', height);
-        canvas.innerHTML = 'To view this web page, upgrade your browser; it does not support the HTML5 canvas element.';
+        canvas.width = width;
+        canvas.height = height;
+
         document.body.appendChild(canvas);
+
+        if (canvas.width !== canvas.clientWidth || canvas.height !== canvas.clientHeight) {
+            throw new RuntimeError('Canvas width and height do not match client width and height.  Perhaps the browser is not at 100% zoom?');
+        }
 
         return canvas;
     }
