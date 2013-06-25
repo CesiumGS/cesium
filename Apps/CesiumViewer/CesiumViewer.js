@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'DynamicScene/CzmlDataSource',
+        'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
         'Core/Color',
         'Core/Math',
@@ -41,6 +42,7 @@ define([
         'domReady!'
     ], function(
         CzmlDataSource,
+        GeoJsonDataSource,
         PerformanceDisplay,
         Color,
         CesiumMath,
@@ -114,6 +116,12 @@ define([
         window.alert(e);
     });
 
+    function endsWith(str, suffix) {
+        var strLength = str.length;
+        var suffixLength = suffix.length;
+        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
+    }
+
     function startup() {
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);
@@ -139,7 +147,12 @@ define([
         }
 
         if (typeof endUserOptions.source !== 'undefined') {
-            var source = new CzmlDataSource();
+            var source;
+            if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
+                source = new GeoJsonDataSource();
+            } else {
+                source = new CzmlDataSource();
+            }
             source.loadUrl(endUserOptions.source).then(function() {
                 viewer.dataSources.add(source);
 

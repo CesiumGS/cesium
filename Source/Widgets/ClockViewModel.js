@@ -3,12 +3,16 @@ define([
         '../Core/Clock',
         '../Core/defaultValue',
         '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/EventHelper',
         '../Core/JulianDate',
         '../ThirdParty/knockout'
     ], function(
         Clock,
         defaultValue,
         defineProperties,
+        destroyObject,
+        EventHelper,
         JulianDate,
         knockout) {
     "use strict";
@@ -25,7 +29,9 @@ define([
     var ClockViewModel = function(clock) {
         clock = defaultValue(clock, new Clock());
         this._clock = clock;
-        this._clock.onTick.addEventListener(this.synchronize, this);
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(clock.onTick, this.synchronize, this);
 
         var startTime = knockout.observable(clock.startTime);
         startTime.equalityComparer = JulianDate.equals;
@@ -195,6 +201,25 @@ define([
         this.clockStep = clockStep;
         this.clockRange = clockRange;
         this.shouldAnimate = shouldAnimate;
+    };
+
+    /**
+     * @memberof ClockViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    ClockViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the view model.  Should be called to
+     * properly clean up the view model when it is no longer needed.
+     * @memberof ClockViewModel
+     */
+    ClockViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
+
+        destroyObject(this);
     };
 
     return ClockViewModel;

@@ -3,6 +3,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/EventHelper',
         '../../Scene/SceneMode',
         '../createCommand',
         '../../ThirdParty/knockout'
@@ -10,6 +11,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EventHelper,
         SceneMode,
         createCommand,
         knockout) {
@@ -29,15 +31,17 @@ define([
             throw new DeveloperError('transitioner is required.');
         }
 
+        this._transitioner = transitioner;
+
         var that = this;
 
-        this._transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
+        var transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
             that.dropDownVisible = false;
         };
 
-        transitioner.onTransitionStart.addEventListener(this._transitionStart);
-        this._transitioner = transitioner;
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(transitioner.onTransitionStart, transitionStart);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
@@ -182,7 +186,8 @@ define([
      * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
-        this._transitioner.onTransitionStart.removeEventListener(this._transitionStart);
+        this._eventHelper.removeAll();
+
         destroyObject(this);
     };
 

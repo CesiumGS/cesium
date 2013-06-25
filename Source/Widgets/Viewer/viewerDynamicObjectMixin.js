@@ -1,19 +1,20 @@
 /*global define*/
-define(['../../Core/defaultValue',
+define([
+        '../../Core/defaultValue',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
-        '../../Core/Event',
+        '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../DynamicScene/DynamicObjectView'
-        ], function(
-                defaultValue,
-                DeveloperError,
-                defineProperties,
-                Event,
-                ScreenSpaceEventType,
-                wrapFunction,
-                DynamicObjectView) {
+    ], function(
+        defaultValue,
+        DeveloperError,
+        defineProperties,
+        EventHelper,
+        ScreenSpaceEventType,
+        wrapFunction,
+        DynamicObjectView) {
     "use strict";
 
     /**
@@ -44,27 +45,19 @@ define(['../../Core/defaultValue',
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
 
+        var eventHelper = new EventHelper();
+        var trackedObject;
         var dynamicObjectView;
 
         //Subscribe to onTick so that we can update the view each update.
-        function onTick(clock) {
+        function updateView(clock) {
             if (typeof dynamicObjectView !== 'undefined') {
                 dynamicObjectView.update(clock.currentTime);
             }
         }
-        viewer.clock.onTick.addEventListener(onTick, viewer);
+        eventHelper.add(viewer.clock.onTick, updateView);
 
-        //Subscribe to the home button click if it exists, so that we can
-        //cancel the trackedObject when it is clicked.
-        function onHomeButton() {
-            viewer.trackedObject = undefined;
-        }
-        if (typeof viewer.homeButton !== 'undefined') {
-            viewer.homeButton.viewModel.command.beforeExecute.addEventListener(onHomeButton, viewer);
-        }
-
-        //Subscribe to left clicks and zoom to the picked object.
-        function _onLeftClick(e) {
+        function pickAndTrackObject(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
             if (typeof pickedPrimitive !== 'undefined' &&
                 typeof pickedPrimitive.dynamicObject !== 'undefined' &&
@@ -72,10 +65,19 @@ define(['../../Core/defaultValue',
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
             }
         }
-        viewer.screenSpaceEventHandler.setInputAction(_onLeftClick, ScreenSpaceEventType.LEFT_CLICK);
 
-        //Local variables to be closed over by defineProperties.
-        var trackedObject;
+        function clearTrackedObject() {
+            viewer.trackedObject = undefined;
+        }
+
+        //Subscribe to the home button click if it exists, so that we can
+        //clear the trackedObject when it is clicked.
+        if (typeof viewer.homeButton !== 'undefined') {
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+        }
+
+        //Subscribe to left clicks and zoom to the picked object.
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
 
         defineProperties(viewer, {
             /**
@@ -99,10 +101,8 @@ define(['../../Core/defaultValue',
 
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
-            viewer.clock.onTick.removeEventListener(onTick, viewer);
-            if (typeof viewer.homeButton !== 'undefined') {
-                viewer.homeButton.viewModel.command.beforeExecute.removeEventListener(onHomeButton, viewer);
-            }
+            eventHelper.removeAll();
+
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
         });
     };
