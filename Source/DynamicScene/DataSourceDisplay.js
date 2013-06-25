@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DataSourceCollection',
+define([
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/EventHelper',
+        './DataSourceCollection',
         './DynamicBillboardVisualizer',
         './DynamicEllipsoidVisualizer',
         './DynamicConeVisualizerUsingCustomSensor',
@@ -9,11 +14,12 @@ define(['./DataSourceCollection',
         './DynamicPolygonVisualizer',
         './DynamicPolylineVisualizer',
         './DynamicPyramidVisualizer',
-        './VisualizerCollection',
-        '../Core/defaultValue',
-        '../Core/destroyObject',
-        '../Core/DeveloperError'
+        './VisualizerCollection'
     ], function(
+        defaultValue,
+        destroyObject,
+        DeveloperError,
+        EventHelper,
         DataSourceCollection,
         DynamicBillboardVisualizer,
         DynamicEllipsoidVisualizer,
@@ -24,10 +30,7 @@ define(['./DataSourceCollection',
         DynamicPolygonVisualizer,
         DynamicPolylineVisualizer,
         DynamicPyramidVisualizer,
-        VisualizerCollection,
-        defaultValue,
-        destroyObject,
-        DeveloperError) {
+        VisualizerCollection) {
     "use strict";
 
     var defaultVisualizerTypes = [DynamicBillboardVisualizer,
@@ -56,8 +59,11 @@ define(['./DataSourceCollection',
         }
 
         var dataSourceCollection = new DataSourceCollection();
-        dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
-        dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
+        this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
+
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
         this._timeVaryingSources = [];
@@ -121,18 +127,19 @@ define(['./DataSourceCollection',
      * dataSourceDisplay = dataSourceDisplay.destroy();
      */
     DataSourceDisplay.prototype.destroy = function() {
-        var dataSources = this._dataSourceCollection;
-        dataSources.dataSourceAdded.removeEventListener(this._onDataSourceAdded, this);
-        dataSources.dataSourceRemoved.removeEventListener(this._onDataSourceRemoved, this);
+        this._eventHelper.removeAll();
 
-        var length = dataSources.getLength();
-        for ( var i = 0; i < length; i++) {
-            var dataSource = dataSources.get(i);
+        var dataSourceCollection = this._dataSourceCollection;
+        for ( var i = 0, length = dataSourceCollection.getLength(); i < length; ++i) {
+            var dataSource = dataSourceCollection.get(i);
+
             this._onDataSourceRemoved(this._dataSourceCollection, dataSource);
+
             if (typeof dataSource.destroy === 'function') {
                 dataSource.destroy();
             }
         }
+
         return destroyObject(this);
     };
 
@@ -151,21 +158,19 @@ define(['./DataSourceCollection',
         }
 
         var timeVaryingSources = this._timeVaryingSources;
-        var staticSourcesToUpdate = this._staticSourcesToUpdate;
-        var length;
         var i;
-
-        length = timeVaryingSources.length;
+        var length = timeVaryingSources.length;
         for (i = 0; i < length; i++) {
             timeVaryingSources[i]._visualizerCollection.update(time);
         }
 
+        var staticSourcesToUpdate = this._staticSourcesToUpdate;
         length = staticSourcesToUpdate.length;
         if (length > 0) {
             for (i = 0; i < length; i++) {
                 staticSourcesToUpdate[i]._visualizerCollection.update(time);
             }
-            this._staticSourcesToUpdate = [];
+            staticSourcesToUpdate.length = 0;
         }
     };
 
