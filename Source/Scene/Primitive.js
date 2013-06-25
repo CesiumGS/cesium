@@ -399,46 +399,56 @@ define([
     }
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
-        if (!primitive._allowColumbusView) {
-            return vertexShaderSource;
+        var attributes;
+        if (primitive._allowColumbusView) {
+            attributes =
+                'attribute vec3 position2DHigh;\n' +
+                'attribute vec3 position2DLow;';
+        } else {
+            attributes = '';
         }
 
-        var attributes =
-            'attribute vec3 position2DHigh;\n' +
-            'attribute vec3 position2DLow;';
         var computePosition =
-            'vec4 p;\n' +
-            'if (czm_morphTime == 1.0)\n' +
-            '{\n' +
-            '    p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
-            '}\n' +
-            'else if (czm_morphTime == 0.0)\n' +
-            '{\n' +
-            '    p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
-            '}\n' +
-            'else\n' +
-            '{\n' +
-            '    p = czm_columbusViewMorph(\n' +
-            '            czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
-            '            czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
-            '            czm_morphTime);\n' +
-            '}';
+            'vec4 czm_computePosition()\n' +
+            '{\n';
+        if (primitive._allowColumbusView) {
+            computePosition +=
+                '    vec4 p;\n' +
+                '    if (czm_morphTime == 1.0)\n' +
+                '    {\n' +
+                '        p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
+                '    }\n' +
+                '    else if (czm_morphTime == 0.0)\n' +
+                '    {\n' +
+                '        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
+                '    }\n' +
+                '    else\n' +
+                '    {\n' +
+                '        p = czm_columbusViewMorph(\n' +
+                '                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
+                '                czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
+                '                czm_morphTime);\n' +
+                '    }\n' +
+                '    return p;\n';
+        } else {
+            computePosition += '    return czm_translateRelativeToEye(position3DHigh, position3DLow);\n';
+        }
+        computePosition += '}\n\n';
+
 
         var position3DLow = 'position3DLow;';
         var positionLowIndex = vertexShaderSource.indexOf(position3DLow);
         positionLowIndex += position3DLow.length;
 
-        var position = 'czm_translateRelativeToEye(position3DHigh, position3DLow);';
-        var positionEndIndex = vertexShaderSource.indexOf(position);
-        var positionStartIndex = vertexShaderSource.lastIndexOf('vec', positionEndIndex);
-        positionEndIndex += position.length;
+        var main = vertexShaderSource.match(/void\s+main\s*\(\s*(?:void)?\s*\)/);
+        var mainIndex = vertexShaderSource.indexOf(main[0]);
 
         var shaderSource =
             vertexShaderSource.substring(0, positionLowIndex) + '\n' +
             attributes +
-            vertexShaderSource.substring(positionLowIndex, positionStartIndex) +
+            vertexShaderSource.substring(positionLowIndex, mainIndex) +
             computePosition +
-            vertexShaderSource.substring(positionEndIndex);
+            vertexShaderSource.substring(mainIndex);
         return shaderSource;
     }
 
