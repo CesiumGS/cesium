@@ -385,18 +385,17 @@ define([
                 geometry : new WallGeometry({
                     vertexFormat : VertexFormat.ALL,
                     positions    : ellipsoid.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0),
-                        Cartographic.fromDegrees(-125.0, 38.0, 550000.0),
-                        Cartographic.fromDegrees(-120.0, 38.0, 550000.0),
-                        Cartographic.fromDegrees(-120.0, 37.0, 500000.0),
-                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0)
+                        Cartographic.fromDegrees(-5.0, -5.0, 500000.0),
+                        Cartographic.fromDegrees( 5.0, -5.0, 600000.0),
+                        Cartographic.fromDegrees( 5.0,  5.0, 600000.0),
+                        Cartographic.fromDegrees(-5.0,  5.0, 500000.0),
+                        Cartographic.fromDegrees(-5.0, -5.0, 500000.0)
                     ]),
                     bottom : 400000.0
                 })
             }),
             appearance : new DebugAppearance({
-                attributeName : 'st',
-                glslDatatype : 'vec2'
+                attributeName : 'normal'
             })
         }));
 

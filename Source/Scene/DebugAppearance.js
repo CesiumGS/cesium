@@ -29,23 +29,38 @@ define([
 
         var glslDatatype = defaultValue(options.glslDatatype, 'vec3');
         var varyingName = 'v_' + attributeName;
-        var varyingVec4;
+        var getColor;
 
-        switch(glslDatatype) {
-            case 'float':
-                varyingVec4 = 'vec4(vec3(' + varyingName + '), 1.0)';
-                break;
-            case 'vec2':
-                varyingVec4 = 'vec4(' + varyingName + ', 0.0, 1.0)';
-                break;
-            case 'vec3':
-                varyingVec4 = 'vec4(' + varyingName + ', 1.0)';
-                break;
-            case 'vec4':
-                varyingVec4 = varyingName;
-                break;
-            default:
-                throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
+        // Well-known normalized vector attributes in VertexFormat
+        if ((attributeName === 'normal') || (attributeName === 'binormal') | (attributeName === 'tangent')) {
+            getColor = 'vec4 getColor() { return vec4((' + varyingName + ' + vec3(1.0)) * 0.5, 1.0); }\n';
+
+
+
+//            gl_FragCoord.xy
+
+        } else {
+            // All other attributes, both well-known and custom
+            if (attributeName === 'st') {
+                glslDatatype = 'vec2';
+
+                switch(glslDatatype) {
+                    case 'float':
+                        getColor = 'vec4 getColor() { return vec4(vec3(' + varyingName + '), 1.0); }\n';
+                        break;
+                    case 'vec2':
+                        getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 0.0, 1.0); }\n';
+                        break;
+                    case 'vec3':
+                        getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 1.0); }\n';
+                        break;
+                    case 'vec4':
+                        getColor = 'vec4 getColor() { return ' + varyingName + '; }\n';
+                        break;
+                    default:
+                        throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
+                }
+            }
         }
 
         var vs =
@@ -61,9 +76,10 @@ define([
             '}';
         var fs =
             'varying ' + glslDatatype + ' ' + varyingName + ';\n' +
+            getColor + '\n' +
             'void main()\n' +
             '{\n' +
-            'gl_FragColor = ' + varyingVec4 + ';\n' +
+            'gl_FragColor = getColor();\n' +
             '}';
 
         options.flat = defaultValue(options.flat, true);
