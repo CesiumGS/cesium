@@ -1,11 +1,15 @@
 /*global define*/
 define([
         '../../Core/createGuid',
+        '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Core/Event',
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
+        defineProperties,
         DeveloperError,
+        Event,
         knockout) {
     "use strict";
 
@@ -37,7 +41,23 @@ define([
         this.dataSources = [];
 
         knockout.track(this, ['dataSources']);
+
+        this._onObjectSelected = new Event();
     };
+
+    defineProperties(DataSourceBrowserViewModel.prototype, {
+        /**
+         * Gets an event that will be raised when an object is selected in the browser.
+         * @memberof DataSourceBrowserViewModel.prototype
+         *
+         * @type {Event}
+         */
+        onObjectSelected : {
+            get : function() {
+                return this._onObjectSelected;
+            }
+        }
+    });
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var dataSourceViewModel = new DataSourceViewModel(dataSource.getName());

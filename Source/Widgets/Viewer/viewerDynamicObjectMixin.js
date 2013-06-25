@@ -61,12 +61,16 @@ define([
         }
         eventHelper.add(viewer.clock.onTick, updateView);
 
+        function trackObject(dynamicObject) {
+            viewer.trackedObject = dynamicObject;
+        }
+
         function pickAndTrackObject(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
             if (defined(pickedPrimitive) &&
                 defined(pickedPrimitive.dynamicObject) &&
                 defined(pickedPrimitive.dynamicObject.position)) {
-                viewer.trackedObject = pickedPrimitive.dynamicObject;
+                trackObject(pickedPrimitive.dynamicObject);
             }
         }
 
@@ -82,6 +86,10 @@ define([
 
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
+
+        if (defined(viewer.dataSourceBrowser)) {
+            eventHelper.add(viewer.dataSourceBrowser.viewModel.onObjectSelected, trackObject);
+        }
 
         defineProperties(viewer, {
             /**
