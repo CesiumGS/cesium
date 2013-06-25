@@ -182,8 +182,8 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown);
-        document.addEventListener('touchstart', this._closeDropDown);
+        document.addEventListener('mousedown', this._closeDropDown, true);
+        document.addEventListener('touchstart', this._closeDropDown, true);
     };
 
     defineProperties(BaseLayerPicker.prototype, {
@@ -226,8 +226,8 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropDown);
-        document.removeEventListener('touchstart', this._closeDropDown);
+        document.removeEventListener('mousedown', this._closeDropDown, true);
+        document.removeEventListener('touchstart', this._closeDropDown, true);
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);

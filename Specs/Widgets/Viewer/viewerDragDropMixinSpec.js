@@ -93,7 +93,7 @@ defineSuite([
         var mockEvent = {
             dataTransfer : {
                 files : [{
-                    name : 'czml1',
+                    name : 'czml1.czml',
                     czmlString : JSON.stringify(czml1)
                 }]
             },
@@ -129,10 +129,10 @@ defineSuite([
         var mockEvent = {
             dataTransfer : {
                 files : [{
-                    name : 'czml1',
+                    name : 'czml1.czml',
                     czmlString : JSON.stringify(czml1)
                 }, {
-                    name : 'czml2',
+                    name : 'czml2.czml',
                     czmlString : JSON.stringify(czml2)
                 }]
             },
@@ -171,10 +171,10 @@ defineSuite([
         var mockEvent = {
             dataTransfer : {
                 files : [{
-                    name : 'czml1',
+                    name : 'czml1.czml',
                     czmlString : JSON.stringify(czml1)
                 }, {
-                    name : 'czml2',
+                    name : 'czml2.czml',
                     czmlString : JSON.stringify(czml2)
                 }]
             },
@@ -254,7 +254,7 @@ defineSuite([
         var mockEvent = {
             dataTransfer : {
                 files : [{
-                    name : 'czml1',
+                    name : 'czml1.czml',
                     czmlString : 'bad JSON'
                 }]
             },
@@ -270,7 +270,7 @@ defineSuite([
         var called = false;
         var callback = function(viewerArg, source, error) {
             expect(viewerArg).toBe(viewer);
-            expect(source).toEqual('czml1');
+            expect(source).toEqual('czml1.czml');
             expect(error).toBeInstanceOf(SyntaxError);
             called = true;
         };
@@ -291,7 +291,7 @@ defineSuite([
         var mockEvent = {
             dataTransfer : {
                 files : [{
-                    name : 'czml1',
+                    name : 'czml1.czml',
                     errorMessage : 'bad JSON'
                 }]
             },

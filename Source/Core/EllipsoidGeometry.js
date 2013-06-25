@@ -118,7 +118,7 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
-     * @param {Ellipsoid} [options.ellipsoi=Ellipsoid.UNIT_SPHERE] The ellipsoid used to create vertex attributes.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.UNIT_SPHERE] The ellipsoid used to create vertex attributes.
      * @param {Number} [options.numberOfPartitions=32] The number of times to partition the ellipsoid in a plane formed by two radii in a single quadrant.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *

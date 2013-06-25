@@ -48,11 +48,14 @@ define([
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
      *
-     * @see Appearance
-     * @see Context#createVertexArrayFromGeometry
-     * @see GeometryInstance
-     * @see GeometryPipeline
-     * @see Primitive
+     * @see PolygonGeometry
+     * @see ExtentGeometry
+     * @see EllipseGeometry
+     * @see CircleGeometry
+     * @see WallGeometry
+     * @see SimplePolylineGeometry
+     * @see BoxGeometry
+     * @see EllipsoidGeometry
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

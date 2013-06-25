@@ -30,9 +30,9 @@ Beta Releases
    * `EllipseGeometry`
    * `CircleGeometry`
    * `WallGeometry`
+   * `SimplePolylineGeometry`
    * `BoxGeometry`
    * `EllipsoidGeometry`
-   * `SimplePolylineGeometry`
 * Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
    * `Appearance`
    * `PerInstanceColorAppearance`
@@ -43,6 +43,7 @@ Beta Releases
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Added `extrudedOptions` parameters to `ExtentGeometry`, in which height, closeTop and closeBottom can be specified
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
@@ -58,6 +59,7 @@ Beta Releases
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
    * Removed `CesiumViewerWidget` and replaced it with a new `Viewer` widget with mixin architecture. This new widget does not depend on Dojo and is part of the combined Cesium.js file. It is intended to be a flexible base widget for easily building robust applications.  See [#838](https://github.com/AnalyticalGraphicsInc/cesium/pull/838) for the full details.
    * Removed the Dojo-based `checkForChromeFrame` function, and replaced it with a new standalone version that returns a promise to signal when the asynchronous check has completed. 
+* Added initial support for [GeoJSON](http://www.geojson.org/) see [#890](https://github.com/AnalyticalGraphicsInc/cesium/pull/890) for details.
 * Added `Context.getAntialias`.
 * Added rotation, aligned axis, width, and height properties to `Billboard`s.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.
@@ -74,6 +76,7 @@ Beta Releases
 * Fix resizing issues in `CesiumWidget` ([#608](https://github.com/AnalyticalGraphicsInc/cesium/issues/608)) by having the default render loop force a resize event every 60 frames.
 * Added `CesiumWidget.onRenderLoopError` which is an `Event` that is raised if an exception is generated inside of the default render loop.
 * `ImageryProviderViewModel.creationCommand` can now return an array of ImageryProvider instances, which allows adding multiple layers when a single item is selected in the `BaseLayerPicker` widget.
+* Changed static `clone` functions in all objects such that if the object being cloned is undefined, the function will return undefined instead of throwing an exception
 
 ### b17 - 2013-06-03
 
