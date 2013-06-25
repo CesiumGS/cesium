@@ -2,6 +2,7 @@
 define([
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
+        'DynamicScene/KmlDataSource',
         'Scene/PerformanceDisplay',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
@@ -11,6 +12,7 @@ define([
     ], function(
         CzmlDataSource,
         GeoJsonDataSource,
+        KmlDataSource,
         PerformanceDisplay,
         checkForChromeFrame,
         Viewer,
@@ -86,8 +88,10 @@ define([
             var source;
             if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
                 source = new GeoJsonDataSource();
-            } else {
+            } else if (endsWith(endUserOptions.source.toUpperCase(), ".CZML"))  {
                 source = new CzmlDataSource();
+            } else {
+                source = new KmlDataSource();
             }
             source.loadUrl(endUserOptions.source).then(function() {
                 viewer.dataSources.add(source);
