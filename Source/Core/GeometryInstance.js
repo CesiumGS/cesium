@@ -20,30 +20,34 @@ define([
      *
      * @param {Geometry} [options.geometry=undefined] The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
-     * @param {Color} [options.color=undefined] The color of the instance when a per-instance color appearance is used.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Context#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
+     * @param {Object} [options.attributes] DOC_TBA
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
      * var geometry = new BoxGeometry({
-     *   vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
      * var instanceBottom = new GeometryInstance({
      *     geometry : geometry,
      *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     color : Color.AQUA,
+     *     attributes : {
+     *         color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *     }
      *     id : 'bottom'
      * });
      * var instanceTop = new GeometryInstance({
-     *   geometry : geometry,
-     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-     *   color : Color.WHITE,
-     *   id : 'top'
+     *     geometry : geometry,
+     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+     *     attributes : {
+     *         color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *     }
+     *     id : 'top'
      * });
      *
      * @see Geometry
@@ -73,15 +77,6 @@ define([
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
-         * The color of the geometry when a per-instance color appearance is used.
-         *
-         * @type Color
-         *
-         * @default undefined
-         */
-        this.color = options.color;
-
-        /**
          * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
          *
          * @default undefined
@@ -90,6 +85,11 @@ define([
          * @see Primitive#getGeometryInstanceAttributes
          */
         this.id = options.id;
+
+        /**
+         * DOC_TBA
+         */
+        this.attributes = defaultValue(options.attributes, {});
     };
 
     /**
@@ -113,8 +113,16 @@ define([
 
         result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
         result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
-        result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
         result.id = this.id;                                // Shadow copy
+
+        var attributes = this.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = attributes[property].clone();
+            }
+        }
+        result.attributes = newAttributes;
 
         return result;
     };

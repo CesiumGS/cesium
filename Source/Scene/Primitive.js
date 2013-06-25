@@ -97,7 +97,7 @@ define([
      *       CesiumMath.toRadians(40.0))
      *     }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
-     *   color : new Color(0.0, 1.0, 1.0, 0.5)
+     *   color : new Color(0.0, 1.0, 1.0, 0.5) // TODO: make attribute
      * });
      * var ellipsoidInstance = new GeometryInstance({
      *   geometry : new EllipsoidGeometry({
@@ -107,7 +107,7 @@ define([
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
-     *   color : new Color(1.0, 0.0, 1.0, 0.5)
+     *   color : new Color(1.0, 0.0, 1.0, 0.5) // TODO: make attribute
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
@@ -192,55 +192,6 @@ define([
 
         this._commandLists = new CommandLists();
     };
-
-    function hasPerInstanceColor(instances) {
-        var perInstanceColor = false;
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof instances[i].color !== 'undefined') {
-                perInstanceColor = true;
-                break;
-            }
-        }
-
-        return perInstanceColor;
-    }
-
-    function addColorAttribute(primitive, instances, context) {
-        var length = instances.length;
-
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var geometry = instance.geometry;
-            var attributes = geometry.attributes;
-            var positionAttr = attributes.position;
-            var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
-
-            attributes.color = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true,
-                values : new Uint8Array(numberOfComponents)
-            });
-
-            var color = instance.color;
-
-            if (typeof color !== 'undefined') {
-                var red = Color.floatToByte(color.red);
-                var green = Color.floatToByte(color.green);
-                var blue = Color.floatToByte(color.blue);
-                var alpha = Color.floatToByte(color.alpha);
-                var values = attributes.color.values;
-
-                for (var j = 0; j < numberOfComponents; j += 4) {
-                    values[j] = red;
-                    values[j + 1] = green;
-                    values[j + 2] = blue;
-                    values[j + 3] = alpha;
-                }
-            }
-        }
-    }
 
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
@@ -374,13 +325,16 @@ define([
         // Clip to IDL
         wrapLongitude(primitive, insts);
 
-        // Add color attribute if any geometries have per-instance color
-        if (hasPerInstanceColor(insts)) {
-            addColorAttribute(primitive, insts, context);
-        }
-
         // Add pickColor attribute for picking individual instances
         addPickColorAttribute(primitive, insts, context);
+
+        // Optimize for vertex shader caches
+        if (primitive._vertexCacheOptimize) {
+            for (i = 0; i < length; ++i) {
+                GeometryPipeline.reorderForPostVertexCache(insts[i].geometry);
+                GeometryPipeline.reorderForPreVertexCache(insts[i].geometry);
+            }
+        }
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
@@ -514,16 +468,6 @@ define([
         if (this._va.length === 0) {
             var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
             var geometries = geometryPipeline(this, instances, context);
-
-            length = geometries.length;
-            if (this._vertexCacheOptimize) {
-                // Optimize for vertex shader caches
-                for (i = 0; i < length; ++i) {
-                    GeometryPipeline.reorderForPostVertexCache(geometries[i]);
-                    GeometryPipeline.reorderForPreVertexCache(geometries[i]);
-                }
-            }
-
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             var va = [];
