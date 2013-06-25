@@ -190,6 +190,7 @@ define([
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
+        this._canRender = false;
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
@@ -383,12 +384,17 @@ define([
         this._canvas.width = width;
         this._canvas.height = height;
 
-        var frustum = this._scene.getCamera().frustum;
-        if (typeof frustum.aspectRatio !== 'undefined') {
-            frustum.aspectRatio = width / height;
-        } else {
-            frustum.top = frustum.right * (height / width);
-            frustum.bottom = -frustum.top;
+        var canRender = width !== 0 && height !== 0;
+        this._canRender = canRender;
+
+        if (canRender) {
+            var frustum = this._scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         }
     };
 
@@ -400,7 +406,9 @@ define([
     CesiumWidget.prototype.render = function() {
         var currentTime = this._clock.tick();
         this._scene.initializeFrame();
-        this._scene.render(currentTime);
+        if (this._canRender) {
+            this._scene.render(currentTime);
+        }
     };
 
     return CesiumWidget;
