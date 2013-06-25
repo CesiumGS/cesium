@@ -512,7 +512,7 @@ define([
             // Duplicate positions result in not enough positions to form a polygon.
             return undefined;
         }
-
+        var geos = {};
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(cleanedPositions, createGeometryFromPositionsPositions);
 
@@ -553,65 +553,89 @@ define([
         topAndBottomGeo.indices = newIndices;
         topAndBottomGeo.attributes.position.values = topBottomPositions;
 
+        geos.topAndBottom = new GeometryInstance({
+            geometry : topAndBottomGeo
+        });
+
         var edgePositions = [];
         var subdividedEdge;
         var edgeIndex;
         var UL, UR, LL, LR;
 
         if (typeof hierarchy !== 'undefined') {
-            var positionCount;
-            var wallLengths = [];
+            geos.walls = [];
             var outerRing = hierarchy.outerRing;
-            positionCount = outerRing.length;
             var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
             if (windingOrder === WindingOrder.CLOCKWISE) {
                 outerRing.reverse();
             }
 
-            var holes = hierarchy.holes;
-            for (i = 0; i < holes.length; i++) {
-                windingOrder = PolygonPipeline.computeWindingOrder2D(holes[i]);
-                positionCount += holes[i].length;
-                if (windingOrder !== WindingOrder.CLOCKWISE) {
-                    holes[i] = holes[i].reverse();
-                }
-            }
-
             length = outerRing.length;
-            var wallLength = 0;
             for (i = 0; i < length; i++) {
                 subdividedEdge = subdivideLine(outerRing[i], outerRing[(i+1)%length], granularity);
-                wallLength += subdividedEdge.length;
                 edgePositions = edgePositions.concat(subdividedEdge);
             }
-            wallLengths.push(wallLength);
+            edgePositions = edgePositions.concat(edgePositions);
+            length = edgePositions.length;
+            indices = IndexDatatype.createTypedArray(length/3, length - outerRing.length*6);
+            edgeIndex = 0;
+            length /= 6;
+            for (i = 0 ; i < length; i++) {
+                UL = i;
+                UR = UL + 1;
+                p1 = Cartesian3.fromArray(edgePositions, UL*3, p1);
+                p2 = Cartesian3.fromArray(edgePositions, UR*3, p2);
+                if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
+                    continue;
+                }
+                LL = UL + length;
+                LR = LL + 1;
+                indices[edgeIndex++] = UL;
+                indices[edgeIndex++] = LL;
+                indices[edgeIndex++] = UR;
+                indices[edgeIndex++] = UR;
+                indices[edgeIndex++] = LL;
+                indices[edgeIndex++] = LR;
+            }
 
+            var wallGeo = new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : edgePositions
+                    })
+                },
+                indices : indices,
+                primitiveType : PrimitiveType.TRIANGLES
+            });
 
-            var j;
+            geos.walls.push(new GeometryInstance({
+                geometry: wallGeo
+            }));
+
+            var holes = hierarchy.holes;
             for (i = 0; i < holes.length; i++) {
+                edgePositions = [];
+                var j;
                 var hole = holes[i];
-                wallLength = 0;
+                windingOrder = PolygonPipeline.computeWindingOrder2D(hole);
+                if (windingOrder !== WindingOrder.CLOCKWISE) {
+                    hole = hole.reverse();
+                }
                 length = hole.length;
                 for (j = 0; j < length; j++) {
                     subdividedEdge = subdivideLine(hole[j], hole[(j+1)%length], granularity);
-                    wallLength += subdividedEdge.length;
                     edgePositions = edgePositions.concat(subdividedEdge);
                 }
-                wallLengths.push(wallLength);
-            }
-
-            edgePositions = edgePositions.concat(edgePositions);
-            length = edgePositions.length;
-            indices = IndexDatatype.createTypedArray(length/3, length - positionCount*6);
-            length /= 6;
-            edgeIndex = 0;
-            var k = 0;
-            for (i = 0; i < wallLengths.length; i++) {
-                wallLength = wallLengths[i]/3;
-                for (j = 0 ; j < wallLength - 1; j++) {
-                    UL = k;
+                edgePositions = edgePositions.concat(edgePositions);
+                length = edgePositions.length;
+                indices = IndexDatatype.createTypedArray(length/3, length - hole.length*6);
+                length /= 6;
+                edgeIndex = 0;
+                for (j = 0 ; j < length; j++) {
+                    UL = j;
                     UR = UL + 1;
-                    k++;
                     p1 = Cartesian3.fromArray(edgePositions, UL*3, p1);
                     p2 = Cartesian3.fromArray(edgePositions, UR*3, p2);
                     if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
@@ -626,7 +650,21 @@ define([
                     indices[edgeIndex++] = LL;
                     indices[edgeIndex++] = LR;
                 }
-                k++;
+
+                wallGeo = new Geometry({
+                    attributes : {
+                        position : new GeometryAttribute({
+                            componentDatatype : ComponentDatatype.DOUBLE,
+                            componentsPerAttribute : 3,
+                            values : edgePositions
+                        })
+                    },
+                    indices : indices,
+                    primitiveType : PrimitiveType.TRIANGLES
+                });
+                geos.walls.push(new GeometryInstance({
+                    geometry: wallGeo
+                }));
             }
         } else {
             length = edgePoints.length;
@@ -656,28 +694,23 @@ define([
                 indices[edgeIndex++] = LL;
                 indices[edgeIndex++] = LR;
             }
-        }
+            var wallsGeo = new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : edgePositions
+                    })
+                },
+                indices : indices,
+                primitiveType : PrimitiveType.TRIANGLES
+            });
 
-        var wallsGeo = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : edgePositions
-                })
-            },
-            indices : indices,
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        return {
-            topAndBottom: new GeometryInstance({
-                geometry : topAndBottomGeo
-            }),
-            walls: new GeometryInstance({
+            geos.walls = new GeometryInstance({
                 geometry: wallsGeo
-            })
-        };
+            });
+        }
+        return geos;
     }
 
     function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
@@ -774,7 +807,7 @@ define([
      *     }
      * });
      *
-     * create extruded polygon
+     * //create extruded polygon
      * var geometry = new Cesium.PolygonGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
@@ -814,6 +847,7 @@ define([
         var topAndBottom;
         var outerPositions;
         var boundingSpherePositions;
+        var computeAttributes = (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
         if (typeof positions !== 'undefined') {
             // create from positions
@@ -828,7 +862,7 @@ define([
                     topAndBottom = geometry.topAndBottom;
                     walls.geometry = scaleToGeodeticHeightExtruded(walls.geometry, height, extrudedHeight, ellipsoid);
                     topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                    if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                    if (computeAttributes) {
                         walls.geometry = computeWallAttributes(vertexFormat, walls.geometry, outerPositions, ellipsoid, stRotation);
                         topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
                     }
@@ -841,7 +875,7 @@ define([
                 if (typeof geometry !== 'undefined') {
                     geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
 
-                    if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                    if (computeAttributes) {
                         geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
                     }
 
@@ -866,6 +900,10 @@ define([
                 var numChildren = outerNode.holes ? outerNode.holes.length : 0;
                 if (numChildren === 0) {
                     // The outer polygon is a simple polygon with no nested inner polygon.
+                    polygonHierarchy.push({
+                        outerRing: outerRing,
+                        holes: []
+                    });
                     polygons.push(outerNode.positions);
                 } else {
                     // The outer polygon contains inner polygons
@@ -910,21 +948,28 @@ define([
                 if (extrude) {
                     geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], boundingSphere, granularity, polygonHierarchy[i]);
                     if (typeof geometry !== 'undefined') {
-                        walls = geometry.walls;
                         topAndBottom = geometry.topAndBottom;
-                        walls.geometry = scaleToGeodeticHeightExtruded(walls.geometry, height, extrudedHeight, ellipsoid);
                         topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                            walls.geometry = computeWallAttributes(vertexFormat, walls.geometry, outerPositions, ellipsoid, stRotation);
+                        if (computeAttributes) {
                             topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
                         }
-                        geometries.push(walls, topAndBottom);
+                        geometries.push(topAndBottom);
+
+                        walls = geometry.walls;
+                        for (var k = 0; k < walls.length; k++) {
+                            var wall = walls[k];
+                            wall.geometry = scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
+                            if (computeAttributes) {
+                                wall.geometry = computeWallAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation);
+                            }
+                            geometries.push(wall);
+                        }
                     }
                 } else {
                     geometry = createGeometryFromPositions(ellipsoid, polygons[i], boundingSphere, granularity);
                     if (typeof geometry !== 'undefined') {
                         geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
-                        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                        if (computeAttributes) {
                             geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
                         }
                         geometries.push(geometry);
