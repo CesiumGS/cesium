@@ -16,7 +16,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(dataSource.getClock()).toBeUndefined();
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(0);
-        expect(dataSource.getIsTimeVarying()).toEqual(true);
+        expect(dataSource.getIsTimeVarying()).toEqual(false);
     });
 
     it('A new empty test', function() {
