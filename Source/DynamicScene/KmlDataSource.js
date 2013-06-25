@@ -92,7 +92,7 @@ define(['../Core/ClockRange',
      * @returns {DynamicClock} The clock associated with the current KML data, or undefined if none exists.
      */
     KmlDataSource.prototype.getClock = function() {
-        return this._clock;
+        return undefined;
     };
 
     /**
@@ -113,24 +113,9 @@ define(['../Core/ClockRange',
      * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
      */
     KmlDataSource.prototype.getIsTimeVarying = function() {
-        return this._timeVarying;
+        return false;
     };
 
-    /**
-     * Processes the provided KML without clearing any existing data.
-     *
-     * @param {Object} kml The KML to be processed.
-     * @param {String} source The source of the KML.
-     *
-     * @exception {DeveloperError} KML is required.
-     */
-    KmlDataSource.prototype.process = function(kml, source) {
-        if (typeof KML === 'undefined') {
-            throw new DeveloperError('KML is required.');
-        }
-
-        this._clock = loadKML(this, kml, source);
-    };
 
     /**
      * Replaces any existing data with the provided KML.
@@ -149,27 +134,6 @@ define(['../Core/ClockRange',
         this._clock = loadKML(this, kml, source);
     };
 
-    /**
-     * Asynchronously processes the KML at the provided url without clearing any existing data.
-     *
-     * @param {Object} url The url to be processed.
-     *
-     * @returns {Promise} a promise that will resolve when the KML is processed.
-     *
-     * @exception {DeveloperError} url is required.
-     */
-    KmlDataSource.prototype.processUrl = function(url) {
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
-        }
-
-        var dataSource = this;
-        return loadXML(url).then(function(kml) {
-            dataSource.process(kml, url);
-        }, function(error) {
-            this._error.raiseEvent(this, error);
-        });
-    };
 
     /**
      * Asynchronously loads the KML at the provided url, replacing any existing data.
