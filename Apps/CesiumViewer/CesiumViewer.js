@@ -206,7 +206,7 @@ define([
                     CesiumMath.toRadians(90.0)),
                 granularity : 0.006                     // More than 64K vertices
             }),
-            pickData : 'geometry',
+            id : 'geometry',
             color : Color.CORNFLOWERBLUE
         });
         var geometry2 = new GeometryInstance({
@@ -216,7 +216,7 @@ define([
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-            pickData : 'geometry2',
+            id : 'geometry2',
             color : Color.AQUAMARINE.clone()
         });
         geometry2.color.alpha = 0.5;
@@ -227,7 +227,7 @@ define([
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-            pickData : 'geometry3',
+            id : 'geometry3',
             color : Color.BLANCHEDALMOND
         });
         var geometry4 = new GeometryInstance({
@@ -240,7 +240,7 @@ define([
                 bearing : CesiumMath.PI_OVER_FOUR,
                 height : 1000000.0
             }),
-            pickData : 'geometry4',
+            id : 'geometry4',
             color : new Color(1.0, 1.0, 0.0, 0.5)
         });
         var primitive = new Primitive({
@@ -294,7 +294,7 @@ define([
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 4500000.0)),
-            pickData : 'geometry5'
+            id : 'geometry5'
         });
         scene.getPrimitives().add(new Primitive({
             geometryInstances : geometry5,
@@ -342,7 +342,7 @@ define([
                 height : 3000000.0,
                 stRotation : 0.523598776
             }),
-            pickData : 'polygon3'
+            id : 'polygon3'
         });
         var polygonPrimitive = new Primitive({
             geometryInstances : polygonGeometry,
@@ -366,7 +366,7 @@ define([
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0)
                 ])
             })
-            // pickData is undefined here for testing
+            // id is undefined here for testing
         });
         var wallPrimitive = new Primitive({
             geometryInstances : wall,
@@ -415,7 +415,7 @@ define([
                indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
            }),
-           pickData : 'customWithIndices',
+           id : 'customWithIndices',
            color : new Color(1.0, 1.0, 1.0, 1.0)
         });
         scene.getPrimitives().add(new Primitive({
@@ -440,7 +440,7 @@ define([
                 },
                 primitiveType : PrimitiveType.LINE_LOOP
             }),
-            pickData : 'customWithoutIndices',
+            id : 'customWithoutIndices',
             color : new Color(1.0, 1.0, 0.0, 1.0)
          });
          scene.getPrimitives().add(new Primitive({
@@ -462,7 +462,7 @@ define([
                          ])
                      }),
                      color : new Color(1.0, 1.0, 1.0, 1.0),
-                     pickData : 'simple polyline'
+                     id : 'simple polyline'
                  }),
                  new GeometryInstance({
                      geometry : new SimplePolylineGeometry({
@@ -473,7 +473,7 @@ define([
                          ])
                      }),
                      color : new Color(1.0, 0.0, 1.0, 1.0),
-                     pickData : 'another simple polyline'
+                     id : 'another simple polyline'
                  })
              ],
              appearance : new PerInstanceColorAppearance({

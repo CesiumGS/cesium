@@ -140,7 +140,7 @@ define([
                     height : this.height,
                     rotation : this.rotation
                 }),
-                pickData : this
+                id : this
             });
 
             if (typeof this._primitive !== 'undefined') {

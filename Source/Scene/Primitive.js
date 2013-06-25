@@ -51,7 +51,7 @@ define([
      * </p>
      * <p>
      * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#pickData}.  Using
+     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      *
@@ -76,7 +76,7 @@ define([
      *       semiMajorAxis : 1000000.0,
      *       bearing : CesiumMath.PI_OVER_FOUR
      *   }),
-     *   pickData : 'object returned when this instance is picked'
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      * var primitive = new Primitive({
      *   geometryInstances : instance,
@@ -96,7 +96,7 @@ define([
      *       CesiumMath.toRadians(-100.0),
      *       CesiumMath.toRadians(40.0))
      *     }),
-     *   pickData : 'object returned when this extent is picked',
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
      *   color : new Color(0.0, 1.0, 1.0, 0.5)
      * });
      * var ellipsoidInstance = new GeometryInstance({
@@ -106,7 +106,7 @@ define([
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-     *   pickData : 'object returned when this ellipsoid is picked',
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
      *   color : new Color(1.0, 0.0, 1.0, 0.5)
      * });
      * var primitive = new Primitive({
@@ -259,7 +259,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var pickId = context.createPickId(defaultValue(instance.pickData, primitive));
+            var pickId = context.createPickId(defaultValue(instance.id, primitive));
             primitive._pickIds.push(pickId);
 
             var pickColor = pickId.color;
