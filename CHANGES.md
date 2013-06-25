@@ -61,6 +61,7 @@ Beta Releases
    * `ImageryProvider.loadImage` now requires that the calling imagery provider instance be passed as its first parameter.
    * Removed `CesiumViewerWidget` and replaced it with a new `Viewer` widget with mixin architecture. This new widget does not depend on Dojo and is part of the combined Cesium.js file. It is intended to be a flexible base widget for easily building robust applications.  See [#838](https://github.com/AnalyticalGraphicsInc/cesium/pull/838) for the full details.
    * Removed the Dojo-based `checkForChromeFrame` function, and replaced it with a new standalone version that returns a promise to signal when the asynchronous check has completed. 
+* Added initial support for [GeoJSON](http://www.geojson.org/) see [#890](https://github.com/AnalyticalGraphicsInc/cesium/pull/890) for details.
 * Added `Context.getAntialias`.
 * Added rotation, aligned axis, width, and height properties to `Billboard`s.
 * Improved the performance of "missing tile" checking, especially for Bing imagery.

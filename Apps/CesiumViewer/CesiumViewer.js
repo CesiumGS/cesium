@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'DynamicScene/CzmlDataSource',
+        'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
         'Core/Color',
         'Core/Math',
@@ -25,10 +26,12 @@ define([
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
+        'Core/VertexFormat',
         'Scene/Primitive',
-        'Scene/Appearance',
+        'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/DebugAppearance',
         'Scene/Material',
         'Scene/ExtentPrimitive',
         'Scene/Polygon',
@@ -39,6 +42,7 @@ define([
         'domReady!'
     ], function(
         CzmlDataSource,
+        GeoJsonDataSource,
         PerformanceDisplay,
         Color,
         CesiumMath,
@@ -63,10 +67,12 @@ define([
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         WallGeometry,
+        VertexFormat,
         Primitive,
-        Appearance,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         EllipsoidSurfaceAppearance,
+        DebugAppearance,
         Material,
         ExtentPrimitive,
         Polygon,
@@ -110,6 +116,12 @@ define([
         window.alert(e);
     });
 
+    function endsWith(str, suffix) {
+        var strLength = str.length;
+        var suffixLength = suffix.length;
+        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
+    }
+
     function startup() {
         var viewer = new Viewer('cesiumContainer');
         viewer.extend(viewerDragDropMixin);
@@ -135,7 +147,12 @@ define([
         }
 
         if (typeof endUserOptions.source !== 'undefined') {
-            var source = new CzmlDataSource();
+            var source;
+            if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
+                source = new GeoJsonDataSource();
+            } else {
+                source = new CzmlDataSource();
+            }
             source.loadUrl(endUserOptions.source).then(function() {
                 viewer.dataSources.add(source);
 
@@ -269,14 +286,14 @@ define([
                 enabled : true
             }
         };
-        var appearance = new Appearance({
-            materialSupport :  Appearance.MaterialSupport.ALL,
+        var appearance = new MaterialAppearance({
+            materialSupport :  MaterialAppearance.MaterialSupport.ALL,
             material : m,
             renderState : rs
         });
         var geometry5 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : Appearance.MaterialSupport.ALL.vertexFormat,
+                vertexFormat : MaterialAppearance.MaterialSupport.ALL.vertexFormat,
                 ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -344,7 +361,7 @@ define([
 
         var wall = new GeometryInstance({
             geometry : new WallGeometry({
-                vertexFormat : Appearance.MaterialSupport.TEXTURED.vertexFormat,
+                vertexFormat : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat,
                 positions    : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(-125.0, 37.0, 100000.0),
                     Cartographic.fromDegrees(-125.0, 38.0, 100000.0),
@@ -357,14 +374,34 @@ define([
         });
         var wallPrimitive = new Primitive({
             geometryInstances : wall,
-            appearance : new Appearance({
-                materialSupport : Appearance.MaterialSupport.TEXTURED,
+            appearance : new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
                 material : Material.fromType(scene.getContext(), 'Checkerboard'),
                 faceForward : true
             })
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
+
+        scene.getPrimitives().add(new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new WallGeometry({
+                    vertexFormat : VertexFormat.ALL,
+                    positions    : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 38.0, 550000.0),
+                        Cartographic.fromDegrees(-120.0, 37.0, 500000.0),
+                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0)
+                    ]),
+                    bottom : 400000.0
+                })
+            }),
+            appearance : new DebugAppearance({
+                attributeName : 'st',
+                glslDatatype : 'vec2'
+            })
+        }));
 
         var customWithIndices = new GeometryInstance({
            geometry : new Geometry({
@@ -494,7 +531,7 @@ define([
         handler.setInputAction(
             function () {
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
-                wallPrimitive.appearance = new Appearance();
+                wallPrimitive.appearance = new MaterialAppearance();
 
                 extentPrimitive.material = Material.fromType(scene.getContext(), 'Dot');
                 extentPrimitive.rotation = CesiumMath.toRadians(45.0);

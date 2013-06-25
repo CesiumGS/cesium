@@ -111,8 +111,8 @@ define([
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown);
-        document.addEventListener('touchstart', this._closeDropDown);
+        document.addEventListener('mousedown', this._closeDropDown, true);
+        document.addEventListener('touchstart', this._closeDropDown, true);
     };
 
     defineProperties(SceneModePicker.prototype, {
@@ -156,8 +156,8 @@ define([
      */
     SceneModePicker.prototype.destroy = function() {
         this._viewModel.destroy();
-        document.removeEventListener('mousedown', this._closeDropDown);
-        document.removeEventListener('touchstart', this._closeDropDown);
+        document.removeEventListener('mousedown', this._closeDropDown, true);
+        document.removeEventListener('touchstart', this._closeDropDown, true);
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
