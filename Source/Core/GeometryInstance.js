@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './Matrix4',
-        './Geometry'
+        './Geometry',
+        './GeometryInstanceAttribute'
     ], function(
         defaultValue,
         Matrix4,
-        Geometry) {
+        Geometry,
+        GeometryInstanceAttribute) {
     "use strict";
 
     /**
@@ -119,7 +121,7 @@ define([
         var newAttributes = {};
         for (var property in attributes) {
             if (attributes.hasOwnProperty(property)) {
-                newAttributes[property] = attributes[property].clone();
+                newAttributes[property] = GeometryInstanceAttribute.clone(attributes[property]);
             }
         }
         result.attributes = newAttributes;

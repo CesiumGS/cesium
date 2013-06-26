@@ -315,6 +315,110 @@ define([
         return [geometry];
     }
 
+    function createPerInstanceAttributes(primitive, instances, context, va) {
+        var length = instances.length;
+
+        var attributesInAllInstances = {};
+
+        var attributes0 = instances[0].attributes;
+        var numberOfVertices0 = Geometry.computeNumberOfVertices(instances[0].geometry);
+        var name;
+        var i;
+        var instance;
+        var numberOfVertices;
+        var attribute;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                attribute = attributes0[name];
+                var componentsPerAttribute = attribute.componentsPerAttribute;
+                var numberOfComponents = componentsPerAttribute * numberOfVertices0;
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (i = 1; i < length; ++i) {
+                    instance = instances[i];
+                    var otherAttribute = instance.attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+
+                    numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+                    numberOfComponents += componentsPerAttribute * numberOfVertices;
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances[name] = new GeometryAttribute({
+                        componentDatatype : attribute.componentDatatype,
+                        componentsPerAttribute : attribute.componentsPerAttribute,
+                        normalize : attribute.normalize,
+                        values : attribute.componentDatatype.createTypedArray(numberOfComponents)
+                    });
+                }
+            }
+        }
+
+        // Combine attributes from each instance into a single typed array
+        for (name in attributesInAllInstances) {
+            if (attributesInAllInstances.hasOwnProperty(name)) {
+                var values = attributesInAllInstances[name].values;
+
+                var n = 0;
+                for (i = 0; i < length; ++i) {
+                    instance = instances[i];
+                    var sourceValue = instance.attributes[name].value;
+                    var sourceValueLength = sourceValue.length;
+
+                    numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+                    for (var j = 0; j < numberOfVertices; ++j) {
+                        for (var k = 0; k < sourceValueLength; ++k) {
+                            values[n++] = sourceValue[k];
+                        }
+                    }
+                }
+            }
+        }
+
+        /*
+        var indices = {};
+        var offset = 0;
+        for (i = 0; i < length; ++i) {
+            var geometry = instances[i].geometry;
+            numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+            indices[geometry.id] = {
+                offset : offset,
+                count : numberOfVertices
+            };
+            offset += numberOfVertices;
+        }
+        */
+
+        length = va.length;
+        var attributeIndices = primitive._attributeIndices;
+        for (name in attributesInAllInstances) {
+            if (attributesInAllInstances.hasOwnProperty(name)) {
+                attribute = attributesInAllInstances[name];
+
+                var vertexBuffer = context.createVertexBuffer(attribute.values, BufferUsage.DYNAMIC_DRAW);
+                for(i = 0; i < length; ++i) {
+                    va[i].addAttribute({
+                        vertexBuffer : vertexBuffer,
+                        componentDatatype : attribute.componentDatatype,
+                        componentsPerAttribute : attribute.componentsPerAttribute,
+                        normalize : attribute.normalize
+                    });
+                }
+                attributeIndices[name] = va[0].getNumberOfAttributes() - 1;
+            }
+        }
+    }
+
     function createColumbusViewShader(primitive, vertexShaderSource) {
         var attributes;
         if (primitive._allowColumbusView) {
@@ -428,6 +532,7 @@ define([
             }
 
             var va = [];
+            length = geometries.length;
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
@@ -437,6 +542,7 @@ define([
                 }));
             }
 
+            createPerInstanceAttributes(this, instances, context, va);
             this._va = va;
 
             for (i = 0; i < length; ++i) {

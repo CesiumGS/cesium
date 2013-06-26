@@ -27,6 +27,7 @@ define([
         'Core/ScreenSpaceEventType',
         'Core/WallGeometry',
         'Core/VertexFormat',
+        'Core/ColorGeometryInstanceAttribute',
         'Scene/Primitive',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
@@ -68,6 +69,7 @@ define([
         ScreenSpaceEventType,
         WallGeometry,
         VertexFormat,
+        ColorGeometryInstanceAttribute,
         Primitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -204,10 +206,12 @@ define([
                     CesiumMath.toRadians(50.0),
                     CesiumMath.toRadians(180.0),
                     CesiumMath.toRadians(90.0)),
-                granularity : 0.006                     // More than 64K vertices
+                //granularity : 0.006                     // More than 64K vertices
             }),
             id : 'geometry',
-            color : Color.CORNFLOWERBLUE
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Color.CORNFLOWERBLUE)
+            }
         });
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
@@ -217,9 +221,11 @@ define([
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
             id : 'geometry2',
-            color : Color.AQUAMARINE.clone()
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Color.AQUAMARINE)
+            }
         });
-        geometry2.color.alpha = 0.5;
+        //geometry2.color.alpha = 0.5; // TODO
         var geometry3 = new GeometryInstance({
             geometry : new BoxGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -228,7 +234,9 @@ define([
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
             id : 'geometry3',
-            color : Color.BLANCHEDALMOND
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Color.BLANCHEDALMOND)
+            }
         });
         var geometry4 = new GeometryInstance({
             geometry : new EllipseGeometry({
@@ -241,7 +249,9 @@ define([
                 height : 1000000.0
             }),
             id : 'geometry4',
-            color : new Color(1.0, 1.0, 0.0, 0.5)
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 0.5))
+            }
         });
         var primitive = new Primitive({
             geometryInstances : [geometry, geometry2, geometry3, geometry4],
@@ -416,7 +426,9 @@ define([
                primitiveType : PrimitiveType.LINES
            }),
            id : 'customWithIndices',
-           color : new Color(1.0, 1.0, 1.0, 1.0)
+           attributes : {
+               color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 1.0, 1.0))
+           }
         });
         scene.getPrimitives().add(new Primitive({
             geometryInstances : customWithIndices,
@@ -441,7 +453,9 @@ define([
                 primitiveType : PrimitiveType.LINE_LOOP
             }),
             id : 'customWithoutIndices',
-            color : new Color(1.0, 1.0, 0.0, 1.0)
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 1.0))
+            }
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,
@@ -461,7 +475,9 @@ define([
                              Cartographic.fromDegrees(5.0, 5.0)
                          ])
                      }),
-                     color : new Color(1.0, 1.0, 1.0, 1.0),
+                     attributes : {
+                         color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 1.0, 1.0))
+                     },
                      id : 'simple polyline'
                  }),
                  new GeometryInstance({
@@ -472,7 +488,9 @@ define([
                              Cartographic.fromDegrees(5.0, 5.0)
                          ])
                      }),
-                     color : new Color(1.0, 0.0, 1.0, 1.0),
+                     attributes : {
+                         color : new ColorGeometryInstanceAttribute(new Color(1.0, 0.0, 1.0, 1.0))
+                     },
                      id : 'another simple polyline'
                  })
              ],
