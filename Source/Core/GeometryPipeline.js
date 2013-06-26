@@ -1188,10 +1188,6 @@ define([
     };
 
     function indexTriangles(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
         }
@@ -1215,10 +1211,6 @@ define([
     }
 
     function indexTriangleFan(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 3) {
             throw new DeveloperError('The number of vertices must be at least three.');
@@ -1242,10 +1234,6 @@ define([
     }
 
     function indexTriangleStrip(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 3) {
             throw new DeveloperError('The number of vertices must be at least 3.');
@@ -1281,10 +1269,6 @@ define([
     }
 
     function indexLines(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('undefined');
-        }
-
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
         }
@@ -1308,10 +1292,6 @@ define([
     }
 
     function indexLineStrip(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 2) {
             throw new DeveloperError('The number of vertices must be at least two.');
@@ -1333,10 +1313,6 @@ define([
     }
 
     function indexLineLoop(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 2) {
             throw new DeveloperError('The number of vertices must be at least two.');
