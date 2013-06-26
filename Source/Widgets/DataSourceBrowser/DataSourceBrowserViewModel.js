@@ -13,8 +13,11 @@ define([
         knockout) {
     "use strict";
 
-    function DataSourceViewModel(name) {
+    function DataSourceViewModel(name, rootViewModel, dynamicObject) {
         var that = this;
+
+        this.rootViewModel = rootViewModel;
+        this.dynamicObject = dynamicObject;
 
         this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
         this.name = name;
@@ -29,6 +32,10 @@ define([
         });
     }
 
+    DataSourceViewModel.prototype.select = function() {
+        this.rootViewModel.selectedItem = this;
+    };
+
     var DataSourceBrowserViewModel = function(dataSourceCollection) {
         if (typeof dataSourceCollection === 'undefined') {
             throw new DeveloperError('dataSourceCollection is required.');
@@ -41,6 +48,22 @@ define([
         this.dataSources = [];
 
         knockout.track(this, ['dataSources']);
+
+        var that = this;
+
+        this.selectedItem = undefined;
+        var selectedViewModel = knockout.observable();
+        knockout.defineProperty(this, 'selectedItem', {
+            get : function() {
+                return selectedViewModel();
+            },
+            set : function(value) {
+                selectedViewModel(value);
+                if (typeof value !== 'undefined' && typeof value.dynamicObject !== 'undefined') {
+                    that._onObjectSelected.raiseEvent(value.dynamicObject);
+                }
+            }
+        });
 
         this._onObjectSelected = new Event();
     };
@@ -60,15 +83,14 @@ define([
     });
 
     DataSourceBrowserViewModel.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
-        var dataSourceViewModel = new DataSourceViewModel(dataSource.getName());
+        var dataSourceViewModel = new DataSourceViewModel(dataSource.getName(), this);
         dataSourceViewModel._dataSource = dataSource;
 
         var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
         var objects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = objects.length; i < len; ++i) {
             var object = objects[i];
-            var dynamicObjectViewModel = new DataSourceViewModel(object.id);
-            dynamicObjectViewModel._object = object;
+            var dynamicObjectViewModel = new DataSourceViewModel(object.id, this, object);
             dataSourceViewModel.children.push(dynamicObjectViewModel);
         }
 

@@ -51,7 +51,7 @@ define([
 <ul data-bind="template: { name: \'' + this._templateID + '\', foreach: children }"></ul>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
-<span data-bind="text: name"></span>\
+<span data-bind="text: name, click: select"></span>\
 <!-- /ko -->';
 
         container.appendChild(templateElement);
