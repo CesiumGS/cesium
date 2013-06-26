@@ -1785,37 +1785,4 @@ defineSuite([
             return GeometryPipeline.wrapLongitude();
         }).toThrow();
     });
-
-    it('wrapLongitude throws when geometry.indices is undefined', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
-        });
-        expect(function() {
-            return GeometryPipeline.wrapLongitude(geometry);
-        }).toThrow();
-    });
-
-    it('wrapLongitude throws when geometry.primitiveType is unsupported', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([1.0, 1.0, 0.0, 1.0, 1.0, 2.0])
-                })
-            },
-            indices : new Uint16Array([0, 1]),
-            primitiveType : PrimitiveType.LINE_LOOP
-        });
-        expect(function() {
-            return GeometryPipeline.wrapLongitude(geometry);
-        }).toThrow();
-    });
 });
