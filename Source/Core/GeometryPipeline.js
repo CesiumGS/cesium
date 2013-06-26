@@ -462,7 +462,8 @@ define([
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
-                        primitiveType : geometry.primitiveType
+                        primitiveType : geometry.primitiveType,
+                        boundingSphere : geometry.boundingSphere
                     }));
 
                     // Reset for next vertex-array
@@ -477,7 +478,8 @@ define([
                 geometries.push(new Geometry({
                     attributes : newAttributes,
                     indices : newIndices,
-                    primitiveType : geometry.primitiveType
+                    primitiveType : geometry.primitiveType,
+                    boundingSphere : geometry.boundingSphere
                 }));
             }
         } else {
