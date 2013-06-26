@@ -300,7 +300,7 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releaseGeometries : true,
+            releaseGeometryInstances : true,
             transformToWorldCoordinates : false
         }));
 

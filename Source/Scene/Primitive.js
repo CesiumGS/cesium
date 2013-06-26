@@ -12,6 +12,7 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/ComponentDatatype',
+        '../Core/Cartesian3',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
@@ -31,6 +32,7 @@ define([
         Geometry,
         GeometryAttribute,
         ComponentDatatype,
+        Cartesian3,
         BufferUsage,
         VertexLayout,
         CommandLists,
@@ -61,8 +63,7 @@ define([
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
-     * @param {Boolean} [options.releaseGeometries=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.transformToWorldCoordinates=true] When <code>true</code>, each geometry instance is transform to world coordinates even if they are already in the same coordinate system.
+     * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
      * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
      *
      * @example
@@ -123,7 +124,7 @@ define([
 
         /**
          * The geometry instances rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometries</code>
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
@@ -173,10 +174,9 @@ define([
         this.show = true;
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
-        this._releaseGeometries = defaultValue(options.releaseGeometries, true);
+        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
         this._allowColumbusView = defaultValue(options.allowColumbusView, true);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
@@ -230,7 +230,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._transformToWorldCoordinates || primitive._allowColumbusView;
+        var toWorld = primitive._allowColumbusView;
         var length = instances.length;
         var i;
 
@@ -255,62 +255,8 @@ define([
         }
     }
 
-    var indexFunctions = [
-        function(geometry) { return geometry; },
-        GeometryPipeline.indexLines,
-        GeometryPipeline.indexLineLoop,
-        GeometryPipeline.indexLineStrip,
-        GeometryPipeline.indexTriangles,
-        GeometryPipeline.indexTriangleStrip,
-        GeometryPipeline.indexTriangleFan
-    ];
-
-    function wrapLongitude(primitive, instances) {
-        if (!primitive._allowColumbusView) {
-            return;
-        }
-
-        var length = instances.length;
-        var primitiveType = instances[0].geometry.primitiveType;
-
-        for (var i = 1; i < length; ++i) {
-            if (instances[i].geometry.primitiveType !== primitiveType) {
-                throw new DeveloperError('All instance geometries must have the same primitiveType.');
-            }
-        }
-
-        var indexFunction = indexFunctions[primitiveType.value];
-        for (var j = 0; j < length; ++j) {
-            var geometry = instances[j].geometry;
-            indexFunction(geometry);
-            GeometryPipeline.wrapLongitude(geometry);
-        }
-    }
-
-    function encodePositions(primitive, geometry) {
-        if (primitive._allowColumbusView) {
-            // Compute 2D positions
-            GeometryPipeline.projectTo2D(geometry);
-
-            // Find bounding sphere
-            primitive._boundingSphere2D = BoundingSphere.fromVertices(geometry.attributes.position2D.values);
-            var center = primitive._boundingSphere2D.center;
-            var x = center.x;
-            var y = center.y;
-            var z = center.z;
-            center.x = z;
-            center.y = x;
-            center.z = y;
-
-            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
-            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
-        } else {
-            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
-        }
-    }
-
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
-    function geometryPipeline(primitive, instances, context) {
+    function geometryPipeline(primitive, instances, context, projection) {
         // Copy instances first since most pipeline operations modify the geometry and instance in-place.
         var length = instances.length;
         var insts = new Array(length);
@@ -322,8 +268,19 @@ define([
         // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
         transformToWorldCoordinates(primitive, insts);
 
+        var primitiveType = instances[0].geometry.primitiveType;
+        for (var j = 1; j < length; ++j) {
+            if (instances[j].geometry.primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
+            }
+        }
+
         // Clip to IDL
-        wrapLongitude(primitive, insts);
+        if (primitive._allowColumbusView) {
+            for (var k = 0; k < length; ++k) {
+                GeometryPipeline.wrapLongitude(instances[k].geometry);
+            }
+        }
 
         // Add pickColor attribute for picking individual instances
         addPickColorAttribute(primitive, insts, context);
@@ -338,10 +295,17 @@ define([
 
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
-        primitive._boundingSphere = geometry.boundingSphere;
 
         // Split positions for GPU RTE
-        encodePositions(primitive, geometry);
+        if (primitive._allowColumbusView) {
+            // Compute 2D positions
+            GeometryPipeline.projectTo2D(geometry, projection);
+
+            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+        } else {
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+        }
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -357,13 +321,13 @@ define([
         if (primitive._allowColumbusView) {
             attributes =
                 'attribute vec3 position2DHigh;\n' +
-                'attribute vec3 position2DLow;';
+                'attribute vec3 position2DLow;\n';
         } else {
             attributes = '';
         }
 
         var computePosition =
-            'vec4 czm_computePosition()\n' +
+            '\nvec4 czm_computePosition()\n' +
             '{\n';
         if (primitive._allowColumbusView) {
             computePosition +=
@@ -389,21 +353,7 @@ define([
         }
         computePosition += '}\n\n';
 
-
-        var position3DLow = 'position3DLow;';
-        var positionLowIndex = vertexShaderSource.indexOf(position3DLow);
-        positionLowIndex += position3DLow.length;
-
-        var main = vertexShaderSource.match(/void\s+main\s*\(\s*(?:void)?\s*\)/);
-        var mainIndex = vertexShaderSource.indexOf(main[0]);
-
-        var shaderSource =
-            vertexShaderSource.substring(0, positionLowIndex) + '\n' +
-            attributes +
-            vertexShaderSource.substring(positionLowIndex, mainIndex) +
-            computePosition +
-            vertexShaderSource.substring(mainIndex);
-        return shaderSource;
+        return attributes + vertexShaderSource + computePosition;
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -443,6 +393,96 @@ define([
 
     }
 
+    function updateBoundingSpheres(primitive, boundingSphere, projection) {
+        primitive._boundingSphere = boundingSphere;
+
+        if (!primitive._allowColumbusView || typeof boundingSphere === 'undefined') {
+            return;
+        }
+
+        var ellipsoid = projection.getEllipsoid();
+        var center = boundingSphere.center;
+        var radius = boundingSphere.radius;
+
+        var normal = ellipsoid.geodeticSurfaceNormal(center);
+        var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal);
+        Cartesian3.normalize(east, east);
+        var north = Cartesian3.cross(normal, east);
+        Cartesian3.normalize(north, north);
+
+        Cartesian3.multiplyByScalar(normal, radius, normal);
+        Cartesian3.multiplyByScalar(north, radius, north);
+        Cartesian3.multiplyByScalar(east, radius, east);
+
+        var south = Cartesian3.negate(north);
+        var west = Cartesian3.negate(east);
+
+        var positions = new Array(8);
+
+        // top NE corner
+        var corner = positions[0] = new Cartesian3();
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, east, corner);
+
+        // top NW corner
+        corner = positions[1] = new Cartesian3();
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // top SW corner
+        corner = positions[2] = new Cartesian3();
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // top SE corner
+        corner = positions[3] = new Cartesian3();
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, east, corner);
+
+        Cartesian3.negate(normal, normal);
+
+        // bottom NE corner
+        corner = positions[4] = new Cartesian3();
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, east, corner);
+
+        // bottom NW corner
+        corner = positions[5] = new Cartesian3();
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // bottom SW corner
+        corner = positions[6] = new Cartesian3();
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // bottom SE corner
+        corner = positions[7] = new Cartesian3();
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, east, corner);
+
+        var length = positions.length;
+        for (var i = 0; i < length; ++i) {
+            var position = positions[i];
+            Cartesian3.add(center, position, position);
+            var cartographic = ellipsoid.cartesianToCartographic(position);
+            projection.project(cartographic, position);
+        }
+
+        boundingSphere = BoundingSphere.fromPoints(positions);
+
+        // swizzle center components
+        center = boundingSphere.center;
+        var x = center.x;
+        var y = center.y;
+        var z = center.z;
+        center.x = z;
+        center.y = x;
+        center.z = y;
+
+        primitive._boundingSphere2D = boundingSphere;
+    }
+
     /**
      * @private
      */
@@ -466,9 +506,13 @@ define([
         var i;
 
         if (this._va.length === 0) {
+            var projection = frameState.scene2D.projection;
+
             var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
-            var geometries = geometryPipeline(this, instances, context);
+            var geometries = geometryPipeline(this, instances, context, projection);
+
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
+            updateBoundingSpheres(this, geometries[0].boundingSphere, projection);
 
             var va = [];
             for (i = 0; i < length; ++i) {
@@ -498,7 +542,7 @@ define([
                 pickCommands.push(pickCommand);
             }
 
-            if (this._releaseGeometries) {
+            if (this._releaseGeometryInstances) {
                 this.geometryInstances = undefined;
             }
         }
@@ -562,10 +606,10 @@ define([
             boundingSphere = this._boundingSphere;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingSphere = this._boundingSphere2D;
-        } else if (frameState.mode === SceneMode.SCENE2D && this._boundingSphere2D !== 'undefined') {
+        } else if (frameState.mode === SceneMode.SCENE2D && typeof this._boundingSphere2D !== 'undefined') {
             boundingSphere = BoundingSphere.clone(this._boundingSphere2D);
             boundingSphere.center.x = 0.0;
-        } else if (typeof this._boundingSphere !== 'undefined' && this._boundingSphere2D !== 'undefined') {
+        } else if (typeof this._boundingSphere !== 'undefined' && typeof this._boundingSphere2D !== 'undefined') {
             boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
         }
 
