@@ -21,7 +21,7 @@ Beta Releases
    * Removed `Polygon.bufferUsage`.  It is no longer needed.
    * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
-   * Removed `PolygonPipeline.wrapLongitude`. It is no longer needed.
+   * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
    * Added `height` parameter to `BoundingSphere.fromExtent3D`.
    * Added `height` parameter to `Extent.subsample`.
 * Added `ExtentPrimitive`.
@@ -42,11 +42,11 @@ Beta Releases
 * Added `GeometryPipeline.combine` to combine meshes for better batching.
 * Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
-* Added the following functions to `GeometryPipeline` to index non-indexed primitive types: `indexLines`, `indexLineLoop`, `indexLineStrip`, `indexTriangles`, `indexTriangleFan`, and `indexTriangleStrip`.
 * Added `GeometryPipeline.wrapLongitude` to split geometry across the International Date Line.
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point with respect to three vertices of a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
+* Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.

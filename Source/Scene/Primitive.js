@@ -306,23 +306,22 @@ define([
 
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context, projection) {
-        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
         var length = instances.length;
-        var insts = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            insts[i] = instances[i].clone();
-        }
-
-        // Unify to world coordinates before combining.  If there is only one geometry or all
-        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, insts);
-
         var primitiveType = instances[0].geometry.primitiveType;
         for (var j = 1; j < length; ++j) {
             if (instances[j].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
+
+        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+        var insts = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            insts[i] = instances[i].clone();
+        }
+
+        // Unify to world coordinates before combining.
+        transformToWorldCoordinates(primitive, insts);
 
         // Clip to IDL
         if (primitive._allowColumbusView) {
@@ -439,96 +438,6 @@ define([
 
     }
 
-    function updateBoundingSpheres(primitive, boundingSphere, projection) {
-        primitive._boundingSphere = boundingSphere;
-
-        if (!primitive._allowColumbusView || typeof boundingSphere === 'undefined') {
-            return;
-        }
-
-        var ellipsoid = projection.getEllipsoid();
-        var center = boundingSphere.center;
-        var radius = boundingSphere.radius;
-
-        var normal = ellipsoid.geodeticSurfaceNormal(center);
-        var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal);
-        Cartesian3.normalize(east, east);
-        var north = Cartesian3.cross(normal, east);
-        Cartesian3.normalize(north, north);
-
-        Cartesian3.multiplyByScalar(normal, radius, normal);
-        Cartesian3.multiplyByScalar(north, radius, north);
-        Cartesian3.multiplyByScalar(east, radius, east);
-
-        var south = Cartesian3.negate(north);
-        var west = Cartesian3.negate(east);
-
-        var positions = new Array(8);
-
-        // top NE corner
-        var corner = positions[0] = new Cartesian3();
-        Cartesian3.add(normal, north, corner);
-        Cartesian3.add(corner, east, corner);
-
-        // top NW corner
-        corner = positions[1] = new Cartesian3();
-        Cartesian3.add(normal, north, corner);
-        Cartesian3.add(corner, west, corner);
-
-        // top SW corner
-        corner = positions[2] = new Cartesian3();
-        Cartesian3.add(normal, south, corner);
-        Cartesian3.add(corner, west, corner);
-
-        // top SE corner
-        corner = positions[3] = new Cartesian3();
-        Cartesian3.add(normal, south, corner);
-        Cartesian3.add(corner, east, corner);
-
-        Cartesian3.negate(normal, normal);
-
-        // bottom NE corner
-        corner = positions[4] = new Cartesian3();
-        Cartesian3.add(normal, north, corner);
-        Cartesian3.add(corner, east, corner);
-
-        // bottom NW corner
-        corner = positions[5] = new Cartesian3();
-        Cartesian3.add(normal, north, corner);
-        Cartesian3.add(corner, west, corner);
-
-        // bottom SW corner
-        corner = positions[6] = new Cartesian3();
-        Cartesian3.add(normal, south, corner);
-        Cartesian3.add(corner, west, corner);
-
-        // bottom SE corner
-        corner = positions[7] = new Cartesian3();
-        Cartesian3.add(normal, south, corner);
-        Cartesian3.add(corner, east, corner);
-
-        var length = positions.length;
-        for (var i = 0; i < length; ++i) {
-            var position = positions[i];
-            Cartesian3.add(center, position, position);
-            var cartographic = ellipsoid.cartesianToCartographic(position);
-            projection.project(cartographic, position);
-        }
-
-        boundingSphere = BoundingSphere.fromPoints(positions);
-
-        // swizzle center components
-        center = boundingSphere.center;
-        var x = center.x;
-        var y = center.y;
-        var z = center.z;
-        center.x = z;
-        center.y = x;
-        center.z = y;
-
-        primitive._boundingSphere2D = boundingSphere;
-    }
-
     /**
      * @private
      */
@@ -567,7 +476,11 @@ define([
             }
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
-            updateBoundingSpheres(this, geometries[0].boundingSphere, projection);
+
+            this._boundingSphere = geometries[0].boundingSphere;
+            if (this._allowColumbusView && typeof this._boundingSphere !== 'undefined') {
+                this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
+            }
 
             var va = [];
             for (i = 0; i < length; ++i) {
