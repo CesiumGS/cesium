@@ -34,11 +34,6 @@ define([
         // Well-known normalized vector attributes in VertexFormat
         if ((attributeName === 'normal') || (attributeName === 'binormal') | (attributeName === 'tangent')) {
             getColor = 'vec4 getColor() { return vec4((' + varyingName + ' + vec3(1.0)) * 0.5, 1.0); }\n';
-
-
-
-//            gl_FragCoord.xy
-
         } else {
             // All other attributes, both well-known and custom
             if (attributeName === 'st') {
@@ -91,19 +86,30 @@ define([
         this.material = undefined;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(false, false));

@@ -35,19 +35,38 @@ define([
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, EllipsoidSurfaceAppearanceVS);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account {@link EllipsoidSurfaceAppearance#material},
+         * {@link EllipsoidSurfaceAppearance#flat}, and {@link EllipsoidSurfaceAppearance#faceForward}.
+         * Use {@link EllipsoidSurfaceAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, EllipsoidSurfaceAppearanceFS);
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         * <p>
+         * The render state can be explicitly defined when constructing a {@link EllipsoidSurfaceAppearance}
+         * instance, or it is set implicitly via {@link EllipsoidSurfaceAppearance#translucent}
+         * and {@link EllipsoidSurfaceAppearance#aboveGround}.
+         * </p>
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, !aboveGround));

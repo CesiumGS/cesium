@@ -44,19 +44,38 @@ define([
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account {@link MaterialAppearance#material},
+         * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
+         * Use {@link MaterialAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         * <p>
+         * The render state can be explicitly defined when constructing a {@link MaterialAppearance}
+         * instance, or it is set implicitly via {@link MaterialAppearance#translucent}
+         * and {@link MaterialAppearance#closed}.
+         * </p>
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));

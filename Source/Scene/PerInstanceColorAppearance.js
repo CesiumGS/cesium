@@ -39,19 +39,38 @@ define([
         this.material = undefined;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, vs);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account {@link PerInstanceColorAppearance#flat},
+         * and {@link PerInstanceColorAppearance#faceForward}.
+         * Use {@link PerInstanceColorAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, fs);
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         * <p>
+         * The render state can be explicitly defined when constructing a {@link PerInstanceColorAppearance}
+         * instance, or it is set implicitly via {@link PerInstanceColorAppearance#translucent}
+         * and {@link PerInstanceColorAppearance#closed}.
+         * </p>
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));

@@ -29,19 +29,32 @@ define([
         this.material = options.material;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = options.vertexShaderSource;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account the {@link Appearance#material}.
+         * Use {@link Appearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = options.fragmentShaderSource;
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = options.renderState;
@@ -65,7 +78,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Appearance.getDefaultRenderState = function(translucent, closed) {
         var rs = {
