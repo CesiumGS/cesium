@@ -121,7 +121,7 @@ define([
      *
      * @param {Array} positions The array of positions.  Each element is usually a {@see Cartesian3}, but all that is required is that the object have an <code>equals</code> function.
      *
-     * @returns {Object} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
      * @exception {DeveloperError} positions is required.
      *

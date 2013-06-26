@@ -171,8 +171,9 @@ defineSuite([
                     new Cartographic()
                 ])
         };
+        polygon.configureFromPolygonHierarchy(hierarchy);
         expect(function() {
-            polygon.configureFromPolygonHierarchy(hierarchy);
+            render(context, frameState, polygon);
         }).toThrow();
     });
 
@@ -230,7 +231,7 @@ defineSuite([
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
-    it('does not render without positions due to duplicates', function() {
+    it('throws without positions due to duplicates', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         polygon = new Polygon();
@@ -241,10 +242,12 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
         ]);
 
-        expect(render(context, frameState, polygon)).toEqual(0);
+        expect(function() {
+            render(context, frameState, polygon);
+        }).toThrow();
     });
 
-    it('does not render without hierarchy positions due to duplicates', function() {
+    it('throws without hierarchy positions due to duplicates', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var hierarchy = {
                 positions : ellipsoid.cartographicArrayToCartesianArray([
@@ -265,7 +268,9 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureFromPolygonHierarchy(hierarchy);
 
-        expect(render(context, frameState, polygon)).toEqual(0);
+        expect(function () {
+            render(context, frameState, polygon);
+        }).toThrow();
     });
 
     it('is picked', function() {
@@ -321,13 +326,8 @@ defineSuite([
         var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
-        var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
-            projectedPositions.push(projection.project(positions[i]));
-        }
-
-        var sphere = BoundingSphere.fromPoints(projectedPositions);
-        sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
+        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
+        sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     }

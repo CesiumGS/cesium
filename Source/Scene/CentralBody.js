@@ -489,7 +489,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
+            if (mode === SceneMode.SCENE3D || (mode === SceneMode.COLUMBUS_VIEW && !(this.terrainProvider instanceof EllipsoidTerrainProvider))) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true

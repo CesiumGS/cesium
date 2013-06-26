@@ -12,6 +12,7 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/ComponentDatatype',
+        '../Core/Cartesian3',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
@@ -31,6 +32,7 @@ define([
         Geometry,
         GeometryAttribute,
         ComponentDatatype,
+        Cartesian3,
         BufferUsage,
         VertexLayout,
         CommandLists,
@@ -61,8 +63,8 @@ define([
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
-     * @param {Boolean} [options.releaseGeometries=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.transformToWorldCoordinates=true] When <code>true</code>, each geometry instance is transform to world coordinates even if they are already in the same coordinate system.
+     * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
+     * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -122,7 +124,7 @@ define([
 
         /**
          * The geometry instances rendered with this primitive.  This may
-         * be <code>undefined</code> if <code>options.releaseGeometries</code>
+         * be <code>undefined</code> if <code>options.releaseGeometryInstances</code>
          * is <code>true</code> when the primitive is constructed.
          * <p>
          * Changing this property after the primitive is rendered has no effect.
@@ -172,10 +174,12 @@ define([
         this.show = true;
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
-        this._releaseGeometries = defaultValue(options.releaseGeometries, true);
+        this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._transformToWorldCoordinates = defaultValue(options.transformToWorldCoordinates, true);
+        this._allowColumbusView = defaultValue(options.allowColumbusView, true);
+        this._boundingSphere = undefined;
+        this._boundingSphere2D = undefined;
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -275,7 +279,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._transformToWorldCoordinates;
+        var toWorld = primitive._allowColumbusView;
         var length = instances.length;
         var i;
 
@@ -301,12 +305,29 @@ define([
     }
 
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
-    function geometryPipeline(primitive, instances, context) {
-        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+    function geometryPipeline(primitive, instances, context, projection) {
         var length = instances.length;
+        var primitiveType = instances[0].geometry.primitiveType;
+        for (var j = 1; j < length; ++j) {
+            if (instances[j].geometry.primitiveType !== primitiveType) {
+                throw new DeveloperError('All instance geometries must have the same primitiveType.');
+            }
+        }
+
+        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
         var insts = new Array(length);
         for (var i = 0; i < length; ++i) {
             insts[i] = instances[i].clone();
+        }
+
+        // Unify to world coordinates before combining.
+        transformToWorldCoordinates(primitive, insts);
+
+        // Clip to IDL
+        if (primitive._allowColumbusView) {
+            for (var k = 0; k < length; ++k) {
+                GeometryPipeline.wrapLongitude(instances[k].geometry);
+            }
         }
 
         // Add color attribute if any geometries have per-instance color
@@ -317,15 +338,19 @@ define([
         // Add pickColor attribute for picking individual instances
         addPickColorAttribute(primitive, insts, context);
 
-        // Unify to world coordinates before combining.  If there is only one geometry or all
-        // geometries are in the same (non-world) coordinate system, only combine if the user requested it.
-        transformToWorldCoordinates(primitive, insts);
-
         // Combine into single geometry for better rendering performance.
         var geometry = GeometryPipeline.combine(insts);
 
-        // Split position for GPU RTE
-        GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+        // Split positions for GPU RTE
+        if (primitive._allowColumbusView) {
+            // Compute 2D positions
+            GeometryPipeline.projectTo2D(geometry, projection);
+
+            GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
+            GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
+        } else {
+            GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
+        }
 
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
@@ -334,6 +359,46 @@ define([
 
         // Unsigned int indices are supported.  No need to break into multiple geometries.
         return [geometry];
+    }
+
+    function createColumbusViewShader(primitive, vertexShaderSource) {
+        var attributes;
+        if (primitive._allowColumbusView) {
+            attributes =
+                'attribute vec3 position2DHigh;\n' +
+                'attribute vec3 position2DLow;\n';
+        } else {
+            attributes = '';
+        }
+
+        var computePosition =
+            '\nvec4 czm_computePosition()\n' +
+            '{\n';
+        if (primitive._allowColumbusView) {
+            computePosition +=
+                '    vec4 p;\n' +
+                '    if (czm_morphTime == 1.0)\n' +
+                '    {\n' +
+                '        p = czm_translateRelativeToEye(position3DHigh, position3DLow);\n' +
+                '    }\n' +
+                '    else if (czm_morphTime == 0.0)\n' +
+                '    {\n' +
+                '        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);\n' +
+                '    }\n' +
+                '    else\n' +
+                '    {\n' +
+                '        p = czm_columbusViewMorph(\n' +
+                '                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),\n' +
+                '                czm_translateRelativeToEye(position3DHigh, position3DLow),\n' +
+                '                czm_morphTime);\n' +
+                '    }\n' +
+                '    return p;\n';
+        } else {
+            computePosition += '    return czm_translateRelativeToEye(position3DHigh, position3DLow);\n';
+        }
+        computePosition += '}\n\n';
+
+        return attributes + vertexShaderSource + computePosition;
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {
@@ -378,10 +443,9 @@ define([
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
-            (frameState.mode !== SceneMode.SCENE3D) ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
-            (typeof this.appearance === 'undefined')) {
-// TODO: support Columbus view and 2D
+            (typeof this.appearance === 'undefined') ||
+            (frameState.mode !== SceneMode.SCENE3D && !this._allowColumbusView)) {
             return;
         }
 
@@ -397,8 +461,10 @@ define([
         var i;
 
         if (this._va.length === 0) {
+            var projection = frameState.scene2D.projection;
+
             var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
-            var geometries = geometryPipeline(this, instances, context);
+            var geometries = geometryPipeline(this, instances, context, projection);
 
             length = geometries.length;
             if (this._vertexCacheOptimize) {
@@ -410,6 +476,11 @@ define([
             }
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
+
+            this._boundingSphere = geometries[0].boundingSphere;
+            if (this._allowColumbusView && typeof this._boundingSphere !== 'undefined') {
+                this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
+            }
 
             var va = [];
             for (i = 0; i < length; ++i) {
@@ -431,17 +502,15 @@ define([
                 colorCommand = new DrawCommand();
                 colorCommand.primitiveType = geometry.primitiveType;
                 colorCommand.vertexArray = this._va[i];
-                colorCommand.boundingVolume = geometry.boundingSphere;
                 colorCommands.push(colorCommand);
 
                 pickCommand = new DrawCommand();
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
-                pickCommand.boundingVolume = geometry.boundingSphere;
                 pickCommands.push(pickCommand);
             }
 
-            if (this._releaseGeometries) {
+            if (this._releaseGeometryInstances) {
                 this.geometryInstances = undefined;
             }
         }
@@ -469,7 +538,7 @@ define([
 
         if (createSP) {
             var shaderCache = context.getShaderCache();
-            var vs = appearance.vertexShaderSource;
+            var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
@@ -500,11 +569,26 @@ define([
             }
         }
 
+        var boundingSphere;
+        if (frameState.mode === SceneMode.SCENE3D) {
+            boundingSphere = this._boundingSphere;
+        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+            boundingSphere = this._boundingSphere2D;
+        } else if (frameState.mode === SceneMode.SCENE2D && typeof this._boundingSphere2D !== 'undefined') {
+            boundingSphere = BoundingSphere.clone(this._boundingSphere2D);
+            boundingSphere.center.x = 0.0;
+        } else if (typeof this._boundingSphere !== 'undefined' && typeof this._boundingSphere2D !== 'undefined') {
+            boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
+        }
+
         // modelMatrix can change from frame to frame
         length = colorCommands.length;
         for (i = 0; i < length; ++i) {
             colorCommands[i].modelMatrix = this.modelMatrix;
             pickCommands[i].modelMatrix = this.modelMatrix;
+
+            colorCommands[i].boundingVolume = boundingSphere;
+            pickCommands[i].boundingVolume = boundingSphere;
         }
 
         commandList.push(this._commandLists);
