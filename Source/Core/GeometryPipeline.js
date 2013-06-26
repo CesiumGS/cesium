@@ -1187,20 +1187,9 @@ define([
         return geometry;
     };
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexTriangles = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
+    function indexTriangles(geometry) {
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
         }
 
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
@@ -1219,20 +1208,9 @@ define([
 
         geometry.indices = indices;
         return geometry;
-    };
+    }
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexTriangleFan = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLE_FAN) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_FAN.');
-        }
-
+    function indexTriangleFan(geometry) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 3) {
             throw new DeveloperError('The number of vertices must be at least three.');
@@ -1253,20 +1231,9 @@ define([
         geometry.indices = indices;
         geometry.primitiveType = PrimitiveType.TRIANGLES;
         return geometry;
-    };
+    }
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexTriangleStrip = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLE_STRIP) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLE_STRIP.');
-        }
-
+    function indexTriangleStrip(geometry) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 3) {
             throw new DeveloperError('The number of vertices must be at least 3.');
@@ -1299,22 +1266,11 @@ define([
         geometry.indices = indices;
         geometry.primitiveType = PrimitiveType.TRIANGLES;
         return geometry;
-    };
+    }
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexLines = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('undefined');
-        }
-
+    function indexLines(geometry) {
         if (typeof geometry.indices !== 'undefined') {
             return geometry;
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.LINES) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINES.');
         }
 
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
@@ -1333,20 +1289,9 @@ define([
 
         geometry.indices = indices;
         return geometry;
-    };
+    }
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexLineStrip = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.LINE_STRIP) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_STRIP.');
-        }
-
+    function indexLineStrip(geometry) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 2) {
             throw new DeveloperError('The number of vertices must be at least two.');
@@ -1365,20 +1310,9 @@ define([
         geometry.indices = indices;
         geometry.primitiveType = PrimitiveType.LINES;
         return geometry;
-    };
+    }
 
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.indexLineLoop = function(geometry) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
-        if (geometry.primitiveType !== PrimitiveType.LINE_LOOP) {
-            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.LINE_LOOP.');
-        }
-
+    function indexLineLoop(geometry) {
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
         if (numberOfVertices < 2) {
             throw new DeveloperError('The number of vertices must be at least two.');
@@ -1401,7 +1335,26 @@ define([
         geometry.indices = indices;
         geometry.primitiveType = PrimitiveType.LINES;
         return geometry;
-    };
+    }
+
+    function indexPrimitive(geometry) {
+        switch (geometry.primitiveType) {
+        case PrimitiveType.TRIANGLE_FAN:
+            return indexTriangleFan(geometry);
+        case PrimitiveType.TRIANGLE_STRIP:
+            return indexTriangleStrip(geometry);
+        case PrimitiveType.TRIANGLES:
+            return indexTriangles(geometry);
+        case PrimitiveType.LINE_STRIP:
+            return indexLineStrip(geometry);
+        case PrimitiveType.LINE_LOOP:
+            return indexLineLoop(geometry);
+        case PrimitiveType.LINES:
+            return indexLines(geometry);
+        }
+
+        return geometry;
+    }
 
     function offsetPointFromXZPlane(p, isBehind) {
         if (Math.abs(p.y) < CesiumMath.EPSILON11){
@@ -1797,28 +1750,10 @@ define([
             }
         }
 
-        var primitiveType = geometry.primitiveType;
-        if (primitiveType === PrimitiveType.TRIANGLE_FAN) {
-            GeometryPipeline.indexTriangleFan(primitiveType);
+        indexPrimitive(geometry);
+        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
             wrapLongitudeTriangles(geometry);
-        } else if (primitiveType === PrimitiveType.TRIANGLE_STRIP) {
-            GeometryPipeline.indexTriangleStrip(geometry);
-            wrapLongitudeTriangles(geometry);
-        } else if (primitiveType === PrimitiveType.TRIANGLES) {
-            if (typeof geometry.indices === 'undefined') {
-                GeometryPipeline.indexTriangles(geometry);
-            }
-            wrapLongitudeTriangles(geometry);
-        } else if (primitiveType === PrimitiveType.LINE_STRIP) {
-            GeometryPipeline.indexLineStrip(geometry);
-            wrapLongitudeLines(geometry);
-        } else if (primitiveType === PrimitiveType.LINE_LOOP) {
-            GeometryPipeline.indexLineLoop(geometry);
-            wrapLongitudeLines(geometry);
-        } else if (primitiveType === PrimitiveType.LINES) {
-            if (typeof geometry.indices === 'undefined') {
-                GeometryPipeline.indexLines(geometry);
-            }
+        } else if (geometry.primitiveType === PrimitiveType.LINES) {
             wrapLongitudeLines(geometry);
         }
 

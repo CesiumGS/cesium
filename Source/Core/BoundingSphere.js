@@ -761,6 +761,117 @@ define([
         return result;
     };
 
+    var projectTo2DNormal = new Cartesian3();
+    var projectTo2DEast = new Cartesian3();
+    var projectTo2DNorth = new Cartesian3();
+    var projectTo2DWest = new Cartesian3();
+    var projectTo2DSouth = new Cartesian3();
+    var projectTo2DCartographic = new Cartographic();
+    var projectTo2DPositions = new Array(8);
+    for (var n = 0; n < 8; ++n) {
+        projectTo2DPositions[n] = new Cartesian3();
+    }
+    /**
+     * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.
+     * @memberof BoundingSphere
+     *
+     * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
+     * @param {Object} [projection=GeographicProjection] The projection to 2D.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     *
+     * @exception {DeveloperError} sphere is required.
+     */
+    BoundingSphere.projectTo2D = function(sphere, projection, result) {
+        if (typeof sphere === 'undefined') {
+            throw new DeveloperError('sphere is required.');
+        }
+
+        projection = (typeof projection !== 'undefined') ? projection : new GeographicProjection();
+
+        var ellipsoid = projection.getEllipsoid();
+        var center = sphere.center;
+        var radius = sphere.radius;
+
+        var normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormal);
+        var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal, projectTo2DEast);
+        Cartesian3.normalize(east, east);
+        var north = Cartesian3.cross(normal, east, projectTo2DNorth);
+        Cartesian3.normalize(north, north);
+
+        Cartesian3.multiplyByScalar(normal, radius, normal);
+        Cartesian3.multiplyByScalar(north, radius, north);
+        Cartesian3.multiplyByScalar(east, radius, east);
+
+        var south = Cartesian3.negate(north, projectTo2DSouth);
+        var west = Cartesian3.negate(east, projectTo2DWest);
+
+        var positions = projectTo2DPositions;
+
+        // top NE corner
+        var corner = positions[0];
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, east, corner);
+
+        // top NW corner
+        corner = positions[1];
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // top SW corner
+        corner = positions[2];
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // top SE corner
+        corner = positions[3];
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, east, corner);
+
+        Cartesian3.negate(normal, normal);
+
+        // bottom NE corner
+        corner = positions[4];
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, east, corner);
+
+        // bottom NW corner
+        corner = positions[5];
+        Cartesian3.add(normal, north, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // bottom SW corner
+        corner = positions[6];
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, west, corner);
+
+        // bottom SE corner
+        corner = positions[7];
+        Cartesian3.add(normal, south, corner);
+        Cartesian3.add(corner, east, corner);
+
+        var length = positions.length;
+        for (var i = 0; i < length; ++i) {
+            var position = positions[i];
+            Cartesian3.add(center, position, position);
+            var cartographic = ellipsoid.cartesianToCartographic(position, projectTo2DCartographic);
+            projection.project(cartographic, position);
+        }
+
+        result = BoundingSphere.fromPoints(positions, result);
+
+        // swizzle center components
+        center = result.center;
+        var x = center.x;
+        var y = center.y;
+        var z = center.z;
+        center.x = z;
+        center.y = x;
+        center.z = y;
+
+        return result;
+    };
+
     /**
      * Compares the provided BoundingSphere componentwise and returns
      * <code>true</code> if they are equal, <code>false</code> otherwise.
@@ -866,6 +977,18 @@ define([
      */
     BoundingSphere.prototype.getPlaneDistances = function(position, direction, result) {
         return BoundingSphere.getPlaneDistances(this, position, direction, result);
+    };
+
+    /**
+     * Creates a bounding sphere in 2D from this bounding sphere. This bounding sphere must be in 3D world coordinates.
+     * @memberof BoundingSphere
+     *
+     * @param {Object} [projection=GeographicProjection] The projection to 2D.
+     * @param {BoundingSphere} [result] The object onto which to store the result.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     */
+    BoundingSphere.prototype.projectTo2D = function(projection, result) {
+        return BoundingSphere.projectTo2D(this, projection, result);
     };
 
     /**

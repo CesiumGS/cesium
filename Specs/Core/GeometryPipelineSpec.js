@@ -1020,7 +1020,7 @@ defineSuite([
         }
     });
 
-    it('indexTriangles provides indices for an un-indexed triangle list', function() {
+    it('wrapLongitude provides indices for an un-indexed triangle list', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1034,11 +1034,11 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLES
         });
 
-        GeometryPipeline.indexTriangles(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
-    it('indexTriangles returns unchanged geometry if indices are already defined for an un-indexed triangle list', function() {
+    it('wrapLongitude returns unchanged geometry if indices are already defined for an un-indexed triangle list', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1053,36 +1053,11 @@ defineSuite([
             indices : new Uint16Array([0, 1, 2, 3, 4, 5])
         });
 
-        GeometryPipeline.indexTriangles(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.indices).toEqual([0, 1, 2, 3, 4, 5]);
     });
 
-    it('indexTriangles throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexTriangles();
-        }).toThrow();
-    });
-
-    it('indexTriangles throws when primitive type is not TRIANGLES', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexTriangles(geometry);
-        }).toThrow();
-    });
-
-    it('indexTriangles throws number of vertices is less than 3', function() {
+    it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is less than 3', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1095,11 +1070,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexTriangles(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexTriangles throws when number of vertices is not a multiple of 3', function() {
+    it('wrapLongitude throws when primitive type is TRIANGLES and number of vertices is not a multiple of 3', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1114,11 +1089,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexTriangles(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexTriangleFan creates indices', function() {
+    it('wrapLongitude creates indexed triangles for a triangle fan', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1130,37 +1105,12 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_FAN
         });
 
-        GeometryPipeline.indexTriangleFan(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(geometry.indices).toEqual([1, 0, 2, 2, 0, 3]);
     });
 
-    it('indexTriangleFan throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexTriangleFan();
-        }).toThrow();
-    });
-
-    it('indexTriangleFan throws when primitive type is not TRIANGLE_FAN', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexTriangleFan(geometry);
-        }).toThrow();
-    });
-
-    it('indexTriangleFan throws number of vertices is less than 3', function() {
+    it('wrapLongitude throws when primitive type is TRIANGLE_FAN and number of vertices is less than 3', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1173,11 +1123,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexTriangleFan(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexTriangleStrip creates indices', function() {
+    it('wrapLongitude creates indexd triangles for triangle strips', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1190,37 +1140,12 @@ defineSuite([
             primitiveType : PrimitiveType.TRIANGLE_STRIP
         });
 
-        GeometryPipeline.indexTriangleStrip(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(geometry.indices).toEqual([0, 1, 2, 0, 2, 3, 3, 2, 4, 3, 4, 5]);
     });
 
-    it('indexTriangleStrip throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexTriangleStrip();
-        }).toThrow();
-    });
-
-    it('indexTriangleStrip throws when primitive type is not TRIANGLE_STRIP', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.LINES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexTriangleStrip(geometry);
-        }).toThrow();
-    });
-
-    it('indexTriangleStrip throws number of vertices is less than 3', function() {
+    it('wrapLongitude throws when the primitive type is TRIANGLE_STRIP and number of vertices is less than 3', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1233,11 +1158,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexTriangleStrip(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexLines creates indices', function() {
+    it('wrapLongitude creates indexed lines', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1249,11 +1174,11 @@ defineSuite([
             primitiveType : PrimitiveType.LINES
         });
 
-        GeometryPipeline.indexLines(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
-    it('indexLines returns geometry unchanged if indices are provided', function() {
+    it('wrapLongitude returns lines unchanged if indices are provided', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1266,36 +1191,11 @@ defineSuite([
             indices : new Uint16Array([0, 1, 2, 3])
         });
 
-        GeometryPipeline.indexLines(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.indices).toEqual([0, 1, 2, 3]);
     });
 
-    it('indexLines throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexLines();
-        }).toThrow();
-    });
-
-    it('indexLines throws when primitive type is not LINES', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexLines(geometry);
-        }).toThrow();
-    });
-
-    it('indexLines throws number of vertices is less than 2', function() {
+    it('wrapLongitude throws when primitive type is LINES and number of vertices is less than 2', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1308,11 +1208,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexLines(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexLines throws number of vertices is not a multiple 2', function() {
+    it('wrapLongitude throws when primitive type is LINES and number of vertices is not a multiple 2', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1325,11 +1225,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexLines(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexLineStrip creates indices', function() {
+    it('wrapLongitude creates indexed lines from line strip', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1341,37 +1241,12 @@ defineSuite([
             primitiveType : PrimitiveType.LINE_STRIP
         });
 
-        GeometryPipeline.indexLineStrip(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
         expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3]);
     });
 
-    it('indexLineStrip throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexLineStrip();
-        }).toThrow();
-    });
-
-    it('indexLineStrip throws when primitive type is not LINE_STRIP', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexLineStrip(geometry);
-        }).toThrow();
-    });
-
-    it('indexLineStrip throws number of vertices is less than 2', function() {
+    it('wrapLongitude throws when primitive type is LINE_STRIP and number of vertices is less than 2', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1384,11 +1259,11 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexLineStrip(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 
-    it('indexLineLoop creates indices', function() {
+    it('wrapLongitude creates indexed lines from line loops', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1400,37 +1275,12 @@ defineSuite([
             primitiveType : PrimitiveType.LINE_LOOP
         });
 
-        GeometryPipeline.indexLineLoop(geometry);
+        GeometryPipeline.wrapLongitude(geometry);
         expect(geometry.primitiveType).toEqual(PrimitiveType.LINES);
         expect(geometry.indices).toEqual([0, 1, 1, 2, 2, 3, 3, 0]);
     });
 
-    it('indexLineLoop throws with undefined geometry', function() {
-        expect(function() {
-            return GeometryPipeline.indexLineLoop();
-        }).toThrow();
-    });
-
-    it('indexLineLoop throws when primitive type is not LINE_LOOP', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                                    0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0,
-                                    8.0, 7.0, 6.0, 5.0, 4.0, 3.0, 2.0, 1.0, 0.0])
-                })
-            },
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
-        expect(function() {
-            GeometryPipeline.indexLineLoop(geometry);
-        }).toThrow();
-    });
-
-    it('indexLineLoop throws number of vertices is less than 2', function() {
+    it('wrapLongitude throws when the primitive type is LINE_LOOP and number of vertices is less than 2', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -1443,7 +1293,7 @@ defineSuite([
         });
 
         expect(function() {
-            GeometryPipeline.indexLineLoop(geometry);
+            GeometryPipeline.wrapLongitude(geometry);
         }).toThrow();
     });
 

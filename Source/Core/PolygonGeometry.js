@@ -92,8 +92,7 @@ define([
     function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
-            // Duplicate positions result in not enough positions to form a polygon.
-            return undefined;
+            throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
         }
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
@@ -140,6 +139,7 @@ define([
      *
      * @exception {DeveloperError} At least three positions are required.
      * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
      *
      * @example
      * // create a polygon from points
