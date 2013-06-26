@@ -326,13 +326,8 @@ defineSuite([
         var boundingVolume = commandList[0].colorList[0].boundingVolume;
         frameState.mode = mode;
 
-        var projectedPositions = [];
-        for (var i = 0; i < positions.length; ++i) {
-            projectedPositions.push(projection.project(positions[i]));
-        }
-
-        var sphere = BoundingSphere.fromPoints(projectedPositions);
-        sphere.center = new Cartesian3(0.0, sphere.center.x, sphere.center.y);
+        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
+        sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
         expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
         expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     }
