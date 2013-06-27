@@ -19,9 +19,10 @@ define([
 
     /**
      * An appearance for geometry on the surface of the ellipsoid like {@link PolygonGeometry}
-     * and {@link ExtentGeometry}, which supports materials like {@link MaterialAppearance}.
-     * However, this appearance requires fewer vertex attributes since the fragment shader
-     * can procedurally compute <code>normal</code>, <code>binormal</code>, and <code>tangent</code>.
+     * and {@link ExtentGeometry}, which supports all materials like {@link MaterialAppearance}
+     * with {@link MaterialAppearance.MaterialSupport.ALL}.  However, this appearance requires
+     * fewer vertex attributes since the fragment shader can procedurally compute <code>normal</code>,
+     * <code>binormal</code>, and <code>tangent</code>.
      *
      * @alias EllipsoidSurfaceAppearance
      * @constructor
@@ -47,6 +48,8 @@ define([
      *     material : Material.fromType(scene.getContext(), 'Stripe')
      *   })
      * });
+     *
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
      */
     var EllipsoidSurfaceAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
