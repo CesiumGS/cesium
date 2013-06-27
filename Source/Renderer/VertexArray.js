@@ -163,23 +163,6 @@ define([
 
     /**
      * DOC_TBA
-     */
-    VertexArray.prototype.addAttribute = function(attribute) {
-        if (typeof attribute !== 'undefined') {
-            var attributes = this._attributes;
-            var index = defaultValue(attribute.index, attributes.length);
-            for (var i = 0; i < attributes.length; ++i) {
-                if (index === attributes[i].index) {
-                    throw new DeveloperError('Index ' + index + ' is already in use.');
-                }
-            }
-
-            addAttribute(attributes, attribute, index);
-        }
-    };
-
-    /**
-     * DOC_TBA
      *
      * index is the location in the array of attributes, not the index property of an attribute.
      *

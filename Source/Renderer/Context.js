@@ -30,7 +30,6 @@ define([
         './TextureWrap',
         './UniformState',
         './VertexArray',
-        './VertexLayout',
         './ClearCommand',
         './PassState'
     ], function(
@@ -64,7 +63,6 @@ define([
         TextureWrap,
         UniformState,
         VertexArray,
-        VertexLayout,
         ClearCommand,
         PassState) {
     "use strict";
@@ -2182,130 +2180,6 @@ define([
         return pixels;
     };
 
-    //////////////////////////////////////////////////////////////////////////////////////////
-
-    function computeNumberOfVertices(attribute) {
-        return attribute.values.length / attribute.componentsPerAttribute;
-    }
-
-    function computeAttributeSizeInBytes(attribute) {
-        return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
-    }
-
-    function interleaveAttributes(attributes) {
-        var j;
-        var name;
-        var attribute;
-
-        // Extract attribute names.
-        var names = [];
-        for (name in attributes) {
-            // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
-                names.push(name);
-
-                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
-                    attributes[name].componentDatatype = ComponentDatatype.FLOAT;
-                    attributes[name].values = ComponentDatatype.FLOAT.createTypedArray(attributes[name].values);
-                }
-            }
-        }
-
-        // Validation.  Compute number of vertices.
-        var numberOfVertices;
-        var namesLength = names.length;
-
-        if (namesLength > 0) {
-            numberOfVertices = computeNumberOfVertices(attributes[names[0]]);
-
-            for (j = 1; j < namesLength; ++j) {
-                var currentNumberOfVertices = computeNumberOfVertices(attributes[names[j]]);
-
-                if (currentNumberOfVertices !== numberOfVertices) {
-                    throw new RuntimeError(
-                        'Each attribute list must have the same number of vertices.  ' +
-                        'Attribute ' + names[j] + ' has a different number of vertices ' +
-                        '(' + currentNumberOfVertices.toString() + ')' +
-                        ' than attribute ' + names[0] +
-                        ' (' + numberOfVertices.toString() + ').');
-                }
-            }
-        }
-
-        // Sort attributes by the size of their components.  From left to right, a vertex stores floats, shorts, and then bytes.
-        names.sort(function(left, right) {
-            return attributes[right].componentDatatype.sizeInBytes - attributes[left].componentDatatype.sizeInBytes;
-        });
-
-        // Compute sizes and strides.
-        var vertexSizeInBytes = 0;
-        var offsetsInBytes = {};
-
-        for (j = 0; j < namesLength; ++j) {
-            name = names[j];
-            attribute = attributes[name];
-
-            offsetsInBytes[name] = vertexSizeInBytes;
-            vertexSizeInBytes += computeAttributeSizeInBytes(attribute);
-        }
-
-        if (vertexSizeInBytes > 0) {
-            // Pad each vertex to be a multiple of the largest component datatype so each
-            // attribute can be addressed using typed arrays.
-            var maxComponentSizeInBytes = attributes[names[0]].componentDatatype.sizeInBytes; // Sorted large to small
-            var remainder = vertexSizeInBytes % maxComponentSizeInBytes;
-            if (remainder !== 0) {
-                vertexSizeInBytes += (maxComponentSizeInBytes - remainder);
-            }
-
-            // Total vertex buffer size in bytes, including per-vertex padding.
-            var vertexBufferSizeInBytes = numberOfVertices * vertexSizeInBytes;
-
-            // Create array for interleaved vertices.  Each attribute has a different view (pointer) into the array.
-            var buffer = new ArrayBuffer(vertexBufferSizeInBytes);
-            var views = {};
-
-            for (j = 0; j < namesLength; ++j) {
-                name = names[j];
-                var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
-
-                views[name] = {
-                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
-                    index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
-                    strideInComponentType : vertexSizeInBytes / sizeInBytes
-                };
-            }
-
-            // Copy attributes into one interleaved array.
-            // PERFORMANCE_IDEA:  Can we optimize these loops?
-            for (j = 0; j < numberOfVertices; ++j) {
-                for ( var n = 0; n < namesLength; ++n) {
-                    name = names[n];
-                    attribute = attributes[name];
-                    var values = attribute.values;
-                    var view = views[name];
-                    var pointer = view.pointer;
-
-                    var numberOfComponents = attribute.componentsPerAttribute;
-                    for ( var k = 0; k < numberOfComponents; ++k) {
-                        pointer[view.index + k] = values[(j * numberOfComponents) + k];
-                    }
-
-                    view.index += view.strideInComponentType;
-                }
-            }
-
-            return {
-                buffer : buffer,
-                offsetsInBytes : offsetsInBytes,
-                vertexSizeInBytes : vertexSizeInBytes
-            };
-        }
-
-        // No attributes to interleave.
-        return undefined;
-    }
-
     /**
      * Creates a vertex array from a geometry.  A geometry contains vertex attributes and optional index data
      * in system memory, whereas a vertex array contains vertex buffers and an optional index buffer in WebGL
@@ -2318,7 +2192,6 @@ define([
      *   <li><code>geometry</code>:  The source geometry containing data used to create the vertex array.</li>
      *   <li><code>attributeIndices</code>:  An object that maps geometry attribute names to vertex shader attribute indices.</li>
      *   <li><code>bufferUsage</code>:  The expected usage pattern of the vertex array's buffers.  On some WebGL implementations, this can significantly affect performance.  See {@link BufferUsage}.  Default: <code>BufferUsage.DYNAMIC_DRAW</code>.</li>
-     *   <li><code>vertexLayout</code>:  Determines if all attributes are interleaved in a single vertex buffer or if each attribute is stored in a separate vertex buffer.  Default: <code>VertexLayout.SEPARATE</code>.</li>
      * </ul>
      * <br />
      * If <code>creationArguments</code> is not specified or the <code>geometry</code> contains no data, the returned vertex array is empty.
@@ -2349,18 +2222,7 @@ define([
      *
      * ////////////////////////////////////////////////////////////////////////////////
      *
-     * // Example 2. Creates a vertex array with interleaved attributes in a
-     * // single vertex buffer.  The vertex and index buffer have static draw usage.
-     * var va = context.createVertexArrayFromGeometry({
-     *     geometry             : geometry,
-     *     attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
-     *     bufferUsage      : BufferUsage.STATIC_DRAW,
-     *     vertexLayout     : VertexLayout.INTERLEAVED
-     * });
-     *
-     * ////////////////////////////////////////////////////////////////////////////////
-     *
-     * // Example 3.  When the caller destroys the vertex array, it also destroys the
+     * // Example 2.  When the caller destroys the vertex array, it also destroys the
      * // attached vertex buffer(s) and index buffer.
      * va = va.destroy();
      */
@@ -2369,76 +2231,57 @@ define([
         var geometry = defaultValue(ca.geometry, defaultValue.EMPTY_OBJECT);
 
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
-
         var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
-        var interleave = (typeof ca.vertexLayout !== 'undefined') && (ca.vertexLayout === VertexLayout.INTERLEAVED);
 
         var name;
         var attribute;
         var vertexBuffer;
         var vaAttributes = [];
         var attributes = geometry.attributes;
+        var interleavedBuffers = [];
 
-        if (interleave) {
-            // Use a single vertex buffer with interleaved vertices.
-            var interleavedAttributes = interleaveAttributes(attributes);
-            if (typeof interleavedAttributes !== 'undefined') {
-                vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
-                var offsetsInBytes = interleavedAttributes.offsetsInBytes;
-                var strideInBytes = interleavedAttributes.vertexSizeInBytes;
+        for (name in attributes) {
+            if (attributes.hasOwnProperty(name)) {
+                attribute = attributes[name];
 
-                for (name in attributes) {
-                    if (attributes.hasOwnProperty(name)) {
-                        attribute = attributes[name];
+                var componentDatatype = attribute.componentDatatype;
+                if (componentDatatype === ComponentDatatype.DOUBLE) {
+                    componentDatatype = ComponentDatatype.FLOAT;
+                }
 
-                        if (typeof attribute.values !== 'undefined') {
-                            // Common case: per-vertex attributes
-                            vaAttributes.push({
-                                index : attributeIndices[name],
-                                vertexBuffer : vertexBuffer,
-                                componentDatatype : attribute.componentDatatype,
-                                componentsPerAttribute : attribute.componentsPerAttribute,
-                                normalize : attribute.normalize,
-                                offsetInBytes : offsetsInBytes[name],
-                                strideInBytes : strideInBytes
-                            });
-                        } else {
-                            // Constant attribute for all vertices
-                            vaAttributes.push({
-                                index : attributeIndices[name],
-                                value : attribute.value,
-                                componentDatatype : attribute.componentDatatype,
-                                normalize : attribute.normalize
-                            });
+                vertexBuffer = undefined;
+                if (typeof attribute.interleavedValues !== 'undefined') {
+                    var values = attribute.interleavedValues;
+                    var length = interleavedBuffers.length;
+                    for (var i = 0; i < length; ++i) {
+                        var interleavedBuffer = interleavedBuffers[i];
+                        if (values === interleavedBuffer.values) {
+                            vertexBuffer = interleavedBuffer.vertexBuffer;
+                            break;
                         }
                     }
-                }
-            }
-        } else {
-            // One vertex buffer per attribute.
-            for (name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
-                    attribute = attributes[name];
 
-                    var componentDatatype = attribute.componentDatatype;
-                    if (componentDatatype === ComponentDatatype.DOUBLE) {
-                        componentDatatype = ComponentDatatype.FLOAT;
+                    if (typeof vertexBuffer === 'undefined') {
+                        vertexBuffer = this.createVertexBuffer(values, bufferUsage);
+                        interleavedBuffers.push({
+                            values : values,
+                            vertexBuffer : vertexBuffer
+                        });
                     }
-
-                    vertexBuffer = undefined;
-                    if (typeof attribute.values !== 'undefined') {
-                        vertexBuffer = this.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
-                    }
-
-                    vaAttributes.push({
-                        index : attributeIndices[name],
-                        vertexBuffer : vertexBuffer,
-                        value : attribute.value,
-                        componentDatatype : componentDatatype,
-                        componentsPerAttribute : attribute.componentsPerAttribute,
-                        normalize : attribute.normalize
-                    });
+                } else if (typeof attribute.values !== 'undefined') {
+                    vertexBuffer = this.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
                 }
+
+                vaAttributes.push({
+                    index : attributeIndices[name],
+                    vertexBuffer : vertexBuffer,
+                    value : attribute.value,
+                    componentDatatype : componentDatatype,
+                    componentsPerAttribute : attribute.componentsPerAttribute,
+                    normalize : attribute.normalize,
+                    offsetInBytes : defaultValue(attribute.offsetInBytes, 0),
+                    strideInBytes : defaultValue(attribute.strideInBytes, 0)
+                });
             }
         }
 

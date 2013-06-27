@@ -14,7 +14,6 @@ define([
         '../Core/ComponentDatatype',
         '../Core/Cartesian3',
         '../Renderer/BufferUsage',
-        '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createPickFragmentShaderSource',
@@ -34,7 +33,6 @@ define([
         ComponentDatatype,
         Cartesian3,
         BufferUsage,
-        VertexLayout,
         CommandLists,
         DrawCommand,
         createPickFragmentShaderSource,
@@ -296,14 +294,8 @@ define([
             }
         }
 
-        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
-        var insts = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            insts[i] = instances[i].clone();
-        }
-
         // Unify to world coordinates before combining.
-        transformToWorldCoordinates(primitive, insts);
+        transformToWorldCoordinates(primitive, instances);
 
         // Clip to IDL
         if (primitive._allowColumbusView) {
@@ -313,21 +305,21 @@ define([
         }
 
         // Add pickColor attribute for picking individual instances
-        addPickColorAttribute(primitive, insts, context);
+        addPickColorAttribute(primitive, instances, context);
 
         // add attributes to the geometry for each per-instance geometry
-        addPerInstanceAttributes(primitive, insts);
+        addPerInstanceAttributes(primitive, instances);
 
         // Optimize for vertex shader caches
         if (primitive._vertexCacheOptimize) {
-            for (i = 0; i < length; ++i) {
-                GeometryPipeline.reorderForPostVertexCache(insts[i].geometry);
-                GeometryPipeline.reorderForPreVertexCache(insts[i].geometry);
+            for (var i = 0; i < length; ++i) {
+                GeometryPipeline.reorderForPostVertexCache(instances[i].geometry);
+                GeometryPipeline.reorderForPreVertexCache(instances[i].geometry);
             }
         }
 
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryPipeline.combine(insts);
+        var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
         if (primitive._allowColumbusView) {
@@ -452,7 +444,13 @@ define([
             var projection = frameState.scene2D.projection;
 
             var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
-            var geometries = geometryPipeline(this, instances, context, projection);
+            // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+            length = instances.length;
+            var insts = new Array(length);
+            for (i = 0; i < length; ++i) {
+                insts[i] = instances[i].clone();
+            }
+            var geometries = geometryPipeline(this, insts, context, projection);
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
@@ -464,11 +462,11 @@ define([
             var va = [];
             length = geometries.length;
             for (i = 0; i < length; ++i) {
+                GeometryPipeline.interleaveAttributes(geometries[i]);
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
                     attributeIndices : this._attributeIndices,
-                    bufferUsage : BufferUsage.STATIC_DRAW,
-                    vertexLayout : VertexLayout.INTERLEAVED
+                    bufferUsage : BufferUsage.STATIC_DRAW
                 }));
             }
 
