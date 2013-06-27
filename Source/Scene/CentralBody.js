@@ -787,6 +787,7 @@ define([
             creditContainer.style.background = "rgba(0, 0, 0, .5)";
             creditContainer.style.color = "#ffffff";
             creditContainer.style["font-size"] = "10pt";
+            creditContainer.style["padding-right"] = "5px";
             canvasContainer.appendChild(creditContainer);
             centralBody._creditManager = new CreditManager(creditContainer);
         }
