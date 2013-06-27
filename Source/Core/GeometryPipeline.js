@@ -1,13 +1,19 @@
 /*global define*/
 define([
+        './barycentricCoordinates',
         './defaultValue',
         './DeveloperError',
-        './Cartesian3',
         './Cartesian2',
+        './Cartesian3',
+        './Cartesian4',
         './Cartographic',
         './EncodedCartesian3',
+        './Intersect',
+        './IntersectionTests',
+        './Math',
         './Matrix3',
         './Matrix4',
+        './Plane',
         './GeographicProjection',
         './ComponentDatatype',
         './IndexDatatype',
@@ -17,14 +23,20 @@ define([
         './Geometry',
         './GeometryAttribute'
     ], function(
+        barycentricCoordinates,
         defaultValue,
         DeveloperError,
-        Cartesian3,
         Cartesian2,
+        Cartesian3,
+        Cartesian4,
         Cartographic,
         EncodedCartesian3,
+        Intersect,
+        IntersectionTests,
+        CesiumMath,
         Matrix3,
         Matrix4,
+        Plane,
         GeographicProjection,
         ComponentDatatype,
         IndexDatatype,
@@ -450,7 +462,8 @@ define([
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
-                        primitiveType : geometry.primitiveType
+                        primitiveType : geometry.primitiveType,
+                        boundingSphere : geometry.boundingSphere
                     }));
 
                     // Reset for next vertex-array
@@ -465,7 +478,8 @@ define([
                 geometries.push(new Geometry({
                     attributes : newAttributes,
                     indices : newIndices,
-                    primitiveType : geometry.primitiveType
+                    primitiveType : geometry.primitiveType,
+                    boundingSphere : geometry.boundingSphere
                 }));
             }
         } else {
@@ -507,7 +521,7 @@ define([
 
             // Project original positions to 2D.
             var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = new Float64Array(2 * wgs84Positions.length / 3);
+            var projectedPositions = new Float64Array(wgs84Positions.length);
             var index = 0;
 
             for ( var i = 0; i < wgs84Positions.length; i += 3) {
@@ -517,6 +531,7 @@ define([
 
                 projectedPositions[index++] = projectedLonLat.x;
                 projectedPositions[index++] = projectedLonLat.y;
+                projectedPositions[index++] = projectedLonLat.z;
             }
 
             // Rename original positions to WGS84 Positions.
@@ -525,7 +540,7 @@ define([
             // Replace original positions with 2D projected positions
             geometry.attributes.position2D = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 2,
+                componentsPerAttribute : 3,
                 values : projectedPositions
             });
             delete geometry.attributes.position;
@@ -795,7 +810,7 @@ define([
         var k;
 
         var m = instances[0].modelMatrix;
-        var haveindicess = (typeof instances[0].geometry.indices !== 'undefined');
+        var haveIndices = (typeof instances[0].geometry.indices !== 'undefined');
         var primitiveType = instances[0].geometry.primitiveType;
 
         for (i = 1; i < length; ++i) {
@@ -803,7 +818,7 @@ define([
                 throw new DeveloperError('All instances must have the same modelMatrix.');
             }
 
-            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveindicess) {
+            if ((typeof instances[i].geometry.indices !== 'undefined') !== haveIndices) {
                 throw new DeveloperError('All instance geometries must have an indices or not have one.');
             }
 
@@ -838,7 +853,7 @@ define([
         // Combine index lists
         var indices;
 
-        if (haveindicess) {
+        if (haveIndices) {
             var numberOfIndices = 0;
             for (i = 0; i < length; ++i) {
                 numberOfIndices += instances[i].geometry.indices.length;
@@ -914,7 +929,7 @@ define([
      * @exception {DeveloperError} geometry is required
      *
      * @example
-     * geometry = GeometryPipeline.computeNormal(geometry);
+     * GeometryPipeline.computeNormal(geometry);
      */
     GeometryPipeline.computeNormal = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -1047,18 +1062,19 @@ define([
      * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have
      * <code>position</code>, <code>normal</code>, and <code>st</code> attributes.
      * </p>
+     * <p>
      * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
      * for an Arbitrary Mesh</a> by Eric Lengyel.
-     * <p>
+     * </p>
      *
      * @param {Geometry} geometry The geometry to modify, which is modified in place.
      *
-     * @returns {Geometry} The modified <code>geometry</code> argument with the compute <code>binormal</code> and <code>tangent</code> attributes.
+     * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
      *
      * @exception {DeveloperError} geometry is required.
-     *˙
+     *
      * @example
-     * geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+     * GeometryPipeline.computeBinormalAndTangent(geometry);
      */
     GeometryPipeline.computeBinormalAndTangent = function(geometry) {
         if (typeof geometry === 'undefined') {
@@ -1167,6 +1183,579 @@ define([
             componentsPerAttribute : 3,
             values : binormalValues
         });
+
+        return geometry;
+    };
+
+    function indexTriangles(geometry) {
+        if (typeof geometry.indices !== 'undefined') {
+            return geometry;
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least three.');
+        }
+
+        if (numberOfVertices % 3 !== 0) {
+            throw new DeveloperError('The number of vertices must be a multiple of three.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices);
+        for (var i = 0; i < numberOfVertices; ++i) {
+            indices[i] = i;
+        }
+
+        geometry.indices = indices;
+        return geometry;
+    }
+
+    function indexTriangleFan(geometry) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least three.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
+        indices[0] = 1;
+        indices[1] = 0;
+        indices[2] = 2;
+
+        var indicesIndex = 3;
+        for (var i = 3; i < numberOfVertices; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = 0;
+            indices[indicesIndex++] = i;
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.TRIANGLES;
+        return geometry;
+    }
+
+    function indexTriangleStrip(geometry) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 3) {
+            throw new DeveloperError('The number of vertices must be at least 3.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 2) * 3);
+        indices[0] = 0;
+        indices[1] = 1;
+        indices[2] = 2;
+
+        if (numberOfVertices > 3) {
+            indices[3] = 0;
+            indices[4] = 2;
+            indices[5] = 3;
+        }
+
+        var indicesIndex = 6;
+        for (var i = 3; i < numberOfVertices - 1; i += 2) {
+            indices[indicesIndex++] = i;
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i + 1;
+
+            if (i + 2 < numberOfVertices) {
+                indices[indicesIndex++] = i;
+                indices[indicesIndex++] = i + 1;
+                indices[indicesIndex++] = i + 2;
+            }
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.TRIANGLES;
+        return geometry;
+    }
+
+    function indexLines(geometry) {
+        if (typeof geometry.indices !== 'undefined') {
+            return geometry;
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+
+        if (numberOfVertices % 2 !== 0) {
+            throw new DeveloperError('The number of vertices must be a multiple of 2.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices);
+        for (var i = 0; i < numberOfVertices; ++i) {
+            indices[i] = i;
+        }
+
+        geometry.indices = indices;
+        return geometry;
+    }
+
+    function indexLineStrip(geometry) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, (numberOfVertices - 1) * 2);
+
+        indices[0] = 0;
+        indices[1] = 1;
+
+        var indicesIndex = 2;
+        for (var i = 2; i < numberOfVertices; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i;
+        }
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.LINES;
+        return geometry;
+    }
+
+    function indexLineLoop(geometry) {
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        if (numberOfVertices < 2) {
+            throw new DeveloperError('The number of vertices must be at least two.');
+        }
+
+        var indices = IndexDatatype.createTypedArray(numberOfVertices, numberOfVertices * 2);
+
+        indices[0] = 0;
+        indices[1] = 1;
+
+        var indicesIndex = 2;
+        for (var i = 2; i < numberOfVertices; ++i) {
+            indices[indicesIndex++] = i - 1;
+            indices[indicesIndex++] = i;
+        }
+
+        indices[indicesIndex++] = numberOfVertices - 1;
+        indices[indicesIndex] = 0;
+
+        geometry.indices = indices;
+        geometry.primitiveType = PrimitiveType.LINES;
+        return geometry;
+    }
+
+    function indexPrimitive(geometry) {
+        switch (geometry.primitiveType) {
+        case PrimitiveType.TRIANGLE_FAN:
+            return indexTriangleFan(geometry);
+        case PrimitiveType.TRIANGLE_STRIP:
+            return indexTriangleStrip(geometry);
+        case PrimitiveType.TRIANGLES:
+            return indexTriangles(geometry);
+        case PrimitiveType.LINE_STRIP:
+            return indexLineStrip(geometry);
+        case PrimitiveType.LINE_LOOP:
+            return indexLineLoop(geometry);
+        case PrimitiveType.LINES:
+            return indexLines(geometry);
+        }
+
+        return geometry;
+    }
+
+    function offsetPointFromXZPlane(p, isBehind) {
+        if (Math.abs(p.y) < CesiumMath.EPSILON11){
+            if (isBehind) {
+                p.y = -CesiumMath.EPSILON11;
+            } else {
+                p.y = CesiumMath.EPSILON11;
+            }
+        }
+    }
+
+    var c3 = new Cartesian3();
+    function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
+        p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
+        Cartesian3.clone(u1, v1);
+        offsetPointFromXZPlane(u1, true);
+        offsetPointFromXZPlane(v1, false);
+    }
+
+    var u1 = new Cartesian3();
+    var u2 = new Cartesian3();
+    var q1 = new Cartesian3();
+    var q2 = new Cartesian3();
+
+    var splitTriangleResult = {
+        positions : new Array(7),
+        indices : new Array(3 * 3)
+    };
+
+    function splitTriangle(p0, p1, p2) {
+        // In WGS84 coordinates, for a triangle approximately on the
+        // ellipsoid to cross the IDL, first it needs to be on the
+        // negative side of the plane x = 0.
+        if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
+            var p0Behind = p0.y < 0.0;
+            var p1Behind = p1.y < 0.0;
+            var p2Behind = p2.y < 0.0;
+
+            offsetPointFromXZPlane(p0, p0Behind);
+            offsetPointFromXZPlane(p1, p1Behind);
+            offsetPointFromXZPlane(p2, p2Behind);
+
+            var numBehind = 0;
+            numBehind += p0Behind ? 1 : 0;
+            numBehind += p1Behind ? 1 : 0;
+            numBehind += p2Behind ? 1 : 0;
+
+            var indices = splitTriangleResult.indices;
+
+            if (numBehind === 1) {
+                indices[1] = 3;
+                indices[2] = 4;
+                indices[5] = 6;
+                indices[7] = 6;
+                indices[8] = 5;
+
+                if (p0Behind) {
+                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                    indices[0] = 0;
+                    indices[3] = 1;
+                    indices[4] = 2;
+                    indices[6] = 1;
+                } else if (p1Behind) {
+                    getXZIntersectionOffsetPoints(p1, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p1, p2, u2, q2);
+
+                    indices[0] = 1;
+                    indices[3] = 2;
+                    indices[4] = 0;
+                    indices[6] = 2;
+                } else if (p2Behind) {
+                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                    indices[0] = 2;
+                    indices[3] = 0;
+                    indices[4] = 1;
+                    indices[6] = 0;
+                }
+            } else if (numBehind === 2) {
+                indices[2] = 4;
+                indices[4] = 4;
+                indices[5] = 3;
+                indices[7] = 5;
+                indices[8] = 6;
+
+                if (!p0Behind) {
+                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                    indices[0] = 1;
+                    indices[1] = 2;
+                    indices[3] = 1;
+                    indices[6] = 0;
+                } else if (!p1Behind) {
+                    getXZIntersectionOffsetPoints(p1, p2, u1, q1);
+                    getXZIntersectionOffsetPoints(p1, p0, u2, q2);
+
+                    indices[0] = 2;
+                    indices[1] = 0;
+                    indices[3] = 2;
+                    indices[6] = 1;
+                } else if (!p2Behind) {
+                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                    indices[0] = 0;
+                    indices[1] = 1;
+                    indices[3] = 0;
+                    indices[6] = 2;
+                }
+            }
+
+            var positions = splitTriangleResult.positions;
+            positions[0] = p0;
+            positions[1] = p1;
+            positions[2] = p2;
+            splitTriangleResult.length = 3;
+
+            if (numBehind === 1 || numBehind === 2) {
+                positions[3] = u1;
+                positions[4] = u2;
+                positions[5] = q1;
+                positions[6] = q2;
+                splitTriangleResult.length = 7;
+            }
+
+            return splitTriangleResult;
+        }
+
+        return undefined;
+    }
+
+    function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
+        if (typeof normals === 'undefined' && typeof binormals === 'undefined' &&
+                typeof tangents === 'undefined' && typeof texCoords === 'undefined') {
+            return;
+        }
+
+        var positions = dividedTriangle.positions;
+        var p0 = positions[0];
+        var p1 = positions[1];
+        var p2 = positions[2];
+
+        var n0, n1, n2;
+        var b0, b1, b2;
+        var t0, t1, t2;
+        var s0, s1, s2;
+        var v0, v1, v2;
+        var u0, u1, u2;
+
+        if (typeof normals !== 'undefined') {
+            n0 = Cartesian3.fromArray(normals, i0 * 3);
+            n1 = Cartesian3.fromArray(normals, i1 * 3);
+            n2 = Cartesian3.fromArray(normals, i2 * 3);
+        }
+
+        if (typeof binormals !== 'undefined') {
+            b0 = Cartesian3.fromArray(binormals, i0 * 3);
+            b1 = Cartesian3.fromArray(binormals, i1 * 3);
+            b2 = Cartesian3.fromArray(binormals, i2 * 3);
+        }
+
+        if (typeof tangents !== 'undefined') {
+            t0 = Cartesian3.fromArray(tangents, i0 * 3);
+            t1 = Cartesian3.fromArray(tangents, i1 * 3);
+            t2 = Cartesian3.fromArray(tangents, i2 * 3);
+        }
+
+        if (typeof texCoords !== 'undefined') {
+            s0 = Cartesian2.fromArray(texCoords, i0 * 2);
+            s1 = Cartesian2.fromArray(texCoords, i1 * 2);
+            s2 = Cartesian2.fromArray(texCoords, i2 * 2);
+        }
+
+        for (var i = 3; i < positions.length; ++i) {
+            var point = positions[i];
+            var coords = barycentricCoordinates(point, p0, p1, p2);
+
+            if (typeof normals !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(n0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(n1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(n2, coords.z, v2);
+
+                var normal = Cartesian3.add(v0, v1);
+                Cartesian3.add(normal, v2, normal);
+                Cartesian3.normalize(normal, normal);
+
+                normals.push(normal.x, normal.y, normal.z);
+            }
+
+            if (typeof binormals !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(b0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(b1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(b2, coords.z, v2);
+
+                var binormal = Cartesian3.add(v0, v1);
+                Cartesian3.add(binormal, v2, binormal);
+                Cartesian3.normalize(binormal, binormal);
+
+                binormals.push(binormal.x, binormal.y, binormal.z);
+            }
+
+            if (typeof tangents !== 'undefined') {
+                v0 = Cartesian3.multiplyByScalar(t0, coords.x, v0);
+                v1 = Cartesian3.multiplyByScalar(t1, coords.y, v1);
+                v2 = Cartesian3.multiplyByScalar(t2, coords.z, v2);
+
+                var tangent = Cartesian3.add(v0, v1);
+                Cartesian3.add(tangent, v2, tangent);
+                Cartesian3.normalize(tangent, tangent);
+
+                tangents.push(tangent.x, tangent.y, tangent.z);
+            }
+
+            if (typeof texCoords !== 'undefined') {
+                u0 = Cartesian2.multiplyByScalar(s0, coords.x, u0);
+                u1 = Cartesian2.multiplyByScalar(s1, coords.y, u1);
+                u2 = Cartesian2.multiplyByScalar(s2, coords.z, u2);
+
+                var texCoord = Cartesian2.add(u0, u1);
+                Cartesian2.add(texCoord, u2, texCoord);
+
+                texCoords.push(texCoord.x, texCoord.y);
+            }
+        }
+    }
+
+    function wrapLongitudeTriangles(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var normals = (typeof attributes.normal !== 'undefined') ? attributes.normal.values : undefined;
+        var binormals = (typeof attributes.binormal !== 'undefined') ? attributes.binormal.values : undefined;
+        var tangents = (typeof attributes.tangent !== 'undefined') ? attributes.tangent.values : undefined;
+        var texCoords = (typeof attributes.st !== 'undefined') ? attributes.st.values : undefined;
+        var indices = geometry.indices;
+
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newNormals = (typeof normals !== 'undefined') ? Array.prototype.slice.call(normals, 0) : undefined;
+        var newBinormals = (typeof binormals !== 'undefined') ? Array.prototype.slice.call(binormals, 0) : undefined;
+        var newTangents = (typeof tangents !== 'undefined') ? Array.prototype.slice.call(tangents, 0) : undefined;
+        var newTexCoords = (typeof texCoords !== 'undefined') ? Array.prototype.slice.call(texCoords, 0) : undefined;
+        var newIndices = [];
+
+        var len = indices.length;
+        for (var i = 0; i < len; i += 3) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+            var i2 = indices[i + 2];
+
+            var p0 = Cartesian3.fromArray(positions, i0 * 3);
+            var p1 = Cartesian3.fromArray(positions, i1 * 3);
+            var p2 = Cartesian3.fromArray(positions, i2 * 3);
+
+            var result = splitTriangle(p0, p1, p2);
+            if (typeof result !== 'undefined') {
+                newPositions[i0 * 3 + 1] = result.positions[0].y;
+                newPositions[i1 * 3 + 1] = result.positions[1].y;
+                newPositions[i2 * 3 + 1] = result.positions[2].y;
+
+                if (result.length > 3) {
+                    var positionsLength = newPositions.length / 3;
+                    for(var j = 0; j < result.indices.length; ++j) {
+                        var index = result.indices[j];
+                        if (index < 3) {
+                            newIndices.push(indices[i + index]);
+                        } else {
+                            newIndices.push(index - 3 + positionsLength);
+                        }
+                    }
+
+                    for (var k = 3; k < result.positions.length; ++k) {
+                        var position = result.positions[k];
+                        newPositions.push(position.x, position.y, position.z);
+                    }
+                    computeTriangleAttributes(i0, i1, i2, result, newNormals, newBinormals, newTangents, newTexCoords);
+                } else {
+                    newIndices.push(i0, i1, i2);
+                }
+            } else {
+                newIndices.push(i0, i1, i2);
+            }
+        }
+
+        geometry.attributes.position.values = new Float64Array(newPositions);
+
+        if (typeof newNormals !== 'undefined') {
+            attributes.normal.values = attributes.normal.componentDatatype.createTypedArray(newNormals);
+        }
+
+        if (typeof newBinormals !== 'undefined') {
+            attributes.binormal.values = attributes.binormal.componentDatatype.createTypedArray(newBinormals);
+        }
+
+        if (typeof newTangents !== 'undefined') {
+            attributes.tangent.values = attributes.tangent.componentDatatype.createTypedArray(newTangents);
+        }
+
+        if (typeof newTexCoords !== 'undefined') {
+            attributes.st.values = attributes.st.componentDatatype.createTypedArray(newTexCoords);
+        }
+
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+    }
+
+    function wrapLongitudeLines(geometry) {
+        var attributes = geometry.attributes;
+        var positions = attributes.position.values;
+        var indices = geometry.indices;
+
+        var newPositions = Array.prototype.slice.call(positions, 0);
+        var newIndices = [];
+
+        var xzPlane = Plane.fromPointNormal(Cartesian3.ZERO, Cartesian3.UNIT_Y);
+
+        var length = indices.length;
+        for ( var i = 0; i < length; i += 2) {
+            var i0 = indices[i];
+            var i1 = indices[i + 1];
+
+            var prev = Cartesian3.fromArray(positions, i0 * 3);
+            var cur = Cartesian3.fromArray(positions, i1 * 3);
+
+            if (Math.abs(prev.y) < CesiumMath.EPSILON6){
+                if (prev.y < 0.0) {
+                    prev.y = -CesiumMath.EPSILON6;
+                } else {
+                    prev.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i0 * 3 + 1] = prev.y;
+            }
+
+            if (Math.abs(cur.y) < CesiumMath.EPSILON6){
+                if (cur.y < 0.0) {
+                    cur.y = -CesiumMath.EPSILON6;
+                } else {
+                    cur.y = CesiumMath.EPSILON6;
+                }
+
+                newPositions[i1 * 3 + 1] = cur.y;
+            }
+
+            newIndices.push(i0);
+
+            // intersects the IDL if either endpoint is on the negative side of the yz-plane
+            if (prev.x < 0.0 || cur.x < 0.0) {
+                // and intersects the xz-plane
+                var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane);
+                if (typeof intersection !== 'undefined') {
+                    // move point on the xz-plane slightly away from the plane
+                    var offset = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Y, 5.0 * CesiumMath.EPSILON9);
+                    if (prev.y < 0.0) {
+                        Cartesian3.negate(offset, offset);
+                    }
+
+                    var index = newPositions.length / 3;
+                    newIndices.push(index, index + 1);
+
+                    var offsetPoint = Cartesian3.add(intersection, offset);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+
+                    Cartesian3.negate(offset, offset);
+                    Cartesian3.add(intersection, offset, offsetPoint);
+                    newPositions.push(offsetPoint.x, offsetPoint.y, offsetPoint.z);
+                }
+            }
+
+            newIndices.push(i1);
+        }
+
+        geometry.attributes.position.values = new Float64Array(newPositions);
+        var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+        geometry.indices = IndexDatatype.createTypedArray(numberOfVertices, newIndices);
+    }
+
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.wrapLongitude = function(geometry) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        var boundingSphere = geometry.boundingSphere;
+        if (typeof boundingSphere !== 'undefined') {
+            var minX = boundingSphere.center.x - boundingSphere.radius;
+            if (minX > 0 || BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) !== Intersect.INTERSECTING) {
+                return geometry;
+            }
+        }
+
+        indexPrimitive(geometry);
+        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+            wrapLongitudeTriangles(geometry);
+        } else if (geometry.primitiveType === PrimitiveType.LINES) {
+            wrapLongitudeLines(geometry);
+        }
 
         return geometry;
     };

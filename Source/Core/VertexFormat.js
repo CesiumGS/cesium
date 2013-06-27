@@ -116,7 +116,9 @@ define([
     }));
 
     /**
-     * DOC_TBA
+     * An immutable vertex format with position, normal, and st attributes.
+     * This is compatible with {@link MaterialAppearance} when {@link MaterialAppearance#materialSupport}
+     * is <code>TEXTURED/code>.
      *
      * @memberof VertexFormat
      *
