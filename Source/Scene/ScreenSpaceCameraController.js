@@ -130,7 +130,7 @@ define([
         /**
          * Sets the behavior in Columbus view.
          * @type {CameraColumbusViewMode}
-         * @default CameraColumbusViewMode.FREE
+         * @default {@link CameraColumbusViewMode.FREE}
          */
         this.columbusViewMode = CameraColumbusViewMode.FREE;
         /**
@@ -148,7 +148,7 @@ define([
         /**
          * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
          * @type {Number}
-         * @default Number.POSITIVE_INFINITY
+         * @default {@link Number.POSITIVE_INFINITY}
          */
         this.maximumZoomDistance = Number.POSITIVE_INFINITY;
 

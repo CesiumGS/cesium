@@ -79,7 +79,7 @@ define([
          * </p>
          *
          * @type {Cartesian3}
-         * @default Cartesian3.ZERO
+         * @default {@link Cartesian3.ZERO}
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
@@ -118,7 +118,7 @@ define([
          * </p>
          *
          * @type {Matrix4}
-         * @default Matrix4.IDENTITY
+         * @default {@link Matrix4.IDENTITY}
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(

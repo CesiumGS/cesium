@@ -38,7 +38,7 @@ define([
         /**
          * The center point of the sphere.
          * @type {Cartesian3}
-         * @default Cartesian3.ZERO
+         * @default {@link Cartesian3.ZERO}
          */
         this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
 

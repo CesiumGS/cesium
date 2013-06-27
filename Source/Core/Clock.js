@@ -113,14 +113,14 @@ define([
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
-         * @default ClockStep.SYSTEM_CLOCK_MULTIPLIER
+         * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
         this.clockStep = defaultValue(description.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
-         * @default ClockRange.UNBOUNDED
+         * @default {@link ClockRange.UNBOUNDED}
          */
         this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
 

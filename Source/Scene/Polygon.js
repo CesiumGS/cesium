@@ -224,7 +224,7 @@ define([
          * The usage hint for the polygon's vertex buffer.
          *
          * @type {BufferUsage}
-         * @default BufferUsage.STATIC_DRAW
+         * @default {@link BufferUsage.STATIC_DRAW}
          *
          * @performance If <code>bufferUsage</code> changes, the next time
          * {@link Polygon#update} is called, the polygon's vertex buffer

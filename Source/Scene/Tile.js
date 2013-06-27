@@ -116,7 +116,7 @@ define([
         /**
          * The current state of the tile in the tile load pipeline.
          * @type {TileState}
-         * @default TileState.START
+         * @default {@link TileState.START}
          */
         this.state = TileState.START;
 

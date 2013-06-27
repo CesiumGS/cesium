@@ -26,14 +26,14 @@ define([
         /**
          * The minimum point defining the bounding box.
          * @type {Cartesian3}
-         * @default Cartesian3.ZERO
+         * @default {@link Cartesian3.ZERO}
          */
         this.minimum = Cartesian3.clone(defaultValue(minimum, Cartesian3.ZERO));
 
         /**
          * The maximum point defining the bounding box.
          * @type {Cartesian3}
-         * @default Cartesian3.ZERO
+         * @default {@link Cartesian3.ZERO}
          */
         this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 

@@ -58,7 +58,7 @@ define([
          * Modifies the camera's reference frame. The inverse of this transformation is appended to the view matrix.
          *
          * @type {Matrix4}
-         * @default Matrix4.IDENTITY
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms
          */

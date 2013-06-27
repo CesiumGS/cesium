@@ -145,7 +145,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
-         * @default ImageryLayer.DEFAULT_BRIGHTNESS
+         * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
          */
         this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
 
@@ -160,7 +160,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
-         * @default ImageryLayer.DEFAULT_CONTRAST
+         * @default {@link ImageryLayer.DEFAULT_CONTRAST}
          */
         this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
 
@@ -173,7 +173,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
-         * @default ImageryLayer.DEFAULT_HUE
+         * @default {@link ImageryLayer.DEFAULT_HUE}
          */
         this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
 
@@ -187,7 +187,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
-         * @default ImageryLayer.DEFAULT_SATURATION
+         * @default {@link ImageryLayer.DEFAULT_SATURATION}
          */
         this.saturation = defaultValue(description.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
 
@@ -201,7 +201,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
-         * @default ImageryLayer.DEFAULT_GAMMA
+         * @default {@link ImageryLayer.DEFAULT_GAMMA}
          */
         this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 

@@ -118,7 +118,7 @@ define([
          * </div>
          *
          * @type {Matrix4}
-         * @default Matrix4.IDENTITY
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see czm_model
          *
@@ -134,7 +134,7 @@ define([
          * DOC_TBA
          *
          * @type {BufferUsage}
-         * @default BufferUsage.STATIC_DRAW
+         * @default {@link BufferUsage.STATIC_DRAW}
          */
         this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
         this._bufferUsage = this.bufferUsage;
@@ -143,7 +143,7 @@ define([
          * DOC_TBA
          *
          * @type {Number}
-         * @default Number.POSITIVE_INFINITY
+         * @default {@link Number.POSITIVE_INFINITY}
          */
         this.radius = defaultValue(options.radius, Number.POSITIVE_INFINITY);
 
@@ -177,7 +177,7 @@ define([
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
          *
          * @type {Color}
-         * @default Color.WHITE
+         * @default {@link Color.WHITE}
          *
          * @see CustomSensorVolume#showIntersection
          */

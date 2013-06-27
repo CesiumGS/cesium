@@ -144,7 +144,7 @@ define([
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
          * @type {Color}
-         * @default Color.BLACK
+         * @default {@link Color.BLACK}
          *
          * @see Scene#skyBox
          */
@@ -154,7 +154,7 @@ define([
          * The current mode of the scene.
          *
          * @type {SceneMode}
-         * @type {SceneMode}.SCENE3D
+         * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
         /**

@@ -18,7 +18,7 @@ define([
         /**
          * The current mode of the scene.
          * @type {SceneMode}
-         * @default SceneMode.SCENE3D
+         * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
 
@@ -27,7 +27,7 @@ define([
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @type {Number}
-         * @default SceneMode.SCENE3D.morphTime
+         * @default {@link SceneMode.SCENE3D.morphTime}
          */
         this.morphTime = SceneMode.SCENE3D.morphTime;
 
@@ -78,30 +78,30 @@ define([
 
         /**
          * The dimensions of the canvas.
-         * @type {}{Cartesian2}
+         * @type {Cartesian2}
          * @default Cartesian2(0.0, 0.0)
          */
         this.canvasDimensions = new Cartesian2();
 
         this.passes = {
-                /**
-                 * <code>true</code> if the primitive should update for a color pass, <code>false</code> otherwise.
-                 * @type {Boolean}
-                 * @default false
-                 */
-                color : false,
-                /**
-                 * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
-                 * @type {Boolean}
-                 * @default false
-                 */
-                pick : false,
-                /**
-                 * <code>true</code> if the primitive should update for an overlay pass, <code>false</code> otherwise.
-                 * @type {Boolean}
-                 * @default false
-                 */
-                overlay : false
+            /**
+             * <code>true</code> if the primitive should update for a color pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            color : false,
+            /**
+             * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            pick : false,
+            /**
+             * <code>true</code> if the primitive should update for an overlay pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            overlay : false
         };
     };
 

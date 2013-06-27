@@ -75,12 +75,14 @@ define([
         /**
          * Gets the event fired at the beginning of a transition.
          * @type {Event}
+         * @default Event()
          */
         this.onTransitionStart = new Event();
 
         /**
          * Gets the event fired at the completion of a transition.
          * @type {Event}
+         * @default Event()
          */
         this.onTransitionComplete = new Event();
 

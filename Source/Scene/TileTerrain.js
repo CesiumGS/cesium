@@ -33,7 +33,7 @@ define([
         /**
          * The current state of the terrain in the terrain processing pipeline.
          * @type {TerrainState}
-         * @default TerrainState.UNLOADED
+         * @default {@link TerrainState.UNLOADED}
          */
         this.state = TerrainState.UNLOADED;
         this.data = undefined;

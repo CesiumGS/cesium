@@ -23,35 +23,35 @@ define([
         /**
          * The start time of the clock to use when looping or clamped.
          * @type {JulianDate}
-         * @default Iso8601.MAXIMUM_INTERVAL.start
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
         this.startTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * The stop time of the clock to use when looping or clamped.
          * @type {JulianDate}
-         * @default Iso8601.MAXIMUM_INTERVAL.stop
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.stop}
          */
         this.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
 
         /**
          * The initial time to use when switching to this clock.
          * @type {JulianDate}
-         * @default Iso8601.MAXIMUM_INTERVAL.start
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
         this.currentTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
-         * @default ClockRange.LOOP_STOP
+         * @default {@link ClockRange.LOOP_STOP}
          */
         this.clockRange = ClockRange.LOOP_STOP;
 
         /**
          * Determines if clock advancement is frame dependent or system clock dependent.
          * @type {ClockStep}
-         * @default ClockStep.SYSTEM_CLOCK_MULTIPLIER
+         * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
         this.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 
