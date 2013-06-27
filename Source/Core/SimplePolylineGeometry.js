@@ -18,12 +18,25 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A polyline modeled as a line strip; the first two positions define a line segment,
+     * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry
      * @constructor
      *
+     * @param {Array} [options.positions] An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     *
      * @exception {DeveloperError} At least two positions are required.
+     *
+     * @example
+     * // A polyline with two connected line segments
+     * var geometry = new SimplePolylineGeometry({
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+     *     Cartographic.fromDegrees(0.0, 0.0),
+     *     Cartographic.fromDegrees(5.0, 0.0),
+     *     Cartographic.fromDegrees(5.0, 5.0)
+     *   ])
+     * });
      */
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -82,7 +95,7 @@ define([
         this.indices = indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */

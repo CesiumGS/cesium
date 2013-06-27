@@ -29,21 +29,21 @@ define([
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
-     * var positions = [
+     * var positions = new Float64Array([
      *   0.0, 0.0, 0.0,
      *   7500000.0, 0.0, 0.0,
      *   0.0, 7500000.0, 0.0
-     * ];
+     * ]);
      *
      * var geometry = new Geometry({
      *   attributes : {
      *     position : new GeometryAttribute({
-     *       componentDatatype : ComponentDatatype.FLOAT,
+     *       componentDatatype : ComponentDatatype.DOUBLE,
      *       componentsPerAttribute : 3,
      *       values : positions
      *     })
      *   },
-     *   indices : [0, 1, 1, 2, 2, 0],
+     *   indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
      *   primitiveType : PrimitiveType.LINES,
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
@@ -98,7 +98,7 @@ define([
          * @default undefined
          *
          * @example
-         * geometry.attributes = new GeometryAttribute({
+         * geometry.attributes.position = new GeometryAttribute({
          *   componentDatatype : ComponentDatatype.FLOAT,
          *   componentsPerAttribute : 3,
          *   values : new Float32Array()

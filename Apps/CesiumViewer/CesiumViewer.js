@@ -35,6 +35,7 @@ define([
         'Scene/Material',
         'Scene/ExtentPrimitive',
         'Scene/Polygon',
+        'Scene/createTangentSpaceDebugPrimitive',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -76,6 +77,7 @@ define([
         Material,
         ExtentPrimitive,
         Polygon,
+        createTangentSpaceDebugPrimitive,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -194,10 +196,6 @@ define([
             }
         }
 
-
-
-
-
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         var geometry = new GeometryInstance({
@@ -215,7 +213,8 @@ define([
         });
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                vertexFormat : VertexFormat.ALL,
+//                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -255,6 +254,11 @@ define([
         });
         scene.getPrimitives().add(primitive);
 
+        scene.getPrimitives().add(createTangentSpaceDebugPrimitive({
+            geometry : geometry2.geometry,
+            length : 10000.0,
+            modelMatrix : geometry2.modelMatrix
+        }));
 
         var m = new Material({
             context : viewer.scene.getContext(),
@@ -304,7 +308,7 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releasegeometryInstances : true,
+            releaseGeometryInstances : true,
             transformToWorldCoordinates : false
         }));
 
@@ -378,7 +382,8 @@ define([
                 materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
                 material : Material.fromType(scene.getContext(), 'Checkerboard'),
                 faceForward : true
-            })
+            }),
+            allowColumbusView : false
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
@@ -388,18 +393,17 @@ define([
                 geometry : new WallGeometry({
                     vertexFormat : VertexFormat.ALL,
                     positions    : ellipsoid.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0),
-                        Cartographic.fromDegrees(-125.0, 38.0, 550000.0),
-                        Cartographic.fromDegrees(-120.0, 38.0, 550000.0),
-                        Cartographic.fromDegrees(-120.0, 37.0, 500000.0),
-                        Cartographic.fromDegrees(-125.0, 37.0, 500000.0)
+                        Cartographic.fromDegrees(-5.0, -5.0, 500000.0),
+                        Cartographic.fromDegrees( 5.0, -5.0, 600000.0),
+                        Cartographic.fromDegrees( 5.0,  5.0, 600000.0),
+                        Cartographic.fromDegrees(-5.0,  5.0, 500000.0),
+                        Cartographic.fromDegrees(-5.0, -5.0, 500000.0)
                     ]),
                     bottom : 400000.0
                 })
             }),
             appearance : new DebugAppearance({
-                attributeName : 'st',
-                glslDatatype : 'vec2'
+                attributeName : 'normal'
             })
         }));
 
@@ -410,26 +414,17 @@ define([
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array([
-                            0.0, 0.0, 2000000.0,
-                            7500000.0, 0.0, 2000000.0,
-                            0.0, 7500000.0, 2000000.0
+                            7000000.0, 0.0, 0.0,
+                            7000000.0, 1000000.0, 0.0,
+                            7000000.0, 0.0, 1000000.0
                         ])
-                   }),
-                   color : new GeometryAttribute({
-                       componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                       componentsPerAttribute : 4,
-                       normalize : true,
-                       values : new Uint8Array([
-                           255, 255, 255, 255,
-                           255, 255, 255, 255,
-                           255, 255, 255, 255
-                       ])
-                  })
+                   })
                },
                indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
            }),
-           pickData : 'customWithIndices'
+           pickData : 'customWithIndices',
+           color : new Color(1.0, 1.0, 1.0, 1.0)
         });
         scene.getPrimitives().add(new Primitive({
             geometryInstances : customWithIndices,
@@ -445,25 +440,16 @@ define([
                          componentDatatype : ComponentDatatype.DOUBLE,
                          componentsPerAttribute : 3,
                          values : new Float64Array([
-                             0.0, 0.0, 0.0,
                              7500000.0, 0.0, 0.0,
-                             0.0, 7500000.0, 0.0
+                             7500000.0, 1000000.0, 0.0,
+                             7500000.0, 0.0, 1000000.0
                          ])
-                    }),
-                    color : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 4,
-                        normalize : true,
-                        values : new Uint8Array([
-                            255, 255, 0, 255,
-                            255, 255, 0, 255,
-                            255, 255, 0, 255
-                        ])
-                   })
+                    })
                 },
                 primitiveType : PrimitiveType.LINE_LOOP
             }),
-            pickData : 'customWithoutIndices'
+            pickData : 'customWithoutIndices',
+            color : new Color(1.0, 1.0, 0.0, 1.0)
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,

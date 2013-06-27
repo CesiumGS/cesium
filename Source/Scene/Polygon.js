@@ -202,46 +202,8 @@ define([
      *  };
      */
     Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy) {
-        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var polygons = [];
-        var queue = new Queue();
-        queue.enqueue(hierarchy);
-
-        while (queue.length !== 0) {
-            var outerNode = queue.dequeue();
-            var outerRing = outerNode.positions;
-
-            if (outerRing.length < 3) {
-                throw new DeveloperError('At least three positions are required.');
-            }
-
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-            if (numChildren === 0) {
-                // The outer polygon is a simple polygon with no nested inner polygon.
-                polygons.push(outerNode.positions);
-            } else {
-                // The outer polygon contains inner polygons
-                var holes = [];
-                for ( var i = 0; i < numChildren; i++) {
-                    var hole = outerNode.holes[i];
-                    holes.push(hole.positions);
-
-                    var numGrandchildren = 0;
-                    if (hole.holes) {
-                        numGrandchildren = hole.holes.length;
-                    }
-
-                    for ( var j = 0; j < numGrandchildren; j++) {
-                        queue.enqueue(hole.holes[j]);
-                    }
-                }
-                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
-                polygons.push(combinedPolygon);
-            }
-        }
-
         this._positions = undefined;
-        this._polygonHierarchy = polygons;
+        this._polygonHierarchy = hierarchy;
         this._createPrimitive = true;
     };
 
@@ -269,7 +231,7 @@ define([
             return;
         }
 
-        if (!this._createPrimitive && (typeof this._primitive === undefined)) {
+        if (!this._createPrimitive && !defined(this._primitive)) {
             // No positions/hierarchy to draw
             return;
         }
