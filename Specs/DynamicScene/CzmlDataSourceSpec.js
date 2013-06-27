@@ -1,21 +1,5 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CzmlDataSource',
-             'DynamicScene/DynamicObjectCollection',
-             'Core/ClockRange',
-             'Core/ClockStep',
-             'Core/Event',
-             'Core/loadJson',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-            ], function(
-                    CzmlDataSource,
-                    DynamicObjectCollection,
-                    ClockRange,
-                    ClockStep,
-                    Event,
-                    loadJson,
-                    JulianDate,
-                    TimeInterval) {
+defineSuite(['DynamicScene/CzmlDataSource', 'DynamicScene/DynamicObjectCollection', 'Core/ClockRange', 'Core/ClockStep', 'Core/Event', 'Core/loadJson', 'Core/JulianDate', 'Core/TimeInterval'], function(CzmlDataSource, DynamicObjectCollection, ClockRange, ClockStep, Event, loadJson, JulianDate, TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -46,9 +30,9 @@ defineSuite(['DynamicScene/CzmlDataSource',
     };
 
     var simple;
-    var simpleUrl = '../../Apps/CesiumViewer/Gallery/simple.czml';
+    var simpleUrl = 'Data/CZML/simple.czml';
     var vehicle;
-    var vehicleUrl = '../../Apps/CesiumViewer/Gallery/Vehicle.czml';
+    var vehicleUrl = 'Data/CZML/Vehicle.czml';
 
     beforeAll(function() {
         loadJson(simpleUrl).then(function(result) {
