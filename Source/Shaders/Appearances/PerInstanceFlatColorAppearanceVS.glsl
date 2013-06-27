@@ -6,7 +6,7 @@ varying vec4 v_color;
 
 void main() 
 {
-    vec4 p = czm_translateRelativeToEye(position3DHigh, position3DLow);   
+    vec4 p = czm_computePosition();
 
     v_color = color;
     

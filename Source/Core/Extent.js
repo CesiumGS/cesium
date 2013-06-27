@@ -17,42 +17,68 @@ define([
 
     /**
      * A two dimensional region specified as longitude and latitude coordinates.
+     *
      * @alias Extent
      * @constructor
      *
-     * @param {Number} [west=0.0] The westernmost longitude in the range [-Pi, Pi].
-     * @param {Number} [south=0.0] The southernmost latitude in the range [-Pi/2, Pi/2].
-     * @param {Number} [east=0.0] The easternmost longitude in the range [-Pi, Pi].
-     * @param {Number} [north=0.0] The northernmost latitude in the range [-Pi/2, Pi/2].
+     * @param {Number} [west=0.0] The westernmost longitude, in radians, in the range [-Pi, Pi].
+     * @param {Number} [south=0.0] The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+     * @param {Number} [east=0.0] The easternmost longitude, in radians, in the range [-Pi, Pi].
+     * @param {Number} [north=0.0] The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
      */
     var Extent = function(west, south, east, north) {
         /**
-         * The westernmost longitude in the range [-Pi, Pi].
+         * The westernmost longitude, in radians, in the range [-Pi, Pi].
+         *
          * @type Number
+         *
+         * @default 0.0
          */
         this.west = defaultValue(west, 0.0);
 
         /**
-         * The southernmost latitude in the range [-Pi/2, Pi/2].
+         * The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+         *
          * @type Number
+         *
+         * @default 0.0
          */
         this.south = defaultValue(south, 0.0);
 
         /**
-         * The easternmost longitude in the range [-Pi, Pi].
+         * The easternmost longitude, in radians, in the range [-Pi, Pi].
+         *
          * @type Number
+         *
+         * @default 0.0
          */
         this.east = defaultValue(east, 0.0);
 
         /**
-         * The northernmost latitude in the range [-Pi/2, Pi/2].
+         * The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+         *
          * @type Number
+         *
+         * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
     };
 
     /**
-     * DOC_TBA
+     * Creates an extent given the boundary longitude and latitude in degrees.
+     *
+     * @memberof Extent
+     *
+     * @param {Number} [west=0.0] The westernmost longitude, in degrees, in the range [-180.0, 180.0].
+     * @param {Number} [south=0.0] The southernmost latitude in degrees, in the range [-90.0, 90.0].
+     * @param {Number} [east=0.0] The easternmost longitude in degrees, in the range [-180.0, 180.0].
+     * @param {Number} [north=0.0] The northernmost latitude in degrees, in the range [-90.0, 90.0].
+     * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
+     *
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     *
+     * @example
+     * var extent = Extent.fromDegrees(0.0, 20.0, 10.0, 30.0);
      */
     Extent.fromDegrees = function(west, south, east, north, result) {
         west = CesiumMath.toRadians(defaultValue(west, 0.0));
@@ -159,7 +185,15 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Compares the provided extents and returns <code>true</code> if they are equal,
+     * <code>false</code> otherwise.
+     *
+     * @memberof Extent
+     *
+     * @param {Extent} [left] The first Extent.
+     * @param {Extent} [right] The second Extent.
+     *
+     * @return {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     Extent.equals = function(left, right) {
         return (left === right) ||

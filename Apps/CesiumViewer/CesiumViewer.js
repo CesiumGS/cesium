@@ -194,10 +194,6 @@ define([
             }
         }
 
-
-
-
-
         var ellipsoid = viewer.centralBody.getEllipsoid();
 
         var geometry = new GeometryInstance({
@@ -304,7 +300,7 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releasegeometryInstances : true,
+            releaseGeometryInstances : true,
             transformToWorldCoordinates : false
         }));
 
@@ -395,7 +391,8 @@ define([
                 materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
                 material : Material.fromType(scene.getContext(), 'Checkerboard'),
                 faceForward : true
-            })
+            }),
+            allowColumbusView : false
         });
         wallPrimitive.appearance.material.uniforms.repeat = { x : 20.0, y : 6.0 };
         scene.getPrimitives().add(wallPrimitive);
@@ -426,26 +423,17 @@ define([
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : new Float64Array([
-                            0.0, 0.0, 2000000.0,
-                            7500000.0, 0.0, 2000000.0,
-                            0.0, 7500000.0, 2000000.0
+                            7000000.0, 0.0, 0.0,
+                            7000000.0, 1000000.0, 0.0,
+                            7000000.0, 0.0, 1000000.0
                         ])
-                   }),
-                   color : new GeometryAttribute({
-                       componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                       componentsPerAttribute : 4,
-                       normalize : true,
-                       values : new Uint8Array([
-                           255, 255, 255, 255,
-                           255, 255, 255, 255,
-                           255, 255, 255, 255
-                       ])
-                  })
+                   })
                },
                indices : new Uint16Array([0, 1, 1, 2, 2, 0]),
                primitiveType : PrimitiveType.LINES
            }),
-           pickData : 'customWithIndices'
+           pickData : 'customWithIndices',
+           color : new Color(1.0, 1.0, 1.0, 1.0)
         });
         scene.getPrimitives().add(new Primitive({
             geometryInstances : customWithIndices,
@@ -461,25 +449,16 @@ define([
                          componentDatatype : ComponentDatatype.DOUBLE,
                          componentsPerAttribute : 3,
                          values : new Float64Array([
-                             0.0, 0.0, 0.0,
                              7500000.0, 0.0, 0.0,
-                             0.0, 7500000.0, 0.0
+                             7500000.0, 1000000.0, 0.0,
+                             7500000.0, 0.0, 1000000.0
                          ])
-                    }),
-                    color : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                        componentsPerAttribute : 4,
-                        normalize : true,
-                        values : new Uint8Array([
-                            255, 255, 0, 255,
-                            255, 255, 0, 255,
-                            255, 255, 0, 255
-                        ])
-                   })
+                    })
                 },
                 primitiveType : PrimitiveType.LINE_LOOP
             }),
-            pickData : 'customWithoutIndices'
+            pickData : 'customWithoutIndices',
+            color : new Color(1.0, 1.0, 0.0, 1.0)
          });
          scene.getPrimitives().add(new Primitive({
              geometryInstances : customWithoutIndices,
