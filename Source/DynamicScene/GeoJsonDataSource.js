@@ -15,7 +15,8 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicMaterialProperty',
         './DynamicObjectCollection',
-        '../ThirdParty/when'], function(
+        '../ThirdParty/when',
+        '../ThirdParty/topojson'], function(
                 createGuid,
                 Cartographic,
                 Color,
@@ -32,7 +33,8 @@ define(['../Core/createGuid',
                 DynamicPolygon,
                 DynamicMaterialProperty,
                 DynamicObjectCollection,
-                when) {
+                when,
+                topojson) {
     "use strict";
 
     //DynamicPositionProperty is pretty hard to use with non-CZML based data
@@ -159,6 +161,24 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
+    function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
+        var feature;
+        var typeHandler;
+        if (dataSource.renderTopoJsonAsMesh) {
+            feature = topojson.mesh(geometry);
+            typeHandler = geoJsonObjectTypes[feature.type];
+            typeHandler(dataSource, geometry, feature, crsFunction, source);
+        } else {
+            for ( var property in geometry.objects) {
+                if (geometry.objects.hasOwnProperty(property)) {
+                    feature = topojson.feature(geometry, geometry.objects[property]);
+                    typeHandler = geoJsonObjectTypes[feature.type];
+                    typeHandler(dataSource, feature, feature, crsFunction, source);
+                }
+            }
+        }
+    }
+
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
         //TODO holes
         var polygons = geometry.coordinates;
@@ -179,7 +199,8 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     var geometryTypes = {
@@ -189,7 +210,8 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     /**
