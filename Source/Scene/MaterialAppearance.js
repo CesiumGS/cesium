@@ -46,7 +46,7 @@ define([
      * var primitive = new Primitive({
      *   geometryInstances : new GeometryInstance({
      *     geometry : new WallGeometry({
-            materialSupport :  MaterialAppearance.MaterialSupport.BASIC,
+            materialSupport :  MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
      *       // ...
      *     })
      *   }),

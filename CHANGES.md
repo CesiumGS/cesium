@@ -4,7 +4,7 @@ Change Log
 Beta Releases
 -------------
 
-### TODO
+### b18 - 2013-08-01
 
 * Breaking changes:
    * Replaced tessellators and meshes with geometry.  In particular:
@@ -43,8 +43,9 @@ Beta Releases
 * Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
 * Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
 * Added `GeometryPipeline.wrapLongitude` to split geometry across the International Date Line.
+* Added `GeometryPipeline.createLineSegmentsForVectors` and `createTangentSpaceDebugPrimitive` for debugging.
 * Added `PolylinePipeline.removeDuplicates`.
-* Added `barycentricCoordinates` to compute the barycentric coordinates of a point with respect to three vertices of a triangle.
+* Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.

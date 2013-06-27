@@ -161,6 +161,77 @@ define([
     };
 
     /**
+     * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
+     * attribute (<code>attributeName</code>) for the provided geometry.  This is used
+     * visualize vector attributes like normals, binormals, and tangents.
+     *
+     * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
+     * @param {String} [attributeName='normal'] The name of the attribute.
+     * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
+     *
+     * @returns {Geometry} A new <code>Geometry<code> instance with line segments for the vector.
+     *
+     * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry.attributes.position is required.
+     * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
+     *
+     * @example
+     * var geometry = GeometryPipeline.createLineSegmentsForVectors(geometry2.geometry, 'binormal', 100000.0),
+     */
+    GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        if (typeof geometry.attributes.position === 'undefined') {
+            throw new DeveloperError('geometry.attributes.position is required.');
+        }
+
+        attributeName = defaultValue(attributeName, 'normal');
+
+        if (typeof geometry.attributes[attributeName] === 'defined') {
+            throw new DeveloperError('geometry.attributes must have an attribute with the same name as the attributeName parameter, ' + attributeName + '.');
+        }
+
+        length = defaultValue(length, 10000.0);
+
+        var positions = geometry.attributes.position.values;
+        var vectors = geometry.attributes[attributeName].values;
+        var positionsLength = positions.length;
+
+        var newPositions = new Float64Array(2 * positionsLength);
+
+        var j = 0;
+        for (var i = 0; i < positionsLength; i += 3) {
+            newPositions[j++] = positions[i];
+            newPositions[j++] = positions[i + 1];
+            newPositions[j++] = positions[i + 2];
+
+            newPositions[j++] = positions[i] + (vectors[i] * length);
+            newPositions[j++] = positions[i + 1] + (vectors[i + 1] * length);
+            newPositions[j++] = positions[i + 2] + (vectors[i + 2] * length);
+        }
+
+        var newBoundingSphere;
+        var bs = geometry.boundingSphere;
+        if (typeof bs !== 'undefined') {
+            newBoundingSphere = new BoundingSphere(bs.center, bs.radius + length);
+        }
+
+        return new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : newPositions
+                })
+            },
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : newBoundingSphere
+        });
+    };
+
+    /**
      * Creates an object that maps attribute names to unique indices for matching
      * vertex attributes and shader programs.
      *
