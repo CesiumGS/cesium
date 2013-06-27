@@ -16,154 +16,154 @@ define([
     /**
      * 0.1
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON1 = 0.1;
 
     /**
      * 0.01
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON2 = 0.01;
 
     /**
      * 0.001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON3 = 0.001;
 
     /**
      * 0.0001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON4 = 0.0001;
 
     /**
      * 0.00001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON5 = 0.00001;
 
     /**
      * 0.000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON6 = 0.000001;
 
     /**
      * 0.0000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON7 = 0.0000001;
 
     /**
      * 0.00000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON8 = 0.00000001;
 
     /**
      * 0.000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON9 = 0.000000001;
 
     /**
      * 0.0000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON10 = 0.0000000001;
 
     /**
      * 0.00000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON11 = 0.00000000001;
 
     /**
      * 0.000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON12 = 0.000000000001;
 
     /**
      * 0.0000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON13 = 0.0000000000001;
 
     /**
      * 0.00000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON14 = 0.00000000000001;
 
     /**
      * 0.000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON15 = 0.000000000000001;
 
     /**
      * 0.0000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON16 = 0.0000000000000001;
 
     /**
      * 0.00000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON17 = 0.00000000000000001;
 
     /**
      * 0.000000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON18 = 0.000000000000000001;
 
     /**
      * 0.0000000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON19 = 0.0000000000000000001;
 
     /**
      * 0.00000000000000000001
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.EPSILON20 = 0.00000000000000000001;
 
     /**
      * 3.986004418e14
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.GRAVITATIONALPARAMETER = 3.986004418e14;
 
     /**
      * Radius of the sun in meters: 6.995e8
      * @constant
-     * @type Number
+     * @type {Number}
      */
     CesiumMath.SOLAR_RADIUS = 6.995e8;
 
