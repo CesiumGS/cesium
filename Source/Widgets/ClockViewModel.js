@@ -66,9 +66,9 @@ define([
         /**
          * Gets or sets the stop time of the clock.  This property is observable.
          * @type {JulianDate}
+         * @default undefined
          */
         this.stopTime = undefined;
-         * @default undefined
         knockout.defineProperty(this, 'stopTime', {
             get : stopTime,
             set : function(value) {
