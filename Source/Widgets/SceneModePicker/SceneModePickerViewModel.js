@@ -45,31 +45,35 @@ define([
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
-         * @type SceneMode
+         * @type {SceneMode}
         */
         this.sceneMode = transitioner.getScene().mode;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
         */
         this.dropDownVisible = false;
 
         /**
          * Gets or sets the 2D tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default '2D'
         */
         this.tooltip2D = '2D';
 
         /**
          * Gets or sets the 3D tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default '3D'
         */
         this.tooltip3D = '3D';
 
         /**
          * Gets or sets the Columbus View tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default 'Columbus View'
         */
         this.tooltipColumbusView = 'Columbus View';
 
@@ -77,7 +81,8 @@ define([
 
         /**
          * Gets the currently active tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedTooltip = undefined;
         knockout.defineProperty(this, 'selectedTooltip', function() {
