@@ -10,4 +10,6 @@
     left: 0;
     color: #ffffff;
     font-size: 8pt;
+    background: rgba(0, 0, 0, .5);
+    padding-right: 5px;
 }

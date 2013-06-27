@@ -14,7 +14,6 @@ define([
     var CreditManager = function(container) {
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
-        textContainer.style["padding-right"] = "5px";
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
