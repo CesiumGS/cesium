@@ -27,6 +27,7 @@ define([
         '../Renderer/DrawCommand',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
+        './CreditManager',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './Material',
@@ -68,6 +69,7 @@ define([
         DrawCommand,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
+        CreditManager,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         Material,
@@ -90,9 +92,10 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
+     * @param {CreditManager} [creditManager] Handles adding and removing credits from an HTML element
      * central body.
      */
-    var CentralBody = function(ellipsoid) {
+    var CentralBody = function(ellipsoid, creditManager) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         var imageryLayerCollection = new ImageryLayerCollection();
@@ -103,6 +106,7 @@ define([
          */
         this.terrainProvider = terrainProvider;
 
+        this._creditManager = creditManager;
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
         this._surface = new CentralBodySurface({
@@ -784,113 +788,29 @@ define([
         return destroyObject(this);
     };
 
-    var logoData = {
-        logos : undefined,
-        logoIndex : 0,
-        rebuildLogo : false,
-        totalLogoWidth : 0,
-        totalLogoHeight : 0
-    };
-
     function updateLogos(centralBody, context, frameState, commandList) {
-        logoData.logos = centralBody._logos;
-        logoData.logoIndex = 0;
-        logoData.rebuildLogo = false;
-        logoData.totalLogoWidth = 0;
-        logoData.totalLogoHeight = 0;
-
-        checkLogo(logoData, centralBody._surface._terrainProvider);
+        if (typeof centralBody._creditManager === 'undefined') {
+            var canvasContainer = context.getCanvas().parentNode;
+            var creditContainer = document.createElement('div');
+            creditContainer.style.position = "absolute";
+            creditContainer.style.bottom = "0";
+            creditContainer.style.background = "rgba(0, 0, 0, .5)";
+            creditContainer.style.color = "#ffffff";
+            creditContainer.style["font-size"] = "10pt";
+            canvasContainer.appendChild(creditContainer);
+            centralBody._creditManager = new CreditManager(creditContainer);
+        }
+        var visibleCredits = [];
+        visibleCredits.push(centralBody._surface._terrainProvider.getCredit());
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                checkLogo(logoData, layer.getImageryProvider());
+                visibleCredits.push(layer.getImageryProvider().getCredit());
             }
         }
-
-        if (logoData.logos.length !== logoData.logoIndex) {
-            logoData.rebuildLogo = true;
-            logoData.logos.length = logoData.logoIndex;
-        }
-
-        var totalLogoWidth = logoData.totalLogoWidth;
-        var totalLogoHeight = logoData.totalLogoHeight;
-
-        var logoQuad = centralBody._logoQuad;
-        if (totalLogoWidth === 0 || totalLogoHeight === 0) {
-            if (typeof logoQuad !== 'undefined') {
-                logoQuad.material = logoQuad.material && logoQuad.material.destroy();
-                logoQuad.destroy();
-                centralBody._logoQuad = undefined;
-            }
-            return;
-        }
-
-        if (typeof logoQuad === 'undefined') {
-            logoQuad = new ViewportQuad();
-            logoQuad.material.destroy();
-            logoQuad.material = Material.fromType(context, Material.ImageType);
-            logoQuad.material.uniforms.image = undefined;
-
-            centralBody._logoQuad = logoQuad;
-        }
-
-        var logoOffset = centralBody.logoOffset;
-        var rectangle = logoQuad.rectangle;
-        rectangle.x = logoOffset.x;
-        rectangle.y = logoOffset.y;
-        rectangle.width = totalLogoWidth;
-        rectangle.height = totalLogoHeight;
-
-        if (logoData.rebuildLogo) {
-            var texture = logoQuad.material.uniforms.image;
-
-            // always delete and recreate the texture to get rid of leftover pixels
-            texture = texture && texture.destroy();
-            texture = context.createTexture2D({
-                width : totalLogoWidth,
-                height : totalLogoHeight
-            });
-            logoQuad.material.uniforms.image = texture;
-
-            var yOffset = 0;
-            for (i = 0, len = logoData.logos.length; i < len; i++) {
-                var logo = logoData.logos[i];
-                if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, yOffset);
-                    yOffset += logo.height + 2;
-                }
-            }
-        }
-
-        if (typeof logoQuad !== 'undefined') {
-            logoQuad.update(context, frameState, commandList);
-        }
-    }
-
-    function checkLogo(logoData, logoSource) {
-        if (typeof logoSource.isReady === 'function' && !logoSource.isReady()) {
-            return;
-        }
-
-        var logo;
-        if (typeof logoSource.getLogo === 'function') {
-            logo = logoSource.getLogo();
-        } else {
-            logo = undefined;
-        }
-
-        if (logoData.logos[logoData.logoIndex] !== logo) {
-            logoData.rebuildLogo = true;
-            logoData.logos[logoData.logoIndex] = logo;
-        }
-        logoData.logoIndex++;
-
-        if (typeof logo !== 'undefined') {
-            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
-            logoData.totalLogoHeight += logo.height + 2;
-        }
+        centralBody._creditManager.showCredits(visibleCredits);
     }
 
     return CentralBody;

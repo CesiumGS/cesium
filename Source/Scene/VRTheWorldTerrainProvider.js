@@ -51,7 +51,7 @@ define([
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [description.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
      *                    specified, the WGS84 ellipsoid is used.
-     * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
+     * @param {Credit} [description.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      *
@@ -86,12 +86,7 @@ define([
                 isBigEndian : true
             };
 
-        if (typeof description.credit !== 'undefined') {
-            // Create the copyright message.
-            this._logo = writeTextToCanvas(description.credit, {
-                font : '12px sans-serif'
-            });
-        }
+        this._credit = description.credit;
 
         this._tilingScheme = undefined;
         this._extents = [];
@@ -226,17 +221,15 @@ define([
     };
 
     /**
-     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link ArcGisImageServerTerrainProvider#isReady} returns true.
      *
      * @memberof VRTheWorldTerrainProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    VRTheWorldTerrainProvider.prototype.getLogo = function() {
-        return this._logo;
+    VRTheWorldTerrainProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
     /**

@@ -28,7 +28,8 @@ define([
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
-        './SunPostProcess'
+        './SunPostProcess',
+        './CreditManager'
     ], function(
         CesiumMath,
         Color,
@@ -58,7 +59,8 @@ define([
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
-        SunPostProcess) {
+        SunPostProcess,
+        CreditManager) {
     "use strict";
 
     /**
@@ -70,6 +72,7 @@ define([
      *
      * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
      * @param {Object} [contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  Default values are shown in the code example below.
+     * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
      * @see <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
@@ -85,9 +88,12 @@ define([
      *     preserveDrawingBuffer : false
      * });
      */
-    var Scene = function(canvas, contextOptions) {
+    var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
 
+        if (typeof creditContainer !== 'undefined') {
+            this._creditManager = new CreditManager(creditContainer);
+        }
         this._frameState = new FrameState();
         this._passState = new PassState(context);
         this._canvas = canvas;
@@ -204,6 +210,14 @@ define([
      */
     Scene.prototype.getContext = function() {
         return this._context;
+    };
+
+    /**
+     * DOC_TBA
+     * @memberof Scene
+     */
+    Scene.prototype.getCreditManager = function() {
+        return this._creditManager;
     };
 
     /**
