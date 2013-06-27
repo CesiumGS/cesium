@@ -26,6 +26,7 @@ define([
         /**
          * The origin of the ray.
          * @type {Cartesian3}
+         * @default {Cartesian3} Cartesian3.ZERO
          */
         this.origin = Cartesian3.clone(defaultValue(origin, Cartesian3.ZERO));
 
