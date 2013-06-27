@@ -81,7 +81,12 @@ define([
         options.translucent = defaultValue(options.translucent, false);
 
         /**
-         * DOC_TBA
+         * This property is part of the {@link Appearance} interface, but is not
+         * used by {@link DebugAppearance} since a fully custom fragment shader is used.
+         *
+         * @type Material
+         *
+         * @default undefined
          */
         this.material = undefined;
 
@@ -117,20 +122,31 @@ define([
         // Non-derived members
 
         /**
-         * DOC_TBA
+         * The name of the attribute being visualized.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.attributeName = attributeName;
 
         /**
-         * DOC_TBA
+         * The GLSL datatype of the attribute being visualized.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.glslDatatype = glslDatatype;
     };
 
     /**
-     * DOC_TBA
+     * Returns the full GLSL fragment shader source, which for {@link DebugAppearance} is just
+     * {@link DebugAppearance#fragmentShaderSource}.
+     *
+     * @memberof DebugAppearance
+     *
+     * @return String The full GLSL fragment shader source.
      */
     DebugAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

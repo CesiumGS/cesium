@@ -30,7 +30,14 @@ define([
         var aboveGround = defaultValue(options.aboveGround, false);
 
         /**
-         * DOC_TBA
+         * The material used to determine the fragment color.  Unlike other {@link EllipsoidSurfaceAppearance}
+         * properties, this is not read-only, so an appearance's material can change on the fly.
+         *
+         * @type Material
+         *
+         * @default Material.ColorType
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
@@ -74,44 +81,79 @@ define([
         // Non-derived members
 
         /**
-         * DOC_TBA
+         * The {@link VertexFormat} that this appearance instance is compatible with.
+         * A geometry can have more vertex attributes and still be compatible - at a
+         * potential performance cost - but it can't have less.
+         *
+         * @type VertexFormat
+         *
          * @readonly
          */
         this.vertexFormat = EllipsoidSurfaceAppearance.VERTEX_FORMAT;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, flat shading is used in the fragment shader,
+         * which means lighting is not taking into account.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.flat = defaultValue(options.flat, false);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the fragment shader flips the surface normal
+         * as needed to ensure that the normal faces the viewer to avoid
+         * dark spots.  This is useful when both sides of a geometry should be
+         * shaded like {@link WallGeometry}.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.faceForward = defaultValue(options.faceForward, false);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the geometry is expected to appear translucent so
+         * {@link EllipsoidSurfaceAppearance#renderState} has alpha blending enabled.
+         *
          * @readonly
+         *
+         * @default true
          */
         this.translucent = translucent;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the geometry is expected to be on the ellipsoid's
+         * surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState}
+         * has backface culling enabled.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.aboveGround = aboveGround;
     };
 
     /**
-     * DOC_TBA
+     * The {@link VertexFormat} that all {@link EllipsoidSurfaceAppearance} instances
+     * are compatible with, which requires only <code>position</code> and <code>st</code>
+     * attributes.  Other attributes are procedurally computed in the fragment shader.
+     *
+     * @type VertexFormat
+     *
      * @constant
      */
     EllipsoidSurfaceAppearance.VERTEX_FORMAT = VertexFormat.POSITION_AND_ST;
 
     /**
-     * DOC_TBA
+     * Procedurally creates the full GLSL fragment shader source.  For {@link PerInstanceColorAppearance},
+     * this is derived from {@link PerInstanceColorAppearance#fragmentShaderSource}, {@link PerInstanceColorAppearance#flat},
+     * and {@link PerInstanceColorAppearance#faceForward}.
+     *
+     * @memberof EllipsoidSurfaceAppearance
+     *
+     * @return String The full GLSL fragment shader source.
      */
     EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

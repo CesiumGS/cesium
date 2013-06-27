@@ -24,7 +24,12 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The material used to determine the fragment color.  Unlike other {@link Appearance}
+         * properties, this is not read-only, so an appearance's material can change on the fly.
+         *
+         * @type Material
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = options.material;
 
@@ -61,7 +66,12 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Procedurally creates the full GLSL fragment shader source for this appearance
+     * taking into account {@link Appearance#fragmentShaderSource} and {@link Appearance#material}.
+     *
+     * @memberof Appearance
+     *
+     * @return String The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
