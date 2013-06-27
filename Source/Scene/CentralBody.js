@@ -157,16 +157,6 @@ define([
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
 
         /**
-         * The offset, relative to the bottom left corner of the viewport,
-         * where the logo for terrain and imagery providers will be drawn.
-         *
-         * @type {Cartesian2}
-         */
-        this.logoOffset = Cartesian2.ZERO.clone();
-        this._logos = [];
-        this._logoQuad = undefined;
-
-        /**
          * Determines if the central body will be shown.
          *
          * @type {Boolean}

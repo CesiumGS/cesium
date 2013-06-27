@@ -34,7 +34,7 @@ define([
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
-     * @param {Credit} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit='MapQuest, Open Street Map and contributors, CC-BY-SA'] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -79,6 +79,9 @@ define([
         this._ready = true;
 
         var credit = defaultValue(description.credit, defaultCredit);
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
         this._credit = credit;
     };
 

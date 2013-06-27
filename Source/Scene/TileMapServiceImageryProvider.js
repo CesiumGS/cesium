@@ -7,6 +7,7 @@ define([
         '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
+        './Credit',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
@@ -18,6 +19,7 @@ define([
         loadXML,
         writeTextToCanvas,
         Extent,
+        Credit,
         ImageryProvider,
         WebMercatorTilingScheme,
         GeographicTilingScheme) {
@@ -34,7 +36,7 @@ define([
      * @param {String} [description.url='.'] Path to image tiles on server.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {Credit} [description.credit=''] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit=''] A credit for the data source, which is displayed on the canvas.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
@@ -87,7 +89,11 @@ define([
 
         this._errorEvent = new Event();
 
-        this._credit = description.credit;
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         var that = this;
 

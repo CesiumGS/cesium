@@ -10,18 +10,40 @@ define([
      */
 
     var interpunct;
+    var delimeter = ' • ';
     function createFirstInterpunct() {
         interpunct = document.createElement('span');
         interpunct.id = 'interpunct';
-        interpunct.appendChild(document.createTextNode('•'));
+        interpunct.appendChild(document.createTextNode(delimeter));
         interpunct.style.padding = "3px";
     }
 
     var CreditManager = function(container) {
         this.visibleCredits = {};
+        this.countDefaultCredits = 0;
         this.hasVisibleCredits = false;
         this.container = container;
         createFirstInterpunct();
+    };
+
+    CreditManager.prototype.addDefaultCredit = function(credit) {
+        if (typeof credit !== 'undefined') {
+            if (this.countDefaultCredits === 0) {
+                this.container.appendChild(interpunct);
+            }
+            this.countDefaultCredits++;
+            showCredit(credit, this.container);
+        }
+    };
+
+    CreditManager.prototype.removeDefaultCredit = function(credit) {
+        if (typeof credit !== 'undefined') {
+            this.countDefaultCredits--;
+            if (this.countDefaultCredits === 0) {
+                this.container.removeChild(interpunct);
+            }
+            hideCredit(credit, this.container);
+        }
     };
 
     CreditManager.prototype.showCredits = function(credits) {
@@ -43,27 +65,31 @@ define([
             }
         }
 
-        if (credits.length === undefinedCredits) {
-            if (this.hasVisibleCredits) {
-                this.container.removeChild(interpunct);
-                this.hasVisibleCredits = false;
+        if (this.countDefaultCredits === 0) {
+            if (credits.length === undefinedCredits) {
+                if (this.hasVisibleCredits) {
+                    this.container.removeChild(interpunct);
+                    this.hasVisibleCredits = false;
+                }
+            }
+
+            if (newVisible.length > 0) {
+                if (!this.hasVisibleCredits) {
+                    this.container.appendChild(interpunct);
+                    this.hasVisibleCredits = true;
+                }
             }
         }
 
+        for (i = 0; i < newVisible.length; i++) {
+            showCredit(newVisible[i], this.container);
+            stillVisible[newVisible[i].name] = newVisible[i];
+        }
 
         for (var a in stillVisible) {
             if (stillVisible.hasOwnProperty(a)) {
                 delete this.visibleCredits[a];
             }
-        }
-
-        for (i = 0; i < newVisible.length; i++) {
-            if (!this.hasVisibleCredits) {
-                this.container.appendChild(interpunct);
-                this.hasVisibleCredits = true;
-            }
-            showCredit(newVisible[i], this.container);
-            stillVisible[newVisible[i].name] = newVisible[i];
         }
 
         for (var b in this.visibleCredits) {
@@ -83,8 +109,8 @@ define([
                 var content;
                 if (typeof credit.image !== 'undefined') {
                     content = document.createElement('img');
+                    content.className = "credit-image";
                     content.src = credit.image;
-                    content.style.height = "19px";
                     content.style["vertical-align"] = "bottom";
                     if (typeof credit.text !== 'undefined') {
                         content.alt = credit.text;
@@ -104,7 +130,7 @@ define([
                 } else {
                     span.appendChild(content);
                 }
-                span.appendChild(document.createTextNode(' • '));
+                span.appendChild(document.createTextNode(delimeter));
                 container.appendChild(span);
             }
         }

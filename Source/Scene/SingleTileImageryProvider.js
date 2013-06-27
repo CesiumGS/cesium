@@ -6,6 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Extent',
+        './Credit',
         './GeographicTilingScheme',
         './TileProviderError',
         '../ThirdParty/when'
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         Event,
         Extent,
+        Credit,
         GeographicTilingScheme,
         TileProviderError,
         when) {
@@ -30,7 +32,7 @@ define([
      *
      * @param {String} description.url The url for the tile.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
-     * @param {Credit} [description.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @exception {DeveloperError} description.url is required.
@@ -76,7 +78,11 @@ define([
             imageUrl = proxy.getURL(imageUrl);
         }
 
-        this._credit = description.credit;
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         var that = this;
         var error;

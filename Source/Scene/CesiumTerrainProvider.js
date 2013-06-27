@@ -6,6 +6,7 @@ define([
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Event',
+        './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './TerrainProvider',
@@ -17,6 +18,7 @@ define([
         writeTextToCanvas,
         DeveloperError,
         Event,
+        Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
         TerrainProvider,
@@ -33,7 +35,7 @@ define([
      *
      * @param {String} description.url The URL of the Cesium terrain server.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {Credit} [description.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
@@ -64,7 +66,11 @@ define([
 
         this._errorEvent = new Event();
 
-        this._credit = description.credit;
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
     };
 
     /**

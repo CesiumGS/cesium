@@ -15,6 +15,7 @@ define([
         '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
+        '../../Scene/Credit',
         '../../Scene/Scene',
         '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
@@ -38,6 +39,7 @@ define([
         ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         CentralBody,
+        Credit,
         Scene,
         SceneMode,
         SceneTransitioner,
@@ -133,19 +135,20 @@ define([
         };
         widgetNode.appendChild(canvas);
 
-        var cesiumLogo = document.createElement('a');
-        cesiumLogo.href = 'http://cesium.agi.com/';
-        cesiumLogo.target = '_blank';
-        cesiumLogo.className = 'cesium-widget-logo';
-        widgetNode.appendChild(cesiumLogo);
+        var creditContainer = document.createElement('div');
+        creditContainer.className = 'cesium-widget-credits';
+        widgetNode.appendChild(creditContainer);
 
-        var scene = new Scene(canvas, options.contextOptions);
+        var scene = new Scene(canvas, options.contextOptions, creditContainer);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var ellipsoid = Ellipsoid.WGS84;
+        var creditManager = scene.getCreditManager();
 
-        var centralBody = new CentralBody(ellipsoid);
-        centralBody.logoOffset = new Cartesian2(125, 0);
+        var cesiumCredit = new Credit('cesium', 'Cesium', '/Source/Widgets/Images/Cesium_Logo_overlay.png', 'http://cesium.agi.com/');
+        creditManager.addDefaultCredit(cesiumCredit);
+
+        var centralBody = new CentralBody(ellipsoid, creditManager);
         scene.getPrimitives().setCentralBody(centralBody);
 
         scene.skyBox = new SkyBox({
@@ -182,7 +185,6 @@ define([
         this._element = widgetNode;
         this._container = container;
         this._canvas = canvas;
-        this._cesiumLogo = cesiumLogo;
         this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
@@ -190,6 +192,7 @@ define([
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
+        this._creditContainer = creditContainer;
 
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
@@ -249,14 +252,14 @@ define([
         },
 
         /**
-         * Gets the Cesium logo element.
+         * Gets the credit container.
          * @memberof CesiumWidget.prototype
          *
          * @type {Element}
          */
-        cesiumLogo : {
+        creditContainer: {
             get : function() {
-                return this._cesiumLogo;
+                return this._creditContainer;
             }
         },
 

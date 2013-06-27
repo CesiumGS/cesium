@@ -9,6 +9,7 @@ define([
         '../Core/Math',
         '../Core/Ellipsoid',
         '../Core/Event',
+        './Credit',
         './TerrainProvider',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
@@ -23,6 +24,7 @@ define([
         CesiumMath,
         Ellipsoid,
         Event,
+        Credit,
         TerrainProvider,
         GeographicTilingScheme,
         HeightmapTerrainData,
@@ -45,7 +47,7 @@ define([
      * @param {Ellipsoid} [description.ellipsoid] The ellipsoid.  If the tilingScheme is specified,
      *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead.
      *                    If neither parameter is specified, the WGS84 ellipsoid is used.
-     * @param {Credit} [description.credit] The credit, which will is displayed on the canvas.
+     * @param {Credit|String} [description.credit] The credit, which will is displayed on the canvas.
      *
      * @see TerrainProvider
      *
@@ -88,7 +90,11 @@ define([
 
         this._errorEvent = new Event();
 
-        this._credit = description.credit;
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
     };
 
     /**

@@ -131,7 +131,7 @@ define([
             }
 
             if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
-                that._credit = new Credit(data.copyrightText, data.copyrightText);
+                that._credit = new Credit(data.copyrightText);
             }
 
             that._ready = true;

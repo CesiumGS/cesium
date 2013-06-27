@@ -7,6 +7,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Extent',
+        './Credit',
         './ImageryProvider',
         './GeographicTilingScheme'
     ], function(
@@ -17,6 +18,7 @@ define([
         DeveloperError,
         Event,
         Extent,
+        Credit,
         ImageryProvider,
         GeographicTilingScheme) {
     "use strict";
@@ -33,7 +35,7 @@ define([
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent of the layer.
      * @param {Number} [description.maximumLevel] The maximum level-of-detail supported by the imagery provider.
      *        If not specified, there is no limit.
-     * @param {Credit} [description.credit] A credit for the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is
      *        expected to have a getURL function which returns the proxied URL, if needed.
      *
@@ -94,7 +96,11 @@ define([
             extent : extent
         });
 
-        this._credit = description.credit;
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         this._errorEvent = new Event();
 
