@@ -28,7 +28,7 @@ define([
          * The default is {@link Cartesian3.ZERO}.
          * </p>
          *
-         * @type Number
+         * @type {Number}
          */
         this.high = Cartesian3.ZERO.clone();
 
@@ -38,7 +38,7 @@ define([
          * The default is {@link Cartesian3.ZERO}.
          * </p>
          *
-         * @type Number
+         * @type {Number}
          */
         this.low = Cartesian3.ZERO.clone();
     };
