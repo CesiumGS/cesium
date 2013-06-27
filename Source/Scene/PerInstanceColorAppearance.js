@@ -18,10 +18,58 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for {@link GeometryInstance} instances with color attributes.
+     * This allows several geometry instances, each with a different color, to
+     * be drawn with the same {@link Primitive} as shown in the second example below.
      *
      * @alias PerInstanceColorAppearance
      * @constructor
+     *
+     * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PerInstanceColorAppearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PerInstanceColorAppearance#renderState} has backface culling enabled.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
+     * @example
+     * // A solid white line segment
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *     geometry : new SimplePolylineGeometry({
+     *       positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(0.0, 0.0),
+     *         Cartographic.fromDegrees(5.0, 0.0)
+     *       ])
+     *     }),
+     *     color : new Color(1.0, 1.0, 1.0, 1.0)
+     *   }),
+     *   appearance : new PerInstanceColorAppearance({
+     *     flat : true,
+     *     translucent : false
+     *   })
+     * }));
+     *
+     * // Two extents in a primitive, each with a different color
+     * var instance = new GeometryInstance({
+     *   geometry : new ExtentGeometry({
+     *     extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     *   }),
+     *   color : new Color(1.0, 0.0, 0.0, 0.5)
+     * });
+     *
+     * var anotherInstance = new GeometryInstance({
+     *   geometry : new ExtentGeometry({
+     *     extent : Extent.fromDegrees(0.0, 40.0, 10.0, 50.0)
+     *   }),
+     *   color : new Color(0.0, 0.0, 1.0, 0.5)
+     * });
+     *
+     * var extentPrimitive = new Primitive({
+     *   geometryInstances : [instance, anotherInstance],
+     *   appearance : new PerInstanceColorAppearance()
+     * });
      */
     var PerInstanceColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

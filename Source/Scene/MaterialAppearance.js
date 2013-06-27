@@ -26,10 +26,37 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
+     * that supports shading with materials.
      *
      * @alias MaterialAppearance
      * @constructor
+     *
+     * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
+     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.BASIC] The type of materials that will be supported.
+     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
+     * @example
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *     geometry : new WallGeometry({
+            materialSupport :  MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+     *       // ...
+     *     })
+     *   }),
+     *   appearance : new MaterialAppearance({
+     *     material : Material.fromType(scene.getContext(), 'Color'),
+     *     faceForward : true
+     *   })
+     * });
+     *
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -108,7 +135,7 @@ define([
          *
          * @readonly
          */
-        this.vertexFormat = defaultValue(options.vertexFormat, materialSupport.vertexFormat);
+        this.vertexFormat = materialSupport.vertexFormat;
 
         /**
          * When <code>true</code>, flat shading is used in the fragment shader,
