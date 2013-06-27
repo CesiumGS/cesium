@@ -23,35 +23,35 @@ define([
         /**
          * The start time of the clock to use when looping or clamped.
          * @type {JulianDate}
-         * @default {JulianDate} Iso8601.MAXIMUM_INTERVAL.start
+         * @default Iso8601.MAXIMUM_INTERVAL.start
          */
         this.startTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * The stop time of the clock to use when looping or clamped.
          * @type {JulianDate}
-         * @default {JulianDate} Iso8601.MAXIMUM_INTERVAL.stop
+         * @default Iso8601.MAXIMUM_INTERVAL.stop
          */
         this.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
 
         /**
          * The initial time to use when switching to this clock.
          * @type {JulianDate}
-         * @default {JulianDate} Iso8601.MAXIMUM_INTERVAL.start
+         * @default Iso8601.MAXIMUM_INTERVAL.start
          */
         this.currentTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
-         * @default {ClockRange} ClockRange.LOOP_STOP
+         * @default ClockRange.LOOP_STOP
          */
         this.clockRange = ClockRange.LOOP_STOP;
 
         /**
          * Determines if clock advancement is frame dependent or system clock dependent.
          * @type {ClockStep}
-         * @default {ClockStep} ClockStep.SYSTEM_CLOCK_MULTIPLIER
+         * @default ClockStep.SYSTEM_CLOCK_MULTIPLIER
          */
         this.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 
@@ -61,7 +61,7 @@ define([
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
          * @type {Number}
-         * @default {Number} 1.0
+         * @default 1.0
          */
         this.multiplier = 1.0;
     };

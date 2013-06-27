@@ -38,7 +38,7 @@ define([
          * to an attachment point.
          *
          * @type {Boolean}
-         * @default {Boolean} true
+         * @default true
          *
          * @see Framebuffer#destroy
          */

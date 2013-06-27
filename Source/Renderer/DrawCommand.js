@@ -24,7 +24,7 @@ define(function() {
          * If the command was already culled, set this to <code>false</code> for a performance improvement.
          *
          * @type {Boolean}
-         * @default {Boolean} true
+         * @default true
          */
         this.cull = true;
 
@@ -98,7 +98,7 @@ define(function() {
          * Specifies if this command is only to be executed in the frustum closest
          * to the eye containing the bounding volume. Defaults to <code>false</code>.
          * @type {Boolean}
-         * @default {Boolean} false 
+         * @default false 
          */
         this.executeInClosestFrustum = false;
     };

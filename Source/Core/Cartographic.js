@@ -26,21 +26,21 @@ define([
         /**
          * The longitude, in radians.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.longitude = defaultValue(longitude, 0.0);
 
         /**
          * The latitude, in radians.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.latitude = defaultValue(latitude, 0.0);
 
         /**
          * The height, in meters, above the ellipsoid.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
     };

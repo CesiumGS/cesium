@@ -25,21 +25,21 @@ define([
         /**
          * The X component.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.z = defaultValue(z, 0.0);
     };

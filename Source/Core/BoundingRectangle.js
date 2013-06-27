@@ -29,28 +29,28 @@ define([
         /**
          * The x coordinate of the rectangle.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The y coordinate of the rectangle.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The width of the rectangle.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.width = defaultValue(width, 0.0);
 
         /**
          * The height of the rectangle.
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
     };

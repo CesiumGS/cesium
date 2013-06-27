@@ -29,28 +29,28 @@ define([
         /**
          * The westernmost longitude in the range [-Pi, Pi].
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.west = defaultValue(west, 0.0);
 
         /**
          * The southernmost latitude in the range [-Pi/2, Pi/2].
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.south = defaultValue(south, 0.0);
 
         /**
          * The easternmost longitude in the range [-Pi, Pi].
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.east = defaultValue(east, 0.0);
 
         /**
          * The northernmost latitude in the range [-Pi/2, Pi/2].
          * @type {Number}
-         * @default {Number} 0.0
+         * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
     };

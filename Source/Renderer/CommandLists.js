@@ -12,21 +12,21 @@ define(function() {
         /**
          * The command list for a color pass.
          * @type {Array}
-         * @default {Array} []
+         * @default []
          */
         this.colorList = [];
 
         /**
          * The command list for a pick pass.
          * @type {Array}
-         * @default {Array} []
+         * @default []
          */
         this.pickList = [];
 
         /**
          * The command list for an overlay pass.
          * @type {Array}
-         * @default {Array} []
+         * @default []
          */
         this.overlayList = [];
     };

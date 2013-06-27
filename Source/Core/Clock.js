@@ -106,28 +106,28 @@ define([
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
          * @type {Number}
-         * @default {Number} 1.0
+         * @default 1.0
          */
         this.multiplier = defaultValue(description.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
-         * @default {ClockStep} ClockStep.SYSTEM_CLOCK_MULTIPLIER
+         * @default ClockStep.SYSTEM_CLOCK_MULTIPLIER
          */
         this.clockStep = defaultValue(description.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
-         * @default {ClockRange} ClockRange.UNBOUNDED
+         * @default ClockRange.UNBOUNDED
          */
         this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
 
         /**
          * Determines if tick should actually advance time.
          * @type {Boolean}
-         * @default {Boolean} true
+         * @default true
          */
         this.shouldAnimate = defaultValue(description.shouldAnimate, true);
 
