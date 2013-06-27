@@ -36,6 +36,7 @@ define([
         'Scene/Material',
         'Scene/ExtentPrimitive',
         'Scene/Polygon',
+        'Scene/createTangentSpaceDebugPrimitive',
         'Widgets/checkForChromeFrame',
         'Widgets/Viewer/Viewer',
         'Widgets/Viewer/viewerDragDropMixin',
@@ -78,6 +79,7 @@ define([
         Material,
         ExtentPrimitive,
         Polygon,
+        createTangentSpaceDebugPrimitive,
         checkForChromeFrame,
         Viewer,
         viewerDragDropMixin,
@@ -215,7 +217,8 @@ define([
         });
         var geometry2 = new GeometryInstance({
             geometry : new EllipsoidGeometry({
-                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                vertexFormat : VertexFormat.ALL,
+//                vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                 ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
             }),
             modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -261,6 +264,11 @@ define([
         });
         scene.getPrimitives().add(primitive);
 
+        scene.getPrimitives().add(createTangentSpaceDebugPrimitive({
+            geometry : geometry2.geometry,
+            length : 10000.0,
+            modelMatrix : geometry2.modelMatrix
+        }));
 
         var m = new Material({
             context : viewer.scene.getContext(),
@@ -310,8 +318,7 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releaseGeometryInstances : true,
-            transformToWorldCoordinates : false
+            releaseGeometryInstances : true
         }));
 
         var polygonGeometry = new GeometryInstance({

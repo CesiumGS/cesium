@@ -26,10 +26,37 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for arbitrary geometry (as opposed to {@link EllipsoidSurfaceAppearance}, for example)
+     * that supports shading with materials.
      *
      * @alias MaterialAppearance
      * @constructor
+     *
+     * @param {Boolean} [options.flat=false] When <code>true</code>, flat shading is used in the fragment shader, which means lighting is not taking into account.
+     * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
+     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.BASIC] The type of materials that will be supported.
+     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
+     * @example
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *     geometry : new WallGeometry({
+            materialSupport :  MaterialAppearance.MaterialSupport.BASIC.vertexFormat,
+     *       // ...
+     *     })
+     *   }),
+     *   appearance : new MaterialAppearance({
+     *     material : Material.fromType(scene.getContext(), 'Color'),
+     *     faceForward : true
+     *   })
+     * });
+     *
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
      */
     var MaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -39,24 +66,50 @@ define([
         var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.BASIC);
 
         /**
-         * DOC_TBA
+         * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}
+         * properties, this is not read-only, so an appearance's material can change on the fly.
+         *
+         * @type Material
+         *
+         * @default Material.ColorType
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = defaultValue(options.vertexShaderSource, materialSupport.vertexShaderSource);
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account {@link MaterialAppearance#material},
+         * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
+         * Use {@link MaterialAppearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = defaultValue(options.fragmentShaderSource, materialSupport.fragmentShaderSource);
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         * <p>
+         * The render state can be explicitly defined when constructing a {@link MaterialAppearance}
+         * instance, or it is set implicitly via {@link MaterialAppearance#translucent}
+         * and {@link MaterialAppearance#closed}.
+         * </p>
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = defaultValue(options.renderState, Appearance.getDefaultRenderState(translucent, closed));
@@ -64,64 +117,96 @@ define([
         // Non-derived members
 
         /**
-         * DOC_TBA
+         * The type of materials supported by this instance.  This impacts the required
+         * {@link VertexFormat} and the complexity of the vertex and fragment shaders.
+         *
+         * @type MaterialAppearance.MaterialSupport
+         *
          * @readonly
          */
         this.materialSupport = materialSupport;
 
         /**
-         * DOC_TBA
+         * The {@link VertexFormat} that this appearance instance is compatible with.
+         * A geometry can have more vertex attributes and still be compatible - at a
+         * potential performance cost - but it can't have less.
+         *
+         * @type VertexFormat
+         *
          * @readonly
          */
-        this.vertexFormat = defaultValue(options.vertexFormat, materialSupport.vertexFormat);
+        this.vertexFormat = materialSupport.vertexFormat;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, flat shading is used in the fragment shader,
+         * which means lighting is not taking into account.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.flat = defaultValue(options.flat, false);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the fragment shader flips the surface normal
+         * as needed to ensure that the normal faces the viewer to avoid
+         * dark spots.  This is useful when both sides of a geometry should be
+         * shaded like {@link WallGeometry}.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.faceForward = defaultValue(options.faceForward, false);
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the geometry is expected to appear translucent so
+         * {@link MaterialAppearance#renderState} has alpha blending enabled.
+         *
          * @readonly
+         *
+         * @default true
          */
         this.translucent = translucent;
 
         /**
-         * DOC_TBA
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link MaterialAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
          * @readonly
+         *
+         * @default false
          */
         this.closed = closed;
     };
 
     /**
-     * DOC_TBA
+     * Procedurally creates the full GLSL fragment shader source.  For {@link MaterialAppearance},
+     * this is derived from {@link MaterialAppearance#fragmentShaderSource}, {@link MaterialAppearance#material},
+     * {@link MaterialAppearance#flat}, and {@link MaterialAppearance#faceForward}.
+     *
+     * @memberof MaterialAppearance
+     *
+     * @return String The full GLSL fragment shader source.
      */
     MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 
     /**
-     * DOC_TBA
+     * Determines the type of {@link Material} that is supported by a
+     * {@link MaterialAppearance} instance.  This is a trade-off between
+     * flexibility (a wide array of materials) and memory/performance
+     * (required vertex format and GLSL shader complexity.
+     *
+     * @memberof MaterialAppearance
+     *
      * @enumeration
      */
     MaterialAppearance.MaterialSupport = {
         /**
-         * DOC_TBA
-         * @readonly
-         */
-        NONE : freezeObject({
-            vertexFormat : undefined,
-            vertexShaderSource : undefined,
-            fragmentShaderSource : undefined
-
-        }),
-        /**
-         * DOC_TBA
+         * Only basic materials, which require just <code>position</code> and
+         * <code>normal</code> vertex attributes, are supported.
+         *
          * @readonly
          */
         BASIC : freezeObject({
@@ -131,7 +216,10 @@ define([
 
         }),
         /**
-         * DOC_TBA
+         * Materials with textures, which require <code>position</code>,
+         * <code>normal</code>, and <code>st</code> vertex attributes,
+         * are supported.  The vast majority of materials fall into this category.
+         *
          * @readonly
          */
         TEXTURED : freezeObject({
@@ -140,7 +228,10 @@ define([
             fragmentShaderSource : TexturedMaterialAppearanceFS
         }),
         /**
-         * DOC_TBA
+         * All materials, including those that work in tangent space, are supported.
+         * This requires <code>position</code>, <code>normal</code>, <code>st</code>,
+         * <code>binormal</code>, and <code>tangent</code> vertex attributes.
+         *
          * @readonly
          */
         ALL : freezeObject({

@@ -10,7 +10,9 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance defines the full GLSL vertex and fragment shaders and the
+     * render state used to draw a {@link Primitive}.  All appearances implement
+     * this base <code>Appearance</code> interface.
      *
      * @alias Appearance
      * @constructor
@@ -24,31 +26,54 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The material used to determine the fragment color.  Unlike other {@link Appearance}
+         * properties, this is not read-only, so an appearance's material can change on the fly.
+         *
+         * @type Material
+         *
+         * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
         this.material = options.material;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the vertex shader.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.vertexShaderSource = options.vertexShaderSource;
 
         /**
-         * DOC_TBA
+         * The GLSL source code for the fragment shader.  The full fragment shader
+         * source is built procedurally taking into account the {@link Appearance#material}.
+         * Use {@link Appearance#getFragmentShaderSource} to get the full source.
+         *
+         * @type String
+         *
          * @readonly
          */
         this.fragmentShaderSource = options.fragmentShaderSource;
 
         /**
-         * DOC_TBA
+         * The render state.  This is not the final {@link RenderState} instance; instead,
+         * it can contain a subset of render state properties identical to <code>renderState</code>
+         * passed to {@link Context#createRenderState}.
+         *
+         * @type Object
+         *
          * @readonly
          */
         this.renderState = options.renderState;
     };
 
     /**
-     * DOC_TBA
+     * Procedurally creates the full GLSL fragment shader source for this appearance
+     * taking into account {@link Appearance#fragmentShaderSource} and {@link Appearance#material}.
+     *
+     * @memberof Appearance
+     *
+     * @return String The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
@@ -65,7 +90,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * @private
      */
     Appearance.getDefaultRenderState = function(translucent, closed) {
         var rs = {
