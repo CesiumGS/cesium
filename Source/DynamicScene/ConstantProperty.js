@@ -3,16 +3,22 @@ define(function() {
     "use strict";
 
     /**
-     * Represents a single value which does not change with regard to simulation time.
+     * A {@link Property} which does not change with regard to simulation time.
      *
      * @alias ConstantProperty
      * @constructor
-     *
-     * @see DynamicProperty
      */
     var ConstantProperty = function(value) {
         this._value = value;
         this._clonable = typeof value !== 'undefined' && typeof value.clone === 'function';
+    };
+
+    /**
+     * @memberof ConstantProperty
+     * @returns {Boolean} Always returns false, since this property never varies with simulation time.
+     */
+    ConstantProperty.prototype.getIsTimeVarying = function() {
+        return false;
     };
 
     /**
@@ -29,6 +35,15 @@ define(function() {
             return value.clone(result);
         }
         return value;
+    };
+
+    ConstantProperty.prototype.sampleValue = function(start, stop, maximumStep, requiredTimes, resultTimes, resultValues) {
+        resultTimes[0] = start.clone();
+        resultTimes[1] = stop.clone();
+        resultTimes.length = 2;
+        resultValues[0] = this.getValue(start, resultValues[0]);
+        resultValues[1] = this.getValue(stop, resultValues[1]);
+        resultValues.length = 2;
     };
 
     return ConstantProperty;
