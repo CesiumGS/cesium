@@ -1,5 +1,21 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CzmlDataSource', 'DynamicScene/DynamicObjectCollection', 'Core/ClockRange', 'Core/ClockStep', 'Core/Event', 'Core/loadJson', 'Core/JulianDate', 'Core/TimeInterval'], function(CzmlDataSource, DynamicObjectCollection, ClockRange, ClockStep, Event, loadJson, JulianDate, TimeInterval) {
+defineSuite(['DynamicScene/CzmlDataSource',
+             'DynamicScene/DynamicObjectCollection',
+             'Core/ClockRange',
+             'Core/ClockStep',
+             'Core/Event',
+             'Core/loadJson',
+             'Core/JulianDate',
+             'Core/TimeInterval'
+            ], function(
+                    CzmlDataSource,
+                    DynamicObjectCollection,
+                    ClockRange,
+                    ClockStep,
+                    Event,
+                    loadJson,
+                    JulianDate,
+                    TimeInterval) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
