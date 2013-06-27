@@ -10,7 +10,9 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance defines the full GLSL vertex and fragment shaders and the
+     * render state used to draw a {@link Primitive}.  All appearances implement
+     * this base <code>Appearance</code> interface.
      *
      * @alias Appearance
      * @constructor
