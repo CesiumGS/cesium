@@ -257,19 +257,19 @@ define(['../Core/createGuid',
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON Point and MultiPoint geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultPoint = defaultPoint;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON LineString and MultiLineString geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultLine = defaultLine;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON Polygon and MultiPolygon geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
     };
@@ -424,7 +424,7 @@ define(['../Core/createGuid',
      * which takes a GeoJSON coordinate and transforms it into a
      * WGS84 Earth-fixed Cartesian.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsNames = {
         'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
@@ -438,7 +438,7 @@ define(['../Core/createGuid',
      * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
      * the link has a type specified.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsLinkHrefs = {};
 
@@ -448,7 +448,7 @@ define(['../Core/createGuid',
      * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
      * Items in <code>crsLinkHrefs</code> take precedence over this object.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsLinkTypes = {};
 
