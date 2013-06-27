@@ -10,13 +10,32 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * Visualizes a vertex attribute by displaying it as a color for debugging.
+     * <p>
+     * Components for well-known unit-length vectors, i.e., <code>normal</code>,
+     * <code>binormal</code>, and <code>tangent</code>, are scaled and biased
+     * from [-1.0, 1.0] to (-1.0, 1.0).
+     * </p>
      *
      * @alias DebugAppearance
      * @constructor
      *
+     * @param {String} options.attributeName The name of the attribute to visualize.
+     * @param {String} [options.glslDatatype='vec3'] The GLSL datatype of the attribute.  Supported datatypes are <code>float</code>, <code>vec2</code>, <code>vec3</code>, and <code>vec4</code>.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
      * @exception {DeveloperError} options.attributeName is required.
      * @exception {DeveloperError} options.glslDatatype must be float, vec2, vec3, or vec4.
+     *
+     * @example
+     * var primitive = new Primitive({
+     *   geometryInstances : // ...
+     *   appearance : new DebugAppearance({
+     *     attributeName : 'normal'
+     *   })
+     * });
      */
     var DebugAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -76,9 +95,6 @@ define([
             '{\n' +
             'gl_FragColor = getColor();\n' +
             '}';
-
-        options.flat = defaultValue(options.flat, true);
-        options.translucent = defaultValue(options.translucent, false);
 
         /**
          * This property is part of the {@link Appearance} interface, but is not
