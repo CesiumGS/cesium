@@ -253,7 +253,64 @@ define([
         }
     }
 
-    function addPerInstanceAttributes(primitive, instances) {
+    function getCommonPerInstanceAttributeNames(instances) {
+        var length = instances.length;
+
+        var attributesInAllInstances = [];
+        var attributes0 = instances[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = instances[i].attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances.push(name);
+                }
+            }
+        }
+
+        return attributesInAllInstances;
+    }
+
+    function getInterleavedAttributeNames(geometry, perInstanceNames) {
+        var interleavedNames = [];
+        var attributes = geometry.attributes;
+        var length = perInstanceNames.length;
+        for (var name in attributes) {
+            if (attributes.hasOwnProperty(name)) {
+                var isPerInstanceName = false;
+                for (var i = 0; i < length; ++i) {
+                    if (name === perInstanceNames[i]) {
+                        isPerInstanceName = true;
+                        break;
+                    }
+                }
+
+                if (!isPerInstanceName) {
+                    interleavedNames.push(name);
+                }
+            }
+        }
+        return interleavedNames;
+    }
+
+    function addPerInstanceAttributes(primitive, instances, names) {
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
@@ -261,25 +318,25 @@ define([
             var geometry = instance.geometry;
             var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
 
-            for (var name in instanceAttributes) {
-                if (instanceAttributes.hasOwnProperty(name)) {
-                    var attribute = instanceAttributes[name];
-                    var componentDatatype = attribute.componentDatatype;
-                    var value = attribute.value;
-                    var componentsPerAttribute = value.length;
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var attribute = instanceAttributes[name];
+                var componentDatatype = attribute.componentDatatype;
+                var value = attribute.value;
+                var componentsPerAttribute = value.length;
 
-                    var buffer = componentDatatype.createTypedArray(numberOfVertices * componentsPerAttribute);
-                    for (var j = 0; j < numberOfVertices; ++j) {
-                        buffer.set(value, j * componentsPerAttribute);
-                    }
-
-                    geometry.attributes[name] = new GeometryAttribute({
-                        componentDatatype : componentDatatype,
-                        componentsPerAttribute : componentsPerAttribute,
-                        normalize : attribute.normalize,
-                        values : buffer
-                    });
+                var buffer = componentDatatype.createTypedArray(numberOfVertices * componentsPerAttribute);
+                for (var k = 0; k < numberOfVertices; ++k) {
+                    buffer.set(value, k * componentsPerAttribute);
                 }
+
+                geometry.attributes[name] = new GeometryAttribute({
+                    componentDatatype : componentDatatype,
+                    componentsPerAttribute : componentsPerAttribute,
+                    normalize : attribute.normalize,
+                    values : buffer
+                });
             }
         }
     }
@@ -288,8 +345,8 @@ define([
     function geometryPipeline(primitive, instances, context, projection) {
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
-        for (var j = 1; j < length; ++j) {
-            if (instances[j].geometry.primitiveType !== primitiveType) {
+        for (var i = 1; i < length; ++i) {
+            if (instances[i].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
@@ -299,8 +356,8 @@ define([
 
         // Clip to IDL
         if (primitive._allowColumbusView) {
-            for (var k = 0; k < length; ++k) {
-                GeometryPipeline.wrapLongitude(instances[k].geometry);
+            for (i = 0; i < length; ++i) {
+                GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
         }
 
@@ -308,11 +365,12 @@ define([
         addPickColorAttribute(primitive, instances, context);
 
         // add attributes to the geometry for each per-instance geometry
-        addPerInstanceAttributes(primitive, instances);
+        var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
+        addPerInstanceAttributes(primitive, instances, perInstanceAttributeNames);
 
         // Optimize for vertex shader caches
         if (primitive._vertexCacheOptimize) {
-            for (var i = 0; i < length; ++i) {
+            for (i = 0; i < length; ++i) {
                 GeometryPipeline.reorderForPostVertexCache(instances[i].geometry);
                 GeometryPipeline.reorderForPreVertexCache(instances[i].geometry);
             }
@@ -332,13 +390,23 @@ define([
             GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
 
+
+        var geometries;
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
-            return GeometryPipeline.fitToUnsignedShortIndices(geometry);
+            geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
+        } else {
+            // Unsigned int indices are supported.  No need to break into multiple geometries.
+            geometries = [geometry];
         }
 
-        // Unsigned int indices are supported.  No need to break into multiple geometries.
-        return [geometry];
+        var interleavedNames = getInterleavedAttributeNames(geometry, perInstanceAttributeNames);
+        length = geometries.length;
+        for (i = 0; i < length; ++i) {
+            GeometryPipeline.interleaveAttributes(geometries[i], interleavedNames);
+        }
+
+        return geometries;
     }
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
@@ -462,7 +530,6 @@ define([
             var va = [];
             length = geometries.length;
             for (i = 0; i < length; ++i) {
-                GeometryPipeline.interleaveAttributes(geometries[i]);
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
                     attributeIndices : this._attributeIndices,

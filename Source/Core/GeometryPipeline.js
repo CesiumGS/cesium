@@ -1770,7 +1770,7 @@ define([
         return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
     }
 
-    function createInterleavedBuffer(geometry) {
+    function createInterleavedBuffer(geometry, attributeNames) {
         var j;
         var name;
         var attribute;
@@ -1778,14 +1778,33 @@ define([
 
         // Extract attribute names.
         var names = [];
-        for (name in attributes) {
-            // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
-                names.push(name);
+        if (typeof attributeNames !== 'undefined') {
+            var length = attributeNames.length;
+            for (j = 0; j < length; ++j) {
+                name = attributeNames[j];
+                attribute = attributes[name];
 
-                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
-                    attributes[name].componentDatatype = ComponentDatatype.FLOAT;
-                    attributes[name].values = ComponentDatatype.FLOAT.createTypedArray(attributes[name].values);
+                // Attribute needs to have per-vertex values; not a constant value for all vertices.
+                if (typeof attribute !== 'undefined' && typeof attribute.values !== 'undefined') {
+                    names.push(name);
+
+                    if (attribute.componentDatatype === ComponentDatatype.DOUBLE) {
+                        attribute.componentDatatype = ComponentDatatype.FLOAT;
+                        attribute.values = ComponentDatatype.FLOAT.createTypedArray(attribute.values);
+                    }
+                }
+            }
+        } else {
+            for (name in attributes) {
+                // Attribute needs to have per-vertex values; not a constant value for all vertices.
+                if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
+                    attribute = attributes[name];
+                    names.push(name);
+
+                    if (attribute.componentDatatype === ComponentDatatype.DOUBLE) {
+                        attribute.componentDatatype = ComponentDatatype.FLOAT;
+                        attribute.values = ComponentDatatype.FLOAT.createTypedArray(attribute.values);
+                    }
                 }
             }
         }
@@ -1885,21 +1904,45 @@ define([
         return undefined;
     }
 
-    GeometryPipeline.interleaveAttributes = function(geometry) {
-        var interleavedAttributes = createInterleavedBuffer(geometry);
+    /**
+     * DOC_TBA
+     */
+    GeometryPipeline.interleaveAttributes = function(geometry, attributeNames) {
+        if (typeof geometry === 'undefined') {
+            throw new DeveloperError('geometry is required.');
+        }
+
+        var interleavedAttributes = createInterleavedBuffer(geometry, attributeNames);
         if (typeof interleavedAttributes !== 'undefined') {
             var buffer = interleavedAttributes.buffer;
             var offsetsInBytes = interleavedAttributes.offsetsInBytes;
             var vertexSizeInBytes = interleavedAttributes.vertexSizeInBytes;
 
             var attributes = geometry.attributes;
-            for (var name in attributes) {
-                if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
-                    var attribute = attributes[name];
-                    attribute.values = undefined;
-                    attribute.interleavedValues = buffer;
-                    attribute.offsetInBytes = offsetsInBytes[name];
-                    attribute.strideInBytes = vertexSizeInBytes;
+            var name;
+            var attribute;
+
+            if (typeof attributeNames !== 'undefined') {
+                var namesLength = attributeNames.length;
+                for (var i = 0; i < namesLength; ++i) {
+                    name = attributeNames[i];
+                    attribute = attributes[name];
+                    if (typeof attribute.values !== 'undefined') {
+                        attribute.values = undefined;
+                        attribute.interleavedValues = buffer;
+                        attribute.offsetInBytes = offsetsInBytes[name];
+                        attribute.strideInBytes = vertexSizeInBytes;
+                    }
+                }
+            } else {
+                for (name in attributes) {
+                    if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
+                        attribute = attributes[name];
+                        attribute.values = undefined;
+                        attribute.interleavedValues = buffer;
+                        attribute.offsetInBytes = offsetsInBytes[name];
+                        attribute.strideInBytes = vertexSizeInBytes;
+                    }
                 }
             }
         }
