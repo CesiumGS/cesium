@@ -339,6 +339,7 @@ define([
          * shaders via {@link czm_model} and derived uniforms.
          *
          * @type Matrix4
+         * @default Matrix4.IDENTITY
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
