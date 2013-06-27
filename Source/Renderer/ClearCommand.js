@@ -70,8 +70,8 @@ define([
     /**
      * Clears color to (0.0, 0.0, 0.0, 0.0); depth to 1.0; and stencil to 0.
      *
-     * @constant
      * @type {ClearCommand}
+     * @constant
      */
     ClearCommand.ALL = freezeObject(all);
 

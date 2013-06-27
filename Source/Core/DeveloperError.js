@@ -24,6 +24,7 @@ define(function() {
          * 'DeveloperError' indicating that this exception was thrown due to a developer error.
          * @type {String}
          * @constant
+         * @default
          */
         this.name = 'DeveloperError';
 
@@ -38,6 +39,7 @@ define(function() {
          * The Error object containing the stack trace.
          * @type {Error}
          * @constant
+         * @default Error()
          *
          * @see <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error'>Error object on Mozilla Developer Network</a>.
          */

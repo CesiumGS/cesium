@@ -115,7 +115,7 @@ define([
          * Gets the Command to toggle fullscreen mode.
          * @memberof FullscreenButtonViewModel.prototype
          *
-         * @type Command
+         * @type {Command}
          */
         command : {
             get : function() {
