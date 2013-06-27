@@ -308,8 +308,7 @@ define([
             geometryInstances : geometry5,
             appearance :appearance,
             vertexCacheOptimize : false,
-            releaseGeometryInstances : true,
-            transformToWorldCoordinates : false
+            releaseGeometryInstances : true
         }));
 
         var polygonGeometry = new GeometryInstance({
