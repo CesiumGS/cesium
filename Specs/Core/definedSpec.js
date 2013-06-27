@@ -16,6 +16,4 @@ defineSuite([
     it('works for undefined object', function() {
         expect(defined(obj2)).toEqual(false);
     });
-
-
 });
