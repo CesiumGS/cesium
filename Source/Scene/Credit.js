@@ -56,5 +56,38 @@ define([
         this.link = link;
     };
 
+    /**
+     * Displays all credits in a list to the credit container
+     *
+     * @memberof Credit
+     *
+     * @param {Credit} left The first credit
+     * @param {Credit} left The second credit
+     *
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Credit.equals = function(left, right) {
+        var leftUndefied = (typeof left === 'undefined');
+        var rightUndefined = (typeof right === 'undefined');
+        if (leftUndefied || rightUndefined) {
+            return (leftUndefied && rightUndefined);
+        }
+
+        return (left.name === right.name && left.text === right.text && left.image === right.image && left.link === right.link);
+    };
+
+    /**
+     * Displays all credits in a list to the credit container
+     *
+     * @memberof Credit
+     *
+     * @param Array {Credit} credits The credits to display
+     *
+     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     */
+    Credit.prototype.equals = function(credit) {
+        return Credit.equals(this, credit);
+    };
+
     return Credit;
 });

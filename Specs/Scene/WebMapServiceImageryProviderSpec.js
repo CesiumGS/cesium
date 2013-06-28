@@ -251,14 +251,14 @@ defineSuite([
             url : 'made/up/wms/server?foo=bar',
             layers : 'someLayer'
         });
-        expect(provider.getLogo()).toBeUndefined();
+        expect(provider.getCredit()).toBeUndefined();
 
         var providerWithCredit = new WebMapServiceImageryProvider({
             url : 'made/up/wms/server?foo=bar',
             layers : 'someLayer',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
-        expect(providerWithCredit.getLogo()).toBeDefined();
+        expect(providerWithCredit.getCredit()).toBeDefined();
     });
 
     it('routes requests through a proxy if one is specified', function() {

@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        './Credit'
     ], function (
-        defaultValue) {
+        defaultValue,
+        Credit) {
     "use strict";
 
     /**
@@ -17,14 +19,13 @@ define([
      * var CreditManager = new CreditManager(creditContainer);
      */
 
-    var delimeter = ' • ';
-
-    var CreditManager = function(container) {
+    var CreditManager = function(container, delimeter) {
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
+        this.delimeter = defaultValue(delimeter, ' • ');
         this.container = container;
         this.textContainer = textContainer;
         this.imageContainer = imageContainer;
@@ -88,7 +89,7 @@ define([
                 this.previousCredits = credits;
             } else {
                 for (var i = 0; i < credits.length; i++) {
-                    if (credits[i] !== this.previousCredits[i]) {
+                    if (!Credit.equals(credits[i], this.previousCredits[i])) {
                         processCredits(this, credits);
                         this.previousCredits = credits;
                         break;
@@ -98,18 +99,36 @@ define([
         }
     };
 
+    function removeDuplicates(credits) {
+        var cleanedCredits = [];
+        var len = credits.length;
+        for (var i = 0; i < len; i++) {
+            var credit = credits[i];
+            cleanedCredits.push(credit);
+            for (var j = i + 1; j < len; j++) {
+                if (Credit.equals(credit, credits[j])) {
+                    credits.splice(j, 1);
+                    len--;
+                    j--;
+                }
+            }
+        }
+        return cleanedCredits;
+    }
+
     function processCredits(creditManager, credits) {
         var newImages = [];
         var newText = [];
         var stillVisible = {};
         var i;
 
+        credits = removeDuplicates(credits);
         for (i = 0; i < credits.length; i++) {
             var credit = credits[i];
             if (typeof credit !== 'undefined') {
                 if (typeof credit.image === 'undefined'){
                     newText.push(credit);
-                } else if (!creditManager.visibleImageCredits.hasOwnProperty(credit.name)) {
+                } else if (!creditManager.visibleImageCredits.hasOwnProperty(credit.name) || !Credit.equals(creditManager.visibleImageCredits[credit.name], credit)) {
                     newImages.push(credit);
                     stillVisible[credit.name] = credit;
                 } else {
@@ -150,7 +169,7 @@ define([
             var credit = textCredits[i];
             var str;
             if (i !== 0) {
-                str = delimeter;
+                str = creditManager.delimeter;
             } else {
                 str = '';
             }
