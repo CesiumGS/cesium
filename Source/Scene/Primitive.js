@@ -193,6 +193,8 @@ define([
         this._allowColumbusView = defaultValue(options.allowColumbusView, true);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
+        this._perInstanceAttributes = undefined;
+        this._perInstanceAttributesCache = {};
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -459,7 +461,11 @@ define([
                     }
 
                     if (typeof indices[instance.id][name] === 'undefined') {
-                        indices[instance.id][name] = [];
+                        indices[instance.id][name] = {
+                            dirty : false,
+                            value : instance.attributes[name].value,
+                            indices : []
+                        };
                     }
 
                     var size = attribute.vertexBuffer.getSizeInBytes() / attribute.componentDatatype.sizeInBytes;
@@ -469,20 +475,18 @@ define([
                     var count;
                     if (offset + tempVertexCount < size) {
                         count = tempVertexCount;
-                        indices[instance.id][name].push({
+                        indices[instance.id][name].indices.push({
                             attribute : attribute,
                             offset : offset,
-                            count : count,
-                            value : instance.attributes[name].value
+                            count : count
                         });
                         offsets[name] = offset + tempVertexCount;
                     } else {
                         count = size - offset;
-                        indices[instance.id][name].push({
+                        indices[instance.id][name].indices.push({
                             attribute : attribute,
                             offset : offset,
-                            count : count,
-                            value : instance.attributes[name].value
+                            count : count
                         });
                         offsets[name] = 0;
                         vaIndices[name] = vaIndex + 1;
@@ -555,15 +559,16 @@ define([
             return vertexShaderSource;
         }
 
-        var glPositionIndex = vertexShaderSource.indexOf('gl_Position');
-        var semicolonIndex = vertexShaderSource.indexOf(';', glPositionIndex);
-
-        var source =
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_show_main()');
+        var showMain =
             'attribute float show;\n' +
-            vertexShaderSource.substring(0, semicolonIndex) +
-            ' * show' +
-            vertexShaderSource.substring(semicolonIndex);
-        return source;
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_show_main(); \n' +
+            '    gl_Position *= show; \n' +
+            '}';
+
+        return renamedVS + '\n' + showMain;
     }
 
     function validateShaderMatching(shaderProgram, attributeIndices) {
@@ -726,6 +731,47 @@ define([
             }
         }
 
+        // Update per-instance attributes
+        if (this._perInstanceAttributes._dirty) {
+            var perInstance = this._perInstanceAttributes;
+            for (var id in perInstance) {
+                if (perInstance.hasOwnProperty(id) && id !== '_dirty') {
+                    var perInstanceAttributes = perInstance[id];
+                    for (var name in perInstanceAttributes) {
+                        if (perInstanceAttributes.hasOwnProperty(name)) {
+                            var attribute = perInstanceAttributes[name];
+                            if (attribute.dirty) {
+                                var value = attribute.value;
+                                var indices = attribute.indices;
+                                length = indices.length;
+                                for (i = 0; i < length; ++i) {
+                                    var index = indices[i];
+                                    var offset = index.offset;
+                                    var count = index.count;
+
+                                    var vaAttribute = index.attribute;
+                                    var componentDatatype = vaAttribute.componentDatatype;
+                                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
+
+                                    var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                                    for (var j = 0; j < count; ++j) {
+                                        typedArray.set(value, j * componentsPerAttribute);
+                                    }
+
+                                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
+                                }
+
+                                attribute.dirty = false;
+                            }
+                        }
+                    }
+                }
+            }
+
+            this._perInstanceAttributes._dirty = false;
+        }
+
         var boundingSphere;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingSphere = this._boundingSphere;
@@ -753,35 +799,19 @@ define([
 
     function createGetFunction(name, perInstanceAttributes) {
         return function() {
-            return perInstanceAttributes[name][0].value;
+            return perInstanceAttributes[name].value;
         };
     }
 
-    function createSetFunction(name, perInstanceAttributes) {
+    function createSetFunction(name, perInstanceAttributes, container) {
         return function (value) {
             if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
 
-            var indices = perInstanceAttributes[name];
-            var length = indices.length;
-            for (var i = 0; i < length; ++i) {
-                var index = indices[i];
-                var offset = index.offset;
-                var count = index.count;
-
-                var attribute = index.attribute;
-                var componentDatatype = attribute.componentDatatype;
-                var componentsPerAttribute = attribute.componentsPerAttribute;
-
-                var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
-                for (var j = 0; j < count; ++j) {
-                    typedArray.set(value, j * componentsPerAttribute);
-                }
-
-                var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
-                attribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-            }
+            perInstanceAttributes[name].value = value;
+            perInstanceAttributes[name].dirty = true;
+            container._dirty = true;
         };
     }
 
@@ -793,17 +823,24 @@ define([
             throw new DeveloperError('id is required');
         }
 
+        var cachedObject = this._perInstanceAttributesCache[id];
+        if (typeof cachedObject !== 'undefined') {
+            return cachedObject;
+        }
+
         var perInstanceAttributes = this._perInstanceAttributes[id];
         var attributes = {};
 
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
                 Object.defineProperty(attributes, name, {
-                    get : createGetFunction(name, perInstanceAttributes),
-                    set : createSetFunction(name, perInstanceAttributes)
+                    get : createGetFunction(name, perInstanceAttributes, this._perInstanceAttributes),
+                    set : createSetFunction(name, perInstanceAttributes, this._perInstanceAttributes)
                 });
             }
         }
+
+        this._perInstanceAttributesCache[id] = attributes;
 
         return attributes;
     };
