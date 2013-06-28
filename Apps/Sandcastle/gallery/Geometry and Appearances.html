@@ -121,7 +121,9 @@ require(['Cesium'], function(Cesium) {
                 height : height,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5))
+            }
         }));
         
         instances.push(new Cesium.GeometryInstance({
@@ -130,7 +132,9 @@ require(['Cesium'], function(Cesium) {
                 height : height,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5))
+            }
         }));
     }
 
@@ -156,14 +160,18 @@ require(['Cesium'], function(Cesium) {
             geometry : boxGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+            }
         }));
         
         instances.push(new Cesium.GeometryInstance({
             geometry : ellipsoidGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+            }
         }));
     }
     
@@ -189,7 +197,9 @@ require(['Cesium'], function(Cesium) {
                     Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0),
                 ])
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+            }
         }));
     }
     

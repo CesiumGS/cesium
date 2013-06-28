@@ -22,11 +22,11 @@ define([
      * @example
      * var instance = new GeometryInstance({
      *     geometry : new BoxGeometry({
-     *         vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *         dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *         dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0),
+     *         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
      *     }),
      *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75, 40))), new Cartesian3(0.0, 0.0, 1000000.0)),
      *     id : 'box',
      *     attributes : {
      *         color : new ColorGeometryInstanceAttribute(Color.AQUA)
