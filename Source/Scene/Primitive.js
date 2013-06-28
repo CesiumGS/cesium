@@ -409,6 +409,79 @@ define([
         return geometries;
     }
 
+    function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
+        var indices = {};
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = instances.length;
+        var offsets = {};
+        var vaIndices = {};
+
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var index = attributeIndices[name];
+
+                var tempVertexCount = numberOfVertices;
+                while (tempVertexCount > 0) {
+                    var vaIndex = defaultValue(vaIndices[name], 0);
+                    var va = vertexArrays[vaIndex];
+                    var vaLength = va.getNumberOfAttributes();
+
+                    var attribute;
+                    for (var k = 0; k < vaLength; ++k) {
+                        attribute = va.getAttribute(k);
+                        if (attribute.index === index) {
+                            break;
+                        }
+                    }
+
+                    if (typeof indices[instance.id] === 'undefined') {
+                        indices[instance.id] = {};
+                    }
+
+                    if (typeof indices[instance.id][name] === 'undefined') {
+                        indices[instance.id][name] = [];
+                    }
+
+                    var size = attribute.vertexBuffer.getSizeInBytes() / attribute.componentDatatype.sizeInBytes;
+                    size /= attribute.componentsPerAttribute;
+                    var offset = defaultValue(offsets[name], 0);
+
+                    var count;
+                    if (offset + tempVertexCount < size) {
+                        count = tempVertexCount;
+                        indices[instance.id][name].push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count,
+                            value : instance.attributes[name].value
+                        });
+                        offsets[name] = offset + tempVertexCount;
+                    } else {
+                        count = size - offset;
+                        indices[instance.id][name].push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count,
+                            value : instance.attributes[name].value
+                        });
+                        offsets[name] = 0;
+                        vaIndices[name] = vaIndex + 1;
+                    }
+
+                    tempVertexCount -= count;
+                }
+            }
+        }
+
+        return indices;
+    }
+
     function createColumbusViewShader(primitive, vertexShaderSource) {
         var attributes;
         if (primitive._allowColumbusView) {
@@ -532,12 +605,13 @@ define([
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
-                    attributeIndices : this._attributeIndices,
-                    bufferUsage : BufferUsage.STATIC_DRAW
+                    attributeIndices : this._attributeIndices//,
+                    //bufferUsage : BufferUsage.STATIC_DRAW
                 }));
             }
 
             this._va = va;
+            this._perInstanceAttributes = computePerInstanceAttributeIndices(insts, va, this._attributeIndices);
 
             for (i = 0; i < length; ++i) {
                 var geometry = geometries[i];
@@ -637,6 +711,51 @@ define([
         }
 
         commandList.push(this._commandLists);
+    };
+
+    Primitive.prototype.getGeometryInstanceAttributes = function(id) {
+        if (typeof id === 'undefined') {
+            throw new DeveloperError('id is required');
+        }
+
+        var perInstanceAttributes = this._perInstanceAttributes[id];
+        var attributes = {};
+
+        for (var name in perInstanceAttributes) {
+            if (perInstanceAttributes.hasOwnProperty(name)) {
+                Object.defineProperty(attributes, name, {
+                    get : function () {
+                        return perInstanceAttributes[name][0].value;
+                    },
+                    set : function (value) {
+                        if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
+                            throw new DeveloperError('value must be and array with length between 1 and 4.');
+                        }
+
+                        var indices = perInstanceAttributes[name];
+                        var length = indices.length;
+                        for (var i = 0; i < length; ++i) {
+                            var index = indices[i];
+                            var offset = index.offset;
+                            var count = index.count;
+
+                            var attribute = index.attribute;
+                            var componentDatatype = attribute.componentDatatype;
+                            var componentsPerAttribute = attribute.componentsPerAttribute;
+
+                            var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                            for (var j = 0; j < count; ++j) {
+                                typedArray.set(value, j * componentsPerAttribute);
+                            }
+
+                            attribute.vertexBuffer.copyFromArrayView(typedArray, offset * componentDatatype.sizeInBytes);
+                        }
+                    }
+                });
+            }
+        }
+
+        return attributes;
     };
 
     /**

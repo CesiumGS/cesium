@@ -208,7 +208,7 @@ define([
                     CesiumMath.toRadians(50.0),
                     CesiumMath.toRadians(180.0),
                     CesiumMath.toRadians(90.0)),
-                //granularity : 0.006                     // More than 64K vertices
+                granularity : 0.006                     // More than 64K vertices
             }),
             id : 'geometry',
             attributes : {
@@ -522,6 +522,7 @@ define([
          scene.getPrimitives().add(pp);
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
+        /*
         handler.setInputAction(
             function (movement) {
                 var pickedObject = scene.pick(movement.endPosition);
@@ -531,8 +532,10 @@ define([
             },
             ScreenSpaceEventType.MOUSE_MOVE
         );
+        */
         handler.setInputAction(
-            function () {
+            function (e) {
+                /*
                 polygonPrimitive.appearance.material = Material.fromType(scene.getContext(), 'Wood');
                 wallPrimitive.appearance = new MaterialAppearance();
 
@@ -543,6 +546,20 @@ define([
                 pp.material = Material.fromType(scene.getContext(), 'Dot');
                 pp.textureRotationAngle = CesiumMath.toRadians(30.0);
                 pp.height = 1500000.0;
+                */
+
+                var pickedObject = scene.pick(e.position);
+                if (typeof pickedObject !== 'undefined') {
+                    var attributes = primitive.getGeometryInstanceAttributes(pickedObject);
+                    if (typeof attributes.color !== 'undefined') {
+                        attributes.color = [
+                            Math.floor((Math.random()*100)),
+                            Math.floor((Math.random()*100)),
+                            Math.floor((Math.random()*100)),
+                            255
+                        ];
+                    }
+                }
             },
             ScreenSpaceEventType.LEFT_CLICK
         );
