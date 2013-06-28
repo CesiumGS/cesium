@@ -536,6 +536,22 @@ define([
         return renamedVS + '\n' + pickMain;
     }
 
+    function appendShow(primitive, vertexShaderSource) {
+        if (typeof primitive._attributeIndices.show === 'undefined') {
+            return vertexShaderSource;
+        }
+
+        var glPositionIndex = vertexShaderSource.indexOf('gl_Position');
+        var semicolonIndex = vertexShaderSource.indexOf(';', glPositionIndex);
+
+        var source =
+            'attribute float show;\n' +
+            vertexShaderSource.substring(0, semicolonIndex) +
+            ' * show' +
+            vertexShaderSource.substring(semicolonIndex);
+        return source;
+    }
+
     function validateShaderMatching(shaderProgram, attributeIndices) {
         // For a VAO and shader program to be compatible, the VAO must have
         // all active attribute in the shader program.  The VAO may have
@@ -605,8 +621,7 @@ define([
             for (i = 0; i < length; ++i) {
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometries[i],
-                    attributeIndices : this._attributeIndices//,
-                    //bufferUsage : BufferUsage.STATIC_DRAW
+                    attributeIndices : this._attributeIndices
                 }));
             }
 
@@ -658,6 +673,7 @@ define([
         if (createSP) {
             var shaderCache = context.getShaderCache();
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
+            vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
@@ -713,6 +729,43 @@ define([
         commandList.push(this._commandLists);
     };
 
+    function createGetFunction(name, perInstanceAttributes) {
+        return function() {
+            return perInstanceAttributes[name][0].value;
+        };
+    }
+
+    function createSetFunction(name, perInstanceAttributes) {
+        return function (value) {
+            if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
+                throw new DeveloperError('value must be and array with length between 1 and 4.');
+            }
+
+            var indices = perInstanceAttributes[name];
+            var length = indices.length;
+            for (var i = 0; i < length; ++i) {
+                var index = indices[i];
+                var offset = index.offset;
+                var count = index.count;
+
+                var attribute = index.attribute;
+                var componentDatatype = attribute.componentDatatype;
+                var componentsPerAttribute = attribute.componentsPerAttribute;
+
+                var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                for (var j = 0; j < count; ++j) {
+                    typedArray.set(value, j * componentsPerAttribute);
+                }
+
+                var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                attribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
+            }
+        };
+    }
+
+    /**
+     * DOC_TBA
+     */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         if (typeof id === 'undefined') {
             throw new DeveloperError('id is required');
@@ -724,34 +777,8 @@ define([
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
                 Object.defineProperty(attributes, name, {
-                    get : function () {
-                        return perInstanceAttributes[name][0].value;
-                    },
-                    set : function (value) {
-                        if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
-                            throw new DeveloperError('value must be and array with length between 1 and 4.');
-                        }
-
-                        var indices = perInstanceAttributes[name];
-                        var length = indices.length;
-                        for (var i = 0; i < length; ++i) {
-                            var index = indices[i];
-                            var offset = index.offset;
-                            var count = index.count;
-
-                            var attribute = index.attribute;
-                            var componentDatatype = attribute.componentDatatype;
-                            var componentsPerAttribute = attribute.componentsPerAttribute;
-
-                            var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
-                            for (var j = 0; j < count; ++j) {
-                                typedArray.set(value, j * componentsPerAttribute);
-                            }
-
-                            var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
-                            attribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-                        }
-                    }
+                    get : createGetFunction(name, perInstanceAttributes),
+                    set : createSetFunction(name, perInstanceAttributes)
                 });
             }
         }

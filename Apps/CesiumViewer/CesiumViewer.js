@@ -28,6 +28,7 @@ define([
         'Core/WallGeometry',
         'Core/VertexFormat',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/ShowGeometryInstanceAttribute',
         'Scene/Primitive',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
@@ -71,6 +72,7 @@ define([
         WallGeometry,
         VertexFormat,
         ColorGeometryInstanceAttribute,
+        ShowGeometryInstanceAttribute,
         Primitive,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -212,7 +214,8 @@ define([
             }),
             id : 'geometry',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.CORNFLOWERBLUE)
+                color : new ColorGeometryInstanceAttribute(Color.CORNFLOWERBLUE),
+                show : new ShowGeometryInstanceAttribute(true)
             }
         });
         var geometry2 = new GeometryInstance({
@@ -225,7 +228,8 @@ define([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
             id : 'geometry2',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.AQUAMARINE)
+                color : new ColorGeometryInstanceAttribute(Color.AQUAMARINE),
+                show : new ShowGeometryInstanceAttribute(true)
             }
         });
         //geometry2.color.alpha = 0.5; // TODO
@@ -238,7 +242,8 @@ define([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
             id : 'geometry3',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.BLANCHEDALMOND)
+                color : new ColorGeometryInstanceAttribute(Color.BLANCHEDALMOND),
+                show : new ShowGeometryInstanceAttribute(true)
             }
         });
         var geometry4 = new GeometryInstance({
@@ -253,7 +258,8 @@ define([
             }),
             id : 'geometry4',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 0.5))
+                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 0.5)),
+                show : new ShowGeometryInstanceAttribute(true)
             }
         });
         var primitive = new Primitive({
