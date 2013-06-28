@@ -52,10 +52,6 @@ define(['../Core/createGuid',
         return value;
     };
 
-    ConstantPositionProperty.prototype.setValue = function(value) {
-        this._value = value;
-    };
-
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple dynamicObject,
     //we can't use it for them either.
@@ -162,19 +158,11 @@ define(['../Core/createGuid',
     }
 
     function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
-        var feature;
-        var typeHandler;
-        if (dataSource.renderTopoJsonAsMesh) {
-            feature = topojson.mesh(geometry);
-            typeHandler = geoJsonObjectTypes[feature.type];
-            typeHandler(dataSource, geometry, feature, crsFunction, source);
-        } else {
-            for ( var property in geometry.objects) {
-                if (geometry.objects.hasOwnProperty(property)) {
-                    feature = topojson.feature(geometry, geometry.objects[property]);
-                    typeHandler = geoJsonObjectTypes[feature.type];
-                    typeHandler(dataSource, feature, feature, crsFunction, source);
-                }
+        for ( var property in geometry.objects) {
+            if (geometry.objects.hasOwnProperty(property)) {
+                var feature = topojson.feature(geometry, geometry.objects[property]);
+                var typeHandler = geoJsonObjectTypes[feature.type];
+                typeHandler(dataSource, feature, feature, crsFunction, source);
             }
         }
     }
@@ -215,9 +203,9 @@ define(['../Core/createGuid',
     };
 
     /**
-     * A {@link DataSource} which processes GeoJSON.  Since GeoJSON has no standard for styling content,
-     * we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties.
-     * Any changes to these objects will affect the resulting {@link DynamicObject} collection.
+     * A {@link DataSource} which processes both GeoJSON and TopoJSON data.  Since GeoJSON has no standard for styling
+     * content, we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties. Any
+     * changes to these objects will affect the resulting {@link DynamicObject} collection.
      * @alias GeoJsonDataSource
      * @constructor
      *
