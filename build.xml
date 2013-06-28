@@ -121,6 +121,7 @@
 	<property name="thirdPartyDirectory" location="ThirdParty" />
 	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
+	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.5/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
@@ -259,9 +260,11 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
+			<arg value="wrap=false" />
 			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
 			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
@@ -296,9 +299,10 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
-			<arg value="wrap=true" />
 			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
 			<arg value="name=${relativeAlmondPath}" />
 			<arg value="include=main" />
 			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
@@ -315,6 +319,7 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="name=Workers/${worker}" />
@@ -348,7 +353,7 @@
 		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
-			<arg value="optimizeCss=standard" />
+			<arg value="${rjsOptions}" />
 			<srcfile prefix="cssIn=" />
 			<targetfile prefix="out=" />
 			<identitymapper />
@@ -428,6 +433,7 @@
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=uglify2" />
 			<arg value="mainConfigFile=CesiumViewerStartup.js" />
 			<arg value="name=CesiumViewer/CesiumViewerStartup" />
@@ -437,7 +443,7 @@
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
-			<arg value="optimizeCss=standard" />
+			<arg value="${rjsOptions}" />
 			<arg value="cssIn=CesiumViewer.css" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewer.css" />
 		</exec>
