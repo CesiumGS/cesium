@@ -748,7 +748,8 @@ define([
                                 typedArray.set(value, j * componentsPerAttribute);
                             }
 
-                            attribute.vertexBuffer.copyFromArrayView(typedArray, offset * componentDatatype.sizeInBytes);
+                            var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                            attribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                         }
                     }
                 });
