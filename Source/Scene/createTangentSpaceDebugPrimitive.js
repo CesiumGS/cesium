@@ -21,6 +21,8 @@ define([
      * is red; binormal is green; and tangent is blue.  If an attribute is not
      * present, it is not drawn.
      *
+     * @exports createTangentSpaceDebugPrimitive
+     *
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.

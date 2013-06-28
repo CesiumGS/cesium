@@ -133,11 +133,20 @@ define([
          * @type Array
          *
          * @default undefined
+         *
+         * @readonly
          */
         this.geometryInstances = options.geometryInstances;
 
         /**
-         * DOC_TBA
+         * The {@link Appearance} used to shade this primitive.  Each geometry
+         * instance is shaded with the same appearance.  Some appearances, like
+         * {@link PerInstanceColorAppearance} allow giving each instance unique
+         * properties.
+         *
+         * @type Appearance
+         *
+         * @default undefined
          */
         this.appearance = options.appearance;
         this._appearance = undefined;

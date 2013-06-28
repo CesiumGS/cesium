@@ -207,10 +207,6 @@ define([
         this._createPrimitive = true;
     };
 
-    function defined(value) {
-        return typeof value !== 'undefined';
-    }
-
     /**
      * @private
      */
@@ -231,7 +227,7 @@ define([
             return;
         }
 
-        if (!this._createPrimitive && !defined(this._primitive)) {
+        if (!this._createPrimitive && (typeof this._primitive === 'undefined')) {
             // No positions/hierarchy to draw
             return;
         }
@@ -250,7 +246,7 @@ define([
 
             this._primitive = this._primitive && this._primitive.destroy();
 
-            if (!defined(this._positions) && !defined(this._polygonHierarchy)) {
+            if ((typeof this._positions === 'undefined') && (typeof this._polygonHierarchy === 'undefined')) {
                 return;
             }
 
