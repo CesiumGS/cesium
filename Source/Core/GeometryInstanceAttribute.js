@@ -99,8 +99,6 @@ define([
          * every three elements in <code>values</code> defines one attributes since
          * <code>componentsPerAttribute</code> is 3.
          *
-         * @type Array
-         *
          * @default undefined
          *
          * @example
@@ -108,7 +106,7 @@ define([
          *   componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
          *   componentsPerAttribute : 1,
          *   normalize : true,
-         *   value : 1.0
+         *   value : [1.0]
          * }
          */
         this.value = options.value;
@@ -130,14 +128,7 @@ define([
         result.componentDatatype = instanceAttribute.componentDatatype;
         result.componentsPerAttribute = instanceAttribute.componentsPerAttribute;
         result.normalize = instanceAttribute.normalize;
-
-        var otherValue = instanceAttribute.value;
-        var length = otherValue.length;
-        var value = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            value[i] = otherValue[i];
-        }
-        result.value = value;
+        result.value = new instanceAttribute.value.constructor(instanceAttribute.value);
 
         return result;
     };

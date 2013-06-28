@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './Color',
-        './ComponentDatatype'
+        './ComponentDatatype',
+        './DeveloperError'
     ], function(
         defaultValue,
         Color,
-        ComponentDatatype) {
+        ComponentDatatype,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -57,18 +59,22 @@ define([
         /**
          * DOC_TBA
          */
-        this.value = [
+        this.value = new Uint8Array([
             Color.floatToByte(red),
             Color.floatToByte(green),
             Color.floatToByte(blue),
             Color.floatToByte(alpha)
-        ];
+        ]);
     };
 
     /**
      * DOC_TBA
      */
     ColorGeometryInstanceAttribute.fromColor = function(color) {
+        if (typeof color === 'undefined') {
+            throw new DeveloperError('color is required.');
+        }
+
         return new ColorGeometryInstanceAttribute(color.red, color.green, color.blue, color.alpha);
     };
 
@@ -76,7 +82,11 @@ define([
      * DOC_TBA
      */
     ColorGeometryInstanceAttribute.toValue = function(color) {
-        return color.toBytes();
+        if (typeof color === 'undefined') {
+            throw new DeveloperError('color is required.');
+        }
+
+        return new Uint8Array(color.toBytes());
     };
 
     return ColorGeometryInstanceAttribute;

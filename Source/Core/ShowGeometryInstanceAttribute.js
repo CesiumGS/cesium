@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './ComponentDatatype'
+        './ComponentDatatype',
+        './DeveloperError'
     ], function(
         defaultValue,
-        ComponentDatatype) {
+        ComponentDatatype,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -60,7 +62,11 @@ define([
      * DOC_TBA
      */
     ShowGeometryInstanceAttribute.toValue = function(show) {
-        return [show];
+        if (typeof show === 'undefined') {
+            throw new DeveloperError('show is required.');
+        }
+
+        return new Uint8Array([show]);
     };
 
     return ShowGeometryInstanceAttribute;
