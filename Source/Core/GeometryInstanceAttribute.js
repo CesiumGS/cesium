@@ -130,7 +130,14 @@ define([
         result.componentDatatype = instanceAttribute.componentDatatype;
         result.componentsPerAttribute = instanceAttribute.componentsPerAttribute;
         result.normalize = instanceAttribute.normalize;
-        result.value = instanceAttribute.value;
+
+        var otherValue = instanceAttribute.value;
+        var length = otherValue.length;
+        var value = new Array(length);
+        for (var i = 0; i < length; ++i) {
+            value[i] = otherValue[i];
+        }
+        result.value = value;
 
         return result;
     };

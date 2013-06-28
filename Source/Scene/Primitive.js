@@ -99,7 +99,7 @@ define([
      *     }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
      *   attribute : {
-     *     color : new ColorGeometryInstanceAttribute(new Color(0.0, 1.0, 1.0, 0.5))
+     *     color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
      * });
      * var ellipsoidInstance = new GeometryInstance({
@@ -111,7 +111,7 @@ define([
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
      *   attribute : {
-     *     color : new ColorGeometryInstanceAttribute(new Color(1.0, 0.0, 1.0, 0.5))
+     *     color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
      *   }
      * });
      * var primitive = new Primitive({

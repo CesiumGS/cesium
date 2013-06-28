@@ -122,7 +122,7 @@ require(['Cesium'], function(Cesium) {
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5))
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
             }
         }));
         
@@ -133,7 +133,7 @@ require(['Cesium'], function(Cesium) {
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5))
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
             }
         }));
     }
@@ -162,7 +162,7 @@ require(['Cesium'], function(Cesium) {
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
             }
         }));
         
@@ -171,7 +171,7 @@ require(['Cesium'], function(Cesium) {
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
             }
         }));
     }
@@ -199,7 +199,7 @@ require(['Cesium'], function(Cesium) {
                 ])
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0))
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
             }
         }));
     }
@@ -212,7 +212,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : 4.0
+                //lineWidth : 4.0 //TODO: Fails with ANGLE
             }
         })
     }));

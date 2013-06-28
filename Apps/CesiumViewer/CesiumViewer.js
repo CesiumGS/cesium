@@ -214,7 +214,7 @@ define([
             }),
             id : 'geometry',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.CORNFLOWERBLUE),
+                color : ColorGeometryInstanceAttribute.fromColor(Color.CORNFLOWERBLUE),
                 show : new ShowGeometryInstanceAttribute(true)
             }
         });
@@ -228,11 +228,10 @@ define([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
             id : 'geometry2',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.AQUAMARINE),
+                color : ColorGeometryInstanceAttribute.fromColor(Color.AQUAMARINE),
                 show : new ShowGeometryInstanceAttribute(true)
             }
         });
-        //geometry2.color.alpha = 0.5; // TODO
         var geometry3 = new GeometryInstance({
             geometry : new BoxGeometry({
                 vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
@@ -242,7 +241,7 @@ define([
                 ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
             id : 'geometry3',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(Color.BLANCHEDALMOND),
+                color : ColorGeometryInstanceAttribute.fromColor(Color.BLANCHEDALMOND),
                 show : new ShowGeometryInstanceAttribute(true)
             }
         });
@@ -258,7 +257,7 @@ define([
             }),
             id : 'geometry4',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 0.5)),
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5),
                 show : new ShowGeometryInstanceAttribute(true)
             }
         });
@@ -440,7 +439,7 @@ define([
            }),
            id : 'customWithIndices',
            attributes : {
-               color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 1.0, 1.0))
+               color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
            }
         });
         scene.getPrimitives().add(new Primitive({
@@ -467,7 +466,7 @@ define([
             }),
             id : 'customWithoutIndices',
             attributes : {
-                color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 0.0, 1.0))
+                color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
             }
          });
          scene.getPrimitives().add(new Primitive({
@@ -489,7 +488,7 @@ define([
                          ])
                      }),
                      attributes : {
-                         color : new ColorGeometryInstanceAttribute(new Color(1.0, 1.0, 1.0, 1.0))
+                         color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
                      },
                      id : 'simple polyline'
                  }),
@@ -502,7 +501,7 @@ define([
                          ])
                      }),
                      attributes : {
-                         color : new ColorGeometryInstanceAttribute(new Color(1.0, 0.0, 1.0, 1.0))
+                         color : new ColorGeometryInstanceAttribute(1.0, 0.0, 1.0, 1.0)
                      },
                      id : 'another simple polyline'
                  })

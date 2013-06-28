@@ -9,8 +9,6 @@ define([
         ComponentDatatype) {
     "use strict";
 
-    var defaultColor = new Color(1.0, 0.0, 0.0, 0.5);
-
     /**
      * Value and type information for per-instance geometry color.
      *
@@ -28,15 +26,18 @@ define([
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-0.0, 0.0))), new Cartesian3(0.0, 0.0, 1000000.0)),
      *   id : 'box',
      *   attributes : {
-     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *     color : new ColorGeometryInstanceAttribute(red, green, blue, alpha)
      *   }
      * });
      *
      * @see GeometryInstance
      * @see GeometryInstanceAttribute
      */
-    var ColorGeometryInstanceAttribute = function(color) {
-        color = defaultValue(color, defaultColor);
+    var ColorGeometryInstanceAttribute = function(red, green, blue, alpha) {
+        red = defaultValue(red, 1.0);
+        green = defaultValue(green, 1.0);
+        blue = defaultValue(blue, 1.0);
+        alpha = defaultValue(alpha, 1.0);
 
         /**
          * DOC_TBA
@@ -56,19 +57,26 @@ define([
         /**
          * DOC_TBA
          */
-        this.value = ColorGeometryInstanceAttribute.toValue(color);
+        this.value = [
+            Color.floatToByte(red),
+            Color.floatToByte(green),
+            Color.floatToByte(blue),
+            Color.floatToByte(alpha)
+        ];
+    };
+
+    /**
+     * DOC_TBA
+     */
+    ColorGeometryInstanceAttribute.fromColor = function(color) {
+        return new ColorGeometryInstanceAttribute(color.red, color.green, color.blue, color.alpha);
     };
 
     /**
      * DOC_TBA
      */
     ColorGeometryInstanceAttribute.toValue = function(color) {
-        return [
-            Color.floatToByte(color.red),
-            Color.floatToByte(color.green),
-            Color.floatToByte(color.blue),
-            Color.floatToByte(color.alpha)
-        ];
+        return color.toBytes();
     };
 
     return ColorGeometryInstanceAttribute;
