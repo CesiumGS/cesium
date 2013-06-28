@@ -21,8 +21,7 @@ define([
         './Tipsify',
         './BoundingSphere',
         './Geometry',
-        './GeometryAttribute',
-        './RuntimeError'
+        './GeometryAttribute'
     ], function(
         barycentricCoordinates,
         defaultValue,
@@ -45,8 +44,7 @@ define([
         Tipsify,
         BoundingSphere,
         Geometry,
-        GeometryAttribute,
-        RuntimeError) {
+        GeometryAttribute) {
     "use strict";
 
     /**
@@ -1842,193 +1840,6 @@ define([
             wrapLongitudeLines(geometry);
         }
 
-        return geometry;
-    };
-
-    function computeNumberOfVertices(attribute) {
-        return attribute.values.length / attribute.componentsPerAttribute;
-    }
-
-    function computeAttributeSizeInBytes(attribute) {
-        return attribute.componentDatatype.sizeInBytes * attribute.componentsPerAttribute;
-    }
-
-    function createInterleavedBuffer(geometry, attributeNames) {
-        var j;
-        var name;
-        var attribute;
-        var attributes = geometry.attributes;
-
-        // Extract attribute names.
-        var names = [];
-        if (typeof attributeNames !== 'undefined') {
-            var length = attributeNames.length;
-            for (j = 0; j < length; ++j) {
-                name = attributeNames[j];
-                attribute = attributes[name];
-
-                // Attribute needs to have per-vertex values; not a constant value for all vertices.
-                if (typeof attribute !== 'undefined' && typeof attribute.values !== 'undefined') {
-                    names.push(name);
-
-                    if (attribute.componentDatatype === ComponentDatatype.DOUBLE) {
-                        attribute.componentDatatype = ComponentDatatype.FLOAT;
-                        attribute.values = ComponentDatatype.FLOAT.createTypedArray(attribute.values);
-                    }
-                }
-            }
-        } else {
-            for (name in attributes) {
-                // Attribute needs to have per-vertex values; not a constant value for all vertices.
-                if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
-                    attribute = attributes[name];
-                    names.push(name);
-
-                    if (attribute.componentDatatype === ComponentDatatype.DOUBLE) {
-                        attribute.componentDatatype = ComponentDatatype.FLOAT;
-                        attribute.values = ComponentDatatype.FLOAT.createTypedArray(attribute.values);
-                    }
-                }
-            }
-        }
-
-        // Validation.  Compute number of vertices.
-        var numberOfVertices;
-        var namesLength = names.length;
-
-        if (namesLength > 0) {
-            numberOfVertices = computeNumberOfVertices(attributes[names[0]]);
-
-            for (j = 1; j < namesLength; ++j) {
-                var currentNumberOfVertices = computeNumberOfVertices(attributes[names[j]]);
-
-                if (currentNumberOfVertices !== numberOfVertices) {
-                    throw new RuntimeError(
-                        'Each attribute list must have the same number of vertices.  ' +
-                        'Attribute ' + names[j] + ' has a different number of vertices ' +
-                        '(' + currentNumberOfVertices.toString() + ')' +
-                        ' than attribute ' + names[0] +
-                        ' (' + numberOfVertices.toString() + ').');
-                }
-            }
-        }
-
-        // Sort attributes by the size of their components.  From left to right, a vertex stores floats, shorts, and then bytes.
-        names.sort(function(left, right) {
-            return attributes[right].componentDatatype.sizeInBytes - attributes[left].componentDatatype.sizeInBytes;
-        });
-
-        // Compute sizes and strides.
-        var vertexSizeInBytes = 0;
-        var offsetsInBytes = {};
-
-        for (j = 0; j < namesLength; ++j) {
-            name = names[j];
-            attribute = attributes[name];
-
-            offsetsInBytes[name] = vertexSizeInBytes;
-            vertexSizeInBytes += computeAttributeSizeInBytes(attribute);
-        }
-
-        if (vertexSizeInBytes > 0) {
-            // Pad each vertex to be a multiple of the largest component datatype so each
-            // attribute can be addressed using typed arrays.
-            var maxComponentSizeInBytes = attributes[names[0]].componentDatatype.sizeInBytes; // Sorted large to small
-            var remainder = vertexSizeInBytes % maxComponentSizeInBytes;
-            if (remainder !== 0) {
-                vertexSizeInBytes += (maxComponentSizeInBytes - remainder);
-            }
-
-            // Total vertex buffer size in bytes, including per-vertex padding.
-            var vertexBufferSizeInBytes = numberOfVertices * vertexSizeInBytes;
-
-            // Create array for interleaved vertices.  Each attribute has a different view (pointer) into the array.
-            var buffer = new ArrayBuffer(vertexBufferSizeInBytes);
-            var views = {};
-
-            for (j = 0; j < namesLength; ++j) {
-                name = names[j];
-                var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
-
-                views[name] = {
-                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
-                    index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
-                    strideInComponentType : vertexSizeInBytes / sizeInBytes
-                };
-            }
-
-            // Copy attributes into one interleaved array.
-            // PERFORMANCE_IDEA:  Can we optimize these loops?
-            for (j = 0; j < numberOfVertices; ++j) {
-                for ( var n = 0; n < namesLength; ++n) {
-                    name = names[n];
-                    attribute = attributes[name];
-                    var values = attribute.values;
-                    var view = views[name];
-                    var pointer = view.pointer;
-
-                    var numberOfComponents = attribute.componentsPerAttribute;
-                    for ( var k = 0; k < numberOfComponents; ++k) {
-                        pointer[view.index + k] = values[(j * numberOfComponents) + k];
-                    }
-
-                    view.index += view.strideInComponentType;
-                }
-            }
-
-            return {
-                buffer : buffer,
-                offsetsInBytes : offsetsInBytes,
-                vertexSizeInBytes : vertexSizeInBytes
-            };
-        }
-
-        // No attributes to interleave.
-        return undefined;
-    }
-
-    /**
-     * DOC_TBA
-     */
-    GeometryPipeline.interleaveAttributes = function(geometry, attributeNames) {
-        if (typeof geometry === 'undefined') {
-            throw new DeveloperError('geometry is required.');
-        }
-
-        var interleavedAttributes = createInterleavedBuffer(geometry, attributeNames);
-        if (typeof interleavedAttributes !== 'undefined') {
-            var buffer = interleavedAttributes.buffer;
-            var offsetsInBytes = interleavedAttributes.offsetsInBytes;
-            var vertexSizeInBytes = interleavedAttributes.vertexSizeInBytes;
-
-            var attributes = geometry.attributes;
-            var name;
-            var attribute;
-
-            if (typeof attributeNames !== 'undefined') {
-                var namesLength = attributeNames.length;
-                for (var i = 0; i < namesLength; ++i) {
-                    name = attributeNames[i];
-                    attribute = attributes[name];
-                    if (typeof attribute.values !== 'undefined') {
-                        attribute.values = undefined;
-                        attribute.interleavedValues = buffer;
-                        attribute.offsetInBytes = offsetsInBytes[name];
-                        attribute.strideInBytes = vertexSizeInBytes;
-                    }
-                }
-            } else {
-                for (name in attributes) {
-                    if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
-                        attribute = attributes[name];
-                        attribute.values = undefined;
-                        attribute.interleavedValues = buffer;
-                        attribute.offsetInBytes = offsetsInBytes[name];
-                        attribute.strideInBytes = vertexSizeInBytes;
-                    }
-                }
-            }
-        }
         return geometry;
     };
 

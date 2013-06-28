@@ -14,6 +14,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/Cartesian3',
         '../Renderer/BufferUsage',
+        '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createPickFragmentShaderSource',
@@ -33,6 +34,7 @@ define([
         ComponentDatatype,
         Cartesian3,
         BufferUsage,
+        VertexLayout,
         CommandLists,
         DrawCommand,
         createPickFragmentShaderSource,
@@ -301,28 +303,6 @@ define([
         return attributesInAllInstances;
     }
 
-    function getInterleavedAttributeNames(geometry, perInstanceNames) {
-        var interleavedNames = [];
-        var attributes = geometry.attributes;
-        var length = perInstanceNames.length;
-        for (var name in attributes) {
-            if (attributes.hasOwnProperty(name)) {
-                var isPerInstanceName = false;
-                for (var i = 0; i < length; ++i) {
-                    if (name === perInstanceNames[i]) {
-                        isPerInstanceName = true;
-                        break;
-                    }
-                }
-
-                if (!isPerInstanceName) {
-                    interleavedNames.push(name);
-                }
-            }
-        }
-        return interleavedNames;
-    }
-
     function addPerInstanceAttributes(primitive, instances, names) {
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
@@ -403,23 +383,44 @@ define([
             GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
 
-
-        var geometries;
         if (!context.getElementIndexUint()) {
             // Break into multiple geometries to fit within unsigned short indices if needed
-            geometries = GeometryPipeline.fitToUnsignedShortIndices(geometry);
-        } else {
-            // Unsigned int indices are supported.  No need to break into multiple geometries.
-            geometries = [geometry];
+            return GeometryPipeline.fitToUnsignedShortIndices(geometry);
         }
 
-        var interleavedNames = getInterleavedAttributeNames(geometry, perInstanceAttributeNames);
-        length = geometries.length;
-        for (i = 0; i < length; ++i) {
-            GeometryPipeline.interleaveAttributes(geometries[i], interleavedNames);
+        // Unsigned int indices are supported.  No need to break into multiple geometries.
+        return [geometry];
+    }
+
+    function createPerInstanceVAAttributes(context, geometry, attributeIndices, names) {
+        var vaAttributes = [];
+
+        var bufferUsage = BufferUsage.DYNAMIC_DRAW;
+        var attributes = geometry.attributes;
+
+        var length = names.length;
+        for (var i = 0; i < length; ++i) {
+            var name = names[i];
+            var attribute = attributes[name];
+
+            var componentDatatype = attribute.componentDatatype;
+            if (componentDatatype === ComponentDatatype.DOUBLE) {
+                componentDatatype = ComponentDatatype.FLOAT;
+            }
+
+            var vertexBuffer = context.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
+            vaAttributes.push({
+                index : attributeIndices[name],
+                vertexBuffer : vertexBuffer,
+                componentDatatype : componentDatatype,
+                componentsPerAttribute : attribute.componentsPerAttribute,
+                normalize : attribute.normalize
+            });
+
+            delete attributes[name];
         }
 
-        return geometries;
+        return vaAttributes;
     }
 
     function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
@@ -629,12 +630,20 @@ define([
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
+            var geometry;
+            var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(insts);
+
             var va = [];
             length = geometries.length;
             for (i = 0; i < length; ++i) {
+                geometry = geometries[i];
+                var vaAttributes = createPerInstanceVAAttributes(context, geometry, this._attributeIndices, perInstanceAttributeNames);
                 va.push(context.createVertexArrayFromGeometry({
-                    geometry : geometries[i],
-                    attributeIndices : this._attributeIndices
+                    geometry : geometry,
+                    attributeIndices : this._attributeIndices,
+                    bufferUsage : BufferUsage.STATIC_DRAW,
+                    vertexLayout : VertexLayout.INTERLEAVED,
+                    vertexArrayAttributes : vaAttributes
                 }));
             }
 
@@ -642,7 +651,7 @@ define([
             this._perInstanceAttributes = computePerInstanceAttributeIndices(insts, va, this._attributeIndices);
 
             for (i = 0; i < length; ++i) {
-                var geometry = geometries[i];
+                geometry = geometries[i];
 
                 // renderState, shaderProgram, and uniformMap for commands are set below.
 
