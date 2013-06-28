@@ -430,12 +430,13 @@
 		<mkdir dir="${cesiumViewerOutputDirectory}" />
 		<property name="relativeCesiumViewerOutputDirectory" location="${cesiumViewerOutputDirectory}" relative="true" basedir="${cesiumViewerDirectory}" />
 
+		<!-- mainConfigFile is relative to the build.js file -->
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
 			<arg value="${rjsOptions}" />
 			<arg value="optimize=uglify2" />
-			<arg value="mainConfigFile=CesiumViewerStartup.js" />
+			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
 			<arg value="name=CesiumViewer/CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
