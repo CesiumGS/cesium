@@ -86,7 +86,7 @@ require(['Cesium'], function(Cesium) {
             semiMajorAxis : 500000.0,
             bearing : Cesium.Math.toRadians(30.0),
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        }),
+        })
     });
 
     var circleInstance = new Cesium.GeometryInstance({
@@ -94,7 +94,7 @@ require(['Cesium'], function(Cesium) {
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 35.0)),
             radius : 200000.0,
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        }),
+        })
     });
     
     primitives.add(new Cesium.Primitive({
@@ -181,12 +181,12 @@ require(['Cesium'], function(Cesium) {
     
     instances = [];
     
-    for (var i = 0; i < 40; i += 2) {
+    for (i = 0; i < 40; i += 2) {
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cesium.Cartographic.fromDegrees(-100.0 + i, 48.0),
-                    Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0),
+                    Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0)
                 ])
             }),
             color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
