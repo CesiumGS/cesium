@@ -37,7 +37,7 @@ define([
      * @param {Extent} [extent=undefined] The extent, which defines the rectangular region to draw.
      * @param {Number} [granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
-     * @param {Number} [rotation=0.0] The angle relative, in radians, to north that the extent is rotate.  Positive angles rotate counter-clockwise.
+     * @param {Number} [rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
      * @param {Boolean} [show=true] Determines if this primitive will be shown.
      * @param {Material} [material=undefined] The surface appearance of the primitive.
      *
@@ -93,7 +93,7 @@ define([
         this._height = undefined;
 
         /**
-         * The angle relative, in radians, to north that the extent is rotate.
+         * The angle, in radians, relative to north that the extent is rotated.
          * Positive angles rotate counter-clockwise.
          *
          * @type Number

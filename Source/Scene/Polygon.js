@@ -30,7 +30,7 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A renderable polygon or hierarchy of polygons.
      *
      * @alias Polygon
      * @constructor
@@ -55,33 +55,54 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The ellipsoid that the polygon is drawn on.
+         *
+         * @type Ellipsoid
+         *
+         * @default Ellipsoid.WGS84
          */
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = undefined;
 
         /**
-         * DOC_TBA
+         * The distance, in radians, between each latitude and longitude in the underlying geometry.
+         * A lower granularity fits the curvature of the {@link Polygon#ellipsoid} better,
+         * but uses more triangles.
+         *
+         * @type Number
+         *
+         * @default CesiumMath.toRadians(1.0)
          */
         this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         this._granularity = undefined;
 
         /**
-         * DOC_TBA
+         * The height, in meters, that the polygon is raised above the {@link Polygon#ellipsoid}.
+         *
+         * @type Number
+         *
+         * @default 0.0
          */
         this.height = defaultValue(options.height, 0.0);
         this._height = undefined;
 
         /**
-         * DOC_TBA
+         * The angle, in radians, relative to north that the polygon's texture is rotated.
+         * Positive angles rotate counter-clockwise.
+         *
+         * @type Number
+         *
+         * @default 0.0
          */
-        this.textureRotationAngle = options.textureRotationAngle;
+        this.textureRotationAngle = defaultValue(options.textureRotationAngle, 0.0);
         this._textureRotationAngle = undefined;
 
         /**
          * Determines if this primitive will be shown.
          *
          * @type Boolean
+         *
+         * @default true
          */
         this.show = defaultValue(options.show, true);
 
@@ -116,7 +137,8 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Returns the positions that define the boundary of the polygon.  If {@link Polygon#configureFromPolygonHierarchy}
+     * was used, this returns <code>undefined</code>.
      *
      * @memberof Polygon
      *
@@ -129,7 +151,7 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Sets positions that define the boundary of the polygon.
      *
      * @memberof Polygon
      *
@@ -186,20 +208,24 @@ define([
      * </code>
      * </pre>
      *
-     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @example
      * // A triangle within a triangle
      * var hierarchy = {
-     *     positions : [new Cartesian3(-634066.5629045101,-4608738.034138676,4348640.761750969),
-     *                  new Cartesian3(-1321523.0597310204,-5108871.981065817,3570395.2500986718),
-     *                  new Cartesian3(46839.74837473363,-5303481.972379478,3530933.5841716)],
-     *     holes : [{
-     *         positions :[new Cartesian3(-646079.44483647,-4811233.11175887,4123187.2266941597),
-     *                     new Cartesian3(-1024015.4454943262,-5072141.413164587,3716492.6173834214),
-     *                     new Cartesian3(-234678.22583880965,-5189078.820849883,3688809.059214336)]
-     *      }]
-     *  };
+     *   positions : [
+     *     new Cartesian3(-634066.5629045101, -4608738.034138676, 4348640.761750969),
+     *     new Cartesian3(-1321523.0597310204, -5108871.981065817, 3570395.2500986718),
+     *     new Cartesian3(46839.74837473363, -5303481.972379478, 3530933.5841716)
+     *   ],
+     *   holes : [{
+     *     positions :[
+     *       new Cartesian3(-646079.44483647, -4811233.11175887, 4123187.2266941597),
+     *       new Cartesian3(-1024015.4454943262, -5072141.413164587, 3716492.6173834214),
+     *       new Cartesian3(-234678.22583880965, -5189078.820849883, 3688809.059214336)
+     *     ]
+     *   }]
+     * };
      */
     Polygon.prototype.configureFromPolygonHierarchy  = function(hierarchy) {
         this._positions = undefined;
@@ -281,11 +307,11 @@ define([
      * If this object was destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      *
-     * @memberof Extent
+     * @memberof Polygon
      *
      * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see Extent#destroy
+     * @see Polygon#destroy
      */
     Polygon.prototype.isDestroyed = function() {
         return false;
@@ -305,10 +331,10 @@ define([
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
-     * @see Extent#isDestroyed
+     * @see Polygon#isDestroyed
      *
      * @example
-     * extent = extent && extent.destroy();
+     * polygon = polygon && polygon.destroy();
      */
     Polygon.prototype.destroy = function() {
         this._primitive = this._primitive && this._primitive.destroy();
