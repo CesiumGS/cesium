@@ -46,9 +46,9 @@ defineSuite(['DynamicScene/CzmlDataSource',
     };
 
     var simple;
-    var simpleUrl = '../../Apps/CesiumViewer/Gallery/simple.czml';
+    var simpleUrl = 'Data/CZML/simple.czml';
     var vehicle;
-    var vehicleUrl = '../../Apps/CesiumViewer/Gallery/Vehicle.czml';
+    var vehicleUrl = 'Data/CZML/Vehicle.czml';
 
     beforeAll(function() {
         loadJson(simpleUrl).then(function(result) {
