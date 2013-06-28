@@ -6,7 +6,19 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
+     *
+     *  @param {String} name A unique identifier for the credit
+     *  @param {String} [text=undefined] The text to be displayed on the screen if no image is specified.
+     *  @param {String} [image=undefined] The source location for an image
+     *  @param {String} [link=undefined] A URL location for which the credit will be hyperlinked
+     *
+     *  @alias Credit
+     *  @constructor
+     *
+     *  @example
+     *  //Create a credit with an image and link
+     *  var credit = new Credit('cesium-credit', undefined, '/images/cesium_logo.png', 'http://cesium.agi.com/');
      */
 
     var Credit = function(name, text, image, link) {
@@ -17,35 +29,31 @@ define([
             text = name;
         }
         /**
-         * DOC_TBA
+         * The unique identifier for the credit.  If more than one credit has the same name, only one will be displayed.
+         *
+         * @type String
          */
         this.name = name;
 
         /**
-         * DOC_TBA
+         * The text to be displayed on screen if no image is specified.
+         * When text, image and link are <code>undefined</code>, <code>text = name</code>
+         *
+         * @type String
          */
         this.text = text;
 
         /**
-         * DOC_TBA
+         * The source location for the image.
+         *
+         * @type String
          */
         this.image = image;
 
         /**
-         * DOC_TBA
+         * A URL location for which the credit will be hyperlinked
          */
         this.link = link;
-    };
-
-    Credit.equals = function(left, right) {
-        if (left.name === right.name) {
-            return true;
-        }
-        return false;
-    };
-
-    Credit.prototype.equals = function(credit) {
-        return Credit.equals(this, credit);
     };
 
     return Credit;

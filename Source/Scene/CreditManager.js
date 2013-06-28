@@ -6,7 +6,15 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * The credit manager is responsible for displaying credits on screen.
+     *
+     * @param {HTMLElement} container The HTML element where credits will be displayed
+     *
+     * @alias CreditManager
+     * @constructor
+     *
+     * @example
+     * var CreditManager = new CreditManager(creditContainer);
      */
 
     var delimeter = ' • ';
@@ -17,15 +25,22 @@ define([
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
-        this.visibleImageCredits = {};
         this.container = container;
         this.textContainer = textContainer;
         this.imageContainer = imageContainer;
+        this.visibleImageCredits = {};
         this.defaultTextCredits = [];
         this.visibleTextCredits = [];
         this.previousCredits = [];
     };
 
+    /**
+     * Adds credits that will persist until they are removed
+     *
+     * @memberof CreditManager
+     *
+     * @param {Credit} credit The credit to added to defaults
+     */
     CreditManager.prototype.addDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
             if (typeof credit.image === 'undefined') {
@@ -37,6 +52,13 @@ define([
         }
     };
 
+    /**
+     * Removes a default credit
+     *
+     * @memberof CreditManager
+     *
+     * @param {Credit} credit The credit to be removed from defaults
+     */
     CreditManager.prototype.removeDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
             if (typeof credit.image === 'undefined') {
@@ -51,17 +73,26 @@ define([
         }
     };
 
+    /**
+     * Displays all credits in a list to the credit container
+     *
+     * @memberof CreditManager
+     *
+     * @param Array {Credit} credits The credits to display
+     */
     CreditManager.prototype.showCredits = function(credits) {
-        var previousCredits = this.previousCredits;
-        if (previousCredits.length !== credits.length) {
-            processCredits(this, credits);
-            this.previousCredits = credits;
-        } else {
-            for (var i = 0; i < credits.length; i++) {
-                if (credits[i] !== this.previousCredits[i]) {
-                    processCredits(this, credits);
-                    this.previousCredits = credits;
-                    break;
+        if (typeof credits !== 'undefined') {
+            var previousCredits = this.previousCredits;
+            if (previousCredits.length !== credits.length) {
+                processCredits(this, credits);
+                this.previousCredits = credits;
+            } else {
+                for (var i = 0; i < credits.length; i++) {
+                    if (credits[i] !== this.previousCredits[i]) {
+                        processCredits(this, credits);
+                        this.previousCredits = credits;
+                        break;
+                    }
                 }
             }
         }
