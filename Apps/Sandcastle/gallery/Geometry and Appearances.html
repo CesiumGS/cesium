@@ -86,7 +86,7 @@ require(['Cesium'], function(Cesium) {
             semiMajorAxis : 500000.0,
             bearing : Cesium.Math.toRadians(30.0),
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        }),
+        })
     });
 
     var circleInstance = new Cesium.GeometryInstance({
@@ -94,7 +94,7 @@ require(['Cesium'], function(Cesium) {
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 35.0)),
             radius : 200000.0,
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
-        }),
+        })
     });
     
     primitives.add(new Cesium.Primitive({
@@ -149,7 +149,8 @@ require(['Cesium'], function(Cesium) {
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        ellipsoid : new Cesium.Ellipsoid(0.5, 0.5, 1.0)
     });
 
     instances = [];
@@ -189,12 +190,12 @@ require(['Cesium'], function(Cesium) {
     
     instances = [];
     
-    for (var i = 0; i < 40; i += 2) {
+    for (i = 0; i < 40; i += 2) {
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cesium.Cartographic.fromDegrees(-100.0 + i, 48.0),
-                    Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0),
+                    Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0)
                 ])
             }),
             attributes : {
@@ -216,7 +217,28 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
-    // TODO: wall
+    // Create a single wall
+    var wallInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.WallGeometry({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0)
+            ])
+        })
+    });
+    var wallMaterial = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+    var wallPrimitive = new Cesium.Primitive({
+        geometryInstances : wallInstance,
+        appearance : new Cesium.MaterialAppearance({
+            material : wallMaterial,
+            faceForward : true
+        })
+    });
+    wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
+    scene.getPrimitives().add(wallPrimitive);
     
     Sandcastle.finishedLoading();
 });

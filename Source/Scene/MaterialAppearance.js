@@ -36,7 +36,7 @@ define([
      * @param {Boolean} [options.faceForward=false] When <code>true</code>, the fragment shader flips the surface normal as needed to ensure that the normal faces the viewer to avoid dark spots.  This is useful when both sides of a geometry should be shaded like {@link WallGeometry}.
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link MaterialAppearance#renderState} has alpha blending enabled.
      * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link MaterialAppearance#renderState} has backface culling enabled.
-     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.BASIC] The type of materials that will be supported.
+     * @param {MaterialAppearance.MaterialSupport} [options.materialSupport=MaterialAppearance.MaterialSupport.TEXTURED] The type of materials that will be supported.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
@@ -63,7 +63,7 @@ define([
 
         var translucent = defaultValue(options.translucent, true);
         var closed = defaultValue(options.closed, false);
-        var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.BASIC);
+        var materialSupport = defaultValue(options.materialSupport, MaterialAppearance.MaterialSupport.TEXTURED);
 
         /**
          * The material used to determine the fragment color.  Unlike other {@link MaterialAppearance}

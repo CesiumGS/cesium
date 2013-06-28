@@ -1808,7 +1808,19 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Splits the geometry's primitives, by introducing new vertices and indices,that
+     * intersect the International Date Line so that no primitives cross longitude
+     * -180/180 degrees.  This is not required for 3D drawing, but is required for
+     * correcting drawing in 2D and Columbus view.
+     *
+     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     *
+     * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
+     *
+     * @exception {DeveloperError} geometry is required.
+     *
+     * @example
+     * geometry = GeometryPipeline.wrapLongitude(geometry);
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
         if (typeof geometry === 'undefined') {
