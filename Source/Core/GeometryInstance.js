@@ -2,11 +2,13 @@
 define([
         './defaultValue',
         './Matrix4',
-        './Geometry'
+        './Geometry',
+        './GeometryInstanceAttribute'
     ], function(
         defaultValue,
         Matrix4,
-        Geometry) {
+        Geometry,
+        GeometryInstanceAttribute) {
     "use strict";
 
     /**
@@ -20,8 +22,8 @@ define([
      *
      * @param {Geometry} [options.geometry=undefined] The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
-     * @param {Color} [options.color=undefined] The color of the instance when a per-instance color appearance is used.
-     * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context#pick}
+     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Context#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
+     * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -32,18 +34,22 @@ define([
      *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
      * var instanceBottom = new GeometryInstance({
-     *     geometry : geometry,
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     color : Color.AQUA,
-     *     pickData : 'bottom'
+     *   geometry : geometry,
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'bottom'
      * });
      * var instanceTop = new GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-     *   color : Color.WHITE,
-     *   pickData : 'top'
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'top'
      * });
      *
      * @see Geometry
@@ -73,29 +79,33 @@ define([
         this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
 
         /**
-         * The color of the geometry when a per-instance color appearance is used.
+         * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
          *
-         * @type Color
-         *
-         * @default undefined
-         */
-        this.color = options.color;
-
-        /**
-         * User-defined object returned when the instance is picked.
+         * @type Object
          *
          * @default undefined
          *
          * @see Context#pick
+         * @see Primitive#getGeometryInstanceAttributes
          */
-        this.pickData = options.pickData;
+        this.id = options.id;
+
+        /**
+         * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
+         * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
+         *
+         * @type Object
+         *
+         * @default undefined
+         */
+        this.attributes = defaultValue(options.attributes, {});
     };
 
     /**
      * Duplicates a GeometryInstance instance, including a deep copy of the geometry.
      * <p>
-     * {@link GeometryInstance#pickData} is shallow copied so that the same <code>
-     * pickData</code> reference is returned by {@link Context#pick} regardless of
+     * {@link GeometryInstance#id} is shallow copied so that the same <code>
+     * id</code> reference is returned by {@link Context#pick} regardless of
      * if the geometry instance was cloned.
      * </p>
      *
@@ -112,8 +122,16 @@ define([
 
         result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
         result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
-        result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
-        result.pickData = this.pickData;                    // Shadow copy
+        result.id = this.id;                                // Shallow copy
+
+        var attributes = this.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = GeometryInstanceAttribute.clone(attributes[property]);
+            }
+        }
+        result.attributes = newAttributes;
 
         return result;
     };
