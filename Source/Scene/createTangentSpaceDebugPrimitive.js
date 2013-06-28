@@ -1,7 +1,6 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
@@ -9,7 +8,6 @@ define([
         './PerInstanceColorAppearance'
     ], function(
         DeveloperError,
-        Color,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         GeometryPipeline,
@@ -58,7 +56,7 @@ define([
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', length),
               attributes : {
-                  color : new ColorGeometryInstanceAttribute(new Color(1.0, 0.0, 0.0, 1.0))
+                  color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
               },
               modelMatrix : modelMatrix
             }));
@@ -68,7 +66,7 @@ define([
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
               attributes : {
-                  color : new ColorGeometryInstanceAttribute(new Color(0.0, 1.0, 0.0, 1.0))
+                  color : new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
               },
               modelMatrix : modelMatrix
             }));
@@ -78,7 +76,7 @@ define([
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
               attributes : {
-                  color : new ColorGeometryInstanceAttribute(new Color(0.0, 0.0, 1.0, 1.0))
+                  color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0)
               },
               modelMatrix : modelMatrix
             }));
