@@ -96,7 +96,9 @@ define([
      *       CesiumMath.toRadians(40.0))
      *     }),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
-     *   color : new Color(0.0, 1.0, 1.0, 0.5) // TODO: make attribute
+     *   attribute : {
+     *     color : new ColorGeometryInstanceAttribute(new Color(0.0, 1.0, 1.0, 0.5))
+     *   }
      * });
      * var ellipsoidInstance = new GeometryInstance({
      *   geometry : new EllipsoidGeometry({
@@ -106,7 +108,9 @@ define([
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
-     *   color : new Color(1.0, 0.0, 1.0, 0.5) // TODO: make attribute
+     *   attribute : {
+     *     color : new ColorGeometryInstanceAttribute(new Color(1.0, 0.0, 1.0, 0.5))
+     *   }
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
@@ -364,7 +368,7 @@ define([
         // Add pickColor attribute for picking individual instances
         addPickColorAttribute(primitive, instances, context);
 
-        // add attributes to the geometry for each per-instance geometry
+        // add attributes to the geometry for each per-instance attribute
         var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
         addPerInstanceAttributes(primitive, instances, perInstanceAttributeNames);
 

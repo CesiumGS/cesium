@@ -30,26 +30,26 @@ define([
      * // One instance positions the box on the bottom and colored aqua.
      * // The other instance positions the box on the top and color white.
      * var geometry = new BoxGeometry({
-     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *   vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
      * var instanceBottom = new GeometryInstance({
-     *     geometry : geometry,
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     attributes : {
-     *         color : new ColorGeometryInstanceAttribute(Color.AQUA)
-     *     }
-     *     id : 'bottom'
+     *   geometry : geometry,
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'bottom'
      * });
      * var instanceTop = new GeometryInstance({
-     *     geometry : geometry,
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-     *     attributes : {
-     *         color : new ColorGeometryInstanceAttribute(Color.AQUA)
-     *     }
-     *     id : 'top'
+     *   geometry : geometry,
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'top'
      * });
      *
      * @see Geometry

@@ -6,9 +6,7 @@ define([
     "use strict";
 
     /**
-     * Values and type information for per-instance geometry attributes.  A {@link Geometry}
-     * generally contains one or more attributes.  All attributes together form
-     * the geometry's vertices.
+     * Values and type information for per-instance geometry attributes.
      *
      * @alias GeometryInstanceAttribute
      * @constructor
@@ -20,24 +18,24 @@ define([
      *
      * @example
      * var instance = new GeometryInstance({
-     *     geometry : new BoxGeometry({
-     *         vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *         dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
-     *     }),
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     id : 'box',
-     *     attributes : {
-     *         color : new GeometryInstanceAttribute({
-     *             componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-     *             componentsPerAttribute : 4,
-     *             normalize : true,
-     *             value : [255, 255, 0 255]
-     *         }
-     *     }
+     *   geometry : new BoxGeometry({
+     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *   }),
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-0.0, 0.0))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   id : 'box',
+     *   attributes : {
+     *       color : new GeometryInstanceAttribute({
+     *         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+     *         componentsPerAttribute : 4,
+     *         normalize : true,
+     *         value : [255, 255, 0 255]
+     *       }
+     *   }
      * });
      *
-     * @see GeometryInstance
+     * @see ColorGeometryInstanceAttribute
+     * @see ShowGeometryInstanceAttribute
      */
     var GeometryInstanceAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -63,10 +61,10 @@ define([
          *
          * @example
          * show : new GeometryInstanceAttribute({
-         *     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-         *     componentsPerAttribute : 1,
-         *     normalize : true,
-         *     value : 1.0
+         *   componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+         *   componentsPerAttribute : 1,
+         *   normalize : true,
+         *   value : 1.0
          * }
          */
         this.componentsPerAttribute = options.componentsPerAttribute;
@@ -107,10 +105,10 @@ define([
          *
          * @example
          * show : new GeometryInstanceAttribute({
-         *     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-         *     componentsPerAttribute : 1,
-         *     normalize : true,
-         *     value : 1.0
+         *   componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+         *   componentsPerAttribute : 1,
+         *   normalize : true,
+         *   value : 1.0
          * }
          */
         this.value = options.value;

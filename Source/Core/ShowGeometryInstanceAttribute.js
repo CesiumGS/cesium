@@ -17,16 +17,16 @@ define([
      *
      * @example
      * var instance = new GeometryInstance({
-     *     geometry : new BoxGeometry({
-     *         vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *         dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
-     *     }),
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     id : 'box',
-     *     attributes : {
-     *         show : new ShowGeometryInstanceAttribute(false)
-     *     }
+     *   geometry : new BoxGeometry({
+     *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *     dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
+     *   }),
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   id : 'box',
+     *   attributes : {
+     *     show : new ShowGeometryInstanceAttribute(false)
+     *   }
      * });
      *
      * @see GeometryInstance
