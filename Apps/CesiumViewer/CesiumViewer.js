@@ -84,9 +84,12 @@ define([
 
         if (typeof endUserOptions.source !== 'undefined') {
             var source;
-            if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
+            var sourceUrl = endUserOptions.source.toUpperCase();
+            if (endsWith(sourceUrl, ".GEOJSON") || //
+            endsWith(sourceUrl, ".JSON") || //
+            endsWith(sourceUrl, ".TOPOJSON")) {
                 source = new GeoJsonDataSource();
-            } else if (endsWith(endUserOptions.source.toUpperCase(), ".CZML")) {
+            } else if (endsWith(sourceUrl, ".CZML")) {
                 source = new CzmlDataSource();
             } else {
                 loadingIndicator.style.display = 'none';
