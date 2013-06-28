@@ -15,7 +15,8 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicMaterialProperty',
         './DynamicObjectCollection',
-        '../ThirdParty/when'], function(
+        '../ThirdParty/when',
+        '../ThirdParty/topojson'], function(
                 createGuid,
                 Cartographic,
                 Color,
@@ -32,7 +33,8 @@ define(['../Core/createGuid',
                 DynamicPolygon,
                 DynamicMaterialProperty,
                 DynamicObjectCollection,
-                when) {
+                when,
+                topojson) {
     "use strict";
 
     //DynamicPositionProperty is pretty hard to use with non-CZML based data
@@ -48,10 +50,6 @@ define(['../Core/createGuid',
             return value.clone(result);
         }
         return value;
-    };
-
-    ConstantPositionProperty.prototype.setValue = function(value) {
-        this._value = value;
     };
 
     //GeoJSON specifies only the Feature object has a usable id property
@@ -159,6 +157,16 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
+    function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
+        for ( var property in geometry.objects) {
+            if (geometry.objects.hasOwnProperty(property)) {
+                var feature = topojson.feature(geometry, geometry.objects[property]);
+                var typeHandler = geoJsonObjectTypes[feature.type];
+                typeHandler(dataSource, feature, feature, crsFunction, source);
+            }
+        }
+    }
+
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
         //TODO holes
         var polygons = geometry.coordinates;
@@ -179,7 +187,8 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     var geometryTypes = {
@@ -189,13 +198,14 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     /**
-     * A {@link DataSource} which processes GeoJSON.  Since GeoJSON has no standard for styling content,
-     * we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties.
-     * Any changes to these objects will affect the resulting {@link DynamicObject} collection.
+     * A {@link DataSource} which processes both GeoJSON and TopoJSON data.  Since GeoJSON has no standard for styling
+     * content, we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties. Any
+     * changes to these objects will affect the resulting {@link DynamicObject} collection.
      * @alias GeoJsonDataSource
      * @constructor
      *

@@ -84,34 +84,42 @@ define([
 
         if (typeof endUserOptions.source !== 'undefined') {
             var source;
-            if (endsWith(endUserOptions.source.toUpperCase(), ".GEOJSON")) {
+            var sourceUrl = endUserOptions.source.toUpperCase();
+            if (endsWith(sourceUrl, ".GEOJSON") || //
+            endsWith(sourceUrl, ".JSON") || //
+            endsWith(sourceUrl, ".TOPOJSON")) {
                 source = new GeoJsonDataSource();
-            } else {
+            } else if (endsWith(sourceUrl, ".CZML")) {
                 source = new CzmlDataSource();
-            }
-            source.loadUrl(endUserOptions.source).then(function() {
-                viewer.dataSources.add(source);
-
-                var dataClock = source.getClock();
-                if (typeof dataClock !== 'undefined') {
-                    dataClock.clone(viewer.clock);
-                    viewer.timeline.updateFromClock();
-                    viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                }
-
-                if (typeof endUserOptions.lookAt !== 'undefined') {
-                    var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
-                    if (typeof dynamicObject !== 'undefined') {
-                        viewer.trackedObject = dynamicObject;
-                    } else {
-                        window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
-                    }
-                }
-            }, function(e) {
-                window.alert(e);
-            }).always(function() {
+            } else {
                 loadingIndicator.style.display = 'none';
-            });
+                window.alert("Unknown format: " + endUserOptions.source);
+            }
+            if (typeof source !== 'undefined') {
+                source.loadUrl(endUserOptions.source).then(function() {
+                    viewer.dataSources.add(source);
+
+                    var dataClock = source.getClock();
+                    if (typeof dataClock !== 'undefined') {
+                        dataClock.clone(viewer.clock);
+                        viewer.timeline.updateFromClock();
+                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                    }
+
+                    if (typeof endUserOptions.lookAt !== 'undefined') {
+                        var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
+                        if (typeof dynamicObject !== 'undefined') {
+                            viewer.trackedObject = dynamicObject;
+                        } else {
+                            window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
+                        }
+                    }
+                }, function(e) {
+                    window.alert(e);
+                }).always(function() {
+                    loadingIndicator.style.display = 'none';
+                });
+            }
         } else {
             loadingIndicator.style.display = 'none';
         }
