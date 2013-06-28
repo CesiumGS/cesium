@@ -22,7 +22,7 @@ define([
         './BoundingSphere',
         './Geometry',
         './GeometryAttribute',
-        './RuntimeError',
+        './RuntimeError'
     ], function(
         barycentricCoordinates,
         defaultValue,
