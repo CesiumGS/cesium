@@ -125,12 +125,11 @@ define([
                         p2.subtract(position, p2);
                         normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
                         recomputeNormal = false;
-                        if (vertexFormat.tangent || vertexFormat.binormal) {
-                            Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-                        }
-                        if (vertexFormat.binormal) {
-                            binormal = Cartesian3.cross(normal, tangent, binormal);
-                            Cartesian3.normalize(binormal, binormal);
+                    }
+                    if (vertexFormat.tangent || vertexFormat.binormal) {
+                        binormal = ellipsoid.geodeticSurfaceNormal(position, binormal);
+                        if (vertexFormat.tangent) {
+                            tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
                         }
                     }
 
@@ -149,9 +148,9 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
-                        tangents[attrIndex + length] = tangent.x;
-                        tangents[attrIndex1 + length] = tangent.y;
-                        tangents[attrIndex2 + length] = tangent.z;
+                        tangents[attrIndex + length] = -tangent.x;
+                        tangents[attrIndex1 + length] = -tangent.y;
+                        tangents[attrIndex2 + length] = -tangent.z;
 
                         tangents[attrIndex] = tangent.x;
                         tangents[attrIndex1] = tangent.y;
@@ -159,9 +158,9 @@ define([
                     }
 
                     if (vertexFormat.binormal) {
-                        binormals[attrIndex + length] = binormal.x;
-                        binormals[attrIndex1 + length] = binormal.y;
-                        binormals[attrIndex2 + length] = binormal.z;
+                        binormals[attrIndex + length] = -binormal.x;
+                        binormals[attrIndex1 + length] = -binormal.y;
+                        binormals[attrIndex2 + length] = -binormal.z;
 
                         binormals[attrIndex] = binormal.x;
                         binormals[attrIndex1] = binormal.y;
