@@ -1,14 +1,14 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         './Primitive',
         './PerInstanceColorAppearance'
     ], function(
         DeveloperError,
-        Color,
+        ColorGeometryInstanceAttribute,
         GeometryInstance,
         GeometryPipeline,
         Primitive,
@@ -55,7 +55,9 @@ define([
         if (typeof attributes.normal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', length),
-              color : new Color(1.0, 0.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -63,7 +65,9 @@ define([
         if (typeof attributes.binormal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
-              color : new Color(0.0, 1.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -71,7 +75,9 @@ define([
         if (typeof attributes.tangent !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
-              color : new Color(0.0, 0.0, 1.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }

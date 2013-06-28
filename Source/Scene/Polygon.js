@@ -286,7 +286,7 @@ define([
                     ellipsoid : this.ellipsoid,
                     granularity : this.granularity
                 }),
-                pickData : this
+                id : this
             });
 
             this._primitive = new Primitive({
