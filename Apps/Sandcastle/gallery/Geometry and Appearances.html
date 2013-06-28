@@ -145,7 +145,8 @@ require(['Cesium'], function(Cesium) {
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        ellipsoid : new Cesium.Ellipsoid(0.5, 0.5, 1.0)
     });
 
     instances = [];
@@ -206,7 +207,28 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
-    // TODO: wall
+    // Create a single wall
+    var wallInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.WallGeometry({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0)
+            ])
+        })
+    });
+    var wallMaterial = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+    var wallPrimitive = new Cesium.Primitive({
+        geometryInstances : wallInstance,
+        appearance : new Cesium.MaterialAppearance({
+            material : wallMaterial,
+            faceForward : true
+        })
+    });
+    wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
+    scene.getPrimitives().add(wallPrimitive);
     
     Sandcastle.finishedLoading();
 });
