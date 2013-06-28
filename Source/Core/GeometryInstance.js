@@ -23,7 +23,7 @@ define([
      * @param {Geometry} [options.geometry=undefined] The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Context#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
-     * @param {Object} [options.attributes] DOC_TBA
+     * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -81,6 +81,8 @@ define([
         /**
          * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
          *
+         * @type Object
+         *
          * @default undefined
          *
          * @see Context#pick
@@ -89,7 +91,12 @@ define([
         this.id = options.id;
 
         /**
-         * DOC_TBA
+         * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
+         * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
+         *
+         * @type Object
+         *
+         * @default undefined
          */
         this.attributes = defaultValue(options.attributes, {});
     };

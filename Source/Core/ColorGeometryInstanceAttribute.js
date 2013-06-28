@@ -42,22 +42,47 @@ define([
         alpha = defaultValue(alpha, 1.0);
 
         /**
-         * DOC_TBA
+         * The datatype of each component in the attribute, e.g., individual elements in
+         * {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @type ComponentDatatype
+         *
+         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
+         *
+         * @readonly
          */
         this.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
 
         /**
-         * DOC_TBA
+         * The number of components in the attributes, i.e., {@link ColorGeometryInstanceAttribute#value}.
+         *
+         * @type Number
+         *
+         * @default 4
+         *
+         * @readonly
          */
         this.componentsPerAttribute = 4;
 
         /**
-         * DOC_TBA
+         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
+         * indicate that the components should be mapped to the range [0, 1] (unsigned)
+         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @readonly
          */
         this.normalize = true;
 
         /**
-         * DOC_TBA
+         * The values for the attributes stored in a typed array.
+         *
+         * @type Uint8Array
+         *
+         * @default [1.0, 0.0, 0.0, 0.5]
          */
         this.value = new Uint8Array([
             Color.floatToByte(red),
@@ -79,7 +104,17 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Converts a color to a typed array that can be used to assign a color attribute.
+     *
+     * @param {Color} color The color.
+     *
+     * @returns {Uint8Array} The typed array in the attribute's format.
+     *
+     * @exception {DeveloperError} color is required.
+     *
+     * @example
+     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
      */
     ColorGeometryInstanceAttribute.toValue = function(color) {
         if (typeof color === 'undefined') {

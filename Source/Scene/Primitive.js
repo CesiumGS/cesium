@@ -816,7 +816,18 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
+     *
+     * @param {Object} id The id of the {@link GeometryInstance}.
+     *
+     * @returns {Object} The typed array in the attribute's format.
+     *
+     * @exception {DeveloperError} id is required.
+     *
+     * @example
+     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
+     * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
         if (typeof id === 'undefined') {

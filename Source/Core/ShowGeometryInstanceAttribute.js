@@ -38,28 +38,63 @@ define([
         show = defaultValue(show, true);
 
         /**
-         * DOC_TBA
+         * The datatype of each component in the attribute, e.g., individual elements in
+         * {@link ShowGeometryInstanceAttribute#value}.
+         *
+         * @type ComponentDatatype
+         *
+         * @default {@link ComponentDatatype.UNSIGNED_BYTE}
+         *
+         * @readonly
          */
         this.componentDatatype = ComponentDatatype.UNSIGNED_BYTE;
 
         /**
-         * DOC_TBA
+         * The number of components in the attributes, i.e., {@link ShowGeometryInstanceAttribute#value}.
+         *
+         * @type Number
+         *
+         * @default 1
+         *
+         * @readonly
          */
         this.componentsPerAttribute = 1;
 
         /**
-         * DOC_TBA
+         * When <code>true</code> and <code>componentDatatype</code> is an integer format,
+         * indicate that the components should be mapped to the range [0, 1] (unsigned)
+         * or [-1, 1] (signed) when they are accessed as floating-point for rendering.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @readonly
          */
         this.normalize = true;
 
         /**
-         * DOC_TBA
+         * The values for the attributes stored in a typed array.
+         *
+         * @type Uint8Array
+         *
+         * @default [1.0]
          */
         this.value = ShowGeometryInstanceAttribute.toValue(show);
     };
 
     /**
-     * DOC_TBA
+     * Converts a boolean show to a typed array that can be used to assign a show attribute.
+     *
+     * @param {Boolean} show The show value.
+     *
+     * @returns {Uint8Array} The typed array in the attribute's format.
+     *
+     * @exception {DeveloperError} show is required.
+     *
+     * @example
+     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
      */
     ShowGeometryInstanceAttribute.toValue = function(show) {
         if (typeof show === 'undefined') {
