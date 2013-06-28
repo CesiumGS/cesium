@@ -122,7 +122,7 @@ define([
 
         result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
         result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
-        result.id = this.id;                                // Shadow copy
+        result.id = this.id;                                // Shallow copy
 
         var attributes = this.attributes;
         var newAttributes = {};

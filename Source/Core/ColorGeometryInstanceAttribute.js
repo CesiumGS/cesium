@@ -93,7 +93,21 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a new {@link ColorGeometryInstanceAttribute} instance given the provided {@link Color}.
+     *
+     * @param {Color} color The color.
+     *
+     * @returns {ColorGeometryInstanceAttribute} The new {@link ColorGeometryInstanceAttribute} instance.
+     *
+     * @exception {DeveloperError} color is required.
+     *
+     * @example
+     * var instance = new GeometryInstance({
+     *   geometry : // ...
+     *   attributes : {
+     *     color : ColorGeometryInstanceAttribute.fromColor(Color.CORNFLOWERBLUE),
+     *   }
+     * });
      */
     ColorGeometryInstanceAttribute.fromColor = function(color) {
         if (typeof color === 'undefined') {
