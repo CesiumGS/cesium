@@ -144,7 +144,7 @@ define([
 
             var terrainHeight = 0.0;
             if (terrain !== undefined) {
-                var h = terrain[i].height;
+                var h = terrain[i/3].height;
                 if (!isNaN(h)) {
                     terrainHeight = h;
                 }
