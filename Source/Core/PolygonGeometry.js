@@ -98,8 +98,10 @@ define([
 
             length /= 2;
             var stOffset = length * 2 / 3;
+
             for (var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
+
                 if (vertexFormat.st) {
                     var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
@@ -160,7 +162,6 @@ define([
                         binormals[attrIndex + length] = binormal.x;
                         binormals[attrIndex1 + length] = binormal.y;
                         binormals[attrIndex2 + length] = binormal.z;
-
 
                         binormals[attrIndex] = binormal.x;
                         binormals[attrIndex1] = binormal.y;
@@ -483,7 +484,7 @@ define([
         if (countDivide < 1) {
             countDivide = 0;
         }
-        var numVertices = Math.pow(2, countDivide) + 1;
+        var numVertices = Math.pow(2, countDivide);
 
         var distanceBetweenVertices = length / numVertices;
 
@@ -492,7 +493,7 @@ define([
         positions[index++] = p0.x;
         positions[index++] = p0.y;
         positions[index++] = p0.z;
-        for (var i = 1; i < numVertices - 1; i++) {
+        for (var i = 1; i < numVertices; i++) {
             var p = getPointAtDistance(p0, p1, i*distanceBetweenVertices, length);
             positions[index++] = p[0];
             positions[index++] = p[1];
