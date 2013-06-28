@@ -212,7 +212,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                //lineWidth : 4.0 //TODO: Fails with ANGLE
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
     }));
