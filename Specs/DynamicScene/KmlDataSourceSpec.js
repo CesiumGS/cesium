@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite(['DynamicScene/KmlDataSource',
              'DynamicScene/DynamicObjectCollection',
+             'Core/loadXML',
              'Core/Event'
             ], function(
                     KmlDataSource,
+                    loadXML,
                     DynamicObjectCollection,
                     Event) {
     "use strict";
@@ -19,6 +21,10 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(dataSource.getIsTimeVarying()).toEqual(false);
     });
 
-    it('A new empty test', function() {
+    it('Just want to see placemark data type in the debugger', function() {
+        var dataSource = new KmlDataSource();
+        var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/KML_Samples.kml';
+
+        dataSource.loadUrl(url);
     });
 });
