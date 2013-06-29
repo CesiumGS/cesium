@@ -11,8 +11,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         SCENE2D : new Enumeration(0, 'SCENE2D', {
             morphTime : 0.0
@@ -21,8 +22,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 1
          */
         COLUMBUS_VIEW : new Enumeration(1, 'COLUMBUS_VIEW', {
             morphTime : 0.0
@@ -31,8 +33,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 2
          */
         SCENE3D : new Enumeration(2, 'SCENE3D', {
             morphTime : 1.0
@@ -41,8 +44,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 3
          */
         MORPHING : new Enumeration(3, 'MORPHING')
     };

@@ -11,31 +11,34 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1100
          */
         DONT_CARE : new Enumeration(0x1100, 'DONT_CARE'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1101
          */
         FASTEST : new Enumeration(0x1101, 'FASTEST'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1102
          */
         NICEST : new Enumeration(0x1102, 'NICEST'),
 
         /**
          * DOC_TBA
          *
-         * @param mipmapHint
+         * @param {MipmapHint} mipmapHint
          *
          * @returns {Boolean}
          */

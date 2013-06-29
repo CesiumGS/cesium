@@ -71,68 +71,73 @@ define([
 
         /**
          * The tiling scheme used to tile the surface.
-         * @type TilingScheme
+         * @type {TilingScheme}
          */
         this.tilingScheme = description.tilingScheme;
 
         /**
          * The x coordinate.
-         * @type Number
+         * @type {Number}
          */
         this.x = description.x;
 
         /**
          * The y coordinate.
-         * @type Number
+         * @type {Number}
          */
         this.y = description.y;
 
         /**
          * The level-of-detail, where zero is the coarsest, least-detailed.
-         * @type Number
+         * @type {Number}
          */
         this.level = description.level;
 
         /**
          * The parent of this tile in a tiling scheme.
-         * @type Tile
+         * @type {Tile}
          */
         this.parent = description.parent;
 
         /**
          * The children of this tile in a tiling scheme.
-         * @type Array
+         * @type {Array}
+         * @default undefined
          */
         this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
          * west properties in radians.
-         * @type Extent
+         * @type {Extent}
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
         /**
          * The current state of the tile in the tile load pipeline.
-         * @type TileState
+         * @type {TileState}
+         * @default {@link TileState.START}
          */
         this.state = TileState.START;
 
         /**
          * The previous tile in the {@link TileReplacementQueue}.
-         * @type Tile
+         * @type {Tile}
+         * @default undefined
          */
         this.replacementPrevious = undefined;
 
         /**
          * The next tile in the {@link TileReplacementQueue}.
-         * @type Tile
+         * @type {Tile}
+         * @default undefined
          */
         this.replacementNext = undefined;
 
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type Array
+         * @type {Array}
+         * @default []
          */
         this.imagery = [];
 
@@ -140,21 +145,24 @@ define([
          * The distance from the camera to this tile, updated when the tile is selected
          * for rendering.  We can get rid of this if we have a better way to sort by
          * distance - for example, by using the natural ordering of a quadtree.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.distance = 0.0;
 
         /**
          * The world coordinates of the southwest corner of the tile's extent.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.southwestCornerCartesian = new Cartesian3();
 
         /**
          * The world coordinates of the northeast corner of the tile's extent.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.northeastCornerCartesian = new Cartesian3();
 
@@ -162,7 +170,8 @@ define([
          * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
          * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.westNormal = new Cartesian3();
 
@@ -172,7 +181,8 @@ define([
          * Because points of constant latitude do not necessary lie in a plane, positions below this
          * plane are not necessarily inside the tile, but they are close.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.southNormal = new Cartesian3();
 
@@ -180,7 +190,8 @@ define([
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
          * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.eastNormal = new Cartesian3();
 
@@ -190,7 +201,8 @@ define([
          * Because points of constant latitude do not necessary lie in a plane, positions below this
          * plane are not necessarily inside the tile, but they are close.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.northNormal = new Cartesian3();
 

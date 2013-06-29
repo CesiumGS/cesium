@@ -11,71 +11,79 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         ZERO : new Enumeration(0, 'ZERO'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1E00
          */
         KEEP : new Enumeration(0x1E00, 'KEEP'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1E01
          */
         REPLACE : new Enumeration(0x1E01, 'REPLACE'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1E02
          */
         INCREMENT : new Enumeration(0x1E02, 'INCREMENT'), // WebGL: INCR
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1E03
          */
         DECREMENT : new Enumeration(0x1E03, 'DECREMENT'), // WebGL: DECR
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x150A
          */
         INVERT : new Enumeration(0x150A, 'INVERT'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8507
          */
         INCREMENT_WRAP : new Enumeration(0x8507, 'INCREMENT_WRAP'), // WebGL: INCR_WRAP
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8508
          */
         DECREMENT_WRAP : new Enumeration(0x8508, 'DECREMENT_WRAP'), // WebGL: DECR_WRAP
 
         /**
          * DOC_TBA
          *
-         * @param stencilOperation
+         * @param {StencilOperation} stencilOperation
          *
          * @returns {Boolean}
          */

@@ -155,7 +155,7 @@ define([
         /**
          * Gets or sets the tooltip.  This property is observable.
          *
-         * @type String
+         * @type {String}
          */
         this.tooltip = 'View Home';
 

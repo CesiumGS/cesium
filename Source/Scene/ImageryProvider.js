@@ -38,6 +38,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultAlpha = undefined;
 
@@ -52,6 +53,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultBrightness = undefined;
 
@@ -66,6 +68,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultContrast = undefined;
 
@@ -78,6 +81,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultHue = undefined;
 
@@ -91,6 +95,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultSaturation = undefined;
 
@@ -104,6 +109,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultGamma = undefined;
 
