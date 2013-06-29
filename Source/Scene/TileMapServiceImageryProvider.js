@@ -7,6 +7,7 @@ define([
         '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
+        '../Core/RuntimeError',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
@@ -18,6 +19,7 @@ define([
         loadXML,
         writeTextToCanvas,
         Extent,
+        RuntimeError,
         ImageryProvider,
         WebMercatorTilingScheme,
         GeographicTilingScheme) {
@@ -104,6 +106,7 @@ define([
             that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
             that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
             var tilesets = xml.getElementsByTagName('TileSet');
+            that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesets[0].getAttribute('order'), 10));
             that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
             // extent handling
@@ -136,6 +139,16 @@ define([
             }
             if (that._extent.north > tilingScheme.getExtent().north) {
                 that._extent.north = tilingScheme.getExtent().north;
+            }
+
+            // Check the number of tiles at the minimum level and throw if it's too big.
+            var swTile = tilingScheme.positionToTileXY(that._extent.getSouthwest(), that._minimumLevel);
+            var neTile = tilingScheme.positionToTileXY(that._extent.getNortheast(), that._minimumLevel);
+            var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+            if (tileCount > 4) {
+                var message = 'The Tile Map Service (TMS) imagery at ' + that._url + ' cannot be used because it has too many tiles (' + tileCount + ') at the root level.';
+                console.log(message);
+                throw new RuntimeError(message);
             }
 
             that._tilingScheme = tilingScheme;
@@ -218,6 +231,21 @@ define([
             throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
         }
         return this._tileHeight;
+    };
+
+    /**
+     * Gets the maximum level-of-detail that can be requested.  This function should
+     * not be called before {@link TileMapServiceImageryProvider#isReady} returns true.
+     *
+     * @memberof TileMapServiceImageryProvider
+     *
+     * @returns {Number} The maximum level.
+     */
+    TileMapServiceImageryProvider.prototype.getMinimumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
+        }
+        return this._minimumLevel;
     };
 
     /**

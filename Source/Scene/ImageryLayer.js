@@ -415,6 +415,13 @@ define([
             imageryLevel = maximumLevel;
         }
 
+        if (typeof imageryProvider.getMinimumLevel !== 'undefined') {
+            var minimumLevel = imageryProvider.getMinimumLevel();
+            if (imageryLevel < minimumLevel) {
+                imageryLevel = minimumLevel;
+            }
+        }
+
         var imageryTilingScheme = imageryProvider.getTilingScheme();
         var northwestTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getNorthwest(), imageryLevel);
         var southeastTileCoordinates = imageryTilingScheme.positionToTileXY(extent.getSoutheast(), imageryLevel);
