@@ -1,9 +1,5 @@
 ({
-    wrap : {
-        start : '(function() {\n\
-"use strict";',
-        end : '}());'
-    },
+    wrap : true,
     useStrict : true,
     optimizeCss : 'standard'
 })
