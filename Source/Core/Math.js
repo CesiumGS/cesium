@@ -17,7 +17,6 @@ define([
      * 0.1
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON1 = 0.1;
 
@@ -25,7 +24,6 @@ define([
      * 0.01
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON2 = 0.01;
 
@@ -33,7 +31,6 @@ define([
      * 0.001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON3 = 0.001;
 
@@ -41,7 +38,6 @@ define([
      * 0.0001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON4 = 0.0001;
 
@@ -49,7 +45,6 @@ define([
      * 0.00001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON5 = 0.00001;
 
@@ -57,7 +52,6 @@ define([
      * 0.000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON6 = 0.000001;
 
@@ -65,7 +59,6 @@ define([
      * 0.0000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON7 = 0.0000001;
 
@@ -73,7 +66,6 @@ define([
      * 0.00000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON8 = 0.00000001;
 
@@ -81,7 +73,6 @@ define([
      * 0.000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON9 = 0.000000001;
 
@@ -89,7 +80,6 @@ define([
      * 0.0000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON10 = 0.0000000001;
 
@@ -97,7 +87,6 @@ define([
      * 0.00000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON11 = 0.00000000001;
 
@@ -105,7 +94,6 @@ define([
      * 0.000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON12 = 0.000000000001;
 
@@ -113,7 +101,6 @@ define([
      * 0.0000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON13 = 0.0000000000001;
 
@@ -121,7 +108,6 @@ define([
      * 0.00000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON14 = 0.00000000000001;
 
@@ -129,7 +115,6 @@ define([
      * 0.000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON15 = 0.000000000000001;
 
@@ -137,7 +122,6 @@ define([
      * 0.0000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON16 = 0.0000000000000001;
 
@@ -145,7 +129,6 @@ define([
      * 0.00000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON17 = 0.00000000000000001;
 
@@ -153,7 +136,6 @@ define([
      * 0.000000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON18 = 0.000000000000000001;
 
@@ -161,7 +143,6 @@ define([
      * 0.0000000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON19 = 0.0000000000000000001;
 
@@ -169,7 +150,6 @@ define([
      * 0.00000000000000000001
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.EPSILON20 = 0.00000000000000000001;
 
@@ -177,7 +157,6 @@ define([
      * 3.986004418e14
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.GRAVITATIONALPARAMETER = 3.986004418e14;
 
@@ -273,11 +252,10 @@ define([
     };
 
     /**
-     * 1/pi
+     * pi
      *
      * @type {Number}
      * @constant
-     * @default Math.PI
      * @see czm_pi
      */
     CesiumMath.PI = Math.PI;
@@ -287,7 +265,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default 1.0 / Math.PI
      * @see czm_oneOverPi
      */
     CesiumMath.ONE_OVER_PI = 1.0 / Math.PI;
@@ -297,18 +274,15 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default Math.PI / 2.0
      * @see czm_piOverTwo
      */
     CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
 
     /**
      * pi/3
-     * <br /><br />
      *
      * @type {Number}
      * @constant
-     * @default Math.PI / 3.0
      * @see czm_piOverThree
      */
     CesiumMath.PI_OVER_THREE = Math.PI / 3.0;
@@ -318,7 +292,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default Math.PI / 4.0
      * @see czm_piOverFour
      */
     CesiumMath.PI_OVER_FOUR = Math.PI / 4.0;
@@ -328,7 +301,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default Math.PI / 3.0
      * @see czm_piOverSix
      */
     CesiumMath.PI_OVER_SIX = Math.PI / 6.0;
@@ -338,7 +310,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default (3.0 * Math.PI) / 2.0
      * @see czm_threePiOver2
      */
     CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
@@ -348,7 +319,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default 2.0 * Math.PI
      * @see czm_twoPi
      */
     CesiumMath.TWO_PI = 2.0 * Math.PI;
@@ -358,7 +328,6 @@ define([
      *
      * @type {Number}
      * @constant
-     * @default 1.0 / (2.0 * Math.PI)
      * @see czm_oneOverTwoPi
      */
     CesiumMath.ONE_OVER_TWO_PI = 1.0 / (2.0 * Math.PI);
@@ -368,7 +337,7 @@ define([
      *
      * @type {Number}
      * @constant
-     * @deafult Math.PI / 180.0
+     * @default Math.PI / 180.0
      * @see czm_radiansPerDegree
      */
     CesiumMath.RADIANS_PER_DEGREE = Math.PI / 180.0;
