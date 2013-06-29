@@ -23,12 +23,14 @@ define(function() {
         /**
          * The numeric value of the enumeration.
          * @type {Number}
+         * @default undefined
          */
         this.value = value;
 
         /**
          * The name of the enumeration for debugging purposes.
          * @type {String}
+         * @default undefined
          */
         this.name = name;
 
