@@ -41,6 +41,7 @@ define([
         this.y = defaultValue(y, 0.0);
 
         /**
+         * The Z component.
          * @type {Number}
          * @default 0.0
          */
