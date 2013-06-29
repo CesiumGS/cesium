@@ -258,7 +258,7 @@ define([
      */
     BingMapsImageryProvider.prototype.getMinimumLevel = function() {
         if (!this._ready) {
-            throw new DeveloperError('getMaximumLevel must not be called before the imagery provider is ready.');
+            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
         }
         return 0;
     };

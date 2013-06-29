@@ -37,6 +37,9 @@ define([
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {String} [description.credit=''] A string crediting the data source, which is displayed on the canvas.
+     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+     *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+     *                 to result in rendering problems.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
