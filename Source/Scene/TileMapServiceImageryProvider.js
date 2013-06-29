@@ -7,7 +7,6 @@ define([
         '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
-        '../Core/RuntimeError',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
@@ -19,7 +18,6 @@ define([
         loadXML,
         writeTextToCanvas,
         Extent,
-        RuntimeError,
         ImageryProvider,
         WebMercatorTilingScheme,
         GeographicTilingScheme) {
