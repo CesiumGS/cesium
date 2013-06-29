@@ -5,7 +5,6 @@ define(['../Core/ClockRange',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadXML',
-        './processKml',
         './DynamicClock',
         './DynamicObjectCollection'
         ], function(
@@ -15,14 +14,53 @@ define(['../Core/ClockRange',
                 Event,
                 Iso8601,
                 loadXML,
-                processKml,
                 DynamicClock,
                 DynamicObjectCollection) {
     "use strict";
 
+    //Copied from GeoJsonDataSource
+    var ConstantPositionProperty = function(value) {
+        this._value = value;
+    };
+
+    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
+        var value = this._value;
+        if (typeof value.clone === 'function') {
+            return value.clone(result);
+        }
+        return value;
+    };
+
+    ConstantPositionProperty.prototype.setValue = function(value) {
+        this._value = value;
+    };
+
+    // GeoJSON processing functions
+    function processPlacemark(placemark, dynamicObjectCollection) {
+        dynamicObjectCollection.getOrCreateObject();
+
+    //    if(placemark.geometry === 'Point')
+    }
+
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        processKml(kml, dynamicObjectCollection, sourceUri);
+
+        if (typeof kml === 'undefined') {
+            throw new DeveloperError('kml is required.');
+        }
+        if (typeof dynamicObjectCollection === 'undefined') {
+            throw new DeveloperError('dynamicObjectCollection is required.');
+        }
+
+        var array = kml.getElementByTagName('Placemark');
+        for ( var i = 0, len = array.length; i < len; i++){
+            processPlacemark(array[i], dynamicObjectCollection);
+        }
+
+
+
+
+        /*
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
@@ -46,7 +84,7 @@ define(['../Core/ClockRange',
             clock.currentTime = clock.startTime;
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
-        return clock;
+        return clock;*/
     }
 
     /**
@@ -127,12 +165,12 @@ define(['../Core/ClockRange',
      * @exception {DeveloperError} KML is required.
      */
     KmlDataSource.prototype.load = function(kml, source) {
-        if (typeof KML === 'undefined') {
-            throw new DeveloperError('KML is required.');
+        if (typeof kml === 'undefined') {
+            throw new DeveloperError('kml is required.');
         }
 
         this._dynamicObjectCollection.clear();
-        this._clock = loadKML(this, kml, source);
+        loadKML(this, kml, source);
     };
 
 
