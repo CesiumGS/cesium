@@ -159,7 +159,7 @@ define([
          * where the logo for terrain and imagery providers will be drawn.
          *
          * @type {Cartesian2}
-         * @default Cartesian2.ZERO
+         * @default {@link Cartesian2.ZERO}
          */
         this.logoOffset = Cartesian2.ZERO.clone();
         this._logos = [];
