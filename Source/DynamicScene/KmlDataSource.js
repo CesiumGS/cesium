@@ -2,6 +2,7 @@
 define(['../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/DeveloperError',
+        '../Core/RuntimeError',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadXML',
@@ -11,12 +12,56 @@ define(['../Core/ClockRange',
                 ClockRange,
                 ClockStep,
                 DeveloperError,
+                RuntimeError,
                 Event,
                 Iso8601,
                 loadXML,
                 DynamicClock,
                 DynamicObjectCollection) {
     "use strict";
+
+    function processPoint() {
+
+    }
+
+    function processLineString(){
+
+    }
+
+    function processLinearRing(){
+
+    }
+
+    function processPolygon(){
+
+    }
+
+    function processMultiGeometry(){
+
+    }
+
+    function processModel(){
+
+    }
+
+    function processGxTrack(){
+
+    }
+
+    function processGxMultiTrack(){
+
+    }
+    //Object that holds all supported Geometry
+    var geometryTypes = {
+            Point : processPoint,
+            LineString : processLineString,
+            LinearRing : processLinearRing,
+            Polygon : processPolygon,
+            MultiGeometry : processMultiGeometry,
+            Model : processModel,
+            gxTrack : processGxTrack,
+            gxMultitrack : processGxMultiTrack
+        };
 
     //Copied from GeoJsonDataSource
     var ConstantPositionProperty = function(value) {
@@ -38,23 +83,22 @@ define(['../Core/ClockRange',
     // KML processing functions
     function processPlacemark(placemark, dynamicObjectCollection) {
         //dynamicObjectCollection.getOrCreateObject();
+
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
-            // Then iterate over all the points in the given placemark
-            // This is surely not the most efficient way to approach this
-            // problem but it's a way to get familiar with the debugger,
-            // must improve it later
-            var item = placemark.childNodes.item(i);
-            if(item.nodeName === 'Point'){
-                processPoint(item);
+            var node = placemark.childNodes.item(i);
+            //Does the node hold a supported Geometry type?
+            if(geometryTypes.hasOwnProperty(node.nodeName)){
+                placemark.geometry = node.nodeName;
+                var geometryType = placemark.geometry;
+                var geometryHandler = geometryTypes[geometryType];
+                if (typeof geometryHandler === 'undefined') {
+                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
+                }
+                geometryHandler();
             }
         }
     }
-
-    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
-
-    }
-
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
 
@@ -99,7 +143,6 @@ define(['../Core/ClockRange',
         }
         return clock;*/
     }
-
 
 
 
