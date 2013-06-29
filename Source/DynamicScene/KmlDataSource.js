@@ -35,11 +35,24 @@ define(['../Core/ClockRange',
         this._value = value;
     };
 
-    // GeoJSON processing functions
+    // KML processing functions
     function processPlacemark(placemark, dynamicObjectCollection) {
-        dynamicObjectCollection.getOrCreateObject();
+        //dynamicObjectCollection.getOrCreateObject();
+        // I want to iterate over every placemark
+        for(var i = 0, len = placemark.childNodes.length; i < len; i++){
+            // Then iterate over all the points in the given placemark
+            // This is surely not the most efficient way to approach this
+            // problem but it's a way to get familiar with the debugger,
+            // must improve it later
+            var item = placemark.childNodes.item(i);
+            if(item.nodeName === 'Point'){
+                processPoint(item);
+            }
+        }
+    }
 
-    //    if(placemark.geometry === 'Point')
+    function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
+
     }
 
     function loadKML(dataSource, kml, sourceUri) {
@@ -86,6 +99,9 @@ define(['../Core/ClockRange',
         }
         return clock;*/
     }
+
+
+
 
     /**
      * A {@link DataSource} which processes KML.
