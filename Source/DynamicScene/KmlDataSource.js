@@ -52,7 +52,7 @@ define(['../Core/ClockRange',
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
-        var array = kml.getElementByTagName('Placemark');
+        var array = kml.getElementsByTagName('Placemark');
         for ( var i = 0, len = array.length; i < len; i++){
             processPlacemark(array[i], dynamicObjectCollection);
         }
