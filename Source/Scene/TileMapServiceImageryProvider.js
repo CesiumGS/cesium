@@ -141,7 +141,9 @@ define([
                 that._extent.north = tilingScheme.getExtent().north;
             }
 
-            // Check the number of tiles at the minimum level and throw if it's too big.
+            // Check the number of tiles at the minimum level.  If it's more than four,
+            // try requesting the lower levels anyway, because starting at the higher minimum
+            // level will cause too many tiles to be downloaded and rendered.
             var swTile = tilingScheme.positionToTileXY(that._extent.getSouthwest(), that._minimumLevel);
             var neTile = tilingScheme.positionToTileXY(that._extent.getNortheast(), that._minimumLevel);
             var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
@@ -232,12 +234,12 @@ define([
     };
 
     /**
-     * Gets the maximum level-of-detail that can be requested.  This function should
+     * Gets the minimum level-of-detail that can be requested.  This function should
      * not be called before {@link TileMapServiceImageryProvider#isReady} returns true.
      *
      * @memberof TileMapServiceImageryProvider
      *
-     * @returns {Number} The maximum level.
+     * @returns {Number} The minimum level.
      */
     TileMapServiceImageryProvider.prototype.getMinimumLevel = function() {
         if (!this._ready) {
