@@ -146,9 +146,7 @@ define([
             var neTile = tilingScheme.positionToTileXY(that._extent.getNortheast(), that._minimumLevel);
             var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
             if (tileCount > 4) {
-                var message = 'The Tile Map Service (TMS) imagery at ' + that._url + ' cannot be used because it has too many tiles (' + tileCount + ') at the root level.';
-                console.log(message);
-                throw new RuntimeError(message);
+                that._minimumLevel = 0;
             }
 
             that._tilingScheme = tilingScheme;
