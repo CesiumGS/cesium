@@ -58,7 +58,7 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(placemark, dynamicObjectCollection) {
+    function processPlacemark(dataSource, placemark, dynamicObjectCollection) {
         var objectId = placemark.id;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
@@ -76,40 +76,40 @@ define(['../Core/createGuid',
                 if (typeof geometryHandler === 'undefined') {
                     throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
-                geometryHandler();
+                geometryHandler(dataSource, placemark, placemark.geometry);
             }
         }
     }
 
-    function processPoint() {
+    function processPoint(dataSource, kml, geometry) {
 
     }
 
-    function processLineString(){
+    function processLineString(dataSource, kml, geometry){
 
     }
 
-    function processLinearRing(){
+    function processLinearRing(dataSource, kml, geometry){
 
     }
 
-    function processPolygon(){
+    function processPolygon(dataSource, kml, geometry){
 
     }
 
-    function processMultiGeometry(){
+    function processMultiGeometry(dataSource, kml, geometry){
 
     }
 
-    function processModel(){
+    function processModel(dataSource, kml, geometry){
 
     }
 
-    function processGxTrack(){
+    function processGxTrack(dataSource, kml, geometry){
 
     }
 
-    function processGxMultiTrack(){
+    function processGxMultiTrack(dataSource, kml, geometry){
 
     }
     //Object that holds all supported Geometry
@@ -136,7 +136,7 @@ define(['../Core/createGuid',
 
         var array = kml.getElementsByTagName('Placemark');
         for ( var i = 0, len = array.length; i < len; i++){
-            processPlacemark(array[i], dynamicObjectCollection);
+            processPlacemark(dataSource, array[i], dynamicObjectCollection);
         }
 
         /*
