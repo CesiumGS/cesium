@@ -248,6 +248,23 @@ define([
     };
 
     /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     *
+     * @memberof BingMapsImageryProvider
+     *
+     * @returns {Number} The minimum level.
+     *
+     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
+     */
+    BingMapsImageryProvider.prototype.getMinimumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
+        }
+        return 0;
+    };
+
+    /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *
