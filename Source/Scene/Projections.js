@@ -13,11 +13,26 @@ define([
      * @exports Projections
      */
     var Projections = {
+        /**
+         * DOC_TBA
+         *
+         * @type {Enumeration}
+         * @constant
+         * @default 0
+         */
         WGS84 : new Enumeration(0, 'WGS84', {
             toWgs84 : function(extent, image) {
                 return image;
             }
         }),
+
+        /**
+         * DOC_TBA
+         *
+         * @type {Enumeration}
+         * @constant
+         * @default 1
+         */
         MERCATOR : new Enumeration(1, 'MERCATOR', {
             toWgs84 : function(extent, image) {
                 if (typeof extent === 'undefined' || typeof extent.north === 'undefined' || typeof extent.south === 'undefined') {

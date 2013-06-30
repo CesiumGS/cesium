@@ -86,6 +86,7 @@ define([
          * no effect.  Instead, set the layer's {@link ImageryLayer#gamma} property.
          *
          * @type {Number}
+         * @default 1.0
          */
         this.defaultGamma = 1.0;
         if (this._mapStyle === BingMapsStyle.AERIAL || this._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS) {

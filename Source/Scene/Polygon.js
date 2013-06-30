@@ -215,14 +215,16 @@ define([
         /**
          * Determines if this polygon will be shown.
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.show = true;
 
         /**
          * The usage hint for the polygon's vertex buffer.
          *
-         * @type BufferUsage
+         * @type {BufferUsage}
+         * @default {@link BufferUsage.STATIC_DRAW}
          *
          * @performance If <code>bufferUsage</code> changes, the next time
          * {@link Polygon#update} is called, the polygon's vertex buffer
@@ -241,7 +243,8 @@ define([
          * The default material is <code>Material.ColorType</code>.
          * </p>
          *
-         * @type Material
+         * @type {Material}
+         * @default Material.fromType(undefined, Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow

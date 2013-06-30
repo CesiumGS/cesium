@@ -19,18 +19,21 @@ define([
     var DynamicImageMaterial = function() {
         /**
          * A DynamicProperty of type CzmlNumber which determines the material's image.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.image = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the material's vertical repeat.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.verticalRepeat = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
          *
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.horizontalRepeat = undefined;
     };

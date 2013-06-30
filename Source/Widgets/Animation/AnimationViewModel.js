@@ -121,7 +121,7 @@ define([
 
         /**
          * Gets or sets whether the shuttle ring is currently being dragged.  This property is observable.
-         * @type Boolean
+         * @type {Boolean}
          * @default false
          */
         this.shuttleRingDragging = false;
@@ -130,7 +130,7 @@ define([
          * Gets or sets whether dragging the shuttle ring should cause the multiplier
          * to snap to the defined tick values rather than interpolating between them.
          * This property is observable.
-         * @type Boolean
+         * @type {Boolean}
          * @default false
          */
         this.snapToTicks = false;
@@ -143,7 +143,8 @@ define([
 
         /**
          * Gets the string representation of the current time.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.timeLabel = undefined;
         knockout.defineProperty(this, 'timeLabel', function() {
@@ -152,7 +153,8 @@ define([
 
         /**
          * Gets the string representation of the current date.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.dateLabel = undefined;
         knockout.defineProperty(this, 'dateLabel', function() {
@@ -161,7 +163,8 @@ define([
 
         /**
          * Gets the string representation of the current multiplier.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.multiplierLabel = undefined;
         knockout.defineProperty(this, 'multiplierLabel', function() {
@@ -183,7 +186,8 @@ define([
 
         /**
          * Gets or sets the current shuttle ring angle.  This property is observable.
-         * @type Number
+         * @type {Number}
+         * @default undefined
          */
         this.shuttleRingAngle = undefined;
         knockout.defineProperty(this, 'shuttleRingAngle', {
@@ -462,7 +466,7 @@ define([
         /**
          * Gets a command that decreases the speed of animation.
          * @memberof AnimationViewModel.prototype
-         * @type Command
+         * @type {Command}
          */
         slower : {
             get : function() {
@@ -473,7 +477,7 @@ define([
         /**
          * Gets a command that increases the speed of animation.
          * @memberof AnimationViewModel.prototype
-         * @type Command
+         * @type {Command}
          */
         faster : {
             get : function() {

@@ -11,19 +11,22 @@ define(function() {
     var CommandLists = function() {
         /**
          * The command list for a color pass.
-         * @type Array
+         * @type {Array}
+         * @default []
          */
         this.colorList = [];
 
         /**
          * The command list for a pick pass.
-         * @type Array
+         * @type {Array}
+         * @default []
          */
         this.pickList = [];
 
         /**
          * The command list for an overlay pass.
-         * @type Array
+         * @type {Array}
+         * @default []
          */
         this.overlayList = [];
     };

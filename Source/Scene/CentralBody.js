@@ -141,6 +141,7 @@ define([
          * extend over the north pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
+         * @default Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0)
          */
         this.northPoleColor = new Cartesian3(2.0 / 255.0, 6.0 / 255.0, 18.0 / 255.0);
 
@@ -149,6 +150,7 @@ define([
          * extend over the south pole, it will be filled with this color before applying lighting.
          *
          * @type {Cartesian3}
+         * @default Cartesian3(1.0, 1.0, 1.0)
          */
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
 
@@ -157,6 +159,7 @@ define([
          * where the logo for terrain and imagery providers will be drawn.
          *
          * @type {Cartesian2}
+         * @default {@link Cartesian2.ZERO}
          */
         this.logoOffset = Cartesian2.ZERO.clone();
         this._logos = [];
@@ -177,7 +180,8 @@ define([
          * The normal map to use for rendering waves in the ocean.  Setting this property will
          * only have an effect if the configured terrain provider includes a water mask.
          *
-         * @type String
+         * @type {String}
+         * @default buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg')
          */
         this.oceanNormalMapUrl = buildModuleUrl('Assets/Textures/waterNormalsSmall.jpg');
 
@@ -188,7 +192,8 @@ define([
          * testing primitives against terrain is that slight numerical noise or terrain level-of-detail
          * switched can sometimes make a primitive that should be on the surface disappear underneath it.
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.depthTestAgainstTerrain = false;
 
@@ -198,7 +203,8 @@ define([
          * this frame.  A larger number will consume more memory but will show detail faster
          * when, for example, zooming out and then back in.
          *
-         * @type Number
+         * @type {Number}
+         * @default 100
          */
         this.tileCacheSize = 100;
 

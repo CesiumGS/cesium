@@ -37,32 +37,38 @@ define([
     var DynamicPyramid = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the pyramid's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
         /**
          * A DynamicDirectionsProperty which determines the projection of the pyramid.
-         * @type DynamicDirectionsProperty
+         * @type {DynamicDirectionsProperty}
+         * @default undefined
          */
         this.directions = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the pyramid's radius.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.radius = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the pyramid's intersection visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.showIntersection = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the pyramid and other central bodies.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.intersectionColor = undefined;
         /**
          * A DynamicMaterialProperty which determines the material.
-         * @type DynamicMaterialProperty
+         * @type {DynamicMaterialProperty}
+         * @default undefined
          */
         this.material = undefined;
     };

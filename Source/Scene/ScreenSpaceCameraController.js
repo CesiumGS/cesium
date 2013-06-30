@@ -64,77 +64,91 @@ define([
         /**
          * If true, allows the user to pan around the map.  If false, the camera stays locked at the current position.
          * This flag only applies in 2D and Columbus view modes.
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.enableTranslate = true;
         /**
          * If true, allows the user to zoom in and out.  If false, the camera is locked to the current distance from the ellipsoid.
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.enableZoom = true;
         /**
          * If true, allows the user to rotate the camera.  If false, the camera is locked to the current heading.
          * This flag only applies in 2D and 3D.
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.enableRotate = true;
         /**
          * If true, allows the user to tilt the camera.  If false, the camera is locked to the current heading.
          * This flag only applies in 3D and Columbus view.
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.enableTilt = true;
         /**
          * If true, allows the user to use free-look. If false, the camera view direction can only be changed through translating
          * or rotating. This flag only applies in 3D and Columbus view modes.
+         * @type {Boolean}
+         * @default true
          */
         this.enableLook = true;
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to spin because of inertia.
          * With value of zero, the camera will have no inertia.
-         * @type Number
+         * @type {Number}
+         * @default 0.9
          */
         this.inertiaSpin = 0.9;
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to translate because of inertia.
          * With value of zero, the camera will have no inertia.
-         * @type Number
+         * @type {Number}
+         * @default 0.9
          */
         this.inertiaTranslate = 0.9;
         /**
          * A parameter in the range <code>[0, 1)</code> used to determine how long
          * the camera will continue to zoom because of inertia.
          * With value of zero, the camera will have no inertia.
-         * @type Number
+         * @type {Number}
+         * @default 0.8
          */
         this.inertiaZoom = 0.8;
         /**
          * A parameter in the range <code>[0, 1)</code> used to limit the range
          * of various user inputs to a percentage of the window width/height per animation frame.
          * This helps keep the camera under control in low-frame-rate situations.
-         * @type Number
+         * @type {Number}
+         * @default 0.1
          */
         this.maximumMovementRatio = 0.1;
         /**
          * Sets the behavior in Columbus view.
-         * @type CameraColumbusViewMode
+         * @type {CameraColumbusViewMode}
+         * @default {@link CameraColumbusViewMode.FREE}
          */
         this.columbusViewMode = CameraColumbusViewMode.FREE;
         /**
          * Sets the duration, in milliseconds, of the bounce back animations in 2D and Columbus view. The default value is 3000.
-         * @type Number
+         * @type {Number}
+         * @default 3000.0
          */
         this.bounceAnimationTime = 3000.0;
         /**
          * The minimum magnitude, in meters, of the camera position when zooming. Defaults to 20.0.
-         * @type Number
+         * @type {Number}
+         * @default 20.0
          */
         this.minimumZoomDistance = 20.0;
         /**
          * The maximum magnitude, in meters, of the camera position when zooming. Defaults to positive infinity.
-         * @type Number
+         * @type {Number}
+         * @default {@link Number.POSITIVE_INFINITY}
          */
         this.maximumZoomDistance = Number.POSITIVE_INFINITY;
 

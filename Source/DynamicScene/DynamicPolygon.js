@@ -31,12 +31,14 @@ define([
     var DynamicPolygon = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
         /**
          * A DynamicMaterialProperty which determines the polygon's material.
-         * @type DynamicMaterialProperty
+         * @type {DynamicMaterialProperty}
+         * @default undefined
          */
         this.material = undefined;
     };
