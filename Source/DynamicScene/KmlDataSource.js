@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/ClockRange',
+define(['../Core/createGuid',
+        '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
@@ -9,6 +10,7 @@ define(['../Core/ClockRange',
         './DynamicClock',
         './DynamicObjectCollection'
         ], function(
+                createGuid,
                 ClockRange,
                 ClockStep,
                 DeveloperError,
@@ -19,6 +21,65 @@ define(['../Core/ClockRange',
                 DynamicClock,
                 DynamicObjectCollection) {
     "use strict";
+
+    //Copied from GeoJsonDataSource
+    var ConstantPositionProperty = function(value) {
+        this._value = value;
+    };
+
+    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
+        var value = this._value;
+        if (typeof value.clone === 'function') {
+            return value.clone(result);
+        }
+        return value;
+    };
+
+    ConstantPositionProperty.prototype.setValue = function(value) {
+        this._value = value;
+    };
+
+    function createObject(kml, dynamicObjectCollection) {
+        var id = kml.id;
+        if (typeof id === 'undefined') {
+            id = createGuid();
+        } else {
+            var i = 2;
+            var finalId = id;
+            while (typeof dynamicObjectCollection.getObject(finalId) !== 'undefined') {
+                finalId = id + "_" + i;
+                i++;
+            }
+            id = finalId;
+        }
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
+        dynamicObject.kml = kml;
+        return dynamicObject;
+    }
+
+    // KML processing functions
+    function processPlacemark(placemark, dynamicObjectCollection) {
+        var objectId = placemark.id;
+        if (typeof objectId === 'undefined') {
+            objectId = createGuid();
+        }
+        dynamicObjectCollection.getOrCreateObject(objectId);
+
+        // I want to iterate over every placemark
+        for(var i = 0, len = placemark.childNodes.length; i < len; i++){
+            var node = placemark.childNodes.item(i);
+            //Does the node hold a supported Geometry type?
+            if(geometryTypes.hasOwnProperty(node.nodeName)){
+                placemark.geometry = node.nodeName;
+                var geometryType = placemark.geometry;
+                var geometryHandler = geometryTypes[geometryType];
+                if (typeof geometryHandler === 'undefined') {
+                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
+                }
+                geometryHandler();
+            }
+        }
+    }
 
     function processPoint() {
 
@@ -63,42 +124,6 @@ define(['../Core/ClockRange',
             gxMultitrack : processGxMultiTrack
         };
 
-    //Copied from GeoJsonDataSource
-    var ConstantPositionProperty = function(value) {
-        this._value = value;
-    };
-
-    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
-        var value = this._value;
-        if (typeof value.clone === 'function') {
-            return value.clone(result);
-        }
-        return value;
-    };
-
-    ConstantPositionProperty.prototype.setValue = function(value) {
-        this._value = value;
-    };
-
-    // KML processing functions
-    function processPlacemark(placemark, dynamicObjectCollection) {
-        //dynamicObjectCollection.getOrCreateObject();
-
-        // I want to iterate over every placemark
-        for(var i = 0, len = placemark.childNodes.length; i < len; i++){
-            var node = placemark.childNodes.item(i);
-            //Does the node hold a supported Geometry type?
-            if(geometryTypes.hasOwnProperty(node.nodeName)){
-                placemark.geometry = node.nodeName;
-                var geometryType = placemark.geometry;
-                var geometryHandler = geometryTypes[geometryType];
-                if (typeof geometryHandler === 'undefined') {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
-                }
-                geometryHandler();
-            }
-        }
-    }
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
 
@@ -113,9 +138,6 @@ define(['../Core/ClockRange',
         for ( var i = 0, len = array.length; i < len; i++){
             processPlacemark(array[i], dynamicObjectCollection);
         }
-
-
-
 
         /*
         var availability = dynamicObjectCollection.computeAvailability();
