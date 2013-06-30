@@ -30,34 +30,35 @@ define([
 
         /**
          * The message describing the error.
-         * @type String
+         * @type {String}
          */
         this.message = message;
 
         /**
          * The X coordinate of the tile that experienced the error.  If the error is not specific
          * to a particular tile, this property will be undefined.
-         * @type Number
+         * @type {Number}
          */
         this.x = x;
 
         /**
          * The Y coordinate of the tile that experienced the error.  If the error is not specific
          * to a particular tile, this property will be undefined.
-         * @type Number
+         * @type {Number}
          */
         this.y = y;
 
         /**
          * The level-of-detail of the tile that experienced the error.  If the error is not specific
          * to a particular tile, this property will be undefined.
-         * @type Number
+         * @type {Number}
          */
         this.level = level;
 
         /**
          * The number of times this operation has been retried.
-         * @type Number
+         * @type {Number}
+         * @default 0
          */
         this.timesRetried = defaultValue(timesRetried, 0);
 
@@ -65,7 +66,8 @@ define([
          * True if the failed operation should be retried; otherwise, false.  The imagery or terrain provider
          * will set the initial value of this property before raising the event, but any listeners
          * can change it.  The value after the last listener is invoked will be acted upon.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.retry = false;
     };

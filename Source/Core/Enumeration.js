@@ -22,13 +22,15 @@ define(function() {
     var Enumeration = function(value, name, properties) {
         /**
          * The numeric value of the enumeration.
-         * @type Number
+         * @type {Number}
+         * @default undefined
          */
         this.value = value;
 
         /**
          * The name of the enumeration for debugging purposes.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.name = name;
 

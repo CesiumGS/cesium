@@ -20,7 +20,7 @@ define([
         /**
          * The value to clear the color buffer to.  When <code>undefined</code>, the color buffer is not cleared.
          *
-         * @type Color
+         * @type {Color}
          * @default undefined
          */
         this.color = undefined;
@@ -28,7 +28,7 @@ define([
         /**
          * The value to clear the depth buffer to.  When <code>undefined</code>, the depth buffer is not cleared.
          *
-         * @type Number
+         * @type {Number}
          * @default undefined
          */
         this.depth = undefined;
@@ -36,7 +36,7 @@ define([
         /**
          * The value to clear the stencil buffer to.  When <code>undefined</code>, the stencil buffer is not cleared.
          *
-         * @type Number
+         * @type {Number}
          * @default undefined
          */
         this.stencil = undefined;
@@ -46,7 +46,7 @@ define([
          * scissor test, color mask, depth mask, stencil mask, and dither.  When the render state is
          * <code>undefined</code>, the default render state is used.
          *
-         * @type Object
+         * @type {Object}
          * @default undefined
          *
          * @see Context#createRenderState
@@ -56,7 +56,7 @@ define([
         /**
          * The framebuffer to clear.
          *
-         * @type Framebuffer
+         * @type {Framebuffer}
          * @default undefined
          */
         this.framebuffer = undefined;
@@ -70,8 +70,8 @@ define([
     /**
      * Clears color to (0.0, 0.0, 0.0, 0.0); depth to 1.0; and stencil to 0.
      *
-     * @constant
      * @type {ClearCommand}
+     * @constant
      */
     ClearCommand.ALL = freezeObject(all);
 
