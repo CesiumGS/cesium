@@ -437,7 +437,7 @@ define(['../Core/createGuid',
     /**
      * An object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
      * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
-     * supported the EPSG type can be added to this list as well, by specifuing the complete EPSG name,
+     * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
      * for example 'EPSG:4326'.
      * @memberof GeoJsonDataSource
      * @type {Object}
