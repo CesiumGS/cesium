@@ -145,12 +145,12 @@ define([
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var creditManager = scene.getCreditManager();
+        var creditDisplay = scene.getCreditDisplay();
 
         var cesiumCredit = new Credit('cesium', 'Cesium', cesium_logo_data, 'http://cesium.agi.com/');
-        creditManager.addDefaultCredit(cesiumCredit);
+        creditDisplay.addDefaultCredit(cesiumCredit);
 
-        var centralBody = new CentralBody(ellipsoid, creditManager);
+        var centralBody = new CentralBody(ellipsoid, creditDisplay);
         scene.getPrimitives().setCentralBody(centralBody);
 
         scene.skyBox = new SkyBox({

@@ -29,7 +29,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './SunPostProcess',
-        './CreditManager'
+        './CreditDisplay'
     ], function(
         CesiumMath,
         Color,
@@ -60,7 +60,7 @@ define([
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         SunPostProcess,
-        CreditManager) {
+        CreditDisplay) {
     "use strict";
 
     /**
@@ -92,7 +92,7 @@ define([
         var context = new Context(canvas, contextOptions);
 
         if (typeof creditContainer !== 'undefined') {
-            this._creditManager = new CreditManager(creditContainer);
+            this._creditDisplay = new CreditDisplay(creditContainer);
         }
         this._frameState = new FrameState();
         this._passState = new PassState(context);
@@ -216,8 +216,8 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.getCreditManager = function() {
-        return this._creditManager;
+    Scene.prototype.getCreditDisplay = function() {
+        return this._creditDisplay;
     };
 
     /**

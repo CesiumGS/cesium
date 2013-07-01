@@ -8,18 +8,18 @@ define([
     "use strict";
 
     /**
-     * The credit manager is responsible for displaying credits on screen.
+     * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
      *
-     * @alias CreditManager
+     * @alias CreditDisplay
      * @constructor
      *
      * @example
-     * var CreditManager = new CreditManager(creditContainer);
+     * var CreditDisplay = new CreditDisplay(creditContainer);
      */
 
-    var CreditManager = function(container, delimeter) {
+    var CreditDisplay = function(container, delimeter) {
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
         container.appendChild(imageContainer);
@@ -38,11 +38,11 @@ define([
     /**
      * Adds credits that will persist until they are removed
      *
-     * @memberof CreditManager
+     * @memberof CreditDisplay
      *
      * @param {Credit} credit The credit to added to defaults
      */
-    CreditManager.prototype.addDefaultCredit = function(credit) {
+    CreditDisplay.prototype.addDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
             if (typeof credit.image === 'undefined') {
                 this.defaultTextCredits.push(credit);
@@ -56,11 +56,11 @@ define([
     /**
      * Removes a default credit
      *
-     * @memberof CreditManager
+     * @memberof CreditDisplay
      *
      * @param {Credit} credit The credit to be removed from defaults
      */
-    CreditManager.prototype.removeDefaultCredit = function(credit) {
+    CreditDisplay.prototype.removeDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
             if (typeof credit.image === 'undefined') {
                 var index = this.defaultTextCredits.indexOf(credit);
@@ -77,11 +77,11 @@ define([
     /**
      * Displays all credits in a list to the credit container
      *
-     * @memberof CreditManager
+     * @memberof CreditDisplay
      *
      * @param Array {Credit} credits The credits to display
      */
-    CreditManager.prototype.showCredits = function(credits) {
+    CreditDisplay.prototype.showCredits = function(credits) {
         if (typeof credits !== 'undefined') {
             var previousCredits = this.previousCredits;
             if (previousCredits.length !== credits.length) {
@@ -116,7 +116,7 @@ define([
         return cleanedCredits;
     }
 
-    function processCredits(creditManager, credits) {
+    function processCredits(creditDisplay, credits) {
         var newImages = [];
         var newText = [];
         var stillVisible = {};
@@ -128,7 +128,7 @@ define([
             if (typeof credit !== 'undefined') {
                 if (typeof credit.image === 'undefined'){
                     newText.push(credit);
-                } else if (!creditManager.visibleImageCredits.hasOwnProperty(credit.name) || !Credit.equals(creditManager.visibleImageCredits[credit.name], credit)) {
+                } else if (!creditDisplay.visibleImageCredits.hasOwnProperty(credit.name) || !Credit.equals(creditDisplay.visibleImageCredits[credit.name], credit)) {
                     newImages.push(credit);
                     stillVisible[credit.name] = credit;
                 } else {
@@ -139,37 +139,37 @@ define([
 
         for (i = 0; i < newImages.length; i++) {
             var c = newImages[i];
-            addImageCredit(c, creditManager.imageContainer);
+            addImageCredit(c, creditDisplay.imageContainer);
         }
 
-        creditManager.visibleTextCredits = newText;
-        addTextCredits(creditManager);
+        creditDisplay.visibleTextCredits = newText;
+        addTextCredits(creditDisplay);
 
 
         for (var a in stillVisible) {
             if (stillVisible.hasOwnProperty(a)) {
-                delete creditManager.visibleImageCredits[a];
+                delete creditDisplay.visibleImageCredits[a];
             }
         }
 
-        for (var b in creditManager.visibleImageCredits) {
-            if (creditManager.visibleImageCredits.hasOwnProperty(b)) {
-                removeImageCredit(creditManager.visibleImageCredits[b], creditManager.imageContainer);
+        for (var b in creditDisplay.visibleImageCredits) {
+            if (creditDisplay.visibleImageCredits.hasOwnProperty(b)) {
+                removeImageCredit(creditDisplay.visibleImageCredits[b], creditDisplay.imageContainer);
             }
         }
 
-        creditManager.visibleImageCredits = stillVisible;
+        creditDisplay.visibleImageCredits = stillVisible;
     }
 
-    function addTextCredits(creditManager) {
-        var container = creditManager.textContainer;
+    function addTextCredits(creditDisplay) {
+        var container = creditDisplay.textContainer;
         var replacementContainer = document.createElement('span');
-        var textCredits = creditManager.defaultTextCredits.concat(creditManager.visibleTextCredits);
+        var textCredits = creditDisplay.defaultTextCredits.concat(creditDisplay.visibleTextCredits);
         for (var i = 0; i < textCredits.length; i++) {
             var credit = textCredits[i];
             var str;
             if (i !== 0) {
-                str = creditManager.delimeter;
+                str = creditDisplay.delimeter;
             } else {
                 str = '';
             }
@@ -235,5 +235,5 @@ define([
         }
     }
 
-    return CreditManager;
+    return CreditDisplay;
 });
