@@ -526,12 +526,6 @@ define([
 
         var indices = PolygonPipeline.earClip2D(positions2D);
 
-        // Checking bounding sphere with plane for quick reject
-        var minX = boundingSphere.center.x - boundingSphere.radius;
-        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
-            indices = PolygonPipeline.wrapLongitude(cleanedPositions, indices);
-        }
-
         var topAndBottomGeo = PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
         indices = topAndBottomGeo.indices;
         var topBottomPositions = topAndBottomGeo.attributes.position.values;
@@ -977,6 +971,12 @@ define([
         var attributes = {};
 
         geometry = GeometryPipeline.combine(geometries);
+
+        // Checking bounding sphere with plane for quick reject
+        var minX = boundingSphere.center.x - boundingSphere.radius;
+        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
+            geometry = GeometryPipeline.wrapLongitude(geometry);
+        }
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
