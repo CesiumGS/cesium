@@ -1,0 +1,1 @@
+find . -name '*.dae' -exec collada2gltf -d -f {} \;

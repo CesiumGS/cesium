@@ -1,5 +1,7 @@
 /*global define*/
 define([
+        'Core/loadText',
+        ///////////////////////////////////////////////////////////////////////
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -9,6 +11,8 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
+        loadText,
+        ///////////////////////////////////////////////////////////////////////
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -137,5 +141,13 @@ define([
                 window.alert('Unknown theme: ' + theme);
             }
         }
+
+        ///////////////////////////////////////////////////////////////////////
+
+        // ../../../Apps/CesiumViewer/Gallery/model/duck/duck.json
+
+        loadText('../../../Apps/CesiumViewer2/Gallery/model/duck/duck.json').then(function(data) {
+            console.log(data);
+        });
     }
 });
