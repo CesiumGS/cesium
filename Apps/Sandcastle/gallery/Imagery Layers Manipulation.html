@@ -111,9 +111,9 @@ require([
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption(
-                'Single Image',
-                new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
+                'Natural Earth II (local)',
+                new Cesium.TileMapServiceImageryProvider({
+                    url : require.toUrl('Assets/Textures/NaturalEarthII')
                 }));
 
         // Create the additional layers
