@@ -144,7 +144,7 @@ define(['../Core/createGuid',
 
         var array = kml.getElementsByTagName('Folder');
         for ( var i = 0, len = array.length; i < len; i++){
-            processPlacemark(dataSource, array[i], dynamicObjectCollection);
+            processFolder(dataSource, array[i], dynamicObjectCollection);
         }
 
         array = kml.getElementsByTagName('Placemark');
