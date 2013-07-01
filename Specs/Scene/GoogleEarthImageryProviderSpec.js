@@ -35,7 +35,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
-        loadWidthXhr.load = loadWithXhr.defaultLoad;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -143,7 +143,7 @@ defineSuite([
 
                 // Just return any old image.
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
-            ;}
+            };
 
             when(provider.requestImage(0, 0, 0), function(image) {
                 tile000Image = image;
