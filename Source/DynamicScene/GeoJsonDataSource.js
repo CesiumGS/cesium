@@ -411,7 +411,7 @@ define(['../Core/createGuid',
 
                 crsFunction = handler(properties);
             } else if (crs.type === 'EPSG') {
-                crsFunction = GeoJsonDataSource.crsEpsgCodes[properties.code];
+                crsFunction = GeoJsonDataSource.crsNames['EPSG:' + properties.code];
                 if (typeof crsFunction === 'undefined') {
                     throw new RuntimeError('Unknown crs EPSG code: ' + properties.code);
                 }
@@ -435,25 +435,16 @@ define(['../Core/createGuid',
     }
 
     /**
-     * An object that maps the name of a crs to a callback function
-     * which takes a GeoJSON coordinate and transforms it into a
-     * WGS84 Earth-fixed Cartesian.
+     * An object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
+     * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
+     * supported the EPSG type can be added to this list as well, by specifuing the complete EPSG name,
+     * for example 'EPSG:4326'.
      * @memberof GeoJsonDataSource
      * @type {Object}
      */
     GeoJsonDataSource.crsNames = {
         'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
         'EPSG:4326' : defaultCrsFunction
-    };
-
-    /**
-     * An object that maps the code property in the EPSG crs type to a callback function
-     * which takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
-     * @memberof GeoJsonDataSource
-     * @type Object
-     */
-    GeoJsonDataSource.crsEpsgCodes = {
-        '4326' : defaultCrsFunction
     };
 
     /**
