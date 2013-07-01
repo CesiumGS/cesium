@@ -32,7 +32,7 @@ defineSuite([
         var labelPacket = {
             label : {
                 text : 'TestFacility',
-                font : '10pt Lucida Console',
+                font : '10pt "Open Sans"',
                 style : 'FILL',
                 fillColor : {
                     rgbaf : [0.1, 0.1, 0.1, 0.1]
@@ -76,7 +76,7 @@ defineSuite([
             label : {
                 interval : '2000-01-01/2001-01-01',
                 text : 'TestFacility',
-                font : '10pt Lucida Console',
+                font : '10pt "Open Sans"',
                 style : 'FILL',
                 fillColor : {
                     rgbaf : [0.1, 0.1, 0.1, 0.1]

@@ -1,8 +1,0 @@
-<div id="view6" data-dojo-type="dojox.mobile.View">
-	<h1 data-dojo-type="dojox.mobile.Heading" data-dojo-props='back:"Home", moveTo:"home"'>view6 (HTML)</h1>
-	<h2 data-dojo-type="dojox.mobile.RoundRectCategory">Script Views</h2>
-	<script>
-		console.log("This is Script in View6");
-		window._ScriptInView6 = true;
-	</script>
-</div>

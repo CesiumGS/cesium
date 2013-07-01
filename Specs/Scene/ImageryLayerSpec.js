@@ -6,6 +6,7 @@ defineSuite([
          'Core/Extent',
          'Core/jsonp',
          'Core/loadImage',
+         'Core/loadWithXhr',
          'Scene/BingMapsImageryProvider',
          'Scene/Imagery',
          'Scene/ImageryState',
@@ -19,6 +20,7 @@ defineSuite([
          Extent,
          jsonp,
          loadImage,
+         loadWithXhr,
          BingMapsImageryProvider,
          Imagery,
          ImageryState,
@@ -41,6 +43,7 @@ defineSuite([
     afterEach(function() {
         jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     function CustomDiscardPolicy() {
@@ -58,6 +61,10 @@ defineSuite([
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
         loadImage.createImage = function(url, crossOrigin, deferred) {
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+        };
+
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
         };
 
         var discardPolicy = new CustomDiscardPolicy();
@@ -104,7 +111,7 @@ defineSuite([
                     "resources" : [{
                         "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
                         "imageHeight" : 256,
-                        "imageUrl" : "http:\/\/invalid.{subdomain}.localhost\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
+                        "imageUrl" : "http:\/\/invalid.{subdomain}.invalid\/tiles\/r{quadkey}?g=1062&lbl=l1&productSet=mmCB",
                         "imageUrlSubdomains" : ["t0"],
                         "imageWidth" : 256,
                         "imageryProviders" : null,
@@ -124,8 +131,12 @@ defineSuite([
             return loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
         };
 
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
+        };
+
         var provider = new BingMapsImageryProvider({
-            url : 'http://invalid.localhost',
+            url : 'http://host.invalid',
             tileDiscardPolicy : new NeverTileDiscardPolicy()
         });
 
@@ -181,5 +192,7 @@ defineSuite([
         });
         expect(layer.getExtent()).toEqual(extent);
         expect(layer.isDestroyed()).toEqual(false);
+        layer.destroy();
+        expect(layer.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');

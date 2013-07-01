@@ -1,4 +1,0 @@
-({
-	legacyBundle:"legacyBundle",
-	rootValueOnly:"rootValueOnly"
-})

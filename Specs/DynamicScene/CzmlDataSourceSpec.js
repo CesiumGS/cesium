@@ -46,15 +46,17 @@ defineSuite(['DynamicScene/CzmlDataSource',
     };
 
     var simple;
-    var simpleUrl = '../../Apps/CesiumViewer/Gallery/simple.czml';
-    loadJson(simpleUrl).then(function(result){
-        simple = result;
-    });
-
+    var simpleUrl = 'Data/CZML/simple.czml';
     var vehicle;
-    var vehicleUrl = '../../Apps/CesiumViewer/Gallery/Vehicle.czml';
-    loadJson(vehicleUrl).then(function(result){
-        vehicle = result;
+    var vehicleUrl = 'Data/CZML/Vehicle.czml';
+
+    beforeAll(function() {
+        loadJson(simpleUrl).then(function(result) {
+            simple = result;
+        });
+        loadJson(vehicleUrl).then(function(result) {
+            vehicle = result;
+        });
     });
 
     var parsedClock = {

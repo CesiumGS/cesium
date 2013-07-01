@@ -25,19 +25,22 @@ define([
     var Cartographic = function(longitude, latitude, height) {
         /**
          * The longitude, in radians.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.longitude = defaultValue(longitude, 0.0);
 
         /**
          * The latitude, in radians.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.latitude = defaultValue(latitude, 0.0);
 
         /**
          * The height, in meters, above the ellipsoid.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
     };
@@ -75,13 +78,11 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartographic is required.
+     * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided. (Returns undefined if cartographic is undefined)
      */
     Cartographic.clone = function(cartographic, result) {
         if (typeof cartographic === 'undefined') {
-            throw new DeveloperError('cartographic is required');
+            return undefined;
         }
         if (typeof result === 'undefined') {
             return new Cartographic(cartographic.longitude, cartographic.latitude, cartographic.height);

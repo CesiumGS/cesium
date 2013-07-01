@@ -22,8 +22,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1400
      * @memberOf ComponentDatatype
      */
     ComponentDatatype.BYTE = new Enumeration(0x1400, 'BYTE');
@@ -39,8 +40,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1401
      * @memberOf ComponentDatatype
      */
     ComponentDatatype.UNSIGNED_BYTE = new Enumeration(0x1401, 'UNSIGNED_BYTE');
@@ -56,8 +58,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1402
      * @memberOf ComponentDatatype
      */
     ComponentDatatype.SHORT = new Enumeration(0x1402, 'SHORT');
@@ -73,8 +76,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1403
      * @memberOf ComponentDatatype
      */
     ComponentDatatype.UNSIGNED_SHORT = new Enumeration(0x1403, 'UNSIGNED_SHORT');
@@ -90,8 +94,9 @@ define(['./Enumeration'], function(Enumeration) {
     /**
      * DOC_TBA
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1406
      * @memberOf ComponentDatatype
      */
     ComponentDatatype.FLOAT = new Enumeration(0x1406, 'FLOAT');
@@ -106,6 +111,10 @@ define(['./Enumeration'], function(Enumeration) {
 
     /**
      * DOC_TBA
+     *
+     * @param {ComponentDataType} componentDatatype
+     *
+     * @returns {Boolean}
      */
     ComponentDatatype.validate = function(componentDatatype) {
         return ((componentDatatype === ComponentDatatype.BYTE) ||

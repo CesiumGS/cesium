@@ -1,8 +1,0 @@
-<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
-
-<system systemId="http://www.unicode.org/cldr/dtd/1.6/ldml.dtd"
-        uri="core/common/dtd/ldml.dtd"/>
-
-</catalog>
-
-

@@ -1,22 +1,27 @@
 /*global define*/
-define(['../../Core/buildModuleUrl',
+define([
+        '../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
         '../../Core/FeatureDetection',
         '../../Core/requestAnimationFrame',
+        '../../Core/ScreenSpaceEventHandler',
         '../../Scene/BingMapsImageryProvider',
         '../../Scene/CentralBody',
         '../../Scene/Scene',
+        '../../Scene/SceneMode',
         '../../Scene/SceneTransitioner',
-        '../../Scene/SkyBox',
         '../../Scene/SkyAtmosphere',
-        '../../Scene/Sun'
+        '../../Scene/SkyBox',
+        '../../Scene/Sun',
+        '../getElement'
     ], function(
         buildModuleUrl,
         Cartesian2,
@@ -24,22 +29,48 @@ define(['../../Core/buildModuleUrl',
         Clock,
         DefaultProxy,
         defaultValue,
+        defineProperties,
         destroyObject,
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
         requestAnimationFrame,
+        ScreenSpaceEventHandler,
         BingMapsImageryProvider,
         CentralBody,
         Scene,
+        SceneMode,
         SceneTransitioner,
-        SkyBox,
         SkyAtmosphere,
-        Sun) {
+        SkyBox,
+        Sun,
+        getElement) {
     "use strict";
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');
+    }
+
+    function startRenderLoop(widget) {
+        widget._renderLoopRunning = true;
+
+        function render() {
+            try {
+                if (widget._useDefaultRenderLoop) {
+                    widget.resize();
+                    widget.render();
+                    requestAnimationFrame(render);
+                } else {
+                    widget._renderLoopRunning = false;
+                }
+            } catch (e) {
+                widget._useDefaultRenderLoop = false;
+                widget._renderLoopRunning = false;
+                widget.onRenderLoopError.raiseEvent(widget, e);
+            }
+        }
+
+        requestAnimationFrame(render);
     }
 
     /**
@@ -51,8 +82,11 @@ define(['../../Core/buildModuleUrl',
      * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Object} [options] Configuration options for the widget.
      * @param {Clock} [options.clock=new Clock()] The clock to use to control current time.
-     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer.
+     * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
+     * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
+     * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      *
      * @exception {DeveloperError} container is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -78,13 +112,7 @@ define(['../../Core/buildModuleUrl',
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
+        container = getElement(container);
 
         options = defaultValue(options, {});
 
@@ -108,12 +136,12 @@ define(['../../Core/buildModuleUrl',
         cesiumLogo.className = 'cesium-widget-logo';
         widgetNode.appendChild(cesiumLogo);
 
-        var scene = new Scene(canvas);
+        var scene = new Scene(canvas, options.contextOptions);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
-        var _ellipsoid = Ellipsoid.WGS84;
+        var ellipsoid = Ellipsoid.WGS84;
 
-        var centralBody = new CentralBody(_ellipsoid);
+        var centralBody = new CentralBody(ellipsoid);
         centralBody.logoOffset = new Cartesian2(125, 0);
         scene.getPrimitives().setCentralBody(centralBody);
 
@@ -125,7 +153,7 @@ define(['../../Core/buildModuleUrl',
             positiveZ : getDefaultSkyBoxUrl('pz'),
             negativeZ : getDefaultSkyBoxUrl('mz')
         });
-        scene.skyAtmosphere = new SkyAtmosphere(_ellipsoid);
+        scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
         scene.sun = new Sun();
 
         //Set the base imagery layer
@@ -138,91 +166,182 @@ define(['../../Core/buildModuleUrl',
                 proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
             });
         }
-        centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+
+        if (imageryProvider !== false) {
+            centralBody.getImageryLayers().addImageryProvider(imageryProvider);
+        }
 
         //Set the terrain provider if one is provided.
         if (typeof options.terrainProvider !== 'undefined') {
             centralBody.terrainProvider = options.terrainProvider;
         }
 
+        this._element = widgetNode;
+        this._container = container;
+        this._canvas = canvas;
+        this._canvasWidth = canvas.width;
+        this._canvasHeight = canvas.height;
+        this._cesiumLogo = cesiumLogo;
+        this._scene = scene;
+        this._centralBody = centralBody;
+        this._clock = defaultValue(options.clock, new Clock());
+        this._transitioner = new SceneTransitioner(scene, ellipsoid);
+        this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
+        this._useDefaultRenderLoop = undefined;
+        this._renderLoopRunning = false;
+        this._canRender = false;
+
+        if (options.sceneMode) {
+            if (options.sceneMode === SceneMode.SCENE2D) {
+                this._transitioner.to2D();
+            }
+            if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
+                this._transitioner.toColumbusView();
+            }
+        }
+
+        this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+    };
+
+    defineProperties(CesiumWidget.prototype, {
         /**
          * Gets the parent container.
-         * @memberof CesiumWidget
+         * @memberof CesiumWidget.prototype
+         *
          * @type {Element}
          */
-        this.container = container;
-
-        /**
-         * Gets the widget DOM element, which contains the canvas and Cesium logo.
-         * @memberof CesiumWidget
-         * @type {Element}
-         */
-        this.element = widgetNode;
-
-        /**
-         * Gets the canvas.
-         * @memberof CesiumWidget
-         * @type {Canvas}
-         */
-        this.canvas = canvas;
-
-        /**
-         * Gets the Cesium logo.
-         * @memberof CesiumWidget
-         * @type {Element}
-         */
-        this.cesiumLogo = cesiumLogo;
-
-        /**
-         * Gets the scene.
-         * @memberof CesiumWidget
-         * @type {Scene}
-         */
-        this.scene = scene;
-
-        /**
-         * Gets the central body.
-         * @memberof CesiumWidget
-         * @type {CentralBody}
-         */
-        this.centralBody = centralBody;
-
-        /**
-         * Gets the clock view model.
-         * @memberof CesiumWidget
-         * @type {Clock}
-         */
-        this.clock = defaultValue(options.clock, new Clock());
+        container : {
+            get : function() {
+                return this._container;
+            }
+        },
 
         /**
          * Gets the scene transitioner.
-         * @memberof CesiumWidget
+         * @memberof CesiumWidget.prototype
+         *
          * @type {SceneTransitioner}
          */
-        this.transitioner = new SceneTransitioner(scene, _ellipsoid);
+        sceneTransitioner : {
+            get : function() {
+                return this._transitioner;
+            }
+        },
 
-        var widget = this;
-        //Subscribe for resize events and set the initial size.
-        this._needResize = true;
-        this._resizeCallback = function() {
-            widget._needResize = true;
-        };
-        window.addEventListener('resize', this._resizeCallback, false);
+        /**
+         * Gets the canvas.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Canvas}
+         */
+        canvas : {
+            get : function() {
+                return this._canvas;
+            }
+        },
 
-        //Create and start the render loop
-        this._isDestroyed = false;
-        function render() {
-            if (!widget._isDestroyed) {
-                widget.render();
-                requestAnimationFrame(render);
+        /**
+         * Gets the Cesium logo element.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Element}
+         */
+        cesiumLogo : {
+            get : function() {
+                return this._cesiumLogo;
+            }
+        },
+
+        /**
+         * Gets the scene.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
+
+        /**
+         * Gets the primary central body.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {CentralBody}
+         */
+        centralBody : {
+            get : function() {
+                return this._centralBody;
+            }
+        },
+
+        /**
+         * Gets the clock.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Clock}
+         */
+        clock : {
+            get : function() {
+                return this._clock;
+            }
+        },
+
+        /**
+         * Gets the screen space event handler.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {ScreenSpaceEventHandler}
+         */
+        screenSpaceEventHandler : {
+            get : function() {
+                return this._screenSpaceEventHandler;
+            }
+        },
+
+        /**
+         * Gets the event that will be raised when an error is encountered during the default render loop.
+         * The widget instance and the generated exception are the only two parameters passed to the event handler.
+         * <code>useDefaultRenderLoop</code> will be set to false whenever an exception is generated and must
+         * be set back to true to continue rendering after an exception.
+         * @memberof Viewer.prototype
+         * @type {Event}
+         */
+        onRenderLoopError : {
+            get : function() {
+                return this._onRenderLoopError;
+            }
+        },
+
+        /**
+         * Gets or sets whether or not this widget should control the render loop.
+         * If set to true the widget will use {@link requestAnimationFrame} to
+         * perform rendering and resizing of the widget, as well as drive the
+         * simulation clock. If set to false, you must manually call the
+         * <code>resize</code>, <code>render</code> methods as part of a custom
+         * render loop.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Boolean}
+         */
+        useDefaultRenderLoop : {
+            get : function() {
+                return this._useDefaultRenderLoop;
+            },
+            set : function(value) {
+                if (this._useDefaultRenderLoop !== value) {
+                    this._useDefaultRenderLoop = value;
+                    if (value && !this._renderLoopRunning) {
+                        startRenderLoop(this);
+                    }
+                }
             }
         }
-        requestAnimationFrame(render);
-    };
+    });
 
     /**
      * @memberof CesiumWidget
-     *
      * @returns {Boolean} true if the object has been destroyed, false otherwise.
      */
     CesiumWidget.prototype.isDestroyed = function() {
@@ -235,50 +354,52 @@ define(['../../Core/buildModuleUrl',
      * @memberof CesiumWidget
      */
     CesiumWidget.prototype.destroy = function() {
-        window.removeEventListener('resize', this._resizeCallback, false);
-        this.container.removeChild(this.element);
-        this._isDestroyed = true;
+        this._container.removeChild(this._element);
         destroyObject(this);
     };
 
     /**
-     * Call this function when the widget changes size, to update the canvas
-     * size, camera aspect ratio, and viewport size. This function is called
-     * automatically on window resize.
+     * Updates the canvas size, camera aspect ratio, and viewport size.
+     * This function is called automatically as needed unless
+     * <code>useDefaultRenderLoop</code> is set to false.
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
-        var width = this.canvas.clientWidth;
-        var height = this.canvas.clientHeight;
-
-        if (this.canvas.width === width && this.canvas.height === height) {
+        var canvas = this._canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        if (this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
 
-        this.canvas.width = width;
-        this.canvas.height = height;
+        canvas.width = this._canvasWidth = width;
+        canvas.height = this._canvasHeight = height;
 
-        var frustum = this.scene.getCamera().frustum;
-        if (typeof frustum.aspectRatio !== 'undefined') {
-            frustum.aspectRatio = width / height;
-        } else {
-            frustum.top = frustum.right * (height / width);
-            frustum.bottom = -frustum.top;
+        var canRender = width !== 0 && height !== 0;
+        this._canRender = canRender;
+
+        if (canRender) {
+            var frustum = this._scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         }
     };
 
     /**
-     * Forces an update and render of the scene. This function is called
-     * automatically.
+     * Renders the scene.  This function is called automatically
+     * unless <code>useDefaultRenderLoop</code> is set to false;
+     * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
-        if (this._needResize) {
-            this.resize();
-            this._needResize = false;
+        var currentTime = this._clock.tick();
+        this._scene.initializeFrame();
+        if (this._canRender) {
+            this._scene.render(currentTime);
         }
-
-        var currentTime = this.clock.tick();
-        this.scene.initializeFrame();
-        this.scene.render(currentTime);
     };
 
     return CesiumWidget;

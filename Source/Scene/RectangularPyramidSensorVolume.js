@@ -37,14 +37,16 @@ define([
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.show = defaultValue(options.show, true);
 
         /**
          * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          *
          * @see RectangularPyramidSensorVolume#intersectionColor
          */
@@ -59,7 +61,8 @@ define([
          * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
          * </p>
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.showThroughEllipsoid = defaultValue(options.showThroughEllipsoid, false);
 
@@ -75,7 +78,8 @@ define([
          * Model coordinate system for a sensor
          * </div>
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see czm_model
          *
@@ -90,21 +94,25 @@ define([
         /**
          * DOC_TBA
          *
-         * @type BufferUsage
+         * @type {BufferUsage}
+         * @default {@link BufferUsage.STATIC_DRAW}
          */
         this.bufferUsage = defaultValue(options.bufferUsage, BufferUsage.STATIC_DRAW);
 
         /**
          * DOC_TBA
          *
-         * @type Number
+         * @type {Number}
+         * @default {@link Number.POSITIVE_INFINITY}
          */
         this.radius = defaultValue(options.radius, Number.POSITIVE_INFINITY);
 
         /**
          * DOC_TBA
          *
-         * @type Number
+         * @type {Number}
+         * @default {@link CesiumMath.PI_OVER_TWO}
+         *
          *
          * @see RectangularPyramidSensorVolume#yHalfAngle
          */
@@ -114,7 +122,8 @@ define([
         /**
          * DOC_TBA
          *
-         * @type Number
+         * @type {Number}
+         * @default {@link CesiumMath.PI_OVER_TWO}
          *
          * @see RectangularPyramidSensorVolume#xHalfAngle
          */
@@ -128,7 +137,8 @@ define([
          * The default material is <code>Material.ColorType</code>.
          * </p>
          *
-         * @type Material
+         * @type {Material}
+         * @default Material.fromType(undefined, Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
@@ -144,7 +154,8 @@ define([
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.
          *
-         * @type Color
+         * @type {Color}
+         * @default {@link Color.WHITE}
          *
          * @see RectangularPyramidSensorVolume#showIntersection
          */

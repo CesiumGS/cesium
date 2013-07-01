@@ -62,13 +62,31 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
+     * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
      *
      * @alias Scene
      * @constructor
+     *
+     * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
+     * @param {Object} [contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  Default values are shown in the code example below.
+     *
+     * @see CesiumWidget
+     * @see <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
+     *
+     * @example
+     * // Create scene with default context options.
+     * var scene = new Scene(canvas, {
+     *     alpha : false,
+     *     depth : true,
+     *     stencil : false,
+     *     antialias : true,
+     *     premultipliedAlpha : true,
+     *     preserveDrawingBuffer : false
+     * });
      */
-    var Scene = function(canvas) {
-        var context = new Context(canvas);
+    var Scene = function(canvas, contextOptions) {
+        var context = new Context(canvas, contextOptions);
 
         this._frameState = new FrameState();
         this._passState = new PassState(context);
@@ -99,8 +117,7 @@ define([
         /**
          * The {@link SkyBox} used to draw the stars.
          *
-         * @type SkyBox
-         *
+         * @type {SkyBox}
          * @default undefined
          *
          * @see Scene#backgroundColor
@@ -110,8 +127,7 @@ define([
         /**
          * The sky atmosphere drawn around the globe.
          *
-         * @type SkyAtmosphere
-         *
+         * @type {SkyAtmosphere}
          * @default undefined
          */
         this.skyAtmosphere = undefined;
@@ -119,8 +135,7 @@ define([
         /**
          * The {@link Sun}.
          *
-         * @type Sun
-         *
+         * @type {Sun}
          * @default undefined
          */
         this.sun = undefined;
@@ -128,9 +143,8 @@ define([
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
-         * @type Color
-         *
-         * @default Color.BLACK
+         * @type {Color}
+         * @default {@link Color.BLACK}
          *
          * @see Scene#skyBox
          */
@@ -139,7 +153,8 @@ define([
         /**
          * The current mode of the scene.
          *
-         * @type SceneMode
+         * @type {SceneMode}
+         * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
         /**
@@ -155,13 +170,15 @@ define([
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
-         * @type Number
+         * @type {Number}
+         * @default 1.0
          */
         this.morphTime = 1.0;
         /**
          * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
          *
-         * @type Number
+         * @type {Number}
+         * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
 

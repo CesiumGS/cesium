@@ -1,6 +1,0 @@
-{ 
-		name:'Toronto', 
-		type:'city', 
-		population:'2.5 million', 
-		timezone:'-5 UTC' 
-}

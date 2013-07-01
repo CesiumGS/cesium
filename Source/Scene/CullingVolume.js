@@ -23,6 +23,7 @@ define([
          * define the unit vector normal to the plane, and the w component is the distance of the
          * plane from the origin.
          * @type {Array}
+         * @default []
          */
         this.planes = defaultValue(planes, []);
     };

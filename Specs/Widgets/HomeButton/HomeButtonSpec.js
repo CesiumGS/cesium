@@ -22,17 +22,19 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
         transitioner.destroy();
+        destroyScene(scene);
     });
 
     it('constructor sets default values', function() {
         var homeButton = new HomeButton(document.body, scene);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.transitioner).toBeUndefined();
+        expect(homeButton.viewModel.sceneTransitioner).toBeUndefined();
         expect(homeButton.viewModel.ellipsoid).toBe(Ellipsoid.WGS84);
+        expect(homeButton.isDestroyed()).toEqual(false);
         homeButton.destroy();
+        expect(homeButton.isDestroyed()).toEqual(true);
     });
 
     it('constructor sets expected values', function() {
@@ -40,7 +42,7 @@ defineSuite([
         var homeButton = new HomeButton(document.body, scene, transitioner, ellipsoid);
         expect(homeButton.container).toBe(document.body);
         expect(homeButton.viewModel.scene).toBe(scene);
-        expect(homeButton.viewModel.transitioner).toBe(transitioner);
+        expect(homeButton.viewModel.sceneTransitioner).toBe(transitioner);
         expect(homeButton.viewModel.ellipsoid).toBe(ellipsoid);
         homeButton.destroy();
     });
@@ -58,12 +60,6 @@ defineSuite([
     it('throws if container is undefined', function() {
         expect(function() {
             return new HomeButton(undefined, scene);
-        }).toThrow();
-    });
-
-    it('throws if scene is undefined', function() {
-        expect(function() {
-            return new HomeButton(document.body, undefined);
         }).toThrow();
     });
 

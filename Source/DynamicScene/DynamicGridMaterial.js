@@ -19,37 +19,43 @@ define([
     var DynamicGridMaterial = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the grid's color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.color = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the grid cells alpha value, when combined with the color alpha.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.cellAlpha = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the number of horizontal rows.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.rowCount = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the number of vertical columns.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.columnCount = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the width of each horizontal line, in pixels.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.rowThickness = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the width of each vertical line, in pixels.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.columnThickness = undefined;
     };

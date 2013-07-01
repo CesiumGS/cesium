@@ -11,55 +11,61 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8056
          */
         RGBA4 : new Enumeration(0x8056, 'RGBA4'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8057
          */
         RGB5_A1 : new Enumeration(0x8057, 'RGB5_A1'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8D62
          */
         RGB565 : new Enumeration(0x8D62, 'RGB565'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x81A5
          */
         DEPTH_COMPONENT16 : new Enumeration(0x81A5, 'DEPTH_COMPONENT16'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8D48
          */
         STENCIL_INDEX8 : new Enumeration(0x8D48, 'STENCIL_INDEX8'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 084F9
          */
         DEPTH_STENCIL : new Enumeration(0x84F9, 'DEPTH_STENCIL'),
 
         /**
          * DOC_TBA
          *
-         * @param renderbufferFormat
+         * @param {RenderBufferFormat} renderbufferFormat
          *
          * @returns {Boolean}
          */

@@ -24,19 +24,22 @@ define([
     var Cartesian3 = function(x, y, z) {
         /**
          * The X component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.z = defaultValue(z, 0.0);
     };
@@ -138,13 +141,11 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian to duplicate.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} cartesian is required.
+     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if cartesian is undefined)
      */
     Cartesian3.clone = function(cartesian, result) {
         if (typeof cartesian === 'undefined') {
-            throw new DeveloperError('cartesian is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

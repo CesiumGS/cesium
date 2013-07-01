@@ -3,6 +3,7 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian3',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Color',
         '../Core/Transforms',
@@ -14,6 +15,7 @@ define([
          DeveloperError,
          destroyObject,
          Cartesian3,
+         Matrix3,
          Matrix4,
          Color,
          Transforms,
@@ -23,27 +25,22 @@ define([
          PolylineCollection) {
     "use strict";
 
+    var toFixedScratch = new Matrix3();
     var PolylineUpdater = function(scene, referenceFrame) {
         this._unusedIndexes = [];
         this._polylineCollection = new PolylineCollection();
         this._scene = scene;
         this._referenceFrame = referenceFrame;
-
-        var transform;
-        if (referenceFrame === ReferenceFrame.INERTIAL) {
-            transform = Transforms.computeIcrfToFixedMatrix;
-        }
         scene.getPrimitives().add(this._polylineCollection);
-        this._transformFunction = transform;
     };
 
     PolylineUpdater.prototype.update = function(time) {
-        var transform = this._transformFunction;
-        if (typeof transform !== 'undefined') {
-            var toFixed = transform(time);
-            if (typeof toFixed !== 'undefined') {
-                Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
+        if (this._referenceFrame === ReferenceFrame.INERTIAL) {
+            var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
+            if (typeof toFixed === 'undefined') {
+                toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
             }
+            Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
         }
     };
 

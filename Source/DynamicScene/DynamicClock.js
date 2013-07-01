@@ -22,31 +22,36 @@ define([
     var DynamicClock = function() {
         /**
          * The start time of the clock to use when looping or clamped.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
         this.startTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * The stop time of the clock to use when looping or clamped.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.stop}
          */
         this.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
 
         /**
          * The initial time to use when switching to this clock.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
         this.currentTime = Iso8601.MAXIMUM_INTERVAL.start;
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-         * @type ClockRange
+         * @type {ClockRange}
+         * @default {@link ClockRange.LOOP_STOP}
          */
         this.clockRange = ClockRange.LOOP_STOP;
 
         /**
          * Determines if clock advancement is frame dependent or system clock dependent.
-         * @type ClockStep
+         * @type {ClockStep}
+         * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
         this.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
 
@@ -55,9 +60,30 @@ define([
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
-         * @type Number
+         * @type {Number}
+         * @default 1.0
          */
         this.multiplier = 1.0;
+    };
+
+    /**
+     * Duplicates a DynamicClock instance.
+     * @memberof DynamicClock
+     *
+     * @param {DynamicClock} [result] The object onto which to store the result.
+     * @return {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
+     */
+    DynamicClock.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+            result = new DynamicClock();
+        }
+        result.startTime = this.startTime;
+        result.stopTime = this.stopTime;
+        result.clockRange = this.clockRange;
+        result.clockStep = this.clockStep;
+        result.multiplier = this.multiplier;
+        result.currentTime = this.currentTime;
+        return result;
     };
 
     /**

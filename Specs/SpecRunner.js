@@ -104,6 +104,7 @@ var afterAll;
                 var beforeAll = this.beforeAll_;
                 if (typeof beforeAll !== 'undefined') {
                     var beforeSpec = new jasmine.Spec(this.env, this, 'beforeAll');
+                    this.beforeSpec_ = beforeSpec;
                     results = function() {
                         return beforeSpec.results();
                     };
@@ -117,6 +118,7 @@ var afterAll;
                 var afterAll = this.afterAll_;
                 if (typeof afterAll !== 'undefined') {
                     var afterSpec = new jasmine.Spec(this.env, this, 'afterAll');
+                    this.afterSpec_ = afterSpec;
                     results = function() {
                         return afterSpec.results();
                     };
@@ -171,7 +173,8 @@ var afterAll;
         baseUrl : getQueryParameter('baseUrl') || '../Source',
         paths : {
             'Specs' : '../Specs'
-        }
+        },
+        waitSeconds : 30
     });
 
     //start loading all of Cesium early, so it's all available for code coverage calculations.
