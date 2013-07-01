@@ -61,51 +61,53 @@ defineSuite([
     });
 
     it('can provide a root tile', function() {
-        var url = 'http://example.invalid';
-        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
-        var channel = 1234;
+        var path = '';
 
-        jsonp.loadAndExecuteScript = function(url, functionName) {
-            expect(url.indexOf(metadataUrl) === 0).toEqual(true);
-            setTimeout(function() {
-                window[functionName]({
-                  "isAuthenticated": true,
-                  "layers": [
+        var url = 'http://example.invalid';
+        var metadataUrl = url + path + '/query?request=Json&vars=geeServerDefs&is2d=t';
+        var channel = 1234;
+        var version = 1;
+
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({ 
+                "isAuthenticated": true,
+                "layers": [
                     {
-                      "icon": "icons/773_l.png",
-                      "id": 1234,
-                      "initialState": true,
-                      "isPng": false,
-                      "label": "Imagery",
-                      "lookAt": "none",
-                      "opacity": 1,
-                      "requestType": "ImageryMaps",
-                      "version": 1
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "isPng": false,
+                        "label": "Imagery",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "ImageryMaps",
+                        "version": 1
                     },{
-                      "icon": "icons/773_l.png",
-                      "id": 1007,
-                      "initialState": true,
-                      "isPng": true,
-                      "label": "Labels",
-                      "lookAt": "none",
-                      "opacity": 1,
-                      "requestType": "VectorMapsRaster",
-                      "version": 8
+                        "icon": "icons/773_l.png",
+                        "id": 1007,
+                        "initialState": true,
+                        "isPng": true,
+                        "label": "Labels",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "VectorMapsRaster",
+                        "version": 8
                     }
-                  ],
-                  "serverUrl": "https://example.invalid",
-                  "useGoogleLayers": false
-                });
-            }, 1);
+                ],
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
         };
 
         var provider = new GoogleEarthImageryProvider({
             url : url,
-            channel: channel
+            channel: channel,
+            path: path
         });
 
         expect(provider.getUrl()).toEqual(url);
         expect(provider.getChannel()).toEqual(channel);
+        expect(provider.getVersion()).toEqual(version);
 
         waitsFor(function() {
             return provider.isReady();
@@ -161,41 +163,38 @@ defineSuite([
 
     it('routes requests through a proxy if one is specified', function() {
         var url = 'http://example.invalid';
-        var metadataUrl = url + '/query?request=Json&vars=geeServerDefs&is2d=t';
+        var metadataUrl = url + '/default_map/query?request=Json&vars=geeServerDefs&is2d=t';
         var proxy = new DefaultProxy('/proxy/');
 
-        jsonp.loadAndExecuteScript = function(url, functionName) {
-            expect(url.indexOf(proxy.getURL(metadataUrl)) === 0).toEqual(true);
-            setTimeout(function() {
-                window[functionName]({
-                  "isAuthenticated": true,
-                  "layers": [
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({
+                "isAuthenticated": true,
+                "layers": [
                     {
-                      "icon": "icons/773_l.png",
-                      "id": 1234,
-                      "initialState": true,
-                      "isPng": false,
-                      "label": "Imagery",
-                      "lookAt": "none",
-                      "opacity": 1,
-                      "requestType": "ImageryMaps",
-                      "version": 1
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "isPng": false,
+                        "label": "Imagery",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "ImageryMaps",
+                        "version": 1
                     },{
-                      "icon": "icons/773_l.png",
-                      "id": 1007,
-                      "initialState": true,
-                      "isPng": true,
-                      "label": "Labels",
-                      "lookAt": "none",
-                      "opacity": 1,
-                      "requestType": "VectorMapsRaster",
-                      "version": 8
+                        "icon": "icons/773_l.png",
+                        "id": 1007,
+                        "initialState": true,
+                        "isPng": true,
+                        "label": "Labels",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "VectorMapsRaster",
+                        "version": 8
                     }
-                  ],
-                  "serverUrl": "https://example.invalid",
-                  "useGoogleLayers": false
-                });
-            }, 1);
+                ],
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
         };
 
         var provider = new GoogleEarthImageryProvider({
@@ -216,7 +215,7 @@ defineSuite([
         runs(function() {
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if(url.indexOf('blob:') !== 0) {
-                  expect(url).toEqual(proxy.getURL('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
+                  expect(url).toEqual(proxy.getURL('http://example.invalid/default_map/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
                 }
 
                 // Just return any old image.
@@ -224,7 +223,7 @@ defineSuite([
             };
 
             loadWithXhr.createImage = function(url, responseType, headers, deferred) {
-                expect(url).toEqual(proxy.getURL('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
+                expect(url).toEqual(proxy.getURL('http://example.invalid/default_map/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1'));
 
                 // Just return any old image.
                 return loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, headers, deferred);
@@ -268,35 +267,35 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        jsonp.loadAndExecuteScript = function(url, functionName) {
-            window[functionName]({
-              "isAuthenticated": true,
-              "layers": [
-                {
-                  "icon": "icons/773_l.png",
-                  "id": 1234,
-                  "initialState": true,
-                  "isPng": false,
-                  "label": "Imagery",
-                  "lookAt": "none",
-                  "opacity": 1,
-                  "requestType": "ImageryMaps",
-                  "version": 1
-                },{
-                  "icon": "icons/773_l.png",
-                  "id": 1007,
-                  "initialState": true,
-                  "isPng": true,
-                  "label": "Labels",
-                  "lookAt": "none",
-                  "opacity": 1,
-                  "requestType": "VectorMapsRaster",
-                  "version": 8
-                }
-              ],
-              "serverUrl": "https://example.invalid",
-              "useGoogleLayers": false
-            });
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({
+                "isAuthenticated": true,
+                "layers": [
+                    {
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "isPng": false,
+                        "label": "Imagery",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "ImageryMaps",
+                        "version": 1
+                    },{
+                        "icon": "icons/773_l.png",
+                        "id": 1007,
+                        "initialState": true,
+                        "isPng": true,
+                        "label": "Labels",
+                        "lookAt": "none",
+                        "opacity": 1,
+                        "requestType": "VectorMapsRaster",
+                        "version": 8
+                    }
+                ],
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
         };
 
         var provider = new GoogleEarthImageryProvider({
