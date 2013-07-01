@@ -8,8 +8,7 @@ define(['require',
         '../../Scene/BingMapsStyle',
         '../../Scene/ArcGisMapServerImageryProvider',
         '../../Scene/OpenStreetMapImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider',
-        '../../Scene/SingleTileImageryProvider'
+        '../../Scene/TileMapServiceImageryProvider'
         ], function (
                 require,
                 ImageryProviderViewModel,
@@ -20,8 +19,7 @@ define(['require',
                 BingMapsStyle,
                 ArcGisMapServerImageryProvider,
                 OpenStreetMapImageryProvider,
-                TileMapServiceImageryProvider,
-                SingleTileImageryProvider) {
+                TileMapServiceImageryProvider) {
     "use strict";
 
     /**
@@ -191,12 +189,12 @@ Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
         }));
 
         providerViewModels.push(new ImageryProviderViewModel({
-            name : 'Disable Streaming Imagery',
-            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/singleTile.png'),
-            tooltip : 'Uses a single image for the entire world.',
+            name : 'Natural Earth\u00a0II',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
+            tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             creationFunction : function() {
-                return new SingleTileImageryProvider({
-                    url : buildModuleUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
+                return new TileMapServiceImageryProvider({
+                    url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }
         }));
