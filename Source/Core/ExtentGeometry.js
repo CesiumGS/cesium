@@ -10,6 +10,9 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './Extent',
+        './Geometry',
+        './GeometryInstance',
+        './GeometryPipeline',
         './GeographicProjection',
         './GeometryAttribute',
         './Math',
@@ -27,6 +30,9 @@ define([
         DeveloperError,
         Ellipsoid,
         Extent,
+        Geometry,
+        GeometryInstance,
+        GeometryPipeline,
         GeographicProjection,
         GeometryAttribute,
         CesiumMath,
@@ -53,25 +59,12 @@ define([
     var proj = new GeographicProjection();
     var position = new Cartesian3();
     var normal = new Cartesian3();
-    var surfaceNormal = new Cartesian3();
     var tangent = new Cartesian3();
     var binormal = new Cartesian3();
     var extrudedPosition = new Cartesian3();
-    var extrudedNormal = new Cartesian3();
-    var extrudedBinormal = new Cartesian3();
     var bottomBoundingSphere = new BoundingSphere();
     var topBoundingSphere = new BoundingSphere();
 
-    var westNormal = new Cartesian3();
-    var northNormal = new Cartesian3();
-    var eastNormal = new Cartesian3();
-    var southNormal = new Cartesian3();
-    var northEastTop = new Cartesian3();
-    var northEastBottom = new Cartesian3();
-    var northWestTop = new Cartesian3();
-    var northWestBottom = new Cartesian3();
-    var southWestTop = new Cartesian3();
-    var southWestBottom = new Cartesian3();
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
 
@@ -119,82 +112,36 @@ define([
         }
     }
 
-    function addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight) {
-        indices[indicesIndex++] = upperLeft;
-        indices[indicesIndex++] = lowerLeft;
-        indices[indicesIndex++] = upperRight;
-        indices[indicesIndex++] = upperRight;
-        indices[indicesIndex++] = lowerLeft;
-        indices[indicesIndex++] = lowerRight;
-        return indices;
-    }
-
     function constructExtent(options, vertexFormat, params){
         var extent = params.extent;
         var ellipsoid = params.ellipsoid;
         var size = params.size;
-        var threeCount = size * 3;
         var height = params.height;
         var width = params.width;
         var surfaceHeight = params.surfaceHeight;
 
-        var attrIndex = 0;
         var stIndex = 0;
 
-        var positions = (vertexFormat.position) ? new Float64Array(threeCount) : undefined;
+        var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Float32Array(threeCount) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Float32Array(threeCount) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(threeCount) : undefined;
 
+        var posIndex = 0;
         for ( var row = 0; row < height; ++row) {
             for ( var col = 0; col < width; ++col) {
                 computePosition(params, row, col, surfaceHeight);
 
-                var attrIndex1 = attrIndex + 1;
-                var attrIndex2 = attrIndex + 2;
-
-                if (vertexFormat.position) {
-                    positions[attrIndex] = position.x;
-                    positions[attrIndex1] = position.y;
-                    positions[attrIndex2] = position.z;
-                }
+                positions[posIndex++] = position.x;
+                positions[posIndex++] = position.y;
+                positions[posIndex++] = position.z;
 
                 if (vertexFormat.st) {
-                    textureCoordinates[stIndex] = (stLongitude - extent.west) * params.lonScalar;
-                    textureCoordinates[stIndex+1] = (stLatitude - extent.south) * params.latScalar;
+                    textureCoordinates[stIndex++] = (stLongitude - extent.west) * params.lonScalar;
+                    textureCoordinates[stIndex++] = (stLatitude - extent.south) * params.latScalar;
                 }
-
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                    ellipsoid.geodeticSurfaceNormal(position, normal);
-
-                    if (vertexFormat.normal) {
-                        normals[attrIndex] = normal.x;
-                        normals[attrIndex1] = normal.y;
-                        normals[attrIndex2] = normal.z;
-                    }
-
-                    if (vertexFormat.tangent) {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-
-                        tangents[attrIndex] = tangent.x;
-                        tangents[attrIndex1] = tangent.y;
-                        tangents[attrIndex2] = tangent.z;
-                    }
-
-                    if (vertexFormat.binormal) {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-                        Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-
-                        binormals[attrIndex] = binormal.x;
-                        binormals[attrIndex1] = binormal.y;
-                        binormals[attrIndex2] = binormal.z;
-                    }
-                }
-                attrIndex += 3;
-                stIndex += 2;
             }
         }
+
+        var geo = calculateAttributesTopBottom(positions, vertexFormat, ellipsoid, true, false);
 
         var indicesSize = 6 * (width - 1) * (height - 1);
         var indices = IndexDatatype.createTypedArray(size, indicesSize);
@@ -206,151 +153,234 @@ define([
                 var lowerLeft = upperLeft + width;
                 var lowerRight = lowerLeft + 1;
                 var upperRight = upperLeft + 1;
-                indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-                indicesIndex += 6;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = lowerRight;
                 ++index;
             }
             ++index;
         }
+
+        geo.indices = indices;
+        if (vertexFormat.st) {
+            geo.attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : textureCoordinates
+                });
+        }
+
         return {
-                indices: indices,
-                binormals: binormals,
-                tangents: tangents,
-                normals: normals,
-                textureCoordinates: textureCoordinates,
-                positions: positions,
-                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight)
+                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+                geometry: geo
         };
     }
 
-    function calculateAttributesWall(vertexFormat, ellipsoid, direction, setNormal) {
-        setNormal.clone(normal);
-        setNormal.clone(extrudedNormal);
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
-            if (direction === 'n' || direction === 's') {
-                Cartesian3.cross(Cartesian3.UNIT_Z, surfaceNormal, tangent).normalize(tangent);
-                if (vertexFormat.binormal) {
-                    Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                    binormal.clone(extrudedBinormal);
-                }
-            } else {
-                Cartesian3.cross(Cartesian3.UNIT_Z, surfaceNormal, tangent).normalize(tangent);
-                if (vertexFormat.binormal) {
-                    Cartesian3.cross(surfaceNormal, tangent, binormal).normalize(binormal);
-                    binormal.clone(extrudedBinormal);
-                }
-                if (vertexFormat.tangent) {
-                    Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
-                }
-            }
-        }
-    }
-
-    function calculateAttributesTopBottom(vertexFormat, ellipsoid) {
-        ellipsoid.geodeticSurfaceNormal(position, normal);
-        Cartesian3.negate(normal, extrudedNormal);
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-            if (vertexFormat.binormal) {
-                Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                binormal.negate(extrudedBinormal);
-            }
-        }
-    }
-
-    function addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, offset, extrudedOffset, top, bottom, direction, setNormal) {
-        if (!top) {
-            extrudedOffset = offset;
-        }
-
-        var threeExtrudedOffset = extrudedOffset*3;
-        var threeOffset = offset*3;
-
-        var attrIndex1 = attrIndex + 1;
-        var attrIndex2 = attrIndex + 2;
-
+    function createAttributes(vertexFormat, attributes) {
+        var geo = new Geometry ({
+            attributes: {},
+            primitiveType: PrimitiveType.TRIANGLES
+        });
         if (vertexFormat.position) {
-            if (bottom) {
-                attributes.positions[attrIndex + threeExtrudedOffset ] = extrudedPosition.x;
-                attributes.positions[attrIndex1 + threeExtrudedOffset] = extrudedPosition.y;
-                attributes.positions[attrIndex2 + threeExtrudedOffset] = extrudedPosition.z;
-            }
-
-            if (top) {
-                attributes.positions[attrIndex + threeOffset] = position.x;
-                attributes.positions[attrIndex1 + threeOffset] = position.y;
-                attributes.positions[attrIndex2 + threeOffset] = position.z;
-            }
+            geo.attributes.position = new GeometryAttribute({
+                componentDatatype: ComponentDatatype.DOUBLE,
+                componentsPerAttribute: 3,
+                values: attributes.positions
+            });
         }
-
-        if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-            if (typeof direction !== 'undefined') {
-                calculateAttributesWall(vertexFormat, ellipsoid, direction, setNormal);
-            } else {
-                calculateAttributesTopBottom(vertexFormat, ellipsoid);
-            }
-
-            if (top) {
-                if (vertexFormat.normal) {
-                    attributes.normals[attrIndex + threeOffset] = normal.x;
-                    attributes.normals[attrIndex1 + threeOffset] = normal.y;
-                    attributes.normals[attrIndex2 + threeOffset] = normal.z;
-                }
-
-                if (vertexFormat.tangent) {
-                    attributes.tangents[attrIndex + threeOffset] = tangent.x;
-                    attributes.tangents[attrIndex1 + threeOffset] = tangent.y;
-                    attributes.tangents[attrIndex2 + threeOffset] = tangent.z;
-                }
-
-                if (vertexFormat.binormal) {
-                    attributes.binormals[attrIndex + threeOffset] = binormal.x;
-                    attributes.binormals[attrIndex1 + threeOffset] = binormal.y;
-                    attributes.binormals[attrIndex2 + threeOffset] = binormal.z;
-                }
-            }
-
-            if (bottom) {
-                if (vertexFormat.normal) {
-                    attributes.normals[attrIndex + threeExtrudedOffset] = extrudedNormal.x;
-                    attributes.normals[attrIndex1 + threeExtrudedOffset] = extrudedNormal.y;
-                    attributes.normals[attrIndex2 + threeExtrudedOffset] = extrudedNormal.z;
-                }
-
-                if (vertexFormat.tangent) {
-                    attributes.tangents[attrIndex + threeExtrudedOffset] = tangent.x;
-                    attributes.tangents[attrIndex1 + threeExtrudedOffset] = tangent.y;
-                    attributes.tangents[attrIndex2 + threeExtrudedOffset] = tangent.z;
-                }
-
-                if (vertexFormat.binormal) {
-                    attributes.binormals[attrIndex + threeExtrudedOffset] = extrudedBinormal.x;
-                    attributes.binormals[attrIndex1 + threeExtrudedOffset] = extrudedBinormal.y;
-                    attributes.binormals[attrIndex2 + threeExtrudedOffset] = extrudedBinormal.z;
-                }
-            }
+        if (vertexFormat.normal) {
+            geo.attributes.normal = new GeometryAttribute({
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 3,
+                values: attributes.normals
+            });
         }
+        if (vertexFormat.tangent) {
+            geo.attributes.tangent = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : attributes.tangents
+                });
+            }
+        if (vertexFormat.binormal) {
+            geo.attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attributes.binormals
+            });
+        }
+        return geo;
     }
 
-    function addTextureCoordinates(vertexFormat, stIndex, attributes, offset, extrudedOffset, closeTop, closeBottom, params) {
-        if (vertexFormat.st) {
-            var twoOffset = offset*2;
-            var twoExtrudedOffset = extrudedOffset*2;
-            var extent = params.extent;
-            var stLon = (stLongitude - extent.west) * params.lonScalar;
-            var stLat = (stLatitude - extent.south) * params.latScalar;
-            if (!closeTop) {
-                extrudedOffset = offset;
-            } else {
-                attributes.textureCoordinates[stIndex + twoOffset] = stLon;
-                attributes.textureCoordinates[stIndex + twoOffset + 1] = stLat;
+    function calculateAttributesTopBottom(positions, vertexFormat, ellipsoid, top, bottom) {
+        var length = positions.length;
+
+        var normals = (vertexFormat.normal) ? new Float32Array(length) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(length) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(length) : undefined;
+
+        var attrIndex = 0;
+        var bottomOffset = (top) ? length / 2 : 0;
+        length = (top && bottom) ? length/2 : length;
+        for (var i = 0; i < length; i+=3) {
+            var p = Cartesian3.fromArray(positions, i, position);
+            var attrIndex1 = attrIndex + 1;
+            var attrIndex2 = attrIndex + 2;
+
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                normal = ellipsoid.geodeticSurfaceNormal(p, normal);
+                if (vertexFormat.tangent || vertexFormat.binormal) {
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                    if (vertexFormat.binormal) {
+                        Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                    }
+                }
+
+                if (top) {
+                    if (vertexFormat.normal) {
+                        normals[attrIndex] = normal.x;
+                        normals[attrIndex1] = normal.y;
+                        normals[attrIndex2] = normal.z;
+                    }
+                    if (vertexFormat.tangent) {
+                        tangents[attrIndex] = tangent.x;
+                        tangents[attrIndex1] = tangent.y;
+                        tangents[attrIndex2] = tangent.z;
+                    }
+                    if (vertexFormat.binormal) {
+                        binormals[attrIndex] = binormal.x;
+                        binormals[attrIndex1] = binormal.y;
+                        binormals[attrIndex2] = binormal.z;
+                    }
+                }
+
+                if (bottom) {
+                    if (vertexFormat.normal) {
+                        normals[attrIndex + bottomOffset] = -normal.x;
+                        normals[attrIndex1 + bottomOffset] = -normal.y;
+                        normals[attrIndex2 + bottomOffset] = -normal.z;
+                    }
+                    if (vertexFormat.tangent) {
+                        tangents[attrIndex + bottomOffset] = tangent.x;
+                        tangents[attrIndex1 + bottomOffset] = tangent.y;
+                        tangents[attrIndex2 + bottomOffset] = tangent.z;
+                    }
+                    if (vertexFormat.binormal) {
+                        binormals[attrIndex + bottomOffset] = binormal.x;
+                        binormals[attrIndex1 + bottomOffset] = binormal.y;
+                        binormals[attrIndex2 + bottomOffset] = binormal.z;
+                    }
+                }
             }
-            if (closeBottom) {
-                attributes.textureCoordinates[stIndex +  twoExtrudedOffset] = stLon;
-                attributes.textureCoordinates[stIndex + 1 +  twoExtrudedOffset] = stLat;
-            }
+            attrIndex += 3;
         }
+        return createAttributes(vertexFormat,
+                {
+            positions: positions,
+            normals: normals,
+            tangents: tangents,
+            binormals: binormals
+                });
+    }
+
+    function calculateAttributesWall(positions, vertexFormat, ellipsoid) {
+        var length = positions.length;
+
+        var normals = (vertexFormat.normal) ? new Float32Array(length) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(length) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(length) : undefined;
+
+        var attrIndex = 0;
+        var recomputeNormal = true;
+        var bottomOffset = length / 2;
+        for (var i = 0; i < bottomOffset; i+=3) {
+            var p = Cartesian3.fromArray(positions, i, position);
+            var attrIndex1 = attrIndex + 1;
+            var attrIndex2 = attrIndex + 2;
+
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                var p1 = Cartesian3.fromArray(positions, i + 3, v1Scratch);
+                if (recomputeNormal) {
+                    var p2 = Cartesian3.fromArray(positions, i + bottomOffset, v2Scratch);
+                    p1 = p1.subtract(p, p1);
+                    p2 = p2.subtract(p, p2);
+                    normal = p2.cross(p1, normal).normalize(normal);
+                    recomputeNormal = false;
+                }
+
+                if (p1.equalsEpsilon(p, CesiumMath.EPSILON10)) { // if we've reached a corner
+                    recomputeNormal = true;
+                }
+
+                if (vertexFormat.tangent || vertexFormat.binormal) {
+                    binormal = ellipsoid.geodeticSurfaceNormal(p, binormal);
+                    if (vertexFormat.tangent) {
+                        tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                    }
+                }
+
+                if (vertexFormat.normal) {
+                    normals[attrIndex] = normal.x;
+                    normals[attrIndex1] = normal.y;
+                    normals[attrIndex2] = normal.z;
+                    normals[attrIndex + bottomOffset] = normal.x;
+                    normals[attrIndex1 + bottomOffset] = normal.y;
+                    normals[attrIndex2 + bottomOffset] = normal.z;
+                }
+
+                if (vertexFormat.tangent) {
+                    tangents[attrIndex] = tangent.x;
+                    tangents[attrIndex1] = tangent.y;
+                    tangents[attrIndex2] = tangent.z;
+                    tangents[attrIndex + bottomOffset] = tangent.x;
+                    tangents[attrIndex1 + bottomOffset] = tangent.y;
+                    tangents[attrIndex2 + bottomOffset] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    binormals[attrIndex] = binormal.x;
+                    binormals[attrIndex1] = binormal.y;
+                    binormals[attrIndex2] = binormal.z;
+                    binormals[attrIndex + bottomOffset] = binormal.x;
+                    binormals[attrIndex1 + bottomOffset] = binormal.y;
+                    binormals[attrIndex2 + bottomOffset] = binormal.z;
+                }
+            }
+            attrIndex += 3;
+        }
+        return createAttributes(vertexFormat,
+                {
+            positions: positions,
+            normals: normals,
+            tangents: tangents,
+            binormals: binormals
+                });
+    }
+
+    function calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, offset) {
+        var extent = params.extent;
+        var stLon = (stLongitude - extent.west) * params.lonScalar;
+        var stLat = (stLatitude - extent.south) * params.latScalar;
+        if (typeof offset !== 'undefined') {
+            wallTextureCoordinates[stIndex +  offset] = stLon;
+            wallTextureCoordinates[stIndex + 1 +  offset] = stLat;
+        }
+        wallTextureCoordinates[stIndex++] = stLon;
+        wallTextureCoordinates[stIndex++] = stLat;
+        return stIndex;
+    }
+
+    function addWallPositions(wallPositions, posIndex, bottomOffset) {
+        wallPositions[posIndex + bottomOffset] = extrudedPosition.x;
+        wallPositions[posIndex++] = position.x;
+        wallPositions[posIndex + bottomOffset] = extrudedPosition.y;
+        wallPositions[posIndex++] = position.y;
+        wallPositions[posIndex + bottomOffset] = extrudedPosition.z;
+        wallPositions[posIndex++] = position.z;
+        return wallPositions;
     }
 
     function constructExtrudedExtent(options, vertexFormat, params) {
@@ -373,241 +403,148 @@ define([
         var closeBottom  = defaultValue(extrudedOptions.closeBottom, true);
 
         var perimeterPositions = 2*width + 2*height - 4;
-        var twoPP = perimeterPositions * 2;
-        var vertexCount = (perimeterPositions + 4)*2;
-        if (closeTop) {
-            vertexCount += size;
-        }
-        if (closeBottom) {
-            vertexCount += size;
-        }
+        var wallCount = (perimeterPositions + 4)*2;
 
-        var threeCount = vertexCount * 3;
-        var positions = (vertexFormat.position) ? new Float64Array(threeCount) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined;
-        var normals = (vertexFormat.normal) ? new Float32Array(threeCount) : undefined;
-        var tangents = (vertexFormat.tangent) ? new Float32Array(threeCount) : undefined;
-        var binormals = (vertexFormat.binormal) ? new Float32Array(threeCount) : undefined;
-
-        var attributes = {
-                positions: positions,
-                textureCoordinates: textureCoordinates,
-                normals: normals,
-                tangents: tangents,
-                binormals: binormals
-        };
-
-        var attrIndex = 0;
-        var stIndex = 0;
+        var wallPositions = new Float64Array(wallCount * 3);
+        var wallTextureCoordinates = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
 
         var row;
-        var col;
-        var countSides = (height - 2) * 2 + width;
-
-        // compute corner points first to find wall normals
-        computePosition(params, 0, 0, maxHeight, minHeight);
-        addTextureCoordinates(vertexFormat, 0, attributes, twoPP, twoPP + 4, true, true, params);
-        addTextureCoordinates(vertexFormat, 0, attributes, 0, perimeterPositions, true, true, params);
-        position.clone(northWestTop);
-        extrudedPosition.clone(northWestBottom);
-
-        computePosition(params, 0, width-1, maxHeight, minHeight);
-        addTextureCoordinates(vertexFormat, 0, attributes, twoPP + 1, twoPP + 5, true, true, params);
-        addTextureCoordinates(vertexFormat, (width-1)*2, attributes, 0, perimeterPositions, true, true, params);
-        position.clone(northEastTop);
-        extrudedPosition.clone(northEastBottom);
-
-        computePosition(params, height-1, 0, maxHeight, minHeight);
-        addTextureCoordinates(vertexFormat, 0, attributes, twoPP + 2, twoPP + 6, true, true, params);
-        addTextureCoordinates(vertexFormat, 0, attributes, countSides, countSides + perimeterPositions, true, true, params);
-        position.clone(southWestTop);
-        extrudedPosition.clone(southWestBottom);
-
-        computePosition(params, height-1, width-1, maxHeight, minHeight);
-        addTextureCoordinates(vertexFormat, 0, attributes, twoPP + 3, twoPP + 7, true, true, params);
-        addTextureCoordinates(vertexFormat, (width-1)*2, attributes, countSides, countSides + perimeterPositions, true, true, params);
-
-        northEastTop.subtract(northWestTop, v1Scratch);
-        northWestBottom.subtract(northWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, northNormal).normalize(northNormal);
-
-        northWestBottom.subtract(northWestTop, v1Scratch);
-        southWestTop.subtract(northWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, westNormal).normalize(westNormal);
-
-        southWestBottom.subtract(southWestTop, v1Scratch);
-        position.subtract(southWestTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, southNormal).normalize(southNormal);
-
-        position.subtract(northEastTop, v1Scratch);
-        northEastBottom.subtract(northEastTop, v2Scratch);
-        Cartesian3.cross(v1Scratch, v2Scratch, eastNormal).normalize(eastNormal);
-
-        addAttributes(0, vertexFormat, attributes, ellipsoid, twoPP + 3, twoPP + 7, true, true, 'e', eastNormal);
-        addAttributes((width-1)*3, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, true, true, 's', southNormal);
-
-        northWestTop.clone(position);
-        northWestBottom.clone(extrudedPosition);
-        addAttributes(0, vertexFormat, attributes, ellipsoid, twoPP, (twoPP + 4), true, true, 'w', westNormal);
-        addAttributes(0, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, 'n', northNormal);
-
-        northEastTop.clone(position);
-        northEastBottom.clone(extrudedPosition);
-        addAttributes(0, vertexFormat, attributes, ellipsoid, twoPP + 1, twoPP + 5, true, true, 'e', eastNormal);
-        addAttributes((width-1)*3, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, 'n', northNormal);
-
-        southWestTop.clone(position);
-        southWestBottom.clone(extrudedPosition);
-        addAttributes(0, vertexFormat, attributes, ellipsoid, twoPP + 2, twoPP + 6, true, true, 'w', westNormal);
-        addAttributes(0, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, true, true, 's', southNormal);
-
-        attrIndex += 3;
-        stIndex += 2;
-
-        for (col = 1; col < width - 1; ++col) {
-            row = 0;
+        var col = 0;
+        var posIndex = 0;
+        var stIndex = 0;
+        var bottomOffset = wallCount / 2 * 3;
+        for (row = 0; row < height; row++) {
             computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, 'n', northNormal); // add north row
-            addTextureCoordinates(vertexFormat, stIndex, attributes, 0, perimeterPositions, true, true, params);
-
-            row = height - 1;
-            computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, countSides, countSides + perimeterPositions, true, true, 's', southNormal); // add south row
-            addTextureCoordinates(vertexFormat, stIndex, attributes, countSides, countSides + perimeterPositions, true, true, params);
-
-            attrIndex += 3;
-            stIndex += 2;
-        }
-
-        attrIndex += 3;
-        stIndex += 2;
-
-        for (row = 1; row < height - 1; ++row) {
-            col = 0;
-            computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, perimeterPositions, true, true, 'w', westNormal); // add west side
-            addTextureCoordinates(vertexFormat, stIndex, attributes, 0, perimeterPositions, true, true, params);
-
-            col = width - 1;
-            computePosition(params, row, col, maxHeight, minHeight);
-            addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, height - 2, height - 2 + perimeterPositions, true, true, 'e', eastNormal); // add east side
-            addTextureCoordinates(vertexFormat, stIndex, attributes, height - 2, height - 2 + perimeterPositions, true, true, params);
-            attrIndex += 3;
-            stIndex += 2;
-        }
-
-        if (closeBottom || closeTop) {
-            var maxH = (closeTop) ? maxHeight : undefined;
-            var minH = (closeBottom) ? minHeight : undefined;
-            var incAmount = width + perimeterPositions + 8 + height - 2;
-            attrIndex += 3 * incAmount;
-            stIndex += 2 * incAmount;
-            for (row = 0; row < height; ++row) { // fill in middle
-                for (col = 0; col < width; ++col) {
-                    computePosition(params, row, col, maxH, minH);
-                    addAttributes(attrIndex, vertexFormat, attributes, ellipsoid, 0, size, closeTop, closeBottom);
-                    addTextureCoordinates(vertexFormat, stIndex, attributes, 0, size, closeTop, closeBottom, params);
-                    attrIndex += 3;
-                    stIndex += 2;
-                }
+            wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
+            posIndex += 3;
+            if (vertexFormat.st) {
+                stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
             }
         }
 
-        var topBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, params.ellipsoid, minHeight, bottomBoundingSphere);
-        var indexCount = perimeterPositions * 6;
-        if (closeTop) {
-            indexCount += (width - 1) * (height - 1) * 6;
+        row = height - 1;
+        for (col = 0; col < width; col++) {
+            computePosition(params, row, col, maxHeight, minHeight);
+            wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
+            posIndex += 3;            if (vertexFormat.st) {
+                stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
+            }
         }
-        if (closeBottom) {
-            indexCount += (width - 1) * (height - 1) * 6;
+
+        col = width - 1;
+        for (row = height - 1; row >= 0; row--) {
+            computePosition(params, row, col, maxHeight, minHeight);
+            wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
+            posIndex += 3;
+            if (vertexFormat.st) {
+                stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
+            }
         }
-        var indices = IndexDatatype.createTypedArray(vertexCount, indexCount);
-        var indicesIndex = 0;
-        var attr = {
-                binormals: binormals,
-                tangents: tangents,
-                normals: normals,
-                textureCoordinates: textureCoordinates,
-                positions: positions,
-                boundingSphere: BoundingSphere.union(topBS, bottomBS)
-        };
+
+        row = 0;
+        for (col = width-1; col >= 0; col--) {
+            computePosition(params, row, col, maxHeight, minHeight);
+            wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
+            posIndex += 3;
+            if (vertexFormat.st) {
+                stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
+            }
+        }
+
+        var geo = calculateAttributesWall(wallPositions, vertexFormat, ellipsoid);
+
+        if (vertexFormat.st) {
+            geo.attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : wallTextureCoordinates
+                });
+        }
+
+        var wallIndices = IndexDatatype.createTypedArray(wallCount, perimeterPositions * 6);
 
         var upperLeft;
         var lowerLeft;
         var lowerRight;
         var upperRight;
-        var i = 0;
-
-        upperLeft = twoPP; //NW corner
-        lowerLeft = upperLeft + 4;
-        if (width === perimeterPositions - width) {
-            upperRight = twoPP + 2; //get clone of corner point
-            lowerRight = upperRight + 4;
-        } else {
-            upperRight = width;
-            lowerRight = perimeterPositions + width;
-        }
-        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-        indicesIndex += 6;
-
-        upperLeft = twoPP + 3; //SE corner
-        lowerLeft = upperLeft + 4;
-        if (perimeterPositions/2 === width - 1) {
-            upperRight = twoPP + 1; //get clone of corner point
-            lowerRight = upperRight + 4;
-        } else {
-            lowerRight = twoPP - 1 - width;
-            upperRight =  perimeterPositions - width - 1;
-        }
-        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-        indicesIndex += 6;
-
-        for (i = 1; i < width; i++) {
-            upperLeft = i; // north wall
-            lowerLeft = upperLeft + perimeterPositions;
-            lowerRight = lowerLeft - 1;
-            upperRight = upperLeft - 1;
-            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-            indicesIndex += 6;
-
-            upperLeft = i + perimeterPositions - width - 1; // south wall
-            lowerLeft = upperLeft + perimeterPositions;
-            lowerRight = lowerLeft + 1;
+        var length = wallPositions.length / 6;
+        var i;
+        var index = 0;
+        for (i = 0; i < length - 1; i++) {
+            upperLeft = i;
             upperRight = upperLeft + 1;
-            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-            indicesIndex += 6;
+            var p1 = Cartesian3.fromArray(wallPositions, upperLeft*3, v1Scratch);
+            var p2 = Cartesian3.fromArray(wallPositions, upperRight*3, v2Scratch);
+            if (p1.equalsEpsilon(p2, CesiumMath.EPSILON10)) {
+                continue;
+            }
+            lowerLeft = upperLeft + length;
+            lowerRight = lowerLeft + 1;
+            wallIndices[index++] = upperLeft;
+            wallIndices[index++] = lowerLeft;
+            wallIndices[index++] = upperRight;
+            wallIndices[index++] = upperRight;
+            wallIndices[index++] = lowerLeft;
+            wallIndices[index++] = lowerRight;
         }
 
-        for (i = width; i < width + height - 2; i++) {
-            upperLeft = i; // west wall
-            lowerLeft = upperLeft + perimeterPositions;
-            if (upperLeft === width - 1 + height - 2) {
-                upperRight = twoPP + 2; //get clone of corner point
-                lowerRight = upperRight + 4;
-            } else {
-                lowerRight = lowerLeft + 1;
-                upperRight = upperLeft + 1;
-            }
-            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-            indicesIndex += 6;
+        geo.indices = wallIndices;
 
-            upperLeft = i + height - 2; // east wall
-            lowerLeft = upperLeft + perimeterPositions;
-            if (upperLeft === width + height - 2) {
-                upperRight = twoPP + 1; //get clone of corner point
-                lowerRight = upperRight + 4;
-            } else {
-                lowerRight = lowerLeft - 1;
-                upperRight = upperLeft - 1;
+        if (closeBottom || closeTop) {
+            var maxH;
+            var minH;
+            var topBottomCount = 0;
+            var topBottomIndicesCount = 0;
+            if (closeTop) {
+                topBottomCount += size;
+                topBottomIndicesCount += (width - 1) * (height - 1) * 6;
+                maxH = maxHeight;
             }
-            indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-            indicesIndex += 6;
-        }
+            if (closeBottom) {
+                topBottomCount += size;
+                topBottomIndicesCount += (width - 1) * (height - 1) * 6;
+                minH = minHeight;
+            }
 
-        if (closeTop || closeBottom) {
-            var index = twoPP + 8;
-            var bottomOffset = (closeBottom && closeTop) ? size : 0;
+            var topBottomPositions = new Float64Array(topBottomCount * 3);
+            var topBottomTextureCoordinates = (vertexFormat.st) ? new Float32Array(topBottomCount * 2) : undefined;
+            var topBottomIndices = IndexDatatype.createTypedArray(topBottomCount, topBottomIndicesCount);
+
+            posIndex = 0;
+            stIndex = 0;
+            bottomOffset = (closeBottom && closeTop) ? size*3 : 0;
+            for (row = 0; row < height; ++row) {
+                for (col = 0; col < width; ++col) {
+                    computePosition(params, row, col, maxH, minH);
+                    if (closeBottom) {
+                        topBottomPositions[posIndex + bottomOffset] = extrudedPosition.x;
+                        topBottomPositions[posIndex + 1 + bottomOffset] = extrudedPosition.y;
+                        topBottomPositions[posIndex + 2 + bottomOffset] = extrudedPosition.z;
+                    }
+                    if (closeTop) {
+                        topBottomPositions[posIndex] = position.x;
+                        topBottomPositions[posIndex + 1] = position.y;
+                        topBottomPositions[posIndex + 2] = position.z;
+                    }
+                    if (vertexFormat.st) {
+                        stIndex = calculateST(vertexFormat, stIndex, topBottomTextureCoordinates, params, size * 2);
+                    }
+                    posIndex += 3;
+                }
+            }
+
+            var topBottomGeo = calculateAttributesTopBottom(topBottomPositions, vertexFormat, ellipsoid, closeTop, closeBottom);
+            if (vertexFormat.st) {
+                topBottomGeo.attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : topBottomTextureCoordinates
+                });
+            }
+
+            var indicesIndex = 0;
+            index = 0;
+            bottomOffset /= 3;
             for (i = 0; i < height - 1; ++i) {
                 for ( var j = 0; j < width - 1; ++j) {
                     upperLeft = index;
@@ -615,25 +552,38 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        indices[indicesIndex++] = upperRight + bottomOffset;
-                        indices[indicesIndex++] = lowerLeft + bottomOffset;
-                        indices[indicesIndex++] = upperLeft + bottomOffset;
-                        indices[indicesIndex++] = lowerRight + bottomOffset;
-                        indices[indicesIndex++] = lowerLeft + bottomOffset;
-                        indices[indicesIndex++] = upperRight + bottomOffset;
+                        topBottomIndices[indicesIndex++]= upperRight + bottomOffset;
+                        topBottomIndices[indicesIndex++] = lowerLeft + bottomOffset;
+                        topBottomIndices[indicesIndex++] = upperLeft + bottomOffset;
+                        topBottomIndices[indicesIndex++] = lowerRight + bottomOffset;
+                        topBottomIndices[indicesIndex++] = lowerLeft + bottomOffset;
+                        topBottomIndices[indicesIndex++] = upperRight + bottomOffset;
                     }
 
                     if (closeTop) {
-                        indices = addIndices(indices, indicesIndex, upperLeft, lowerLeft, upperRight, lowerRight);
-                        indicesIndex += 6;
+                        topBottomIndices[indicesIndex++] = upperLeft;
+                        topBottomIndices[indicesIndex++] = lowerLeft;
+                        topBottomIndices[indicesIndex++] = upperRight;
+                        topBottomIndices[indicesIndex++] = upperRight;
+                        topBottomIndices[indicesIndex++] = lowerLeft;
+                        topBottomIndices[indicesIndex++] = lowerRight;
                     }
                     ++index;
                 }
                 ++index;
             }
+            topBottomGeo.indices = topBottomIndices;
+            geo = GeometryPipeline.combine([new GeometryInstance({geometry: topBottomGeo}), new GeometryInstance({geometry: geo})]);
         }
-        attr.indices= indices;
-        return attr;
+
+        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var boundingSphere = BoundingSphere.union(topBS, bottomBS);
+
+        return {
+            boundingSphere: boundingSphere,
+            geometry: geo
+        };
     }
 
     /**
@@ -724,7 +674,6 @@ define([
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var attributes = {};
 
         var size = width * height;
 
@@ -746,54 +695,14 @@ define([
             size: size
         };
 
-        var attr;
+        var o;
 
         if (typeof options.extrudedOptions !== 'undefined') {
-            attr = constructExtrudedExtent(options, vertexFormat, params);
+            o = constructExtrudedExtent(options, vertexFormat, params);
         } else {
-            attr = constructExtent(options, vertexFormat, params);
+            o = constructExtent(options, vertexFormat, params);
         }
-
-
-        if (vertexFormat.position) {
-            attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : attr.positions
-            });
-        }
-
-        if (vertexFormat.st) {
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : attr.textureCoordinates
-            });
-        }
-
-        if (vertexFormat.normal) {
-            attributes.normal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.normals
-            });
-        }
-
-        if (vertexFormat.tangent) {
-            attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.tangents
-            });
-        }
-
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.binormals
-            });
-        }
+        var geometry = o.geometry;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -803,27 +712,27 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = attributes;
+        this.attributes = geometry.attributes;
 
         /**
          * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indices = attr.indices;
+        this.indices = geometry.indices;
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = attr.boundingSphere;
+        this.boundingSphere = o.boundingSphere;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
          *
          * @type PrimitiveType
          */
-        this.primitiveType = PrimitiveType.TRIANGLES;
+        this.primitiveType = geometry.primitiveType;
     };
 
     return ExtentGeometry;

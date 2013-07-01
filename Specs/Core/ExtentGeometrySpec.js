@@ -173,7 +173,7 @@ defineSuite([
         var rotation = Matrix2.fromRotation(angle);
         var rotatedSECornerCartographic = projection.unproject(rotation.multiplyByVector(projectedSECorner));
         var rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedSECornerCartographic);
-        var actual = new Cartesian3(positions[length-3], positions[length-2], positions[length-1]);
+        var actual = new Cartesian3(positions[length-21], positions[length-20], positions[length-19]);
         expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
     });
 
