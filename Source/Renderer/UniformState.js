@@ -89,8 +89,14 @@ define([
         this._viewProjectionDirty = true;
         this._viewProjection = new Matrix4();
 
+        this._inverseViewProjectionDirty = true;
+        this._inverseViewProjection = new Matrix4();
+
         this._modelViewProjectionDirty = true;
         this._modelViewProjection = new Matrix4();
+
+        this._inverseModelViewProjectionDirty = true;
+        this._inverseModelViewProjection = new Matrix4();
 
         this._modelViewProjectionRelativeToEyeDirty = true;
         this._modelViewProjectionRelativeToEye = new Matrix4();
@@ -340,9 +346,13 @@ define([
         this._inverseModelView3DDirty = true;
         this._inverseModelDirty = true;
         this._modelViewDirty = true;
+        this._inverseModelViewDirty = true;
+        this._viewProjectionDirty = true;
+        this._inverseViewProjectionDirty = true;
         this._modelViewRelativeToEyeDirty = true;
         this._inverseModelViewDirty = true;
         this._modelViewProjectionDirty = true;
+        this._inverseModelViewProjectionDirty = true;
         this._modelViewProjectionRelativeToEyeDirty = true;
         this._modelViewInfiniteProjectionDirty = true;
         this._normalDirty = true;
@@ -514,6 +524,26 @@ define([
     UniformState.prototype.getInverseViewRotation3D = function() {
         this.getInverseView3D();
         return this._inverseViewRotation3D;
+    };
+
+    /**
+     * DOC_TBA
+     *
+     * @memberof UniformState
+     *
+     * @param {Matrix4} [matrix] DOC_TBA.
+     *
+     * @see UniformState#getProjection
+     * @see czm_projection
+     */
+    UniformState.prototype.setProjection = function(matrix) {
+        Matrix4.clone(defaultValue(matrix, Matrix4.IDENTITY), this._projection);
+
+        this._inverseProjectionDirty = true;
+        this._viewProjectionDirty = true;
+        this.__inverseViewProjectionDirty = true;
+        this._modelViewProjectionDirty = true;
+        this._inverseModelViewProjectionDirty = true;
     };
 
     /**
@@ -718,6 +748,28 @@ define([
         return this._viewProjection;
     };
 
+    function cleanInverseViewProjection(uniformState) {
+        if (uniformState._inverseViewProjectionDirty) {
+            uniformState._inverseViewProjectionDirty = false;
+
+            Matrix4.inverse(uniformState.getViewProjection(), uniformState._inverseViewProjection);
+        }
+    }
+
+    /**
+     * Returns the inverse view-projection matrix
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} The inverse view-projection matrix.
+     *
+     * @see czm_inverseViewProjection
+     */
+    UniformState.prototype.getInverseViewProjection = function() {
+        cleanInverseViewProjection(this);
+        return this._inverseViewProjection;
+    };
+
     function cleanModelViewProjection(uniformState) {
         if (uniformState._modelViewProjectionDirty) {
             uniformState._modelViewProjectionDirty = false;
@@ -738,6 +790,28 @@ define([
     UniformState.prototype.getModelViewProjection = function() {
         cleanModelViewProjection(this);
         return this._modelViewProjection;
+    };
+
+    function cleanInverseModelViewProjection(uniformState) {
+        if (uniformState._inverseModelViewProjectionDirty) {
+            uniformState._inverseModelViewProjectionDirty = false;
+
+            Matrix4.inverse(uniformState.getModelViewProjection(), uniformState._inverseModelViewProjection);
+        }
+    }
+
+    /**
+     * Returns the inverse model-view-projection matrix.
+     *
+     * @memberof UniformState
+     *
+     * @return {Matrix4} The inverse model-view-projection matrix.
+     *
+     * @see czm_inverseModelViewProjection
+     */
+    UniformState.prototype.getInverseModelViewProjection = function() {
+        cleanInverseModelViewProjection(this);
+        return this._inverseModelViewProjection;
     };
 
     function cleanModelViewProjectionRelativeToEye(uniformState) {

@@ -4,6 +4,10 @@ Change Log
 Beta Releases
 -------------
 
+### TODO
+
+* Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:
