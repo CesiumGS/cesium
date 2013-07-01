@@ -198,6 +198,17 @@ define([
     };
 
     /**
+     * Gets the url path of the data on the Google Earth server.
+     *
+     * @memberof GoogleEarthImageryProvider
+     *
+     * @returns {String} The path.
+     */
+    GoogleEarthImageryProvider.prototype.getPath = function() {
+        return this._path;
+    };
+
+    /**
      * Gets the proxy used by this provider.
      *
      * @memberof GoogleEarthImageryProvider

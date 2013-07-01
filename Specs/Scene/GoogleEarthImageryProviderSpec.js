@@ -62,7 +62,6 @@ defineSuite([
 
     it('can provide a root tile', function() {
         var path = '';
-
         var url = 'http://example.invalid';
         var metadataUrl = url + path + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var channel = 1234;
@@ -106,6 +105,7 @@ defineSuite([
         });
 
         expect(provider.getUrl()).toEqual(url);
+        expect(provider.getPath()).toEqual(path);
         expect(provider.getChannel()).toEqual(channel);
         expect(provider.getVersion()).toEqual(version);
 
@@ -162,6 +162,7 @@ defineSuite([
     });
 
     it('routes requests through a proxy if one is specified', function() {
+        var path = '/default_map';
         var url = 'http://example.invalid';
         var metadataUrl = url + '/default_map/query?request=Json&vars=geeServerDefs&is2d=t';
         var proxy = new DefaultProxy('/proxy/');
@@ -204,6 +205,7 @@ defineSuite([
         });
 
         expect(provider.getUrl()).toEqual(url);
+        expect(provider.getPath()).toEqual(path);
         expect(provider.getProxy()).toEqual(proxy);
 
         waitsFor(function() {
