@@ -56,15 +56,15 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
     };
 
     var pointNamedCrs = {
-        type : 'Point',
-        coordinates : [102.0, 0.5],
-        crs : {
-            type : 'name',
-            properties : {
-                name : 'EPSG:4326'
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            crs : {
+                type : 'name',
+                properties : {
+                    name : 'EPSG:4326'
+                }
             }
-        }
-    };
+        };
 
     var pointCrsLinkHref = {
         type : 'Point',
@@ -73,6 +73,17 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             type : 'link',
             properties : {
                 href : 'http://crs.invalid'
+            }
+        }
+    };
+
+    var pointCrsEpsg = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'EPSG',
+            properties : {
+                code : 4326
             }
         }
     };
@@ -396,6 +407,20 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
             expect(pointObject.position.getValueCartesian()).toEqual(projectedPosition);
+        });
+    });
+
+    it('Works with EPSG crs', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(pointCrsEpsg);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 1;
+        });
+        runs(function() {
+            var pointObject = dynamicObjectCollection.getObjects()[0];
+            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
 
