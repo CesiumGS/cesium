@@ -1,4 +1,6 @@
 language: node_js
 node_js:
-  - "0.8"
-script: ant release -DnodePath=node
+  - "0.10"
+script:
+  - ant runJsHint
+  - ant release -DnodePath=node
