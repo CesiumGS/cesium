@@ -55,7 +55,7 @@ vec4 shade(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
 {
     if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval, pointInEllipsoid))
     {
-        return getIntersectionColor(u_sensorRadius, v_positionEC);
+        return getIntersectionColor();
     }
     return getColor(u_sensorRadius, v_positionEC);
 }
