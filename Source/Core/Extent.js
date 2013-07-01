@@ -30,8 +30,7 @@ define([
         /**
          * The westernmost longitude, in radians, in the range [-Pi, Pi].
          *
-         * @type Number
-         *
+         * @type {Number}
          * @default 0.0
          */
         this.west = defaultValue(west, 0.0);
@@ -39,8 +38,7 @@ define([
         /**
          * The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
          *
-         * @type Number
-         *
+         * @type {Number}
          * @default 0.0
          */
         this.south = defaultValue(south, 0.0);
@@ -48,8 +46,7 @@ define([
         /**
          * The easternmost longitude, in radians, in the range [-Pi, Pi].
          *
-         * @type Number
-         *
+         * @type {Number}
          * @default 0.0
          */
         this.east = defaultValue(east, 0.0);
@@ -57,8 +54,7 @@ define([
         /**
          * The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
          *
-         * @type Number
-         *
+         * @type {Number}
          * @default 0.0
          */
         this.north = defaultValue(north, 0.0);

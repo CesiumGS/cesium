@@ -38,12 +38,14 @@ define([
         /**
          * The center point of the sphere.
          * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
          */
         this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
 
         /**
          * The radius of the sphere.
          * @type {Number}
+         * @default 0.0
          */
         this.radius = defaultValue(radius, 0.0);
     };

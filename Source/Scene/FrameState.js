@@ -17,7 +17,8 @@ define([
     var FrameState = function() {
         /**
          * The current mode of the scene.
-         * @type SceneMode
+         * @type {SceneMode}
+         * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
 
@@ -25,71 +26,82 @@ define([
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
-         * @type Number
+         * @type {Number}
+         * @default {@link SceneMode.SCENE3D.morphTime}
          */
         this.morphTime = SceneMode.SCENE3D.morphTime;
 
         /**
          * The current frame number.
          *
-         * @type Number
+         * @type {Number}
+         * @default 0
          */
         this.frameNumber = 0;
 
         /**
          * The scene's current time.
          *
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default undefined
          */
         this.time = undefined;
 
         this.scene2D = {
             /**
              * The projection to use in 2D mode.
+             * @default undefined
              */
             projection : undefined
         };
 
         /**
          * The current camera.
-         * @type Camera
+         * @type {Camera}
+         * @default undefined
          */
         this.camera = undefined;
 
         /**
          * The culling volume.
-         * @type CullingVolume
+         * @type {CullingVolume}
+         * @default undefined
          */
         this.cullingVolume = undefined;
 
         /**
          * The current occluder.
-         * @type Occluder
+         * @type {Occluder}
+         * @default undefined
          */
         this.occluder = undefined;
 
         /**
          * The dimensions of the canvas.
          * @type {Cartesian2}
+         * @default Cartesian2(0.0, 0.0)
          */
         this.canvasDimensions = new Cartesian2();
 
         this.passes = {
-                /**
-                 * <code>true</code> if the primitive should update for a color pass, <code>false</code> otherwise.
-                 * @type Boolean
-                 */
-                color : false,
-                /**
-                 * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
-                 * @type Boolean
-                 */
-                pick : false,
-                /**
-                 * <code>true</code> if the primitive should update for an overlay pass, <code>false</code> otherwise.
-                 * @type Boolean
-                 */
-                overlay : false
+            /**
+             * <code>true</code> if the primitive should update for a color pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            color : false,
+            /**
+             * <code>true</code> if the primitive should update for a picking pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            pick : false,
+            /**
+             * <code>true</code> if the primitive should update for an overlay pass, <code>false</code> otherwise.
+             * @type {Boolean}
+             * @default false
+             */
+            overlay : false
         };
     };
 

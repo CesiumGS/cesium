@@ -89,13 +89,25 @@ define([
 
     /**
      * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     * not be called before {@link GridImageryProvider#isReady} returns true.
      *
      * @memberof GridImageryProvider
      *
      * @returns {Number} The maximum level.
      */
     GridImageryProvider.prototype.getMaximumLevel = function() {
+        return undefined;
+    };
+
+    /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link GridImageryProvider#isReady} returns true.
+     *
+     * @memberof GridImageryProvider
+     *
+     * @returns {Number} The minimum level.
+     */
+    GridImageryProvider.prototype.getMinimumLevel = function() {
         return undefined;
     };
 

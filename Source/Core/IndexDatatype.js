@@ -19,8 +19,9 @@ define([
          * 8-bit unsigned byte enumeration corresponding to <code>UNSIGNED_BYTE</code> and the type
          * of an element in <code>Uint8Array</code>.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1401
          */
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
 
@@ -28,8 +29,9 @@ define([
          * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
          * of an element in <code>Uint16Array</code>.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1403
          */
         UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
 

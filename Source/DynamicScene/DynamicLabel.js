@@ -46,62 +46,74 @@ define([
     var DynamicLabel = function() {
         /**
          * A DynamicProperty of type CzmlString which determines the label's text.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.text = undefined;
         /**
          * A DynamicProperty of type CzmlString which determines the label's font.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.font = undefined;
         /**
          * A DynamicProperty of type CzmlLabelStyle which determines the label's style.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.style = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the label's fill color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.fillColor = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the label's outline color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.outlineColor = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the label's outline width.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.outlineWidth = undefined;
         /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the label's horizontal origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.horizontalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlVerticalOrigin which determines the label's vertical origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.verticalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the label's eye offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.eyeOffset = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian2 which determines the label's pixel offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.pixelOffset = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the label's scale.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.scale = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the label's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
     };

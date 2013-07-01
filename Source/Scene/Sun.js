@@ -51,8 +51,7 @@ define([
         /**
          * Determines if the sun will be shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = true;

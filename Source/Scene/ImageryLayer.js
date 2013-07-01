@@ -134,6 +134,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default 1.0
          */
         this.alpha = defaultValue(description.alpha, defaultValue(imageryProvider.defaultAlpha, 1.0));
 
@@ -148,6 +149,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default {@link ImageryLayer.DEFAULT_BRIGHTNESS}
          */
         this.brightness = defaultValue(description.brightness, defaultValue(imageryProvider.defaultBrightness, ImageryLayer.DEFAULT_BRIGHTNESS));
 
@@ -162,6 +164,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default {@link ImageryLayer.DEFAULT_CONTRAST}
          */
         this.contrast = defaultValue(description.contrast, defaultValue(imageryProvider.defaultContrast, ImageryLayer.DEFAULT_CONTRAST));
 
@@ -174,6 +177,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default {@link ImageryLayer.DEFAULT_HUE}
          */
         this.hue = defaultValue(description.hue, defaultValue(imageryProvider.defaultHue, ImageryLayer.DEFAULT_HUE));
 
@@ -187,6 +191,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default {@link ImageryLayer.DEFAULT_SATURATION}
          */
         this.saturation = defaultValue(description.saturation, defaultValue(imageryProvider.defaultSaturation, ImageryLayer.DEFAULT_SATURATION));
 
@@ -200,6 +205,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default {@link ImageryLayer.DEFAULT_GAMMA}
          */
         this.gamma = defaultValue(description.gamma, defaultValue(imageryProvider.defaultGamma, ImageryLayer.DEFAULT_GAMMA));
 
@@ -207,6 +213,7 @@ define([
          * Determines if this layer is shown.
          *
          * @type {Boolean}
+         * @default true
          */
         this.show = defaultValue(description.show, true);
 
@@ -234,30 +241,35 @@ define([
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the brightness of the imagery.
      * @type {number}
+     * @default 1.0
      */
     ImageryLayer.DEFAULT_BRIGHTNESS = 1.0;
     /**
      * This value is used as the default contrast for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the contrast of the imagery.
-     * @type {number}
+     * @type {Number}
+     * @default 1.0
      */
     ImageryLayer.DEFAULT_CONTRAST = 1.0;
     /**
      * This value is used as the default hue for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the hue of the imagery.
-     * @type {number}
+     * @type {Number}
+     * @default 0.0
      */
     ImageryLayer.DEFAULT_HUE = 0.0;
     /**
      * This value is used as the default saturation for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the saturation of the imagery.
-     * @type {number}
+     * @type {Number}
+     * @default 1.0
      */
     ImageryLayer.DEFAULT_SATURATION = 1.0;
     /**
      * This value is used as the default gamma for the imagery layer if one is not provided during construction
      * or by the imagery provider. This value does not modify the gamma of the imagery.
-     * @type {number}
+     * @type {Number}
+     * @default 1.0
      */
     ImageryLayer.DEFAULT_GAMMA = 1.0;
 
@@ -417,6 +429,13 @@ define([
         var maximumLevel = imageryProvider.getMaximumLevel();
         if (imageryLevel > maximumLevel) {
             imageryLevel = maximumLevel;
+        }
+
+        if (typeof imageryProvider.getMinimumLevel !== 'undefined') {
+            var minimumLevel = imageryProvider.getMinimumLevel();
+            if (imageryLevel < minimumLevel) {
+                imageryLevel = minimumLevel;
+            }
         }
 
         var imageryTilingScheme = imageryProvider.getTilingScheme();

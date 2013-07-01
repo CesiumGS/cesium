@@ -14,16 +14,19 @@ define(['../Core/defaultValue'], function(defaultValue) {
         /**
          * The lower bound or closest distance from the camera.
          * @type {Number}
+         * @default 0.0
          */
         this.near = defaultValue(near, 0.0);
         /**
          * The upper bound or farthest distance from the camera.
          * @type {Number}
+         * @default 0.0
          */
         this.far = defaultValue(far, 0.0);
         /**
          * The list of commands.
          * @type {Array}
+         * @default []
          */
         this.commands = [];
     };
