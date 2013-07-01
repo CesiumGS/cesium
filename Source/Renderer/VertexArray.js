@@ -122,7 +122,7 @@ define([
      * @internalConstructor
      *
      * @see {@link Context#createVertexArray}
-     * @see {@link Context#createVertexArrayFromMesh}
+     * @see {@link Context#createVertexArrayFromGeometry}
      */
     var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
         var vaAttributes = [];

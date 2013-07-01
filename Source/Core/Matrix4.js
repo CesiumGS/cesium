@@ -87,32 +87,32 @@ define([
      * @param {Matrix4} [result] The object onto which to store the result.
      * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
-    Matrix4.clone = function(values, result) {
-        if (typeof values === 'undefined') {
+    Matrix4.clone = function(matrix, result) {
+        if (typeof matrix === 'undefined') {
             return undefined;
         }
         if (typeof result === 'undefined') {
-            return new Matrix4(values[0], values[4], values[8], values[12],
-                               values[1], values[5], values[9], values[13],
-                               values[2], values[6], values[10], values[14],
-                               values[3], values[7], values[11], values[15]);
+            return new Matrix4(matrix[0], matrix[4], matrix[8], matrix[12],
+                               matrix[1], matrix[5], matrix[9], matrix[13],
+                               matrix[2], matrix[6], matrix[10], matrix[14],
+                               matrix[3], matrix[7], matrix[11], matrix[15]);
         }
-        result[0] = values[0];
-        result[1] = values[1];
-        result[2] = values[2];
-        result[3] = values[3];
-        result[4] = values[4];
-        result[5] = values[5];
-        result[6] = values[6];
-        result[7] = values[7];
-        result[8] = values[8];
-        result[9] = values[9];
-        result[10] = values[10];
-        result[11] = values[11];
-        result[12] = values[12];
-        result[13] = values[13];
-        result[14] = values[14];
-        result[15] = values[15];
+        result[0] = matrix[0];
+        result[1] = matrix[1];
+        result[2] = matrix[2];
+        result[3] = matrix[3];
+        result[4] = matrix[4];
+        result[5] = matrix[5];
+        result[6] = matrix[6];
+        result[7] = matrix[7];
+        result[8] = matrix[8];
+        result[9] = matrix[9];
+        result[10] = matrix[10];
+        result[11] = matrix[11];
+        result[12] = matrix[12];
+        result[13] = matrix[13];
+        result[14] = matrix[14];
+        result[15] = matrix[15];
         return result;
     };
 

@@ -8,6 +8,54 @@ Beta Releases
 
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
+### b18 - 2013-08-01
+
+* Breaking changes:
+   * Replaced tessellators and meshes with geometry.  In particular:
+      * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
+      * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Replaced `ExtentTessletaor` with `ExtentGeometry`.
+      * Removed `PlaneTessellator`.  It was incomplete and not used.
+      * Renamed `MeshFilters` to `GeometryPipeline`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryPipeline.toWireframe`.
+      * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
+      * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
+   * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+   * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
+   * Removed `Polygon.bufferUsage`.  It is no longer needed.
+   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
+   * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
+   * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
+   * Added `height` parameter to `BoundingSphere.fromExtent3D`.
+   * Added `height` parameter to `Extent.subsample`.
+* Added `ExtentPrimitive`.
+* Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
+   * `PolygonGeometry`
+   * `ExtentGeometry`
+   * `EllipseGeometry`
+   * `CircleGeometry`
+   * `WallGeometry`
+   * `SimplePolylineGeometry`
+   * `BoxGeometry`
+   * `EllipsoidGeometry`
+* Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
+   * `Appearance`
+   * `PerInstanceColorAppearance`
+   * `EllipsoidSurfaceAppearance`
+* Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
+* Added `GeometryPipeline.combine` to combine meshes for better batching.
+* Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
+* Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
+* Added `GeometryPipeline.wrapLongitude` to split geometry across the International Date Line.
+* Added `GeometryPipeline.createLineSegmentsForVectors` and `createTangentSpaceDebugPrimitive` for debugging.
+* Added `PolylinePipeline.removeDuplicates`.
+* Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
+* Added `BoundingSphere.fromEllipsoid`.
+* Added `BoundingSphere.projectTo2D`.
+* Added `Extent.fromDegrees`.
+* Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:

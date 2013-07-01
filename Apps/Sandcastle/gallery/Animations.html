@@ -34,7 +34,7 @@ require([
 {
     "use strict";
 
-    var polygon;
+    var extent;
     var rectangularSensor;
 
     function addAlphaAnimation(primitive, scene) {
@@ -49,22 +49,14 @@ require([
         });
     }
 
-    function addHeightAnimation(primitive, scene) {
-        Sandcastle.declare(addHeightAnimation); // For highlighting in Sandcastle.
-        scene.getAnimations().addProperty(primitive, 'height', 5000000.0, 0.0, {
-            duration : 1000
-        });
-    }
-
     function addStripeAnimation(primitive, scene) {
         Sandcastle.declare(addStripeAnimation); // For highlighting in Sandcastle.
         scene.getAnimations().addOffsetIncrement(primitive.material);
     }
 
-    function resetPolygonPropeties(polygon) {
-        polygon.height = 0.0;
-        polygon.material.uniforms.time = 1.0;
-        polygon.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+    function resetExtentPropeties(extent) {
+        extent.material.uniforms.time = 1.0;
+        extent.material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
     }
 
     function createPrimitives(widget) {
@@ -72,14 +64,15 @@ require([
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
 
-        polygon = new Cesium.Polygon();
-        polygon.configureExtent(new Cesium.Extent(
-                Cesium.Math.toRadians(-120.0),
-                Cesium.Math.toRadians(20.0),
-                Cesium.Math.toRadians(-80.0),
-                Cesium.Math.toRadians(50.0)));
-        polygon.material = Cesium.Material.fromType(scene.getContext(), 'Erosion');
-        primitives.add(polygon);
+        extent = new Cesium.ExtentPrimitive({
+            extent : new Cesium.Extent(
+                        Cesium.Math.toRadians(-120.0),
+                        Cesium.Math.toRadians(20.0),
+                        Cesium.Math.toRadians(-80.0),
+                        Cesium.Math.toRadians(50.0)),
+            material : Cesium.Material.fromType(scene.getContext(), 'Erosion')
+        });
+        primitives.add(extent);
 
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-45.0, 45.0)));
@@ -105,8 +98,8 @@ require([
             label : 'Alpha Animation',
             onClick : function() {
                 scene.getAnimations().removeAll();
-                resetPolygonPropeties(polygon);
-                addAlphaAnimation(polygon, scene);
+                resetExtentPropeties(extent);
+                addAlphaAnimation(extent, scene);
                 Sandcastle.highlight(addAlphaAnimation);
             }
         }).placeAt('toolbar');
@@ -115,19 +108,9 @@ require([
             label : 'Erosion Animation',
             onClick : function() {
                 scene.getAnimations().removeAll();
-                resetPolygonPropeties(polygon);
-                addErosionAnimation(polygon, scene);
+                resetExtentPropeties(extent);
+                addErosionAnimation(extent, scene);
                 Sandcastle.highlight(addErosionAnimation);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : 'Height Animation',
-            onClick : function() {
-                scene.getAnimations().removeAll();
-                resetPolygonPropeties(polygon);
-                addHeightAnimation(polygon, scene);
-                Sandcastle.highlight(addHeightAnimation);
             }
         }).placeAt('toolbar');
 

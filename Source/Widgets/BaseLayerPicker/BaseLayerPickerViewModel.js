@@ -3,11 +3,15 @@ define([
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../createCommand',
+        '../../Scene/ImageryLayer',
+        '../../Scene/ImageryProvider',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         DeveloperError,
         createCommand,
+        ImageryLayer,
+        ImageryProvider,
         knockout) {
     "use strict";
 

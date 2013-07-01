@@ -2,12 +2,16 @@
 defineSuite([
          'Renderer/Context',
          'Core/Color',
+         'Core/IndexDatatype',
+         'Renderer/BufferUsage',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/renderFragment'
      ], function(
          Context,
          Color,
+         IndexDatatype,
+         BufferUsage,
          createContext,
          destroyContext,
          renderFragment) {
@@ -167,6 +171,18 @@ defineSuite([
             expect(pixel).toEqual([0, 0, 255, 255]);
         } else {
             expect(pixel).toEqual([255, 255, 255, 255]);
+        }
+    });
+
+    it('gets the element index uint extension', function() {
+        if (context.getElementIndexUint()) {
+            var buffer = context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+            expect(buffer).toBeDefined();
+            buffer.destroy();
+        } else {
+            expect(function() {
+                context.createIndexBuffer(6, BufferUsage.STREAM_DRAW, IndexDatatype.UNSIGNED_INT);
+            }).toThrow();
         }
     });
 

@@ -486,7 +486,7 @@ define([
         for (var i = 0; i < numFrustums; ++i) {
             clearDepthStencil.execute(context, passState);
 
-            var index = numFrustums - i - 1.0;
+            var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;

@@ -20,6 +20,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Pinkos](https://github.com/hpinkos)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
+* [EU Edge](http://euedge.com/)
+   *  [Ákos Maróy](https://github.com/akosmaroy)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
