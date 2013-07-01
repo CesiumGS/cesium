@@ -161,6 +161,59 @@ defineSuite([
         });
     });
 
+    it('handles malformed JSON data returned by the server', function() {
+        var path = '/default_map';
+        var url = 'http://example.invalid';
+        var version = 1;
+        var channel = 1234;
+        var metadataUrl = url + '/default_map/query?request=Json&vars=geeServerDefs&is2d=t';
+
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve('{\n' +
+                'isAuthenticated: true,\n' +
+                'layers: [\n' +
+                '   {\n' +
+                '        icon: "icons/773_l.png",\n' +
+                '        id: 1234,\n' +
+                '        initialState: true,\n' +
+                '        isPng: false,\n' +
+                '        label: "Imagery",\n' +
+                '        lookAt: "none",\n' +
+                '        opacity: 1,\n' +
+                '        requestType: "ImageryMaps",\n' +
+                '        version: 1\n' +
+                '    },{\n' +
+                '        icon: "icons/773_l.png",\n' +
+                '        id: 1007,\n' +
+                '        initialState: true,\n' +
+                '        isPng: true,\n' +
+                '        label: "Labels",\n' +
+                '        lookAt: "none",\n' +
+                '        opacity: 1,\n' +
+                '        requestType: "VectorMapsRaster",\n' +
+                '        version: 8\n' +
+                '    }\n' +
+                '],\n' +
+                'serverUrl: "https://example.invalid",\n' +
+                'useGoogleLayers: false\n' +
+            '}');
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : 'http://example.invalid',
+            channel: 1234
+        });
+
+        expect(provider.getUrl()).toEqual(url);
+        expect(provider.getPath()).toEqual(path);
+        expect(provider.getVersion()).toEqual(version);
+        expect(provider.getChannel()).toEqual(channel);
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+    });
+
     it('routes requests through a proxy if one is specified', function() {
         var path = '/default_map';
         var url = 'http://example.invalid';
