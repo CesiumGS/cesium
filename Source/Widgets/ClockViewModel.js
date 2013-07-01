@@ -3,12 +3,16 @@ define([
         '../Core/Clock',
         '../Core/defaultValue',
         '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/EventHelper',
         '../Core/JulianDate',
         '../ThirdParty/knockout'
     ], function(
         Clock,
         defaultValue,
         defineProperties,
+        destroyObject,
+        EventHelper,
         JulianDate,
         knockout) {
     "use strict";
@@ -25,14 +29,17 @@ define([
     var ClockViewModel = function(clock) {
         clock = defaultValue(clock, new Clock());
         this._clock = clock;
-        this._clock.onTick.addEventListener(this.synchronize, this);
+
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(clock.onTick, this.synchronize, this);
 
         var startTime = knockout.observable(clock.startTime);
         startTime.equalityComparer = JulianDate.equals;
 
         /**
          * Gets the current system time.  This property is observable.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default JulianDate() 
          */
         this.systemTime = knockout.observable(new JulianDate());
         this.systemTime.equalityComparer = JulianDate.equals;
@@ -41,7 +48,8 @@ define([
 
         /**
          * Gets or sets the start time of the clock.  This property is observable.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default undefined
          */
         this.startTime = undefined;
         knockout.defineProperty(this, 'startTime', {
@@ -57,7 +65,8 @@ define([
 
         /**
          * Gets or sets the stop time of the clock.  This property is observable.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default undefined
          */
         this.stopTime = undefined;
         knockout.defineProperty(this, 'stopTime', {
@@ -73,7 +82,8 @@ define([
 
         /**
          * Gets or sets the current time.  This property is observable.
-         * @type JulianDate
+         * @type {JulianDate}
+         * @default undefined
          */
         this.currentTime = undefined;
         knockout.defineProperty(this, 'currentTime', {
@@ -90,7 +100,8 @@ define([
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.  This property is observable.
-         * @type Number
+         * @type {Number}
+         * @default undefined
          */
         this.multiplier = undefined;
         knockout.defineProperty(this, 'multiplier', {
@@ -109,7 +120,8 @@ define([
         /**
          * Gets or sets whether calls to <code>Clock.tick</code> are frame dependent or system clock dependent.
          * This property is observable.
-         * @type ClockStep
+         * @type {ClockStep}
+         * @default undefined
          */
         this.clockStep = undefined;
         knockout.defineProperty(this, 'clockStep', {
@@ -128,7 +140,8 @@ define([
         /**
          * Gets or sets how tick should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * This property is observable.
-         * @type ClockRange
+         * @type {ClockRange}
+         * @default undefined
          */
         this.clockRange = undefined;
         knockout.defineProperty(this, 'clockRange', {
@@ -144,7 +157,8 @@ define([
         /**
          * Gets or sets whether or not <code>Clock.tick</code> should actually advance time.
          * This property is observable.
-         * @type Boolean
+         * @type {Boolean}
+         * @default undefined
          */
         this.shouldAnimate = undefined;
         knockout.defineProperty(this, 'shouldAnimate', {
@@ -195,6 +209,25 @@ define([
         this.clockStep = clockStep;
         this.clockRange = clockRange;
         this.shouldAnimate = shouldAnimate;
+    };
+
+    /**
+     * @memberof ClockViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    ClockViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the view model.  Should be called to
+     * properly clean up the view model when it is no longer needed.
+     * @memberof ClockViewModel
+     */
+    ClockViewModel.prototype.destroy = function() {
+        this._eventHelper.removeAll();
+
+        destroyObject(this);
     };
 
     return ClockViewModel;

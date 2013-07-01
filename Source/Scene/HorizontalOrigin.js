@@ -15,22 +15,25 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * The origin is at the horizontal center of the object.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         CENTER : new Enumeration(0, 'CENTER'),
         /**
          * The origin is on the left side of the object.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 1
          */
         LEFT : new Enumeration(1, 'LEFT'),
         /**
          * The origin is on the right side of the object.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default -1
          */
         RIGHT : new Enumeration(-1, 'RIGHT')
     };

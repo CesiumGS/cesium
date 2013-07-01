@@ -37,7 +37,7 @@ define([
          * {@link Framebuffer#destroy} is called or when a new attachment is assigned
          * to an attachment point.
          *
-         * @type Boolean
+         * @type {Boolean}
          * @default true
          *
          * @see Framebuffer#destroy

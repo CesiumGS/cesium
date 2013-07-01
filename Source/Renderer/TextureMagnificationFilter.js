@@ -11,23 +11,25 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x2600
          */
         NEAREST : new Enumeration(0x2600, 'NEAREST'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x2601
          */
         LINEAR : new Enumeration(0x2601, 'LINEAR'),
 
         /**
          * DOC_TBA
          *
-         * @param textureMagnificationFilter
+         * @param {TextureMagnificationFilter} textureMagnificationFilter
          *
          * @returns {Boolean}
          */

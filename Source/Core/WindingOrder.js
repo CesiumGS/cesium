@@ -11,22 +11,24 @@ define(['./Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x0900
          */
         CLOCKWISE : new Enumeration(0x0900, 'CLOCKWISE'), // WebGL: CW
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x901
          */
         COUNTER_CLOCKWISE : new Enumeration(0x0901, 'COUNTER_CLOCKWISE'), // WebGL CCW
 
         /**
          * DOC_TBA
          *
-         * @param windingOrder
+         * @param {WindingOrder} windingOrder
          *
          * @returns {Boolean}
          */

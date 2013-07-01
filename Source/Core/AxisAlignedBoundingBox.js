@@ -26,12 +26,14 @@ define([
         /**
          * The minimum point defining the bounding box.
          * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
          */
         this.minimum = Cartesian3.clone(defaultValue(minimum, Cartesian3.ZERO));
 
         /**
          * The maximum point defining the bounding box.
          * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
          */
         this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 
@@ -120,13 +122,11 @@ define([
      *
      * @param {AxisAlignedBoundingBox} box The bounding box to duplicate.
      * @param {AxisAlignedBoundingBox} [result] The object onto which to store the result.
-     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided.
-     *
-     * @exception {DeveloperError} box is required.
+     * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
      */
     AxisAlignedBoundingBox.clone = function(box, result) {
         if (typeof box === 'undefined') {
-            throw new DeveloperError('box is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

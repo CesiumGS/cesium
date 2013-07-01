@@ -38,12 +38,14 @@ define([
         /**
          * The center point of the sphere.
          * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
          */
         this.center = Cartesian3.clone(defaultValue(center, Cartesian3.ZERO));
 
         /**
          * The radius of the sphere.
          * @type {Number}
+         * @default 0.0
          */
         this.radius = defaultValue(radius, 0.0);
     };
@@ -525,13 +527,11 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
-     *
-     * @exception {DeveloperError} sphere is required.
+     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
         if (typeof sphere === 'undefined') {
-            throw new DeveloperError('sphere is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

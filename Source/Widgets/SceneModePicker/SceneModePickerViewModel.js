@@ -3,6 +3,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../../Core/EventHelper',
         '../../Scene/SceneMode',
         '../createCommand',
         '../../ThirdParty/knockout'
@@ -10,6 +11,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        EventHelper,
         SceneMode,
         createCommand,
         knockout) {
@@ -29,43 +31,49 @@ define([
             throw new DeveloperError('transitioner is required.');
         }
 
+        this._transitioner = transitioner;
+
         var that = this;
 
-        this._transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
+        var transitionStart = function(transitioner, oldMode, newMode, isMorphing) {
             that.sceneMode = newMode;
             that.dropDownVisible = false;
         };
 
-        transitioner.onTransitionStart.addEventListener(this._transitionStart);
-        this._transitioner = transitioner;
+        this._eventHelper = new EventHelper();
+        this._eventHelper.add(transitioner.onTransitionStart, transitionStart);
 
         /**
          * Gets or sets the current SceneMode.  This property is observable.
-         * @type SceneMode
+         * @type {SceneMode}
         */
         this.sceneMode = transitioner.getScene().mode;
 
         /**
          * Gets or sets whether the button drop-down is currently visible.  This property is observable.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
         */
         this.dropDownVisible = false;
 
         /**
          * Gets or sets the 2D tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default '2D'
         */
         this.tooltip2D = '2D';
 
         /**
          * Gets or sets the 3D tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default '3D'
         */
         this.tooltip3D = '3D';
 
         /**
          * Gets or sets the Columbus View tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default 'Columbus View'
         */
         this.tooltipColumbusView = 'Columbus View';
 
@@ -73,7 +81,8 @@ define([
 
         /**
          * Gets the currently active tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedTooltip = undefined;
         knockout.defineProperty(this, 'selectedTooltip', function() {
@@ -182,7 +191,8 @@ define([
      * @memberof SceneModePickerViewModel
      */
     SceneModePickerViewModel.prototype.destroy = function() {
-        this._transitioner.onTransitionStart.removeEventListener(this._transitionStart);
+        this._eventHelper.removeAll();
+
         destroyObject(this);
     };
 

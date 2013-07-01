@@ -28,25 +28,29 @@ define([
     var Extent = function(west, south, east, north) {
         /**
          * The westernmost longitude in the range [-Pi, Pi].
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.west = defaultValue(west, 0.0);
 
         /**
          * The southernmost latitude in the range [-Pi/2, Pi/2].
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.south = defaultValue(south, 0.0);
 
         /**
          * The easternmost longitude in the range [-Pi, Pi].
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.east = defaultValue(east, 0.0);
 
         /**
          * The northernmost latitude in the range [-Pi/2, Pi/2].
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.north = defaultValue(north, 0.0);
     };
@@ -95,9 +99,12 @@ define([
      *
      * @param {Extent} extent The extent to clone.
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
-     * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
+     * @return {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
      */
     Extent.clone = function(extent, result) {
+        if (typeof extent === 'undefined') {
+            return undefined;
+        }
         if (typeof result === 'undefined') {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }
