@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Cartesian2',
@@ -13,6 +14,7 @@ define([
         '../Core/Simon1994PlanetaryPositions',
         '../Scene/SceneMode'
     ], function(
+        defaultValue,
         Matrix3,
         Matrix4,
         Cartesian2,
