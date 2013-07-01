@@ -2,5 +2,4 @@ language: node_js
 node_js:
   - "0.10"
 script:
-  - ant jsHint
-  - ant release -DnodePath=node
+  - ant jsHint release -DnodePath=node
