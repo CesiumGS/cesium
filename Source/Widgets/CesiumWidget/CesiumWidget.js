@@ -136,13 +136,19 @@ define([
         cesiumLogo.className = 'cesium-widget-logo';
         widgetNode.appendChild(cesiumLogo);
 
+        var agiLogo = document.createElement('a');
+        agiLogo.href = 'http://www.agi.com/';
+        agiLogo.target = '_blank';
+        agiLogo.className = 'cesium-widget-agiLogo';
+        widgetNode.appendChild(agiLogo);
+
         var scene = new Scene(canvas, options.contextOptions);
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var ellipsoid = Ellipsoid.WGS84;
 
         var centralBody = new CentralBody(ellipsoid);
-        centralBody.logoOffset = new Cartesian2(125, 0);
+        centralBody.logoOffset = new Cartesian2(206, 0);
         scene.getPrimitives().setCentralBody(centralBody);
 
         scene.skyBox = new SkyBox({
@@ -182,6 +188,7 @@ define([
         this._canvasWidth = canvas.width;
         this._canvasHeight = canvas.height;
         this._cesiumLogo = cesiumLogo;
+        this._agiLogo = agiLogo;
         this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
@@ -249,6 +256,18 @@ define([
         cesiumLogo : {
             get : function() {
                 return this._cesiumLogo;
+            }
+        },
+
+        /**
+         * Gets the AGI logo element.
+         * @memberof CesiumWidget.prototype
+         *
+         * @type {Element}
+         */
+        agiLogo : {
+            get : function() {
+                return this._agiLogo;
             }
         },
 

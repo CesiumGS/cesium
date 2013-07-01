@@ -627,8 +627,13 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 logoStyle.bottom = logoBottom + 'px';
                 logoStyle.left = logoLeft + 'px';
 
+                var agiLogo = cesiumWidget.agiLogo;
+                var agiLogoStyle = agiLogo.style;
+                agiLogoStyle.bottom = logoBottom + 'px';
+                agiLogoStyle.left = (logo.clientWidth + logoLeft + 5) + 'px';
+
                 var logoOffset = cesiumWidget.centralBody.logoOffset;
-                logoOffset.x = logoLeft + logo.clientWidth + 5;
+                logoOffset.x = logoLeft + logo.clientWidth + agiLogo.clientWidth + 10;
                 logoOffset.y = logoBottom;
             }
         }

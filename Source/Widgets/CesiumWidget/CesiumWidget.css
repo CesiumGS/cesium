@@ -4,12 +4,24 @@
 }
 
 .cesium-widget-logo {
-	background-image: url(../Images/Cesium_Logo_overlay.png);
-	display: block;
-	position: absolute;
-	bottom: 4px;
-	left: 0;
-	text-decoration: none;
-	width: 118px;
-	height: 26px;
+    background-image: url(../Images/Cesium_Logo_overlay.png);
+    display: block;
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    text-decoration: none;
+    width: 118px;
+    height: 26px;
+}
+
+.cesium-widget-agiLogo {
+    background-image: url(../Images/AGILogo3_overlay.png);
+    display: block;
+    position: absolute;
+    bottom: 0;
+    left: 123px;
+    text-decoration: none;
+    width: 60px;
+    height: 30px;
+    background-size: 60px 30px;
 }
