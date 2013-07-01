@@ -32,7 +32,8 @@ define([
     var TileTerrain = function TileTerrain(upsampleDetails) {
         /**
          * The current state of the terrain in the terrain processing pipeline.
-         * @type TerrainState
+         * @type {TerrainState}
+         * @default {@link TerrainState.UNLOADED}
          */
         this.state = TerrainState.UNLOADED;
         this.data = undefined;

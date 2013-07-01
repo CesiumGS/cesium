@@ -33,17 +33,20 @@ define([
     var DynamicEllipsoid = function() {
         /**
          * A DynamicProperty of type CzmlBoolean which determines the ellipsoid's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the ellipsoid's radii.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.radii = undefined;
         /**
          * A DynamicMaterialProperty which determines the material.
-         * @type DynamicMaterialProperty
+         * @type {DynamicMaterialProperty}
+         * @default undefined
          */
         this.material = undefined;
     };

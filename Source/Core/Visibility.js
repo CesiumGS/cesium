@@ -14,22 +14,25 @@ define(['./Enumeration'], function(Enumeration) {
         /**
          * Represents that no part of an object is visible.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default -1
          */
         NONE : new Enumeration(-1, 'NONE'),
         /**
         * Represents that part, but not all, of an object is visible
         *
-        * @constant
         * @type {Enumeration}
+        * @constant
+        * @default 0
         */
         PARTIAL : new Enumeration(0, 'PARTIAL'),
         /**
         * Represents that an object is visible in its entirety.
         *
-        * @constant
         * @type {Enumeration}
+        * @constant
+        * @default 1
         */
         FULL : new Enumeration(1, 'FULL')
     };

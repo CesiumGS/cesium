@@ -187,6 +187,23 @@ define([
     };
 
     /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link SingleTileImageryProvider#isReady} returns true.
+     *
+     * @memberof SingleTileImageryProvider
+     *
+     * @returns {Number} The minimum level.
+     *
+     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
+     */
+    SingleTileImageryProvider.prototype.getMinimumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
+        }
+        return 0;
+    };
+
+    /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link SingleTileImageryProvider#isReady} returns true.
      *

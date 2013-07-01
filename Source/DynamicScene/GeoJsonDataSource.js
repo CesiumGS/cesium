@@ -15,7 +15,8 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicMaterialProperty',
         './DynamicObjectCollection',
-        '../ThirdParty/when'], function(
+        '../ThirdParty/when',
+        '../ThirdParty/topojson'], function(
                 createGuid,
                 Cartographic,
                 Color,
@@ -32,7 +33,8 @@ define(['../Core/createGuid',
                 DynamicPolygon,
                 DynamicMaterialProperty,
                 DynamicObjectCollection,
-                when) {
+                when,
+                topojson) {
     "use strict";
 
     //DynamicPositionProperty is pretty hard to use with non-CZML based data
@@ -48,10 +50,6 @@ define(['../Core/createGuid',
             return value.clone(result);
         }
         return value;
-    };
-
-    ConstantPositionProperty.prototype.setValue = function(value) {
-        this._value = value;
     };
 
     //GeoJSON specifies only the Feature object has a usable id property
@@ -159,6 +157,16 @@ define(['../Core/createGuid',
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
+    function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
+        for ( var property in geometry.objects) {
+            if (geometry.objects.hasOwnProperty(property)) {
+                var feature = topojson.feature(geometry, geometry.objects[property]);
+                var typeHandler = geoJsonObjectTypes[feature.type];
+                typeHandler(dataSource, feature, feature, crsFunction, source);
+            }
+        }
+    }
+
     function processMultiPolygon(dataSource, geoJson, geometry, crsFunction, source) {
         //TODO holes
         var polygons = geometry.coordinates;
@@ -179,7 +187,8 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     var geometryTypes = {
@@ -189,13 +198,14 @@ define(['../Core/createGuid',
         MultiPoint : processMultiPoint,
         MultiPolygon : processMultiPolygon,
         Point : processPoint,
-        Polygon : processPolygon
+        Polygon : processPolygon,
+        Topology : processTopology
     };
 
     /**
-     * A {@link DataSource} which processes GeoJSON.  Since GeoJSON has no standard for styling content,
-     * we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties.
-     * Any changes to these objects will affect the resulting {@link DynamicObject} collection.
+     * A {@link DataSource} which processes both GeoJSON and TopoJSON data.  Since GeoJSON has no standard for styling
+     * content, we provide default graphics via the defaultPoint, defaultLine, and defaultPolygon properties. Any
+     * changes to these objects will affect the resulting {@link DynamicObject} collection.
      * @alias GeoJsonDataSource
      * @constructor
      *
@@ -257,19 +267,19 @@ define(['../Core/createGuid',
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON Point and MultiPoint geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultPoint = defaultPoint;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON LineString and MultiLineString geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultLine = defaultLine;
 
         /**
          * Gets or sets the default graphics to be applied to GeoJSON Polygon and MultiPolygon geometries.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.defaultPolygon = defaultPolygon;
     };
@@ -400,6 +410,11 @@ define(['../Core/createGuid',
                 }
 
                 crsFunction = handler(properties);
+            } else if (crs.type === 'EPSG') {
+                crsFunction = GeoJsonDataSource.crsNames['EPSG:' + properties.code];
+                if (typeof crsFunction === 'undefined') {
+                    throw new RuntimeError('Unknown crs EPSG code: ' + properties.code);
+                }
             } else {
                 throw new RuntimeError('Unknown crs type: ' + crs.type);
             }
@@ -420,11 +435,12 @@ define(['../Core/createGuid',
     }
 
     /**
-     * An object that maps the name of a crs to a callback function
-     * which takes a GeoJSON coordinate and transforms it into a
-     * WGS84 Earth-fixed Cartesian.
+     * An object that maps the name of a crs to a callback function which takes a GeoJSON coordinate
+     * and transforms it into a WGS84 Earth-fixed Cartesian.  Older versions of GeoJSON which
+     * supported the EPSG type can be added to this list as well, by specifying the complete EPSG name,
+     * for example 'EPSG:4326'.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsNames = {
         'urn:ogc:def:crs:OGC:1.3:CRS84' : defaultCrsFunction,
@@ -438,7 +454,7 @@ define(['../Core/createGuid',
      * Items in this object take precedence over those defined in <code>crsLinkHrefs</code>, assuming
      * the link has a type specified.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsLinkHrefs = {};
 
@@ -448,7 +464,7 @@ define(['../Core/createGuid',
      * to a function that takes a GeoJSON coordinate and transforms it into a WGS84 Earth-fixed Cartesian.
      * Items in <code>crsLinkHrefs</code> take precedence over this object.
      * @memberof GeoJsonDataSource
-     * @type Object
+     * @type {Object}
      */
     GeoJsonDataSource.crsLinkTypes = {};
 
