@@ -410,6 +410,11 @@ define(['../Core/createGuid',
                 }
 
                 crsFunction = handler(properties);
+			} else if(crs.type === 'EPSG' && properties.code) {
+				crsFunction = GeoJsonDataSource.crsNames['EPSG:' + properties.code];
+				if(typeof crsFunction === 'undefined') {
+					throw new RuntimeError('Unknown EPSG code: ' + properties.code);
+				}
             } else {
                 throw new RuntimeError('Unknown crs type: ' + crs.type);
             }
