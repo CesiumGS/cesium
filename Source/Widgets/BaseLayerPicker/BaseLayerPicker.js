@@ -76,12 +76,12 @@ define([
      *  }));
      *
      *  providerViewModels.push(new ImageryProviderViewModel({
-     *      name : 'Disable Streaming Imagery',
-     *      iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
-     *      tooltip : 'Uses a single image for the entire world.',
+     *      name : 'Natural Earth\u00a0II',
+     *      iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
+     *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new SingleTileImageryProvider({
-     *              url : 'NE2_LR_LC_SR_W_DR_2048.jpg'
+     *          return new TileMapServiceImageryProvider({
+     *              url : buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
      *  }));
