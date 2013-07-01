@@ -14,7 +14,8 @@ defineSuite([
          'Core/GeometryAttribute',
          'Core/GeometryInstance',
          'Core/VertexFormat',
-         'Core/Math'
+         'Core/Math',
+         'Core/BoundingSphere'
      ], function(
          GeometryPipeline,
          PrimitiveType,
@@ -30,7 +31,8 @@ defineSuite([
          GeometryAttribute,
          GeometryInstance,
          VertexFormat,
-         CesiumMath) {
+         CesiumMath,
+         BoundingSphere) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -115,6 +117,63 @@ defineSuite([
     it('toWireframe throws without a geometry', function() {
         expect(function() {
             GeometryPipeline.toWireframe(undefined);
+        }).toThrow();
+    });
+
+    it('createLineSegmentsForVectors', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
+                }),
+                normal : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0]
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+        });
+        var lines = GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', 1.0);
+        var linePositions = [0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0];
+
+        expect(lines.attributes).toBeDefined();
+        expect(lines.attributes.position).toBeDefined();
+        expect(lines.attributes.position.values).toEqual(linePositions);
+        expect(lines.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(lines.boundingSphere.center).toEqual(geometry.boundingSphere.center);
+        expect(lines.boundingSphere.radius).toEqual(geometry.boundingSphere.radius + 1.0);
+    });
+
+    it('createLineSegmentsForVectors throws without geometry', function() {
+        expect(function() {
+            GeometryPipeline.createLineSegmentsForVectors();
+        }).toThrow();
+    });
+
+    it('createLineSegmentsForVectors throws without geometry.attributes.position', function() {
+        expect(function() {
+            GeometryPipeline.createLineSegmentsForVectors();
+        }).toThrow();
+    });
+
+    it('createLineSegmentsForVectors throws when geometry.attributes does not vae an attributeName property', function() {
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : [0.0, 1.0, 2.0, 3.0, 4.0, 5.0]
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal');
         }).toThrow();
     });
 
@@ -558,6 +617,95 @@ defineSuite([
         }).toThrow();
     });
 
+    it('transformToWorldCoordinates', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+            }),
+            modelMatrix : new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                      1.0, 0.0, 0.0, 0.0,
+                                      0.0, 1.0, 0.0, 0.0,
+                                      0.0, 0.0, 0.0, 1.0)
+        });
+
+        var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+        var transformedPositions = [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0];
+        var transformedNormals = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
+
+        expect(transformed.geometry.attributes.position.values).toEqual(transformedPositions);
+        expect(transformed.geometry.attributes.normal.values).toEqual(transformedNormals);
+        expect(transformed.geometry.boundingSphere).toEqual(new BoundingSphere(new Cartesian3(0.0, 0.5, 0.5), 1.0));
+        expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it('transformToWorldCoordinates does nothing when already in world coordinates', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0
+                        ]
+                    }),
+                    normal : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0,
+                            0.0, 0.0, 1.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+            }),
+            modelMatrix : Matrix4.IDENTITY
+        });
+
+        var transformed = GeometryPipeline.transformToWorldCoordinates(instance);
+        var transformedPositions = [0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        var transformedNormals = [0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+
+        expect(transformed.geometry.attributes.position.values).toEqual(transformedPositions);
+        expect(transformed.geometry.attributes.normal.values).toEqual(transformedNormals);
+        expect(transformed.geometry.boundingSphere).toEqual(new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0));
+        expect(transformed.modelMatrix).toEqual(Matrix4.IDENTITY);
+    });
+
+    it('transformToWorldCoordinates throws without an instance', function() {
+        expect(function() {
+            GeometryPipeline.transformToWorldCoordinates();
+        }).toThrow();
+    });
+
     it('combine combines one geometry', function() {
         var instance = new GeometryInstance({
             geometry : new Geometry({
@@ -680,7 +828,50 @@ defineSuite([
         }));
     });
 
-    it('combine throws with instances', function() {
+    it('combine combines bounding spheres', function() {
+        var instance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            0.0, 0.0, 0.0,
+                            1.0, 0.0, 0.0,
+                            0.0, 1.0, 0.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
+            })
+        });
+        var anotherInstance = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [
+                            1.0, 0.0, 0.0,
+                            2.0, 0.0, 0.0,
+                            1.0, 1.0, 0.0
+                        ]
+                    })
+                },
+                indices : [0, 1, 2],
+                primitiveType : PrimitiveType.TRIANGLES,
+                boundingSphere : new BoundingSphere(new Cartesian3(1.5, 0.5, 0.0), 1.0)
+            })
+        });
+
+        var combined = GeometryPipeline.combine([instance, anotherInstance]);
+        var expected = BoundingSphere.union(instance.geometry.boundingSphere, anotherInstance.geometry.boundingSphere);
+        expect(combined.boundingSphere).toEqual(expected);
+    });
+
+    it('combine throws without instances', function() {
         expect(function() {
             GeometryPipeline.combine();
         }).toThrow();
@@ -703,7 +894,7 @@ defineSuite([
                     }
                 })
             }),
-            modelMatrix : Matrix4.fromScale(1.0)
+            modelMatrix : Matrix4.fromScale(new Cartesian3(1.0, 1.0, 1.0))
         });
 
         var instance1 = new GeometryInstance({
@@ -716,7 +907,7 @@ defineSuite([
                     }
                 })
             }),
-            modelMatrix : Matrix4.fromScale(2.0)
+            modelMatrix : Matrix4.fromScale(new Cartesian3(2.0, 2.0, 2.0))
         });
 
         expect(function() {
@@ -747,6 +938,38 @@ defineSuite([
                         values : [0.0, 0.0, 0.0]
                     }
                 })
+            })
+        });
+
+        expect(function() {
+            GeometryPipeline.combine([instance0, instance1]);
+        }).toThrow();
+    });
+
+    it('combine throws when instance geometries do not all have the same primitive type', function() {
+        var instance0 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    }
+                }),
+                primitiveType : PrimitiveType.POINTS
+            })
+        });
+
+        var instance1 = new GeometryInstance({
+            geometry : new Geometry({
+                attributes : new GeometryAttribute({
+                    position : {
+                        componentDatatype : ComponentDatatype.FLOAT,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+                    }
+                }),
+                primitiveType : PrimitiveType.LINES
             })
         });
 
