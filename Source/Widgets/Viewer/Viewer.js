@@ -6,6 +6,7 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/Event',
+        '../../Core/EventHelper',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventType',
         '../../DynamicScene/DataSourceDisplay',
@@ -28,6 +29,7 @@ define([
         defineProperties,
         destroyObject,
         Event,
+        EventHelper,
         requestAnimationFrame,
         ScreenSpaceEventType,
         DataSourceDisplay,
@@ -57,10 +59,7 @@ define([
         function render() {
             try {
                 if (viewer._useDefaultRenderLoop) {
-                    var frameNumber = viewer._cesiumWidget._scene.getFrameState().frameNumber;
-                    if (viewer._needResize || (frameNumber % 60) === 0) {
-                        viewer.resize();
-                    }
+                    viewer.resize();
                     viewer.render();
                     requestAnimationFrame(render);
                 } else {
@@ -190,19 +189,20 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : false
         });
 
-        //Subscribe for resize events and set the initial size.
-        var that = this;
-        this._needResize = true;
-        this._resizeCallback = function() {
-            that._needResize = true;
-        };
-        window.addEventListener('resize', this._resizeCallback, false);
-
-        var clock = cesiumWidget.clock;
-
         //Data source display
         var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
         this._dataSourceDisplay = dataSourceDisplay;
+
+        var clock = cesiumWidget.clock;
+
+        this._eventHelper = new EventHelper();
+
+        function updateDataSourceDisplay(clock) {
+            dataSourceDisplay.update(clock.currentTime);
+        }
+        this._eventHelper.add(clock.onTick, updateDataSourceDisplay);
+
+        this._clockViewModel = new ClockViewModel(clock);
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -244,11 +244,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         //Animation
         var animation;
         if (typeof options.animation === 'undefined' || options.animation !== false) {
-            var clockViewModel = new ClockViewModel(clock);
             var animationContainer = document.createElement('div');
             animationContainer.className = 'cesium-viewer-animationContainer';
             viewerContainer.appendChild(animationContainer);
-            animation = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
+            animation = new Animation(animationContainer, new AnimationViewModel(this._clockViewModel));
         }
 
         //Timeline
@@ -538,14 +537,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
     });
 
     /**
-     * @memberof Viewer
-     * @returns {Boolean} true if the object has been destroyed, false otherwise.
-     */
-    Viewer.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    /**
      * Extends the base viewer functionality with the provided mixin.
      * A mixin may add additional properties, functions, or other behavior
      * to the provided viewer instance.
@@ -571,7 +562,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @memberof Viewer
      */
     Viewer.prototype.resize = function() {
-        this._needResize = false;
+        var cesiumWidget = this._cesiumWidget;
+        cesiumWidget.resize();
 
         var container = this._container;
         var width = container.clientWidth;
@@ -579,9 +571,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         if (width === this._lastWidth && height === this._lastHeight) {
             return;
         }
-
-        var cesiumWidget = this._cesiumWidget;
-        cesiumWidget.resize();
 
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
         if (typeof baseLayerPickerDropDown !== 'undefined') {
@@ -658,19 +647,27 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @memberof Viewer
      */
     Viewer.prototype.render = function() {
-        var cesiumWidget = this._cesiumWidget;
-        cesiumWidget.render();
-        this._dataSourceDisplay.update(cesiumWidget.clock.currentTime);
+        this._cesiumWidget.render();
     };
 
     /**
-     * Destroys the  widget.  Should be called if permanently
+     * @memberof Viewer
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    Viewer.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the widget.  Should be called if permanently
      * removing the widget from layout.
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
         this._container.removeChild(this._viewerContainer);
         this._viewerContainer.removeChild(this._toolbar);
+
+        this._eventHelper.removeAll();
 
         if (typeof this._homeButton !== 'undefined') {
             this._homeButton = this._homeButton.destroy();
@@ -701,8 +698,10 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
-        this._cesiumWidget = this._cesiumWidget.destroy();
+        this._clockViewModel = this._clockViewModel.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
+        this._cesiumWidget = this._cesiumWidget.destroy();
+
         return destroyObject(this);
     };
 

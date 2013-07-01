@@ -6,6 +6,8 @@ define([
         '../../Core/Event',
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
+        '../../DynamicScene/GeoJsonDataSource',
+        '../../ThirdParty/when',
         '../getElement'
     ], function(
         defaultValue,
@@ -14,8 +16,11 @@ define([
         Event,
         wrapFunction,
         CzmlDataSource,
+        GeoJsonDataSource,
+        when,
         getElement) {
     "use strict";
+    /*global console*/
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
@@ -191,22 +196,43 @@ define([
         dropTarget.addEventListener('dragexit', stop, false);
     }
 
+    function endsWith(str, suffix) {
+        var strLength = str.length;
+        var suffixLength = suffix.length;
+        return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
+    }
+
     function createOnLoadCallback(viewer, source, firstTime) {
+        var DataSource;
+        var sourceUpperCase = source.toUpperCase();
+        if (endsWith(sourceUpperCase, ".CZML")) {
+            DataSource = CzmlDataSource;
+        } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
+        endsWith(sourceUpperCase, ".JSON") || //
+        endsWith(sourceUpperCase, ".TOPOJSON")) {
+            DataSource = GeoJsonDataSource;
+        } else {
+            viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+        }
+
         return function(evt) {
-            var czmlSource = new CzmlDataSource();
+            var dataSource = new DataSource();
             try {
-                czmlSource.load(JSON.parse(evt.target.result), source);
-                viewer.dataSources.add(czmlSource);
-                if (firstTime) {
-                    var dataClock = czmlSource.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        if (typeof viewer.timeline !== 'undefined') {
-                            viewer.timeline.updateFromClock();
-                            viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
+                    viewer.dataSources.add(dataSource);
+                    if (firstTime) {
+                        var dataClock = dataSource.getClock();
+                        if (typeof dataClock !== 'undefined') {
+                            dataClock.clone(viewer.clock);
+                            if (typeof viewer.timeline !== 'undefined') {
+                                viewer.timeline.updateFromClock();
+                                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+                            }
                         }
                     }
-                }
+                }, function(error) {
+                    viewer.onDropError.raiseEvent(viewer, source, error);
+                });
             } catch (error) {
                 viewer.onDropError.raiseEvent(viewer, source, error);
             }
