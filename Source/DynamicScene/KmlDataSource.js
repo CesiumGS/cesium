@@ -124,6 +124,14 @@ define(['../Core/createGuid',
             gxMultitrack : processGxMultiTrack
         };
 
+    function processStyle(kml){
+        //var style = kml.getElementsByTagName("Style");
+    }
+
+    function processFolder(){
+
+    }
+
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
 
@@ -134,8 +142,13 @@ define(['../Core/createGuid',
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
-        var array = kml.getElementsByTagName('Placemark');
+        var array = kml.getElementsByTagName('Folder');
         for ( var i = 0, len = array.length; i < len; i++){
+            processPlacemark(dataSource, array[i], dynamicObjectCollection);
+        }
+
+        array = kml.getElementsByTagName('Placemark');
+        for (i = 0, len = array.length; i < len; i++){
             processPlacemark(dataSource, array[i], dynamicObjectCollection);
         }
 
