@@ -10,6 +10,6 @@
 	left: 0;
 	color: #ffffff;
 	font-size: 10pt;
-	background: rgba(0, 0, 0, .5);
+	text-shadow: 0px 0px 2px #000000;
 	padding-right: 5px;
 }

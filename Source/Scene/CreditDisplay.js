@@ -11,6 +11,7 @@ define([
      * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
+     * @param {String} [delimeter= ' • '] The string to separate text credits
      *
      * @alias CreditDisplay
      * @constructor
@@ -19,13 +20,13 @@ define([
      * var CreditDisplay = new CreditDisplay(creditContainer);
      */
 
-    var CreditDisplay = function(container, delimeter) {
+    var CreditDisplay = function(container, delimiter) {
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
-        this.delimeter = defaultValue(delimeter, ' • ');
+        this.delimiter = defaultValue(delimiter, ' • ');
         this.container = container;
         this.textContainer = textContainer;
         this.imageContainer = imageContainer;
@@ -169,7 +170,7 @@ define([
             var credit = textCredits[i];
             var str;
             if (i !== 0) {
-                str = creditDisplay.delimeter;
+                str = creditDisplay.delimiter;
             } else {
                 str = '';
             }

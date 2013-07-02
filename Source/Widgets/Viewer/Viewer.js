@@ -643,7 +643,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 var creditContainer = cesiumWidget.creditContainer;
                 creditContainer.style.bottom = logoBottom + 'px';
                 creditContainer.style.left = logoLeft + 'px';
-                creditContainer.style.background = "transparent";
             }
         }
 

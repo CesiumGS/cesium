@@ -57,7 +57,7 @@ define([
     };
 
     /**
-     * Displays all credits in a list to the credit container
+     * Returns true if the credits are equal
      *
      * @memberof Credit
      *
@@ -73,11 +73,14 @@ define([
             return (leftUndefied && rightUndefined);
         }
 
-        return (left.name === right.name && left.text === right.text && left.image === right.image && left.link === right.link);
+        return (left.name === right.name &&
+                left.text === right.text &&
+                left.image === right.image &&
+                left.link === right.link);
     };
 
     /**
-     * Displays all credits in a list to the credit container
+     * Returns true if the credits are equal
      *
      * @memberof Credit
      *

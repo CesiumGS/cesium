@@ -784,7 +784,7 @@ define([
             var creditContainer = document.createElement('div');
             creditContainer.style.position = "absolute";
             creditContainer.style.bottom = "0";
-            creditContainer.style.background = "rgba(0, 0, 0, .5)";
+            creditContainer.style["text-shadow"] = "0px 0px 2px #000000";
             creditContainer.style.color = "#ffffff";
             creditContainer.style["font-size"] = "10pt";
             creditContainer.style["padding-right"] = "5px";
