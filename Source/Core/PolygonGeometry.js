@@ -76,10 +76,6 @@ define([
             }
         }
 
-        if (typeof result === 'undefined') {
-            result = new BoundingRectangle();
-        }
-
         result.x = minX;
         result.y = minY;
         result.width = maxX - minX;

@@ -2,13 +2,11 @@
 defineSuite([
          'Core/BoxGeometry',
          'Core/VertexFormat',
-         'Core/Cartesian3',
-         'Core/Matrix4'
+         'Core/Cartesian3'
      ], function(
          BoxGeometry,
          VertexFormat,
-         Cartesian3,
-         Matrix4) {
+         Cartesian3) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 

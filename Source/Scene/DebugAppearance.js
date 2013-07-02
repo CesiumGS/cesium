@@ -57,23 +57,23 @@ define([
             // All other attributes, both well-known and custom
             if (attributeName === 'st') {
                 glslDatatype = 'vec2';
+            }
 
-                switch(glslDatatype) {
-                    case 'float':
-                        getColor = 'vec4 getColor() { return vec4(vec3(' + varyingName + '), 1.0); }\n';
-                        break;
-                    case 'vec2':
-                        getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 0.0, 1.0); }\n';
-                        break;
-                    case 'vec3':
-                        getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 1.0); }\n';
-                        break;
-                    case 'vec4':
-                        getColor = 'vec4 getColor() { return ' + varyingName + '; }\n';
-                        break;
-                    default:
-                        throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
-                }
+            switch(glslDatatype) {
+                case 'float':
+                    getColor = 'vec4 getColor() { return vec4(vec3(' + varyingName + '), 1.0); }\n';
+                    break;
+                case 'vec2':
+                    getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 0.0, 1.0); }\n';
+                    break;
+                case 'vec3':
+                    getColor = 'vec4 getColor() { return vec4(' + varyingName + ', 1.0); }\n';
+                    break;
+                case 'vec4':
+                    getColor = 'vec4 getColor() { return ' + varyingName + '; }\n';
+                    break;
+                default:
+                    throw new DeveloperError('options.glslDatatype must be float, vec2, vec3, or vec4.');
             }
         }
 
