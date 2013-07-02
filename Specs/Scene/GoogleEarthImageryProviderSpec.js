@@ -228,7 +228,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url: url, 
+            url: url,
             channel: 1234,
             proxy : proxy
         });
