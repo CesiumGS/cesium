@@ -12,6 +12,7 @@ defineSuite([
          'Scene/ImageryState',
          'Scene/NeverTileDiscardPolicy',
          'Scene/WebMercatorTilingScheme',
+         'Scene/GeographicTilingScheme',
          'ThirdParty/when'
      ], function(
          GoogleEarthImageryProvider,
@@ -26,6 +27,7 @@ defineSuite([
          ImageryState,
          NeverTileDiscardPolicy,
          WebMercatorTilingScheme,
+         GeographicTilingScheme,
          when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -60,12 +62,11 @@ defineSuite([
     it('can provide a root tile', function() {
         var path = '';
         var url = 'http://example.invalid';
-        var metadataUrl = url + path + '/query?request=Json&vars=geeServerDefs&is2d=t';
         var channel = 1234;
         var version = 1;
 
         loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return deferred.resolve(JSON.stringify({ 
+            return deferred.resolve(JSON.stringify({
                 "isAuthenticated": true,
                 "layers": [
                     {
@@ -74,8 +75,6 @@ defineSuite([
                         "initialState": true,
                         "isPng": false,
                         "label": "Imagery",
-                        "lookAt": "none",
-                        "opacity": 1,
                         "requestType": "ImageryMaps",
                         "version": 1
                     },{
@@ -84,8 +83,6 @@ defineSuite([
                         "initialState": true,
                         "isPng": true,
                         "label": "Labels",
-                        "lookAt": "none",
-                        "opacity": 1,
                         "requestType": "VectorMapsRaster",
                         "version": 8
                     }
@@ -116,6 +113,7 @@ defineSuite([
             expect(provider.getTileWidth()).toEqual(256);
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(23);
+            expect(provider.getMinimumLevel()).toEqual(0);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
@@ -163,7 +161,6 @@ defineSuite([
         var url = 'http://example.invalid';
         var version = 1;
         var channel = 1234;
-        var metadataUrl = url + '/default_map/query?request=Json&vars=geeServerDefs&is2d=t';
 
         loadWithXhr.load = function(url, responseType, headers, deferred) {
             return deferred.resolve('{\n' +
@@ -173,20 +170,16 @@ defineSuite([
                 '        icon: "icons/773_l.png",\n' +
                 '        id: 1234,\n' +
                 '        initialState: true,\n' +
-                '        isPng: false,\n' +
                 '        label: "Imagery",\n' +
                 '        lookAt: "none",\n' +
-                '        opacity: 1,\n' +
                 '        requestType: "ImageryMaps",\n' +
                 '        version: 1\n' +
                 '    },{\n' +
                 '        icon: "icons/773_l.png",\n' +
                 '        id: 1007,\n' +
                 '        initialState: true,\n' +
-                '        isPng: true,\n' +
                 '        label: "Labels",\n' +
                 '        lookAt: "none",\n' +
-                '        opacity: 1,\n' +
                 '        requestType: "VectorMapsRaster",\n' +
                 '        version: 8\n' +
                 '    }\n' +
@@ -197,8 +190,8 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://example.invalid',
-            channel: 1234
+            url : url,
+            channel: channel
         });
 
         expect(provider.getUrl()).toEqual(url);
@@ -214,7 +207,6 @@ defineSuite([
     it('routes requests through a proxy if one is specified', function() {
         var path = '/default_map';
         var url = 'http://example.invalid';
-        var metadataUrl = url + '/default_map/query?request=Json&vars=geeServerDefs&is2d=t';
         var proxy = new DefaultProxy('/proxy/');
 
         loadWithXhr.load = function(url, responseType, headers, deferred) {
@@ -225,22 +217,9 @@ defineSuite([
                         "icon": "icons/773_l.png",
                         "id": 1234,
                         "initialState": true,
-                        "isPng": false,
                         "label": "Imagery",
-                        "lookAt": "none",
-                        "opacity": 1,
                         "requestType": "ImageryMaps",
                         "version": 1
-                    },{
-                        "icon": "icons/773_l.png",
-                        "id": 1007,
-                        "initialState": true,
-                        "isPng": true,
-                        "label": "Labels",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "VectorMapsRaster",
-                        "version": 8
                     }
                 ],
                 "serverUrl": "https://example.invalid",
@@ -327,22 +306,9 @@ defineSuite([
                         "icon": "icons/773_l.png",
                         "id": 1234,
                         "initialState": true,
-                        "isPng": false,
                         "label": "Imagery",
-                        "lookAt": "none",
-                        "opacity": 1,
                         "requestType": "ImageryMaps",
                         "version": 1
-                    },{
-                        "icon": "icons/773_l.png",
-                        "id": 1007,
-                        "initialState": true,
-                        "isPng": true,
-                        "label": "Labels",
-                        "lookAt": "none",
-                        "opacity": 1,
-                        "requestType": "VectorMapsRaster",
-                        "version": 8
                     }
                 ],
                 "serverUrl": "https://example.invalid",
@@ -407,6 +373,159 @@ defineSuite([
             expect(imagery.image).toBeInstanceOf(Image);
             expect(tries).toEqual(2);
             imagery.releaseReference();
+        });
+    });
+
+    it('defaults to WebMercatorTilingScheme when no projection specified', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({
+                "isAuthenticated": true,
+                "layers": [
+                    {
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "label": "Imagery",
+                        "requestType": "ImageryMaps",
+                        "version": 1
+                    }
+                ],
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : 'http://example.invalid',
+            channel: 1234
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+          expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+        });
+    });
+    
+    it('Projection is WebMercatorTilingScheme when server projection is mercator', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({
+                "isAuthenticated": true,
+                "layers": [
+                    {
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "label": "Imagery",
+                        "requestType": "ImageryMaps",
+                        "version": 1
+                    }
+                ],
+                "projection": "mercator",
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : 'http://example.invalid',
+            channel: 1234
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+          expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+        });
+    });
+
+    it('Projection is GeographicTilingScheme when server projection is flat', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return deferred.resolve(JSON.stringify({
+                "isAuthenticated": true,
+                "layers": [
+                    {
+                        "icon": "icons/773_l.png",
+                        "id": 1234,
+                        "initialState": true,
+                        "label": "Imagery",
+                        "requestType": "ImageryMaps",
+                        "version": 1
+                    }
+                ],
+                "projection": "flat",
+                "serverUrl": "https://example.invalid",
+                "useGoogleLayers": false
+            }));
+        };
+
+        var provider = new GoogleEarthImageryProvider({
+            url : 'http://example.invalid',
+            channel: 1234
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+          expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
+        });
+    });
+
+    it('raises error when channel cannot be found', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_channel.json', responseType, headers, deferred);
+        };
+        
+        var provider = new GoogleEarthImageryProvider({
+            url: 'http://invalid.localhost',
+            channel: 1235
+        });
+
+        var errorEventRaised = false;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.message.indexOf('Could not find layer with channel') >= 0).toEqual(true);
+            errorEventRaised = true;
+        });
+
+        waitsFor(function() {
+            return provider.isReady() || errorEventRaised;
+        }, 'imagery provider to become ready or raise error event');
+
+        runs(function() {
+            expect(provider.isReady()).toEqual(false);
+            expect(errorEventRaised).toEqual(true);
+        });
+    });
+
+    it('raises error when unsupported projection is specified', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_projection.json', responseType, headers, deferred);
+        };
+        
+        var provider = new GoogleEarthImageryProvider({
+            url: 'http://invalid.localhost',
+            channel: 1234
+        });
+
+        var errorEventRaised = false;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.message.indexOf('Unsupported projection') >= 0).toEqual(true);
+            errorEventRaised = true;
+        });
+
+        waitsFor(function() {
+            return provider.isReady() || errorEventRaised;
+        }, 'imagery provider to become ready or raise error event');
+
+        runs(function() {
+            expect(provider.isReady()).toEqual(false);
+            expect(errorEventRaised).toEqual(true);
         });
     });
 });

@@ -151,6 +151,7 @@ define([
                   numberOfLevelZeroTilesY : 2,
                   extent: new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI)
               });
+            // Default to mercator projection when projection is undefined
             } else if(typeof data.projection === 'undefined' || data.projection === 'mercator') {
               that._tilingScheme = new WebMercatorTilingScheme({
                   numberOfLevelZeroTilesX : 2,
