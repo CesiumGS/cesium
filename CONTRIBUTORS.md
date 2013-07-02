@@ -31,7 +31,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
 
+<!--
 ## [Developer Certificate of Origin](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md)
-* [Kyle Linden](https://github.com/klinden)
+-->
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.
