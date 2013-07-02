@@ -3,7 +3,6 @@ defineSuite([
          'Scene/GoogleEarthImageryProvider',
          'Core/DefaultProxy',
          'Core/FeatureDetection',
-         'Core/jsonp',
          'Core/loadImage',
          'Core/loadWithXhr',
          'Scene/DiscardMissingTileImagePolicy',
@@ -18,7 +17,6 @@ defineSuite([
          GoogleEarthImageryProvider,
          DefaultProxy,
          FeatureDetection,
-         jsonp,
          loadImage,
          loadWithXhr,
          DiscardMissingTileImagePolicy,
@@ -33,7 +31,6 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     afterEach(function() {
-        jsonp.loadAndExecuteScript = jsonp.defaultLoadAndExecuteScript;
         loadImage.createImage = loadImage.defaultCreateImage;
         loadWithXhr.load = loadWithXhr.defaultLoad;
     });
@@ -45,19 +42,19 @@ defineSuite([
     it('constructor throws when url is not specified', function() {
         function constructWithoutServer() {
             return new GoogleEarthImageryProvider({
-              channel: 1234
+                channel: 1234
             });
         }
         expect(constructWithoutServer).toThrow();
     });
 
     it('constructor throws when channel is not specified', function() {
-        function constructWithoutServer() {
+        function constructWithoutChannel() {
             return new GoogleEarthImageryProvider({
-              url: 'http://foo.bar.net'
+                url: 'http://invalid.localhost'
             });
         }
-        expect(constructWithoutServer).toThrow();
+        expect(constructWithoutChannel).toThrow();
     });
 
     it('can provide a root tile', function() {
