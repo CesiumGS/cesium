@@ -124,8 +124,79 @@ define(['../Core/createGuid',
             gxMultitrack : processGxMultiTrack
         };
 
-    function processStyle(kml){
-        //var style = kml.getElementsByTagName("Style");
+    //First, create a function that takes a styleNode and creates equivalent dynamic object properties.
+    function processStyle(styleNode, dynamicObject) {
+//
+//        if(style has IconStyle)   {
+//
+//          dynamicObject.billboard = new DynamicBillboard();
+//
+//         //Map style to billboard properties
+//
+//       }
+//
+//        if(style has LabelStyle)   {
+//
+//          dynamicObject.label = new DynamicLabel();
+//
+//         //Map style to label properties
+//
+//       }
+//
+//        if(style has LineStyle)   {
+//
+//          dynamicObject.polyline = new DynamicPolyline();
+//
+//         //Map style to line properties
+//
+//       }
+//
+//        if(style has PolyStyle)   {
+//
+//          dynamicObject.polygon = new DynamicPolygon();
+//
+//         //Map style to polygon properties
+//
+//       }
+//
+//    }
+//
+//
+//
+//    //On load, iterate over all styles
+//
+//    //Keep a special collection just for styles.
+//
+//    var  styleCollection = new DynamicObjectCollection();
+//
+//
+//
+//    For each (style in list of stylesNodes) {
+//
+//       var styleObject = styleCollection.getOrCreateObject(style.id);
+//
+//      processStyle(style, styleObject);
+//
+//    }
+//
+//
+//
+//    //Then, when iterating placemarks you do something like this
+//
+//    If(placemark node has embedded style) {
+//
+//       //process the style directly
+//
+//      processStyle(styleNode, placemarkDynamicObject);
+//
+//    } else {
+//
+//      //Shared style uri, so get the already processed style and merge it with this object.
+//
+//      var styleObject = styleCollection.getObject(style Uri);
+//
+//       placemarkDynamicObject.merge(styleObject);
+
     }
 
     function processFolder(){
