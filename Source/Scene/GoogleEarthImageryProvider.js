@@ -136,7 +136,9 @@ define([
             }
 
             if(typeof layer === 'undefined') {
-              throw new DeveloperError('Could not find layer with channel (id) of ' + that._channel + '.');
+              var message = 'Could not find layer with channel (id) of ' + that._channel + '.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+              return;
             }
 
             if(typeof data.projection !== 'undefined' && data.projection === 'flat') {
