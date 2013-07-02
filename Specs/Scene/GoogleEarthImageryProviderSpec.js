@@ -228,7 +228,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url: url 
+            url: url, 
             channel: 1234,
             proxy : proxy
         });
@@ -490,6 +490,32 @@ defineSuite([
         var errorEventRaised = false;
         provider.getErrorEvent().addEventListener(function(error) {
             expect(error.message.indexOf('Could not find layer with channel') >= 0).toEqual(true);
+            errorEventRaised = true;
+        });
+
+        waitsFor(function() {
+            return provider.isReady() || errorEventRaised;
+        }, 'imagery provider to become ready or raise error event');
+
+        runs(function() {
+            expect(provider.isReady()).toEqual(false);
+            expect(errorEventRaised).toEqual(true);
+        });
+    });
+
+    it('raises error when channel version cannot be found', function() {
+        loadWithXhr.load = function(url, responseType, headers, deferred) {
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/bad_version.json', responseType, headers, deferred);
+        };
+        
+        var provider = new GoogleEarthImageryProvider({
+            url: 'http://invalid.localhost',
+            channel: 1234
+        });
+
+        var errorEventRaised = false;
+        provider.getErrorEvent().addEventListener(function(error) {
+            expect(error.message.indexOf('Could not find a version in channel') >= 0).toEqual(true);
             errorEventRaised = true;
         });
 

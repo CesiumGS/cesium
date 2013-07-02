@@ -55,6 +55,7 @@ define([
      * @exception {DeveloperError} <code>description.url</code> is required.
      * @exception {DeveloperError} <code>description.channel</code> is required.
      * @exception {RuntimeError} Could not find layer with channel (id) of <code>description.channel</code>.
+     * @exception {RuntimeError} Could not find a version in channel (id) <code>description.channel</code>.
      * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
      *
      * @see ArcGisMapServerImageryProvider
@@ -145,6 +146,13 @@ define([
               throw new RuntimeError(message);
             }
 
+            if(typeof layer.version === 'undefined') {
+              message = 'Could not find a version in channel (id) ' + that._channel + '.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+              throw new RuntimeError(message);
+            }
+            that._version = layer.version;
+
             if(typeof data.projection !== 'undefined' && data.projection === 'flat') {
               that._tilingScheme = new GeographicTilingScheme({
                   numberOfLevelZeroTilesX : 2,
@@ -163,7 +171,6 @@ define([
               throw new RuntimeError(message);
             }
 
-            that._version = layer.version;
             that._imageUrlTemplate = that._imageUrlTemplate.replace('{request}', that._requestType)
               .replace('{channel}', that._channel).replace('{version}', that._version);
 
