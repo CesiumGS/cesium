@@ -4,6 +4,7 @@ define([
         '../Core/loadText',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
+        '../Core/RuntimeError',
         '../Core/Event',
         '../Core/Extent',
         './DiscardMissingTileImagePolicy',
@@ -17,6 +18,7 @@ define([
         loadText,
         Cartesian2,
         DeveloperError,
+        RuntimeError,
         Event,
         Extent,
         DiscardMissingTileImagePolicy,
@@ -52,8 +54,8 @@ define([
      *
      * @exception {DeveloperError} <code>description.url</code> is required.
      * @exception {DeveloperError} <code>description.channel</code> is required.
-     * @exception {DeveloperError} Could not find layer with channel (id) of <code>description.channel</code>.
-     * @exception {DeveloperError} Unsupported projection <code>data.projection</code>.
+     * @exception {RuntimeError} Could not find layer with channel (id) of <code>description.channel</code>.
+     * @exception {RuntimeError} Unsupported projection <code>data.projection</code>.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -134,11 +136,13 @@ define([
                 break;
               }
             }
+            
+            var message;
 
             if(typeof layer === 'undefined') {
-              var message = 'Could not find layer with channel (id) of ' + that._channel + '.';
+              message = 'Could not find layer with channel (id) of ' + that._channel + '.';
               metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
-              return;
+              throw new RuntimeError(message);
             }
 
             if(typeof data.projection !== 'undefined' && data.projection === 'flat') {
@@ -153,7 +157,9 @@ define([
                   numberOfLevelZeroTilesY : 2
               });
             } else {
-              throw new DeveloperError('Unsupported projection ' + data.projection + '.');
+              message = 'Unsupported projection ' + data.projection + '.';
+              metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
+              throw new RuntimeError(message);
             }
 
             that._version = layer.version;
