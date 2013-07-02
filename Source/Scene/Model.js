@@ -8,6 +8,7 @@ define([
         '../Core/loadText',
         '../Core/loadImage',
         '../Core/Queue',
+        '../Core/IndexDatatype',
         '../Renderer/BufferUsage',
         './SceneMode'
     ], function(
@@ -19,6 +20,7 @@ define([
         loadText,
         loadImage,
         Queue,
+        IndexDatatype,
         BufferUsage,
         SceneMode) {
     "use strict";
@@ -183,9 +185,23 @@ define([
             return;
         }
 
+        var gltfBufferViews = model.json.bufferViews;
+        var buffers = model._buffers;
+
         while (model._bufferViewsToCreate.length > 0) {
             var bufferView = model._bufferViewsToCreate.dequeue();
-            console.log(bufferView);
+
+            var gltfBufferView = gltfBufferViews[bufferView.name];
+            gltfBufferView.extra = defaultValue(gltfBufferView.extra, {});
+
+            var raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+
+            if (bufferView.target === 'ARRAY_BUFFER') {
+                gltfBufferView.extra.czmBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+            } else { // ELEMENT_ARRAY_BUFFER
+// TODO: we don't know the index datatype yet...and createIndexBuffer() should not require it.
+                gltfBufferView.extra.czmBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+            }
         }
     }
 
@@ -194,29 +210,29 @@ define([
             return;
         }
 
-        var programs = model.json.programs;
+        var gltfPrograms = model.json.programs;
         var shaders = model._shaders;
 
         while (model._programsToCreate.length > 0) {
             var programToCreate = model._programsToCreate.dequeue();
 
-            var program = programs[programToCreate.name];
-            program.extra = defaultValue(program.extra, {});
-            program.extra.czmProgram = context.getShaderCache().getShaderProgram(
+            var gltfProgram = gltfPrograms[programToCreate.name];
+            gltfProgram.extra = defaultValue(gltfProgram.extra, {});
+            gltfProgram.extra.czmProgram = context.getShaderCache().getShaderProgram(
                 shaders[programToCreate.vertexShader],
                 shaders[programToCreate.fragmentShader]);
         }
     }
 
     function createTextures(model, context) {
-        var images = model.json.images;
+        var gltfImages = model.json.images;
 
         while (model._texturesToCreate.length > 0) {
             var textureToCreate = model._texturesToCreate.dequeue();
 
-            var image = images[textureToCreate.name];
-            image.extra = defaultValue(image.extra, {});
-            image.extra.czmTexture = context.createTexture2D({
+            var gltfImage = gltfImages[textureToCreate.name];
+            gltfImage.extra = defaultValue(gltfImage.extra, {});
+            gltfImage.extra.czmTexture = context.createTexture2D({
                 source : textureToCreate.image,
                 flipY : false
             });
