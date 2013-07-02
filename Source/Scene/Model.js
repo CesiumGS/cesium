@@ -18,6 +18,8 @@ define([
         Queue,
         SceneMode) {
     "use strict";
+// TODO: remove before merge to master
+/*global console*/
 
     /**
      * DOC_TBA
@@ -56,18 +58,24 @@ define([
         this._pendingShaderLoads = 0;
     };
 
+    function shaderLoad(model, name) {
+        return function(source) {
+            model._shaders[name] = source;
+            --model._pendingShaderLoads;
+         };
+    }
+
+    function failedShaderLoad() {
+        // TODO
+    }
+
     function parseShaders(model) {
         var shaders = model.json.shaders;
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._pendingShaderLoads;
                 var shaderPath = model.basePath + shaders[name].path;
-                loadText(shaderPath).then(function(source) {
-                    model._shaders[name] = source;
-                    --model._pendingShaderLoads;
-                 }, function() {
-                     // TODO
-                 });
+                loadText(shaderPath).then(shaderLoad(model, name), failedShaderLoad);
             }
         }
     }
@@ -86,20 +94,25 @@ define([
         }
     }
 
+    function imageLoad(model, name) {
+        return function(image) {
+            model._texturesToCreate.enqueue({
+                 name : name,
+                 image : image
+             });
+         };
+    }
+
+    function failedImageLoad() {
+        // TODO
+    }
+
     function parseImages(model) {
         var images = model.json.images;
         for (var name in images) {
             if (images.hasOwnProperty(name)) {
                 var imagePath = model.basePath + images[name].path;
-
-                loadImage(imagePath).then(function(image) {
-                   model._texturesToCreate.enqueue({
-                        name : name,
-                        image : image
-                    });
-                }, function() {
-                    // TODO
-                });
+                loadImage(imagePath).then(imageLoad(model, name), failedImageLoad);
             }
         }
     }
