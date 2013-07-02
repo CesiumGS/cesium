@@ -1,6 +1,7 @@
 /*global define*/
 define([
         'Core/loadText',
+        'Scene/Model',
         ///////////////////////////////////////////////////////////////////////
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
@@ -12,6 +13,7 @@ define([
         'domReady!'
     ], function(
         loadText,
+        Model,
         ///////////////////////////////////////////////////////////////////////
         CzmlDataSource,
         GeoJsonDataSource,
@@ -146,8 +148,13 @@ define([
 
         // ../../../Apps/CesiumViewer/Gallery/model/duck/duck.json
 
-        loadText('../../../Apps/CesiumViewer2/Gallery/model/duck/duck.json').then(function(data) {
-            console.log(data);
+        loadText('./Gallery/model/duck/duck.json').then(function(data) {
+            var json = JSON.parse(data);
+            var model = new Model({
+                json : json,
+                basePath : './Gallery/model/duck/'
+            });
+            scene.getPrimitives().add(model);
         });
     }
 });
