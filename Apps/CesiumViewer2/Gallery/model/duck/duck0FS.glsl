@@ -1,6 +1,5 @@
 precision highp float;
 varying vec3 v_normal;
-varying vec2 v_diffuseAttrib;
 varying vec2 v_texcoord0;
 uniform sampler2D u_diffuse;
 void main(void) {

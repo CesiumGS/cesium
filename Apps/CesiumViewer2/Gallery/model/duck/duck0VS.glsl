@@ -5,8 +5,6 @@ varying vec3 v_normal;
 uniform mat3 u_normalMatrix;
 uniform mat4 u_worldViewMatrix;
 uniform mat4 u_projectionMatrix;
-attribute vec2 a_diffuseAttrib;
-varying vec2 v_diffuseAttrib;
 attribute vec2 a_texcoord0;
 varying vec2 v_texcoord0;
 void main(void) {
