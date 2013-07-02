@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Enumeration',
         '../Core/loadArrayBuffer',
         '../Core/loadText',
         '../Core/loadImage',
@@ -16,6 +17,7 @@ define([
         defaultValue,
         DeveloperError,
         destroyObject,
+        Enumeration,
         loadArrayBuffer,
         loadText,
         loadImage,
@@ -26,6 +28,31 @@ define([
     "use strict";
 // TODO: remove before merge to master
 /*global console*/
+
+    var ModelState = {
+        NEEDS_LOAD : new Enumeration(0, 'NEEDS_LOAD'),
+        LOADING : new Enumeration(1, 'LOADING'),
+        LOADED : new Enumeration(2, 'LOADED')
+    };
+
+    function LoadResources() {
+        this.bufferViewsToCreate = new Queue();
+        this.buffers = {};
+        this.pendingBufferLoads = 0;
+
+        this.programsToCreate = new Queue();
+        this.shaders = {};
+        this.pendingShaderLoads = 0;
+
+        this.texturesToCreate = new Queue();
+        this.pendingTextureLoads = 0;
+    }
+
+    LoadResources.prototype.finishedPendingLoads = function() {
+        return ((this.pendingBufferLoads === 0) &&
+                (this.pendingShaderLoads === 0) &&
+                (this.pendingTextureLoads === 0));
+    };
 
     /**
      * DOC_TBA
@@ -55,26 +82,17 @@ define([
          */
         this.show = true;
 
-        this._reload = true;
-
-        this._bufferViewsToCreate = new Queue();
-        this._buffers = {};
-        this._pendingBufferLoads = 0;
-
-        this._programsToCreate = new Queue();
-        this._shaders = {};
-        this._pendingShaderLoads = 0;
-
-        this._texturesToCreate = new Queue();
-        this._pendingTextureLoads = 0;
+        this._state = ModelState.NEEDS_LOAD;
+        this._loadResources = undefined;
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
     function bufferLoad(model, name) {
         return function(arrayBuffer) {
-            model._buffers[name] = arrayBuffer;
-            --model._pendingBufferLoads;
+            var loadResources = model._loadResources;
+            loadResources.buffers[name] = arrayBuffer;
+            --loadResources.pendingBufferLoads;
          };
     }
 
@@ -86,7 +104,7 @@ define([
         var buffers = model.json.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
-                ++model._pendingBufferLoads;
+                ++model._loadResources.pendingBufferLoads;
                 var bufferPath = model.basePath + buffers[name].path;
                 loadArrayBuffer(bufferPath).then(bufferLoad(model, name), failedBufferLoad);
             }
@@ -98,7 +116,7 @@ define([
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
                 var bufferView = bufferViews[name];
-                model._bufferViewsToCreate.enqueue({
+                model._loadResources.bufferViewsToCreate.enqueue({
                      name : name,
                      buffer : bufferView.buffer,
                      byteLength : bufferView.byteLength,
@@ -111,8 +129,9 @@ define([
 
     function shaderLoad(model, name) {
         return function(source) {
-            model._shaders[name] = source;
-            --model._pendingShaderLoads;
+            var loadResources = model._loadResources;
+            loadResources.shaders[name] = source;
+            --loadResources.pendingShaderLoads;
          };
     }
 
@@ -124,7 +143,7 @@ define([
         var shaders = model.json.shaders;
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
-                ++model._pendingShaderLoads;
+                ++model._loadResources.pendingShaderLoads;
                 var shaderPath = model.basePath + shaders[name].path;
                 loadText(shaderPath).then(shaderLoad(model, name), failedShaderLoad);
             }
@@ -136,7 +155,7 @@ define([
         for (var name in programs) {
             if (programs.hasOwnProperty(name)) {
                 var program = programs[name];
-                model._programsToCreate.enqueue({
+                model._loadResources.programsToCreate.enqueue({
                      name : name,
                      vertexShader : program.vertexShader,
                      fragmentShader : program.fragmentShader
@@ -147,8 +166,9 @@ define([
 
     function imageLoad(model, name) {
         return function(image) {
-            --model._pendingTextureLoads;
-            model._texturesToCreate.enqueue({
+            var loadResources = model._loadResources;
+            --loadResources.pendingTextureLoads;
+            loadResources.texturesToCreate.enqueue({
                  name : name,
                  image : image
              });
@@ -163,7 +183,7 @@ define([
         var images = model.json.images;
         for (var name in images) {
             if (images.hasOwnProperty(name)) {
-                ++model._pendingTextureLoads;
+                ++model._loadResources.pendingTextureLoads;
                 var imagePath = model.basePath + images[name].path;
                 loadImage(imagePath).then(imageLoad(model, name), failedImageLoad);
             }
@@ -181,15 +201,17 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createBufferViews(model, context) {
-        if (model._pendingBufferLoads !== 0) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
 
         var gltfBufferViews = model.json.bufferViews;
-        var buffers = model._buffers;
+        var buffers = loadResources.buffers;
 
-        while (model._bufferViewsToCreate.length > 0) {
-            var bufferView = model._bufferViewsToCreate.dequeue();
+        while (loadResources.bufferViewsToCreate.length > 0) {
+            var bufferView = loadResources.bufferViewsToCreate.dequeue();
 
             var gltfBufferView = gltfBufferViews[bufferView.name];
             gltfBufferView.extra = defaultValue(gltfBufferView.extra, {});
@@ -206,15 +228,17 @@ define([
     }
 
     function createPrograms(model, context) {
-        if (model._pendingShaderLoads !== 0) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.pendingShaderLoads !== 0) {
             return;
         }
 
         var gltfPrograms = model.json.programs;
-        var shaders = model._shaders;
+        var shaders = loadResources.shaders;
 
-        while (model._programsToCreate.length > 0) {
-            var programToCreate = model._programsToCreate.dequeue();
+        while (loadResources.programsToCreate.length > 0) {
+            var programToCreate = loadResources.programsToCreate.dequeue();
 
             var gltfProgram = gltfPrograms[programToCreate.name];
             gltfProgram.extra = defaultValue(gltfProgram.extra, {});
@@ -225,10 +249,11 @@ define([
     }
 
     function createTextures(model, context) {
+        var loadResources = model._loadResources;
         var gltfImages = model.json.images;
 
-        while (model._texturesToCreate.length > 0) {
-            var textureToCreate = model._texturesToCreate.dequeue();
+        while (loadResources.texturesToCreate.length > 0) {
+            var textureToCreate = loadResources.texturesToCreate.dequeue();
 
             var gltfImage = gltfImages[textureToCreate.name];
             gltfImage.extra = defaultValue(gltfImage.extra, {});
@@ -257,20 +282,19 @@ define([
             return;
         }
 
-        if (this._reload && defined(this.json)) {
-            this._reload = false;
+        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.json)) {
+            this._state = ModelState.LOADING;
+            this._loadResources = new LoadResources();
             parseJson(this);
         }
 
-        createResources(this, context);
+        if (this._state === ModelState.LOADING) {
+            createResources(this, context);
 
-        if ((this._pendingBufferLoads === 0) &&
-            (this._pendingShaderLoads === 0) &&
-            (this._pendingTextureLoads === 0)) {
-
-            // Clear CPU memory since WebGL resources were created.
-            this._buffers = {};
-            this._shaders = {};
+            if (this._loadResources.finishedPendingLoads()) {
+                this._state = ModelState.LOADED;
+                this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+            }
         }
     };
 
