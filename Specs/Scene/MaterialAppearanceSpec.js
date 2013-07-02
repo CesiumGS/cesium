@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidSurfaceAppearance',
+         'Scene/MaterialAppearance',
          'Scene/Appearance',
          'Scene/Material',
          'Scene/Primitive',
@@ -16,7 +16,7 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createFrameState'
      ], function(
-         EllipsoidSurfaceAppearance,
+         MaterialAppearance,
          Appearance,
          Material,
          Primitive,
@@ -46,6 +46,7 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new ExtentGeometry({
+                    vertexFormat : MaterialAppearance.MaterialSupport.ALL.vertexFormat,
                     extent : extent
                 }),
                 attributes : {
@@ -65,22 +66,58 @@ defineSuite([
     });
 
     it('constructor', function() {
-        var a = new EllipsoidSurfaceAppearance();
+        var a = new MaterialAppearance();
 
+        expect(a.materialSupport).toEqual(MaterialAppearance.MaterialSupport.TEXTURED);
         expect(a.material).toBeDefined();
         expect(a.material.type).toEqual(Material.ColorType);
-        expect(a.vertexShaderSource).toBeDefined();
-        expect(a.fragmentShaderSource).toBeDefined();
-        expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, true));
-        expect(a.vertexFormat).toEqual(EllipsoidSurfaceAppearance.VERTEX_FORMAT);
+        expect(a.vertexShaderSource).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.vertexShaderSource);
+        expect(a.fragmentShaderSource).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.fragmentShaderSource);
+        expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, false));
+        expect(a.vertexFormat).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat);
         expect(a.flat).toEqual(false);
         expect(a.faceForward).toEqual(false);
         expect(a.translucent).toEqual(true);
-        expect(a.aboveGround).toEqual(false);
+        expect(a.closed).toEqual(false);
     });
 
-    it('renders', function() {
-        primitive.appearance = new EllipsoidSurfaceAppearance();
+    it('renders basic', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.BASIC,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.DotType)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders textured', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.ImageType)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders all', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.ALL,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.NormalMapType)
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

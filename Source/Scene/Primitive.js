@@ -683,7 +683,6 @@ define([
         var createSP = false;
 
         if (this._appearance !== appearance) {
-
             this._appearance = appearance;
             this._material = material;
             createRS = true;

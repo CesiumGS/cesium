@@ -1,12 +1,65 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/DebugAppearance',
-         'Scene/Appearance'
+         'Scene/Appearance',
+         'Scene/Primitive',
+         'Core/ExtentGeometry',
+         'Core/Extent',
+         'Core/GeometryInstance',
+         'Core/GeometryInstanceAttribute',
+         'Core/ComponentDatatype',
+         'Core/VertexFormat',
+         'Renderer/ClearCommand',
+         'Specs/render',
+         'Specs/createCanvas',
+         'Specs/destroyCanvas',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/createFrameState'
      ], function(
          DebugAppearance,
-         Appearance) {
+         Appearance,
+         Primitive,
+         ExtentGeometry,
+         Extent,
+         GeometryInstance,
+         GeometryInstanceAttribute,
+         ComponentDatatype,
+         VertexFormat,
+         ClearCommand,
+         render,
+         createCanvas,
+         destroyCanvas,
+         createContext,
+         destroyContext,
+         createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var context;
+    var frameState;
+    var extentInstance;
+
+    beforeAll(function() {
+        context = createContext();
+        frameState = createFrameState();
+
+        var extent = Extent.fromDegrees(-80.0, 20.0, -70.0, 40.0);
+        extentInstance = new GeometryInstance({
+            geometry : new ExtentGeometry({
+                vertexFormat : VertexFormat.ALL,
+                extent : extent
+            })
+        });
+
+        frameState.camera.controller.viewExtent(extent);
+        var us = context.getUniformState();
+        us.update(frameState);
+    });
+
+    afterAll(function() {
+        destroyContext(context);
+    });
 
     it('constructor throws without attributeName', function() {
         expect(function() {
@@ -114,6 +167,174 @@ defineSuite([
                 glslDatatype : 'invalid'
             });
         }).toThrow();
+    });
+
+    it('renders normal', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'normal'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders binormal', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'binormal'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders tangent', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'tangent'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders st', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'st'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders float', function() {
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1,
+                value : [1.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'float'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders vec2', function() {
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                value : [1.0, 2.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec2'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders vec3', function() {
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                value : [1.0, 2.0, 3.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec3'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders vec4', function() {
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                value : [1.0, 2.0, 3.0, 4.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec4'
+            })
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
 });

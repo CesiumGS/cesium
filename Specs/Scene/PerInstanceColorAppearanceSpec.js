@@ -1,6 +1,6 @@
 /*global defineSuite*/
 defineSuite([
-         'Scene/EllipsoidSurfaceAppearance',
+         'Scene/PerInstanceColorAppearance',
          'Scene/Appearance',
          'Scene/Material',
          'Scene/Primitive',
@@ -16,7 +16,7 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createFrameState'
      ], function(
-         EllipsoidSurfaceAppearance,
+         PerInstanceColorAppearance,
          Appearance,
          Material,
          Primitive,
@@ -46,6 +46,7 @@ defineSuite([
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new ExtentGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
                     extent : extent
                 }),
                 attributes : {
@@ -65,22 +66,35 @@ defineSuite([
     });
 
     it('constructor', function() {
-        var a = new EllipsoidSurfaceAppearance();
+        var a = new PerInstanceColorAppearance();
 
-        expect(a.material).toBeDefined();
-        expect(a.material.type).toEqual(Material.ColorType);
+        expect(a.material).not.toBeDefined();
         expect(a.vertexShaderSource).toBeDefined();
         expect(a.fragmentShaderSource).toBeDefined();
-        expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, true));
-        expect(a.vertexFormat).toEqual(EllipsoidSurfaceAppearance.VERTEX_FORMAT);
+        expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, false));
+        expect(a.vertexFormat).toEqual(PerInstanceColorAppearance.VERTEX_FORMAT);
         expect(a.flat).toEqual(false);
         expect(a.faceForward).toEqual(false);
         expect(a.translucent).toEqual(true);
-        expect(a.aboveGround).toEqual(false);
+        expect(a.closed).toEqual(false);
     });
 
     it('renders', function() {
-        primitive.appearance = new EllipsoidSurfaceAppearance();
+        primitive.appearance = new PerInstanceColorAppearance();
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders flat', function() {
+        primitive.appearance = new PerInstanceColorAppearance({
+            flat : true,
+            translucent : false,
+            closed : true
+        });
 
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);

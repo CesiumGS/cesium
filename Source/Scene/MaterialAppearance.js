@@ -213,7 +213,6 @@ define([
             vertexFormat : VertexFormat.POSITION_AND_NORMAL,
             vertexShaderSource : BasicMaterialAppearanceVS,
             fragmentShaderSource : BasicMaterialAppearanceFS
-
         }),
         /**
          * Materials with textures, which require <code>position</code>,
