@@ -9,6 +9,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ed Mackey](https://github.com/emackey)
    * [Dan Bagnell](https://github.com/bagnell)
    * [Scott Hunter](https://github.com/shunter)
+   * [Frank Stoner](https://github.com/fstoner)
    * [Matthew Ford](https://github.com/mrmattf)
    * [Tom Fili](https://github.com/tfili)
    * [Matthew Amato](https://github.com/mramato)
@@ -29,5 +30,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Ognjen Bubalo](https://github.com/ognjenb)
 * [Ayudh Das](https://github.com/ayudhDas)
 * [You Lu](https://github.com/YouLu)
+
+<!--
+## [Developer Certificate of Origin](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/CONTRIBUTING.md)
+-->
 
 Also see [our contributors page](http://cesium.agi.com/contributors.html) for more information.
