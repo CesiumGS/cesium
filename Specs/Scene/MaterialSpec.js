@@ -504,13 +504,15 @@ defineSuite([
                     color1 : {
                         type : 'Color',
                         uniforms : {
-                            color : new Color(0.0, 1.0, 0.0, 1.0)
+                            color : new Color(0.0, 1.0, 0.0, 1.0),
+                            emission : 0.0
                         }
                     },
                     color2 : {
                         type : 'Color',
                         uniforms : {
-                            color : new Color(0.0, 0.0, 1.0, 1.0)
+                            color : new Color(0.0, 0.0, 1.0, 1.0),
+                            emission : 0.0
                         }
                     }
                 },

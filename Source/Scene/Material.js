@@ -118,6 +118,7 @@ define([
      *  <li>Color</li>
      *  <ul>
      *      <li><code>color</code>:  rgba color object.</li>
+     *      <li><code>emission</code>:  percent of the color that is visible regardless of lighting.</li>
      *  </ul>
      *  <li>Image</li>
      *  <ul>
@@ -918,10 +919,12 @@ define([
     Material._materialCache.addMaterial(Material.ColorType, {
         type : Material.ColorType,
         uniforms : {
-            color : new Color(1.0, 0.0, 0.0, 0.5)
+            color : new Color(1.0, 0.0, 0.0, 0.5),
+            emission : 0.4
         },
         components : {
-            diffuse : 'color.rgb',
+            emission : 'color.rgb * emission',
+            diffuse : 'color.rgb * (1.0 - emission)',
             alpha : 'color.a'
         }
     });
