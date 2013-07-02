@@ -6,55 +6,48 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('Event works with no scope', function() {
-        var e = new Event();
-        var someValue = 123;
-        var callbackCalled = false;
-
-        this.myCallback = function(expectedValue) {
-            callbackCalled = true;
-            expect(expectedValue).toEqual(someValue);
-            expect(this).toBeUndefined();
-        };
-
-        e.addEventListener(this.myCallback);
-        expect(callbackCalled).toEqual(false);
-
-        e.raiseEvent(someValue);
-        expect(callbackCalled).toEqual(true);
-
-        callbackCalled = false;
-        e.removeEventListener(this.myCallback);
-        e.raiseEvent(someValue);
-        expect(callbackCalled).toEqual(false);
+    var event;
+    var spyListener;
+    beforeEach(function() {
+        event = new Event();
+        spyListener = jasmine.createSpy('listener');
     });
 
-    it('Event works with scope', function() {
-        var e = new Event();
+    it('works with no scope', function() {
         var someValue = 123;
-        var callbackCalled = false;
-        var that = this;
-        this.myCallback = function(expectedValue) {
-            callbackCalled = true;
-            expect(expectedValue).toEqual(someValue);
-            expect(this).toEqual(that);
-        };
 
-        e.addEventListener(this.myCallback, this);
-        expect(callbackCalled).toEqual(false);
+        event.addEventListener(spyListener);
+        event.raiseEvent(someValue);
 
-        e.raiseEvent(someValue);
-        expect(callbackCalled).toEqual(true);
+        expect(spyListener).toHaveBeenCalledWith(someValue);
 
-        callbackCalled = false;
-        e.removeEventListener(this.myCallback, this);
-        e.raiseEvent(someValue);
-        expect(callbackCalled).toEqual(false);
+        spyListener.reset();
+
+        event.removeEventListener(spyListener);
+        event.raiseEvent(someValue);
+
+        expect(spyListener).not.toHaveBeenCalled();
+    });
+
+    it('works with scope', function() {
+        var someValue = 123;
+        var scope = {};
+
+        event.addEventListener(spyListener, scope);
+        event.raiseEvent(someValue);
+
+        expect(spyListener).toHaveBeenCalledWith(someValue);
+        expect(spyListener.calls[0].object).toBe(scope);
+
+        spyListener.reset();
+
+        event.removeEventListener(spyListener, scope);
+        event.raiseEvent(someValue);
+
+        expect(spyListener).not.toHaveBeenCalled();
     });
 
     it('addEventListener and removeEventListener works with same function of different scopes', function() {
-        var e = new Event();
-
         var Scope = function() {
             this.timesCalled = 0;
         };
@@ -66,22 +59,22 @@ defineSuite([
         var scope1 = new Scope();
         var scope2 = new Scope();
 
-        e.addEventListener(Scope.prototype.myCallback, scope1);
-        e.addEventListener(Scope.prototype.myCallback, scope2);
-        e.raiseEvent();
+        event.addEventListener(Scope.prototype.myCallback, scope1);
+        event.addEventListener(Scope.prototype.myCallback, scope2);
+        event.raiseEvent();
 
         expect(scope1.timesCalled).toEqual(1);
         expect(scope2.timesCalled).toEqual(1);
 
-        e.removeEventListener(Scope.prototype.myCallback, scope1);
-        expect(e.getNumberOfListeners()).toEqual(1);
-        e.raiseEvent();
+        event.removeEventListener(Scope.prototype.myCallback, scope1);
+        expect(event.getNumberOfListeners()).toEqual(1);
+        event.raiseEvent();
 
         expect(scope1.timesCalled).toEqual(1);
         expect(scope2.timesCalled).toEqual(2);
 
-        e.removeEventListener(Scope.prototype.myCallback, scope2);
-        expect(e.getNumberOfListeners()).toEqual(0);
+        event.removeEventListener(Scope.prototype.myCallback, scope2);
+        expect(event.getNumberOfListeners()).toEqual(0);
     });
 
     it('getNumberOfListeners returns the correct number', function() {
@@ -91,76 +84,98 @@ defineSuite([
         var callback2 = function() {
         };
 
-        var e = new Event();
-        expect(e.getNumberOfListeners()).toEqual(0);
+        expect(event.getNumberOfListeners()).toEqual(0);
 
-        e.addEventListener(callback1);
-        expect(e.getNumberOfListeners()).toEqual(1);
+        event.addEventListener(callback1);
+        expect(event.getNumberOfListeners()).toEqual(1);
 
-        e.addEventListener(callback2);
-        expect(e.getNumberOfListeners()).toEqual(2);
+        event.addEventListener(callback2);
+        expect(event.getNumberOfListeners()).toEqual(2);
 
-        e.removeEventListener(callback2);
-        expect(e.getNumberOfListeners()).toEqual(1);
+        event.removeEventListener(callback2);
+        expect(event.getNumberOfListeners()).toEqual(1);
     });
 
-    it('Event works with no listeners', function() {
-        var e = new Event();
-        e.raiseEvent(123);
+    it('works with no listeners', function() {
+        event.raiseEvent(123);
+    });
+
+    it('addEventListener returns a function allowing removal', function() {
+        var someValue = 123;
+
+        var remove = event.addEventListener(spyListener);
+        event.raiseEvent(someValue);
+
+        expect(spyListener).toHaveBeenCalledWith(someValue);
+        spyListener.reset();
+
+        remove();
+        event.raiseEvent(someValue);
+
+        expect(spyListener).not.toHaveBeenCalled();
+    });
+
+    it('addEventListener with scope returns a function allowing removal', function() {
+        var someValue = 123;
+        var scope = {};
+
+        var remove = event.addEventListener(spyListener, scope);
+        event.raiseEvent(someValue);
+
+        expect(spyListener).toHaveBeenCalledWith(someValue);
+        spyListener.reset();
+
+        remove();
+        event.raiseEvent(someValue);
+
+        expect(spyListener).not.toHaveBeenCalled();
     });
 
     it('addEventListener throws with undefined listener', function() {
-        var e = new Event();
         expect(function() {
-            e.addEventListener(undefined);
+            event.addEventListener(undefined);
         }).toThrow();
     });
 
     it('addEventListener throws with null listener', function() {
-        var e = new Event();
         expect(function() {
-            e.addEventListener(null);
+            event.addEventListener(null);
         }).toThrow();
     });
 
     it('addEventListener throws with non-function listener', function() {
-        var e = new Event();
         expect(function() {
-            e.addEventListener({});
+            event.addEventListener({});
         }).toThrow();
     });
 
     it('removeEventListener throws with undefined listener', function() {
-        var e = new Event();
         expect(function() {
-            e.removeEventListener(undefined);
+            event.removeEventListener(undefined);
         }).toThrow();
     });
 
     it('removeEventListener throws with null listener', function() {
-        var e = new Event();
         expect(function() {
-            e.removeEventListener(null);
+            event.removeEventListener(null);
         }).toThrow();
     });
 
     it('removeEventListener throws with non registered listener', function() {
-        var e = new Event();
         expect(function() {
-            e.removeEventListener(function() {
+            event.removeEventListener(function() {
             });
         }).toThrow();
     });
 
     it('removeEventListener throws with registered listener of a different scope', function() {
-        var e = new Event();
-
         var myFunc = function() {
         };
-        e.addEventListener(myFunc, e);
+        var scope = {};
+        event.addEventListener(myFunc, scope);
 
         expect(function() {
-            e.removeEventListener(myFunc);
+            event.removeEventListener(myFunc);
         }).toThrow();
     });
 });

@@ -59,10 +59,7 @@ define([
         function render() {
             try {
                 if (widget._useDefaultRenderLoop) {
-                    var frameNumber = widget._scene.getFrameState().frameNumber;
-                    if (widget._needResize || (frameNumber % 60) === 0) {
-                        widget.resize();
-                    }
+                    widget.resize();
                     widget.render();
                     requestAnimationFrame(render);
                 } else {
@@ -187,15 +184,15 @@ define([
         this._element = widgetNode;
         this._container = container;
         this._canvas = canvas;
-        this._scene = scene;
+        this._canvasWidth = canvas.width;
+        this._canvasHeight = canvas.height;        this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
         this._transitioner = new SceneTransitioner(scene, ellipsoid);
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
-        this._creditContainer = creditContainer;
-
+        this._creditContainer = creditContainer;        this._canRender = false;
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
                 this._transitioner.to2D();
@@ -204,14 +201,6 @@ define([
                 this._transitioner.toColumbusView();
             }
         }
-
-        var that = this;
-        //Subscribe for resize events and set the initial size.
-        this._needResize = true;
-        this._resizeCallback = function() {
-            that._needResize = true;
-        };
-        window.addEventListener('resize', this._resizeCallback, false);
 
         this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
     };
@@ -367,7 +356,6 @@ define([
      * @memberof CesiumWidget
      */
     CesiumWidget.prototype.destroy = function() {
-        window.removeEventListener('resize', this._resizeCallback, false);
         this._container.removeChild(this._element);
         destroyObject(this);
     };
@@ -379,21 +367,27 @@ define([
      * @memberof CesiumWidget
      */
     CesiumWidget.prototype.resize = function() {
-        var width = this._canvas.clientWidth;
-        var height = this._canvas.clientHeight;
-        if (this._canvas.width === width && this._canvas.height === height) {
+        var canvas = this._canvas;
+        var width = canvas.clientWidth;
+        var height = canvas.clientHeight;
+        if (this._canvasWidth === width && this._canvasHeight === height) {
             return;
         }
 
-        this._canvas.width = width;
-        this._canvas.height = height;
+        canvas.width = this._canvasWidth = width;
+        canvas.height = this._canvasHeight = height;
 
-        var frustum = this._scene.getCamera().frustum;
-        if (typeof frustum.aspectRatio !== 'undefined') {
-            frustum.aspectRatio = width / height;
-        } else {
-            frustum.top = frustum.right * (height / width);
-            frustum.bottom = -frustum.top;
+        var canRender = width !== 0 && height !== 0;
+        this._canRender = canRender;
+
+        if (canRender) {
+            var frustum = this._scene.getCamera().frustum;
+            if (typeof frustum.aspectRatio !== 'undefined') {
+                frustum.aspectRatio = width / height;
+            } else {
+                frustum.top = frustum.right * (height / width);
+                frustum.bottom = -frustum.top;
+            }
         }
     };
 
@@ -405,7 +399,9 @@ define([
     CesiumWidget.prototype.render = function() {
         var currentTime = this._clock.tick();
         this._scene.initializeFrame();
-        this._scene.render(currentTime);
+        if (this._canRender) {
+            this._scene.render(currentTime);
+        }
     };
 
     return CesiumWidget;

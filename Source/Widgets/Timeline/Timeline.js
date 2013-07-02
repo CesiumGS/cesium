@@ -169,6 +169,8 @@ define([
     };
 
     Timeline.prototype.destroy = function() {
+        this._clock.onTick.removeEventListener(this.updateFromClock, this);
+
         document.removeEventListener('mouseup', this._onMouseUp, false);
         document.removeEventListener('mousemove', this._onMouseMove, false);
 

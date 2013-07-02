@@ -123,8 +123,7 @@ define([
         /**
          * The {@link SkyBox} used to draw the stars.
          *
-         * @type SkyBox
-         *
+         * @type {SkyBox}
          * @default undefined
          *
          * @see Scene#backgroundColor
@@ -134,8 +133,7 @@ define([
         /**
          * The sky atmosphere drawn around the globe.
          *
-         * @type SkyAtmosphere
-         *
+         * @type {SkyAtmosphere}
          * @default undefined
          */
         this.skyAtmosphere = undefined;
@@ -143,8 +141,7 @@ define([
         /**
          * The {@link Sun}.
          *
-         * @type Sun
-         *
+         * @type {Sun}
          * @default undefined
          */
         this.sun = undefined;
@@ -152,9 +149,8 @@ define([
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
          *
-         * @type Color
-         *
-         * @default Color.BLACK
+         * @type {Color}
+         * @default {@link Color.BLACK}
          *
          * @see Scene#skyBox
          */
@@ -163,7 +159,8 @@ define([
         /**
          * The current mode of the scene.
          *
-         * @type SceneMode
+         * @type {SceneMode}
+         * @default {@link SceneMode.SCENE3D}
          */
         this.mode = SceneMode.SCENE3D;
         /**
@@ -179,13 +176,15 @@ define([
          * The current morph transition time between 2D/Columbus View and 3D,
          * with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
-         * @type Number
+         * @type {Number}
+         * @default 1.0
          */
         this.morphTime = 1.0;
         /**
          * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
          *
-         * @type Number
+         * @type {Number}
+         * @default 1000.0
          */
         this.farToNearRatio = 1000.0;
 

@@ -32,7 +32,8 @@ define([
     var TileTerrain = function TileTerrain(upsampleDetails) {
         /**
          * The current state of the terrain in the terrain processing pipeline.
-         * @type TerrainState
+         * @type {TerrainState}
+         * @default {@link TerrainState.UNLOADED}
          */
         this.state = TerrainState.UNLOADED;
         this.data = undefined;
@@ -68,11 +69,7 @@ define([
         tile.maximumHeight = mesh.maximumHeight;
         BoundingSphere.clone(mesh.boundingSphere3D, tile.boundingSphere3D);
 
-        if (typeof mesh.occludeePointInScaledSpace !== 'undefined') {
-            Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
-        } else {
-            tile.occludeePointInScaledSpace = undefined;
-        }
+        Cartesian3.clone(mesh.occludeePointInScaledSpace, tile.occludeePointInScaledSpace);
 
         // Free the tile's existing vertex array, if any.
         tile.freeVertexArray();

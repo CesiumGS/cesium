@@ -19,7 +19,8 @@ define([
     var Command = function() {
         /**
          * Gets whether this command can currently be executed.  This property is observable.
-         * @type Boolean
+         * @type {Boolean}
+         * @default undefined
          */
         this.canExecute = undefined;
 
@@ -28,14 +29,16 @@ define([
          * is raised with an object containing two properties: a <code>cancel</code> property,
          * which if set to false by the listener will prevent the command from being executed, and
          * an <code>args</code> property, which is the array of arguments being passed to the command.
-         * @type Event
+         * @type {Event}
+         * @default undefined
          */
         this.beforeExecute = undefined;
 
         /**
          * Gets an event which is raised after the command executes, the event
          * is raised with the return value of the command as its only parameter.
-         * @type Event
+         * @type {Event}
+         * @default undefined
          */
         this.afterExecute = undefined;
 

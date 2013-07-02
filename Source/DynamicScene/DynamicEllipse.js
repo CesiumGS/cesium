@@ -33,18 +33,21 @@ define(['../Core/TimeInterval',
     var DynamicEllipse = function() {
         /**
          * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMajorAxis.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.semiMajorAxis = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMinorAxis.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.semiMinorAxis = undefined;
 
         /**
          * A DynamicProperty of type CzmlNumber which determines the bearing of the ellipse.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.bearing = undefined;
 

@@ -33,27 +33,32 @@ function(
     var DynamicPolyline = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the line's color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the line's outline color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.outlineColor = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the line's outline width.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.outlineWidth = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the line's width.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.width = undefined;
     };

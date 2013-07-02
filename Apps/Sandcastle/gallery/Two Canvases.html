@@ -37,8 +37,8 @@
         var scene = new Cesium.Scene(canvas);
         var primitives = scene.getPrimitives();
 
-        var imageryProvider = new Cesium.SingleTileImageryProvider({
-            url : imageryUrl + 'NE2_LR_LC_SR_W_DR_2048.jpg'
+        var imageryProvider = new Cesium.TileMapServiceImageryProvider({
+            url : imageryUrl + 'NaturalEarthII'
         });
 
         var cb = new Cesium.CentralBody(ellipsoid);

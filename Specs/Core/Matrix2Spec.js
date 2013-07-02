@@ -464,10 +464,8 @@ defineSuite([
         }).toThrow();
     });
 
-    it('static clone throws without matrix parameter', function() {
-        expect(function() {
-            Matrix2.clone(undefined);
-        }).toThrow();
+    it('static clone returns undefined without matrix parameter', function() {
+        expect(typeof Matrix2.clone(undefined)).toEqual('undefined');
     });
 
     it('static toArray throws without matrix parameter', function() {

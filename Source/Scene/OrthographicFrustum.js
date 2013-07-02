@@ -41,6 +41,7 @@ define([
         /**
          * The left clipping plane.
          * @type {Number}
+         * @default undefined
          */
         this.left = undefined;
         this._left = undefined;
@@ -48,6 +49,7 @@ define([
         /**
          * The right clipping plane.
          * @type {Number}
+         * @default undefined
          */
         this.right = undefined;
         this._right = undefined;
@@ -55,6 +57,7 @@ define([
         /**
          * The top clipping plane.
          * @type {Number}
+         * @default undefined
          */
         this.top = undefined;
         this._top = undefined;
@@ -62,6 +65,7 @@ define([
         /**
          * The bottom clipping plane.
          * @type {Number}
+         * @default undefined
          */
         this.bottom = undefined;
         this._bottom = undefined;
@@ -69,6 +73,7 @@ define([
         /**
          * The distance of the near plane.
          * @type {Number}
+         * @default 1.0
          */
         this.near = 1.0;
         this._near = this.near;
@@ -76,6 +81,7 @@ define([
         /**
          * The distance of the far plane.
          * @type {Number}
+         * @default 500000000.0;
          */
         this.far = 500000000.0;
         this._far = this.far;
