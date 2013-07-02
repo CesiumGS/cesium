@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/loadText',
         '../Core/loadImage',
         '../Core/Queue',
         './SceneMode'
@@ -12,6 +13,7 @@ define([
         defaultValue,
         DeveloperError,
         destroyObject,
+        loadText,
         loadImage,
         Queue,
         SceneMode) {
@@ -47,26 +49,54 @@ define([
 
         this._reload = true;
 
-        this._pendingRequests = 0;
+        this._programsToCreate = new Queue();
         this._texturesToCreate = new Queue();
+
+        this._shaders = {};
+        this._pendingShaderLoads = 0;
     };
 
-    function parseJson(model) {
-        var name;
-        var json = model.json;
+    function parseShaders(model) {
+        var shaders = model.json.shaders;
+        for (var name in shaders) {
+            if (shaders.hasOwnProperty(name)) {
+                ++model._pendingShaderLoads;
+                var shaderPath = model.basePath + shaders[name].path;
+                loadText(shaderPath).then(function(source) {
+                    model._shaders[name] = source;
+                    --model._pendingShaderLoads;
+                 }, function() {
+                     // TODO
+                 });
+            }
+        }
+    }
 
-        var images = json.images;
-        for (name in images) {
+    function parsePrograms(model) {
+        var programs = model.json.programs;
+        for (var name in programs) {
+            if (programs.hasOwnProperty(name)) {
+                var program = programs[name];
+                model._programsToCreate.enqueue({
+                     name : name,
+                     vertexShader : program.vertexShader,
+                     fragmentShader : program.fragmentShader
+                 });
+            }
+        }
+    }
+
+    function parseImages(model) {
+        var images = model.json.images;
+        for (var name in images) {
             if (images.hasOwnProperty(name)) {
                 var imagePath = model.basePath + images[name].path;
 
                 loadImage(imagePath).then(function(image) {
-                   model. _texturesToCreate.enqueue({
+                   model._texturesToCreate.enqueue({
                         name : name,
                         image : image
                     });
-
-                    --model._pendingRequests;
                 }, function() {
                     // TODO
                 });
@@ -74,15 +104,33 @@ define([
         }
     }
 
-    function createTextures(texturesToCreate) {
-        while (texturesToCreate.length > 0) {
-            var textureToCreate = texturesToCreate.dequeue();
+    function parseJson(model) {
+        parseShaders(model);
+        parsePrograms(model);
+        parseImages(model);
+    }
+
+    function createPrograms(model) {
+        if (model._pendingShaderLoads !== 0) {
+            return;
+        }
+
+        while (model._programsToCreate.length > 0) {
+            var programToCreate = model._programsToCreate.dequeue();
+            console.log(programToCreate);
+        }
+    }
+
+    function createTextures(model) {
+        while (model._texturesToCreate.length > 0) {
+            var textureToCreate = model._texturesToCreate.dequeue();
             console.log(textureToCreate);
         }
     }
 
     function createResources(model) {
-        createTextures(model._texturesToCreate);
+        createPrograms(model);
+        createTextures(model);
     }
 
     /**
