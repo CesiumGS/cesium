@@ -176,7 +176,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function createBufferViews(model) {
+    function createBufferViews(model, context) {
         if (model._pendingBufferLoads !== 0) {
             return;
         }
@@ -187,7 +187,7 @@ define([
         }
     }
 
-    function createPrograms(model) {
+    function createPrograms(model, context) {
         if (model._pendingShaderLoads !== 0) {
             return;
         }
@@ -198,17 +198,25 @@ define([
         }
     }
 
-    function createTextures(model) {
+    function createTextures(model, context) {
+        var images = model.json.images;
+
         while (model._texturesToCreate.length > 0) {
             var textureToCreate = model._texturesToCreate.dequeue();
-            console.log(textureToCreate);
+
+            var image = images[textureToCreate.name];
+            image.extra = defaultValue(image.extra, {});
+            image.extra.czmTexture = context.createTexture2D({
+                source : textureToCreate.image,
+                flipY : false
+            });
         }
     }
 
-    function createResources(model) {
-        createBufferViews(model);
-        createPrograms(model);
-        createTextures(model);
+    function createResources(model, context) {
+        createBufferViews(model, context);
+        createPrograms(model, context);
+        createTextures(model, context);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -228,7 +236,7 @@ define([
             parseJson(this);
         }
 
-        createResources(this);
+        createResources(this, context);
 
         if ((this._pendingBufferLoads === 0) &&
             (this._pendingShaderLoads === 0) &&
