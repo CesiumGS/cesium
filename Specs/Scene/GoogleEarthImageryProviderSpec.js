@@ -228,7 +228,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://example.invalid',
+            url: url 
             channel: 1234,
             proxy : proxy
         });
@@ -277,7 +277,7 @@ defineSuite([
     it('raises error on invalid url', function() {
         var url = 'invalid.localhost';
         var provider = new GoogleEarthImageryProvider({
-            url : url,
+            url: url,
             channel: 1234
         });
 
@@ -317,7 +317,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'example.invalid',
+            url: 'example.invalid',
             channel: 1234
         });
 
@@ -396,7 +396,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://example.invalid',
+            url: 'http://example.invalid',
             channel: 1234
         });
 
@@ -430,7 +430,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://example.invalid',
+            url: 'http://example.invalid',
             channel: 1234
         });
 
@@ -464,7 +464,7 @@ defineSuite([
         };
 
         var provider = new GoogleEarthImageryProvider({
-            url : 'http://example.invalid',
+            url: 'http://example.invalid',
             channel: 1234
         });
 
