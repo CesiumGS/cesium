@@ -8,6 +8,7 @@ define([
         '../Core/loadText',
         '../Core/loadImage',
         '../Core/Queue',
+        '../Renderer/BufferUsage',
         './SceneMode'
     ], function(
         defined,
@@ -18,6 +19,7 @@ define([
         loadText,
         loadImage,
         Queue,
+        BufferUsage,
         SceneMode) {
     "use strict";
 // TODO: remove before merge to master
@@ -192,9 +194,17 @@ define([
             return;
         }
 
+        var programs = model.json.programs;
+        var shaders = model._shaders;
+
         while (model._programsToCreate.length > 0) {
             var programToCreate = model._programsToCreate.dequeue();
-            console.log(programToCreate);
+
+            var program = programs[programToCreate.name];
+            program.extra = defaultValue(program.extra, {});
+            program.extra.czmProgram = context.getShaderCache().getShaderProgram(
+                shaders[programToCreate.vertexShader],
+                shaders[programToCreate.fragmentShader]);
         }
     }
 
@@ -264,6 +274,17 @@ define([
         return false;
     };
 
+    function destroyExtra(property, resourceName) {
+        for (var name in property) {
+            if (property.hasOwnProperty(name)) {
+                var extra = property[name].extra;
+                if (defined(extra) && defined(extra[resourceName])) {
+                    extra[resourceName] = extra[resourceName].destroy();
+                }
+            }
+        }
+    }
+
     /**
      * Destroys the WebGL resources held by this object.  Destroying an object allows for deterministic
      * release of WebGL resources, instead of relying on the garbage collector to destroy this object.
@@ -284,6 +305,10 @@ define([
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
+        destroyExtra(this.json.buffers, 'czmBuffer');
+        destroyExtra(this.json.program, 'czmProgram');
+        destroyExtra(this.json.images, 'czmTexture');
+
         return destroyObject(this);
     };
 
