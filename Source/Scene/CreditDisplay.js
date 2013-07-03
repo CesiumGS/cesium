@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/DeveloperError',
         './Credit'
     ], function (
         defaultValue,
+        DeveloperError,
         Credit) {
     "use strict";
 
@@ -21,6 +23,9 @@ define([
      */
 
     var CreditDisplay = function(container, delimiter) {
+        if (typeof container === 'undefined') {
+            throw new DeveloperError('credit container is required');
+        }
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
         container.appendChild(imageContainer);
