@@ -423,6 +423,9 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
+        var boundingSphereCenter = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), height);
+        Cartesian3.add(center, boundingSphereCenter, boundingSphereCenter);
+
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
@@ -452,7 +455,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
+        this.boundingSphere = new BoundingSphere(boundingSphereCenter, semiMajorAxis);
     };
 
     return EllipseGeometry;

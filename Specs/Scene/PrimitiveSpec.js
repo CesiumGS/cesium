@@ -19,7 +19,6 @@ defineSuite([
          'Scene/PerInstanceColorAppearance',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
-         'Scene/Camera',
          'Specs/render',
          'Specs/pick',
          'Specs/createCanvas',
@@ -47,7 +46,6 @@ defineSuite([
          PerInstanceColorAppearance,
          SceneMode,
          OrthographicFrustum,
-         Camera,
          render,
          pick,
          createCanvas,
@@ -72,7 +70,7 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState(new Camera(context.getCanvas()));
+        frameState = createFrameState();
 
         us = context.getUniformState();
         us.update(frameState);
