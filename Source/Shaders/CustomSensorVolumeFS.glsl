@@ -44,9 +44,9 @@ bool isOnBoundary(float value)
     return czm_equalsEpsilon(value, 0.0, width * epsilon);
 }
 
-vec4 shade(czm_raySegment ellipsoidInterval, bool isOnEllipsoid)
+vec4 shade(bool isOnEllipsoid)
 {
-    if (u_showIntersection && !czm_isEmpty(ellipsoidInterval) && isOnEllipsoid)
+    if (u_showIntersection && isOnEllipsoid)
     {
         return getIntersectionColor();
     }
@@ -90,10 +90,7 @@ void main()
     {
         discard;
     }
-
-    czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
-    czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
     
     bool isOnEllipsoid = isOnBoundary(ellipsoidValue);
-    gl_FragColor = shade(ellipsoidInterval, isOnEllipsoid);
+    gl_FragColor = shade(isOnEllipsoid);
 }
