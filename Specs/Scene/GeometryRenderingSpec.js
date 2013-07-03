@@ -3,7 +3,9 @@ defineSuite([
          'Core/BoxGeometry',
          'Core/CircleGeometry',
          'Core/EllipseGeometry',
+         'Core/EllipsoidGeometry',
          'Core/ExtentGeometry',
+         'Core/PolygonGeometry',
          'Core/defaultValue',
          'Core/Geometry',
          'Core/GeometryAttribute',
@@ -36,7 +38,9 @@ defineSuite([
          BoxGeometry,
          CircleGeometry,
          EllipseGeometry,
+         EllipsoidGeometry,
          ExtentGeometry,
+         PolygonGeometry,
          defaultValue,
          Geometry,
          GeometryAttribute,
@@ -106,8 +110,7 @@ defineSuite([
         var frameState = createFrameState();
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        var modelMatrix = defaultValue(instance.modelMatrix, Matrix4.IDENTITY);
-        viewSphere3D(frameState.camera, sphere, modelMatrix);
+        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -123,7 +126,7 @@ defineSuite([
         sphere = BoundingSphere.transform(sphere, modelMatrix);
         sphere = BoundingSphere.projectTo2D(sphere);
         var center = sphere.center.clone();
-        var radius = sphere.radius;
+        var radius = sphere.radius * 0.5;
 
         Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
         Cartesian3.negate(camera.direction, camera.direction);
@@ -151,8 +154,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        var modelMatrix = defaultValue(instance.modelMatrix, Matrix4.IDENTITY);
-        viewSphereCV(frameState.camera, sphere, modelMatrix);
+        viewSphereCV(frameState.camera, sphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -208,8 +210,7 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        var modelMatrix = defaultValue(instance.modelMatrix, Matrix4.IDENTITY);
-        viewSphere2D(frameState.camera, sphere, modelMatrix);
+        viewSphere2D(frameState.camera, sphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -230,8 +231,7 @@ defineSuite([
         var frameState = createFrameState();
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        var modelMatrix = defaultValue(instance.modelMatrix, Matrix4.IDENTITY);
-        viewSphere3D(frameState.camera, sphere, modelMatrix);
+        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         expect(pick(context, frameState, primitive)).toEqual(instance.id);
@@ -375,6 +375,203 @@ defineSuite([
                 }
             });
             render3D(atHeight);
+        });
+    }, 'WebGL');
+
+    describe('EllipsoidGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new EllipsoidGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : new Ellipsoid(1000000.0, 1000000.0, 500000.0)
+                }),
+                modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
+                id : 'ellipsoid',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
+    describe('ExtentGeometry', function() {
+        var instance;
+        var extent;
+        beforeAll(function() {
+            extent = Extent.fromDegrees(0, 0, 1, 1);
+            instance = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent
+                }),
+                id : 'extent',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('rotated', function() {
+            var rotated = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent,
+                    rotation : CesiumMath.PI_OVER_FOUR
+                }),
+                id : 'extent',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            render3D(rotated);
+        });
+
+        it('at height', function() {
+            var atHeight = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent,
+                    height : 100000.0
+                }),
+                id : 'extent',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            render3D(atHeight);
+        });
+    }, 'WebGL');
+
+    describe('PolygonGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new PolygonGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 55.0),
+                        Cartographic.fromDegrees(0.0, 55.0)
+                    ])
+                }),
+                id : 'polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('at height', function() {
+            var atHeight = new GeometryInstance({
+                geometry : new PolygonGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 55.0),
+                        Cartographic.fromDegrees(0.0, 55.0)
+                    ]),
+                    height : 3000000.0
+                }),
+                id : 'polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            render3D(atHeight);
+        });
+
+        it('hierarchy', function() {
+            var hierarchy = new GeometryInstance({
+                geometry : new PolygonGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    polygonHierarchy : {
+                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                            Cartographic.fromDegrees(-109.0, 30.0),
+                            Cartographic.fromDegrees(-95.0, 30.0),
+                            Cartographic.fromDegrees(-95.0, 40.0),
+                            Cartographic.fromDegrees(-109.0, 40.0)
+                        ]),
+                        holes : [{
+                            positions : ellipsoid.cartographicArrayToCartesianArray([
+                                Cartographic.fromDegrees(-107.0, 31.0),
+                                Cartographic.fromDegrees(-107.0, 39.0),
+                                Cartographic.fromDegrees(-97.0, 39.0),
+                                Cartographic.fromDegrees(-97.0, 31.0)
+                            ]),
+                            holes : [{
+                                positions : ellipsoid.cartographicArrayToCartesianArray([
+                                    Cartographic.fromDegrees(-106.5, 31.5),
+                                    Cartographic.fromDegrees(-97.5, 31.5),
+                                    Cartographic.fromDegrees(-97.5, 38.5),
+                                    Cartographic.fromDegrees(-106.5, 38.5)
+                                ])
+                            }]
+                        }]
+                    }
+                }),
+                id : 'polygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            render3D(hierarchy);
         });
     }, 'WebGL');
 

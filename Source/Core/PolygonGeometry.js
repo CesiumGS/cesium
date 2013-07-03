@@ -85,7 +85,7 @@ define([
 
     var createGeometryFromPositionsPositions = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
@@ -209,7 +209,7 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            geometry = createGeometryFromPositions(ellipsoid, positions, granularity);
             if (typeof geometry !== 'undefined') {
                 geometries.push(geometry);
             }
@@ -262,7 +262,7 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], granularity);
                 if (typeof geometry !== 'undefined') {
                     geometries.push(geometry);
                 }
@@ -273,6 +273,11 @@ define([
 
         geometry = GeometryPipeline.combine(geometries);
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
+
+        var center = boundingSphere.center;
+        var mag = center.magnitude();
+        ellipsoid.geodeticSurfaceNormal(center, center);
+        Cartesian3.multiplyByScalar(center, mag + height, center);
 
         var attributes = {};
 
