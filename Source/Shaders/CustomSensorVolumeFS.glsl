@@ -30,42 +30,35 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     return czm_phong(normalize(positionToEyeEC), material);
 }
 
-bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
+bool isOnBoundary(float value)
 {
-    if (czm_isEmpty(ellipsoidInterval)) {
-        return false;
-    }
-
-    float t = pointInEllipsoid;
-
 #ifdef GL_OES_standard_derivatives
-    float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
+    float epsilon = max(abs(dFdx(value)), abs(dFdy(value)));
 #else
     // TODO:  Don't hardcode this.
     float epsilon = 1.0 / 500.0;
 #endif
 
     float width = 2.0;  // TODO: Expose as a uniform
-    epsilon *= width;           
 
-    return czm_equalsEpsilon(t, 1.0, epsilon);
+    return czm_equalsEpsilon(value, 0.0, width * epsilon);
 }
 
-vec4 shade(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
+vec4 shade(czm_raySegment ellipsoidInterval, bool isOnEllipsoid)
 {
-    if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval, pointInEllipsoid))
+    if (u_showIntersection && !czm_isEmpty(ellipsoidInterval) && isOnEllipsoid)
     {
         return getIntersectionColor();
     }
     return getColor(u_sensorRadius, v_positionEC);
 }
 
-float czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
+float czm_ellipsoidSurfaceFunction(czm_ellipsoid ellipsoid, vec3 point)
 {
     // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
     return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
             ((point.y * point.y) / (ellipsoid.radii.y * ellipsoid.radii.y)) +
-            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z)));
+            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z))) - 1.0;
 }
 
 void main()
@@ -74,14 +67,14 @@ void main()
     vec3 sensorVertexEC = czm_modelView[3].xyz;  // (0.0, 0.0, 0.0) in model coordinates
 
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
-    float pointInEllipsoid = czm_pointInEllipsoid(ellipsoid, v_positionWC);
+    float ellipsoidValue = czm_ellipsoidSurfaceFunction(ellipsoid, v_positionWC);
 
     // Occluded by the ellipsoid?
 	if (!u_showThroughEllipsoid)
 	{
 	    // Discard if in the ellipsoid    
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
-	    if (pointInEllipsoid < 1.0)
+	    if (ellipsoidValue < 0.0)
 	    {
             discard;
 	    }
@@ -102,6 +95,7 @@ void main()
 
     czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
     czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
-
-    gl_FragColor = shade(ellipsoidInterval, pointInEllipsoid);
+    
+    bool isOnEllipsoid = isOnBoundary(ellipsoidValue);
+    gl_FragColor = shade(ellipsoidInterval, isOnEllipsoid);
 }
