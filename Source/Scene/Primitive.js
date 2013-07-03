@@ -819,9 +819,10 @@ define([
      *
      * @param {Object} id The id of the {@link GeometryInstance}.
      *
-     * @returns {Object} The typed array in the attribute's format.
+     * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
      *
      * @exception {DeveloperError} id is required.
+     * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
      *
      * @example
      * var attributes = primitive.getGeometryInstanceAttributes('an id');
@@ -838,7 +839,15 @@ define([
             return cachedObject;
         }
 
+        if (typeof this._perInstanceAttributes === 'undefined') {
+            throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
+        }
+
         var perInstanceAttributes = this._perInstanceAttributes[id];
+        if (typeof perInstanceAttributes === 'undefined') {
+            return undefined;
+        }
+
         var attributes = {};
 
         for (var name in perInstanceAttributes) {
