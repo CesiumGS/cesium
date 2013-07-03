@@ -66,30 +66,7 @@ defineSuite([
         var version = 1;
 
         loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return deferred.resolve(JSON.stringify({
-                "isAuthenticated": true,
-                "layers": [
-                    {
-                        "icon": "icons/773_l.png",
-                        "id": 1234,
-                        "initialState": true,
-                        "isPng": false,
-                        "label": "Imagery",
-                        "requestType": "ImageryMaps",
-                        "version": 1
-                    },{
-                        "icon": "icons/773_l.png",
-                        "id": 1007,
-                        "initialState": true,
-                        "isPng": true,
-                        "label": "Labels",
-                        "requestType": "VectorMapsRaster",
-                        "version": 8
-                    }
-                ],
-                "serverUrl": "https://example.invalid",
-                "useGoogleLayers": false
-            }));
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, headers, deferred);
         };
 
         var provider = new GoogleEarthImageryProvider({
@@ -101,7 +78,6 @@ defineSuite([
         expect(provider.getUrl()).toEqual(url);
         expect(provider.getPath()).toEqual(path);
         expect(provider.getChannel()).toEqual(channel);
-        expect(provider.getVersion()).toEqual(version);
 
         waitsFor(function() {
             return provider.isReady();
@@ -114,6 +90,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(23);
             expect(provider.getMinimumLevel()).toEqual(0);
+            expect(provider.getVersion()).toEqual(version);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
@@ -210,21 +187,7 @@ defineSuite([
         var proxy = new DefaultProxy('/proxy/');
 
         loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return deferred.resolve(JSON.stringify({
-                "isAuthenticated": true,
-                "layers": [
-                    {
-                        "icon": "icons/773_l.png",
-                        "id": 1234,
-                        "initialState": true,
-                        "label": "Imagery",
-                        "requestType": "ImageryMaps",
-                        "version": 1
-                    }
-                ],
-                "serverUrl": "https://example.invalid",
-                "useGoogleLayers": false
-            }));
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, headers, deferred);
         };
 
         var provider = new GoogleEarthImageryProvider({
@@ -299,21 +262,7 @@ defineSuite([
 
     it('raises error event when image cannot be loaded', function() {
         loadWithXhr.load = function(url, responseType, headers, deferred) {
-            return deferred.resolve(JSON.stringify({
-                "isAuthenticated": true,
-                "layers": [
-                    {
-                        "icon": "icons/773_l.png",
-                        "id": 1234,
-                        "initialState": true,
-                        "label": "Imagery",
-                        "requestType": "ImageryMaps",
-                        "version": 1
-                    }
-                ],
-                "serverUrl": "https://example.invalid",
-                "useGoogleLayers": false
-            }));
+            return loadWithXhr.defaultLoad('Data/GoogleEarthImageryProvider/good.json', responseType, headers, deferred);
         };
 
         var provider = new GoogleEarthImageryProvider({
@@ -405,7 +354,8 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-          expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
         });
     });
     
@@ -439,7 +389,8 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-          expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
+            expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
         });
     });
 
@@ -473,7 +424,8 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-          expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.getExtent()).toEqual(new Extent(-Math.PI, -Math.PI, Math.PI, Math.PI));
         });
     });
 
