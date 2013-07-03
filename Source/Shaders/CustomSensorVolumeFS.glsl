@@ -30,30 +30,30 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     return czm_phong(normalize(positionToEyeEC), material);
 }
 
-bool isOnBoundary(float value)
+bool isOnBoundary(float value, float epsilon)
 {
+    float width = 4.0;  // TODO: Expose as a uniform
+    float tolerance = width * epsilon;
+
 #ifdef GL_OES_standard_derivatives
-    float epsilon = max(abs(dFdx(value)), abs(dFdy(value)));
+    float delta = max(abs(dFdx(value)), abs(dFdy(value)));
+    float temp = abs(value);
+    return temp < tolerance || temp - delta < tolerance;
 #else
-    // TODO:  Don't hardcode this.
-    float epsilon = 1.0 / 500.0;
+    return abs(value) < tolerance;
 #endif
-
-    float width = 2.0;  // TODO: Expose as a uniform
-
-    return czm_equalsEpsilon(value, 0.0, width * epsilon);
 }
 
-vec4 shade(bool isOnEllipsoid)
+vec4 shade(bool isOnBoundary)
 {
-    if (u_showIntersection && isOnEllipsoid)
+    if (u_showIntersection && isOnBoundary)
     {
         return getIntersectionColor();
     }
     return getColor(u_sensorRadius, v_positionEC);
 }
 
-float czm_ellipsoidSurfaceFunction(czm_ellipsoid ellipsoid, vec3 point)
+float ellipsoidSurfaceFunction(czm_ellipsoid ellipsoid, vec3 point)
 {
     vec3 scaled = ellipsoid.inverseRadii * point;
     return dot(scaled, scaled) - 1.0;
@@ -65,7 +65,7 @@ void main()
     vec3 sensorVertexEC = czm_modelView[3].xyz;  // (0.0, 0.0, 0.0) in model coordinates
 
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
-    float ellipsoidValue = czm_ellipsoidSurfaceFunction(ellipsoid, v_positionWC);
+    float ellipsoidValue = ellipsoidSurfaceFunction(ellipsoid, v_positionWC);
 
     // Occluded by the ellipsoid?
 	if (!u_showThroughEllipsoid)
@@ -91,6 +91,7 @@ void main()
         discard;
     }
     
-    bool isOnEllipsoid = isOnBoundary(ellipsoidValue);
+    // TODO: Each surface functions should have an associated tolerance based on the floating point error.
+    bool isOnEllipsoid = isOnBoundary(ellipsoidValue, czm_epsilon3);
     gl_FragColor = shade(isOnEllipsoid);
 }
