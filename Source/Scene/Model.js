@@ -54,6 +54,12 @@ define([
                 (this.pendingTextureLoads === 0));
     };
 
+    LoadResources.prototype.finishedResourceCreeation = function() {
+        return ((this.bufferViewsToCreate.length === 0) &&
+                (this.programsToCreate.length === 0) &&
+                (this.texturesToCreate.length === 0));
+    };
+
     /**
      * DOC_TBA
      *
@@ -88,6 +94,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function failedLoad() {
+        // TODO
+    }
+
     function bufferLoad(model, name) {
         return function(arrayBuffer) {
             var loadResources = model._loadResources;
@@ -96,17 +106,13 @@ define([
          };
     }
 
-    function failedBufferLoad() {
-        // TODO
-    }
-
     function parseBuffers(model) {
         var buffers = model.json.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
                 var bufferPath = model.basePath + buffers[name].path;
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), failedBufferLoad);
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), failedLoad);
             }
         }
     }
@@ -128,17 +134,13 @@ define([
          };
     }
 
-    function failedShaderLoad() {
-        // TODO
-    }
-
     function parseShaders(model) {
         var shaders = model.json.shaders;
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shaderPath = model.basePath + shaders[name].path;
-                loadText(shaderPath).then(shaderLoad(model, name), failedShaderLoad);
+                loadText(shaderPath).then(shaderLoad(model, name), failedLoad);
             }
         }
     }
@@ -147,12 +149,7 @@ define([
         var programs = model.json.programs;
         for (var name in programs) {
             if (programs.hasOwnProperty(name)) {
-                var program = programs[name];
-                model._loadResources.programsToCreate.enqueue({
-                     name : name,
-                     vertexShader : program.vertexShader,
-                     fragmentShader : program.fragmentShader
-                 });
+                model._loadResources.programsToCreate.enqueue(name);
             }
         }
     }
@@ -168,17 +165,13 @@ define([
          };
     }
 
-    function failedImageLoad() {
-        // TODO
-    }
-
     function parseImages(model) {
         var images = model.json.images;
         for (var name in images) {
             if (images.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
                 var imagePath = model.basePath + images[name].path;
-                loadImage(imagePath).then(imageLoad(model, name), failedImageLoad);
+                loadImage(imagePath).then(imageLoad(model, name), failedLoad);
             }
         }
     }
@@ -196,6 +189,7 @@ define([
     function createBufferViews(model, context) {
         var loadResources = model._loadResources;
 
+// TODO: more fine-grained bufferView-to-buffer dependencies
         if (loadResources.pendingBufferLoads !== 0) {
             return;
         }
@@ -204,8 +198,6 @@ define([
         var bufferView;
         var bufferViews = model.json.bufferViews;
         var buffers = loadResources.buffers;
-
-debugger;
 
         while (loadResources.bufferViewsToCreate.length > 0) {
             var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
@@ -228,7 +220,7 @@ debugger;
                 var instance = indices[name];
                 bufferView = bufferViews[instance.bufferView];
 
-                if (typeof bufferView.extra.czmBuffer === 'undefined') {
+                if (!defined(bufferView.extra.czmBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
                     bufferView.extra.czmBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
                     // In theory, several glTF indices with different types could
@@ -242,37 +234,40 @@ debugger;
     function createPrograms(model, context) {
         var loadResources = model._loadResources;
 
+// TODO: more fine-grained program-to-shader dependencies
         if (loadResources.pendingShaderLoads !== 0) {
             return;
         }
 
-        var gltfPrograms = model.json.programs;
+        var programs = model.json.programs;
         var shaders = loadResources.shaders;
 
-        while (loadResources.programsToCreate.length > 0) {
-            var programToCreate = loadResources.programsToCreate.dequeue();
-
-            var gltfProgram = gltfPrograms[programToCreate.name];
-            gltfProgram.extra = defaultValue(gltfProgram.extra, {});
-            gltfProgram.extra.czmProgram = context.getShaderCache().getShaderProgram(
-                shaders[programToCreate.vertexShader],
-                shaders[programToCreate.fragmentShader]);
+        // Create one program per frame
+        if (loadResources.programsToCreate.length > 0) {
+            var name = loadResources.programsToCreate.dequeue();
+            var program = programs[name];
+            program.extra = defaultValue(program.extra, {});
+            program.extra.czmProgram = context.getShaderCache().getShaderProgram(
+                shaders[program.vertexShader],
+                shaders[program.fragmentShader]);
         }
     }
 
     function createTextures(model, context) {
         var loadResources = model._loadResources;
-        var gltfImages = model.json.images;
+        var images = model.json.images;
 
-        while (loadResources.texturesToCreate.length > 0) {
+        // Create one texture per frame
+        if (loadResources.texturesToCreate.length > 0) {
             var textureToCreate = loadResources.texturesToCreate.dequeue();
 
-            var gltfImage = gltfImages[textureToCreate.name];
-            gltfImage.extra = defaultValue(gltfImage.extra, {});
-            gltfImage.extra.czmTexture = context.createTexture2D({
+            var image = images[textureToCreate.name];
+            image.extra = defaultValue(image.extra, {});
+            image.extra.czmTexture = context.createTexture2D({
                 source : textureToCreate.image,
                 flipY : false
             });
+// TODO: texture cache
         }
     }
 
@@ -301,10 +296,11 @@ debugger;
         }
 
         if (this._state === ModelState.LOADING) {
+            // Incrementally create WebGL resources as buffers/shaders/textures are downloaded
             createResources(this, context);
 
-            if (this._loadResources.finishedPendingLoads()) {
-                debugger;
+            var loadResources = this._loadResources;
+            if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreeation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
             }
@@ -358,9 +354,10 @@ debugger;
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-        destroyExtra(this.json.buffers, 'czmBuffer');
-        destroyExtra(this.json.program, 'czmProgram');
-        destroyExtra(this.json.images, 'czmTexture');
+        var json = this.json;
+        destroyExtra(json.buffers, 'czmBuffer');
+        destroyExtra(json.program, 'czmProgram');
+        destroyExtra(json.images, 'czmTexture');
 
         return destroyObject(this);
     };
