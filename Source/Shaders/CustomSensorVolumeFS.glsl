@@ -55,10 +55,8 @@ vec4 shade(czm_raySegment ellipsoidInterval, bool isOnEllipsoid)
 
 float czm_ellipsoidSurfaceFunction(czm_ellipsoid ellipsoid, vec3 point)
 {
-    // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
-    return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
-            ((point.y * point.y) / (ellipsoid.radii.y * ellipsoid.radii.y)) +
-            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z))) - 1.0;
+    vec3 scaled = ellipsoid.inverseRadii * point;
+    return dot(scaled, scaled) - 1.0;
 }
 
 void main()
