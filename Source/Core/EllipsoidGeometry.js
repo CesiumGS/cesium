@@ -127,8 +127,7 @@ define([
      * @example
      * var ellipsoid = new EllipsoidGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
-     *   modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
+     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
      * });
      */
     var EllipsoidGeometry = function(options) {
