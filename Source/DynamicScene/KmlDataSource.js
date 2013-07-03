@@ -1,9 +1,11 @@
 /*global define*/
 define(['../Core/createGuid',
+        '../Core/Cartographic',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
+        '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadXML',
@@ -11,10 +13,12 @@ define(['../Core/createGuid',
         './DynamicObjectCollection'
         ], function(
                 createGuid,
+                Cartographic,
                 ClockRange,
                 ClockStep,
                 DeveloperError,
                 RuntimeError,
+                Ellipsoid,
                 Event,
                 Iso8601,
                 loadXML,
@@ -57,6 +61,27 @@ define(['../Core/createGuid',
         return dynamicObject;
     }
 
+    function readCoords(el) {
+        var text = "", coords = [], i;
+        for (i = 0; i < el.childNodes.length; i++) {
+            text = text + el.childNodes[i].nodeValue;
+        }
+        text = text.split(/[\s\n]+/);
+        for (i = 0; i < text.length; i++) {
+            var ll = text[i].split(',');
+            if (ll.length < 2) {
+                continue;
+            }
+            coords.push(ll[0]);
+            coords.push(ll[1]);
+
+            if(ll[2] === "0"){
+                coords.push(0);
+            }
+        }
+        return coords;
+    }
+
     // KML processing functions
     function processPlacemark(dataSource, placemark, dynamicObjectCollection) {
         var objectId = placemark.id;
@@ -76,40 +101,49 @@ define(['../Core/createGuid',
                 if (typeof geometryHandler === 'undefined') {
                     throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
-                geometryHandler(dataSource, placemark, placemark.geometry);
+                geometryHandler(dataSource, placemark, node);
             }
         }
     }
 
-    function processPoint(dataSource, kml, geometry) {
+    function processPoint(dataSource, kml, node) {
+        var el = node.getElementsByTagName('coordinates');
+        var coords = [];
+        for (var j = 0; j < el.length; j++) {
+        // text might span many childnodes
+        coords = coords.concat(readCoords(el[j]));
+        }
+
+        var cartographic = Cartographic.fromDegrees(coords[0], coords[1], coords[2]);
+        var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
     }
 
-    function processLineString(dataSource, kml, geometry){
+    function processLineString(dataSource, kml, node){
 
     }
 
-    function processLinearRing(dataSource, kml, geometry){
+    function processLinearRing(dataSource, kml, node){
 
     }
 
-    function processPolygon(dataSource, kml, geometry){
+    function processPolygon(dataSource, kml, node){
 
     }
 
-    function processMultiGeometry(dataSource, kml, geometry){
+    function processMultiGeometry(dataSource, kml, node){
 
     }
 
-    function processModel(dataSource, kml, geometry){
+    function processModel(dataSource, kml, node){
 
     }
 
-    function processGxTrack(dataSource, kml, geometry){
+    function processGxTrack(dataSource, kml, node){
 
     }
 
-    function processGxMultiTrack(dataSource, kml, geometry){
+    function processGxMultiTrack(dataSource, kml, node){
 
     }
     //Object that holds all supported Geometry
@@ -319,7 +353,6 @@ define(['../Core/createGuid',
     KmlDataSource.prototype.getIsTimeVarying = function() {
         return false;
     };
-
 
     /**
      * Replaces any existing data with the provided KML.
