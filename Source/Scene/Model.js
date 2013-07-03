@@ -115,14 +115,7 @@ define([
         var bufferViews = model.json.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
-                var bufferView = bufferViews[name];
-                model._loadResources.bufferViewsToCreate.enqueue({
-                     name : name,
-                     buffer : bufferView.buffer,
-                     byteLength : bufferView.byteLength,
-                     byteOffset : bufferView.byteOffset,
-                     target : bufferView.target
-                 });
+                model._loadResources.bufferViewsToCreate.enqueue(name);
             }
         }
     }
@@ -207,22 +200,41 @@ define([
             return;
         }
 
-        var gltfBufferViews = model.json.bufferViews;
+        var raw;
+        var bufferView;
+        var bufferViews = model.json.bufferViews;
         var buffers = loadResources.buffers;
 
+debugger;
+
         while (loadResources.bufferViewsToCreate.length > 0) {
-            var bufferView = loadResources.bufferViewsToCreate.dequeue();
-
-            var gltfBufferView = gltfBufferViews[bufferView.name];
-            gltfBufferView.extra = defaultValue(gltfBufferView.extra, {});
-
-            var raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+            var bufferViewName = loadResources.bufferViewsToCreate.dequeue();
+            bufferView = bufferViews[bufferViewName];
+            bufferView.extra = defaultValue(bufferView.extra, {});
 
             if (bufferView.target === 'ARRAY_BUFFER') {
-                gltfBufferView.extra.czmBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
-            } else { // ELEMENT_ARRAY_BUFFER
-// TODO: we don't know the index datatype yet...and createIndexBuffer() should not require it.
-                gltfBufferView.extra.czmBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+                // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
+                raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+                bufferView.extra.czmBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+            }
+        }
+
+        // The Cesium Renderer requires knowing the datatype for an index buffer
+        // at creation type, which is not part of the glTF bufferview so loop
+        // through glTF indices to create the bufferview's index buffer.
+        var indices = model.json.indices;
+        for (var name in indices) {
+            if (indices.hasOwnProperty(name)) {
+                var instance = indices[name];
+                bufferView = bufferViews[instance.bufferView];
+
+                if (typeof bufferView.extra.czmBuffer === 'undefined') {
+                    raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
+                    bufferView.extra.czmBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
+                    // In theory, several glTF indices with different types could
+                    // point to the same glTF bufferView, which would break this.
+                    // In practice, it is unlikely as it will be UNSIGNED_SHORT.
+                }
             }
         }
     }
@@ -292,6 +304,7 @@ define([
             createResources(this, context);
 
             if (this._loadResources.finishedPendingLoads()) {
+                debugger;
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
             }
