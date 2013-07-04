@@ -12,8 +12,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>float</code> uniform.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1406
          */
         FLOAT : new Enumeration(0x1406, 'FLOAT', {
             getGLSL : function() {
@@ -24,8 +25,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>vec2</code> uniform: a two-component floating-point vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B50
          */
         FLOAT_VECTOR2 : new Enumeration(0x8B50, 'FLOAT_VECTOR2', {
             getGLSL : function() {
@@ -36,8 +38,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>vec3</code> uniform: a three-component floating-point vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B51
          */
         FLOAT_VECTOR3 : new Enumeration(0x8B51, 'FLOAT_VECTOR3', {
             getGLSL : function() {
@@ -48,8 +51,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>vec4</code> uniform: a four-component floating-point vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B52
          */
         FLOAT_VECTOR4 : new Enumeration(0x8B52, 'FLOAT_VECTOR4', {
             getGLSL : function() {
@@ -60,8 +64,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>int</code> uniform.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1404
          */
         INT : new Enumeration(0x1404, 'INT', {
             getGLSL : function() {
@@ -72,8 +77,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>ivec2</code> uniform: a two-component integer vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B53
          */
         INT_VECTOR2 : new Enumeration(0x8B53, 'INT_VECTOR2', {
             getGLSL : function() {
@@ -84,8 +90,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>ivec3</code> uniform: a three-component integer vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B54
          */
         INT_VECTOR3 : new Enumeration(0x8B54, 'INT_VECTOR3', {
             getGLSL : function() {
@@ -96,8 +103,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>ivec4</code> uniform: a four-component integer vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B55
          */
         INT_VECTOR4 : new Enumeration(0x8B55, 'INT_VECTOR4', {
             getGLSL : function() {
@@ -108,8 +116,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>bool</code> uniform.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B56
          */
         BOOL : new Enumeration(0x8B56, 'BOOL', {
             getGLSL : function() {
@@ -120,8 +129,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>bvec2</code> uniform: a two-component boolean vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B57
          */
         BOOL_VECTOR2 : new Enumeration(0x8B57, 'BOOL_VECTOR2', {
             getGLSL : function() {
@@ -132,8 +142,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>bvec3</code> uniform: a three-component boolean vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B58
          */
         BOOL_VECTOR3 : new Enumeration(0x8B58, 'BOOL_VECTOR3', {
             getGLSL : function() {
@@ -144,8 +155,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>bvec4</code> uniform: a four-component boolean vector.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B59
          */
         BOOL_VECTOR4 : new Enumeration(0x8B59, 'BOOL_VECTOR4', {
             getGLSL : function() {
@@ -156,8 +168,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>mat2</code> uniform: a 2x2 floating-point matrix.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B5A
          */
         FLOAT_MATRIX2 : new Enumeration(0x8B5A, 'FLOAT_MATRIX2', {
             getGLSL : function() {
@@ -168,8 +181,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>mat3</code> uniform: a 3x3 floating-point matrix.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B5B
          */
         FLOAT_MATRIX3 : new Enumeration(0x8B5B, 'FLOAT_MATRIX3', {
             getGLSL : function() {
@@ -180,8 +194,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * An <code>mat4</code> uniform: a 4x4 floating-point matrix.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B5C
          */
         FLOAT_MATRIX4 : new Enumeration(0x8B5C, 'FLOAT_MATRIX4', {
             getGLSL : function() {
@@ -192,8 +207,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>sampler2D</code> uniform: an opaque type to access 2D textures.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B5E
          */
         SAMPLER_2D : new Enumeration(0x8B5E, 'SAMPLER_2D', {
             getGLSL : function() {
@@ -204,8 +220,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A <code>samplerCube</code> uniform: an opaque type to access cube-map textures.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8B60
          */
         SAMPLER_CUBE : new Enumeration(0x8B60, 'SAMPLER_CUBE', {
             getGLSL : function() {

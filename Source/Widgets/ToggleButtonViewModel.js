@@ -32,13 +32,15 @@ define([
 
         /**
          * Gets or sets whether the button is currently toggled.  This property is observable.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.toggled = defaultValue(options.toggled, false);
 
         /**
          * Gets or sets the button's tooltip.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default ''
          */
         this.tooltip = defaultValue(options.tooltip, '');
 
@@ -49,7 +51,7 @@ define([
         /**
          * Gets the command which will be executed when the button is toggled.
          * @memberof ToggleButtonViewModel.prototype
-         * @type Command
+         * @type {Command}
          */
         command : {
             get : function() {

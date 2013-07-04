@@ -42,13 +42,14 @@ define([
         /**
          * Gets or sets an array of ImageryProviderViewModel instances available for selection.
          * This property is observable.
-         * @type Array
+         * @type {Array}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
         /**
          * Gets or sets whether the imagery selection drop-down is currently visible.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.dropDownVisible = false;
 
@@ -56,7 +57,8 @@ define([
 
         /**
          * Gets the currently selected item name.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedName = undefined;
         knockout.defineProperty(this, 'selectedName', function() {
@@ -66,7 +68,8 @@ define([
 
         /**
          * Gets the image url of the currently selected item.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedIconUrl = undefined;
         knockout.defineProperty(this, 'selectedIconUrl', function() {
@@ -76,7 +79,8 @@ define([
 
         /**
          * Gets or sets the currently selected item.  This property is observable.
-         * @type ImageryProviderViewModel
+         * @type {ImageryProviderViewModel}
+         * @default undefined
          */
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();

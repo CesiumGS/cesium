@@ -25,19 +25,22 @@ define([
     var Cartographic = function(longitude, latitude, height) {
         /**
          * The longitude, in radians.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.longitude = defaultValue(longitude, 0.0);
 
         /**
          * The latitude, in radians.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.latitude = defaultValue(latitude, 0.0);
 
         /**
          * The height, in meters, above the ellipsoid.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
     };

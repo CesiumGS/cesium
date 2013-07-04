@@ -13,40 +13,45 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * Aerial imagery.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         AERIAL : new Enumeration(0, 'AERIAL', { imagerySetName : 'Aerial' }),
 
         /**
          * Aerial imagery with a road overlay.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 1
          */
         AERIAL_WITH_LABELS : new Enumeration(1, 'AERIAL_WITH_LABELS', { imagerySetName : 'AerialWithLabels' }),
 
         /**
          * Roads without additional imagery.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 2
          */
         ROAD : new Enumeration(2, 'ROAD', { imagerySetName : 'Road' }),
 
         /**
          * Ordnance Survey imagery
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 3
          */
         ORDNANCE_SURVEY : new Enumeration(3, 'ORDNANCE_SURVEY', { imagerySetName : 'OrdnanceSurvey' }),
 
         /**
          * Collins Bart imagery.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 4
          */
         COLLINS_BART : new Enumeration(4, 'COLLINS_BART', { imagerySetName : 'CollinsBart' })
     };

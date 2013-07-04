@@ -1,5 +1,5 @@
 <project name="Cesium" default="combine">
-	<target name="build" description="A developer build that runs in-place.">
+	<target name="build" description="A developer build that prepares the source tree for use as standard AMD modules.">
 		<mkdir dir="${buildDirectory}" />
 		<glslToJavascript minify="${build.minification}" minifystatefile="${buildDirectory}/minifyShaders.state">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
@@ -21,7 +21,7 @@
 		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
 	</target>
 
-	<target name="combine" description="Combines all source files into a single stand-alone script." depends="build,combineJavaScript">
+	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
 		<copy todir="Build">
 			<fileset dir="Apps/">
 				<include name="HelloWorld.html" />
@@ -49,7 +49,7 @@
 		<antcall target="buildApps" />
 	</target>
 
-	<target name="instrumentForCoverage" description="A debug build instrumented for JSCoverage (currently Windows only)." depends="build">
+	<target name="instrumentForCoverage" depends="build" description="A debug build instrumented for JSCoverage (currently Windows only).">
 		<exec executable="${jscoveragePath}">
 			<arg value="${sourceDirectory}" />
 			<arg value="${instrumentedDirectory}" />
@@ -57,7 +57,7 @@
 		</exec>
 	</target>
 
-	<target name="makeZipFile" description="Builds a zip file containing all release files." depends="release">
+	<target name="makeZipFile" depends="release" description="Builds zip files containing all release files.">
 		<zip destfile="Cesium-${version}.zip" basedir="${basedir}">
 			<fileset dir="Build">
 				<include name="Cesium/**" />
@@ -87,7 +87,7 @@
 		</zip>
 	</target>
 
-	<target name="clean" description="Cleans the build.">
+	<target name="clean" description="Removes all generated build artifacts.">
 		<delete includeEmptyDirs="true" failonerror="false">
 			<fileset dir="${sourceDirectory}" includes="Cesium.js" />
 			<fileset dir="${buildDirectory}" defaultexcludes="false" />
@@ -109,7 +109,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b17" />
+	<property name="version" value="b18" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />
@@ -121,6 +121,7 @@
 	<property name="thirdPartyDirectory" location="ThirdParty" />
 	<property name="requirejsPath" location="${thirdPartyDirectory}/requirejs-2.1.6" />
 	<property name="rjsPath" location="${requirejsPath}/r.js" />
+	<property name="rjsOptions" location="${toolsDirectory}/build.js" />
 	<property name="almondPath" location="${thirdPartyDirectory}/almond-0.2.5/almond.js" />
 	<property name="jscoveragePath" location="${toolsDirectory}/jscoverage-0.5.1/jscoverage.exe" />
 	<property name="rhinoJarPath" location="${toolsDirectory}/rhino-1.7R4/js.jar" />
@@ -197,7 +198,7 @@
 
 	<property file="${basedir}/.settings/com.eclipsesource.jshint.ui.prefs" prefix="jsHintEclipseSettings" />
 
-	<target name="jsHint" depends="build">
+	<target name="jsHint" depends="build" description="Runs JSHint on the entire source tree.">
 		<runJsHint jshintpath="${jsHintPath}" jshintoptions="${jsHintEclipseSettings.options}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
 			<sourcefiles dir="${basedir}">
 				<include name="Source/**/*.js" />
@@ -259,9 +260,11 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="skipModuleInsertion=true" />
+			<arg value="wrap=false" />
 			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
 			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
 		</exec>
@@ -296,9 +299,10 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
-			<arg value="wrap=true" />
 			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
 			<arg value="name=${relativeAlmondPath}" />
 			<arg value="include=main" />
 			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
@@ -315,6 +319,7 @@
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=${optimize}" />
 			<arg value="baseUrl=." />
 			<arg value="name=Workers/${worker}" />
@@ -348,7 +353,7 @@
 		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
-			<arg value="optimizeCss=standard" />
+			<arg value="${rjsOptions}" />
 			<srcfile prefix="cssIn=" />
 			<targetfile prefix="out=" />
 			<identitymapper />
@@ -358,7 +363,7 @@
 		</apply>
 	</target>
 
-	<target name="generateDocumentation">
+	<target name="generateDocumentation" description="Generates HTML documentation.">
 		<extractShaderComments output="${shadersDirectory}/glslComments.js">
 			<glslfiles dir="${shadersDirectory}" includes="**/*.glsl" />
 		</extractShaderComments>
@@ -389,7 +394,7 @@
 		</copy>
 	</target>
 
-	<target name="runServer" description="Runs a local web server ">
+	<target name="runServer" description="Runs a local web server.">
 		<taskdef name="server" classname="com.agi.ServerTask">
 			<classpath>
 				<fileset dir="${webProxyDirectory}" includes="**/*.jar" />
@@ -405,7 +410,7 @@
 		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" />
 	</target>
 
-	<target name="runPublicServer" description="Runs a public web server">
+	<target name="runPublicServer" description="Runs a public web server.">
 		<antcall target="runServer">
 			<param name="runServer.public" value="true" />
 		</antcall>
@@ -425,11 +430,13 @@
 		<mkdir dir="${cesiumViewerOutputDirectory}" />
 		<property name="relativeCesiumViewerOutputDirectory" location="${cesiumViewerOutputDirectory}" relative="true" basedir="${cesiumViewerDirectory}" />
 
+		<!-- mainConfigFile is relative to the build.js file -->
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
+			<arg value="${rjsOptions}" />
 			<arg value="optimize=uglify2" />
-			<arg value="mainConfigFile=CesiumViewerStartup.js" />
+			<arg value="mainConfigFile=../Apps/CesiumViewer/CesiumViewerStartup.js" />
 			<arg value="name=CesiumViewer/CesiumViewerStartup" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewerStartup.js" />
 		</exec>
@@ -437,7 +444,7 @@
 		<exec executable="${nodePath}" dir="${cesiumViewerDirectory}">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
-			<arg value="optimizeCss=standard" />
+			<arg value="${rjsOptions}" />
 			<arg value="cssIn=CesiumViewer.css" />
 			<arg value="out=${relativeCesiumViewerOutputDirectory}/CesiumViewer.css" />
 		</exec>

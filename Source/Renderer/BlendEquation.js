@@ -11,24 +11,27 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x8006
          */
         ADD : new Enumeration(0x8006, 'ADD'), // WebGL: FUNC_ADD
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x800A
          */
         SUBTRACT : new Enumeration(0x800A, 'SUBTRACT'), // WebGL: FUNC_SUBTRACT
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x800B
          */
         REVERSE_SUBTRACT : new Enumeration(0x800B, 'REVERSE_SUBTRACT'), // WebGL: FUNC_REVERSE_SUBTRACT
 
@@ -37,7 +40,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * DOC_TBA
          *
-         * @param blendEquation
+         * @param {BlendEquation} blendEquation
          *
          * @returns {Boolean}
          */
