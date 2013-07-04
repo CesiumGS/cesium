@@ -61,7 +61,7 @@ define(['../Core/createGuid',
         return dynamicObject;
     }
 
-    function readCoords(el) {
+    function readCoordinates(el) {
         var text = "", coords = [], i;
         for (i = 0; i < el.childNodes.length; i++) {
             text = text + el.childNodes[i].nodeValue;
@@ -74,9 +74,10 @@ define(['../Core/createGuid',
             }
             coords.push(ll[0]);
             coords.push(ll[1]);
-
-            if(ll[2] === "0"){
-                coords.push(0);
+            if(typeof ll[2] === 'undefined'){
+                coords.push(ll[2]); //defaultValue will handle it
+            } else {
+                coords.push(parseInt(ll[2], 10));
             }
         }
         return coords;
@@ -108,15 +109,17 @@ define(['../Core/createGuid',
 
     function processPoint(dataSource, kml, node) {
         var el = node.getElementsByTagName('coordinates');
-        var coords = [];
+        var coordinates = [];
         for (var j = 0; j < el.length; j++) {
         // text might span many childnodes
-        coords = coords.concat(readCoords(el[j]));
+            coordinates = coordinates.concat(readCoordinates(el[j]));
         }
 
-        var cartographic = Cartographic.fromDegrees(coords[0], coords[1], coords[2]);
+        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
         var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-
+        var dynamicObject = createObject(node, dataSource._dynamicObjectCollection);
+        //dynamicObject.merge(dataSource.defaultPoint);  What are the defaults for KML?
+        dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
     function processLineString(dataSource, kml, node){
