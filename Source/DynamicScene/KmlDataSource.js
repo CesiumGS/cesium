@@ -10,7 +10,12 @@ define(['../Core/createGuid',
         '../Core/Iso8601',
         '../Core/loadXML',
         './DynamicClock',
-        './DynamicObjectCollection'
+        './DynamicObjectCollection',
+        './DynamicPoint',
+        './DynamicPolyline',
+        './DynamicPolygon',
+        './DynamicLabel',
+        './DynamicBillboard'
         ], function(
                 createGuid,
                 Cartographic,
@@ -23,7 +28,12 @@ define(['../Core/createGuid',
                 Iso8601,
                 loadXML,
                 DynamicClock,
-                DynamicObjectCollection) {
+                DynamicObjectCollection,
+                DynamicPoint,
+                DynamicPolyline,
+                DynamicPolygon,
+                DynamicLabel,
+                DynamicBillboard) {
     "use strict";
 
     //Copied from GeoJsonDataSource
@@ -89,12 +99,12 @@ define(['../Core/createGuid',
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
         }
-        dynamicObjectCollection.getOrCreateObject(objectId);
+        dynamicObjectCollection.getOrCreateObject(objectId); //dataSource._dynamicObjectCollection...?
 
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
             var node = placemark.childNodes.item(i);
-            //Does the node hold a supported Geometry type?
+            //Checking if the node holds a supported Geometry type
             if(geometryTypes.hasOwnProperty(node.nodeName)){
                 placemark.geometry = node.nodeName;
                 var geometryType = placemark.geometry;
@@ -120,6 +130,8 @@ define(['../Core/createGuid',
         var dynamicObject = createObject(node, dataSource._dynamicObjectCollection);
         //dynamicObject.merge(dataSource.defaultPoint);  What are the defaults for KML?
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
+
+        //add the new dynamicObject to dataSource._dynamicObjectCollection?
     }
 
     function processLineString(dataSource, kml, node){
@@ -163,40 +175,26 @@ define(['../Core/createGuid',
 
     //First, create a function that takes a styleNode and creates equivalent dynamic object properties.
     function processStyle(styleNode, dynamicObject) {
-//
-//        if(style has IconStyle)   {
-//
-//          dynamicObject.billboard = new DynamicBillboard();
-//
-//         //Map style to billboard properties
-//
-//       }
-//
-//        if(style has LabelStyle)   {
-//
-//          dynamicObject.label = new DynamicLabel();
-//
-//         //Map style to label properties
-//
-//       }
-//
-//        if(style has LineStyle)   {
-//
-//          dynamicObject.polyline = new DynamicPolyline();
-//
-//         //Map style to line properties
-//
-//       }
-//
-//        if(style has PolyStyle)   {
-//
-//          dynamicObject.polygon = new DynamicPolygon();
-//
-//         //Map style to polygon properties
-//
-//       }
-//
-//    }
+        if(styleNode.hasOwnProperty("IconStyle")){
+            dynamicObject.billboard = new DynamicBillboard();
+
+         //Map style to billboard properties
+        }
+        if(styleNode.hasOwnProperty("LabelStyle"))   {
+          dynamicObject.label = new DynamicLabel();
+
+         //Map style to label properties
+        }
+        if(styleNode.hasOwnProperty("LineStyle"))   {
+          dynamicObject.polyline = new DynamicPolyline();
+
+          //Map style to line properties
+        }
+        if(styleNode.hasOwnProperty("PolyStyle"))   {
+          dynamicObject.polygon = new DynamicPolygon();
+         //Map style to polygon properties
+       }
+
 //
 //
 //
