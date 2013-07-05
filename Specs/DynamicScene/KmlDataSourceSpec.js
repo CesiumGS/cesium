@@ -21,7 +21,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(dataSource.getIsTimeVarying()).toEqual(false);
     });
 
-    it('Just want to see placemark data type in the debugger', function() {
+    it('Test processPoint', function() {
         var dataSource = new KmlDataSource();
         var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/KML_Samples.kml';
 
