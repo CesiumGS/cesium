@@ -177,61 +177,20 @@ define(['../Core/createGuid',
     function processStyle(styleNode, dynamicObject) {
         if(styleNode.hasOwnProperty("IconStyle")){
             dynamicObject.billboard = new DynamicBillboard();
-
-         //Map style to billboard properties
+            //Map style to billboard properties
         }
         if(styleNode.hasOwnProperty("LabelStyle"))   {
           dynamicObject.label = new DynamicLabel();
-
-         //Map style to label properties
+          //Map style to label properties
         }
         if(styleNode.hasOwnProperty("LineStyle"))   {
           dynamicObject.polyline = new DynamicPolyline();
-
           //Map style to line properties
         }
         if(styleNode.hasOwnProperty("PolyStyle"))   {
           dynamicObject.polygon = new DynamicPolygon();
-         //Map style to polygon properties
+          //Map style to polygon properties
        }
-
-//
-//
-//
-//    //On load, iterate over all styles
-//
-//    //Keep a special collection just for styles.
-//
-//    var  styleCollection = new DynamicObjectCollection();
-//
-//
-//
-//    For each (style in list of stylesNodes) {
-//
-//       var styleObject = styleCollection.getOrCreateObject(style.id);
-//
-//      processStyle(style, styleObject);
-//
-//    }
-//
-//
-//
-//    //Then, when iterating placemarks you do something like this
-//
-//    If(placemark node has embedded style) {
-//
-//       //process the style directly
-//
-//      processStyle(styleNode, placemarkDynamicObject);
-//
-//    } else {
-//
-//      //Shared style uri, so get the already processed style and merge it with this object.
-//
-//      var styleObject = styleCollection.getObject(style Uri);
-//
-//       placemarkDynamicObject.merge(styleObject);
-
     }
 
     function processFolder(){
@@ -248,12 +207,37 @@ define(['../Core/createGuid',
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
+        var stylesArray = kml.getElementsByTagName('Style');
+        var styleCollection = new DynamicObjectCollection();
+        for ( var i = 0, len = stylesArray.length; i < len; i++){
+            var styleNode = stylesArray.item(i);
+            styleNode.id = stylesArray.item(i).attributes[0].nodeValue;
+            var styleObject = styleCollection.getOrCreateObject(styleNode.id);
+
+            processStyle(styleNode, styleObject);
+        }
+
         var array = kml.getElementsByTagName('Folder');
-        for ( var i = 0, len = array.length; i < len; i++){
+        for (i = 0, len = array.length; i < len; i++){
             processFolder(dataSource, array[i], dynamicObjectCollection);
         }
 
         array = kml.getElementsByTagName('Placemark');
+//      //Then, when iterating placemarks you do something like this
+//
+//            If(placemark node has embedded style) {
+//
+//               //process the style directly
+//
+//              processStyle(styleNode, placemarkDynamicObject);
+//
+//            } else {
+//
+//              //Shared style uri, so get the already processed style and merge it with this object.
+//
+//              var styleObject = styleCollection.getObject(style Uri);
+//
+//               placemarkDynamicObject.merge(styleObject);
         for (i = 0, len = array.length; i < len; i++){
             processPlacemark(dataSource, array[i], dynamicObjectCollection);
         }
