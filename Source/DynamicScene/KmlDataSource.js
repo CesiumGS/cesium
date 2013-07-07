@@ -95,6 +95,7 @@ define(['../Core/createGuid',
 
     // KML processing functions
     function processPlacemark(dataSource, placemark, dynamicObjectCollection) {
+        //TODO get placemark ID in the proper way
         var objectId = placemark.id;
         if (typeof objectId === 'undefined') {
             objectId = createGuid();
@@ -175,22 +176,26 @@ define(['../Core/createGuid',
 
     //First, create a function that takes a styleNode and creates equivalent dynamic object properties.
     function processStyle(styleNode, dynamicObject) {
-        if(styleNode.hasOwnProperty("IconStyle")){
-            dynamicObject.billboard = new DynamicBillboard();
-            //Map style to billboard properties
+        for(var i = 0, len = styleNode.childNodes.length; i < len; i++){
+            var node = styleNode.childNodes.item(i);
+
+            if(node.nodeName === "IconStyle"){
+                dynamicObject.billboard = new DynamicBillboard();
+                //Map style to billboard properties
+            }
+            if(node.nodeName ===  "LabelStyle")   {
+                dynamicObject.label = new DynamicLabel();
+                //Map style to label properties
+            }
+            if(node.nodeName ===  "LineStyle")   {
+                dynamicObject.polyline = new DynamicPolyline();
+                //Map style to line properties
+            }
+            if(node.nodeName === "PolyStyle")   {
+                dynamicObject.polygon = new DynamicPolygon();
+                //Map style to polygon properties
+            }
         }
-        if(styleNode.hasOwnProperty("LabelStyle"))   {
-          dynamicObject.label = new DynamicLabel();
-          //Map style to label properties
-        }
-        if(styleNode.hasOwnProperty("LineStyle"))   {
-          dynamicObject.polyline = new DynamicPolyline();
-          //Map style to line properties
-        }
-        if(styleNode.hasOwnProperty("PolyStyle"))   {
-          dynamicObject.polygon = new DynamicPolygon();
-          //Map style to polygon properties
-       }
     }
 
     function processFolder(){
