@@ -71,6 +71,7 @@ define(['../Core/createGuid',
         return dynamicObject;
     }
 
+    //Helper functions
     function readCoordinates(el) {
         var text = "", coords = [], i;
         for (i = 0; i < el.childNodes.length; i++) {
@@ -93,14 +94,18 @@ define(['../Core/createGuid',
         return coords;
     }
 
+    function getId(node){
+        var id = node.attributes.id && node.attributes.id.nodeValue;
+        if (typeof id === 'undefined') {
+            id = createGuid();
+        }
+        return id;
+    }
+
     // KML processing functions
     function processPlacemark(dataSource, placemark, dynamicObjectCollection) {
-        //TODO get placemark ID in the proper way
-        var objectId = placemark.id;
-        if (typeof objectId === 'undefined') {
-            objectId = createGuid();
-        }
-        dynamicObjectCollection.getOrCreateObject(objectId); //dataSource._dynamicObjectCollection...?
+        placemark.id = getId(placemark);
+        dynamicObjectCollection.getOrCreateObject(placemark.id); //dataSource._dynamicObjectCollection...?
 
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
@@ -215,7 +220,7 @@ define(['../Core/createGuid',
         var styleCollection = new DynamicObjectCollection();
         for ( var i = 0, len = stylesArray.length; i < len; i++){
             var styleNode = stylesArray.item(i);
-            styleNode.id = stylesArray.item(i).attributes[0].nodeValue;
+            styleNode.id = getId(styleNode);
             var styleObject = styleCollection.getOrCreateObject(styleNode.id);
 
             processStyle(styleNode, styleObject);
