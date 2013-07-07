@@ -122,7 +122,6 @@ define(['../Core/createGuid',
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
-        // text might span many childnodes
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
 
@@ -162,6 +161,7 @@ define(['../Core/createGuid',
     function processGxMultiTrack(dataSource, kml, node){
 
     }
+
     //Object that holds all supported Geometry
     var geometryTypes = {
             Point : processPoint,
@@ -174,7 +174,6 @@ define(['../Core/createGuid',
             gxMultitrack : processGxMultiTrack
         };
 
-    //First, create a function that takes a styleNode and creates equivalent dynamic object properties.
     function processStyle(styleNode, dynamicObject) {
         for(var i = 0, len = styleNode.childNodes.length; i < len; i++){
             var node = styleNode.childNodes.item(i);
@@ -230,48 +229,23 @@ define(['../Core/createGuid',
         array = kml.getElementsByTagName('Placemark');
 //      //Then, when iterating placemarks you do something like this
 //
-//            If(placemark node has embedded style) {
+//      If(placemark node has embedded style) {
 //
-//               //process the style directly
+//          //process the style directly
 //
-//              processStyle(styleNode, placemarkDynamicObject);
+//          processStyle(styleNode, placemarkDynamicObject);
 //
-//            } else {
+//      } else {
 //
-//              //Shared style uri, so get the already processed style and merge it with this object.
+//          //Shared style uri, so get the already processed style and merge it with this object.
 //
-//              var styleObject = styleCollection.getObject(style Uri);
+//          var styleObject = styleCollection.getObject(style Uri);
 //
-//               placemarkDynamicObject.merge(styleObject);
+//          placemarkDynamicObject.merge(styleObject);
+//      }
         for (i = 0, len = array.length; i < len; i++){
             processPlacemark(dataSource, array[i], dynamicObjectCollection);
         }
-
-        /*
-        var availability = dynamicObjectCollection.computeAvailability();
-
-        var clock;
-        var documentObject = dynamicObjectCollection.getObject('document');
-        if (typeof documentObject !== 'undefined' && typeof documentObject.clock !== 'undefined') {
-            clock = new DynamicClock();
-            clock.startTime = documentObject.clock.startTime;
-            clock.stopTime = documentObject.clock.stopTime;
-            clock.clockRange = documentObject.clock.clockRange;
-            clock.clockStep = documentObject.clock.clockStep;
-            clock.multiplier = documentObject.clock.multiplier;
-            clock.currentTime = documentObject.clock.currentTime;
-        } else if (!availability.start.equals(Iso8601.MINIMUM_VALUE)) {
-            clock = new DynamicClock();
-            clock.startTime = availability.start;
-            clock.stopTime = availability.stop;
-            clock.clockRange = ClockRange.LOOP_STOP;
-            var totalSeconds = clock.startTime.getSecondsDifference(clock.stopTime);
-            var multiplier = Math.round(totalSeconds / 120.0);
-            clock.multiplier = multiplier;
-            clock.currentTime = clock.startTime;
-            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
-        }
-        return clock;*/
     }
 
 
@@ -289,7 +263,6 @@ define(['../Core/createGuid',
         this._timeVarying = true;
     };
 
-    /* The following functions were copied from CzmlDataSource.js, just replaced CZML with KML */
     /**
      * Gets an event that will be raised when non-time-varying data changes
      * or if the return value of getIsTimeVarying changes.
