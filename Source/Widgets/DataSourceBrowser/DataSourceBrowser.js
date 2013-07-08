@@ -38,6 +38,12 @@ define([
         container.appendChild(element);
         this._element = element;
 
+        var addDataSourceButton = document.createElement('span');
+        addDataSourceButton.textContent = 'Add';
+        addDataSourceButton.className = 'cesium-dataSourceBrowser-addDataSource';
+        addDataSourceButton.setAttribute('data-bind', 'attr: { title: addDataSourceTooltip }, click: addDataSourceCommand');
+        element.appendChild(addDataSourceButton);
+
         var templateElement = document.createElement('script');
         templateElement.type = 'text/html';
 
@@ -54,15 +60,56 @@ define([
 <span data-bind="text: name, click: select"></span>\
 <!-- /ko -->';
 
-        container.appendChild(templateElement);
-        this._templateElement = templateElement;
+        element.appendChild(templateElement);
 
         var rootDataSourcesElement = document.createElement('ul');
         rootDataSourcesElement.setAttribute('data-bind', 'template: { name: "' + templateID + '", foreach: dataSources }');
         element.appendChild(rootDataSourcesElement);
-        this._rootDataSourcesElement = rootDataSourcesElement;
 
-        knockout.applyBindings(viewModel, container);
+        var addDataSourceContainer = document.createElement('div');
+        addDataSourceContainer.className = 'cesium-dataSourceBrowser-addDataSourceContainer';
+        addDataSourceContainer.setAttribute('data-bind', '\
+                css: { "cesium-dataSourceBrowser-visible" : addDataSourceVisible,\
+                       "cesium-dataSourceBrowser-hidden" : !addDataSourceVisible }');
+        element.appendChild(addDataSourceContainer);
+
+        var addDataSourceLabel = document.createElement('span');
+        addDataSourceLabel.textContent = 'Add Data Source';
+        addDataSourceContainer.appendChild(addDataSourceLabel);
+
+        var addDataSourceOptions = document.createElement('div');
+        addDataSourceOptions.className = 'cesium-dataSourceBrowser-addDataSourceOptions';
+        addDataSourceOptions.setAttribute('data-bind', 'foreach: addDataSourcePanels');
+        addDataSourceContainer.appendChild(addDataSourceOptions);
+
+        var addDataSourceOption = document.createElement('div');
+        addDataSourceOption.setAttribute('data-bind', '\
+                text : description,\
+                css: {"cesium-dataSourceBrowser-addDataSourceSelected" : $data === $parent.activeAddDataSourcePanel},\
+                click: function($data) { $parent.activeAddDataSourcePanel = $data }');
+        addDataSourceOptions.appendChild(addDataSourceOption);
+
+        var activeAddDataSourcePanelContainer = document.createElement('div');
+        addDataSourceContainer.appendChild(activeAddDataSourcePanelContainer);
+
+        this._activeAddDataSourcePanel = undefined;
+
+        var that = this;
+        function activeAddDataSourcePanelCallback(AddDataSourcePanel) {
+            if (typeof that._activeAddDataSourcePanel !== 'undefined') {
+                if (that._activeAddDataSourcePanel.constructor === AddDataSourcePanel) {
+                    return;
+                }
+                that._activeAddDataSourcePanel = that._activeAddDataSourcePanel.destroy();
+            }
+            if (typeof AddDataSourcePanel !== 'undefined') {
+                that._activeAddDataSourcePanel = new AddDataSourcePanel(activeAddDataSourcePanelContainer);
+            }
+        }
+
+        this._activeAddDataSourcePanelSubscription = knockout.getObservable(viewModel, 'activeAddDataSourcePanel').subscribe(activeAddDataSourcePanelCallback);
+
+        knockout.applyBindings(viewModel, element);
     };
 
     defineProperties(DataSourceBrowser.prototype, {
@@ -108,7 +155,6 @@ define([
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
-        container.removeChild(this._templateElement);
         return destroyObject(this);
     };
 

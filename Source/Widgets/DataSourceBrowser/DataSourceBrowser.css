@@ -60,3 +60,14 @@
 .cesium-dataSourceBrowser input:checked+label::before {
     background-position: 0 -16px;
 }
+
+.cesium-dataSourceBrowser-addDataSourcePanel {
+}
+
+.cesium-dataSourceBrowser-visible {
+    display: block;
+}
+
+.cesium-dataSourceBrowser-hidden {
+    display: none;
+}
