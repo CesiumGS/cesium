@@ -8,6 +8,8 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
+        './GeometryPipeline',
+        './GeometryInstance',
         './GeometryAttribute',
         './Math',
         './Matrix3',
@@ -23,6 +25,8 @@ define([
         DeveloperError,
         Ellipsoid,
         Geometry,
+        GeometryPipeline,
+        GeometryInstance,
         GeometryAttribute,
         CesiumMath,
         Matrix3,
@@ -95,46 +99,48 @@ define([
         var binormal = scratchBinormal;
 
         var length = positions.length;
-        var bottomOffset = 0;
-        if (extrude) {
-            length /= 2;
-            bottomOffset = length;
-        }
+        var bottomOffset = (extrude) ? length : 0;
+        var stOffset = bottomOffset / 3 * 2;
         for (var i = 0; i < length; i += 3) {
+            var i1 = i + 1;
+            var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
             var extrudedPosition;
 
             if (vertexFormat.st) {
                 var relativeToCenter = Cartesian3.subtract(position, center);
                 if (extrude) {
-                    textureCoordinates[textureCoordIndex + length] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                    textureCoordinates[textureCoordIndex + 1 + length] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                    textureCoordinates[textureCoordIndex + stOffset] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                    textureCoordinates[textureCoordIndex + 1 + stOffset] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
                 }
 
                 textureCoordinates[textureCoordIndex++] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
                 textureCoordinates[textureCoordIndex++] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
             }
 
-            ellipsoid.scaleToGeodeticSurface(position, position);
-            position = Cartesian3.add(position, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(position), height), position);
+            position = ellipsoid.scaleToGeodeticSurface(position, position);
+            extrudedPosition = position.clone();
+            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+            scaledNormal = Cartesian3.multiplyByScalar(normal, height, scaledNormal);
+            position = Cartesian3.add(position, scaledNormal, position);
             if (extrude) {
-                extrudedPosition = Cartesian3.add(position, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(position), extrudedHeight), position);
+                scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
+                extrudedPosition = Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
             }
 
             if (vertexFormat.position) {
                 if (extrude) {
                     finalPositions[i + bottomOffset] = extrudedPosition.x;
-                    finalPositions[i + 1 + bottomOffset] = extrudedPosition.y;
-                    finalPositions[i + 2 + bottomOffset] = extrudedPosition.z;
+                    finalPositions[i1 + bottomOffset] = extrudedPosition.y;
+                    finalPositions[i2 + bottomOffset] = extrudedPosition.z;
                 }
 
                 finalPositions[i] = position.x;
-                finalPositions[i + 1] = position.y;
-                finalPositions[i + 2] = position.z;
+                finalPositions[i1] = position.y;
+                finalPositions[i2] = position.z;
             }
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                normal = ellipsoid.geodeticSurfaceNormal(position, normal);
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
                 }
@@ -144,8 +150,8 @@ define([
                     normals[i + 2] = normal.z;
                     if (extrude) {
                         normals[i + bottomOffset] = -normal.x;
-                        normals[i + 1 + bottomOffset] = -normal.y;
-                        normals[i + 2 + bottomOffset] = -normal.z;
+                        normals[i1 + bottomOffset] = -normal.y;
+                        normals[i2 + bottomOffset] = -normal.z;
                     }
                 }
 
@@ -155,20 +161,20 @@ define([
                     tangents[i + 2] = tangent.z;
                     if (extrude) {
                         tangents[i + bottomOffset] = -tangent.x;
-                        tangents[i + 1 + bottomOffset] = -tangent.y;
-                        tangents[i + 2 + bottomOffset] = -tangent.z;
+                        tangents[i1 + bottomOffset] = -tangent.y;
+                        tangents[i2 + bottomOffset] = -tangent.z;
                     }
                 }
 
                 if (vertexFormat.binormal) {
                     binormal = Cartesian3.cross(normal, tangent, binormal);
                     binormals[i] = binormal.x;
-                    binormals[i + 1] = binormal.y;
-                    binormals[i + 2] = binormal.z;
+                    binormals[i1] = binormal.y;
+                    binormals[i2] = binormal.z;
                     if (extrude) {
                         binormals[i + bottomOffset] = binormal.x;
-                        binormals[i + 1 + bottomOffset] = binormal.y;
-                        binormals[i + 2 + bottomOffset] = binormal.z;
+                        binormals[i1 + bottomOffset] = binormal.y;
+                        binormals[i2 + bottomOffset] = binormal.z;
                     }
                 }
             }
@@ -218,7 +224,7 @@ define([
         return attributes;
     }
 
-    function computeEllipsePositions(options) {
+    function computeEllipsePositions(options, doPerimeter) {
         var semiMinorAxis = options.semiMinorAxis;
         var semiMajorAxis = options.semiMajorAxis;
         var bearing = options.bearing;
@@ -268,7 +274,15 @@ define([
          // on the number of iterations before the angle reaches pi/2.
          var size = 2 * numPts * (numPts + 1);
          var positions = new Array(size * 3);
+         var outerLeft;
+         var outerRight;
+
+         if (doPerimeter) {
+             outerLeft = [];
+             outerRight = [];
+         }
          var positionIndex = 0;
+
          var position = scratchCartesian1;
          var reflectedPosition = scratchCartesian2;
 
@@ -300,12 +314,21 @@ define([
              positions[positionIndex++] = reflectedPosition.x;
              positions[positionIndex++] = reflectedPosition.y;
              positions[positionIndex++] = reflectedPosition.z;
+
+             if (doPerimeter) {
+                 outerRight.push(position.z, position.y, position.x);
+                 if (i !== 0) {
+                     outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                 }
+             }
          }
+
+
 
          // Set numPts if theta reached zero
          numPts = i;
 
-         // Compute points in the 'northern' half of the ellipse
+         // Compute points in the 'southern' half of the ellipse
          for (i = numPts; i > 0; --i) {
              theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
@@ -328,6 +351,13 @@ define([
              positions[positionIndex++] = reflectedPosition.x;
              positions[positionIndex++] = reflectedPosition.y;
              positions[positionIndex++] = reflectedPosition.z;
+
+             if (doPerimeter) {
+                 outerRight.push(position.z, position.y, position.x);
+                 if (i !== 1) {
+                     outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                 }
+             }
          }
 
          // The original length may have been an over-estimate
@@ -336,13 +366,20 @@ define([
              positions.length = positionIndex;
          }
 
-         return {
-             positions: positions,
-             numPts: numPts
+         var r = {
+                 positions: positions,
+                 numPts: numPts
          };
+
+         if (doPerimeter) {
+             outerRight.reverse();
+             r.outerPositions = outerRight.concat(outerLeft);
+         }
+
+         return r;
     }
 
-    function topIndices(positions, numPts) {
+    function topIndices(numPts) {
         // The number of triangles in the ellipse on the positive x half-space and for
         // the column of triangles in the middle is:
         //
@@ -426,15 +463,18 @@ define([
         return indices;
     }
 
+    var scaledNormal = new Cartesian3();
+    var bsCenter = new Cartesian3();
     function computeEllipse(options) {
         var center = options.center;
-        center = Cartesian3.add(center, Cartesian3.multiplyByScalar(options.ellipsoid.geodeticSurfaceNormal(center), options.height), center);
-        var boundingSphere = new BoundingSphere(center, options.semiMajorAxis);
+        scaledNormal = Cartesian3.multiplyByScalar(options.ellipsoid.geodeticSurfaceNormal(center, scaledNormal), options.height, scaledNormal);
+        bsCenter = Cartesian3.add(center, scaledNormal, bsCenter);
+        var boundingSphere = new BoundingSphere(bsCenter, options.semiMajorAxis);
         var cep = computeEllipsePositions(options);
         var positions = cep.positions;
         var numPts = cep.numPts;
         var attributes = computeTopBottomAttributes(positions, options, false);
-        var indices = topIndices(positions, numPts);
+        var indices = topIndices(numPts);
         indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
         return {
             boundingSphere: boundingSphere,
@@ -444,11 +484,172 @@ define([
     }
 
     function computeWallAttributes(positions, options) {
-        return {};
+        var vertexFormat = options.vertexFormat;
+        var center = options.center;
+        var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
+        var ellipsoid = options.ellipsoid;
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        var size = positions.length/3*2;
+
+        var finalPositions = new Float64Array(size * 3);
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var normals = (vertexFormat.normal) ? new Float32Array(size * 3) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size * 3) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size * 3) : undefined;
+
+        var textureCoordIndex = 0;
+
+        // Raise positions to a height above the ellipsoid and compute the
+        // texture coordinates, normals, tangents, and binormals.
+        var normal = scratchNormal;
+        var tangent = scratchTangent;
+        var binormal = scratchBinormal;
+
+        var length = positions.length;
+        var stOffset = length / 3 * 2;
+        for (var i = 0; i < length; i += 3) {
+            var i1 = i + 1;
+            var i2 = i + 2;
+            var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
+            var extrudedPosition;
+
+            if (vertexFormat.st) {
+                var relativeToCenter = Cartesian3.subtract(position, center);
+                textureCoordinates[textureCoordIndex + stOffset] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                textureCoordinates[textureCoordIndex + 1 + stOffset] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+
+                textureCoordinates[textureCoordIndex++] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                textureCoordinates[textureCoordIndex++] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+            }
+
+            position = ellipsoid.scaleToGeodeticSurface(position, position);
+            extrudedPosition = position.clone();
+            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+            scaledNormal = Cartesian3.multiplyByScalar(normal, height, scaledNormal);
+            position = Cartesian3.add(position, scaledNormal, position);
+            scaledNormal = Cartesian3.multiplyByScalar(normal, extrudedHeight, scaledNormal);
+            extrudedPosition = Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
+
+            if (vertexFormat.position) {
+                finalPositions[i + length] = extrudedPosition.x;
+                finalPositions[i1 + length] = extrudedPosition.y;
+                finalPositions[i2 + length] = extrudedPosition.z;
+
+                finalPositions[i] = position.x;
+                finalPositions[i1] = position.y;
+                finalPositions[i2] = position.z;
+            }
+
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+
+                binormal = normal.clone(binormal);
+                var next = Cartesian3.fromArray(positions, (i + 3)%length, scratchCartesian2);
+                next = next.subtract(position, next);
+                var bottom = extrudedPosition.subtract(position, scratchCartesian3);
+
+                normal = bottom.cross(next, normal).normalize(normal);
+
+                if (vertexFormat.normal) {
+                    normals[i] = normal.x;
+                    normals[i1] = normal.y;
+                    normals[i2] = normal.z;
+
+                    normals[i + length] = normal.x;
+                    normals[i1 + length] = normal.y;
+                    normals[i2 + length] = normal.z;
+                }
+
+                if (vertexFormat.tangent) {
+                    tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                    tangents[i] = tangent.x;
+                    tangents[i1] = tangent.y;
+                    tangents[i2] = tangent.z;
+
+                    tangents[i + length] = tangent.x;
+                    tangents[i + 1 + length] = tangent.y;
+                    tangents[i + 2 + length] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    binormals[i] = binormal.x;
+                    binormals[i1] = binormal.y;
+                    binormals[i2] = binormal.z;
+
+                    binormals[i + length] = binormal.x;
+                    binormals[i1 + length] = binormal.y;
+                    binormals[i2 + length] = binormal.z;
+                }
+            }
+        }
+
+        var attributes = {};
+
+        if (vertexFormat.position) {
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : finalPositions
+            });
+        }
+
+        if (vertexFormat.st) {
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : binormals
+            });
+        }
+        return attributes;
     }
 
     function computeWallIndices(positions) {
-        return [];
+        var UL;
+        var UR;
+        var LL;
+        var LR;
+        var indices = [];
+        var length = positions.length/3;
+        for (var i = 0; i < length - 1; i++) {
+            UL = i;
+            LL = i + length;
+            UR = UL + 1;
+            LR = UR + length;
+            indices.push(UL, LL, UR, UR, LL, LR);
+        }
+
+        UL = length - 1;
+        LL = i + length;
+        UR = 0;
+        LR = UR + length;
+        indices.push(UL, LL, UR, UR, LL, LR);
+
+        return indices;
     }
 
     var topBoundingSphere = new BoundingSphere();
@@ -457,44 +658,55 @@ define([
         var center = options.center;
         var ellipsoid = options.ellipsoid;
         var semiMajorAxis = options.semiMajorAxis;
-        center = Cartesian3.add(center, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), options.height), center);
-        topBoundingSphere.center = center.clone();
+        scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scaledNormal), options.height, scaledNormal);
+        bsCenter = Cartesian3.add(center, scaledNormal, bsCenter);
+        topBoundingSphere.center = bsCenter.clone();
         topBoundingSphere.radius = semiMajorAxis;
-        center = Cartesian3.add(center, Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), options.extrudedHeight), center);
-        bottomBoundingSphere.center = center.clone();
+
+        scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scaledNormal), options.extrudedHeight, scaledNormal);
+        bsCenter = Cartesian3.add(center, scaledNormal, bsCenter);
+        bottomBoundingSphere.center = bsCenter.clone();
         bottomBoundingSphere.radius = semiMajorAxis;
 
-        var cep = computeEllipsePositions(options);
+        var cep = computeEllipsePositions(options, true);
         var positions = cep.positions;
         var numPts = cep.numPts;
+        var outerPositions = cep.outerPositions;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var topBottomAttributes = computeTopBottomAttributes(positions, options, true);
-        var indices = topIndices(positions, numPts);
+        var indices = topIndices(numPts);
         var length = indices.length;
         indices = indices.concat(new Array(indices.length));
-
+        var posLength = positions.length/3;
         for (var i = 0; i < length; i+=3) {
-            indices[i + length] = indices[i + 2];
-            indices[i + 1 + length] = indices[i + 1];
-            indices[i + 2 + length] = indices[i];
+            indices[i + length] = indices[i + 2] + posLength;
+            indices[i + 1 + length] = indices[i + 1] + posLength;
+            indices[i + 2 + length] = indices[i] + posLength;
         }
 
-        var topBotomIndices = IndexDatatype.createTypedArray(positions.length * 2 / 3, indices);
+        var topBottomIndices = IndexDatatype.createTypedArray(posLength * 2 / 3, indices);
 
         var topBottomGeo = new Geometry({
             attributes: topBottomAttributes,
-            indices: topBotomIndices
+            indices: topBottomIndices
         });
 
-        var wallAttributes = computeWallAttributes(positions, options);
-        var wallIndices = computeWallIndices(positions);
+        var wallAttributes = computeWallAttributes(outerPositions, options);
+        indices = computeWallIndices(outerPositions);
+        var wallIndices = IndexDatatype.createTypedArray(outerPositions.length * 2 / 3, indices);
 
         var wallGeo = new Geometry({
             attributes: wallAttributes,
             indices: wallIndices
         });
 
-        var geo = Geometry.combine(topBottomGeo, wallGeo);
+        var geo = GeometryPipeline.combine([
+                new GeometryInstance({
+                    geometry: topBottomGeo
+                }),
+                new GeometryInstance({
+                    geometry: wallGeo
+                })]);
         return {
             boundingSphere: boundingSphere,
             attributes: geo.attributes,
