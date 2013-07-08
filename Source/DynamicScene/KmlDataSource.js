@@ -232,23 +232,23 @@ define(['../Core/createGuid',
         }
 
         array = kml.getElementsByTagName('Placemark');
-//      //Then, when iterating placemarks you do something like this
-//
-//      If(placemark node has embedded style) {
-//
-//          //process the style directly
-//
-//          processStyle(styleNode, placemarkDynamicObject);
-//
-//      } else {
-//
-//          //Shared style uri, so get the already processed style and merge it with this object.
-//
-//          var styleObject = styleCollection.getObject(style Uri);
-//
-//          placemarkDynamicObject.merge(styleObject);
-//      }
         for (i = 0, len = array.length; i < len; i++){
+//            //Then, when iterating placemarks you do something like this
+//
+//            If(placemark node has embedded style) {
+//
+//                //process the style directly
+//
+//                processStyle(styleNode, placemarkDynamicObject);
+//
+//            } else {
+//
+//                //Shared style uri, so get the already processed style and merge it with this object.
+//
+//                var styleObject = styleCollection.getObject(style Uri);
+//
+//                placemarkDynamicObject.merge(styleObject);
+//            }
             processPlacemark(dataSource, array[i], dynamicObjectCollection);
         }
     }
