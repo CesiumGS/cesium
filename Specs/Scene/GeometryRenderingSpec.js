@@ -6,6 +6,7 @@ defineSuite([
          'Core/EllipsoidGeometry',
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
+         'Core/WallGeometry',
          'Core/defaultValue',
          'Core/Geometry',
          'Core/GeometryAttribute',
@@ -41,6 +42,7 @@ defineSuite([
          EllipsoidGeometry,
          ExtentGeometry,
          PolygonGeometry,
+         WallGeometry,
          defaultValue,
          Geometry,
          GeometryAttribute,
@@ -101,7 +103,7 @@ defineSuite([
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
 
-    function render3D(instance, boundingSphere) {
+    function render3D(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance()
@@ -111,6 +113,11 @@ defineSuite([
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
         viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState);
+        }
+
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -138,7 +145,7 @@ defineSuite([
         camera.position.z = center.x + radius;
     }
 
-    function renderCV(instance, boundingSphere) {
+    function renderCV(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance()
@@ -155,6 +162,11 @@ defineSuite([
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
         viewSphereCV(frameState.camera, sphere, instance.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState);
+        }
+
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -222,7 +234,7 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function pickGeometry(instance, boundingSphere) {
+    function pickGeometry(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance()
@@ -232,6 +244,11 @@ defineSuite([
 
         var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
         viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState);
+        }
+
         context.getUniformState().update(frameState);
 
         expect(pick(context, frameState, primitive)).toEqual(instance.id);
@@ -572,6 +589,58 @@ defineSuite([
                 }
             });
             render3D(hierarchy);
+        });
+    }, 'WebGL');
+
+    describe('WallGeometry', function() {
+        var instance;
+        var afterViewCV;
+        var afterView3D;
+        beforeAll(function() {
+            var height = 100000.0;
+
+            instance = new GeometryInstance({
+                geometry : new WallGeometry({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0, height),
+                        Cartographic.fromDegrees(0.01, 0.0, height)
+                    ])
+                }),
+                id : 'wall',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+
+            afterView3D = function(frameState) {
+                var transform = Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center);
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.zoomIn(instance.geometry.boundingSphere.radius * 0.99);
+            };
+
+            afterViewCV = function(frameState) {
+                var translation = frameState.camera.position.clone();
+                translation.z = 0.0;
+                var transform = Matrix4.fromTranslation(translation);
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.zoomIn(instance.geometry.boundingSphere.radius * 1.85);
+            };
+        });
+
+        it('3D', function() {
+            render3D(instance, afterView3D);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance, afterViewCV);
+        });
+
+        // walls do not render in 2D
+
+        it('pick', function() {
+            pickGeometry(instance, afterView3D);
         });
     }, 'WebGL');
 
