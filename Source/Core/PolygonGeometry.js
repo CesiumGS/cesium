@@ -148,9 +148,9 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
-                        tangents[attrIndex + length] = -tangent.x;
-                        tangents[attrIndex1 + length] = -tangent.y;
-                        tangents[attrIndex2 + length] = -tangent.z;
+                        tangents[attrIndex + length] = tangent.x;
+                        tangents[attrIndex1 + length] = tangent.y;
+                        tangents[attrIndex2 + length] = tangent.z;
 
                         tangents[attrIndex] = tangent.x;
                         tangents[attrIndex1] = tangent.y;
@@ -158,9 +158,9 @@ define([
                     }
 
                     if (vertexFormat.binormal) {
-                        binormals[attrIndex + length] = -binormal.x;
-                        binormals[attrIndex1 + length] = -binormal.y;
-                        binormals[attrIndex2 + length] = -binormal.z;
+                        binormals[attrIndex + length] = binormal.x;
+                        binormals[attrIndex1 + length] = binormal.y;
+                        binormals[attrIndex2 + length] = binormal.z;
 
                         binormals[attrIndex] = binormal.x;
                         binormals[attrIndex1] = binormal.y;
