@@ -38,7 +38,7 @@ bool isOnBoundary(float value, float epsilon)
 #ifdef GL_OES_standard_derivatives
     float delta = max(abs(dFdx(value)), abs(dFdy(value)));
     float temp = abs(value);
-    return temp < tolerance || temp - delta < tolerance;
+    return temp < tolerance || (delta < 10.0 * tolerance && temp - delta < tolerance);
 #else
     return abs(value) < tolerance;
 #endif
