@@ -3,10 +3,10 @@ require({
     baseUrl : '../..',
     packages : [{
         name : 'dojo',
-        location : 'ThirdParty/dojo-release-1.9.0/dojo'
+        location : 'ThirdParty/dojo-release-1.9.1/dojo'
     }, {
         name : 'dijit',
-        location : 'ThirdParty/dojo-release-1.9.0/dijit'
+        location : 'ThirdParty/dojo-release-1.9.1/dijit'
     }, {
         name : 'Core',
         location : 'Source/Core'
