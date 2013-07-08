@@ -6,6 +6,7 @@ defineSuite([
          'Core/EllipsoidGeometry',
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
+         'Core/SimplePolylineGeometry',
          'Core/WallGeometry',
          'Core/defaultValue',
          'Core/Geometry',
@@ -42,6 +43,7 @@ defineSuite([
          EllipsoidGeometry,
          ExtentGeometry,
          PolygonGeometry,
+         SimplePolylineGeometry,
          WallGeometry,
          defaultValue,
          Geometry,
@@ -106,7 +108,9 @@ defineSuite([
     function render3D(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         var frameState = createFrameState();
@@ -148,7 +152,9 @@ defineSuite([
     function renderCV(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         var frameState = createFrameState();
@@ -203,7 +209,9 @@ defineSuite([
     function render2D(instance, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         var frameState = createFrameState();
@@ -237,7 +245,9 @@ defineSuite([
     function pickGeometry(instance, afterView, boundingSphere) {
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
 
         var frameState = createFrameState();
@@ -261,7 +271,7 @@ defineSuite([
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new BoxGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -295,7 +305,7 @@ defineSuite([
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new CircleGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                     radius : 1000000.0
@@ -329,7 +339,7 @@ defineSuite([
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new EllipseGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                     semiMinorAxis : 1000000.0,
@@ -361,7 +371,7 @@ defineSuite([
         it('rotated', function() {
             var rotated = new GeometryInstance({
                 geometry : new EllipseGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                     semiMinorAxis : 1000000.0,
@@ -379,7 +389,7 @@ defineSuite([
         it('at height', function() {
             var atHeight = new GeometryInstance({
                 geometry : new EllipseGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
                     semiMinorAxis : 1000000.0,
@@ -400,7 +410,7 @@ defineSuite([
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new EllipsoidGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : new Ellipsoid(1000000.0, 1000000.0, 500000.0)
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
@@ -436,7 +446,7 @@ defineSuite([
             extent = Extent.fromDegrees(0, 0, 1, 1);
             instance = new GeometryInstance({
                 geometry : new ExtentGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     extent : extent
                 }),
@@ -466,7 +476,7 @@ defineSuite([
         it('rotated', function() {
             var rotated = new GeometryInstance({
                 geometry : new ExtentGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     extent : extent,
                     rotation : CesiumMath.PI_OVER_FOUR
@@ -482,7 +492,7 @@ defineSuite([
         it('at height', function() {
             var atHeight = new GeometryInstance({
                 geometry : new ExtentGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     extent : extent,
                     height : 100000.0
@@ -501,7 +511,7 @@ defineSuite([
         beforeAll(function() {
             instance = new GeometryInstance({
                 geometry : new PolygonGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
                         Cartographic.fromDegrees(0.0, 45.0),
@@ -536,7 +546,7 @@ defineSuite([
         it('at height', function() {
             var atHeight = new GeometryInstance({
                 geometry : new PolygonGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
                         Cartographic.fromDegrees(0.0, 45.0),
@@ -557,7 +567,7 @@ defineSuite([
         it('hierarchy', function() {
             var hierarchy = new GeometryInstance({
                 geometry : new PolygonGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     polygonHierarchy : {
                         positions : ellipsoid.cartographicArrayToCartesianArray([
                             Cartographic.fromDegrees(-109.0, 30.0),
@@ -601,7 +611,7 @@ defineSuite([
 
             instance = new GeometryInstance({
                 geometry : new WallGeometry({
-                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
                         Cartographic.fromDegrees(0.0, 0.0, height),
@@ -643,5 +653,39 @@ defineSuite([
             pickGeometry(instance, afterView3D);
         });
     }, 'WebGL');
+
+    describe('SimplePolylineGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new SimplePolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ])
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                },
+                id : 'simple polyline'
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    });
 
 });
