@@ -18,7 +18,7 @@ define([
     "use strict";
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit = new Credit('OSM', 'MapQuest, Open Street Map and contributors, CC-BY-SA');
+    var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
      * Provides tiled imagery hosted by OpenStreetMap or another provider of Slippy tiles.  Please be aware

@@ -8,7 +8,6 @@ define([
     /**
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      *
-     *  @param {String} name A unique identifier for the credit
      *  @param {String} [text=undefined] The text to be displayed on the screen if no imageUrl is specified.
      *  @param {String} [imageUrl=undefined] The source location for an image
      *  @param {String} [link=undefined] A URL location for which the credit will be hyperlinked
@@ -21,15 +20,10 @@ define([
      *  var credit = new Credit('cesium-credit', undefined, '/images/cesium_logo.png', 'http://cesium.agi.com/');
      */
 
-    var Credit = function(name, text, imageUrl, link) {
-        if (typeof name === 'undefined') {
-            throw new DeveloperError('name is required');
-        }
+    var Credit = function(text, imageUrl, link) {
         if (typeof text === 'undefined' && typeof imageUrl === 'undefined' && typeof link === 'undefined') {
-            text = name;
+            throw new DeveloperError('text, imageUrl or link is required');
         }
-
-        this._name = name;
 
         this._text = text;
 
@@ -37,15 +31,6 @@ define([
 
         this._link = link;
 
-    };
-
-    /**
-     * Returns the unique identifier for the credit
-     *
-     * @returns {String}
-     */
-    Credit.prototype.getName = function() {
-        return this._name;
     };
 
     /**

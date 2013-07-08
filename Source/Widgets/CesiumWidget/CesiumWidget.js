@@ -144,7 +144,7 @@ define([
         var ellipsoid = Ellipsoid.WGS84;
         var creditDisplay = scene.getFrameState().creditDisplay;
 
-        var cesiumCredit = new Credit('cesium', 'Cesium', cesiumLogoData, 'http://cesium.agi.com/');
+        var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesium.agi.com/');
         creditDisplay.addDefaultCredit(cesiumCredit);
 
         var centralBody = new CentralBody(ellipsoid);

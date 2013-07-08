@@ -80,7 +80,7 @@ define([
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
-        this._credit = new Credit('bing', 'Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
+        this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
