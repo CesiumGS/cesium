@@ -13,7 +13,7 @@ define([
      * The credit display is responsible for displaying credits on screen.
      *
      * @param {HTMLElement} container The HTML element where credits will be displayed
-     * @param {String} [delimeter= ' • '] The string to separate text credits
+     * @param {String} [delimiter= ' • '] The string to separate text credits
      *
      * @alias CreditDisplay
      * @constructor
@@ -22,9 +22,19 @@ define([
      * var CreditDisplay = new CreditDisplay(creditContainer);
      */
 
-    var CreditDisplay = function(container, delimiter) {
+    var CreditDisplay = function(container, delimiter, canvas) {
         if (typeof container === 'undefined') {
-            throw new DeveloperError('credit container is required');
+            if (typeof canvas === 'undefined') {
+                throw new DeveloperError('credit container is required');
+            }
+            container = document.createElement('div');
+            container.style.position = "absolute";
+            container.style.bottom = "0";
+            container.style["text-shadow"] = "0px 0px 2px #000000";
+            container.style.color = "#ffffff";
+            container.style["font-size"] = "10pt";
+            container.style["padding-right"] = "5px";
+            canvas.parentNode.appendChild(container);
         }
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
@@ -50,7 +60,7 @@ define([
      */
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
-            if (typeof credit.image === 'undefined') {
+            if (typeof credit.getImageUrl() === 'undefined') {
                 this.defaultTextCredits.push(credit);
                 addTextCredits(this);
             } else {
@@ -68,7 +78,7 @@ define([
      */
     CreditDisplay.prototype.removeDefaultCredit = function(credit) {
         if (typeof credit !== 'undefined') {
-            if (typeof credit.image === 'undefined') {
+            if (typeof credit.getImageUrl() === 'undefined') {
                 var index = this.defaultTextCredits.indexOf(credit);
                 if (index !== -1) {
                     this.defaultTextCredits.splice(index, 1);
@@ -132,13 +142,14 @@ define([
         for (i = 0; i < credits.length; i++) {
             var credit = credits[i];
             if (typeof credit !== 'undefined') {
-                if (typeof credit.image === 'undefined'){
+                var name = credit.getName();
+                if (typeof credit.getImageUrl() === 'undefined'){
                     newText.push(credit);
-                } else if (!creditDisplay.visibleImageCredits.hasOwnProperty(credit.name) || !Credit.equals(creditDisplay.visibleImageCredits[credit.name], credit)) {
+                } else if (!creditDisplay.visibleImageCredits.hasOwnProperty(name) || !Credit.equals(creditDisplay.visibleImageCredits[name], credit)) {
                     newImages.push(credit);
-                    stillVisible[credit.name] = credit;
+                    stillVisible[name] = credit;
                 } else {
-                    stillVisible[credit.name] = credit;
+                    stillVisible[name] = credit;
                 }
             }
         }
@@ -173,28 +184,30 @@ define([
         var textCredits = creditDisplay.defaultTextCredits.concat(creditDisplay.visibleTextCredits);
         for (var i = 0; i < textCredits.length; i++) {
             var credit = textCredits[i];
+            var text = credit.getText();
+            var link = credit.getLink();
             var str;
             if (i !== 0) {
                 str = creditDisplay.delimiter;
             } else {
                 str = '';
             }
-            if (typeof credit.text !== 'undefined') {
-                str += credit.text;
+            if (typeof text !== 'undefined') {
+                str += text;
             } else {
-                str += credit.link;
+                str += link;
             }
-            var text = document.createTextNode(str);
+            var txt = document.createTextNode(str);
             var span = document.createElement('span');
-            if (typeof credit.link !== 'undefined') {
-                var link = document.createElement('a');
-                link.appendChild(text);
-                link.href = credit.link;
-                link.target = "_blank";
+            if (typeof link !== 'undefined') {
+                var a = document.createElement('a');
+                a.appendChild(txt);
+                a.href = link;
+                a.target = "_blank";
 
-                span.appendChild(link);
+                span.appendChild(a);
             } else {
-                span.appendChild(text);
+                span.appendChild(txt);
             }
             replacementContainer.appendChild(span);
         }
@@ -204,24 +217,26 @@ define([
     }
 
     function addImageCredit(credit, container) {
-        var name = credit.name;
+        var name = credit.getName();
+        var text = credit.getText();
+        var link = credit.getLink();
         var span = document.createElement('span');
         span.id = name;
         var content = document.createElement('img');
         content.className = "credit-image";
-        content.src = credit.image;
+        content.src = credit.getImageUrl();
         content.style["vertical-align"] = "bottom";
-        if (typeof credit.text !== 'undefined') {
-            content.alt = credit.text;
-            content.title = credit.text;
+        if (typeof text !== 'undefined') {
+            content.alt = text;
+            content.title = text;
         }
 
-        if (typeof credit.link !== 'undefined') {
-            var link = document.createElement('a');
-            link.appendChild(content);
-            link.href = credit.link;
-            link.target = "_blank";
-            span.appendChild(link);
+        if (typeof link !== 'undefined') {
+            var a = document.createElement('a');
+            a.appendChild(content);
+            a.href = link;
+            a.target = "_blank";
+            span.appendChild(a);
         } else {
             span.appendChild(content);
         }
@@ -231,7 +246,7 @@ define([
 
     function removeImageCredit(credit, container) {
         if (typeof credit !== 'undefined') {
-            var name = credit.name;
+            var name = credit.getName();
             if (typeof credit !== 'undefined') {
                 var span = document.getElementById(name);
                 if (typeof span !== 'undefined') {

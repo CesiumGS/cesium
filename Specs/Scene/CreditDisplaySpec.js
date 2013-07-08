@@ -21,6 +21,12 @@ defineSuite([
         document.body.removeChild(container);
     });
 
+    it('credit display throws with no container', function() {
+        expect(function() {
+            return new CreditDisplay();
+        }).toThrow();
+    });
+
     it('credit display displays text credit', function() {
         var creditDisplay = new CreditDisplay(container);
         var credits = [new Credit('credit1')];

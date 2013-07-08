@@ -5,6 +5,7 @@ define([
         'Core/defaultValue',
         'Core/JulianDate',
         'Scene/Camera',
+        'Scene/CreditDisplay',
         'Scene/FrameState'
     ], function(
         Ellipsoid,
@@ -12,12 +13,15 @@ define([
         defaultValue,
         JulianDate,
         Camera,
+        CreditDisplay,
         FrameState) {
     "use strict";
 
     var createFrameState = function(camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var frameState = new FrameState();
+        var container = document.createElement('div');
+        var creditDisplay = new CreditDisplay(container);
+        var frameState = new FrameState(creditDisplay);
 
         frameState.scene2D = {
             projection : new GeographicProjection(Ellipsoid.WGS84)

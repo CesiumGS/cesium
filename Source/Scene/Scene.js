@@ -90,11 +90,13 @@ define([
      */
     var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
-
+        var creditDisplay;
         if (typeof creditContainer !== 'undefined') {
-            this._creditDisplay = new CreditDisplay(creditContainer);
+            creditDisplay = new CreditDisplay(creditContainer);
+        } else {
+            creditDisplay= new CreditDisplay(undefined, undefined, canvas);
         }
-        this._frameState = new FrameState();
+        this._frameState = new FrameState(creditDisplay);
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;

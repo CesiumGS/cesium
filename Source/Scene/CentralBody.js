@@ -92,10 +92,9 @@ define([
      * @constructor
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] Determines the size and shape of the
-     * @param {CreditDisplay} [creditDisplay] Handles adding and removing credits from an HTML element
      * central body.
      */
-    var CentralBody = function(ellipsoid, creditDisplay) {
+    var CentralBody = function(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         var terrainProvider = new EllipsoidTerrainProvider({ellipsoid : ellipsoid});
         var imageryLayerCollection = new ImageryLayerCollection();
@@ -106,7 +105,6 @@ define([
          */
         this.terrainProvider = terrainProvider;
 
-        this._creditDisplay = creditDisplay;
         this._ellipsoid = ellipsoid;
         this._imageryLayerCollection = imageryLayerCollection;
         this._surface = new CentralBodySurface({
@@ -784,18 +782,6 @@ define([
     };
 
     function updateLogos(centralBody, context, frameState, commandList) {
-        if (typeof centralBody._creditDisplay === 'undefined') {
-            var canvasContainer = context.getCanvas().parentNode;
-            var creditContainer = document.createElement('div');
-            creditContainer.style.position = "absolute";
-            creditContainer.style.bottom = "0";
-            creditContainer.style["text-shadow"] = "0px 0px 2px #000000";
-            creditContainer.style.color = "#ffffff";
-            creditContainer.style["font-size"] = "10pt";
-            creditContainer.style["padding-right"] = "5px";
-            canvasContainer.appendChild(creditContainer);
-            centralBody._creditDisplay = new CreditDisplay(creditContainer);
-        }
         var visibleCredits = [];
         visibleCredits.push(centralBody._surface._terrainProvider.getCredit());
 
@@ -806,7 +792,7 @@ define([
                 visibleCredits.push(layer.getImageryProvider().getCredit());
             }
         }
-        centralBody._creditDisplay.showCredits(visibleCredits);
+        frameState.creditDisplay.showCredits(visibleCredits);
     }
 
     return CentralBody;

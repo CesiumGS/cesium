@@ -9,8 +9,8 @@ define([
      * A credit contains data pertaining to how to display attributions/credits for certain content on the screen.
      *
      *  @param {String} name A unique identifier for the credit
-     *  @param {String} [text=undefined] The text to be displayed on the screen if no image is specified.
-     *  @param {String} [image=undefined] The source location for an image
+     *  @param {String} [text=undefined] The text to be displayed on the screen if no imageUrl is specified.
+     *  @param {String} [imageUrl=undefined] The source location for an image
      *  @param {String} [link=undefined] A URL location for which the credit will be hyperlinked
      *
      *  @alias Credit
@@ -21,39 +21,58 @@ define([
      *  var credit = new Credit('cesium-credit', undefined, '/images/cesium_logo.png', 'http://cesium.agi.com/');
      */
 
-    var Credit = function(name, text, image, link) {
+    var Credit = function(name, text, imageUrl, link) {
         if (typeof name === 'undefined') {
-            throw new DeveloperError('Credit is required to have a name');
+            throw new DeveloperError('name is required');
         }
-        if (typeof text === 'undefined' && typeof image === 'undefined' && typeof link === 'undefined') {
+        if (typeof text === 'undefined' && typeof imageUrl === 'undefined' && typeof link === 'undefined') {
             text = name;
         }
-        /**
-         * The unique identifier for the credit.  If more than one credit has the same name, only one will be displayed.
-         *
-         * @type String
-         */
-        this.name = name;
 
-        /**
-         * The text to be displayed on screen if no image is specified.
-         * When text, image and link are <code>undefined</code>, <code>text = name</code>
-         *
-         * @type String
-         */
-        this.text = text;
+        this._name = name;
 
-        /**
-         * The source location for the image.
-         *
-         * @type String
-         */
-        this.image = image;
+        this._text = text;
 
-        /**
-         * A URL location for which the credit will be hyperlinked
-         */
-        this.link = link;
+        this._imageUrl = imageUrl;
+
+        this._link = link;
+
+    };
+
+    /**
+     * Returns the unique identifier for the credit
+     *
+     * @returns {String}
+     */
+    Credit.prototype.getName = function() {
+        return this._name;
+    };
+
+    /**
+     * Returns the credit text
+     *
+     * @returns {String}
+     */
+    Credit.prototype.getText = function() {
+        return this._text;
+    };
+
+    /**
+     * Returns the source location for the image.
+     *
+     * @returns {String}
+     */
+    Credit.prototype.getImageUrl = function() {
+        return this._imageUrl;
+    };
+
+    /**
+     * Returns a URL location for the credit hyperlink
+     *
+     * @returns {String}
+     */
+    Credit.prototype.getLink = function() {
+        return this._link;
     };
 
     /**
@@ -67,16 +86,15 @@ define([
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
-        var leftUndefied = (typeof left === 'undefined');
+        var leftUndefined = (typeof left === 'undefined');
         var rightUndefined = (typeof right === 'undefined');
-        if (leftUndefied || rightUndefined) {
-            return (leftUndefied && rightUndefined);
-        }
 
-        return (left.name === right.name &&
-                left.text === right.text &&
-                left.image === right.image &&
-                left.link === right.link);
+        return ((left === right) ||
+               ((leftUndefined && rightUndefined) ||
+               (!leftUndefined && !rightUndefined)) &&
+               ((left._text === right._text &&
+               left._imageUrl === right._imageUrl &&
+               left._link === right._link)));
     };
 
     /**

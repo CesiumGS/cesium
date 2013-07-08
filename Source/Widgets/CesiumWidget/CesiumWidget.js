@@ -142,12 +142,12 @@ define([
         scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var ellipsoid = Ellipsoid.WGS84;
-        var creditDisplay = scene.getCreditDisplay();
+        var creditDisplay = scene.getFrameState().creditDisplay;
 
         var cesiumCredit = new Credit('cesium', 'Cesium', cesiumLogoData, 'http://cesium.agi.com/');
         creditDisplay.addDefaultCredit(cesiumCredit);
 
-        var centralBody = new CentralBody(ellipsoid, creditDisplay);
+        var centralBody = new CentralBody(ellipsoid);
         scene.getPrimitives().setCentralBody(centralBody);
 
         scene.skyBox = new SkyBox({
@@ -192,7 +192,8 @@ define([
         this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
-        this._creditContainer = creditContainer;        this._canRender = false;
+        this._creditContainer = creditContainer;
+        this._canRender = false;
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
                 this._transitioner.to2D();
