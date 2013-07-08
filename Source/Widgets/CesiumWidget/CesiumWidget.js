@@ -185,7 +185,8 @@ define([
         this._container = container;
         this._canvas = canvas;
         this._canvasWidth = canvas.width;
-        this._canvasHeight = canvas.height;        this._scene = scene;
+        this._canvasHeight = canvas.height;
+        this._scene = scene;
         this._centralBody = centralBody;
         this._clock = defaultValue(options.clock, new Clock());
         this._transitioner = new SceneTransitioner(scene, ellipsoid);

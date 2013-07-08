@@ -217,14 +217,6 @@ define([
      * DOC_TBA
      * @memberof Scene
      */
-    Scene.prototype.getCreditDisplay = function() {
-        return this._creditDisplay;
-    };
-
-    /**
-     * DOC_TBA
-     * @memberof Scene
-     */
     Scene.prototype.getPrimitives = function() {
         return this._primitives;
     };
