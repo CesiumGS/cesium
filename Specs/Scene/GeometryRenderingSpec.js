@@ -688,4 +688,97 @@ defineSuite([
         });
     });
 
+    describe('Custom geometry', function() {
+        describe('with indices', function() {
+            var instance;
+            beforeAll(function() {
+                instance = new GeometryInstance({
+                    geometry : new Geometry({
+                        attributes : {
+                            position : new GeometryAttribute({
+                                 componentDatatype : ComponentDatatype.DOUBLE,
+                                 componentsPerAttribute : 3,
+                                 values : new Float64Array([
+                                     7000000.0, 0.0, 0.0,
+                                     7000000.0, 1000000.0, 0.0,
+                                     7000000.0, 0.0, 1000000.0,
+                                     7000000.0, 1000000.0, 1000000.0
+                                 ])
+                            })
+                        },
+                        indices : new Uint16Array([0, 1, 2, 2, 1, 3]),
+                        primitiveType : PrimitiveType.TRIANGLES
+                    }),
+                    id : 'customWithIndices',
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                    }
+                });
+                instance.geometry.boundingSphere = BoundingSphere.fromVertices(instance.geometry.attributes.position.values);
+            });
+
+            it('3D', function() {
+                render3D(instance);
+            });
+
+            it('Columbus view', function() {
+                renderCV(instance);
+            });
+
+            it('2D', function() {
+                render2D(instance);
+            });
+
+            it('pick', function() {
+                pickGeometry(instance);
+            });
+        });
+
+        describe('without indices', function() {
+            var instance;
+            beforeAll(function() {
+                instance = new GeometryInstance({
+                    geometry : new Geometry({
+                        attributes : {
+                            position : new GeometryAttribute({
+                                 componentDatatype : ComponentDatatype.DOUBLE,
+                                 componentsPerAttribute : 3,
+                                 values : new Float64Array([
+                                     7000000.0, 0.0, 0.0,
+                                     7000000.0, 1000000.0, 0.0,
+                                     7000000.0, 0.0, 1000000.0,
+                                     7000000.0, 0.0, 1000000.0,
+                                     7000000.0, 1000000.0, 0.0,
+                                     7000000.0, 1000000.0, 1000000.0
+                                 ])
+                            })
+                        },
+                        primitiveType : PrimitiveType.TRIANGLES
+                    }),
+                    id : 'customWithIndices',
+                    attributes : {
+                        color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                    }
+                });
+                instance.geometry.boundingSphere = BoundingSphere.fromVertices(instance.geometry.attributes.position.values);
+            });
+
+            it('3D', function() {
+                render3D(instance);
+            });
+
+            it('Columbus view', function() {
+                renderCV(instance);
+            });
+
+            it('2D', function() {
+                render2D(instance);
+            });
+
+            it('pick', function() {
+                pickGeometry(instance);
+            });
+        });
+    });
+
 });
