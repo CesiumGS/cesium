@@ -89,9 +89,11 @@ define([
         this.list.length = 0;
     };
 
+    var scratch1 = new Cartesian2();
+    var scratch2 = new Cartesian2();
     function isTipConvex(p0, p1, p2) {
-        var u = p1.subtract(p0);
-        var v = p2.subtract(p1);
+        var u = p1.subtract(p0, scratch1);
+        var v = p2.subtract(p1, scratch2);
 
         // Use the sign of the z component of the cross product
         return ((u.x * v.y) - (u.y * v.x)) > 0.0;
