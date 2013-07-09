@@ -18,6 +18,7 @@ define([
         '../Core/EllipsoidGeometry',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -32,7 +33,7 @@ define([
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
         './Primitive',
-        './Appearance',
+        './PerInstanceColorAppearance',
         './SunPostProcess'
     ], function(
         CesiumMath,
@@ -53,6 +54,7 @@ define([
         EllipsoidGeometry,
         GeometryInstance,
         GeometryPipeline,
+        ColorGeometryInstanceAttribute,
         Context,
         ClearCommand,
         PassState,
@@ -67,7 +69,7 @@ define([
         PerspectiveOffCenterFrustum,
         FrustumCommands,
         Primitive,
-        Appearance,
+        PerInstanceColorAppearance,
         SunPostProcess) {
     "use strict";
 
@@ -476,13 +478,21 @@ define([
             // Assumes bounding volume is a bounding sphere.
 
             if (typeof scene._debugSphere === 'undefined') {
-                var geometry = new EllipsoidGeometry(Ellipsoid.UNIT_SPHERE, 20);
+                var geometry = new EllipsoidGeometry({
+                    ellipsoid : Ellipsoid.UNIT_SPHERE,
+                    numberOfPartitions : 20,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                });
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
-                        geometry : GeometryPipeline.toWireframe(geometry)
+                        geometry : GeometryPipeline.toWireframe(geometry),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
                     }),
-                    appearance : new Appearance({
-                        closed : true
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
                     })
                 });
             }
