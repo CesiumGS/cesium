@@ -19,9 +19,7 @@ define([
 
     var createFrameState = function(camera, frameNumber, time) {
         // Mock frame-state for testing.
-        var container = document.createElement('div');
-        var creditDisplay = new CreditDisplay(container);
-        var frameState = new FrameState(creditDisplay);
+        var frameState = new FrameState(new CreditDisplay(document.createElement('div')));
 
         frameState.scene2D = {
             projection : new GeographicProjection(Ellipsoid.WGS84)

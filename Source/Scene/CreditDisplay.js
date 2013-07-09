@@ -22,19 +22,9 @@ define([
      * var CreditDisplay = new CreditDisplay(creditContainer);
      */
 
-    var CreditDisplay = function(container, delimiter, canvas) {
+    var CreditDisplay = function(container, delimiter) {
         if (typeof container === 'undefined') {
-            if (typeof canvas === 'undefined') {
-                throw new DeveloperError('credit container is required');
-            }
-            container = document.createElement('div');
-            container.style.position = "absolute";
-            container.style.bottom = "0";
-            container.style["text-shadow"] = "0px 0px 2px #000000";
-            container.style.color = "#ffffff";
-            container.style["font-size"] = "10pt";
-            container.style["padding-right"] = "5px";
-            canvas.parentNode.appendChild(container);
+            throw new DeveloperError('credit container is required');
         }
         var imageContainer = document.createElement('span');
         var textContainer = document.createElement('span');
@@ -46,10 +36,33 @@ define([
         this.textContainer = textContainer;
         this.imageContainer = imageContainer;
         this.defaultImageCredits = [];
-        this.visibleImageCredits = [];
         this.defaultTextCredits = [];
-        this.visibleTextCredits = [];
-        this.previousCredits = [];
+
+        this.displayedCredits = {
+                imageCredits: [],
+                textCredits: []
+        };
+        this.currentFrameCredits = {
+                imageCredits: [],
+                textCredits: []
+        };
+    };
+
+    /**
+     * Adds a credit to the list of current credits to be displayed in the in the credit container
+     *
+     * @memberof CreditDisplay
+     *
+     * @param {Credit} credit The credit to display
+     */
+    CreditDisplay.prototype.addCredit = function(credit) {
+        if (typeof credit !== 'undefined') {
+            if (typeof credit.getImageUrl() !== 'undefined') {
+                this.currentFrameCredits.imageCredits.push(credit);
+            } else {
+                this.currentFrameCredits.textCredits.push(credit);
+            }
+        }
     };
 
     /**
@@ -63,10 +76,10 @@ define([
         if (typeof credit !== 'undefined') {
             if (typeof credit.getImageUrl() === 'undefined') {
                 this.defaultTextCredits.push(credit);
-                addTextCredits(this);
+                this.currentFrameCredits.imageCredits.push(credit);
             } else {
                 this.defaultImageCredits.push(credit);
-                addImageCredits(this);
+                this.currentFrameCredits.textCredits.push(credit);
             }
         }
     };
@@ -85,42 +98,137 @@ define([
                 index = this.defaultTextCredits.indexOf(credit);
                 if (index !== -1) {
                     this.defaultTextCredits.splice(index, 1);
-                    addTextCredits(this);
                 }
             } else {
                 index = this.defaultImageCredits.indexOf(credit);
                 if (index !== -1) {
                     this.defaultImageCredits.splice(index, 1);
-                    addImageCredits(this);
                 }
             }
         }
     };
 
     /**
-     * Displays all credits in a list to the credit container
+     * Resets the credit display to a beginning of frame state, clearing out current credits.
      *
      * @memberof CreditDisplay
      *
-     * @param Array {Credit} credits The credits to display
+     * @param {Credit} credit The credit to display
      */
-    CreditDisplay.prototype.showCredits = function(credits) {
-        if (typeof credits !== 'undefined') {
-            var previousCredits = this.previousCredits;
-            if (previousCredits.length !== credits.length) {
-                processCredits(this, credits);
-                this.previousCredits = credits;
+    CreditDisplay.prototype.beginFrame = function() {
+        this.currentFrameCredits.imageCredits = this.defaultImageCredits.slice(0);
+        this.currentFrameCredits.textCredits = this.defaultTextCredits.slice(0);
+    };
+
+    /**
+     * Sets the credit display to the end of frame state, displaying current credits in the credit container
+     *
+     * @memberof CreditDisplay
+     *
+     * @param {Credit} credit The credit to display
+     */
+    CreditDisplay.prototype.endFrame = function() {
+        var credit;
+        var displayedTextCredits = this.displayedCredits.textCredits;
+        var displayedImageCredits = this.displayedCredits.imageCredits;
+        var textCredits = removeDuplicates(this.currentFrameCredits.textCredits);
+        var imageCredits = removeDuplicates(this.currentFrameCredits.imageCredits);
+        var i;
+        var index;
+        for(i = 0; i < textCredits.length; i++) {
+            credit = textCredits[i];
+            index = displayedTextCredits.indexOf(credit);
+            if (index === -1) {
+                displayTextCredit(credit, this.textContainer, this.delimiter);
             } else {
-                for (var i = 0; i < credits.length; i++) {
-                    if (!Credit.equals(credits[i], this.previousCredits[i])) {
-                        processCredits(this, credits);
-                        this.previousCredits = credits;
-                        break;
-                    }
-                }
+                displayedTextCredits.splice(index, 1);
             }
         }
+        for (i = 0; i < displayedTextCredits.length; i++) {
+            credit = displayedTextCredits[i];
+            hideCredit(credit, true);
+        }
+
+        for(i = 0; i < imageCredits.length; i++) {
+            credit = imageCredits[i];
+            index = displayedImageCredits.indexOf(credit);
+            if (index === -1) {
+                displayImageCredit(credit, this.imageContainer);
+            } else {
+                displayedImageCredits.splice(index, 1);
+            }
+        }
+        for (i = 0; i < displayedImageCredits.length; i++) {
+            credit = displayedImageCredits[i];
+            hideCredit(credit, false);
+        }
+
+        this.displayedCredits.textCredits = textCredits;
+        this.displayedCredits.imageCredits = imageCredits;
     };
+
+
+
+    function displayTextCredit(credit, container, delimiter) {
+        if (typeof credit.element === 'undefined') {
+            var text = credit.getText();
+            var link = credit.getLink();
+            var txt;
+            if (typeof text !== 'undefined') {
+                txt = document.createTextNode(text);
+            } else {
+                txt = document.createTextNode(link);
+            }
+            var span = document.createElement('span');
+            if (typeof link !== 'undefined') {
+                var a = document.createElement('a');
+                a.appendChild(txt);
+                a.href = link;
+                a.target = "_blank";
+                span.appendChild(a);
+            } else {
+                span.appendChild(txt);
+            }
+            span.className = "cesium-credit-text";
+            credit.element = span;
+        }
+        if (container.hasChildNodes()) {
+            var del = document.createTextNode(delimiter);
+            var delSpan = document.createElement('span');
+            delSpan.appendChild(del);
+            delSpan.className = "cesium-credit-delimiter";
+            container.appendChild(delSpan);
+        }
+        container.appendChild(credit.element);
+    }
+
+    function displayImageCredit(credit, container) {
+        if (typeof credit.element === 'undefined') {
+            var text = credit.getText();
+            var link = credit.getLink();
+            var span = document.createElement('span');
+            var content = document.createElement('img');
+            content.src = credit.getImageUrl();
+            content.style["vertical-align"] = "bottom";
+            if (typeof text !== 'undefined') {
+                content.alt = text;
+                content.title = text;
+            }
+
+            if (typeof link !== 'undefined') {
+                var a = document.createElement('a');
+                a.appendChild(content);
+                a.href = link;
+                a.target = "_blank";
+                span.appendChild(a);
+            } else {
+                span.appendChild(content);
+            }
+            span.className = "cesium-credit-image";
+            credit.element = span;
+        }
+        container.appendChild(credit.element);
+    }
 
     function removeDuplicates(credits) {
         var cleanedCredits = [];
@@ -139,99 +247,20 @@ define([
         return cleanedCredits;
     }
 
-    function processCredits(creditDisplay, credits) {
-        var newImages = [];
-        var newText = [];
-        var i;
-
-        credits = removeDuplicates(credits);
-        for (i = 0; i < credits.length; i++) {
-            var credit = credits[i];
-            if (typeof credit !== 'undefined') {
-                if (typeof credit.getImageUrl() === 'undefined'){
-                    newText.push(credit);
-                } else {
-                    newImages.push(credit);
+    function hideCredit(credit, isText) {
+        var element = credit.element;
+        if (typeof element !== 'undefined') {
+            var container = element.parentNode;
+            if (isText) {
+                var delimiter = element.previousSibling;
+                if (delimiter === null) {
+                    delimiter = element.nextSibling;
+                }
+                if (delimiter !== null) {
+                    container.removeChild(delimiter);
                 }
             }
-        }
-
-        creditDisplay.visibleImageCredits = newImages;
-        addImageCredits(creditDisplay);
-
-        creditDisplay.visibleTextCredits = newText;
-        addTextCredits(creditDisplay);
-    }
-
-    function addTextCredits(creditDisplay) {
-        var container = creditDisplay.textContainer;
-        var replacementContainer = document.createElement('span');
-        var textCredits = creditDisplay.defaultTextCredits.concat(creditDisplay.visibleTextCredits);
-        for (var i = 0; i < textCredits.length; i++) {
-            var credit = textCredits[i];
-            var text = credit.getText();
-            var link = credit.getLink();
-            var str;
-            if (i !== 0) {
-                str = creditDisplay.delimiter;
-            } else {
-                str = '';
-            }
-            if (typeof text !== 'undefined') {
-                str += text;
-            } else {
-                str += link;
-            }
-            var txt = document.createTextNode(str);
-            var span = document.createElement('span');
-            if (typeof link !== 'undefined') {
-                var a = document.createElement('a');
-                a.appendChild(txt);
-                a.href = link;
-                a.target = "_blank";
-
-                span.appendChild(a);
-            } else {
-                span.appendChild(txt);
-            }
-            replacementContainer.appendChild(span);
-        }
-        if (container.innerHTML !== replacementContainer.innerHTML) {
-            container.innerHTML = replacementContainer.innerHTML;
-        }
-    }
-
-    function addImageCredits(creditDisplay) {
-        var container = creditDisplay.imageContainer;
-        var replacementContainer = document.createElement('span');
-        var imageCredits = creditDisplay.defaultImageCredits.concat(creditDisplay.visibleImageCredits);
-        for (var i = 0; i < imageCredits.length; i++) {
-            var credit = imageCredits[i];
-            var text = credit.getText();
-            var link = credit.getLink();
-            var span = document.createElement('span');
-            var content = document.createElement('img');
-            content.className = "credit-image";
-            content.src = credit.getImageUrl();
-            content.style["vertical-align"] = "bottom";
-            if (typeof text !== 'undefined') {
-                content.alt = text;
-                content.title = text;
-            }
-
-            if (typeof link !== 'undefined') {
-                var a = document.createElement('a');
-                a.appendChild(content);
-                a.href = link;
-                a.target = "_blank";
-                span.appendChild(a);
-            } else {
-                span.appendChild(content);
-            }
-            replacementContainer.appendChild(span);
-        }
-        if (container.innerHTML !== replacementContainer.innerHTML) {
-            container.innerHTML = replacementContainer.innerHTML;
+            container.removeChild(element);
         }
     }
 

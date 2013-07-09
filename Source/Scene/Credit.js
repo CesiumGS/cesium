@@ -16,8 +16,8 @@ define([
      *  @constructor
      *
      *  @example
-     *  //Create a credit with an image and link
-     *  var credit = new Credit('cesium-credit', undefined, '/images/cesium_logo.png', 'http://cesium.agi.com/');
+     *  //Create a credit with a tooltip, image and link
+     *  var credit = new Credit('Cesium', '/images/cesium_logo.png', 'http://cesium.agi.com/');
      */
 
     var Credit = function(text, imageUrl, link) {
@@ -30,7 +30,6 @@ define([
         this._imageUrl = imageUrl;
 
         this._link = link;
-
     };
 
     /**
@@ -87,7 +86,7 @@ define([
      *
      * @memberof Credit
      *
-     * @param Array {Credit} credits The credits to display
+     * @param {Credit} credits The credit to compare to.
      *
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */

@@ -782,17 +782,16 @@ define([
     };
 
     function updateLogos(centralBody, context, frameState, commandList) {
-        var visibleCredits = [];
-        visibleCredits.push(centralBody._surface._terrainProvider.getCredit());
+        var creditDisplay = frameState.creditDisplay;
+        creditDisplay.addCredit(centralBody._surface._terrainProvider.getCredit());
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                visibleCredits.push(layer.getImageryProvider().getCredit());
+                creditDisplay.addCredit(layer.getImageryProvider().getCredit());
             }
         }
-        frameState.creditDisplay.showCredits(visibleCredits);
     }
 
     return CentralBody;

@@ -94,7 +94,15 @@ define([
         if (typeof creditContainer !== 'undefined') {
             creditDisplay = new CreditDisplay(creditContainer);
         } else {
-            creditDisplay= new CreditDisplay(undefined, undefined, canvas);
+            var creditDiv = document.createElement('div');
+            creditDiv.style.position = "absolute";
+            creditDiv.style.bottom = "0";
+            creditDiv.style["text-shadow"] = "0px 0px 2px #000000";
+            creditDiv.style.color = "#ffffff";
+            creditDiv.style["font-size"] = "10pt";
+            creditDiv.style["padding-right"] = "5px";
+            canvas.parentNode.appendChild(creditDiv);
+            creditDisplay = new CreditDisplay(creditDiv);
         }
         this._frameState = new FrameState(creditDisplay);
         this._passState = new PassState(context);
@@ -559,6 +567,7 @@ define([
         updateFrameState(this, frameNumber, time);
         frameState.passes.color = true;
         frameState.passes.overlay = true;
+        frameState.creditDisplay.beginFrame();
 
         us.update(frameState);
 
@@ -572,6 +581,7 @@ define([
         var passState = this._passState;
         executeCommands(this, passState);
         executeOverlayCommands(this, passState);
+        frameState.creditDisplay.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();

@@ -15,7 +15,7 @@ define([
         var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState(new CreditDisplay(undefined, undefined, context.getCanvas()))).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')))).passes;
         frameState.passes.pick = true;
 
         var commandLists = [];
