@@ -56,41 +56,48 @@ define([
          * The default amount to move the camera when an argument is not
          * provided to the move methods.
          * @type {Number}
+         * @default 100000.0;
          */
         this.defaultMoveAmount = 100000.0;
         /**
          * The default amount to rotate the camera when an argument is not
          * provided to the look methods.
          * @type {Number}
+         * @default Math.PI / 60.0
          */
         this.defaultLookAmount = Math.PI / 60.0;
         /**
          * The default amount to rotate the camera when an argument is not
          * provided to the rotate methods.
          * @type {Number}
+         * @default Math.PI / 3600.0
          */
         this.defaultRotateAmount = Math.PI / 3600.0;
         /**
          * The default amount to move the camera when an argument is not
          * provided to the zoom methods.
          * @type {Number}
+         * @default 100000.0;
          */
         this.defaultZoomAmount = 100000.0;
         /**
          * If set, the camera will not be able to rotate past this axis in either direction.
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default undefined
          */
         this.constrainedAxis = undefined;
         /**
          * The factor multiplied by the the map size used to determine where to clamp the camera position
          * when translating across the surface. The default is 1.5. Only valid for 2D and Columbus view.
-         * @type Number
+         * @type {Number}
+         * @default 1.5
          */
         this.maximumTranslateFactor = 1.5;
         /**
          * The factor multiplied by the the map size used to determine where to clamp the camera position
          * when zooming out from the surface. The default is 2.5. Only valid for 2D.
-         * @type Number
+         * @type {Number}
+         * @default 2.5
          */
         this.maximumZoomFactor = 2.5;
 
@@ -883,8 +890,8 @@ define([
         if (!positionOnly) {
             var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
             Cartesian3.negate(direction, direction);
-            var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.cross(right, direction, camera.up);
+            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
 
         return result;
@@ -940,8 +947,10 @@ define([
             frustum.top = top;
             frustum.bottom = -top;
 
-            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.cross(cameraRight, camera.direction, camera.up);
+            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+            Cartesian3.negate(direction, direction);
+            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
 
         return result;

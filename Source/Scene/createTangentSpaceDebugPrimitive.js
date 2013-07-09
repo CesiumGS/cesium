@@ -1,14 +1,14 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
-        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         './Primitive',
         './PerInstanceColorAppearance'
     ], function(
         DeveloperError,
-        Color,
+        ColorGeometryInstanceAttribute,
         GeometryInstance,
         GeometryPipeline,
         Primitive,
@@ -20,6 +20,8 @@ define([
      * <code>normal</code>, <code>binormal</code>, and <code>tangent</code>.  Normal
      * is red; binormal is green; and tangent is blue.  If an attribute is not
      * present, it is not drawn.
+     *
+     * @exports createTangentSpaceDebugPrimitive
      *
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
      * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
@@ -53,7 +55,9 @@ define([
         if (typeof attributes.normal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', length),
-              color : new Color(1.0, 0.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -61,7 +65,9 @@ define([
         if (typeof attributes.binormal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
-              color : new Color(0.0, 1.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -69,7 +75,9 @@ define([
         if (typeof attributes.tangent !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
-              color : new Color(0.0, 0.0, 1.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }

@@ -57,19 +57,19 @@ define([
 
         /**
          * Gets the display name.  This property is observable.
-         * @type String
+         * @type {String}
          */
         this.name = description.name;
 
         /**
          * Gets the tooltip.  This property is observable.
-         * @type String
+         * @type {String}
          */
         this.tooltip = description.tooltip;
 
         /**
          * Gets the icon.  This property is observable.
-         * @type String
+         * @type {String}
          */
         this.iconUrl = description.iconUrl;
 
@@ -82,7 +82,7 @@ define([
          * imagery providers to be added to the bottom of the layer collection.
          * @memberof ImageryProviderViewModel.prototype
          *
-         * @type Command
+         * @type {Command}
          */
         creationCommand : {
             get : function() {

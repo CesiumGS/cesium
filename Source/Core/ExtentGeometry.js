@@ -15,6 +15,7 @@ define([
         './GeometryPipeline',
         './GeographicProjection',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix2',
         './PrimitiveType',
@@ -35,6 +36,7 @@ define([
         GeometryPipeline,
         GeographicProjection,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix2,
         PrimitiveType,
@@ -112,72 +114,6 @@ define([
         }
     }
 
-    function constructExtent(options, vertexFormat, params){
-        var extent = params.extent;
-        var ellipsoid = params.ellipsoid;
-        var size = params.size;
-        var height = params.height;
-        var width = params.width;
-        var surfaceHeight = params.surfaceHeight;
-
-        var stIndex = 0;
-
-        var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
-        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
-
-        var posIndex = 0;
-        for ( var row = 0; row < height; ++row) {
-            for ( var col = 0; col < width; ++col) {
-                computePosition(params, row, col, surfaceHeight);
-
-                positions[posIndex++] = position.x;
-                positions[posIndex++] = position.y;
-                positions[posIndex++] = position.z;
-
-                if (vertexFormat.st) {
-                    textureCoordinates[stIndex++] = (stLongitude - extent.west) * params.lonScalar;
-                    textureCoordinates[stIndex++] = (stLatitude - extent.south) * params.latScalar;
-                }
-            }
-        }
-
-        var geo = calculateAttributesTopBottom(positions, vertexFormat, ellipsoid, true, false);
-
-        var indicesSize = 6 * (width - 1) * (height - 1);
-        var indices = IndexDatatype.createTypedArray(size, indicesSize);
-        var index = 0;
-        var indicesIndex = 0;
-        for ( var i = 0; i < height - 1; ++i) {
-            for ( var j = 0; j < width - 1; ++j) {
-                var upperLeft = index;
-                var lowerLeft = upperLeft + width;
-                var lowerRight = lowerLeft + 1;
-                var upperRight = upperLeft + 1;
-                indices[indicesIndex++] = upperLeft;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = upperRight;
-                indices[indicesIndex++] = lowerLeft;
-                indices[indicesIndex++] = lowerRight;
-                ++index;
-            }
-            ++index;
-        }
-
-        geo.indices = indices;
-        if (vertexFormat.st) {
-            geo.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : textureCoordinates
-                });
-        }
-
-        return {
-                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
-                geometry: geo
-        };
-    }
 
     function createAttributes(vertexFormat, attributes) {
         var geo = new Geometry ({
@@ -383,6 +319,74 @@ define([
         return wallPositions;
     }
 
+    function constructExtent(options, vertexFormat, params){
+        var extent = params.extent;
+        var ellipsoid = params.ellipsoid;
+        var size = params.size;
+        var height = params.height;
+        var width = params.width;
+        var surfaceHeight = params.surfaceHeight;
+
+        var stIndex = 0;
+
+        var positions = (vertexFormat.position) ? new Float64Array(size * 3) : undefined;
+        var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+
+        var posIndex = 0;
+        for ( var row = 0; row < height; ++row) {
+            for ( var col = 0; col < width; ++col) {
+                computePosition(params, row, col, surfaceHeight);
+
+                positions[posIndex++] = position.x;
+                positions[posIndex++] = position.y;
+                positions[posIndex++] = position.z;
+
+                if (vertexFormat.st) {
+                    textureCoordinates[stIndex++] = (stLongitude - extent.west) * params.lonScalar;
+                    textureCoordinates[stIndex++] = (stLatitude - extent.south) * params.latScalar;
+                }
+            }
+        }
+
+        var geo = calculateAttributesTopBottom(positions, vertexFormat, ellipsoid, true, false);
+
+        var indicesSize = 6 * (width - 1) * (height - 1);
+        var indices = IndexDatatype.createTypedArray(size, indicesSize);
+        var index = 0;
+        var indicesIndex = 0;
+        for ( var i = 0; i < height - 1; ++i) {
+            for ( var j = 0; j < width - 1; ++j) {
+                var upperLeft = index;
+                var lowerLeft = upperLeft + width;
+                var lowerRight = lowerLeft + 1;
+                var upperRight = upperLeft + 1;
+                indices[indicesIndex++] = upperLeft;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = upperRight;
+                indices[indicesIndex++] = lowerLeft;
+                indices[indicesIndex++] = lowerRight;
+                ++index;
+            }
+            ++index;
+        }
+
+        geo.indices = indices;
+        if (vertexFormat.st) {
+            geo.attributes.st = new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : textureCoordinates
+                });
+        }
+
+        return {
+                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+                geometry: geo
+        };
+    }
+
+
     function constructExtrudedExtent(options, vertexFormat, params) {
         var surfaceHeight = params.surfaceHeight;
         var height = params.height;
@@ -587,7 +591,7 @@ define([
     }
 
     /**
-     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor
@@ -674,7 +678,6 @@ define([
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
         var size = width * height;
 
         var params = {
@@ -708,14 +711,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
-        this.attributes = geometry.attributes;
+        this.attributes = new GeometryAttributes(geometry.attributes);
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

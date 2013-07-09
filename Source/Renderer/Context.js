@@ -2372,11 +2372,12 @@ define([
 
         var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
         var interleave = (typeof ca.vertexLayout !== 'undefined') && (ca.vertexLayout === VertexLayout.INTERLEAVED);
+        var createdVAAttributes = ca.vertexArrayAttributes;
 
         var name;
         var attribute;
         var vertexBuffer;
-        var vaAttributes = [];
+        var vaAttributes = (typeof createdVAAttributes !== 'undefined') ? createdVAAttributes : [];
         var attributes = geometry.attributes;
 
         if (interleave) {
@@ -2417,7 +2418,7 @@ define([
         } else {
             // One vertex buffer per attribute.
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
+                if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;

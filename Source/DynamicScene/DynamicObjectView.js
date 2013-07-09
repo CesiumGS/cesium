@@ -249,20 +249,20 @@ define([
     var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
         /**
          * The object to track with the camera.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.dynamicObject = dynamicObject;
 
         /**
          * The scene in which to track the object.
-         * @type Scene
+         * @type {Scene}
          */
         this.scene = scene;
         this._lastScene = undefined;
 
         /**
          * The ellipsoid to use for orienting the camera.
-         * @type Ellipsoid
+         * @type {Ellipsoid}
          */
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 

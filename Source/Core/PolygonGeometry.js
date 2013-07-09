@@ -11,6 +11,7 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './GeometryAttribute',
+        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
         './IndexDatatype',
@@ -34,6 +35,7 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         GeometryAttribute,
+        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
@@ -76,10 +78,6 @@ define([
             }
         }
 
-        if (typeof result === 'undefined') {
-            result = new BoundingRectangle();
-        }
-
         result.x = minX;
         result.y = minY;
         result.width = maxX - minX;
@@ -89,7 +87,7 @@ define([
 
     var createGeometryFromPositionsPositions = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
@@ -123,7 +121,7 @@ define([
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
     /**
-     * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
+     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
      * by an array of Cartesian points, or a polygon hierarchy.
      *
      * @alias PolygonGeometry
@@ -213,7 +211,7 @@ define([
             outerPositions = positions;
 
             boundingSphere = BoundingSphere.fromPoints(positions);
-            geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+            geometry = createGeometryFromPositions(ellipsoid, positions, granularity);
             if (typeof geometry !== 'undefined') {
                 geometries.push(geometry);
             }
@@ -266,7 +264,7 @@ define([
             boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygonHierarchy.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], boundingSphere, granularity);
+                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], granularity);
                 if (typeof geometry !== 'undefined') {
                     geometries.push(geometry);
                 }
@@ -278,7 +276,12 @@ define([
         geometry = GeometryPipeline.combine(geometries);
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
-        var attributes = {};
+        var center = boundingSphere.center;
+        var mag = center.magnitude();
+        ellipsoid.geodeticSurfaceNormal(center, center);
+        Cartesian3.multiplyByScalar(center, mag + height, center);
+
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -408,14 +411,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

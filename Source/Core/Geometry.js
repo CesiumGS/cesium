@@ -93,7 +93,7 @@ define([
          * </ul>
          * </p>
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @default undefined
          *
@@ -178,7 +178,7 @@ define([
         var attributes = geometry.attributes;
         var newAttributes = {};
         for (var property in attributes) {
-            if (attributes.hasOwnProperty(property)) {
+            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
                 newAttributes[property] = attributes[property].clone();
             }
         }
@@ -218,7 +218,10 @@ define([
 
         var numberOfVertices = -1;
         for ( var property in geometry.attributes) {
-            if (geometry.attributes.hasOwnProperty(property) && geometry.attributes[property].values) {
+            if (geometry.attributes.hasOwnProperty(property) &&
+                    typeof geometry.attributes[property] !== 'undefined' &&
+                    typeof geometry.attributes[property].values !== 'undefined') {
+
                 var attribute = geometry.attributes[property];
                 var num = attribute.values.length / attribute.componentsPerAttribute;
                 if ((numberOfVertices !== num) && (numberOfVertices !== -1)) {

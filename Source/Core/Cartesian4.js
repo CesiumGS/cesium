@@ -25,25 +25,29 @@ define([
     var Cartesian4 = function(x, y, z, w) {
         /**
          * The X component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.z = defaultValue(z, 0.0);
 
         /**
          * The W component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.w = defaultValue(w, 0.0);
     };

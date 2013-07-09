@@ -162,7 +162,7 @@ define([
 
     /**
      * Creates a new {@link Geometry} with <code>LINES</code> representing the provided
-     * attribute (<code>attributeName</code>) for the provided geometry.  This is used
+     * attribute (<code>attributeName</code>) for the provided geometry.  This is used to
      * visualize vector attributes like normals, binormals, and tangents.
      *
      * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
@@ -176,7 +176,7 @@ define([
      * @exception {DeveloperError} geometry.attributes must have an attribute with the same name as the attributeName parameter.
      *
      * @example
-     * var geometry = GeometryPipeline.createLineSegmentsForVectors(geometry2.geometry, 'binormal', 100000.0),
+     * var geometry = GeometryPipeline.createLineSegmentsForVectors(instance.geometry, 'binormal', 100000.0),
      */
     GeometryPipeline.createLineSegmentsForVectors = function(geometry, attributeName, length) {
         if (typeof geometry === 'undefined') {
@@ -349,9 +349,6 @@ define([
                     indicesOut[intoIndicesOut] = tempIndex;
                 } else {
                     tempIndex = indicesIn[intoIndicesIn];
-                    if (tempIndex >= numVertices) {
-                        throw new DeveloperError('Each attribute array in geometry.attributes must have the same number of attributes.');
-                    }
                     indexCrossReferenceOldToNew[tempIndex] = nextIndex;
 
                     indicesOut[intoIndicesOut] = nextIndex;
@@ -758,7 +755,7 @@ define([
 
         if (modelMatrix.equals(Matrix4.IDENTITY)) {
             // Already in world coordinates
-            return;
+            return instance;
         }
 
         var attributes = instance.geometry.attributes;
@@ -1806,7 +1803,19 @@ define([
     }
 
     /**
-     * DOC_TBA
+     * Splits the geometry's primitives, by introducing new vertices and indices,that
+     * intersect the International Date Line so that no primitives cross longitude
+     * -180/180 degrees.  This is not required for 3D drawing, but is required for
+     * correcting drawing in 2D and Columbus view.
+     *
+     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     *
+     * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
+     *
+     * @exception {DeveloperError} geometry is required.
+     *
+     * @example
+     * geometry = GeometryPipeline.wrapLongitude(geometry);
      */
     GeometryPipeline.wrapLongitude = function(geometry) {
         if (typeof geometry === 'undefined') {

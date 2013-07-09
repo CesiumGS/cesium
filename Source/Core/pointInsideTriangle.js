@@ -12,16 +12,26 @@ define([
     var coords = new Cartesian3();
 
     /**
-     * DOC_TBA
-     *
-     * @param point
-     * @param p0
-     * @param p1
-     * @param p2
+     * Determines if a 2D point is inside a triangle.
      *
      * @exports pointInsideTriangle
      *
+     * @param {Cartesian2} point The point to test.
+     * @param {Cartesian2} p0 The first point of the triangle.
+     * @param {Cartesian2} p1 The second point of the triangle.
+     * @param {Cartesian2} p2 The third point of the triangle.
+     *
+     * @return {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
+     *
      * @exception {DeveloperError} point, p0, p1, and p2 are required.
+     *
+     * @example
+     * // Returns true
+     * var p = new Cartesian2(0.25, 0.25);
+     * var b = pointInsideTriangle(p,
+     *   new Cartesian2(0.0, 0.0),
+     *   new Cartesian2(1.0, 0.0),
+     *   new Cartesian2(0.0, 1.0));
      */
     var pointInsideTriangle = function(point, p0, p1, p2) {
         barycentricCoordinates(point, p0, p1, p2, coords);

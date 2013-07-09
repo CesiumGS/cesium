@@ -62,6 +62,16 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws when semiMajorAxis is less than the semiMajorAxis', function() {
+        expect(function() {
+            return new EllipseGeometry({
+                center : Ellipsoid.WGS84.cartographicToCartesian(new Cartographic()),
+                semiMajorAxis : 1.0,
+                semiMinorAxis : 2.0
+            });
+        }).toThrow();
+    });
+
     it('computes positions', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var m = new EllipseGeometry({
