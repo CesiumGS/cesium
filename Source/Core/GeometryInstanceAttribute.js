@@ -16,6 +16,11 @@ define([
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
      * @param {Array} [options.value=undefined] The value for the attribute.
      *
+     * @exception {DeveloperError} options.componentDatatype is required.
+     * @exception {DeveloperError} options.componentsPerAttribute is required.
+     * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
+     * @exception {DeveloperError} options.value is required.
+     *
      * @example
      * var instance = new GeometryInstance({
      *   geometry : new BoxGeometry({
@@ -39,6 +44,22 @@ define([
      */
     var GeometryInstanceAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.componentDatatype === 'undefined') {
+            throw new DeveloperError('options.componentDatatype is required.');
+        }
+
+        if (typeof options.componentsPerAttribute === 'undefined') {
+            throw new DeveloperError('options.componentsPerAttribute is required.');
+        }
+
+        if (options.componentsPerAttribute < 1 || options.componentsPerAttribute > 4) {
+            throw new DeveloperError('options.componentsPerAttribute must be between 1 and 4.');
+        }
+
+        if (typeof options.value === 'undefined') {
+            throw new DeveloperError('options.value is required.');
+        }
 
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
@@ -110,27 +131,6 @@ define([
          * }
          */
         this.value = options.value;
-    };
-
-    /**
-     * Duplicates a GeometryInstanceAttribute instance.
-     *
-     * @param {GeometryInstanceAttribute} instanceAttribute The per-instance attribute to clone.
-     * @param {GeometryInstanceAttribute} [result] The object onto which to store the result.
-     *
-     * @return {GeometryInstanceAttribute} The modified result parameter or a new GeometryInstanceAttribute instance if one was not provided.
-     */
-    GeometryInstanceAttribute.clone = function(instanceAttribute, result) {
-        if (typeof result === 'undefined') {
-            result = new GeometryInstanceAttribute();
-        }
-
-        result.componentDatatype = instanceAttribute.componentDatatype;
-        result.componentsPerAttribute = instanceAttribute.componentsPerAttribute;
-        result.normalize = instanceAttribute.normalize;
-        result.value = new instanceAttribute.value.constructor(instanceAttribute.value);
-
-        return result;
     };
 
     return GeometryInstanceAttribute;

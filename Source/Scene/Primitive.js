@@ -11,6 +11,9 @@ define([
         '../Core/BoundingSphere',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
+        '../Core/GeometryInstance',
+        '../Core/GeometryInstanceAttribute',
         '../Core/ComponentDatatype',
         '../Core/Cartesian3',
         '../Renderer/BufferUsage',
@@ -31,6 +34,9 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
+        GeometryInstance,
+        GeometryInstanceAttribute,
         ComponentDatatype,
         Cartesian3,
         BufferUsage,
@@ -105,7 +111,7 @@ define([
      * var ellipsoidInstance = new GeometryInstance({
      *   geometry : new EllipsoidGeometry({
      *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
+     *     radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
@@ -207,6 +213,64 @@ define([
 
         this._commandLists = new CommandLists();
     };
+
+    function cloneAttribute(attribute) {
+        return new GeometryAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            values : new attribute.values.constructor(attribute.values)
+        });
+    }
+
+    function cloneGeometry(geometry) {
+        var attributes = geometry.attributes;
+        var newAttributes = new GeometryAttributes();
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
+                newAttributes[property] = cloneAttribute(attributes[property]);
+            }
+        }
+
+        var indices;
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            indices = new sourceValues.constructor(sourceValues);
+        }
+
+        return new Geometry({
+            attributes : newAttributes,
+            indices : indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : BoundingSphere.clone(geometry.boundingSphere)
+        });
+    }
+
+    function cloneGeometryInstanceAttribute(attribute) {
+        return new GeometryInstanceAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            value : new attribute.value.constructor(attribute.value)
+        });
+    }
+
+    function cloneInstance(instance) {
+        var attributes = instance.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
+            }
+        }
+
+        return new GeometryInstance({
+            geometry : cloneGeometry(instance.geometry),
+            modelMatrix : Matrix4.clone(instance.modelMatrix),
+            id : instance.id, // Shallow copy
+            attributes : newAttributes
+        });
+    }
 
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
@@ -624,7 +688,7 @@ define([
             length = instances.length;
             var insts = new Array(length);
             for (i = 0; i < length; ++i) {
-                insts[i] = instances[i].clone();
+                insts[i] = cloneInstance(instances[i]);
             }
             var geometries = geometryPipeline(this, insts, context, projection);
 

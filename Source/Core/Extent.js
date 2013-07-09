@@ -28,7 +28,7 @@ define([
      */
     var Extent = function(west, south, east, north) {
         /**
-         * The westernmost longitude, in radians, in the range [-Pi, Pi].
+         * The westernmost longitude in radians in the range [-Pi, Pi].
          *
          * @type {Number}
          * @default 0.0
@@ -36,7 +36,7 @@ define([
         this.west = defaultValue(west, 0.0);
 
         /**
-         * The southernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+         * The southernmost latitude in radians in the range [-Pi/2, Pi/2].
          *
          * @type {Number}
          * @default 0.0
@@ -44,7 +44,7 @@ define([
         this.south = defaultValue(south, 0.0);
 
         /**
-         * The easternmost longitude, in radians, in the range [-Pi, Pi].
+         * The easternmost longitude in radians in the range [-Pi, Pi].
          *
          * @type {Number}
          * @default 0.0
@@ -52,7 +52,7 @@ define([
         this.east = defaultValue(east, 0.0);
 
         /**
-         * The northernmost latitude, in radians, in the range [-Pi/2, Pi/2].
+         * The northernmost latitude in radians in the range [-Pi/2, Pi/2].
          *
          * @type {Number}
          * @default 0.0
@@ -65,10 +65,10 @@ define([
      *
      * @memberof Extent
      *
-     * @param {Number} [west=0.0] The westernmost longitude, in degrees, in the range [-180.0, 180.0].
-     * @param {Number} [south=0.0] The southernmost latitude in degrees, in the range [-90.0, 90.0].
-     * @param {Number} [east=0.0] The easternmost longitude in degrees, in the range [-180.0, 180.0].
-     * @param {Number} [north=0.0] The northernmost latitude in degrees, in the range [-90.0, 90.0].
+     * @param {Number} [west=0.0] The westernmost longitude in degrees in the range [-180.0, 180.0].
+     * @param {Number} [south=0.0] The southernmost latitude in degrees in the range [-90.0, 90.0].
+     * @param {Number} [east=0.0] The easternmost longitude in degrees in the range [-180.0, 180.0].
+     * @param {Number} [north=0.0] The northernmost latitude in degrees in the range [-90.0, 90.0].
      * @param {Extent} [result] The object onto which to store the result, or undefined if a new instance should be created.
      *
      * @return {Extent} The modified result parameter or a new Extent instance if none was provided.

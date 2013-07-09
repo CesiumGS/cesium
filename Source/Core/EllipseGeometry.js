@@ -36,8 +36,8 @@ define([
     var unitQuat = new Quaternion();
     var rotMtx = new Matrix3();
 
-    function pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
-        var azimuth = theta + bearing;
+    function pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
+        var azimuth = theta + rotation;
 
         Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth), rotAxis);
         Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth), tempVec);
@@ -81,7 +81,7 @@ define([
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.bearing=0.0] The angle from north (clockwise) in radians. The default is zero.
+     * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
@@ -100,7 +100,7 @@ define([
      *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   bearing : CesiumMath.toRadians(60.0)
+     *   rotation : CesiumMath.toRadians(60.0)
      * });
      */
     var EllipseGeometry = function(options) {
@@ -110,7 +110,7 @@ define([
         var semiMinorAxis = options.semiMinorAxis;
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var bearing = defaultValue(options.bearing, 0.0);
+        var rotation = defaultValue(options.rotation, 0.0);
         var height = defaultValue(options.height, 0.0);
         var granularity = defaultValue(options.granularity, 0.02);
 
@@ -190,8 +190,8 @@ define([
         // Compute points in the 'northern' half of the ellipse
         var theta = CesiumMath.PI_OVER_TWO;
         for (i = 0; i < numPts && theta > 0; ++i) {
-            pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            pointOnEllipsoid(Math.PI - theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
@@ -220,8 +220,8 @@ define([
         for (i = numPts; i > 0; --i) {
             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
-            pointOnEllipsoid(-theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            pointOnEllipsoid( theta + Math.PI, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid( theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;

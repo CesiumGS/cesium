@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        './defaultValue'
+        './defaultValue',
+        './DeveloperError'
     ], function(
-        defaultValue) {
+        defaultValue,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -17,6 +19,11 @@ define([
      * @param {Number} [options.componentsPerAttribute=undefined] A number between 1 and 4 that defines the number of components in an attributes.
      * @param {Boolean} [options.normalize=false] When <code>true</code> and <code>componentDatatype</code> is an integer format, indicate that the components should be mapped to the range [0, 1] (unsigned) or [-1, 1] (signed) when they are accessed as floating-point for rendering.
      * @param {Array} [options.values=undefined] The values for the attributes stored in a typed array.
+     *
+     * @exception {DeveloperError} options.componentDatatype is required.
+     * @exception {DeveloperError} options.componentsPerAttribute is required.
+     * @exception {DeveloperError} options.componentsPerAttribute must be between 1 and 4.
+     * @exception {DeveloperError} options.values is required.
      *
      * @example
      * var geometry = new Geometry({
@@ -38,6 +45,22 @@ define([
      */
     var GeometryAttribute = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.componentDatatype === 'undefined') {
+            throw new DeveloperError('options.componentDatatype is required.');
+        }
+
+        if (typeof options.componentsPerAttribute === 'undefined') {
+            throw new DeveloperError('options.componentsPerAttribute is required.');
+        }
+
+        if (options.componentsPerAttribute < 1 || options.componentsPerAttribute > 4) {
+            throw new DeveloperError('options.componentsPerAttribute must be between 1 and 4.');
+        }
+
+        if (typeof options.values === 'undefined') {
+            throw new DeveloperError('options.values is required.');
+        }
 
         /**
          * The datatype of each component in the attribute, e.g., individual elements in
@@ -113,28 +136,6 @@ define([
          * ]);
          */
         this.values = options.values;
-    };
-
-    /**
-     * Duplicates a GeometryAttribute instance, including a deep copy of {@link GeometryAttribute#values}.
-     *
-     * @memberof Geometry
-     *
-     * @param {GeometryAttribute} [result] The object onto which to store the result.
-     *
-     * @return {GeometryAttribute} The modified result parameter or a new GeometryAttribute instance if one was not provided.
-     */
-    GeometryAttribute.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
-            result = new GeometryAttribute();
-        }
-
-        result.componentDatatype = this.componentDatatype;
-        result.componentsPerAttribute = this.componentsPerAttribute;
-        result.normalize = this.normalize;
-        result.values = new this.values.constructor(this.values);
-
-        return result;
     };
 
     return GeometryAttribute;

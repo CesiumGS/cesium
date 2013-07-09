@@ -38,6 +38,7 @@ defineSuite([
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
+            attributes : {},
             indices : [0, 1, 2, 3, 4, 5],
             primitiveType : PrimitiveType.TRIANGLES
         }));
@@ -64,6 +65,7 @@ defineSuite([
 
     it('converts a triangle fan to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
+            attributes : {},
             indices : [0, 1, 2, 3],
             primitiveType : PrimitiveType.TRIANGLE_FAN
         }));
@@ -90,6 +92,7 @@ defineSuite([
 
     it('converts a triangle strip to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
+            attributes : {},
             indices : [0, 1, 2, 3],
             primitiveType : PrimitiveType.TRIANGLE_STRIP
         }));
@@ -180,10 +183,23 @@ defineSuite([
     it('creates attribute indices', function() {
         var geometry = new Geometry({
             attributes : {
-                position : new GeometryAttribute(),
-                normal : new GeometryAttribute(),
-                color : new GeometryAttribute()
-            }
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : []
+                }),
+                normal : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 3,
+                    values : []
+                }),
+                color : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                    componentsPerAttribute : 4,
+                    values : []
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         var indices = GeometryPipeline.createAttributeIndices(geometry);
@@ -569,7 +585,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [c.x, c.y, c.z]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
         geometry = GeometryPipeline.encodeAttribute(geometry);
 
@@ -715,7 +732,8 @@ defineSuite([
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
                     })
-                }
+                },
+                primitiveType : PrimitiveType.POINTS
             })
         });
 
@@ -732,7 +750,8 @@ defineSuite([
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
                     })
-                }
+                },
+                primitiveType : PrimitiveType.POINTS
             })
         });
         var anotherInstance = new GeometryInstance({
@@ -743,7 +762,8 @@ defineSuite([
                         componentsPerAttribute : 3,
                         values : [1.0, 1.0, 1.0]
                     })
-                }
+                },
+                primitiveType : PrimitiveType.POINTS
             })
         });
 
@@ -758,7 +778,8 @@ defineSuite([
                         1.0, 1.0, 1.0
                     ])
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         }));
     });
 
@@ -886,26 +907,28 @@ defineSuite([
     it('combine throws when instances.modelMatrix do not match', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                })
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
             }),
             modelMatrix : Matrix4.fromScale(new Cartesian3(1.0, 1.0, 1.0))
         });
 
         var instance1 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                })
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
             }),
             modelMatrix : Matrix4.fromScale(new Cartesian3(2.0, 2.0, 2.0))
         });
@@ -918,26 +941,28 @@ defineSuite([
     it('combine throws when instance geometries do not all have or not have an indices', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                }),
-                indices : [0]
+                    })
+                },
+                indices : [0],
+                primitiveType : PrimitiveType.POINTS
             })
         });
 
         var instance1 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                })
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
             })
         });
 
@@ -949,26 +974,26 @@ defineSuite([
     it('combine throws when instance geometries do not all have the same primitive type', function() {
         var instance0 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0]
-                    }
-                }),
+                    })
+                },
                 primitiveType : PrimitiveType.POINTS
             })
         });
 
         var instance1 = new GeometryInstance({
             geometry : new Geometry({
-                attributes : new GeometryAttribute({
-                    position : {
+                attributes : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : [0.0, 0.0, 0.0, 1.0, 0.0, 0.0]
-                    }
-                }),
+                    })
+                },
                 primitiveType : PrimitiveType.LINES
             })
         });
@@ -989,9 +1014,11 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         geometry = GeometryPipeline.computeNormal(geometry);
@@ -1004,7 +1031,8 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
@@ -1022,7 +1050,8 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
@@ -1040,7 +1069,8 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 1, 3, 2],
@@ -1067,7 +1097,8 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 3, 0, 2, 4, 0, 3, 4, 5, 0, 5, 6, 0, 6, 1, 0],
@@ -1109,18 +1140,22 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 }),
                 normal: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
 
                 }),
                 st: new GeometryAttribute({
                     values: [0, 1],
-                    componentsPerAttribute: 2
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
@@ -1134,17 +1169,20 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
 
                 }),
                 normal: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
 
                 }),
                 st: new GeometryAttribute({
                     values: [0, 1],
-                    componentsPerAttribute: 2
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
@@ -1162,11 +1200,13 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 }),
                 st: new GeometryAttribute({
                     values: [0, 0, 1, 0, 0, 1],
-                    componentsPerAttribute: 2
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2],
@@ -1185,11 +1225,13 @@ defineSuite([
             attributes: {
                 position: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 1, 1, 1, 1, 2, 0, 0],
-                    componentsPerAttribute: 3
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
                 }),
                 st: new GeometryAttribute({
                     values: [0, 0, 1, 0, 1, 1, 0, 1],
-                    componentsPerAttribute: 2
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
                 })
             },
             indices : [0, 1, 2, 1, 3, 2],

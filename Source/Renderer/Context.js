@@ -2201,7 +2201,9 @@ define([
         var names = [];
         for (name in attributes) {
             // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
+            if (attributes.hasOwnProperty(name) &&
+                    typeof attributes[name] !== 'undefined' &&
+                    typeof attributes[name].values !== 'undefined') {
                 names.push(name);
 
                 if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
@@ -2389,7 +2391,7 @@ define([
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
                 for (name in attributes) {
-                    if (attributes.hasOwnProperty(name)) {
+                    if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
                         attribute = attributes[name];
 
                         if (typeof attribute.values !== 'undefined') {

@@ -411,7 +411,7 @@ defineSuite([
             instance = new GeometryInstance({
                 geometry : new EllipsoidGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
-                    ellipsoid : new Ellipsoid(1000000.0, 1000000.0, 500000.0)
+                    radii : new Cartesian3(1000000.0, 1000000.0, 500000.0)
                 }),
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),

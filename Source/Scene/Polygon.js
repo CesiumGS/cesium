@@ -71,9 +71,9 @@ define([
          *
          * @type Number
          *
-         * @default CesiumMath.toRadians(1.0)
+         * @default CesiumMath.RADIANS_PER_DEGREE
          */
-        this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        this.granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._granularity = undefined;
 
         /**

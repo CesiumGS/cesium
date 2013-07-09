@@ -362,7 +362,10 @@ define([
             // Reorder attributes
             var attributes = geometry.attributes;
             for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && attributes[property].values) {
+                if (attributes.hasOwnProperty(property) &&
+                        typeof attributes[property] !== 'undefined' &&
+                        typeof attributes[property].values !== 'undefined') {
+
                     var attribute = attributes[property];
                     var elementsIn = attribute.values;
                     var intoElementsIn = 0;
@@ -797,7 +800,10 @@ define([
         var name;
 
         for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
+            if (attributes0.hasOwnProperty(name) &&
+                    typeof attributes0[name] !== 'undefined' &&
+                    typeof attributes0[name].values !== 'undefined') {
+
                 var attribute = attributes0[name];
                 var numberOfComponents = attribute.values.length;
                 var inAllGeometries = true;
@@ -928,7 +934,8 @@ define([
             }
 
             var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
-                attributes : attributes
+                attributes : attributes,
+                primitiveType : PrimitiveType.POINTS
             }));
             var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 

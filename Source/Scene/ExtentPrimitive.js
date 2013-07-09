@@ -35,7 +35,7 @@ define([
      *
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
      * @param {Extent} [extent=undefined] The extent, which defines the rectangular region to draw.
-     * @param {Number} [granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude in the underlying geometry.
+     * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
      * @param {Number} [height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
      * @param {Number} [rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
      * @param {Boolean} [show=true] Determines if this primitive will be shown.
@@ -77,9 +77,9 @@ define([
          *
          * @type Number
          *
-         * @default CesiumMath.toRadians(1.0)
+         * @default CesiumMath.RADIANS_PER_DEGREE
          */
-        this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        this.granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._granularity = undefined;
 
         /**
