@@ -2,7 +2,6 @@
 define([
         '../Core/defined',
         '../Core/defaultValue',
-        '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Enumeration',
         '../Core/loadArrayBuffer',
@@ -10,12 +9,12 @@ define([
         '../Core/loadImage',
         '../Core/Queue',
         '../Core/IndexDatatype',
+        '../Core/ComponentDatatype',
         '../Renderer/BufferUsage',
         './SceneMode'
     ], function(
         defined,
         defaultValue,
-        DeveloperError,
         destroyObject,
         Enumeration,
         loadArrayBuffer,
@@ -23,6 +22,7 @@ define([
         loadImage,
         Queue,
         IndexDatatype,
+        ComponentDatatype,
         BufferUsage,
         SceneMode) {
     "use strict";
@@ -54,10 +54,14 @@ define([
                 (this.pendingTextureLoads === 0));
     };
 
-    LoadResources.prototype.finishedResourceCreeation = function() {
+    LoadResources.prototype.finishedResourceCreation = function() {
         return ((this.bufferViewsToCreate.length === 0) &&
                 (this.programsToCreate.length === 0) &&
                 (this.texturesToCreate.length === 0));
+    };
+
+    LoadResources.prototype.finishedBufferViewsCreation = function() {
+        return ((this.pendingBufferLoads === 0) && (this.bufferViewsToCreate.length === 0));
     };
 
     /**
@@ -186,7 +190,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function createBufferViews(model, context) {
+    function createBuffers(model, context) {
         var loadResources = model._loadResources;
 
 // TODO: more fine-grained bufferView-to-buffer dependencies
@@ -207,7 +211,9 @@ define([
             if (bufferView.target === 'ARRAY_BUFFER') {
                 // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
                 raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                bufferView.extra.czmBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+                var vertexBuffer = context.createVertexBuffer(raw, BufferUsage.STATIC_DRAW);
+                vertexBuffer.setVertexArrayDestroyable(false);
+                bufferView.extra.czmBuffer = vertexBuffer;
             }
         }
 
@@ -222,7 +228,9 @@ define([
 
                 if (!defined(bufferView.extra.czmBuffer)) {
                     raw = new Uint8Array(buffers[bufferView.buffer], bufferView.byteOffset, bufferView.byteLength);
-                    bufferView.extra.czmBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
+                    var indexBuffer = context.createIndexBuffer(raw, BufferUsage.STATIC_DRAW, IndexDatatype[instance.type]);
+                    indexBuffer.setVertexArrayDestroyable(false);
+                    bufferView.extra.czmBuffer = indexBuffer;
                     // In theory, several glTF indices with different types could
                     // point to the same glTF bufferView, which would break this.
                     // In practice, it is unlikely as it will be UNSIGNED_SHORT.
@@ -271,10 +279,114 @@ define([
         }
     }
 
+    var gltfTypes = {
+        FLOAT : {
+            componentsPerAttribute : 1,
+            componentDatatype : ComponentDatatype.FLOAT
+        },
+        FLOAT_VEC2 : {
+            componentsPerAttribute : 2,
+            componentDatatype : ComponentDatatype.FLOAT
+        },
+        FLOAT_VEC3 : {
+            componentsPerAttribute : 3,
+            componentDatatype : ComponentDatatype.FLOAT
+        },
+        FLOAT_VEC4 : {
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT
+        }
+// TODO: add other types
+    };
+
+    function getSemanticToAttributeLocations(model, primitive) {
+// TODO: this could be done per material, not per mesh, if we don't change glTF
+        var programs = model.json.programs;
+        var techniques = model.json.techniques;
+        var materials = model.json.materials;
+
+        // Retrieve the compiled shader program to assign index values to attributes
+        var semanticToAttributeLocations = {};
+
+        var technique = techniques[materials[primitive.material].instanceTechnique.technique];
+        var parameters = technique.parameters;
+        var pass = technique.passes[technique.pass];
+        var instanceProgram = pass.instanceProgram;
+        var program = programs[instanceProgram.program];
+        var attributes = instanceProgram.attributes;
+        var attributeLocations = program.extra.czmProgram.getVertexAttributes();
+
+        for (var name in attributes) {
+            if (attributes.hasOwnProperty(name)) {
+                var parameter = parameters[attributes[name]];
+
+                semanticToAttributeLocations[parameter.semantic] = attributeLocations[name].index;
+            }
+        }
+
+        return semanticToAttributeLocations;
+    }
+
+    function createVertexArrays(model, context) {
+        var loadResources = model._loadResources;
+
+// TODO: more fine-grained mesh-to-buffer-views dependencies
+         if (!loadResources.finishedBufferViewsCreation()) {
+             return;
+         }
+
+         var bufferViews = model.json.bufferViews;
+         var attributes = model.json.attributes;
+         var indices = model.json.indices;
+         var meshes = model.json.meshes;
+         var name;
+
+         for (name in meshes) {
+             if (meshes.hasOwnProperty(name)) {
+                 var primitives = meshes[name].primitives;
+
+                 for (name in primitives) {
+                     if (primitives.hasOwnProperty(name)) {
+                         var primitive = primitives[name];
+
+                         var semanticToAttributeLocations = getSemanticToAttributeLocations(model, primitive);
+                         var attrs = [];
+                         var semantics = primitive.semantics;
+                         for (name in semantics) {
+                             if (semantics.hasOwnProperty(name)) {
+                                 var a = attributes[semantics[name]];
+
+                                 var type = gltfTypes[a.type];
+                                 attrs.push({
+                                     index                  : semanticToAttributeLocations[name],
+                                     vertexBuffer           : bufferViews[a.bufferView].extra.czmBuffer,
+                                     componentsPerAttribute : type.componentsPerAttribute,
+                                     componentDatatype      : type.componentDatatype,
+// TODO: is normalize part of glTF attribute?
+                                     normalize              : false,
+                                     offsetInBytes          : a.byteOffset,
+                                     strideInBytes          : a.byteStride
+                                 });
+                             }
+                         }
+
+                         var i = indices[primitive.indices];
+                         var indexBuffer = bufferViews[i.bufferView].extra.czmBuffer;
+
+                         primitive.extra = defaultValue(primitive.extra, {});
+                         primitive.extra.czmVertexArray = context.createVertexArray(attrs, indexBuffer);
+                     }
+                 }
+             }
+         }
+    }
+
     function createResources(model, context) {
-        createBufferViews(model, context);
+        createBuffers(model, context);      // using glTF bufferViews
         createPrograms(model, context);
         createTextures(model, context);
+
+        createVertexArrays(model, context); // using glTF meshes
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -300,7 +412,7 @@ define([
             createResources(this, context);
 
             var loadResources = this._loadResources;
-            if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreeation()) {
+            if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
             }
@@ -355,7 +467,7 @@ define([
      */
     Model.prototype.destroy = function() {
         var json = this.json;
-        destroyExtra(json.buffers, 'czmBuffer');
+        destroyExtra(json.bufferViews, 'czmBuffer');
         destroyExtra(json.program, 'czmProgram');
         destroyExtra(json.images, 'czmTexture');
 
