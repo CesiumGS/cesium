@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * Computes vertices and indices for a circle on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for a circle on the ellipsoid.
      *
      * @alias CircleGeometry
      * @constructor
@@ -50,9 +50,15 @@ define([
             throw new DeveloperError('radius must be greater than zero.');
         }
 
-        var ellipseGeometryOptions = clone(options);
-        ellipseGeometryOptions.semiMajorAxis = radius;
-        ellipseGeometryOptions.semiMinorAxis = radius;
+        var ellipseGeometryOptions = {
+            center : options.center,
+            semiMajorAxis : radius,
+            semiMinorAxis : radius,
+            ellipsoid : options.ellipsoid,
+            height : options.height,
+            granularity : options.granularity,
+            vertexFormat : options.vertexFormat
+        };
         var ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
 
         /**

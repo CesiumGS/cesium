@@ -24,7 +24,7 @@ define([
     var diffScratch = new Cartesian3();
 
     /**
-     * Creates vertices and indices for a cube centered at the origin.
+     * A {@link Geometry} that represents vertices and indices for a cube centered at the origin.
      *
      * @alias BoxGeometry
      * @constructor

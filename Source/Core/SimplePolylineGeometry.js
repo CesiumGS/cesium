@@ -20,7 +20,7 @@ define([
     "use strict";
 
     /**
-     * A polyline modeled as a line strip; the first two positions define a line segment,
+     * A {@link Geometry} that represents a polyline modeled as a line strip; the first two positions define a line segment,
      * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry

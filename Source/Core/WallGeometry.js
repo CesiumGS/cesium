@@ -46,7 +46,7 @@ define([
     var scratchNormal = new Cartesian3();
 
     /**
-     * Creates a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      * The points in the wall can be offset by supplied terrain elevation data.
      *

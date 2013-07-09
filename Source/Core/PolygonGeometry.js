@@ -121,7 +121,7 @@ define([
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
     /**
-     * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
+     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
      * by an array of Cartesian points, or a polygon hierarchy.
      *
      * @alias PolygonGeometry

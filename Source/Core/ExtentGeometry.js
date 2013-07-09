@@ -59,7 +59,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor

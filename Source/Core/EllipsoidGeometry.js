@@ -115,7 +115,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates vertices and indices for an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents vertices and indices for an ellipsoid centered at the origin.
      *
      * @alias EllipsoidGeometry
      * @constructor
