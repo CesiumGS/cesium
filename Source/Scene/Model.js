@@ -11,6 +11,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/ComponentDatatype',
         '../Renderer/BufferUsage',
+        '../Renderer/BlendingState',
         './SceneMode'
     ], function(
         defined,
@@ -24,6 +25,7 @@ define([
         IndexDatatype,
         ComponentDatatype,
         BufferUsage,
+        BlendingState,
         SceneMode) {
     "use strict";
 // TODO: remove before merge to master
@@ -46,6 +48,8 @@ define([
 
         this.texturesToCreate = new Queue();
         this.pendingTextureLoads = 0;
+
+        this.createRenderStates = true;
     }
 
     LoadResources.prototype.finishedPendingLoads = function() {
@@ -381,12 +385,42 @@ define([
          }
     }
 
+    function createRenderStates(model, context) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.createRenderStates) {
+            loadResources.createRenderStates = false;
+
+            var techniques = model.json.techniques;
+            for (var name in techniques) {
+                if (techniques.hasOwnProperty(name)) {
+                    var technique = techniques[name];
+                    var pass = technique.passes[technique.pass];
+                    var states = pass.states;
+
+                    states.extra = defaultValue(states.extra, {});
+                    states.extra.czmRenderState = context.createRenderState({
+                        cull : {
+                            enabled : states.cullFaceEnable
+                        },
+                        depthTest : {
+                            enabled : states.depthTestEnable
+                        },
+                        depthMask : states.depthMask,
+                        blending : states.blendEnable ? BlendingState.ALPHA_BLEND : BlendingState.DISABLED
+                    });
+                }
+            }
+        }
+    }
+
     function createResources(model, context) {
         createBuffers(model, context);      // using glTF bufferViews
         createPrograms(model, context);
         createTextures(model, context);
 
         createVertexArrays(model, context); // using glTF meshes
+        createRenderStates(model, context);
     }
 
     ///////////////////////////////////////////////////////////////////////////
