@@ -123,6 +123,16 @@ defineSuite([
         }).toThrow();
     });
 
+    it('toWireframe throws when primitiveType is not a triangle type', function() {
+        expect(function() {
+            GeometryPipeline.toWireframe(new Geometry({
+                attributes : {},
+                indices : [],
+                primitiveType : PrimitiveType.POINTS
+            }));
+        }).toThrow();
+    });
+
     it('createLineSegmentsForVectors', function() {
         var geometry = new Geometry({
             attributes : {
@@ -163,7 +173,7 @@ defineSuite([
         }).toThrow();
     });
 
-    it('createLineSegmentsForVectors throws when geometry.attributes does not vae an attributeName property', function() {
+    it('createLineSegmentsForVectors throws when geometry.attributes does not have an attributeName property', function() {
         var geometry = new Geometry({
             attributes : {
                 position : new GeometryAttribute({
@@ -351,7 +361,7 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices creates one geometry', function() {
-        var sixtyFourK = 64 * 1024;
+        var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
         var times = [];
         for ( var i = 0; i < sixtyFourK + 1; ++i) {
             times.push(i);
@@ -381,7 +391,7 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices creates two triangle geometries', function() {
-        var sixtyFourK = 64 * 1024;
+        var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
         var positions = [];
         for ( var i = 0; i < sixtyFourK + 1; ++i) {
@@ -418,7 +428,7 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices creates two line geometries', function() {
-        var sixtyFourK = 64 * 1024;
+        var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
         var positions = [];
         for ( var i = 0; i < sixtyFourK + 2; ++i) {
@@ -455,7 +465,7 @@ defineSuite([
     });
 
     it('fitToUnsignedShortIndices creates two point geometries', function() {
-        var sixtyFourK = 64 * 1024;
+        var sixtyFourK = CesiumMath.SIXTY_FOUR_KILOBYTES;
 
         var positions = [];
         var indices = [];
@@ -588,7 +598,7 @@ defineSuite([
             },
             primitiveType : PrimitiveType.POINTS
         });
-        geometry = GeometryPipeline.encodeAttribute(geometry);
+        geometry = GeometryPipeline.encodeAttribute(geometry, 'position', 'positionHigh', 'positionLow');
 
         expect(geometry.attributes.positionHigh).toBeDefined();
         expect(geometry.attributes.positionHigh.values[0]).toEqual(encoded.high.x);
@@ -607,15 +617,63 @@ defineSuite([
         }).toThrow();
     });
 
-    it('encodeAttribute throws with geometry without attributes property', function() {
+    it('encodeAttribute throws without attributeName', function() {
         expect(function() {
-            GeometryPipeline.encodeAttribute({});
+            GeometryPipeline.encodeAttribute(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }));
+        }).toThrow();
+    });
+
+    it('encodeAttribute throws without attributeHighName', function() {
+        expect(function() {
+            GeometryPipeline.encodeAttribute(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'position');
+        }).toThrow();
+    });
+
+    it('encodeAttribute throws without attributeLowName', function() {
+        expect(function() {
+            GeometryPipeline.encodeAttribute(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'position', 'positionHigh');
         }).toThrow();
     });
 
     it('encodeAttribute throws without attribute', function() {
         expect(function() {
-            GeometryPipeline.encodeAttribute(new Geometry());
+            GeometryPipeline.encodeAttribute(new Geometry({
+                attributes : {
+                    position : new GeometryAttribute({
+                        componentDatatype : ComponentDatatype.DOUBLE,
+                        componentsPerAttribute : 3,
+                        values : [0.0, 0.0, 0.0]
+                    })
+                },
+                primitiveType : PrimitiveType.POINTS
+            }), 'normal');
         }).toThrow();
     });
 
@@ -730,7 +788,7 @@ defineSuite([
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
-                        values : [0.0, 0.0, 0.0]
+                        values : new Float32Array([0.0, 0.0, 0.0])
                     })
                 },
                 primitiveType : PrimitiveType.POINTS
@@ -738,7 +796,7 @@ defineSuite([
         });
 
         var combined = GeometryPipeline.combine([instance]);
-        expect(combined).toBe(instance.geometry);
+        expect(combined).toEqual(instance.geometry);
     });
 
     it('combine combines several geometries without indicess', function() {
@@ -1009,7 +1067,18 @@ defineSuite([
         }).toThrow();
     });
 
-    it('computeNormal does not compute normals when geometry.indices is undefined', function() {
+    it('computeNormal throws when geometry.attributes.position is undefined', function() {
+        var geometry = new Geometry({
+            attributes: {},
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.computeNormal(geometry);
+        }).toThrow();
+    });
+
+    it('computeNormal throws when geometry.indices is undefined', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1018,15 +1087,32 @@ defineSuite([
                     componentDatatype : ComponentDatatype.FLOAT
                 })
             },
-            primitiveType : PrimitiveType.POINTS
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
-        geometry = GeometryPipeline.computeNormal(geometry);
-
-        expect(geometry.attributes.normal).not.toBeDefined();
+        expect(function() {
+            GeometryPipeline.computeNormal(geometry);
+        }).toThrow();
     });
 
-    it('computeNormal does not compute normals when primitive type is not triangle', function() {
+    it('computeNormal throws when geometry.indices.length is not a multiple of 3', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.computeNormal(geometry);
+        }).toThrow();
+    });
+
+    it('computeNormal throws when primitive type is not triangle', function() {
         var geometry = new Geometry({
             attributes: {
                 position: new GeometryAttribute({
@@ -1039,9 +1125,9 @@ defineSuite([
             primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
-        geometry = GeometryPipeline.computeNormal(geometry);
-
-        expect(geometry.attributes.normal).not.toBeDefined();
+        expect(function() {
+            GeometryPipeline.computeNormal(geometry);
+        }).toThrow();
     });
 
 
@@ -1135,14 +1221,9 @@ defineSuite([
         }).toThrow();
     });
 
-    it('computeBinormalAndTangent does not compute tangent and binormals when geometry.indices is undefined', function() {
+    it('computeBinormalAndTangent throws when position is undefined', function() {
         var geometry = new Geometry({
             attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
-                    componentDatatype : ComponentDatatype.FLOAT
-                }),
                 normal: new GeometryAttribute({
                     values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
                     componentsPerAttribute: 3,
@@ -1150,37 +1231,7 @@ defineSuite([
 
                 }),
                 st: new GeometryAttribute({
-                    values: [0, 1],
-                    componentsPerAttribute: 2,
-                    componentDatatype : ComponentDatatype.FLOAT
-                })
-            },
-            primitiveType : PrimitiveType.POINTS
-        });
-
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
-
-        expect(typeof geometry.attributes.tangent === 'undefined').toEqual(true);
-        expect(typeof geometry.attributes.binormal === 'undefined').toEqual(true);
-    });
-
-    it('computeBinormalAndTangent does not compute tangent and binormals when primitive type is not triangle', function() {
-        var geometry = new Geometry({
-            attributes: {
-                position: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
-                    componentDatatype : ComponentDatatype.FLOAT
-
-                }),
-                normal: new GeometryAttribute({
-                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
-                    componentsPerAttribute: 3,
-                    componentDatatype : ComponentDatatype.FLOAT
-
-                }),
-                st: new GeometryAttribute({
-                    values: [0, 1],
+                    values: [0, 0, 1, 1],
                     componentsPerAttribute: 2,
                     componentDatatype : ComponentDatatype.FLOAT
                 })
@@ -1189,10 +1240,146 @@ defineSuite([
             primitiveType: PrimitiveType.TRIANGLE_STRIP
         });
 
-        geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
+        expect(function() {
+            GeometryPipeline.computeBinormalAndTangent(geometry);
+       }).toThrow();
+    });
 
-        expect(typeof geometry.attributes.tangent === 'undefined').toEqual(true);
-        expect(typeof geometry.attributes.binormal === 'undefined').toEqual(true);
+    it('computeBinormalAndTangent throws when normal is undefined', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 1],
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
+        });
+
+        expect(function() {
+            GeometryPipeline.computeBinormalAndTangent(geometry);
+       }).toThrow();
+    });
+
+    it('computeBinormalAndTangent throws when st is undefined', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                })
+            },
+            indices : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
+        });
+
+        expect(function() {
+            GeometryPipeline.computeBinormalAndTangent(geometry);
+       }).toThrow();
+    });
+
+    it('computeBinormalAndTangent throws when geometry.indices is undefined', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 1],
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
+
+        expect(function() {
+             GeometryPipeline.computeBinormalAndTangent(geometry);
+        }).toThrow();
+    });
+
+    it('computeBinormalAndTangent throws when indices is not a multiple of 3', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 1],
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2, 3, 4],
+            primitiveType: PrimitiveType.TRIANGLES
+        });
+
+        expect(function() {
+            GeometryPipeline.computeBinormalAndTangent(geometry);
+       }).toThrow();
+    });
+
+    it('computeBinormalAndTangent throws when primitive type is not triangle', function() {
+        var geometry = new Geometry({
+            attributes: {
+                position: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                normal: new GeometryAttribute({
+                    values: [0, 0, 0, 1, 0, 0, 0, 1, 0],
+                    componentsPerAttribute: 3,
+                    componentDatatype : ComponentDatatype.FLOAT
+
+                }),
+                st: new GeometryAttribute({
+                    values: [0, 0, 1, 1],
+                    componentsPerAttribute: 2,
+                    componentDatatype : ComponentDatatype.FLOAT
+                })
+            },
+            indices : [0, 1, 2],
+            primitiveType: PrimitiveType.TRIANGLE_STRIP
+        });
+
+        expect(function() {
+            GeometryPipeline.computeBinormalAndTangent(geometry);
+       }).toThrow();
     });
 
     it('computeBinormalAndTangent computes tangent and binormal for one triangle', function() {

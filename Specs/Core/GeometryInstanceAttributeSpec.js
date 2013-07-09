@@ -24,7 +24,7 @@ defineSuite([
 
     it('constructor throws without componentDatatype', function() {
         expect(function() {
-            return new GeometryAttribute({
+            return new GeometryInstanceAttribute({
                 componentsPerAttribute : 4,
                 value : new Uint8Array([255, 255, 0, 255])
             });
@@ -33,7 +33,7 @@ defineSuite([
 
     it('constructor throws without componentsPerAttribute', function() {
         expect(function() {
-            return new GeometryAttribute({
+            return new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 value : new Uint8Array([255, 255, 0, 255])
             });
@@ -42,7 +42,7 @@ defineSuite([
 
     it('constructor throws when componentsPerAttribute is less than 1 or greater than 4', function() {
         expect(function() {
-            return new GeometryAttribute({
+            return new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 7,
                 value : new Uint8Array([255, 255, 0, 255])
@@ -52,7 +52,7 @@ defineSuite([
 
     it('constructor throws without values', function() {
         expect(function() {
-            return new GeometryAttribute({
+            return new GeometryInstanceAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 4
             });

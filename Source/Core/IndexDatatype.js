@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './Enumeration',
-        './DeveloperError'
+        './DeveloperError',
+        './Math'
     ], function(
         Enumeration,
-        DeveloperError) {
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -88,7 +90,7 @@ define([
             throw new DeveloperError('numberOfVertices is required.');
         }
 
-        if (numberOfVertices > 64 * 1024) {
+        if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(indicesLengthOrArray);
         }
 

@@ -11,6 +11,7 @@ define([
         '../Core/Geometry',
         '../Core/createGuid',
         '../Core/Matrix4',
+        '../Core/Math',
         './Buffer',
         './BufferUsage',
         './CubeMap',
@@ -45,6 +46,7 @@ define([
         Geometry,
         createGuid,
         Matrix4,
+        CesiumMath,
         Buffer,
         BufferUsage,
         CubeMap,
@@ -2448,7 +2450,7 @@ define([
         var indexBuffer;
         var indices = geometry.indices;
         if (typeof indices !== 'undefined') {
-            if ((Geometry.computeNumberOfVertices(geometry) > 64 * 1024) && this.getElementIndexUint()) {
+            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.getElementIndexUint()) {
                 indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
                 indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);

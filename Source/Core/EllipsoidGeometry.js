@@ -216,7 +216,6 @@ define([
 
         if (vertexFormat.position) {
             // Expand cube into ellipsoid and flatten values
-            var radii = ellipsoid.getRadii();
             var flattenedPositions = new Float64Array(length * 3);
 
             for (i = j = 0; i < length; ++i) {
