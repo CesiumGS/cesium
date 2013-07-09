@@ -191,7 +191,7 @@ define([
          *
          * @see CustomSensorVolume#showIntersection
          */
-        this.intersectionWidth = defaultValue(options.intersectionWidth, 50.0);
+        this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
 
         var that = this;
         this._uniforms = {
