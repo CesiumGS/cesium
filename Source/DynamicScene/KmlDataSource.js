@@ -1,6 +1,7 @@
 /*global define*/
 define(['../Core/createGuid',
         '../Core/Cartographic',
+        '../Core/Color',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/DeveloperError',
@@ -9,6 +10,7 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadXML',
+        './DynamicProperty',
         './DynamicClock',
         './DynamicObjectCollection',
         './DynamicPoint',
@@ -19,6 +21,7 @@ define(['../Core/createGuid',
         ], function(
                 createGuid,
                 Cartographic,
+                Color,
                 ClockRange,
                 ClockStep,
                 DeveloperError,
@@ -27,6 +30,7 @@ define(['../Core/createGuid',
                 Event,
                 Iso8601,
                 loadXML,
+                DynamicProperty,
                 DynamicClock,
                 DynamicObjectCollection,
                 DynamicPoint,
@@ -100,6 +104,11 @@ define(['../Core/createGuid',
             id = createGuid();
         }
         return id;
+    }
+
+    function getElementValue(node, elementType){
+        var element = node.getElementsByTagName(elementType)[0];
+        return element && element.firstChild.data; //protecting from TypeError
     }
 
     // KML processing functions
@@ -186,6 +195,13 @@ define(['../Core/createGuid',
             if(node.nodeName === "IconStyle"){
                 dynamicObject.billboard = new DynamicBillboard();
                 //Map style to billboard properties
+                var image = getElementValue(node,'href');
+                var color = getElementValue(node,'color');
+                var colorMode = getElementValue(node, 'colorMode');
+                var scale = getElementValue(node, 'scale');
+                //constant property or dynamic property?
+                dynamicObject.billboard.image = new DynamicProperty(image);
+                dynamicObject.billboard.color = new DynamicProperty(Color.fromRgba(color)); //Do I need to switch the alpha value?
             }
             if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
