@@ -11,6 +11,14 @@ defineSuite([
 
     var container;
 
+    var imageContainerSpan = '<span class="cesium-credit-imageContainer">';
+    var textContainerSpan = '<span class="cesium-credit-textContainer">';
+    var textSpan = '<span class="cesium-credit-text">';
+    var imageSpan = '<span class="cesium-credit-image">';
+    var img = '<img src="imagesrc" style="vertical-align: bottom;">';
+    var delimiterSpan = '<span class="cesium-credit-delimiter">';
+    var endSpan = '</span>';
+
     beforeEach(function() {
         container = document.createElement('div');
         container.id = 'credit-container';
@@ -49,7 +57,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
     });
 
     it('credit display displays image credit', function() {
@@ -58,7 +66,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display displays hyperlink credit', function() {
@@ -67,7 +75,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text"><a href="http://cesium.agi.com" target="_blank">http://cesium.agi.com</a></span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + '<a href="http://cesium.agi.com" target="_blank">http://cesium.agi.com</a>' + endSpan + endSpan);
     });
 
     it('credit display updates html when credits change', function() {
@@ -78,21 +86,21 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + endSpan);
 
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display uses delimeter for text credits', function() {
@@ -103,7 +111,7 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit2</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit2' + endSpan + endSpan);
     });
 
     it('credit display manages delimeters correctly for text credits', function() {
@@ -117,24 +125,24 @@ defineSuite([
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit2</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit3</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit2' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit3' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit2</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit3</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit2' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit3' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit2</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit2' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.addCredit(credit3);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit2</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit3</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit2' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit3' + endSpan + endSpan);
     });
 
     it('credit display uses text as title for image credit', function() {
@@ -143,7 +151,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" alt="credit text" title="credit text" style="vertical-align: bottom;"></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + '<img src="imagesrc" alt="credit text" title="credit text" style="vertical-align: bottom;">' + endSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display creates image credit with hyperlink', function() {
@@ -152,7 +160,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><a href="link.com" target="_blank"><img src="imagesrc" style="vertical-align: bottom;"></a></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + '<a href="link.com" target="_blank">' + img + '</a>' + endSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display displays default credit', function() {
@@ -163,11 +171,11 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">defaultCredit</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'defaultCredit' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">defaultCredit</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'defaultCredit' + endSpan + endSpan);
     });
 
     it('credit display displays credits when default is removed', function() {
@@ -179,13 +187,13 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">defaultCredit</span><span class="cesium-credit-delimiter">, </span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'defaultCredit' + endSpan + delimiterSpan + ', ' + endSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.removeDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
     });
 
     it('credit display displays default image credit', function() {
@@ -196,11 +204,11 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + endSpan);
 
     });
 
@@ -213,14 +221,14 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
 
         creditDisplay.removeDefaultCredit(defaultCredit);
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
 
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">credit1</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'credit1' + endSpan + endSpan);
     });
 
     it('credit display creates image credit with hyperlink', function() {
@@ -229,7 +237,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit1);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><a href="link.com" target="_blank"><img src="imagesrc" style="vertical-align: bottom;"></a></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + '<a href="link.com" target="_blank">' + img + '</a>' + endSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display only displays one if two image credits are equal', function() {
@@ -240,7 +248,7 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span><span class="cesium-credit-image"><img src="imagesrc" style="vertical-align: bottom;"></span></span><span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + imageSpan + img + endSpan + endSpan + textContainerSpan + endSpan);
     });
 
     it('credit display only displays one if two text credits are equal', function() {
@@ -251,6 +259,6 @@ defineSuite([
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toEqual('<span></span><span><span class="cesium-credit-text">text</span></span>');
+        expect(container.innerHTML).toEqual(imageContainerSpan + endSpan + textContainerSpan + textSpan + 'text' + endSpan + endSpan);
     });
 });

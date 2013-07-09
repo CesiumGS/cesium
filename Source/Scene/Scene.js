@@ -714,6 +714,7 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
+        this._frameState.creditDisplay.destroy();
         return destroyObject(this);
     };
 

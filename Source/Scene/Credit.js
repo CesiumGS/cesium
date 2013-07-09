@@ -21,8 +21,15 @@ define([
      */
 
     var Credit = function(text, imageUrl, link) {
-        if (typeof text === 'undefined' && typeof imageUrl === 'undefined' && typeof link === 'undefined') {
+        var hasLink = (typeof link !== 'undefined');
+        var hasImage = (typeof imageUrl !== 'undefined');
+        var hasText = (typeof text !== 'undefined');
+        if (!hasText && !hasImage && !hasLink) {
             throw new DeveloperError('text, imageUrl or link is required');
+        }
+
+        if (!hasText && !hasImage) {
+            text = link;
         }
 
         this._text = text;
@@ -30,6 +37,28 @@ define([
         this._imageUrl = imageUrl;
 
         this._link = link;
+
+        this._hasLink = hasLink;
+
+        this._hasImage = hasImage;
+    };
+
+    /**
+     * Returns tre if the credit has an imageUrl
+     *
+     * @returns {Boolean}
+     */
+    Credit.prototype.hasImage = function() {
+        return this._hasImage;
+    };
+
+    /**
+     * Returns true if the credit has a link
+     *
+     * @returns {Boolean}
+     */
+    Credit.prototype.hasLink = function() {
+        return this._hasLink;
     };
 
     /**
