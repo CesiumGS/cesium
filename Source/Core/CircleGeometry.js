@@ -59,14 +59,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = ellipseGeometry.attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

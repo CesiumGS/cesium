@@ -11,6 +11,7 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './GeometryAttribute',
+        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
         './IndexDatatype',
@@ -34,6 +35,7 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         GeometryAttribute,
+        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
@@ -279,7 +281,7 @@ define([
         ellipsoid.geodeticSurfaceNormal(center, center);
         Cartesian3.multiplyByScalar(center, mag + height, center);
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -409,14 +411,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

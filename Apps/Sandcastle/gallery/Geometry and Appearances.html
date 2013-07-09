@@ -145,8 +145,9 @@ require(['Cesium'], function(Cesium) {
     
     // Create box and ellipsoid boxes, and use the instance's
     // modelMatrix to scale and position them.
-    var boxGeometry = new Cesium.BoxGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,

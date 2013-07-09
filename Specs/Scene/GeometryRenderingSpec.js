@@ -270,7 +270,7 @@ defineSuite([
         var instance;
         beforeAll(function() {
             instance = new GeometryInstance({
-                geometry : new BoxGeometry({
+                geometry : BoxGeometry.fromDimensions({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     dimensions : new Cartesian3(1000000.0, 1000000.0, 2000000.0)
                 }),
