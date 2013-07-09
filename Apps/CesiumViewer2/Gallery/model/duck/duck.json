@@ -275,7 +275,10 @@
                             },
                             "lightingModel": "Blinn",
                             "parameters": [
-                                "diffuse"
+                                "diffuse",
+                                "normalMatrix",
+                                "projectionMatrix",
+                                "worldViewMatrix"
                             ],
                             "texcoordBindings": {
                                 "diffuse": "TEXCOORD_0"
