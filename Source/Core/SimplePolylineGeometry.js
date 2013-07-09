@@ -6,7 +6,8 @@ define([
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
-        './GeometryAttribute'
+        './GeometryAttribute',
+        './GeometryAttributes'
     ], function(
         DeveloperError,
         ComponentDatatype,
@@ -14,11 +15,12 @@ define([
         PrimitiveType,
         defaultValue,
         BoundingSphere,
-        GeometryAttribute) {
+        GeometryAttribute,
+        GeometryAttributes) {
     "use strict";
 
     /**
-     * A polyline modeled as a line strip; the first two positions define a line segment,
+     * A {@link Geometry} that represents a polyline modeled as a line strip; the first two positions define a line segment,
      * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry
@@ -59,13 +61,12 @@ define([
             positionValues[j++] = p.z;
         }
 
-        var attributes = {
-            position : new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : positionValues
-            })
-        };
+        var attributes = new GeometryAttributes();
+        attributes.position = new GeometryAttribute({
+            componentDatatype : ComponentDatatype.DOUBLE,
+            componentsPerAttribute : 3,
+            values : positionValues
+        });
 
         // From line strip to lines
         var numberOfIndices = 2 * (numberOfPositions - 1);
@@ -88,7 +89,7 @@ define([
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

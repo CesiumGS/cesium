@@ -10,6 +10,7 @@ define([
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './PolylinePipeline',
         './PolygonPipeline',
@@ -27,6 +28,7 @@ define([
         Ellipsoid,
         EllipsoidTangentPlane,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         PolylinePipeline,
         PolygonPipeline,
@@ -44,7 +46,7 @@ define([
     var scratchNormal = new Cartesian3();
 
     /**
-     * Creates a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      * The points in the wall can be offset by supplied terrain elevation data.
      *
@@ -239,7 +241,7 @@ define([
             }
         }
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -324,14 +326,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
