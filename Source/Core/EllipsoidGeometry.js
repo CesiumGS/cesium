@@ -10,6 +10,7 @@ define([
         './PrimitiveType',
         './BoundingSphere',
         './GeometryAttribute',
+        './GeometryAttributes',
         './VertexFormat'
     ], function(
         defaultValue,
@@ -22,6 +23,7 @@ define([
         PrimitiveType,
         BoundingSphere,
         GeometryAttribute,
+        GeometryAttributes,
         VertexFormat) {
     "use strict";
 
@@ -113,7 +115,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates vertices and indices for an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents vertices and indices for an ellipsoid centered at the origin.
      *
      * @alias EllipsoidGeometry
      * @constructor
@@ -127,8 +129,7 @@ define([
      * @example
      * var ellipsoid = new EllipsoidGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0),
-     *   modelMatrix : Transforms.eastNorthUpToFixedFrame(center)
+     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
      * });
      */
     var EllipsoidGeometry = function(options) {
@@ -204,7 +205,7 @@ define([
         // Plane z = -1
         addFaceTriangles(edge1to2, edge0to1.slice(0).reverse(), edge3to0.slice(0).reverse(), edge2to3, numberOfPartitions, positions, indices);
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         var length = positions.length;
         var i;
@@ -316,7 +317,7 @@ define([
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

@@ -11,6 +11,7 @@ define([
         './GeometryPipeline',
         './GeometryInstance',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix3',
         './PrimitiveType',
@@ -28,6 +29,7 @@ define([
         GeometryPipeline,
         GeometryInstance,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix3,
         PrimitiveType,
@@ -776,6 +778,10 @@ define([
             throw new DeveloperError('granularity must be greater than zero.');
         }
 
+        if (options.semiMajorAxis < options.semiMinorAxis) {
+            throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
+        }
+
         var extrude = (options.height !== options.extrudedHeight);
         var o;
         if (extrude) {
@@ -793,14 +799,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
-        this.attributes = o.attributes;
+        this.attributes = new GeometryAttributes(o.attributes);
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

@@ -333,7 +333,7 @@ defineSuite([
 
     it('fromEllipsoid with a result parameter', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var sphere = new BoundingSphere();
+        var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
         var result = BoundingSphere.fromEllipsoid(ellipsoid, sphere);
         expect(result).toBe(sphere);
         expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius()));

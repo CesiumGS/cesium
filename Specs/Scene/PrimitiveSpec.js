@@ -19,7 +19,6 @@ defineSuite([
          'Scene/PerInstanceColorAppearance',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
-         'Scene/Camera',
          'Specs/render',
          'Specs/pick',
          'Specs/createCanvas',
@@ -47,7 +46,6 @@ defineSuite([
          PerInstanceColorAppearance,
          SceneMode,
          OrthographicFrustum,
-         Camera,
          render,
          pick,
          createCanvas,
@@ -72,7 +70,7 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        frameState = createFrameState(new Camera(context.getCanvas()));
+        frameState = createFrameState();
 
         us = context.getUniformState();
         us.update(frameState);
@@ -228,7 +226,6 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    /*
     it('renders in Columbus view when allowColumbusView is true', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
@@ -237,6 +234,7 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.morphTime = frameState.mode.morphTime;
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,
@@ -273,6 +271,7 @@ defineSuite([
         });
 
         frameState.mode = SceneMode.SCENE2D;
+        frameState.morphTime = frameState.mode.morphTime;
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                                                   1.0, 0.0, 0.0, 0.0,
                                                   0.0, 1.0, 0.0, 0.0,
@@ -306,7 +305,6 @@ defineSuite([
         frameState = createFrameState(); // reset frame state
         primitive = primitive && primitive.destroy();
     });
-    */
 
     it('transforms to world coordinates', function() {
         var primitive = new Primitive({

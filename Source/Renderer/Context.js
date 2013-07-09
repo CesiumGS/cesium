@@ -2418,7 +2418,7 @@ define([
         } else {
             // One vertex buffer per attribute.
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
+                if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;

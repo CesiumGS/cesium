@@ -27,11 +27,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
-], function(
-    Cesium, Button, DropDownButton, DropDownMenu, MenuItem)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -88,46 +84,8 @@ require([
         return Cesium.destroyObject(this);
     };
 
-    function createButtons(widget) {
-        var scene = widget.scene;
-        var ellipsoid = widget.centralBody.getEllipsoid();
-        var transitioner = new Cesium.SceneTransitioner(scene, ellipsoid);
-
-        var sceneMenu = new DropDownMenu({
-            style : "display: none;"
-        });
-
-        sceneMenu.addChild(new MenuItem({
-            label : '2D',
-            onClick : function() {
-                transitioner.morphTo2D();
-            }
-        }));
-
-        sceneMenu.addChild(new MenuItem({
-            label : 'Columbus View',
-            onClick : function() {
-                transitioner.morphToColumbusView();
-            }
-        }));
-
-        sceneMenu.addChild(new MenuItem({
-            label : '3D',
-            onClick : function() {
-                transitioner.morphTo3D();
-            }
-        }));
-
-        new DropDownButton({
-            label : 'Scene Mode',
-            dropDown : sceneMenu
-        }).placeAt('toolbar');
-    }
-
-    var widget = new Cesium.CesiumWidget('cesiumContainer');
-
-    createButtons(widget);
-    renderBox(widget.scene);
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    renderBox(viewer.scene);
 
     Sandcastle.finishedLoading();
 });</script>
