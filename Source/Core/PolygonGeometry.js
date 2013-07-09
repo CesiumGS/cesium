@@ -7,23 +7,24 @@ define([
         './Cartesian3',
         './Cartesian4',
         './ComponentDatatype',
-        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
+        './GeometryAttributes',
         './GeometryInstance',
         './GeometryPipeline',
+        './IndexDatatype',
         './Intersect',
         './Math',
         './Matrix3',
         './PolygonPipeline',
+        './PrimitiveType',
         './Quaternion',
         './Queue',
         './VertexFormat',
-        './WindingOrder',
-        './PrimitiveType'
+        './WindingOrder'
     ], function(
         defaultValue,
         BoundingRectangle,
@@ -32,23 +33,24 @@ define([
         Cartesian3,
         Cartesian4,
         ComponentDatatype,
-        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
         GeometryInstance,
         GeometryPipeline,
+        IndexDatatype,
         Intersect,
         CesiumMath,
         Matrix3,
         PolygonPipeline,
+        PrimitiveType,
         Quaternion,
         Queue,
         VertexFormat,
-        WindingOrder,
-        PrimitiveType) {
+        WindingOrder) {
     "use strict";
 
     var scratchBoundingRectangle = new BoundingRectangle();
@@ -974,31 +976,7 @@ define([
         if (!vertexFormat.position) {
             delete attributes.position;
         }
-/*
-        if (vertexFormat.position) {
-            attributes.position = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.DOUBLE,
-                componentsPerAttribute : 3,
-                values : new Float64Array(geometry.attributes.position.values)
-            });
-        }
 
-        if (vertexFormat.st) {
-            attributes.st = geometry.attributes.st;
-        }
-
-        if (vertexFormat.normal) {
-            attributes.normal = geometry.attributes.normal;
-        }
-
-        if (vertexFormat.tangent) {
-            attributes.tangent = geometry.attributes.tangent;
-        }
-
-        if (vertexFormat.binormal) {
-            attributes.binormal = geometry.attributes.binormal;
-        }
-*/
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
@@ -1007,7 +985,7 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = attributes;
+        this.attributes = new GeometryAttributes(attributes);
 
         /**
          * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
