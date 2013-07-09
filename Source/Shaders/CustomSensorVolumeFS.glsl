@@ -37,6 +37,7 @@ bool isOnBoundary(float value, float epsilon)
 
 #ifdef GL_OES_standard_derivatives
     float delta = max(abs(dFdx(value)), abs(dFdy(value)));
+    float pixels = width * delta;
     float temp = abs(value);
     // There are a couple things going on here.
     // First we test the value at the current fragment to see if it is within the tolerance.
@@ -45,7 +46,8 @@ bool isOnBoundary(float value, float epsilon)
     // For example, if we are looking for "value" to be close to 0, but value is 1 and the adjacent value is 2,
     // then the delta would be 1 and "temp - delta" would be "1 - 1" which is zero even though neither of
     // the points is close to zero.
-    return temp < tolerance || (delta < 10.0 * tolerance && temp - delta < tolerance);
+    // TODO: Cleanup comparison using max().
+    return temp < tolerance && temp < pixels || (delta < 10.0 * tolerance && temp - delta < tolerance && temp < pixels);
 #else
     return abs(value) < tolerance;
 #endif
