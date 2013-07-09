@@ -71,68 +71,73 @@ define([
 
         /**
          * The tiling scheme used to tile the surface.
-         * @type TilingScheme
+         * @type {TilingScheme}
          */
         this.tilingScheme = description.tilingScheme;
 
         /**
          * The x coordinate.
-         * @type Number
+         * @type {Number}
          */
         this.x = description.x;
 
         /**
          * The y coordinate.
-         * @type Number
+         * @type {Number}
          */
         this.y = description.y;
 
         /**
          * The level-of-detail, where zero is the coarsest, least-detailed.
-         * @type Number
+         * @type {Number}
          */
         this.level = description.level;
 
         /**
          * The parent of this tile in a tiling scheme.
-         * @type Tile
+         * @type {Tile}
          */
         this.parent = description.parent;
 
         /**
          * The children of this tile in a tiling scheme.
-         * @type Array
+         * @type {Array}
+         * @default undefined
          */
         this.children = undefined;
 
         /**
          * The cartographic extent of the tile, with north, south, east and
          * west properties in radians.
-         * @type Extent
+         * @type {Extent}
          */
         this.extent = this.tilingScheme.tileXYToExtent(this.x, this.y, this.level);
 
         /**
          * The current state of the tile in the tile load pipeline.
-         * @type TileState
+         * @type {TileState}
+         * @default {@link TileState.START}
          */
         this.state = TileState.START;
 
         /**
          * The previous tile in the {@link TileReplacementQueue}.
-         * @type Tile
+         * @type {Tile}
+         * @default undefined
          */
         this.replacementPrevious = undefined;
 
         /**
          * The next tile in the {@link TileReplacementQueue}.
-         * @type Tile
+         * @type {Tile}
+         * @default undefined
          */
         this.replacementNext = undefined;
 
         /**
          * The {@link TileImagery} attached to this tile.
-         * @type Array
+         * @type {Array}
+         * @default []
          */
         this.imagery = [];
 
@@ -140,21 +145,24 @@ define([
          * The distance from the camera to this tile, updated when the tile is selected
          * for rendering.  We can get rid of this if we have a better way to sort by
          * distance - for example, by using the natural ordering of a quadtree.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.distance = 0.0;
 
         /**
          * The world coordinates of the southwest corner of the tile's extent.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.southwestCornerCartesian = new Cartesian3();
 
         /**
          * The world coordinates of the northeast corner of the tile's extent.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.northeastCornerCartesian = new Cartesian3();
 
@@ -162,7 +170,8 @@ define([
          * A normal that, along with southwestCornerCartesian, defines a plane at the western edge of
          * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.westNormal = new Cartesian3();
 
@@ -172,7 +181,8 @@ define([
          * Because points of constant latitude do not necessary lie in a plane, positions below this
          * plane are not necessarily inside the tile, but they are close.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.southNormal = new Cartesian3();
 
@@ -180,7 +190,8 @@ define([
          * A normal that, along with northeastCornerCartesian, defines a plane at the eastern edge of
          * the tile.  Any position above (in the direction of the normal) this plane is outside the tile.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.eastNormal = new Cartesian3();
 
@@ -190,7 +201,8 @@ define([
          * Because points of constant latitude do not necessary lie in a plane, positions below this
          * plane are not necessarily inside the tile, but they are close.
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default Cartesian3()
          */
         this.northNormal = new Cartesian3();
 
@@ -323,17 +335,22 @@ define([
             processTerrainStateMachine(this, context, terrainProvider);
         }
 
+        // The terrain is renderable as soon as we have a valid vertex array.
         var isRenderable = typeof this.vertexArray !== 'undefined';
+
+        // But it's not done loading until our two state machines are terminated.
         var isDoneLoading = typeof this.loadedTerrain === 'undefined' && typeof this.upsampledTerrain === 'undefined';
 
         // Transition imagery states
         var tileImageryCollection = this.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
-            var imagery = tileImagery.imagery;
-            var imageryLayer = imagery.imageryLayer;
+            if (typeof tileImagery.loadingImagery === 'undefined') {
+                continue;
+            }
 
-            if (imagery.state === ImageryState.PLACEHOLDER) {
+            if (tileImagery.loadingImagery.state === ImageryState.PLACEHOLDER) {
+                var imageryLayer = tileImagery.loadingImagery.imageryLayer;
                 if (imageryLayer.getImageryProvider().isReady()) {
                     // Remove the placeholder and add the actual skeletons (if any)
                     // at the same position.  Then continue the loop at the same index.
@@ -342,62 +359,22 @@ define([
                     imageryLayer._createTileImagerySkeletons(this, terrainProvider, i);
                     --i;
                     len = tileImageryCollection.length;
-                }
-            }
-
-            if (imagery.state === ImageryState.UNLOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._requestImagery(imagery);
-            }
-
-            if (imagery.state === ImageryState.RECEIVED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._createTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.TEXTURE_LOADED) {
-                imagery.state = ImageryState.TRANSITIONING;
-                imageryLayer._reprojectTexture(context, imagery);
-            }
-
-            if (imagery.state === ImageryState.FAILED || imagery.state === ImageryState.INVALID) {
-                // re-associate TileImagery with a parent Imagery that is not failed or invalid.
-                var parent = imagery.parent;
-                while (typeof parent !== 'undefined' && (parent.state === ImageryState.FAILED || parent.state === ImageryState.INVALID)) {
-                    parent = parent.parent;
-                }
-
-                // If there's no valid parent, remove this TileImagery from the tile.
-                if (typeof parent === 'undefined') {
-                    tileImagery.freeResources();
-                    tileImageryCollection.splice(i, 1);
-                    --i;
-                    len = tileImageryCollection.length;
                     continue;
                 }
-
-                // use that parent imagery instead, storing the original imagery
-                // in originalImagery to keep it alive
-                tileImagery.originalImagery = imagery;
-
-                parent.addReference();
-                tileImagery.imagery = parent;
-                imagery = parent;
             }
 
-            var imageryDoneLoading = imagery.state === ImageryState.READY;
+            var thisTileDoneLoading = tileImagery.processStateMachine(this, context);
+            isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
-            if (imageryDoneLoading && typeof tileImagery.textureTranslationAndScale === 'undefined') {
-                tileImagery.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(this, tileImagery);
-            }
-
-            isRenderable = isRenderable && (imageryDoneLoading || imageryLayer.alpha === 0.0);
-            isDoneLoading = isDoneLoading && imageryDoneLoading;
+            // The imagery is renderable as soon as we have any renderable imagery for this region.
+            isRenderable = isRenderable && (thisTileDoneLoading || typeof tileImagery.readyImagery !== 'undefined');
         }
 
         // The tile becomes renderable when the terrain and all imagery data are loaded.
-        if (i === len && isRenderable) {
-            this.isRenderable = true;
+        if (i === len) {
+            if (isRenderable) {
+                this.isRenderable = true;
+            }
 
             if (isDoneLoading) {
                 this.state = TileState.READY;

@@ -42,18 +42,26 @@ define([
     var Color = function(red, green, blue, alpha) {
         /**
          * The red component.
+         * @type {Number}
+         * @default 1.0
          */
         this.red = defaultValue(red, 1.0);
         /**
          * The green component.
+         * @type {Number}
+         * @default 1.0
          */
         this.green = defaultValue(green, 1.0);
         /**
          * The blue component.
+         * @type {Number}
+         * @default 1.0
          */
         this.blue = defaultValue(blue, 1.0);
         /**
          * The alpha component.
+         * @type {Number}
+         * @default 1.0
          */
         this.alpha = defaultValue(alpha, 1.0);
     };
@@ -246,9 +254,12 @@ define([
      *
      * @param {Color} color The Color to duplicate.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
-     * @return {Color} The modified result parameter or a new instance if result was undefined.
+     * @return {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
      */
     Color.clone = function(color, result) {
+        if (typeof color === 'undefined'){
+            return undefined;
+        }
         if (typeof result === 'undefined') {
             return new Color(color.red, color.green, color.blue, color.alpha);
         }

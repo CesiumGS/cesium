@@ -22,37 +22,44 @@ define(function() {
     var DeveloperError = function(message) {
         /**
          * 'DeveloperError' indicating that this exception was thrown due to a developer error.
-         * @type String
+         * @type {String}
          * @constant
          */
         this.name = 'DeveloperError';
 
         /**
          * The explanation for why this exception was thrown.
-         * @type String
+         * @type {String}
          * @constant
          */
         this.message = message;
 
         /**
          * The Error object containing the stack trace.
-         * @type Error
+         * @type {Error}
          * @constant
          *
          * @see <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error'>Error object on Mozilla Developer Network</a>.
          */
         this.error = new Error();
+
+        /**
+         * The stack trace of this exception.
+         * @type {String}
+         * @constant
+         */
+        this.stack = this.error.stack;
     };
 
-    DeveloperError.prototype.toString = function () {
+    DeveloperError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
-        if (typeof this.error !== 'undefined') {
-            if (typeof this.error.stack !== 'undefined') {
-                str += '\n' + this.error.stack.toString();
-            } else {
-                str += '\n' + this.error.toString();
-            }
+
+        if (typeof this.stack !== 'undefined') {
+            str += '\n' + this.stack.toString();
+        } else {
+            str += '\n' + this.error.toString();
         }
+
         return str;
     };
 

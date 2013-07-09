@@ -616,6 +616,11 @@ defineSuite([
     });
 
     it('draws with sample coverage', function() {
+        if (!context.getAntialias()) {
+            // Sample coverage requires antialiasing.
+            return;
+        }
+
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';
         sp = context.createShaderProgram(vs, fs);

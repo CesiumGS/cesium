@@ -3,12 +3,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../getElement',
         './SceneModePickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         destroyObject,
         DeveloperError,
+        getElement,
         SceneModePickerViewModel,
         knockout) {
     "use strict";
@@ -45,17 +47,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof transitioner === 'undefined') {
             throw new DeveloperError('transitioner is required.');
         }
+
+        container = getElement(container);
 
         var viewModel = new SceneModePickerViewModel(transitioner);
 
@@ -115,8 +111,8 @@ define([
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown);
-        document.addEventListener('touchstart', this._closeDropDown);
+        document.addEventListener('mousedown', this._closeDropDown, true);
+        document.addEventListener('touchstart', this._closeDropDown, true);
     };
 
     defineProperties(SceneModePicker.prototype, {
@@ -160,8 +156,8 @@ define([
      */
     SceneModePicker.prototype.destroy = function() {
         this._viewModel.destroy();
-        document.removeEventListener('mousedown', this._closeDropDown);
-        document.removeEventListener('touchstart', this._closeDropDown);
+        document.removeEventListener('mousedown', this._closeDropDown, true);
+        document.removeEventListener('touchstart', this._closeDropDown, true);
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);

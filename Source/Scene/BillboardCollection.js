@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/Color',
+        '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -24,6 +25,7 @@ define([
     ], function(
         DeveloperError,
         Color,
+        defaultValue,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -54,6 +56,8 @@ define([
     var SCALE_INDEX = Billboard.SCALE_INDEX;
     var IMAGE_INDEX_INDEX = Billboard.IMAGE_INDEX_INDEX;
     var COLOR_INDEX = Billboard.COLOR_INDEX;
+    var ROTATION_INDEX = Billboard.ROTATION_INDEX;
+    var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -67,7 +71,8 @@ define([
         originAndShow : 5,
         direction : 6,
         pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
-        color : 7       // the 'pick' pass and 'color' is only used during the 'color' pass.
+        color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
+        rotationAndAlignedAxis : 8
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -137,6 +142,10 @@ define([
         this._billboardsRemoved = false;
         this._createVertexArray = false;
 
+        this._shaderRotation = false;
+        this._compiledShaderRotation = false;
+        this._compiledShaderRotationPick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -160,7 +169,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
@@ -190,16 +200,15 @@ define([
                               BufferUsage.STATIC_DRAW, // VERTICAL_ORIGIN_INDEX
                               BufferUsage.STATIC_DRAW, // SCALE_INDEX
                               BufferUsage.STATIC_DRAW, // IMAGE_INDEX_INDEX
-                              BufferUsage.STATIC_DRAW // COLOR_INDEX
+                              BufferUsage.STATIC_DRAW, // COLOR_INDEX
+                              BufferUsage.STATIC_DRAW, // ROTATION_INDEX
+                              BufferUsage.STATIC_DRAW  // ALIGNED_AXIS_INDEX
                           ];
 
         var that = this;
         this._uniforms = {
             u_atlas : function() {
                 return that._textureAtlas.getTexture();
-            },
-            u_atlasSize : function() {
-                return that._textureAtlas.getTexture().getDimensions();
             }
         };
     };
@@ -627,8 +636,7 @@ define([
         }, {
             index : attributeIndices.textureCoordinatesAndImageSize,
             componentsPerAttribute : 4,
-            normalize : true,
-            componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
+            componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[IMAGE_INDEX_INDEX]
         }, {
             index : attributeIndices.pickColor,
@@ -655,6 +663,11 @@ define([
             componentsPerAttribute : 2,
             normalize : true,
             componentDatatype : ComponentDatatype.UNSIGNED_BYTE
+        }, {
+            index : attributeIndices.rotationAndAlignedAxis,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -668,7 +681,7 @@ define([
     var writePositionScratch = new EncodedCartesian3();
 
     function writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var position = billboard._getActualPosition();
 
         if (billboardCollection._mode === SceneMode.SCENE3D) {
@@ -694,7 +707,7 @@ define([
     }
 
     function writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var pixelOffset = billboard.getPixelOffset();
         billboardCollection._maxPixelOffset = Math.max(billboardCollection._maxPixelOffset, pixelOffset.x, pixelOffset.y);
 
@@ -707,7 +720,7 @@ define([
     }
 
     function writeEyeOffsetAndScale(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var eyeOffset = billboard.getEyeOffset();
         var scale = billboard.getScale();
         billboardCollection._maxEyeOffset = Math.max(billboardCollection._maxEyeOffset, Math.abs(eyeOffset.x), Math.abs(eyeOffset.y), Math.abs(eyeOffset.z));
@@ -722,7 +735,7 @@ define([
     }
 
     function writePickColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
 
         var pickWriters = vafWriters[pickPassPurpose];
         var writer = pickWriters[attributeIndices.pickColor];
@@ -740,7 +753,7 @@ define([
     }
 
     function writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
 
         var colorWriters = vafWriters[colorPassPurpose];
         var writer = colorWriters[attributeIndices.color];
@@ -758,7 +771,7 @@ define([
     }
 
     function writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var horizontalOrigin = billboard.getHorizontalOrigin().value;
         var verticalOrigin = billboard.getVerticalOrigin().value;
         var show = billboard.getShow();
@@ -780,7 +793,7 @@ define([
     }
 
     function writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-        var i = (billboard._index * 4);
+        var i = billboard._index * 4;
         var bottomLeftX = 0;
         var bottomLeftY = 0;
         var width = 0;
@@ -799,14 +812,39 @@ define([
         var topRightX = bottomLeftX + width;
         var topRightY = bottomLeftY + height;
 
-        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, width, height);
+        var dimensions = billboardCollection._textureAtlas.getTexture().getDimensions();
+        var imageWidth = defaultValue(billboard.getWidth(), dimensions.x * width) * 0.5;
+        var imageHeight = defaultValue(billboard.getHeight(), dimensions.y * height) * 0.5;
+
+        billboardCollection._maxSize = Math.max(billboardCollection._maxSize, imageWidth, imageHeight);
 
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.textureCoordinatesAndImageSize];
-        writer(i + 0, bottomLeftX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Left
-        writer(i + 1, topRightX * 65535, bottomLeftY * 65535, width * 65535, height * 65535); // Lower Right
-        writer(i + 2, topRightX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Right
-        writer(i + 3, bottomLeftX * 65535, topRightY * 65535, width * 65535, height * 65535); // Upper Left
+        writer(i + 0, bottomLeftX, bottomLeftY, imageWidth, imageHeight); // Lower Left
+        writer(i + 1, topRightX, bottomLeftY, imageWidth, imageHeight); // Lower Right
+        writer(i + 2, topRightX, topRightY, imageWidth, imageHeight); // Upper Right
+        writer(i + 3, bottomLeftX, topRightY, imageWidth, imageHeight); // Upper Left
+    }
+
+    function writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var rotation = billboard.getRotation();
+        var alignedAxis = billboard.getAlignedAxis();
+
+        if (rotation !== 0.0 || !Cartesian3.equals(alignedAxis, Cartesian3.ZERO)) {
+            billboardCollection._shaderRotation = true;
+        }
+
+        var x = alignedAxis.x;
+        var y = alignedAxis.y;
+        var z = alignedAxis.z;
+
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.rotationAndAlignedAxis];
+        writer(i + 0, rotation, x, y, z);
+        writer(i + 1, rotation, x, y, z);
+        writer(i + 2, rotation, x, y, z);
+        writer(i + 3, rotation, x, y, z);
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -817,6 +855,7 @@ define([
         writeColor(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -883,9 +922,6 @@ define([
         var camera = frameState.camera;
         var frustum = camera.frustum;
 
-        var textureDimensions = collection._textureAtlas.getTexture().getDimensions();
-        var textureSize = Math.max(textureDimensions.x, textureDimensions.y);
-
         var pixelScale;
         var size;
         var offset;
@@ -900,7 +936,7 @@ define([
         var pixelSize = frustum.getPixelSize(scratchCanvasDimensions, distance);
         pixelScale = Math.max(pixelSize.x, pixelSize.y);
 
-        size = pixelScale * collection._maxScale * collection._maxSize * textureSize;
+        size = pixelScale * collection._maxScale * collection._maxSize * 2.0;
         if (collection._allHorizontalCenter) {
             size *= 0.5;
         }
@@ -1001,6 +1037,10 @@ define([
                     writers.push(writeOriginAndShow);
                 }
 
+                if (properties[ROTATION_INDEX] || properties[ALIGNED_AXIS_INDEX]) {
+                    writers.push(writeRotationAndAlignedAxis);
+                }
+
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1050,7 +1090,7 @@ define([
         if (frameState.mode === SceneMode.SCENE3D) {
             modelMatrix = this.modelMatrix;
             boundingVolume = BoundingSphere.clone(this._baseVolume, this._boundingVolume);
-        } else if (typeof this._baseVolume2D !== 'undefined') {
+        } else {
             boundingVolume = BoundingSphere.clone(this._baseVolume2D, this._boundingVolume);
         }
         updateBoundingVolume(this, context, frameState, boundingVolume);
@@ -1066,15 +1106,22 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            if (typeof this._sp === 'undefined') {
+            if (typeof this._rs === 'undefined') {
                 this._rs = context.createRenderState({
                     depthTest : {
                         enabled : true
                     },
                     blending : BlendingState.ALPHA_BLEND
                 });
+            }
 
-                this._sp = context.getShaderCache().getShaderProgram(BillboardCollectionVS, BillboardCollectionFS, attributeIndices);
+            if (typeof this._sp === 'undefined' || (this._shaderRotation && !this._compiledShaderRotation)) {
+                this._sp = context.getShaderCache().replaceShaderProgram(
+                        this._sp,
+                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + BillboardCollectionVS,
+                        BillboardCollectionFS,
+                        attributeIndices);
+                this._compiledShaderRotation = this._shaderRotation;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1101,11 +1148,13 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            if (typeof this._spPick === 'undefined') {
-                this._spPick = context.getShaderCache().getShaderProgram(
-                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
+            if (typeof this._spPick === 'undefined' || (this._shaderRotation && !this._compiledShaderRotationPick)) {
+                this._spPick = context.getShaderCache().replaceShaderProgram(
+                        this._spPick,
+                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
                         '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
                         attributeIndices);
+                this._compiledShaderRotation = this._shaderRotationPick;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];

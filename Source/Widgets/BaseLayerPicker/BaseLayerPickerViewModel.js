@@ -42,13 +42,14 @@ define([
         /**
          * Gets or sets an array of ImageryProviderViewModel instances available for selection.
          * This property is observable.
-         * @type Array
+         * @type {Array}
          */
         this.imageryProviderViewModels = imageryProviderViewModels.slice(0);
 
         /**
          * Gets or sets whether the imagery selection drop-down is currently visible.
-         * @type Boolean
+         * @type {Boolean}
+         * @default false
          */
         this.dropDownVisible = false;
 
@@ -56,7 +57,8 @@ define([
 
         /**
          * Gets the currently selected item name.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedName = undefined;
         knockout.defineProperty(this, 'selectedName', function() {
@@ -66,7 +68,8 @@ define([
 
         /**
          * Gets the image url of the currently selected item.  This property is observable.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.selectedIconUrl = undefined;
         knockout.defineProperty(this, 'selectedIconUrl', function() {
@@ -76,23 +79,47 @@ define([
 
         /**
          * Gets or sets the currently selected item.  This property is observable.
-         * @type ImageryProviderViewModel
+         * @type {ImageryProviderViewModel}
+         * @default undefined
          */
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
+
+        this._currentProviders = [];
         knockout.defineProperty(this, 'selectedItem', {
             get : function() {
                 return selectedViewModel();
             },
             set : function(value) {
-                if (imageryLayers.getLength() > 0) {
-                    imageryLayers.remove(imageryLayers.get(0));
+                var i;
+                var currentProviders = that._currentProviders;
+                var currentProvidersLength = currentProviders.length;
+                for (i = 0; i < currentProvidersLength; i++) {
+                    var layersLength = imageryLayers.getLength();
+                    for ( var x = 0; x < layersLength; x++) {
+                        var layer = imageryLayers.get(x);
+                        if (layer.getImageryProvider() === currentProviders[i]) {
+                            imageryLayers.remove(layer);
+                            break;
+                        }
+                    }
                 }
-                var newLayer = value.creationCommand();
-                if (typeof newLayer !== 'undefined') {
-                    imageryLayers.addImageryProvider(newLayer, 0);
+
+                if (typeof value !== 'undefined') {
+                    var newProviders = value.creationCommand();
+                    if (Array.isArray(newProviders)) {
+                        var newProvidersLength = newProviders.length;
+                        for (i = newProvidersLength - 1; i >= 0; i--) {
+                            imageryLayers.addImageryProvider(newProviders[i], 0);
+                        }
+                        that._currentProviders = newProviders.slice(0);
+                    } else {
+                        that._currentProviders = [newProviders];
+                        imageryLayers.addImageryProvider(newProviders, 0);
+                    }
+
+                    selectedViewModel(value);
                 }
-                selectedViewModel(value);
                 that.dropDownVisible = false;
             }
         });

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
@@ -14,6 +15,7 @@ define([
         '../Scene/SceneMode',
         '../ThirdParty/Tween'
     ], function(
+        Cartesian2,
         Cartesian3,
         clone,
         defaultValue,
@@ -404,6 +406,9 @@ define([
      * @see Scene#getFrameState
      * @see Scene#getAnimations
      */
+    var dirScratch = new Cartesian3();
+    var rightScratch = new Cartesian3();
+    var upScratch = new Cartesian3();
     CameraFlightPath.createAnimation = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
@@ -422,11 +427,70 @@ define([
         var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
         var onComplete = description.onComplete;
+        var frustum = frameState.camera.frustum;
 
-        if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
+        if (frameState.mode === SceneMode.SCENE2D) {
+            if ((Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
+                return {
+                    duration : 0,
+                    onComplete : onComplete
+                };
+            }
+        } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
                 duration : 0,
-                onComplete : description.onComplete
+                onComplete : onComplete
+            };
+        }
+
+        if (duration <= 0) {
+            var newOnComplete = function() {
+                var position = destination;
+                if (frameState.mode === SceneMode.SCENE3D) {
+                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        dirScratch = position.negate(dirScratch).normalize(dirScratch);
+                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                    } else {
+                        dirScratch = description.direction;
+                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                    }
+                    upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
+                } else {
+                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                        dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
+                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                    } else {
+                        dirScratch = description.direction;
+                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                    }
+                    upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
+                }
+
+                Cartesian3.clone(position, frameState.camera.position);
+                Cartesian3.clone(dirScratch, frameState.camera.direction);
+                Cartesian3.clone(upScratch, frameState.camera.up);
+                Cartesian3.clone(rightScratch, frameState.camera.right);
+
+                if (frameState.mode === SceneMode.SCENE2D) {
+                    var zoom = frameState.camera.position.z;
+
+
+                    var ratio = frustum.top / frustum.right;
+
+                    var incrementAmount = (zoom - (frustum.right - frustum.left)) * 0.5;
+                    frustum.right += incrementAmount;
+                    frustum.left -= incrementAmount;
+                    frustum.top = ratio * frustum.right;
+                    frustum.bottom = -frustum.top;
+                }
+
+                if (typeof onComplete === 'function') {
+                    onComplete();
+                }
+            };
+            return {
+                duration : 0,
+                onComplete : newOnComplete
             };
         }
 
@@ -494,13 +558,6 @@ define([
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
 
-        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete
-            };
-        }
-
         var createAnimationDescription = clone(description);
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);
@@ -540,13 +597,6 @@ define([
         var createAnimationDescription = clone(description);
         var camera = frameState.camera;
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
-
-        if (Cartesian3.equalsEpsilon(c3destination, frameState.camera.position, CesiumMath.EPSILON6)) {
-            return {
-                duration : 0,
-                onComplete : description.onComplete
-            };
-        }
 
         createAnimationDescription.destination = c3destination;
         return this.createAnimation(frameState, createAnimationDescription);

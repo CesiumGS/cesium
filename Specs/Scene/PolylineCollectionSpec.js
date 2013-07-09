@@ -366,7 +366,7 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
-    it('does not crash is polyline has one position', function() {
+    it('does not crash if polyline has one position', function() {
         polylines.add({
             positions : [{
                 x : 1647745.6656519484,

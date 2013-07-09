@@ -61,13 +61,11 @@ define([
      * @param {Spherical} spherical The spherical to clone.
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return The modified result parameter or a new instance if result was undefined.
-     *
-     * @exception {DeveloperError} spherical is required.
+     * @return The modified result parameter or a new instance if result was undefined. (Returns undefined if spherical is undefined)
      */
     Spherical.clone = function(spherical, result) {
         if (typeof spherical === 'undefined') {
-            throw new DeveloperError('spherical is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

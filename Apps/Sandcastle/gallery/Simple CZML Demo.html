@@ -11,54 +11,67 @@
     var dojoConfig = {
         baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
-            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
         ]
     };
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
-    @import url(../../../Source/Widgets/Dojo/CesiumViewerWidget.css);
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'Widgets/Dojo/CesiumViewerWidget', 'dijit/form/Button'
+    'Cesium', 'dijit/form/Button'
 ], function(
-    Cesium, CesiumViewerWidget, Button)
+    Cesium, Button)
 {
     "use strict";
 
     var gallery = '../../CesiumViewer/Gallery/';
-    var endUserOptions = {
-        source : gallery + 'simple.czml'
-    };
 
-    function czmlSatellites(widget) {
+    var czmlDataSource = new Cesium.CzmlDataSource();
+    
+    function czmlSatellites() {
         Sandcastle.declare(czmlSatellites);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.loadCzml(gallery + 'simple.czml');
+        czmlDataSource.loadUrl(gallery + 'simple.czml').then(function() {
+           viewer.homeButton.viewModel.command();
+           var dataClock = czmlDataSource.getClock();
+           if(typeof dataClock !== 'undefined') {
+               dataClock.clone(viewer.clock);
+               viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+           }
+        });
     }
 
-    function czmlSensors(widget) {
+    function czmlSensors() {
         Sandcastle.declare(czmlSensors);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.loadCzml(gallery + 'LotsOfSensors.czml');
+        czmlDataSource.loadUrl(gallery + 'LotsOfSensors.czml').then(function() {
+            viewer.homeButton.viewModel.command();
+            var dataClock = czmlDataSource.getClock();
+            if(typeof dataClock !== 'undefined') {
+                dataClock.clone(viewer.clock);
+                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+            }
+         });
     }
 
-    function czmlVehicle(widget) {
+    function czmlVehicle() {
         Sandcastle.declare(czmlVehicle);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.loadCzml(gallery + 'Vehicle.czml', 'Vehicle');
+        czmlDataSource.loadUrl(gallery + 'Vehicle.czml').then(function() {
+            viewer.homeButton.viewModel.command();
+            var dataClock = czmlDataSource.getClock();
+            if(typeof dataClock !== 'undefined') {
+                dataClock.clone(viewer.clock);
+                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+            }
+         });
     }
 
     var builtInCzml = [
@@ -129,22 +142,25 @@ require([
         }
     ];
 
-    function useBuiltInCzml(widget) {
+    function useBuiltInCzml() {
         Sandcastle.declare(useBuiltInCzml);    // For highlighting in Sandcastle.
-        widget.removeAllCzml();
-        widget.viewHome();
-        widget.addCzml(builtInCzml, 'Built-in CZML');
+        czmlDataSource.load(builtInCzml, 'Built-in CZML');
+        var dataClock = czmlDataSource.getClock();
+        if(typeof dataClock !== 'undefined') {
+            dataClock.clone(viewer.clock);
+            viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
+        }
 
         // Zoom in a little closer...
         var extent = new Cesium.Extent(-2.056, 0.587, -2.010, 0.633);
-        widget.scene.getCamera().controller.viewExtent(extent);
+        viewer.scene.getCamera().controller.viewExtent(extent);
     }
 
-    function createButtons(widget) {
+    function createButtons() {
         new Button({
             label: 'Satellites',
             onClick: function() {
-                czmlSatellites(widget);
+                czmlSatellites();
                 Sandcastle.highlight(czmlSatellites);
             }
         }).placeAt('toolbar');
@@ -152,7 +168,7 @@ require([
         new Button({
             label: 'Sensors',
             onClick: function() {
-                czmlSensors(widget);
+                czmlSensors();
                 Sandcastle.highlight(czmlSensors);
             }
         }).placeAt('toolbar');
@@ -160,7 +176,7 @@ require([
         new Button({
             label: 'Vehicle',
             onClick: function() {
-                czmlVehicle(widget);
+                czmlVehicle();
                 Sandcastle.highlight(czmlVehicle);
             }
         }).placeAt('toolbar');
@@ -168,7 +184,7 @@ require([
         new Button({
             label: 'Built-in CZML',
             onClick: function() {
-                useBuiltInCzml(widget);
+                useBuiltInCzml();
                 Sandcastle.highlight(useBuiltInCzml);
             }
         }).placeAt('toolbar');
@@ -176,14 +192,10 @@ require([
 
     // Initialize a viewer capable of drag-and-drop
     // and user customizations.
-    var widget = new CesiumViewerWidget({
-        endUserOptions : endUserOptions,
-        enableDragDrop : true
-    });
-    widget.placeAt('cesiumContainer');
-    widget.startup();
-
-    createButtons(widget);
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    viewer.dataSources.add(czmlDataSource);
+    czmlSatellites(viewer);
+    createButtons(viewer);
 
     Sandcastle.finishedLoading();
 });

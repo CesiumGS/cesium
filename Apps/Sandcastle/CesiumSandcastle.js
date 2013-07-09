@@ -5,20 +5,16 @@ require({
     baseUrl : '../../Source',
     packages : [{
         name : 'dojo',
-        location : '../ThirdParty/dojo-release-1.8.3-src/dojo'
+        location : '../ThirdParty/dojo-release-1.9.1/dojo'
     }, {
         name : 'dijit',
-        location : '../ThirdParty/dojo-release-1.8.3-src/dijit'
-    }, {
-        name : 'dojox',
-        location : '../ThirdParty/dojo-release-1.8.3-src/dojox'
+        location : '../ThirdParty/dojo-release-1.9.1/dijit'
     }, {
         name : 'Sandcastle',
         location : '../Apps/Sandcastle'
     }]
 }, [
     'Sandcastle/LinkButton',
-    'Widgets/Dojo/CesiumViewerWidget',
     'dojo/mouse',
     'dojo/on',
     'dojo/parser',
@@ -50,7 +46,6 @@ require({
     'dojo/domReady!'
 ], function(
     LinkButton,
-    CesiumViewerWidget,
     mouse,
     on,
     parser,
@@ -69,7 +64,6 @@ require({
 
     parser.parse();
 
-    window.CesiumViewerWidget = CesiumViewerWidget; // for autocomplete.
     fx.fadeOut({
         node : 'loading',
         onEnd : function() {

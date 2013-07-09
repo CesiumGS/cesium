@@ -1,5 +1,0 @@
-define(
-({
-	label: "Selectare fişiere..."
-})
-);

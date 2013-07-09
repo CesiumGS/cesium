@@ -22,8 +22,8 @@ defineSuite([
     });
 
     afterAll(function() {
-        destroyScene(scene);
         transitioner.destroy();
+        destroyScene(scene);
     });
 
     it('constructor sets default values', function() {
@@ -51,23 +51,27 @@ defineSuite([
     //The actual position of the camera at the end of the command is
     //tied to the implementation of various camera features.
     it('works in 3D', function() {
+        scene.render();
         var viewModel = new HomeButtonViewModel(scene, transitioner);
         viewModel.command();
     });
 
     it('works in 2D', function() {
+        scene.render();
         var viewModel = new HomeButtonViewModel(scene, transitioner);
         transitioner.to2D();
         viewModel.command();
     });
 
     it('works in Columbus View', function() {
+        scene.render();
         var viewModel = new HomeButtonViewModel(scene, transitioner);
         transitioner.toColumbusView();
         viewModel.command();
     });
 
     it('works while morphing', function() {
+        scene.render();
         var viewModel = new HomeButtonViewModel(scene, transitioner);
         transitioner.morphToColumbusView();
         viewModel.command();

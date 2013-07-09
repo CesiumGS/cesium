@@ -21,37 +21,46 @@ define(function() {
     var RuntimeError = function(message) {
         /**
          * 'RuntimeError' indicating that this exception was thrown due to a runtime error.
-         * @type String
+         * @type {String}
          * @constant
+         * @default
          */
         this.name = 'RuntimeError';
 
         /**
          * The explanation for why this exception was thrown.
-         * @type String
+         * @type {String}
          * @constant
          */
         this.message = message;
 
         /**
          * The Error object containing the stack trace.
-         * @type Error
+         * @type {Error}
          * @constant
+         * @default Error()
          *
          * @see <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error'>Error object on Mozilla Developer Network</a>.
          */
         this.error = new Error();
+
+        /**
+         * The stack trace of this exception.
+         * @type {String}
+         * @constant
+         */
+        this.stack = this.error.stack;
     };
 
-    RuntimeError.prototype.toString = function () {
+    RuntimeError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
-        if (typeof this.error !== 'undefined') {
-            if (typeof this.error.stack !== 'undefined') {
-                str += '\n' + this.error.stack.toString();
-            } else {
-                str += '\n' + this.error.toString();
-            }
+
+        if (typeof this.stack !== 'undefined') {
+            str += '\n' + this.stack.toString();
+        } else {
+            str += '\n' + this.error.toString();
         }
+
         return str;
     };
 

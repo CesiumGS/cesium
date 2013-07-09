@@ -26,6 +26,9 @@ public class HostChecker {
 	}
 
 	public boolean allowHost(String host) {
+		if (host == null) {
+			return false;
+		}
 		return allowedHosts.matcher(host).matches();
 	}
 }

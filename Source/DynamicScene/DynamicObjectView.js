@@ -99,7 +99,16 @@ define([
             if (typeof deltaCartesian !== 'undefined' && !Cartesian3.equalsEpsilon(cartesian, deltaCartesian, CesiumMath.EPSILON6)) {
                 var toInertial = Transforms.computeFixedToIcrfMatrix(time, update3DMatrix3Scratch1);
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
-                var toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+                var toFixed;
+
+                if (typeof toInertial === 'undefined' || typeof toInertialDelta === 'undefined') {
+                    toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, update3DMatrix3Scratch3);
+                    toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
+                    toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, update3DMatrix3Scratch2);
+                    Matrix3.transpose(toInertialDelta, toInertialDelta);
+                } else {
+                    toFixed = Matrix3.transpose(toInertial, update3DMatrix3Scratch3);
+                }
 
                 // Z along the position
                 var zBasis = update3DCartesian3Scratch2;
@@ -191,7 +200,6 @@ define([
 
     function update3DController(that, camera, objectChanged, offset) {
         var scene = that.scene;
-        that._screenSpaceCameraController.enableTilt = false;
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         if (objectChanged) {
@@ -241,20 +249,20 @@ define([
     var DynamicObjectView = function(dynamicObject, scene, ellipsoid) {
         /**
          * The object to track with the camera.
-         * @type DynamicObject
+         * @type {DynamicObject}
          */
         this.dynamicObject = dynamicObject;
 
         /**
          * The scene in which to track the object.
-         * @type Scene
+         * @type {Scene}
          */
         this.scene = scene;
         this._lastScene = undefined;
 
         /**
          * The ellipsoid to use for orienting the camera.
-         * @type Ellipsoid
+         * @type {Ellipsoid}
          */
         this.ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 

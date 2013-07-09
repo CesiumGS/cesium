@@ -55,7 +55,7 @@ defineSuite([
     });
 
     it('returns a promise that resolves when the request loads', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadJson(testUrl);
 
         expect(promise).toBeDefined();
@@ -80,7 +80,7 @@ defineSuite([
     });
 
     it('returns a promise that rejects when the request errors', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadJson(testUrl);
 
         expect(promise).toBeDefined();
@@ -104,7 +104,7 @@ defineSuite([
     });
 
     it('returns a promise that rejects when the request results in an HTTP error code', function() {
-        var testUrl = 'http://example.com/testuri';
+        var testUrl = 'http://example.invalid/testuri';
         var promise = loadJson(testUrl);
 
         expect(promise).toBeDefined();

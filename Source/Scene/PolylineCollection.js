@@ -130,7 +130,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
@@ -141,6 +142,7 @@ define([
 
         this._boundingVolume = undefined;
         this._boundingVolume2D = undefined;
+        this._boundingVolumeScratch = new BoundingSphere();
 
         this._commandLists = new CommandLists();
         this._colorCommands = [];
@@ -365,7 +367,6 @@ define([
     };
 
     var emptyArray = [];
-    var scracthBoundingSphere = new BoundingSphere();
 
     /**
      * @private
@@ -439,11 +440,11 @@ define([
             boundingVolume = this._boundingVolume2D;
         } else if (frameState.mode === SceneMode.SCENE2D) {
             if (typeof this._boundingVolume2D !== 'undefined') {
-                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, scracthBoundingSphere);
+                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, this._boundingVolumeScratch);
                 boundingVolume.center.x = 0.0;
             }
         } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, scracthBoundingSphere);
+            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, this._boundingVolumeScratch);
         }
 
         if (typeof boundingVolume === 'undefined') {

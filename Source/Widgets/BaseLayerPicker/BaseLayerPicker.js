@@ -3,12 +3,14 @@ define([
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
+        '../getElement',
         './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
         destroyObject,
         DeveloperError,
+        getElement,
         BaseLayerPickerViewModel,
         knockout) {
     "use strict";
@@ -54,7 +56,7 @@ define([
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
      *          return new OpenStreetMapImageryProvider({
-     *              url : 'http://tile.openstreetmap.org/',
+     *              url : 'http://tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
@@ -68,18 +70,18 @@ define([
      *          return new TileMapServiceImageryProvider({
      *              url : 'http://cesium.agi.com/blackmarble',
      *              maximumLevel : 8,
-     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory',
+     *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
      *          });
      *      }
      *  }));
      *
      *  providerViewModels.push(new ImageryProviderViewModel({
-     *      name : 'Disable Streaming Imagery',
-     *      iconUrl : require.toUrl('../Images/ImageryProviders/singleTile.png'),
-     *      tooltip : 'Uses a single image for the entire world.',
+     *      name : 'Natural Earth\u00a0II',
+     *      iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
+     *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new SingleTileImageryProvider({
-     *              url : 'NE2_LR_LC_SR_W_DR_2048.jpg',
+     *          return new TileMapServiceImageryProvider({
+     *              url : buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
      *  }));
@@ -96,17 +98,11 @@ define([
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof container === 'string') {
-            var tmp = document.getElementById(container);
-            if (tmp === null) {
-                throw new DeveloperError('Element with id "' + container + '" does not exist in the document.');
-            }
-            container = tmp;
-        }
-
         if (typeof imageryLayers === 'undefined') {
             throw new DeveloperError('imageryLayers is required.');
         }
+
+        container = getElement(container);
 
         var viewModel = new BaseLayerPickerViewModel(imageryLayers, imageryProviderViewModels);
         this._viewModel = viewModel;
@@ -122,6 +118,7 @@ define([
         container.appendChild(element);
 
         var choices = document.createElement('div');
+        this._choices = choices;
         choices.className = 'cesium-baseLayerPicker-dropDown';
         choices.setAttribute('data-bind', '\
                 css: { "cesium-baseLayerPicker-visible" : dropDownVisible,\
@@ -157,8 +154,8 @@ define([
             }
         };
 
-        document.addEventListener('mousedown', this._closeDropDown);
-        document.addEventListener('touchstart', this._closeDropDown);
+        document.addEventListener('mousedown', this._closeDropDown, true);
+        document.addEventListener('touchstart', this._closeDropDown, true);
     };
 
     defineProperties(BaseLayerPicker.prototype, {
@@ -201,11 +198,12 @@ define([
      * @memberof BaseLayerPicker
      */
     BaseLayerPicker.prototype.destroy = function() {
-        document.removeEventListener('mousedown', this._closeDropDown);
-        document.removeEventListener('touchstart', this._closeDropDown);
+        document.removeEventListener('mousedown', this._closeDropDown, true);
+        document.removeEventListener('touchstart', this._closeDropDown, true);
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
+        container.removeChild(this._choices);
         return destroyObject(this);
     };
 

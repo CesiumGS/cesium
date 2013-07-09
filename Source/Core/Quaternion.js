@@ -28,25 +28,29 @@ define([
     var Quaternion = function(x, y, z, w) {
         /**
          * The X component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The Y component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The Z component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.z = defaultValue(z, 0.0);
 
         /**
          * The W component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.w = defaultValue(w, 0.0);
     };
@@ -174,13 +178,11 @@ define([
      *
      * @param {Quaternion} quaternion The quaternion to duplicate.
      * @param {Quaternion} [result] The object onto which to store the result.
-     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided.
-     *
-     * @exception {DeveloperError} quaternion is required.
+     * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided. (Returns undefined if quaternion is undefined)
      */
     Quaternion.clone = function(quaternion, result) {
         if (typeof quaternion === 'undefined') {
-            throw new DeveloperError('quaternion is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

@@ -323,4 +323,72 @@ defineSuite([
             expect(provider.getExtent().north).toBeLessThanOrEqualTo(provider.getTilingScheme().getExtent().north);
         });
     });
+
+    it('uses a minimum level if the tilemapresource.xml specifies one and it is reasonable', function() {
+        loadXML.loadXML = function(url, headers, deferred) {
+            var parser = new DOMParser();
+            var xmlString =
+                "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
+                "  <Abstract/>" +
+                "  <SRS>EPSG:900913</SRS>" +
+                "  <BoundingBox minx='-10.0' miny='5.0' maxx='-9.0' maxy='6.0'/>" +
+                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+                "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
+                "  <TileSets profile='mercator'>" +
+                "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
+                "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+                "  </TileSets>" +
+                "</TileMap>";
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.getMaximumLevel()).toBe(8);
+            expect(provider.getMinimumLevel()).toBe(7);
+        });
+    });
+
+    it('ignores the minimum level in the tilemapresource.xml if it is unreasonable', function() {
+        loadXML.loadXML = function(url, headers, deferred) {
+            var parser = new DOMParser();
+            var xmlString =
+                "<TileMap version='1.0.0' tilemapservice='http://tms.osgeo.org/1.0.0'>" +
+                "  <Title>dnb_land_ocean_ice.2012.54000x27000_geo.tif</Title>" +
+                "  <Abstract/>" +
+                "  <SRS>EPSG:900913</SRS>" +
+                "  <BoundingBox minx='-170.0' miny='-85.0' maxx='170.0' maxy='85.0'/>" +
+                "  <Origin x='-88.0' y='-180.00000000000000'/>" +
+                "  <TileFormat width='256' height='256' mime-type='image/png' extension='png'/>" +
+                "  <TileSets profile='mercator'>" +
+                "    <TileSet href='7' units-per-pixel='1222.99245234375008' order='7'/>" +
+                "    <TileSet href='8' units-per-pixel='611.49622617187504' order='8'/>" +
+                "  </TileSets>" +
+                "</TileMap>";
+            var xml = parser.parseFromString(xmlString, "text/xml");
+            deferred.resolve(xml);
+        };
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'made/up/tms/server'
+        });
+
+        waitsFor(function() {
+            return provider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            expect(provider.getMaximumLevel()).toBe(8);
+            expect(provider.getMinimumLevel()).toBe(0);
+        });
+    });
 });

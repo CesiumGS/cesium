@@ -28,25 +28,29 @@ define([
     var BoundingRectangle = function(x, y, width, height) {
         /**
          * The x coordinate of the rectangle.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The y coordinate of the rectangle.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
 
         /**
          * The width of the rectangle.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.width = defaultValue(width, 0.0);
 
         /**
          * The height of the rectangle.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.height = defaultValue(height, 0.0);
     };
@@ -144,13 +148,11 @@ define([
      *
      * @param {BoundingRectangle} rectangle The bounding rectangle to duplicate.
      * @param {BoundingRectangle} [result] The object onto which to store the result.
-     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
-     *
-     * @exception {DeveloperError} rectangle is required.
+     * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided. (Returns undefined if rectangle is undefined)
      */
     BoundingRectangle.clone = function(rectangle, result) {
         if (typeof rectangle === 'undefined') {
-            throw new DeveloperError('rectangle is required');
+            return undefined;
         }
 
         if (typeof result === 'undefined') {

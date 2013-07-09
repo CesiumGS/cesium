@@ -65,7 +65,7 @@ define([
         canvas.dimensions = dimensions;
 
         document.body.removeChild(canvas);
-        canvas.style.visibility = undefined;
+        canvas.style.visibility = '';
 
         var baseline = dimensions.height - dimensions.ascent;
         canvas.width = dimensions.width;
@@ -87,7 +87,6 @@ define([
             context2D.fillStyle = fillColor.toCssColorString();
             context2D.fillText(text, 0, y);
         }
-
 
         return canvas;
     };

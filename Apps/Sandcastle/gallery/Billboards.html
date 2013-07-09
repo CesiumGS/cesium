@@ -12,14 +12,13 @@
     var dojoConfig = {
         baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.8.3-src/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.8.3-src/dijit' },
-            { name: 'dojox', location: '../ThirdParty/dojo-release-1.8.3-src/dojox' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
         ]
     };
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.8.3-src/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.8.3-src/dijit/themes/claro/claro.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -73,8 +72,12 @@ require([
                 horizontalOrigin : Cesium.HorizontalOrigin.CENTER, // default
                 verticalOrigin : Cesium.VerticalOrigin.BOTTOM, // default: CENTER
                 scale : 2.0, // default: 1.0
-                imageIndex : 0, // default
-                color : Cesium.Color.LIME // default: WHITE
+                imageIndex : 0, // default: -1
+                color : Cesium.Color.LIME, // default: WHITE
+                rotation : Cesium.Math.PI_OVER_FOUR, // default: 0.0
+                alignedAxis : Cesium.Cartesian3.ZERO, // default
+                width : 100, // default: undefined
+                height : 25 // default: undefined
             });
             scene.getPrimitives().add(billboards);
         };
