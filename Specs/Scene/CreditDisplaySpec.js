@@ -22,6 +22,27 @@ defineSuite([
         }).toThrow();
     });
 
+    it('credit display addCredit throws when credit is undefined', function() {
+        expect(function() {
+            var creditDisplay = new CreditDisplay();
+            creditDisplay.addCredit();
+        }).toThrow();
+    });
+
+    it('credit display addDefaultCredit throws when credit is undefined', function() {
+        expect(function() {
+            var creditDisplay = new CreditDisplay();
+            creditDisplay.addDefaultCredit();
+        }).toThrow();
+    });
+
+    it('credit display removeDefaultCredit throws when credit is undefined', function() {
+        expect(function() {
+            var creditDisplay = new CreditDisplay();
+            creditDisplay.removeDevaultCredit();
+        }).toThrow();
+    });
+
     it('credit display displays text credit', function() {
         var creditDisplay = new CreditDisplay(container);
         var credit = new Credit('credit1');

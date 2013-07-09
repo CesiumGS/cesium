@@ -705,7 +705,7 @@ define([
                     this._rsColor,
                     this._projection);
 
-            updateLogos(this, context, frameState, commandList);
+            displayCredits(this, frameState);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
@@ -781,15 +781,21 @@ define([
         return destroyObject(this);
     };
 
-    function updateLogos(centralBody, context, frameState, commandList) {
+    function displayCredits(centralBody, frameState) {
         var creditDisplay = frameState.creditDisplay;
-        creditDisplay.addCredit(centralBody._surface._terrainProvider.getCredit());
+        var credit = centralBody._surface._terrainProvider.getCredit();
+        if (typeof credit !== 'undefined') {
+            creditDisplay.addCredit(credit);
+        }
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                creditDisplay.addCredit(layer.getImageryProvider().getCredit());
+                credit = layer.getImageryProvider().getCredit();
+                if (typeof credit !== 'undefined') {
+                    creditDisplay.addCredit(credit);
+                }
             }
         }
     }

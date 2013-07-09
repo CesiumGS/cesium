@@ -31,18 +31,18 @@ define([
         container.appendChild(imageContainer);
         container.appendChild(textContainer);
 
-        this.delimiter = defaultValue(delimiter, ' • ');
-        this.container = container;
-        this.textContainer = textContainer;
-        this.imageContainer = imageContainer;
-        this.defaultImageCredits = [];
-        this.defaultTextCredits = [];
+        this._delimiter = defaultValue(delimiter, ' • ');
+        this._container = container;
+        this._textContainer = textContainer;
+        this._imageContainer = imageContainer;
+        this._defaultImageCredits = [];
+        this._defaultTextCredits = [];
 
-        this.displayedCredits = {
+        this._displayedCredits = {
                 imageCredits: [],
                 textCredits: []
         };
-        this.currentFrameCredits = {
+        this._currentFrameCredits = {
                 imageCredits: [],
                 textCredits: []
         };
@@ -56,12 +56,14 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.addCredit = function(credit) {
-        if (typeof credit !== 'undefined') {
-            if (typeof credit.getImageUrl() !== 'undefined') {
-                this.currentFrameCredits.imageCredits.push(credit);
-            } else {
-                this.currentFrameCredits.textCredits.push(credit);
-            }
+        if (typeof credit === 'undefined') {
+            throw new DeveloperError('credit must be defined');
+        }
+
+        if (typeof credit.getImageUrl() !== 'undefined') {
+            this._currentFrameCredits.imageCredits.push(credit);
+        } else {
+            this._currentFrameCredits.textCredits.push(credit);
         }
     };
 
@@ -73,14 +75,16 @@ define([
      * @param {Credit} credit The credit to added to defaults
      */
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
-        if (typeof credit !== 'undefined') {
-            if (typeof credit.getImageUrl() === 'undefined') {
-                this.defaultTextCredits.push(credit);
-                this.currentFrameCredits.imageCredits.push(credit);
-            } else {
-                this.defaultImageCredits.push(credit);
-                this.currentFrameCredits.textCredits.push(credit);
-            }
+        if (typeof credit === 'undefined') {
+            throw new DeveloperError('credit must be defined');
+        }
+
+        if (typeof credit.getImageUrl() === 'undefined') {
+            this._defaultTextCredits.push(credit);
+            this._currentFrameCredits.imageCredits.push(credit);
+        } else {
+            this._defaultImageCredits.push(credit);
+            this._currentFrameCredits.textCredits.push(credit);
         }
     };
 
@@ -92,18 +96,20 @@ define([
      * @param {Credit} credit The credit to be removed from defaults
      */
     CreditDisplay.prototype.removeDefaultCredit = function(credit) {
-        if (typeof credit !== 'undefined') {
-            var index;
-            if (typeof credit.getImageUrl() === 'undefined') {
-                index = this.defaultTextCredits.indexOf(credit);
-                if (index !== -1) {
-                    this.defaultTextCredits.splice(index, 1);
-                }
-            } else {
-                index = this.defaultImageCredits.indexOf(credit);
-                if (index !== -1) {
-                    this.defaultImageCredits.splice(index, 1);
-                }
+        if (typeof credit === 'undefined') {
+            throw new DeveloperError('credit must be defined');
+        }
+
+        var index;
+        if (typeof credit.getImageUrl() === 'undefined') {
+            index = this._defaultTextCredits.indexOf(credit);
+            if (index !== -1) {
+                this._defaultTextCredits.splice(index, 1);
+            }
+        } else {
+            index = this._defaultImageCredits.indexOf(credit);
+            if (index !== -1) {
+                this._defaultImageCredits.splice(index, 1);
             }
         }
     };
@@ -116,8 +122,8 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.beginFrame = function() {
-        this.currentFrameCredits.imageCredits = this.defaultImageCredits.slice(0);
-        this.currentFrameCredits.textCredits = this.defaultTextCredits.slice(0);
+        this._currentFrameCredits.imageCredits = this._defaultImageCredits.slice(0);
+        this._currentFrameCredits.textCredits = this._defaultTextCredits.slice(0);
     };
 
     /**
@@ -129,17 +135,17 @@ define([
      */
     CreditDisplay.prototype.endFrame = function() {
         var credit;
-        var displayedTextCredits = this.displayedCredits.textCredits;
-        var displayedImageCredits = this.displayedCredits.imageCredits;
-        var textCredits = removeDuplicates(this.currentFrameCredits.textCredits);
-        var imageCredits = removeDuplicates(this.currentFrameCredits.imageCredits);
+        var displayedTextCredits = this._displayedCredits.textCredits;
+        var displayedImageCredits = this._displayedCredits.imageCredits;
+        var textCredits = removeDuplicates(this._currentFrameCredits.textCredits);
+        var imageCredits = removeDuplicates(this._currentFrameCredits.imageCredits);
         var i;
         var index;
         for(i = 0; i < textCredits.length; i++) {
             credit = textCredits[i];
             index = displayedTextCredits.indexOf(credit);
             if (index === -1) {
-                displayTextCredit(credit, this.textContainer, this.delimiter);
+                displayTextCredit(credit, this._textContainer, this._delimiter);
             } else {
                 displayedTextCredits.splice(index, 1);
             }
@@ -153,7 +159,7 @@ define([
             credit = imageCredits[i];
             index = displayedImageCredits.indexOf(credit);
             if (index === -1) {
-                displayImageCredit(credit, this.imageContainer);
+                displayImageCredit(credit, this._imageContainer);
             } else {
                 displayedImageCredits.splice(index, 1);
             }
@@ -163,8 +169,8 @@ define([
             hideCredit(credit, false);
         }
 
-        this.displayedCredits.textCredits = textCredits;
-        this.displayedCredits.imageCredits = imageCredits;
+        this._displayedCredits.textCredits = textCredits;
+        this._displayedCredits.imageCredits = imageCredits;
     };
 
 
