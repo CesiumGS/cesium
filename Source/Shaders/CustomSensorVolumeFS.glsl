@@ -32,7 +32,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
 
 bool isOnBoundary(float value, float epsilon)
 {
-    float width = 4.0;  // TODO: Expose as a uniform
+    float width = getIntersectionWidth();
     float tolerance = width * epsilon;
 
 #ifdef GL_OES_standard_derivatives
@@ -46,7 +46,6 @@ bool isOnBoundary(float value, float epsilon)
     // For example, if we are looking for "value" to be close to 0, but value is 1 and the adjacent value is 2,
     // then the delta would be 1 and "temp - delta" would be "1 - 1" which is zero even though neither of
     // the points is close to zero.
-    // TODO: Cleanup comparison using max().
     return temp < tolerance && temp < pixels || (delta < 10.0 * tolerance && temp - delta < tolerance && temp < pixels);
 #else
     return abs(value) < tolerance;
@@ -100,7 +99,7 @@ void main()
         discard;
     }
     
-    // TODO: Each surface functions should have an associated tolerance based on the floating point error.
+    // Notes: Each surface functions should have an associated tolerance based on the floating point error.
     bool isOnEllipsoid = isOnBoundary(ellipsoidValue, czm_epsilon3);
     gl_FragColor = shade(isOnEllipsoid);
 }
