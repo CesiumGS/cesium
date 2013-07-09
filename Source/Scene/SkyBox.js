@@ -86,8 +86,7 @@ define([
         /**
          * Determines if the sky box will be shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = true;
@@ -149,7 +148,7 @@ define([
                 }
             };
 
-            var geometry = new BoxGeometry({
+            var geometry = BoxGeometry.fromDimensions({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
             });

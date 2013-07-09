@@ -267,8 +267,8 @@ require([
             this._ellipsoid = scene.getPrimitives().getCentralBody().getEllipsoid();
             this._finishHandler = handler;
             this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
-            this._poly = new Cesium.Polygon();
-            this._scene.getPrimitives().add(this._poly);
+            this._extentPrimitive = new Cesium.ExtentPrimitive();
+            this._scene.getPrimitives().add(this._extentPrimitive);
         };
         
         DrawExtentHelper.prototype.enableInput = function() {
@@ -315,8 +315,7 @@ require([
         };
         
         DrawExtentHelper.prototype.setPolyPts = function(mn, mx) {
-            var e = this.getExtent(mn, mx);
-            this._poly.configureExtent(e);
+            this._extentPrimitive.extent = this.getExtent(mn, mx);
         };
         
         DrawExtentHelper.prototype.setToDegrees = function(w, s, e, n) {

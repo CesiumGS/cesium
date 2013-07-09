@@ -56,15 +56,15 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
     };
 
     var pointNamedCrs = {
-        type : 'Point',
-        coordinates : [102.0, 0.5],
-        crs : {
-            type : 'name',
-            properties : {
-                name : 'EPSG:4326'
+            type : 'Point',
+            coordinates : [102.0, 0.5],
+            crs : {
+                type : 'name',
+                properties : {
+                    name : 'EPSG:4326'
+                }
             }
-        }
-    };
+        };
 
     var pointCrsLinkHref = {
         type : 'Point',
@@ -73,6 +73,17 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
             type : 'link',
             properties : {
                 href : 'http://crs.invalid'
+            }
+        }
+    };
+
+    var pointCrsEpsg = {
+        type : 'Point',
+        coordinates : [102.0, 0.5],
+        crs : {
+            type : 'EPSG',
+            properties : {
+                code : 4326
             }
         }
     };
@@ -153,6 +164,31 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
     var geometryCollectionUnknownType = {
         type : 'GeometryCollection',
         'geometries' : [unknownGeometry]
+    };
+
+    var topoJson = {
+        type : "Topology",
+        transform : {
+            scale : [1, 1],
+            translate : [0, 0]
+        },
+        objects : {
+            polygon : {
+                type : "Polygon",
+                arcs : [[0, 1, 2, 3]],
+                properties : {
+                    myProps : 0
+                }
+            },
+            lineString : {
+                type : "LineString",
+                arcs : [4],
+                properties : {
+                    myProps : 1
+                }
+            }
+        },
+        "arcs" : [[[0, 0], [1, 0], [0, 1], [-1, 0], [0, -1]], [[0, 0], [1, 0], [0, 1]], [[1, 1], [-1, 0], [0, -1]], [[1, 1]], [[0, 0]]]
     };
 
     it('default constructor has expected values', function() {
@@ -339,6 +375,29 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
     });
 
+    it('Works with topojson geometry', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(topoJson);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 2;
+        });
+        runs(function() {
+            var objects = dynamicObjectCollection.getObjects();
+
+            var polygon = objects[0];
+            expect(polygon.geoJson.properties).toBe(topoJson.objects.polygon.properties);
+            expect(polygon.vertexPositions).toBeDefined();
+            expect(polygon.polygon).toBeDefined();
+            expect(polygon.polyline).toBeDefined();
+
+            var lineString = objects[1];
+            expect(lineString.geoJson.properties).toBe(topoJson.objects.lineString.properties);
+            expect(lineString.polyline).toBeDefined();
+        });
+    });
+
     it('Works with geometrycollection', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.load(geometryCollection);
@@ -399,12 +458,26 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
     });
 
+    it('Works with EPSG crs', function() {
+        var dataSource = new GeoJsonDataSource();
+        dataSource.load(pointCrsEpsg);
+
+        var dynamicObjectCollection = dataSource.getDynamicObjectCollection();
+        waitsFor(function() {
+            return dynamicObjectCollection.getObjects().length === 1;
+        });
+        runs(function() {
+            var pointObject = dynamicObjectCollection.getObjects()[0];
+            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
+        });
+    });
+
     it('loadUrl works', function() {
         var dataSource = new GeoJsonDataSource();
         dataSource.loadUrl('Data/test.geojson');
 
         waitsFor(function() {
-            return dataSource.getDynamicObjectCollection().getObjects().length === 3;
+            return dataSource.getDynamicObjectCollection().getObjects().length === 4;
         });
     });
 

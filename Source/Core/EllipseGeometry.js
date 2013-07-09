@@ -8,6 +8,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix3',
         './PrimitiveType',
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         Ellipsoid,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix3,
         PrimitiveType,
@@ -64,9 +66,12 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
+    var unitPosScratch = new Cartesian3();
+    var eastVecScratch = new Cartesian3();
+    var northVecScratch = new Cartesian3();
 
     /**
-     * Computes vertices and indices for an ellipse on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for an ellipse on the ellipsoid.
      *
      * @alias EllipseGeometry
      * @constructor
@@ -84,6 +89,7 @@ define([
      * @exception {DeveloperError} semiMajorAxis is required.
      * @exception {DeveloperError} semiMinorAxis is required.
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @example
@@ -129,9 +135,7 @@ define([
         }
 
         if (semiMajorAxis < semiMinorAxis) {
-           var temp = semiMajorAxis;
-           semiMajorAxis = semiMinorAxis;
-           semiMinorAxis = temp;
+           throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -144,10 +148,10 @@ define([
 
         var mag = center.magnitude();
 
-        var unitPos = Cartesian3.normalize(center);
-        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center);
+        var unitPos = Cartesian3.normalize(center, unitPosScratch);
+        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);
         Cartesian3.normalize(eastVec, eastVec);
-        var northVec = Cartesian3.cross(unitPos, eastVec);
+        var northVec = Cartesian3.cross(unitPos, eastVec, northVecScratch);
 
         // The number of points in the first quadrant
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
@@ -179,13 +183,13 @@ define([
 
         var i;
         var j;
-        var theta;
         var numInterior;
         var t;
         var interiorPosition;
 
         // Compute points in the 'northern' half of the ellipse
-        for (i = 0, theta = CesiumMath.PI_OVER_TWO; i < numPts && theta > 0; ++i, theta -= deltaTheta) {
+        var theta = CesiumMath.PI_OVER_TWO;
+        for (i = 0; i < numPts && theta > 0; ++i) {
             pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
             pointOnEllipsoid(Math.PI - theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
@@ -205,6 +209,8 @@ define([
             positions[positionIndex++] = reflectedPosition.x;
             positions[positionIndex++] = reflectedPosition.y;
             positions[positionIndex++] = reflectedPosition.z;
+
+            theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
         }
 
         // Set numPts if theta reached zero
@@ -303,7 +309,7 @@ define([
             }
         }
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -423,18 +429,21 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
+        var boundingSphereCenter = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), height);
+        Cartesian3.add(center, boundingSphereCenter, boundingSphereCenter);
+
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
@@ -452,7 +461,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
+        this.boundingSphere = new BoundingSphere(boundingSphereCenter, semiMajorAxis);
     };
 
     return EllipseGeometry;

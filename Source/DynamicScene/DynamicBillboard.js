@@ -44,42 +44,50 @@ define([
     var DynamicBillboard = function() {
         /**
          * A DynamicProperty of type CzmlImage which determines the billboard's texture.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.image = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.scale = undefined;
         /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.horizontalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.verticalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the billboard's color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.eyeOffset = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.pixelOffset = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
     };

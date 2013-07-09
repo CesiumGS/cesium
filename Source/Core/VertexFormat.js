@@ -166,14 +166,17 @@ define([
     }));
 
     /**
-     * An immutable vertex format with position and normal attributes.
+     * An immutable vertex format with position, normal, and st attributes.
+     * This is compatible with most appearances and materials; however
+     * normal and st attributes are not always required.  When this is
+     * known in advance, another <code>VertexFormat</code> should be used.
      *
      * @memberof VertexFormat
      *
      * @see VertexFormat#position
      * @see VertexFormat#normal
      */
-    VertexFormat.DEFAULT = VertexFormat.POSITION_AND_NORMAL;
+    VertexFormat.DEFAULT = VertexFormat.POSITION_NORMAL_AND_ST;
 
     return VertexFormat;
 });

@@ -56,6 +56,7 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchBinormal = new Cartesian3();
+    var scratchBoundingSphere = new BoundingSphere();
     var p1 = new Cartesian3();
     var p2 = new Cartesian3();
 
@@ -395,10 +396,6 @@ define([
             }
         }
 
-        if (typeof result === 'undefined') {
-            result = new BoundingRectangle();
-        }
-
         result.x = minX;
         result.y = minY;
         result.width = maxX - minX;
@@ -506,7 +503,7 @@ define([
     }
 
     var createGeometryFromPositionsPositions = [];
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, boundingSphere, granularity, hierarchy) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             // Duplicate positions result in not enough positions to form a polygon.
@@ -707,7 +704,7 @@ define([
         return geos;
     }
 
-    function createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity) {
+    function createGeometryFromPositions(ellipsoid, positions, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
             throw new DeveloperError('Duplicate positions result in not enough positions to form a polygon.');
@@ -723,8 +720,10 @@ define([
         }
 
         var indices = PolygonPipeline.earClip2D(positions2D);
+        var geometry = PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
+        geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
         return new GeometryInstance({
-            geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
+            geometry : geometry
         });
     }
 
@@ -834,17 +833,14 @@ define([
         var walls;
         var topAndBottom;
         var outerPositions;
-        var boundingSpherePositions;
         var computeAttributes = (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
         if (typeof positions !== 'undefined') {
             // create from positions
             outerPositions = positions;
+            boundingSphere = BoundingSphere.fromPoints(positions);
             if (extrude) {
-                boundingSpherePositions = scaleCartesiansToGeodeticHeight(positions, height, ellipsoid);
-                boundingSpherePositions = boundingSpherePositions.concat(scaleCartesiansToGeodeticHeight(positions, extrudedHeight, ellipsoid));
-                boundingSphere = BoundingSphere.fromPoints(boundingSpherePositions);
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, positions, boundingSphere, granularity);
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, positions, granularity);
                 if (typeof geometry !== 'undefined') {
                     walls = geometry.walls;
                     topAndBottom = geometry.topAndBottom;
@@ -857,9 +853,7 @@ define([
                     geometries.push(walls, topAndBottom);
                 }
             } else {
-                boundingSpherePositions = scaleCartesiansToGeodeticHeight(positions, height, ellipsoid);
-                boundingSphere = BoundingSphere.fromPoints(boundingSpherePositions);
-                geometry = createGeometryFromPositions(ellipsoid, positions, boundingSphere, granularity);
+                geometry = createGeometryFromPositions(ellipsoid, positions, granularity);
                 if (typeof geometry !== 'undefined') {
                     geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
 
@@ -923,18 +917,11 @@ define([
             // The bounding volume is just around the boundary points, so there could be cases for
             // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
             // volume doesn't cover the polygon.
-            if (extrude) {
-                boundingSpherePositions = scaleCartesiansToGeodeticHeight(outerPositions, height, ellipsoid);
-                boundingSpherePositions = boundingSpherePositions.concat(scaleCartesiansToGeodeticHeight(outerPositions, extrudedHeight, ellipsoid));
-                boundingSphere = BoundingSphere.fromPoints(boundingSpherePositions);
-            } else {
-                boundingSpherePositions = scaleCartesiansToGeodeticHeight(outerPositions, height, ellipsoid);
-                boundingSphere = BoundingSphere.fromPoints(boundingSpherePositions);
-            }
+            boundingSphere = BoundingSphere.fromPoints(outerPositions);
 
             for (i = 0; i < polygons.length; i++) {
                 if (extrude) {
-                    geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], boundingSphere, granularity, polygonHierarchy[i]);
+                    geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i]);
                     if (typeof geometry !== 'undefined') {
                         topAndBottom = geometry.topAndBottom;
                         topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
@@ -954,7 +941,7 @@ define([
                         }
                     }
                 } else {
-                    geometry = createGeometryFromPositions(ellipsoid, polygons[i], boundingSphere, granularity);
+                    geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
                     if (typeof geometry !== 'undefined') {
                         geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
                         if (computeAttributes) {
@@ -968,16 +955,26 @@ define([
             throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
-        var attributes = {};
-
         geometry = GeometryPipeline.combine(geometries);
 
-        // Checking bounding sphere with plane for quick reject
-        var minX = boundingSphere.center.x - boundingSphere.radius;
-        if ((minX < 0) && (BoundingSphere.intersect(boundingSphere, Cartesian4.UNIT_Y) === Intersect.INTERSECTING)) {
-            geometry = GeometryPipeline.wrapLongitude(geometry);
+        var center = boundingSphere.center;
+        var mag = center.magnitude();
+        scratchPosition = ellipsoid.geodeticSurfaceNormal(center, scratchPosition);
+        center = Cartesian3.multiplyByScalar(scratchPosition, mag + height, center);
+
+        if (extrude) {
+            scratchBoundingSphere = boundingSphere.clone(scratchBoundingSphere);
+            center = scratchBoundingSphere.center;
+            center = Cartesian3.multiplyByScalar(scratchPosition, mag + extrudedHeight, center);
+            boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
         }
 
+        var attributes = geometry.attributes;
+
+        if (!vertexFormat.position) {
+            delete attributes.position;
+        }
+/*
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
@@ -1001,7 +998,7 @@ define([
         if (vertexFormat.binormal) {
             attributes.binormal = geometry.attributes.binormal;
         }
-
+*/
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.

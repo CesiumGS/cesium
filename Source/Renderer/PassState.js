@@ -16,7 +16,7 @@ define(function() {
         /**
          * The context used to execute commands for this pass.
          *
-         * @type Context
+         * @type {Context}
          */
         this.context = context;
 
@@ -25,7 +25,8 @@ define(function() {
          * or {@link ClearCommand} explicitly define a framebuffer, which is used for off-screen
          * rendering.
          *
-         * @type Framebuffer
+         * @type {Framebuffer}
+         * @default undefined
          */
         this.framebuffer = undefined;
 
@@ -36,7 +37,7 @@ define(function() {
          * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
          * </p>
          *
-         * @type Boolean
+         * @type {Boolean}
          * @default undefined
          */
         this.blendingEnabled = undefined;
@@ -47,6 +48,9 @@ define(function() {
          * <p>
          * When this is <code>undefined</code>, the {@link DrawCommand}'s property is used.
          * </p>
+         *
+         * @type DOC_TBA
+         * @default undefined
          */
         this.scissorTest = undefined;
     };

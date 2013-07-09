@@ -27,17 +27,19 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var positionsRadius = 1.0;
-    var positionsCenter = new Cartesian3(1.0, 0.0, 0.0);
+    var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);
+
+    var center = new Cartesian3(10000000.0, 0.0, 0.0);
 
     function getPositions() {
         return [
-                new Cartesian3(1, 0, 0),
-                new Cartesian3(2, 0, 0),
-                new Cartesian3(0, 0, 0),
-                new Cartesian3(1, 1, 0),
-                new Cartesian3(1, -1, 0),
-                new Cartesian3(1, 0, 1),
-                new Cartesian3(1, 0, -1)
+                center.add(new Cartesian3(1, 0, 0)),
+                center.add(new Cartesian3(2, 0, 0)),
+                center.add(new Cartesian3(0, 0, 0)),
+                center.add(new Cartesian3(1, 1, 0)),
+                center.add(new Cartesian3(1, -1, 0)),
+                center.add(new Cartesian3(1, 0, 1)),
+                center.add(new Cartesian3(1, 0, -1))
             ];
     }
 
@@ -322,6 +324,27 @@ defineSuite([
         }).toThrow();
     });
 
+    it('fromEllipsoid', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var sphere = BoundingSphere.fromEllipsoid(ellipsoid);
+        expect(sphere.center).toEqual(Cartesian3.ZERO);
+        expect(sphere.radius).toEqual(ellipsoid.getMaximumRadius());
+    });
+
+    it('fromEllipsoid with a result parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var sphere = new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0);
+        var result = BoundingSphere.fromEllipsoid(ellipsoid, sphere);
+        expect(result).toBe(sphere);
+        expect(result).toEqual(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius()));
+    });
+
+    it('fromEllipsoid throws without ellipsoid', function() {
+        expect(function() {
+            BoundingSphere.fromEllipsoid();
+        }).toThrow();
+    });
+
     it('sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.UNIT_X.negate();
@@ -381,6 +404,54 @@ defineSuite([
         var direction = Cartesian3.UNIT_X;
         var expected = new Interval(1.0, 3.0);
         expect(bs.getPlaneDistances(position, direction)).toEqual(expected);
+    });
+
+    it('projectTo2D', function() {
+        var positions = getPositions();
+        var projection = new GeographicProjection();
+
+        var positions2D = [];
+        for (var i = 0; i < positions.length; ++i) {
+            var position = positions[i];
+            var cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            positions2D.push(projection.project(cartographic));
+        }
+
+        var boundingSphere3D = BoundingSphere.fromPoints(positions);
+        var boundingSphere2D = boundingSphere3D.projectTo2D(projection);
+        var actualSphere = BoundingSphere.fromPoints(positions2D);
+        actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
+
+        expect(boundingSphere2D.center).toEqualEpsilon(actualSphere.center, CesiumMath.EPSILON6);
+        expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
+    });
+
+    it('projectTo2D with result parameter', function() {
+        var positions = getPositions();
+        var projection = new GeographicProjection();
+        var sphere = new BoundingSphere();
+
+        var positions2D = [];
+        for (var i = 0; i < positions.length; ++i) {
+            var position = positions[i];
+            var cartographic = projection.getEllipsoid().cartesianToCartographic(position);
+            positions2D.push(projection.project(cartographic));
+        }
+
+        var boundingSphere3D = BoundingSphere.fromPoints(positions);
+        var boundingSphere2D = boundingSphere3D.projectTo2D(projection, sphere);
+        var actualSphere = BoundingSphere.fromPoints(positions2D);
+        actualSphere.center = new Cartesian3(actualSphere.center.z, actualSphere.center.x, actualSphere.center.y);
+
+        expect(boundingSphere2D).toBe(sphere);
+        expect(boundingSphere2D.center).toEqualEpsilon(actualSphere.center, CesiumMath.EPSILON6);
+        expect(boundingSphere2D.radius).toBeGreaterThan(actualSphere.radius);
+    });
+
+    it('static projectTo2D throws without sphere', function() {
+        expect(function() {
+            BoundingSphere.projectTo2D();
+        }).toThrow();
     });
 
     it('static clone returns undefined with no parameter', function() {

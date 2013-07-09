@@ -36,6 +36,34 @@ defineSuite([
         expect(extent.north).toEqual(north);
     });
 
+    it('fromDegrees produces expected values.', function() {
+        var west = -10.0;
+        var south = -20.0;
+        var east = 10.0;
+        var north = 20.0;
+
+        var extent = Extent.fromDegrees(west, south, east, north);
+        expect(extent.west).toEqual(CesiumMath.toRadians(west));
+        expect(extent.south).toEqual(CesiumMath.toRadians(south));
+        expect(extent.east).toEqual(CesiumMath.toRadians(east));
+        expect(extent.north).toEqual(CesiumMath.toRadians(north));
+    });
+
+    it('fromDegrees works with a result parameter.', function() {
+        var west = -10.0;
+        var south = -20.0;
+        var east = 10.0;
+        var north = 20.0;
+
+        var result = new Extent();
+        var extent = Extent.fromDegrees(west, south, east, north, result);
+        expect(result).toBe(extent);
+        expect(extent.west).toEqual(CesiumMath.toRadians(west));
+        expect(extent.south).toEqual(CesiumMath.toRadians(south));
+        expect(extent.east).toEqual(CesiumMath.toRadians(east));
+        expect(extent.north).toEqual(CesiumMath.toRadians(north));
+    });
+
     it('fromCartographicArray produces expected values.', function() {
         var minLon = new Cartographic(-0.1, 0.3, 0.0);
         var minLat = new Cartographic(0.0, -0.2, 0.0);
@@ -87,6 +115,10 @@ defineSuite([
         expect(returnedResult).toBe(extent);
     });
 
+    it('clone works without extent', function() {
+        expect(Extent.clone()).not.toBeDefined();
+    });
+
     it('Equals works in all cases', function() {
         var extent = new Extent(0.1, 0.2, 0.3, 0.4);
         expect(extent.equals(new Extent(0.1, 0.2, 0.3, 0.4))).toEqual(true);
@@ -95,6 +127,16 @@ defineSuite([
         expect(extent.equals(new Extent(0.1, 0.2, 0.5, 0.4))).toEqual(false);
         expect(extent.equals(new Extent(0.1, 0.2, 0.3, 0.5))).toEqual(false);
         expect(extent.equals(undefined)).toEqual(false);
+    });
+
+    it('Static equals works in all cases', function() {
+        var extent = new Extent(0.1, 0.2, 0.3, 0.4);
+        expect(Extent.equals(extent, new Extent(0.1, 0.2, 0.3, 0.4))).toEqual(true);
+        expect(Extent.equals(extent, new Extent(0.5, 0.2, 0.3, 0.4))).toEqual(false);
+        expect(Extent.equals(extent, new Extent(0.1, 0.5, 0.3, 0.4))).toEqual(false);
+        expect(Extent.equals(extent, new Extent(0.1, 0.2, 0.5, 0.4))).toEqual(false);
+        expect(Extent.equals(extent, new Extent(0.1, 0.2, 0.3, 0.5))).toEqual(false);
+        expect(Extent.equals(extent, undefined)).toEqual(false);
     });
 
     it('Equals epsilon works in all cases', function() {
