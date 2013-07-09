@@ -204,9 +204,12 @@ define([
 
     function createOnLoadCallback(viewer, source, firstTime) {
         var DataSource;
-        if (endsWith(source.toUpperCase(), ".CZML")) {
+        var sourceUpperCase = source.toUpperCase();
+        if (endsWith(sourceUpperCase, ".CZML")) {
             DataSource = CzmlDataSource;
-        } else if (endsWith(source.toUpperCase(), '.GEOJSON')) {
+        } else if (endsWith(sourceUpperCase, ".GEOJSON") || //
+        endsWith(sourceUpperCase, ".JSON") || //
+        endsWith(sourceUpperCase, ".TOPOJSON")) {
             DataSource = GeoJsonDataSource;
         } else {
             viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);

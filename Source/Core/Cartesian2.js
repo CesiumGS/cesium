@@ -23,13 +23,15 @@ define([
     var Cartesian2 = function(x, y) {
         /**
          * The Y component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.x = defaultValue(x, 0.0);
 
         /**
          * The X component.
-         * @type Number
+         * @type {Number}
+         * @default 0.0
          */
         this.y = defaultValue(y, 0.0);
     };

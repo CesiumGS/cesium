@@ -169,7 +169,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model

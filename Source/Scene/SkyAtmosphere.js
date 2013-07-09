@@ -53,8 +53,7 @@ define([
         /**
          * Determines if the atmosphere is shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = true;

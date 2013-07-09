@@ -28,40 +28,77 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A renderable rectangular extent.
      *
      * @alias ExtentPrimitive
      * @constructor
+     *
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
+     * @param {Extent} [extent=undefined] The extent, which defines the rectangular region to draw.
+     * @param {Number} [granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude in the underlying geometry.
+     * @param {Number} [height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
+     * @param {Number} [rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
+     * @param {Boolean} [show=true] Determines if this primitive will be shown.
+     * @param {Material} [material=undefined] The surface appearance of the primitive.
+     *
+     * @example
+     * var extentPrimitive = new ExtentPrimitive({
+     *   extent : Extent.fromDegrees(0.0, 20.0, 10.0, 30.0)
+     * });
+     * primitives.add(extentPrimitive);
      */
     var ExtentPrimitive = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * DOC_TBA
+         * The ellipsoid that the extent is drawn on.
+         *
+         * @type Ellipsoid
+         *
+         * @default Ellipsoid.WGS84
          */
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._ellipsoid = undefined;
 
         /**
-         * DOC_TBA
+         * The extent, which defines the rectangular region to draw.
+         *
+         * @type Extent
+         *
+         * @default undefined
          */
         this.extent = Extent.clone(options.extent);
         this._extent = undefined;
 
         /**
-         * DOC_TBA
+         * The distance, in radians, between each latitude and longitude in the underlying geometry.
+         * A lower granularity fits the curvature of the {@link ExtentPrimitive#ellipsoid} better,
+         * but uses more triangles.
+         *
+         * @type Number
+         *
+         * @default CesiumMath.toRadians(1.0)
          */
         this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
         this._granularity = undefined;
 
         /**
-         * DOC_TBA
+         * The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
+         *
+         * @type Number
+         *
+         * @default 0.0
          */
         this.height = defaultValue(options.height, 0.0);
         this._height = undefined;
 
         /**
-         * DOC_TBA
+         * The angle, in radians, relative to north that the extent is rotated.
+         * Positive angles rotate counter-clockwise.
+         *
+         * @type Number
+         *
+         * @default 0.0
          */
         this.rotation = defaultValue(options.rotation, 0.0);
         this._rotation = undefined;
@@ -70,6 +107,8 @@ define([
          * Determines if this primitive will be shown.
          *
          * @type Boolean
+         *
+         * @default true
          */
         this.show = defaultValue(options.show, true);
 
@@ -140,7 +179,7 @@ define([
                     height : this.height,
                     rotation : this.rotation
                 }),
-                pickData : this
+                id : this
             });
 
             if (typeof this._primitive !== 'undefined') {

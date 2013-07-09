@@ -16,8 +16,9 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * the sharing of vertex buffers among vertex arrays.  It also requires much less initial CPU
          * processing than interleaving.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         SEPARATE : new Enumeration(0, 'SEPARATE'),
         /**
@@ -26,15 +27,16 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * extra CPU processing to initially interleave the vertex data.  This is recommended for
          * static data that will be rendered over several frames.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 1
          */
         INTERLEAVED : new Enumeration(1, 'INTERLEAVED'),
 
         /**
          * DOC_TBA
          *
-         * @param vertexLayout
+         * @param {VertexLayout} vertexLayout
          *
          * @returns {Boolean}
          */

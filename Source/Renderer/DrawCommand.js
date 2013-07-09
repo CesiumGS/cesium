@@ -21,7 +21,7 @@ define(function() {
          * minimize the number of frustums needed.
          * </p>
          *
-         * @type Object
+         * @type {Object}
          *
          * @default undefined
          *
@@ -33,18 +33,20 @@ define(function() {
          * When <code>true</code>, the renderer frustum and horizon culls the command based on its {@link DrawCommand#boundingVolume}.
          * If the command was already culled, set this to <code>false</code> for a performance improvement.
          *
-         * @type Boolean
+         * @type {Boolean}
+         *
          * @default true
          */
         this.cull = true;
 
         /**
          * The transformation from the geometry in model space to world space.
+<<<<<<< HEAD
          * <p>
          * When <code>undefined</code>, the geometry is assumed to be defined in world space.
          * </p>
          *
-         * @type Matrix4
+         * @type {Matrix4}
          *
          * @default undefined
          */
@@ -53,7 +55,7 @@ define(function() {
         /**
          * The type of geometry in the vertex array.
          *
-         * @type PrimitiveType
+         * @type {PrimitiveType}
          *
          * @default undefined
          */
@@ -62,7 +64,7 @@ define(function() {
         /**
          * The vertex array.
          *
-         * @type VertexArray
+         * @type {VertexArray}
          *
          * @default undefined
          */
@@ -71,7 +73,7 @@ define(function() {
         /**
          * The number of vertices to draw in the vertex array.
          *
-         * @type Number
+         * @type {Number}
          *
          * @default undefined
          */
@@ -80,7 +82,7 @@ define(function() {
         /**
          * The offset to start drawing in the vertex array.
          *
-         * @type Number
+         * @type {Number}
          *
          * @default undefined
          */
@@ -89,7 +91,7 @@ define(function() {
         /**
          * The shader program to apply.
          *
-         * @type ShaderProgram
+         * @type {ShaderProgram}
          *
          * @default undefined
          */
@@ -99,7 +101,7 @@ define(function() {
          * An object with functions whose names match the uniforms in the shader program
          * and return values to set those uniforms.
          *
-         * @type Object
+         * @type {Object}
          *
          * @default undefined
          */
@@ -108,7 +110,7 @@ define(function() {
         /**
          * The render state.
          *
-         * @type Object
+         * @type {RenderState}
          *
          * @default undefined
          *
@@ -119,7 +121,7 @@ define(function() {
         /**
          * The framebuffer to draw to.
          *
-         * @type Framebuffer
+         * @type {Framebuffer}
          *
          * @default undefined
          */
@@ -129,7 +131,7 @@ define(function() {
          * Specifies if this command is only to be executed in the frustum closest
          * to the eye containing the bounding volume. Defaults to <code>false</code>.
          *
-         * @type Boolean
+         * @type {Boolean}
          *
          * @default false
          */
@@ -141,7 +143,7 @@ define(function() {
          * reference to the command, and can be used to selectively execute commands
          * with {@link Scene#debugCommandFilter}.
          *
-         * @type Object
+         * @type {Object}
          *
          * @default undefined
          *
@@ -155,7 +157,7 @@ define(function() {
          * Draws the {@link DrawCommand#boundingVolume} for this command, assuming it is a sphere, when the command executes.
          * </p>
          *
-         * @type Boolean
+         * @type {Boolean}
          *
          * @default false
          *

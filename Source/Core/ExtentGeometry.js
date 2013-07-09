@@ -12,6 +12,7 @@ define([
         './Extent',
         './GeographicProjection',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix2',
         './PrimitiveType',
@@ -29,6 +30,7 @@ define([
         Extent,
         GeographicProjection,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix2,
         PrimitiveType,
@@ -57,7 +59,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor
@@ -147,7 +149,7 @@ define([
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         var positionIndex = 0;
         var stIndex = 0;
@@ -295,14 +297,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

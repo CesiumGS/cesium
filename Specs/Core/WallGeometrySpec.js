@@ -78,12 +78,12 @@ defineSuite([
             positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
         });
 
-        expect(w.attributes.position.values.length).toEqual(3 * 2 * 3);
-        expect(w.attributes.normal.values.length).toEqual(3 * 2 * 3);
-        expect(w.attributes.tangent.values.length).toEqual(3 * 2 * 3);
-        expect(w.attributes.binormal.values.length).toEqual(3 * 2 * 3);
-        expect(w.attributes.st.values.length).toEqual(3 * 2 * 2);
-        expect(w.indices.length).toEqual((3 * 2 - 2) * 3);
+        expect(w.attributes.position.values.length).toEqual(4 * 2 * 3);
+        expect(w.attributes.normal.values.length).toEqual(4 * 2 * 3);
+        expect(w.attributes.tangent.values.length).toEqual(4 * 2 * 3);
+        expect(w.attributes.binormal.values.length).toEqual(4 * 2 * 3);
+        expect(w.attributes.st.values.length).toEqual(4 * 2 * 2);
+        expect(w.indices.length).toEqual((4 * 2 - 2) * 3);
     });
 });
 

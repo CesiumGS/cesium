@@ -34,27 +34,32 @@ function(
     var DynamicVector = function() {
         /**
          * A DynamicProperty of type CzmlColor which determines the vector's color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the vector's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the vector's width.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.width = undefined;
         /**
          * A DynamicProperty of type CzmlDirection which determines the vector's direction.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.direction = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the vector's graphical length.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.length = undefined;
     };

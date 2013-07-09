@@ -80,7 +80,8 @@ define([
          * The default is {@link Cartesian3.ZERO}.
          * </p>
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default {@link Cartesian3.ZERO}
          *
          * @see EllipsoidPrimitive#modelMatrix
          */
@@ -93,7 +94,8 @@ define([
          * The default is <code>undefined</code>.  The ellipsoid is not drawn until a radii is provided.
          * </p>
          *
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default undefined
          *
          * @example
          * // A sphere with a radius of 2.0
@@ -114,7 +116,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @default Matrix4.IDENTITY
          *
@@ -132,8 +135,7 @@ define([
         /**
          * Determines if the ellipsoid primitive will be shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = true;
@@ -145,7 +147,8 @@ define([
          * The default material is <code>Material.ColorType</code>.
          * </p>
          *
-         * @type Material
+         * @type {Material}
+         * @default Material.fromType(undefined, Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
@@ -196,7 +199,7 @@ define([
             return vertexArray;
         }
 
-        var geometry = new BoxGeometry({
+        var geometry = BoxGeometry.fromDimensions({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 
