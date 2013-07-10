@@ -108,7 +108,16 @@ define(['../Core/createGuid',
 
     function getElementValue(node, elementType){
         var element = node.getElementsByTagName(elementType)[0];
-        return element && element.firstChild.data; //protecting from TypeError
+        if (elementType === 'hotSpot' && typeof element !== 'undefined'){
+            var hotSpot = {
+              x: element.attributes.x.nodeValue,
+              y: element.attributes.y.nodeValue,
+              xunits: element.attributes.xunits.nodeValue,
+              yunits: element.attributes.yunits.nodeValue
+            };
+            return hotSpot;
+        }
+            return element && element.firstChild.data; //protecting from TypeError
     }
 
     // KML processing functions
@@ -195,13 +204,21 @@ define(['../Core/createGuid',
             if(node.nodeName === "IconStyle"){
                 dynamicObject.billboard = new DynamicBillboard();
                 //Map style to billboard properties
-                var image = getElementValue(node,'href');
+                var scale = getElementValue(node, 'scale');
+                var heading = getElementValue(node, 'heading');
+                var icon = getElementValue(node,'href');
+                var hotSpot = getElementValue(node, 'hotSpot');
                 var color = getElementValue(node,'color');
                 var colorMode = getElementValue(node, 'colorMode');
-                var scale = getElementValue(node, 'scale');
+
                 //constant property or dynamic property?
-                dynamicObject.billboard.image = new DynamicProperty(image);
-                dynamicObject.billboard.color = new DynamicProperty(Color.fromRgba(color)); //Do I need to switch the alpha value?
+                dynamicObject.billboard.image = icon && new DynamicProperty(icon);
+                dynamicObject.billboard.scale = scale && new DynamicProperty(scale);
+                dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color)); //Do I need to switch the alpha value?
+                //not sure how to map these
+                dynamicObject.billboard.heading = heading && new DynamicProperty(heading); //pixel offset?
+                dynamicObject.billboard.hotSpot =  hotSpot && new DynamicProperty(hotSpot);
+                dynamicObject.billboard.colorMode = colorMode && new DynamicProperty(colorMode);
             }
             if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
