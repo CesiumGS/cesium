@@ -8,10 +8,15 @@ define([
         '../Core/loadText',
         '../Core/loadImage',
         '../Core/Queue',
+        '../Core/Cartesian3',
+        '../Core/Matrix4',
+        '../Core/BoundingSphere',
         '../Core/IndexDatatype',
         '../Core/ComponentDatatype',
+        '../Core/PrimitiveType',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
+        '../Renderer/DrawCommand',
         './SceneMode'
     ], function(
         defined,
@@ -22,10 +27,15 @@ define([
         loadText,
         loadImage,
         Queue,
+        Cartesian3,
+        Matrix4,
+        BoundingSphere,
         IndexDatatype,
         ComponentDatatype,
+        PrimitiveType,
         BufferUsage,
         BlendingState,
+        DrawCommand,
         SceneMode) {
     "use strict";
 // TODO: remove before merge to master
@@ -414,6 +424,94 @@ define([
         }
     }
 
+    function createCommand(model, node, context) {
+        node.extra = defaultValue(node.extra, {});
+        node.extra.czmMeshesCommands = {};
+
+        var json = model.json;
+
+        var attributes = json.attributes;
+        var indices = json.indices;
+        var meshes = json.meshes;
+
+        var programs = json.programs;
+        var techniques = json.techniques;
+        var materials = json.materials;
+
+        var name;
+        for (name in meshes) {
+            if (meshes.hasOwnProperty(name)) {
+                var primitives = meshes[name].primitives;
+                var length = primitives.length;
+                var meshesCommands = new Array(length);
+
+                for (var i = 0; i < length; ++i) {
+                    var primitive = primitives[i];
+                    var ix = indices[primitive.indices];
+                    var technique = techniques[materials[primitive.material].instanceTechnique.technique];
+                    var pass = technique.passes[technique.pass];
+
+                    var sp = programs[pass.instanceProgram.program].extra.czmProgram;
+                    var rs = pass.states.extra.czmRenderState;
+
+debugger;
+
+                    var boundingSphere;
+                    var positionAttribute = primitive.semantics.POSITION;
+                    if (defined(positionAttribute)) {
+                        var a = attributes[positionAttribute];
+                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+                    }
+
+                    var command = new DrawCommand();
+                    command.boundingVolume = boundingSphere;
+                    command.modelMatrix = new Matrix4();                                    // computed in update()
+                    command.primitiveType = PrimitiveType[primitive.primitive];
+                    command.vertexArray = primitive.extra.czmVertexArray;
+                    command.count = ix.count;
+                    command.offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);    // glTF has offset in bytes.  Cesium has offsets in indices
+                    command.shaderProgram = sp;
+                    command.uniformMap = undefined;
+                    command.renderState = rs;
+
+                    var pickCommand = new DrawCommand();
+                    // TODO: set pickCommand
+
+                    meshesCommands[i] = {
+                        command : command,
+                        pickCommand : pickCommand
+                    };
+                }
+
+                node.extra.czmMeshesCommands[name] = meshesCommands;
+            }
+        }
+    }
+
+    function createCommands(model, context) {
+        var loadResources = model._loadResources;
+
+// TODO: more fine-grained dependencies
+        if (!loadResources.finishedPendingLoads() || !loadResources.finishedResourceCreation()) {
+            return;
+        }
+
+        var scenes = model.json.scenes;
+        var nodes = model.json.nodes;
+
+        var scene = scenes[model.json.scene];
+        var sceneNodes = scene.nodes;
+        var length = sceneNodes.length;
+
+        for (var i = 0; i < length; ++i) {
+            var node = nodes[sceneNodes[i]];
+// TODO: handle camera and light nodes
+            if (defined(node.meshes)) {
+                createCommand(model, node, context);
+            }
+        }
+    }
+
     function createResources(model, context) {
         createBuffers(model, context);      // using glTF bufferViews
         createPrograms(model, context);
@@ -421,6 +519,7 @@ define([
 
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context);
+        createCommands(model, context);     // using glTF scene
     }
 
     ///////////////////////////////////////////////////////////////////////////
