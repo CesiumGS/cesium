@@ -102,6 +102,8 @@ define([
         this._timeBarSecondsSpan = undefined;
         this._clock = clock;
         this._scrubJulian = clock.currentTime;
+        this._lastJulian = clock.currentTime;
+        this._autoPan = 0;
         this._mainTicSpan = -1;
         this._mouseMode = timelineMouseMode.none;
         this._touchMode = timelineTouchMode.none;
@@ -484,8 +486,34 @@ define([
         this._scrubJulian = this._clock.currentTime;
         var scrubElement = this._scrubElement;
         if (typeof this._scrubElement !== 'undefined') {
+            var width = this._topDiv.clientWidth;
             var seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
-            var xPos = Math.round(seconds * this._topDiv.clientWidth / this._timeBarSecondsSpan);
+            var xPos = Math.round(seconds * width / this._timeBarSecondsSpan);
+            var drift = 2 * this._lastJulian.getSecondsDifference(this._scrubJulian);
+            var leftMargin = width / 6;
+            var rightMargin = 5 * width / 6;
+
+            if ((this._autoPan === -1 && this._clock.multiplier > 0) || (this._autoPan === 1 && this._clock.multiplier < 0)) {
+                this._autoPan = 0;
+            } else if (this._clock.shouldAnimate === true) {
+                if (xPos < leftMargin && this._clock.multiplier < 0) {
+                    this._autoPan = -1;
+                } else if (xPos > rightMargin && this._clock.multiplier > 0) {
+                    this._autoPan = 1;
+                }
+            } else {
+                this._autoPan = 0;
+            }
+
+            if (this._autoPan !== 0) {
+                if ((this._lastXPos > 3 * width / 8) && (this._lastXPos < 5 * width / 8 )) {
+                    drift /= 2;
+                }
+                this.zoomTo(this._startJulian.addSeconds(drift), this._endJulian.addSeconds(drift));
+                seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
+                xPos = Math.round(seconds * width / this._timeBarSecondsSpan);
+            }
+            this._lastJulian = this._clock.currentTime;
 
             if (this._lastXPos !== xPos) {
                 this._lastXPos = xPos;
