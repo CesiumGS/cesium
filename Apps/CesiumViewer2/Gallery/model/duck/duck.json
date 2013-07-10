@@ -102,6 +102,14 @@
                 "technique": "technique1",
                 "values": [
                     {
+                        "parameter": "ambient",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
                         "parameter": "diffuse",
                         "value": {
                             "image": "image_0",
@@ -110,6 +118,34 @@
                             "wrapS": "REPEAT",
                             "wrapT": "REPEAT"
                         }
+                    },
+                    {
+                        "parameter": "emission",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
+                    },
+                    {
+                        "parameter": "shininess",
+                        "value": 38.4
+                    },
+                    {
+                        "parameter": "specular",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
                     }
                 ]
             },
@@ -237,6 +273,9 @@
                 "diffuse": {
                     "type": "SAMPLER_2D"
                 },
+                "emission": {
+                    "type": "FLOAT_VEC3"
+                },
                 "normal": {
                     "semantic": "NORMAL",
                     "type": "FLOAT_VEC3"
@@ -252,6 +291,15 @@
                 "projectionMatrix": {
                     "semantic": "PROJECTION",
                     "type": "FLOAT_MAT4"
+                },
+                "reflective": {
+                    "type": "FLOAT_VEC3"
+                },
+                "shininess": {
+                    "type": "FLOAT"
+                },
+                "specular": {
+                    "type": "FLOAT_VEC3"
                 },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
@@ -273,8 +321,12 @@
                             "lightingModel": "Blinn",
                             "parameters": [
                                 "diffuse",
+                                "emission",
                                 "normalMatrix",
                                 "projectionMatrix",
+                                "reflective",
+                                "shininess",
+                                "specular",
                                 "worldViewMatrix"
                             ],
                             "texcoordBindings": {
@@ -292,8 +344,12 @@
                         "program": "program_0",
                         "uniforms": {
                             "u_diffuse": "diffuse",
+                            "u_emission": "emission",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
+                            "u_reflective": "reflective",
+                            "u_shininess": "shininess",
+                            "u_specular": "specular",
                             "u_worldViewMatrix": "worldViewMatrix"
                         }
                     },

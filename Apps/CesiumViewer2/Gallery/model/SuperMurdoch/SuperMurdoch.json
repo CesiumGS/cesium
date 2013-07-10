@@ -9698,7 +9698,7 @@
         },
         "material.15": {
             "instanceTechnique": {
-                "technique": "technique3",
+                "technique": "technique2",
                 "values": [
                     {
                         "parameter": "diffuse",
@@ -9750,7 +9750,7 @@
         },
         "material.18": {
             "instanceTechnique": {
-                "technique": "technique3",
+                "technique": "technique2",
                 "values": [
                     {
                         "parameter": "diffuse",
@@ -9770,7 +9770,7 @@
         },
         "material.2": {
             "instanceTechnique": {
-                "technique": "technique2",
+                "technique": "technique1",
                 "values": [
                     {
                         "parameter": "diffuse",
@@ -13960,10 +13960,6 @@
         "program_1": {
             "fragmentShader": "SuperMurdoch2FS",
             "vertexShader": "SuperMurdoch2VS"
-        },
-        "program_2": {
-            "fragmentShader": "SuperMurdoch4FS",
-            "vertexShader": "SuperMurdoch4VS"
         }
     },
     "scene": "defaultScene",
@@ -13986,12 +13982,6 @@
         },
         "SuperMurdoch2VS": {
             "path": "SuperMurdoch2VS.glsl"
-        },
-        "SuperMurdoch4FS": {
-            "path": "SuperMurdoch4FS.glsl"
-        },
-        "SuperMurdoch4VS": {
-            "path": "SuperMurdoch4VS.glsl"
         }
     },
     "skins": {},
@@ -14064,67 +14054,6 @@
         },
         "technique2": {
             "parameters": {
-                "normal": {
-                    "semantic": "NORMAL",
-                    "type": "FLOAT_VEC3"
-                },
-                "normalMatrix": {
-                    "semantic": "WORLDVIEWINVERSETRANSPOSE",
-                    "type": "FLOAT_MAT3"
-                },
-                "position": {
-                    "semantic": "POSITION",
-                    "type": "FLOAT_VEC3"
-                },
-                "projectionMatrix": {
-                    "semantic": "PROJECTION",
-                    "type": "FLOAT_MAT4"
-                },
-                "worldViewMatrix": {
-                    "semantic": "WORLDVIEW",
-                    "type": "FLOAT_MAT4"
-                }
-            },
-            "pass": "defaultPass",
-            "passes": {
-                "defaultPass": {
-                    "details": {
-                        "commonProfile": {
-                            "extras": {
-                                "doubleSided": false
-                            },
-                            "lightingModel": "Lambert",
-                            "parameters": [
-                                "normalMatrix",
-                                "projectionMatrix",
-                                "worldViewMatrix"
-                            ]
-                        },
-                        "type": "COLLADA-1.4.1/commonProfile"
-                    },
-                    "instanceProgram": {
-                        "attributes": {
-                            "a_normal": "normal",
-                            "a_position": "position"
-                        },
-                        "program": "program_1",
-                        "uniforms": {
-                            "u_normalMatrix": "normalMatrix",
-                            "u_projectionMatrix": "projectionMatrix",
-                            "u_worldViewMatrix": "worldViewMatrix"
-                        }
-                    },
-                    "states": {
-                        "blendEnable": false,
-                        "cullFaceEnable": true,
-                        "depthMask": true,
-                        "depthTestEnable": true
-                    }
-                }
-            }
-        },
-        "technique3": {
-            "parameters": {
                 "diffuse": {
                     "type": "FLOAT_VEC3"
                 },
@@ -14176,7 +14105,7 @@
                             "a_normal": "normal",
                             "a_position": "position"
                         },
-                        "program": "program_2",
+                        "program": "program_1",
                         "uniforms": {
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",

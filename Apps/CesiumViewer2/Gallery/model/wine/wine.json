@@ -790,6 +790,14 @@
                             "wrapS": "REPEAT",
                             "wrapT": "REPEAT"
                         }
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
                     }
                 ]
             },
@@ -813,6 +821,14 @@
                             0.564706,
                             0.972549,
                             0.835294
+                        ]
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
                         ]
                     },
                     {
@@ -844,6 +860,14 @@
                             "wrapS": "REPEAT",
                             "wrapT": "REPEAT"
                         }
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
                     }
                 ]
             },
@@ -867,6 +891,14 @@
                             1,
                             1,
                             1
+                        ]
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
                         ]
                     }
                 ]
@@ -894,6 +926,14 @@
                             "wrapS": "REPEAT",
                             "wrapT": "REPEAT"
                         }
+                    },
+                    {
+                        "parameter": "reflective",
+                        "value": [
+                            0,
+                            0,
+                            0
+                        ]
                     }
                 ]
             },
@@ -11684,6 +11724,9 @@
                     "semantic": "PROJECTION",
                     "type": "FLOAT_MAT4"
                 },
+                "reflective": {
+                    "type": "FLOAT_VEC3"
+                },
                 "texcoord0": {
                     "semantic": "TEXCOORD_0",
                     "type": "FLOAT_VEC2"
@@ -11706,6 +11749,7 @@
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
+                                "reflective",
                                 "worldViewMatrix"
                             ],
                             "texcoordBindings": {
@@ -11725,6 +11769,7 @@
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
+                            "u_reflective": "reflective",
                             "u_worldViewMatrix": "worldViewMatrix"
                         }
                     },
@@ -11758,6 +11803,9 @@
                     "semantic": "PROJECTION",
                     "type": "FLOAT_MAT4"
                 },
+                "reflective": {
+                    "type": "FLOAT_VEC3"
+                },
                 "transparency": {
                     "type": "FLOAT"
                 },
@@ -11779,6 +11827,7 @@
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
+                                "reflective",
                                 "transparency",
                                 "worldViewMatrix"
                             ]
@@ -11795,6 +11844,7 @@
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
+                            "u_reflective": "reflective",
                             "u_transparency": "transparency",
                             "u_worldViewMatrix": "worldViewMatrix"
                         }
@@ -11834,6 +11884,9 @@
                     "semantic": "PROJECTION",
                     "type": "FLOAT_MAT4"
                 },
+                "reflective": {
+                    "type": "FLOAT_VEC3"
+                },
                 "worldViewMatrix": {
                     "semantic": "WORLDVIEW",
                     "type": "FLOAT_MAT4"
@@ -11852,6 +11905,7 @@
                                 "diffuse",
                                 "normalMatrix",
                                 "projectionMatrix",
+                                "reflective",
                                 "worldViewMatrix"
                             ]
                         },
@@ -11867,6 +11921,7 @@
                             "u_diffuse": "diffuse",
                             "u_normalMatrix": "normalMatrix",
                             "u_projectionMatrix": "projectionMatrix",
+                            "u_reflective": "reflective",
                             "u_worldViewMatrix": "worldViewMatrix"
                         }
                     },
