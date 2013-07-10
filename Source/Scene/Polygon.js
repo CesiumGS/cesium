@@ -276,18 +276,32 @@ define([
                 return;
             }
 
-            var instance = new GeometryInstance({
-                geometry : new PolygonGeometry({
-                    positions : this._positions,
-                    polygonHierarchy : this._polygonHierarchy,
-                    height : this.height,
-                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    stRotation : this.textureRotationAngle,
-                    ellipsoid : this.ellipsoid,
-                    granularity : this.granularity
-                }),
-                id : this
-            });
+            var instance;
+            if (typeof this._positions !== 'undefined') {
+                instance = new GeometryInstance({
+                    geometry : PolygonGeometry.fromPositions({
+                        positions : this._positions,
+                        height : this.height,
+                        vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                        stRotation : this.textureRotationAngle,
+                        ellipsoid : this.ellipsoid,
+                        granularity : this.granularity
+                    }),
+                    id : this
+                });
+            } else {
+                instance = new GeometryInstance({
+                    geometry : new PolygonGeometry({
+                        polygonHierarchy : this._polygonHierarchy,
+                        height : this.height,
+                        vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                        stRotation : this.textureRotationAngle,
+                        ellipsoid : this.ellipsoid,
+                        granularity : this.granularity
+                    }),
+                    id : this
+                });
+            }
 
             this._primitive = new Primitive({
                 geometryInstances : instance,

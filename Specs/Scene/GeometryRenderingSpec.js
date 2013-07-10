@@ -510,7 +510,7 @@ defineSuite([
         var instance;
         beforeAll(function() {
             instance = new GeometryInstance({
-                geometry : new PolygonGeometry({
+                geometry : PolygonGeometry.fromPositions({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
@@ -545,7 +545,7 @@ defineSuite([
 
         it('at height', function() {
             var atHeight = new GeometryInstance({
-                geometry : new PolygonGeometry({
+                geometry : PolygonGeometry.fromPositions({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
