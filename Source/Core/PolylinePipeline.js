@@ -150,7 +150,7 @@ define([
             var v0 = positions[i - 1];
             var v1 = positions[i];
 
-            if (!v0.equals(v1)) {
+            if (!Cartesian3.equals(v0, v1)) {
                 cleanedPositions.push(v1); // Shallow copy!
             }
         }
