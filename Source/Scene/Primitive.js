@@ -49,16 +49,16 @@ define([
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
-     * as shown in Code Example 1 below, or from an array of instances, even if the geometry is from different
+     * as shown in example 1 below, or from an array of instances, even if the geometry is from different
      * geometry types, e.g., an {@link ExtentGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
      * <p>
      * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
-     * {@link Material} and {@link Renderstate}.  Roughly, the geometry instance defines the structure and placement,
+     * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and max most of them, and to easily add new geometry types and appearances.
+     * and match most of them and add a new geometry or appearance independently of each other.
      * </p>
      * <p>
-     * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
+     * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
      * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
@@ -68,9 +68,9 @@ define([
      *
      * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
+     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -196,7 +196,7 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._allowColumbusView = defaultValue(options.allowColumbusView, true);
+        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
         this._perInstanceAttributes = undefined;
@@ -309,7 +309,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._allowColumbusView;
+        var toWorld = !primitive._allow3DOnly;
         var length = instances.length;
         var i;
 
@@ -414,7 +414,7 @@ define([
         transformToWorldCoordinates(primitive, instances);
 
         // Clip to IDL
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             for (i = 0; i < length; ++i) {
                 GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
@@ -439,7 +439,7 @@ define([
         var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry, projection);
 
@@ -566,7 +566,7 @@ define([
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
         var attributes;
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             attributes =
                 'attribute vec3 position2DHigh;\n' +
                 'attribute vec3 position2DLow;\n';
@@ -577,7 +577,7 @@ define([
         var computePosition =
             '\nvec4 czm_computePosition()\n' +
             '{\n';
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             computePosition +=
                 '    vec4 p;\n' +
                 '    if (czm_morphTime == 1.0)\n' +
@@ -665,11 +665,8 @@ define([
         if (!this.show ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
             (typeof this.appearance === 'undefined') ||
-            (frameState.mode !== SceneMode.SCENE3D && !this._allowColumbusView)) {
-            return;
-        }
-
-        if (!frameState.passes.color && !frameState.passes.pick) {
+            (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
+            (!frameState.passes.color && !frameState.passes.pick)) {
             return;
         }
 
@@ -683,7 +680,7 @@ define([
         if (this._va.length === 0) {
             var projection = frameState.scene2D.projection;
 
-            var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
+            var instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
             // Copy instances first since most pipeline operations modify the geometry and instance in-place.
             length = instances.length;
             var insts = new Array(length);
@@ -695,7 +692,7 @@ define([
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             this._boundingSphere = geometries[0].boundingSphere;
-            if (this._allowColumbusView && typeof this._boundingSphere !== 'undefined') {
+            if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
