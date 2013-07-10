@@ -1,6 +1,6 @@
 uniform vec4 u_intersectionColor;
 
-bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointEC)
+bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointWC)
 {
     // Diagonal matrix from the unscaled ellipsoid space to the scaled space.    
     vec3 D = ellipsoidEC.inverseRadii;
@@ -10,11 +10,8 @@ bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointEC)
     float qMagnitudeSquared = dot(q, q);
     float test = qMagnitudeSquared - 1.0;
     
-    // Fragment in the ellipsoid frame
-    vec3 t = (czm_inverseView * vec4(pointEC, 1.0)).xyz;
-
     // Sensor vertex to fragment vector in the ellipsoid's scaled space
-    vec3 temp = D * t - q;
+    vec3 temp = D * pointWC - q;
     float d = dot(temp, q);
     
     // Behind silhouette plane and inside silhouette cone
@@ -25,7 +22,7 @@ bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointEC)
 
 #ifndef RENDER_FOR_PICK
 
-vec4 getIntersectionColor(float sensorRadius, vec3 pointEC)
+vec4 getIntersectionColor()
 {
     return u_intersectionColor;
 }

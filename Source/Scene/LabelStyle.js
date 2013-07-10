@@ -13,24 +13,27 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * Fill the text of the label, but do not outline.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0
          */
         FILL : new Enumeration(0, 'FILL'),
 
         /**
          * Outline the text of the label, but do not fill.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 1
          */
         OUTLINE : new Enumeration(1, 'OUTLINE'),
 
         /**
          * Fill and outline the text of the label.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 2
          */
         FILL_AND_OUTLINE : new Enumeration(2, 'FILL_AND_OUTLINE')
     };

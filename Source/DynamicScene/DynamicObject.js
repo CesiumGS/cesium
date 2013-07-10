@@ -69,98 +69,114 @@ define([
          * other properties will return valid data for any provided time.
          * If availability exists, the objects other properties will only
          * provide valid data if queried within the given interval.
-         * @type TimeInterval
+         * @type {TimeInterval}
+         * @default undefined
          */
         this.availability = undefined;
 
         /**
          * Gets or sets the position.
-         * @type DynamicPositionProperty
+         * @type {DynamicPositionProperty}
+         * @default undefined
          */
         this.position = undefined;
 
         /**
          * Gets or sets the orientation.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.orientation = undefined;
 
         /**
          * Gets or sets the billboard.
-         * @type DynamicBillboard
+         * @type {DynamicBillboard}
+         * @default undefined
          */
         this.billboard = undefined;
 
         /**
          * Gets or sets the cone.
-         * @type DynamicCone
+         * @type {DynamicCone}
+         * @default undefined
          */
         this.cone = undefined;
 
         /**
          * Gets or sets the ellipsoid.
-         * @type DynamicEllipsoid
+         * @type {DynamicEllipsoid}
+         * @default undefined
          */
         this.ellipsoid = undefined;
 
         /**
-        * Gets or sets the ellipse.
-        * @type DynamicEllipse
-        */
+         * Gets or sets the ellipse.
+         * @type {DynamicEllipse}
+         * @default undefined
+         */
         this.ellipse = undefined;
 
         /**
          * Gets or sets the label.
-         * @type DynamicLabel
+         * @type {DynamicLabel}
+         * @default undefined
          */
         this.label = undefined;
 
         /**
          * Gets or sets the path.
-         * @type DynamicPath
+         * @type {DynamicPath}
+         * @default undefined
          */
         this.path = undefined;
 
         /**
          * Gets or sets the point graphic.
-         * @type DynamicPoint
+         * @type {DynamicPoint}
+         * @default undefined
          */
         this.point = undefined;
 
         /**
          * Gets or sets the polygon.
-         * @type DynamicPolygon
+         * @type {DynamicPolygon}
+         * @default undefined
          */
         this.polygon = undefined;
 
         /**
          * Gets or sets the polyline.
-         * @type DynamicPolyline
+         * @type {DynamicPolyline}
+         * @default undefined
          */
         this.polyline = undefined;
 
         /**
          * Gets or sets the pyramid.
-         * @type DynamicPyramid
+         * @type {DynamicPyramid}
+         * @default undefined
          */
         this.pyramid = undefined;
 
         /**
          * Gets or sets the vertex positions.
-         * @type DynamicVertexPositionsProperty
+         * @type {DynamicVertexPositionsProperty}
+         * @default undefined
          */
         this.vertexPositions = undefined;
 
         /**
          * Gets or sets the vector.
-         * @type DynamicVector
+         * @type {DynamicVector}
+         * @default undefined
          */
         this.vector = undefined;
 
         /**
          * Gets or sets the suggested initial offset for viewing this object
          * with the camera.  The offset is defined in the east-north-up reference frame.
-         * @type Cartesian3
+         * @type {Cartesian3}
+         * @default undefined
          */
         this.viewFrom = undefined;
     };

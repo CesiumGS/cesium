@@ -11,13 +11,13 @@
     var dojoConfig = {
         baseUrl : '../../../Source',
         packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.0/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.0/dijit' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
         ]
     };
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.0/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.0/dijit/themes/claro/claro.css" type="text/css">
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
@@ -111,9 +111,9 @@ require([
                     credit: 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 }));
         addBaseLayerOption(
-                'Single Image',
-                new Cesium.SingleTileImageryProvider({
-                    url : require.toUrl('Assets/Textures/NE2_LR_LC_SR_W_DR_2048.jpg')
+                'Natural Earth II (local)',
+                new Cesium.TileMapServiceImageryProvider({
+                    url : require.toUrl('Assets/Textures/NaturalEarthII')
                 }));
 
         // Create the additional layers

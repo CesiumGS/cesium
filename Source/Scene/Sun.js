@@ -54,7 +54,8 @@ define([
          * The default is <code>true</code>.
          * </p>
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.show = true;
     };

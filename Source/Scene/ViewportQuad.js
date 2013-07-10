@@ -60,7 +60,8 @@ define([
          * The default is <code>true</code>.
          * </p>
          *
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
         */
         this.show = true;
 
@@ -71,7 +72,7 @@ define([
         /**
          * The BoundingRectangle defining the quad's position within the viewport.
          *
-         * @type BoundingRectangle
+         * @type {BoundingRectangle}
          *
          * @example
          * viewportQuad.rectangle = new BoundingRectangle(0, 0, 80, 40);
