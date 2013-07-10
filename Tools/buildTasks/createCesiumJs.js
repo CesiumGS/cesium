@@ -26,7 +26,7 @@ forEachFile('sourcefiles', function(relativePath, file) {
 
     var parameterName = String(moduleId).replace(nonIdentifierRegexp, '_');
 
-    moduleIds.push("'" + moduleId + "'");
+    moduleIds.push("'./" + moduleId + "'");
     parameters.push(parameterName);
     assignments.push('Cesium.' + assignmentName + ' = ' + parameterName + ';');
 });
