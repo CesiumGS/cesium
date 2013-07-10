@@ -112,7 +112,7 @@
                         }
                     },
                     {
-                        "parameter": "shininesss",
+                        "parameter": "shininess",
                         "value": 38.4
                     }
                 ]
@@ -138,7 +138,7 @@
         }
     },
     "nodes": {
-        "node_0": {
+        "LOD3sp": {
             "children": [],
             "matrix": [
                 1,
@@ -163,7 +163,7 @@
             ],
             "name": "LOD3sp"
         },
-        "node_1": {
+        "camera1": {
             "camera": "camera_0",
             "children": [],
             "matrix": [
@@ -186,7 +186,7 @@
             ],
             "name": "camera1"
         },
-        "node_2": {
+        "directionalLight1": {
             "children": [],
             "matrix": [
                 -0.954692,
@@ -220,9 +220,9 @@
     "scenes": {
         "defaultScene": {
             "nodes": [
-                "node_0",
-                "node_1",
-                "node_2"
+                "LOD3sp",
+                "camera1",
+                "directionalLight1"
             ]
         }
     },
@@ -234,6 +234,7 @@
             "path": "duck0VS.glsl"
         }
     },
+    "skins": {},
     "techniques": {
         "technique1": {
             "parameters": {
