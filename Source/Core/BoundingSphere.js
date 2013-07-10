@@ -524,7 +524,7 @@ define([
     };
 
     /**
-     * Creaates a bounding sphere encompassing an ellipsoid.
+     * Creates a bounding sphere encompassing an ellipsoid.
      *
      * @memberof BoundingSphere
      *
@@ -547,6 +547,7 @@ define([
             result = new BoundingSphere();
         }
 
+        Cartesian3.clone(Cartesian3.ZERO, result.center);
         result.radius = ellipsoid.getMaximumRadius();
         return result;
     };
@@ -763,16 +764,17 @@ define([
         return result;
     };
 
-    var projectTo2DNormal = new Cartesian3();
-    var projectTo2DEast = new Cartesian3();
-    var projectTo2DNorth = new Cartesian3();
-    var projectTo2DWest = new Cartesian3();
-    var projectTo2DSouth = new Cartesian3();
-    var projectTo2DCartographic = new Cartographic();
-    var projectTo2DPositions = new Array(8);
+    var projectTo2DNormalScratch = new Cartesian3();
+    var projectTo2DEastScratch = new Cartesian3();
+    var projectTo2DNorthScratch = new Cartesian3();
+    var projectTo2DWestScratch = new Cartesian3();
+    var projectTo2DSouthScratch = new Cartesian3();
+    var projectTo2DCartographicScratch = new Cartographic();
+    var projectTo2DPositionsScratch = new Array(8);
     for (var n = 0; n < 8; ++n) {
-        projectTo2DPositions[n] = new Cartesian3();
+        projectTo2DPositionsScratch[n] = new Cartesian3();
     }
+    var projectTo2DProjection = new GeographicProjection();
     /**
      * Creates a bounding sphere in 2D from a bounding sphere in 3D world coordinates.
      * @memberof BoundingSphere
@@ -789,26 +791,26 @@ define([
             throw new DeveloperError('sphere is required.');
         }
 
-        projection = (typeof projection !== 'undefined') ? projection : new GeographicProjection();
+        projection = defaultValue(projection, projectTo2DProjection);
 
         var ellipsoid = projection.getEllipsoid();
         var center = sphere.center;
         var radius = sphere.radius;
 
-        var normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormal);
-        var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal, projectTo2DEast);
+        var normal = ellipsoid.geodeticSurfaceNormal(center, projectTo2DNormalScratch);
+        var east = Cartesian3.cross(Cartesian3.UNIT_Z, normal, projectTo2DEastScratch);
         Cartesian3.normalize(east, east);
-        var north = Cartesian3.cross(normal, east, projectTo2DNorth);
+        var north = Cartesian3.cross(normal, east, projectTo2DNorthScratch);
         Cartesian3.normalize(north, north);
 
         Cartesian3.multiplyByScalar(normal, radius, normal);
         Cartesian3.multiplyByScalar(north, radius, north);
         Cartesian3.multiplyByScalar(east, radius, east);
 
-        var south = Cartesian3.negate(north, projectTo2DSouth);
-        var west = Cartesian3.negate(east, projectTo2DWest);
+        var south = Cartesian3.negate(north, projectTo2DSouthScratch);
+        var west = Cartesian3.negate(east, projectTo2DWestScratch);
 
-        var positions = projectTo2DPositions;
+        var positions = projectTo2DPositionsScratch;
 
         // top NE corner
         var corner = positions[0];
@@ -856,7 +858,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var position = positions[i];
             Cartesian3.add(center, position, position);
-            var cartographic = ellipsoid.cartesianToCartographic(position, projectTo2DCartographic);
+            var cartographic = ellipsoid.cartesianToCartographic(position, projectTo2DCartographicScratch);
             projection.project(cartographic, position);
         }
 

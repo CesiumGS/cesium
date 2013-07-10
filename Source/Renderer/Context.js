@@ -11,6 +11,7 @@ define([
         '../Core/Geometry',
         '../Core/createGuid',
         '../Core/Matrix4',
+        '../Core/Math',
         './Buffer',
         './BufferUsage',
         './CubeMap',
@@ -45,6 +46,7 @@ define([
         Geometry,
         createGuid,
         Matrix4,
+        CesiumMath,
         Buffer,
         BufferUsage,
         CubeMap,
@@ -2201,7 +2203,9 @@ define([
         var names = [];
         for (name in attributes) {
             // Attribute needs to have per-vertex values; not a constant value for all vertices.
-            if (attributes.hasOwnProperty(name) && typeof attributes[name].values !== 'undefined') {
+            if (attributes.hasOwnProperty(name) &&
+                    typeof attributes[name] !== 'undefined' &&
+                    typeof attributes[name].values !== 'undefined') {
                 names.push(name);
 
                 if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
@@ -2389,7 +2393,7 @@ define([
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
                 for (name in attributes) {
-                    if (attributes.hasOwnProperty(name)) {
+                    if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
                         attribute = attributes[name];
 
                         if (typeof attribute.values !== 'undefined') {
@@ -2418,7 +2422,7 @@ define([
         } else {
             // One vertex buffer per attribute.
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name)) {
+                if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;
@@ -2446,7 +2450,7 @@ define([
         var indexBuffer;
         var indices = geometry.indices;
         if (typeof indices !== 'undefined') {
-            if ((Geometry.computeNumberOfVertices(geometry) > 64 * 1024) && this.getElementIndexUint()) {
+            if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.getElementIndexUint()) {
                 indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
                 indexBuffer = this.createIndexBuffer(new Uint16Array(indices), bufferUsage, IndexDatatype.UNSIGNED_SHORT);

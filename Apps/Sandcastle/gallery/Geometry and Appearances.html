@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0)),
             semiMinorAxis : 200000.0,
             semiMajorAxis : 500000.0,
-            bearing : Cesium.Math.toRadians(30.0),
+            rotation : Cesium.Math.toRadians(30.0),
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
         })
     });
@@ -145,12 +145,13 @@ require(['Cesium'], function(Cesium) {
     
     // Create box and ellipsoid boxes, and use the instance's
     // modelMatrix to scale and position them.
-    var boxGeometry = new Cesium.BoxGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        ellipsoid : new Cesium.Ellipsoid(0.5, 0.5, 1.0)
+        radii : new Cesium.Cartesian3(0.5, 0.5, 1.0)
     });
 
     instances = [];

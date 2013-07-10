@@ -17,7 +17,10 @@ define([
      * @alias ColorGeometryInstanceAttribute
      * @constructor
      *
-     * @param {Color} [color=new Color(1.0, 0.0, 0.0, 0.5)] The color of the geometry instance.
+     * @param {Number} [red=1.0] The red component.
+     * @param {Number} [green=1.0] The green component.
+     * @param {Number} [blue=1.0] The blue component.
+     * @param {Number} [alpha=1.0] The alpha component.
      *
      * @example
      * var instance = new GeometryInstance({
@@ -82,7 +85,7 @@ define([
          *
          * @type Uint8Array
          *
-         * @default [1.0, 0.0, 0.0, 0.5]
+         * @default [255, 255, 255, 255]
          */
         this.value = new Uint8Array([
             Color.floatToByte(red),

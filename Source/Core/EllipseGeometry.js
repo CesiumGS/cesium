@@ -8,6 +8,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix3',
         './PrimitiveType',
@@ -22,6 +23,7 @@ define([
         DeveloperError,
         Ellipsoid,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix3,
         PrimitiveType,
@@ -34,8 +36,8 @@ define([
     var unitQuat = new Quaternion();
     var rotMtx = new Matrix3();
 
-    function pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
-        var azimuth = theta + bearing;
+    function pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
+        var azimuth = theta + rotation;
 
         Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth), rotAxis);
         Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth), tempVec);
@@ -64,9 +66,12 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
+    var unitPosScratch = new Cartesian3();
+    var eastVecScratch = new Cartesian3();
+    var northVecScratch = new Cartesian3();
 
     /**
-     * Computes vertices and indices for an ellipse on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for an ellipse on the ellipsoid.
      *
      * @alias EllipseGeometry
      * @constructor
@@ -76,7 +81,7 @@ define([
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.bearing=0.0] The angle from north (clockwise) in radians. The default is zero.
+     * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
@@ -84,6 +89,7 @@ define([
      * @exception {DeveloperError} semiMajorAxis is required.
      * @exception {DeveloperError} semiMinorAxis is required.
      * @exception {DeveloperError} semiMajorAxis and semiMinorAxis must be greater than zero.
+     * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
      * @example
@@ -94,7 +100,7 @@ define([
      *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   semiMajorAxis : 500000.0,
      *   semiMinorAxis : 300000.0,
-     *   bearing : CesiumMath.toRadians(60.0)
+     *   rotation : CesiumMath.toRadians(60.0)
      * });
      */
     var EllipseGeometry = function(options) {
@@ -104,7 +110,7 @@ define([
         var semiMinorAxis = options.semiMinorAxis;
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var bearing = defaultValue(options.bearing, 0.0);
+        var rotation = defaultValue(options.rotation, 0.0);
         var height = defaultValue(options.height, 0.0);
         var granularity = defaultValue(options.granularity, 0.02);
 
@@ -129,9 +135,7 @@ define([
         }
 
         if (semiMajorAxis < semiMinorAxis) {
-           var temp = semiMajorAxis;
-           semiMajorAxis = semiMinorAxis;
-           semiMinorAxis = temp;
+           throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -144,10 +148,10 @@ define([
 
         var mag = center.magnitude();
 
-        var unitPos = Cartesian3.normalize(center);
-        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center);
+        var unitPos = Cartesian3.normalize(center, unitPosScratch);
+        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);
         Cartesian3.normalize(eastVec, eastVec);
-        var northVec = Cartesian3.cross(unitPos, eastVec);
+        var northVec = Cartesian3.cross(unitPos, eastVec, northVecScratch);
 
         // The number of points in the first quadrant
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
@@ -179,15 +183,15 @@ define([
 
         var i;
         var j;
-        var theta;
         var numInterior;
         var t;
         var interiorPosition;
 
         // Compute points in the 'northern' half of the ellipse
-        for (i = 0, theta = CesiumMath.PI_OVER_TWO; i < numPts && theta > 0; ++i, theta -= deltaTheta) {
-            pointOnEllipsoid(theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            pointOnEllipsoid(Math.PI - theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+        var theta = CesiumMath.PI_OVER_TWO;
+        for (i = 0; i < numPts && theta > 0; ++i) {
+            pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
@@ -205,6 +209,8 @@ define([
             positions[positionIndex++] = reflectedPosition.x;
             positions[positionIndex++] = reflectedPosition.y;
             positions[positionIndex++] = reflectedPosition.z;
+
+            theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
         }
 
         // Set numPts if theta reached zero
@@ -214,8 +220,8 @@ define([
         for (i = numPts; i > 0; --i) {
             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
-            pointOnEllipsoid(-theta, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            pointOnEllipsoid( theta + Math.PI, bearing, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            pointOnEllipsoid( theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             positions[positionIndex++] = position.x;
             positions[positionIndex++] = position.y;
@@ -303,7 +309,7 @@ define([
             }
         }
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -423,18 +429,21 @@ define([
             indices[indicesIndex++] = positionIndex++;
         }
 
+        var boundingSphereCenter = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center), height);
+        Cartesian3.add(center, boundingSphereCenter, boundingSphereCenter);
+
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
@@ -452,7 +461,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = new BoundingSphere(center, semiMajorAxis);
+        this.boundingSphere = new BoundingSphere(boundingSphereCenter, semiMajorAxis);
     };
 
     return EllipseGeometry;

@@ -1,0 +1,129 @@
+/*global defineSuite*/
+defineSuite([
+         'Scene/MaterialAppearance',
+         'Scene/Appearance',
+         'Scene/Material',
+         'Scene/Primitive',
+         'Core/ExtentGeometry',
+         'Core/Extent',
+         'Core/GeometryInstance',
+         'Core/ColorGeometryInstanceAttribute',
+         'Renderer/ClearCommand',
+         'Specs/render',
+         'Specs/createCanvas',
+         'Specs/destroyCanvas',
+         'Specs/createContext',
+         'Specs/destroyContext',
+         'Specs/createFrameState'
+     ], function(
+         MaterialAppearance,
+         Appearance,
+         Material,
+         Primitive,
+         ExtentGeometry,
+         Extent,
+         GeometryInstance,
+         ColorGeometryInstanceAttribute,
+         ClearCommand,
+         render,
+         createCanvas,
+         destroyCanvas,
+         createContext,
+         destroyContext,
+         createFrameState) {
+    "use strict";
+    /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var context;
+    var frameState;
+    var primitive;
+
+    beforeAll(function() {
+        context = createContext();
+        frameState = createFrameState();
+
+        var extent = Extent.fromDegrees(-80.0, 20.0, -70.0, 40.0);
+        primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : MaterialAppearance.MaterialSupport.ALL.vertexFormat,
+                    extent : extent
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            })
+        });
+
+        frameState.camera.controller.viewExtent(extent);
+        var us = context.getUniformState();
+        us.update(frameState);
+    });
+
+    afterAll(function() {
+        primitive = primitive && primitive.destroy();
+        destroyContext(context);
+    });
+
+    it('constructor', function() {
+        var a = new MaterialAppearance();
+
+        expect(a.materialSupport).toEqual(MaterialAppearance.MaterialSupport.TEXTURED);
+        expect(a.material).toBeDefined();
+        expect(a.material.type).toEqual(Material.ColorType);
+        expect(a.vertexShaderSource).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.vertexShaderSource);
+        expect(a.fragmentShaderSource).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.fragmentShaderSource);
+        expect(a.renderState).toEqual(Appearance.getDefaultRenderState(true, false));
+        expect(a.vertexFormat).toEqual(MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat);
+        expect(a.flat).toEqual(false);
+        expect(a.faceForward).toEqual(false);
+        expect(a.translucent).toEqual(true);
+        expect(a.closed).toEqual(false);
+    });
+
+    it('renders basic', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.BASIC,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.DotType)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders textured', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.ImageType)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+    it('renders all', function() {
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.ALL,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.NormalMapType)
+        });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+    });
+
+});

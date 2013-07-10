@@ -8,15 +8,11 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
-         'Core/BoundingRectangle',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
-         'Core/Extent',
-         'Core/Matrix4',
          'Core/Math',
-         'Core/JulianDate',
          'Renderer/ClearCommand',
          'Scene/SceneMode'
      ], function(
@@ -28,15 +24,11 @@ defineSuite([
          frameState,
          pick,
          render,
-         BoundingRectangle,
          BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
-         Extent,
-         Matrix4,
          CesiumMath,
-         JulianDate,
          ClearCommand,
          SceneMode) {
     "use strict";
@@ -191,7 +183,7 @@ defineSuite([
     });
 
     it('gets the default granularity', function() {
-        expect(polygon.granularity).toEqual(CesiumMath.toRadians(1.0));
+        expect(polygon.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
     });
 
     it('renders', function() {

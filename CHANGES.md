@@ -26,28 +26,10 @@ Beta Releases
    * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
-   * Added `height` parameter to `BoundingSphere.fromExtent3D`.
-   * Added `height` parameter to `Extent.subsample`.
+   * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
+   * Added `surfaceHeight` parameter to `Extent.subsample`.
 * Added `ExtentPrimitive`.
-* Added `Geometry` and `GeometryInstance`.  Added the following geometry types:
-   * `PolygonGeometry`
-   * `ExtentGeometry`
-   * `EllipseGeometry`
-   * `CircleGeometry`
-   * `WallGeometry`
-   * `SimplePolylineGeometry`
-   * `BoxGeometry`
-   * `EllipsoidGeometry`
-* Added appearances, which describe the visual characteristics for geometry instances.  Added the following types:
-   * `Appearance`
-   * `PerInstanceColorAppearance`
-   * `EllipsoidSurfaceAppearance`
-* Added `Primitive`, which is a generic primitive that combines geometry instances and appearances.
-* Added `GeometryPipeline.combine` to combine meshes for better batching.
-* Added `GeometryPipeline.computeNormal` to compute normals for a geometry.
-* Added `GeometryPipeline.computeBinormalAndTangent` to compute binormals and tangent vectors for a geometry.
-* Added `GeometryPipeline.wrapLongitude` to split geometry across the International Date Line.
-* Added `GeometryPipeline.createLineSegmentsForVectors` and `createTangentSpaceDebugPrimitive` for debugging.
+* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.

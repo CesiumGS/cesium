@@ -12,6 +12,7 @@ define([
         './Extent',
         './GeographicProjection',
         './GeometryAttribute',
+        './GeometryAttributes',
         './Math',
         './Matrix2',
         './PrimitiveType',
@@ -29,6 +30,7 @@ define([
         Extent,
         GeographicProjection,
         GeometryAttribute,
+        GeometryAttributes,
         CesiumMath,
         Matrix2,
         PrimitiveType,
@@ -57,7 +59,7 @@ define([
     var binormal = new Cartesian3();
 
     /**
-     * Creates geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor
@@ -65,7 +67,7 @@ define([
      * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
-     * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
      *
@@ -95,7 +97,7 @@ define([
 
         extent.validate();
 
-        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
@@ -147,7 +149,7 @@ define([
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         var positionIndex = 0;
         var stIndex = 0;
@@ -295,14 +297,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */

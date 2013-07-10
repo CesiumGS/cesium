@@ -48,7 +48,7 @@ define([
     "use strict";
 
     /**
-     * Content pipeline functions for geometries.  These functions generally modify geometry in place.
+     * Content pipeline functions for geometries.
      *
      * @exports GeometryPipeline
      *
@@ -126,11 +126,12 @@ define([
      * This is commonly used to create a wireframe geometry for visual debugging.
      * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its triangle indices converted to lines.
      *
      * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.
      *
      * @example
      * geometry = GeometryPipeline.toWireframe(geometry);
@@ -152,6 +153,8 @@ define([
                 case PrimitiveType.TRIANGLE_FAN:
                     geometry.indices = triangleFanToLines(indices);
                     break;
+                default:
+                    throw new DeveloperError('geometry.primitiveType must be TRIANGLES, TRIANGLE_STRIP, or TRIANGLE_FAN.');
             }
 
             geometry.primitiveType = PrimitiveType.LINES;
@@ -189,7 +192,7 @@ define([
 
         attributeName = defaultValue(attributeName, 'normal');
 
-        if (typeof geometry.attributes[attributeName] === 'defined') {
+        if (typeof geometry.attributes[attributeName] === 'undefined') {
             throw new DeveloperError('geometry.attributes must have an attribute with the same name as the attributeName parameter, ' + attributeName + '.');
         }
 
@@ -308,7 +311,7 @@ define([
     /**
      * Reorders a geometry's attributes and <code>indices</code> to achieve better performance from the GPU's pre-vertex-shader cache.
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its attributes and indices reordered for the GPU's pre-vertex-shader cache.
      *
@@ -362,7 +365,10 @@ define([
             // Reorder attributes
             var attributes = geometry.attributes;
             for ( var property in attributes) {
-                if (attributes.hasOwnProperty(property) && attributes[property].values) {
+                if (attributes.hasOwnProperty(property) &&
+                        typeof attributes[property] !== 'undefined' &&
+                        typeof attributes[property].values !== 'undefined') {
+
                     var attribute = attributes[property];
                     var elementsIn = attribute.values;
                     var intoElementsIn = 0;
@@ -388,7 +394,7 @@ define([
      * post vertex-shader cache by using the Tipsify algorithm.  If the geometry <code>primitiveType</code>
      * is not <code>TRIANGLES</code> or the geometry does not have an <code>indices</code>, this function has no effect.
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      * @param {Number} [cacheCapacity=24] The number of vertices that can be held in the GPU's vertex cache.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its indices reordered for the post-vertex-shader cache.
@@ -432,7 +438,10 @@ define([
         var newAttributes = {};
 
         for ( var attribute in attributes) {
-            if (attributes.hasOwnProperty(attribute) && attributes[attribute].values) {
+            if (attributes.hasOwnProperty(attribute) &&
+                    typeof attributes[attribute] !== 'undefined' &&
+                    typeof attributes[attribute].values !== 'undefined') {
+
                 var attr = attributes[attribute];
                 newAttributes[attribute] = new GeometryAttribute({
                     componentDatatype : attr.componentDatatype,
@@ -448,7 +457,10 @@ define([
 
     function copyVertex(destinationAttributes, sourceAttributes, index) {
         for ( var attribute in sourceAttributes) {
-            if (sourceAttributes.hasOwnProperty(attribute) && sourceAttributes[attribute].values) {
+            if (sourceAttributes.hasOwnProperty(attribute) &&
+                    typeof sourceAttributes[attribute] !== 'undefined' &&
+                    typeof sourceAttributes[attribute].values !== 'undefined') {
+
                 var attr = sourceAttributes[attribute];
 
                 for ( var k = 0; k < attr.componentsPerAttribute; ++k) {
@@ -459,14 +471,14 @@ define([
     }
 
     /**
-     * Splits a geometry into multiple geometries - if necessary - to ensure that indices in the
+     * Splits a geometry into multiple geometries, if necessary, to ensure that indices in the
      * <code>indices</code> fit into unsigned shorts.  This is used to meet the WebGL requirements
      * when {@link Context#getElementIndexUint} is <code>false</code>.
      * <p>
-     * If the geometry does not have an <code>indices</code>, this function has no effect.
+     * If the geometry does not have any <code>indices</code>, this function has no effect.
      * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place if it needs to be split into multiple geometries.
+     * @param {Geometry} geometry The geometry to be split into multiple geometries.
      *
      * @returns {Array} An array of geometries, each with indices that fit into unsigned shorts.
      *
@@ -494,8 +506,7 @@ define([
         // If there's an index list and more than 64K attributes, it is possible that
         // some indices are outside the range of unsigned short [0, 64K - 1]
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
-        var sixtyFourK = 64 * 1024;
-        if (typeof geometry.indices !== 'undefined' && (numberOfVertices > sixtyFourK)) {
+        if (typeof geometry.indices !== 'undefined' && (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES)) {
             var oldToNewIndex = [];
             var newIndices = [];
             var currentIndex = 0;
@@ -526,7 +537,7 @@ define([
                     newIndices.push(i);
                 }
 
-                if (currentIndex + indicesPerPrimitive > sixtyFourK) {
+                if (currentIndex + indicesPerPrimitive > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     geometries.push(new Geometry({
                         attributes : newAttributes,
                         indices : newIndices,
@@ -568,7 +579,7 @@ define([
      * If the geometry does not have a <code>position</code>, this function has no effect.
      * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      * @param {Object} [projection=new GeographicProjection()] The projection to use.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with <code>position3D</code> and <code>position2D</code> attributes.
@@ -588,12 +599,12 @@ define([
             var ellipsoid = projection.getEllipsoid();
 
             // Project original positions to 2D.
-            var wgs84Positions = geometry.attributes.position.values;
-            var projectedPositions = new Float64Array(wgs84Positions.length);
+            var positions3D = geometry.attributes.position.values;
+            var projectedPositions = new Float64Array(positions3D.length);
             var index = 0;
 
-            for ( var i = 0; i < wgs84Positions.length; i += 3) {
-                var position = Cartesian3.fromArray(wgs84Positions, i, scratchProjectTo2DCartesian3);
+            for ( var i = 0; i < positions3D.length; i += 3) {
+                var position = Cartesian3.fromArray(positions3D, i, scratchProjectTo2DCartesian3);
                 var lonLat = ellipsoid.cartesianToCartographic(position, scratchProjectTo2DCartographic);
                 var projectedLonLat = projection.project(lonLat, scratchProjectTo2DCartesian3);
 
@@ -629,14 +640,17 @@ define([
      * This is commonly used to create high-precision position vertex attributes.
      * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
-     * @param {String} [attributeName='position'] The name of the attribute.
-     * @param {String} [attributeHighName='positionHigh'] The name of the attribute for the encoded high bits.
-     * @param {String} [attributeLowName='positionLow'] The name of the attribute for the encoded low bits.
+     * @param {Geometry} geometry The geometry to modify.
+     * @param {String} attributeName The name of the attribute.
+     * @param {String} attributeHighName The name of the attribute for the encoded high bits.
+     * @param {String} attributeLowName The name of the attribute for the encoded low bits.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with its encoded attribute.
      *
      * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} attributeName is required.
+     * @exception {DeveloperError} attributeHighName is required.
+     * @exception {DeveloperError} attributeLowName is required.
      * @exception {DeveloperError} geometry must have attribute matching the attributeName argument.
      * @exception {DeveloperError} The attribute componentDatatype must be ComponentDatatype.DOUBLE.
      *
@@ -646,12 +660,20 @@ define([
      * @see EncodedCartesian3
      */
     GeometryPipeline.encodeAttribute = function(geometry, attributeName, attributeHighName, attributeLowName) {
-        attributeName = defaultValue(attributeName, 'position');
-        attributeHighName = defaultValue(attributeHighName, 'positionHigh');
-        attributeLowName = defaultValue(attributeLowName, 'positionLow');
-
         if (typeof geometry === 'undefined') {
             throw new DeveloperError('geometry is required.');
+        }
+
+        if (typeof attributeName === 'undefined') {
+            throw new DeveloperError('attributeName is required.');
+        }
+
+        if (typeof attributeHighName === 'undefined') {
+            throw new DeveloperError('attributeHighName is required.');
+        }
+
+        if (typeof attributeLowName === 'undefined') {
+            throw new DeveloperError('attributeLowName is required.');
         }
 
         var attribute = geometry.attributes[attributeName];
@@ -732,7 +754,7 @@ define([
      * following attributes if they are present: <code>position</code>, <code>normal</code>,
      * <code>binormal</code>, and <code>tangent</code>.
      *
-     * @param {GeometryInstance} instance The geometry instance to modify, which is modified in place.
+     * @param {GeometryInstance} instance The geometry instance to modify.
      *
      * @returns {GeometryInstance} The modified <code>instance</code> argument, with its attributes transforms to world coordinates.
      *
@@ -797,7 +819,10 @@ define([
         var name;
 
         for (name in attributes0) {
-            if (attributes0.hasOwnProperty(name)) {
+            if (attributes0.hasOwnProperty(name) &&
+                    typeof attributes0[name] !== 'undefined' &&
+                    typeof attributes0[name].values !== 'undefined') {
+
                 var attribute = attributes0[name];
                 var numberOfComponents = attribute.values.length;
                 var inAllGeometries = true;
@@ -846,7 +871,7 @@ define([
      *
      * @param {Array} [instances] The array of {@link GeometryInstance} objects whose geometry will be combined.
      *
-     * @returns {Geometry} A new geometry created from the provided geometry instances.
+     * @returns {Geometry} A single geometry created from the provided geometry instances.
      *
      * @exception {DeveloperError} instances is required and must have length greater than zero.
      * @exception {DeveloperError} All instances must have the same modelMatrix.
@@ -867,10 +892,6 @@ define([
         }
 
         var length = instances.length;
-
-        if (length === 1) {
-            return instances[0].geometry;
-        }
 
         var name;
         var i;
@@ -928,7 +949,8 @@ define([
             }
 
             var numberOfVertices = Geometry.computeNumberOfVertices(new Geometry({
-                attributes : attributes
+                attributes : attributes,
+                primitiveType : PrimitiveType.POINTS
             }));
             var destIndices = IndexDatatype.createTypedArray(numberOfVertices, numberOfIndices);
 
@@ -984,17 +1006,16 @@ define([
      * Computes per-vertex normals for a geometry containing <code>TRIANGLES</code> by averaging the normals of
      * all triangles incident to the vertex.  The result is a new <code>normal</code> attribute added to the geometry.
      * This assumes a counter-clockwise winding order.
-     * <p>
-     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
-     * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have a
-     * <code>position</code> attribute.
-     * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>normal</code> attribute.
      *
-     * @exception {DeveloperError} geometry is required
+     * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry.attributes.position.values is required.
+     * @exception {DeveloperError} geometry.indices is required.
+     * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
+     * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
      * GeometryPipeline.computeNormal(geometry);
@@ -1007,14 +1028,20 @@ define([
         var attributes = geometry.attributes;
         var indices = geometry.indices;
 
-        if (typeof attributes.position === 'undefined' ||
-            typeof attributes.position.values === 'undefined' ||
-            geometry.primitiveType !== PrimitiveType.TRIANGLES ||
-            typeof indices === 'undefined' ||
-            indices.length < 2 ||
-            indices.length % 3 !== 0) {
+        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.position.values is required.');
+        }
 
-            return geometry;
+        if (typeof indices === 'undefined') {
+            throw new DeveloperError('geometry.indices is required.');
+        }
+
+        if (indices.length < 2 || indices.length % 3 !== 0) {
+            throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
         }
 
         var vertices = geometry.attributes.position.values;
@@ -1024,7 +1051,7 @@ define([
         var normalsPerTriangle = new Array(numIndices / 3);
         var normalIndices = new Array(numIndices);
 
-        for (var i = 0; i < numVertices; i++) {
+        for ( var i = 0; i < numVertices; i++) {
             normalsPerVertex[i] = {
                 indexOffset : 0,
                 count : 0,
@@ -1037,9 +1064,9 @@ define([
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
-            var i03 = i0*3;
-            var i13 = i1*3;
-            var i23 = i2*3;
+            var i03 = i0 * 3;
+            var i13 = i1 * 3;
+            var i23 = i2 * 3;
 
             v0.x = vertices[i03];
             v0.y = vertices[i03 + 1];
@@ -1109,9 +1136,9 @@ define([
         }
 
         geometry.attributes.normal = new GeometryAttribute({
-            componentDatatype: ComponentDatatype.FLOAT,
-            componentsPerAttribute: 3,
-            values: normalValues
+            componentDatatype : ComponentDatatype.FLOAT,
+            componentsPerAttribute : 3,
+            values : normalValues
         });
 
         return geometry;
@@ -1126,20 +1153,21 @@ define([
      * The result is new <code>binormal</code> and <code>tangent</code> attributes added to the geometry.
      * This assumes a counter-clockwise winding order.
      * <p>
-     * This function has no effect if the geometry's <code>indices</code> is undefined or the <code>
-     * primitiveType</code> is not {@link PrimitiveType.TRIANGLES} or the geometry does not have
-     * <code>position</code>, <code>normal</code>, and <code>st</code> attributes.
-     * </p>
-     * <p>
      * Based on <a href="http://www.terathon.com/code/tangent.html">Computing Tangent Space Basis Vectors
      * for an Arbitrary Mesh</a> by Eric Lengyel.
      * </p>
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument with the computed <code>binormal</code> and <code>tangent</code> attributes.
      *
      * @exception {DeveloperError} geometry is required.
+     * @exception {DeveloperError} geometry.attributes.position.values is required.
+     * @exception {DeveloperError} geometry.attributes.normal.values is required.
+     * @exception {DeveloperError} geometry.attributes.st.values is required.
+     * @exception {DeveloperError} geometry.indices is required.
+     * @exception {DeveloperError} geometry.indices length must be greater than 0 and be a multiple of 3.
+     * @exception {DeveloperError} geometry.primitiveType must be {@link PrimitiveType.TRIANGLES}.
      *
      * @example
      * GeometryPipeline.computeBinormalAndTangent(geometry);
@@ -1150,43 +1178,57 @@ define([
         }
 
         var attributes = geometry.attributes;
+        var indices = geometry.indices;
+
+        if (typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.position.values is required.');
+        }
+
+        if (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.normal.values is required.');
+        }
+
+        if (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') {
+            throw new DeveloperError('geometry.attributes.st.values is required.');
+        }
+
+        if (typeof indices === 'undefined') {
+            throw new DeveloperError('geometry.indices is required.');
+        }
+
+        if (indices.length < 2 || indices.length % 3 !== 0) {
+            throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
+        }
+
+        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+            throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
+        }
+
         var vertices = geometry.attributes.position.values;
         var normals = geometry.attributes.normal.values;
         var st = geometry.attributes.st.values;
-        var indices = geometry.indices;
 
-        if ((typeof attributes.position === 'undefined' || typeof attributes.position.values === 'undefined') ||
-            (typeof attributes.normal === 'undefined' || typeof attributes.normal.values === 'undefined') ||
-            (typeof attributes.st === 'undefined' || typeof attributes.st.values === 'undefined') ||
-            geometry.primitiveType !== PrimitiveType.TRIANGLES ||
-            typeof indices === 'undefined' ||
-            indices.length < 2 ||
-            indices.length % 3 !== 0) {
-
-            return geometry;
-        }
-
-        var numVertices = geometry.attributes.position.values.length/3;
+        var numVertices = geometry.attributes.position.values.length / 3;
         var numIndices = indices.length;
         var tan1 = new Array(numVertices * 3);
 
-        for (var i = 0; i < tan1.length; i++) {
+        for ( var i = 0; i < tan1.length; i++) {
             tan1[i] = 0;
         }
 
         var i03;
         var i13;
         var i23;
-        for (i = 0; i < numIndices; i+=3) {
+        for (i = 0; i < numIndices; i += 3) {
             var i0 = indices[i];
             var i1 = indices[i + 1];
             var i2 = indices[i + 2];
-            i03 = i0*3;
-            i13 = i1*3;
-            i23 = i2*3;
-            var i02 = i0*2;
-            var i12 = i1*2;
-            var i22 = i2*2;
+            i03 = i0 * 3;
+            i13 = i1 * 3;
+            i23 = i2 * 3;
+            var i02 = i0 * 2;
+            var i12 = i1 * 2;
+            var i22 = i2 * 2;
 
             var ux = vertices[i03];
             var uy = vertices[i03 + 1];
@@ -1203,16 +1245,16 @@ define([
             var sdirz = (t2 * (vertices[i13 + 2] - uz) - t1 * (vertices[i23 + 2] - uz)) * r;
 
             tan1[i03] += sdirx;
-            tan1[i03+1] += sdiry;
-            tan1[i03+2] += sdirz;
+            tan1[i03 + 1] += sdiry;
+            tan1[i03 + 2] += sdirz;
 
             tan1[i13] += sdirx;
-            tan1[i13+1] += sdiry;
-            tan1[i13+2] += sdirz;
+            tan1[i13 + 1] += sdiry;
+            tan1[i13 + 2] += sdirz;
 
             tan1[i23] += sdirx;
-            tan1[i23+1] += sdiry;
-            tan1[i23+2] += sdirz;
+            tan1[i23 + 1] += sdiry;
+            tan1[i23 + 2] += sdirz;
         }
 
         var binormalValues = new Float32Array(numVertices * 3);
@@ -1456,106 +1498,106 @@ define([
         // In WGS84 coordinates, for a triangle approximately on the
         // ellipsoid to cross the IDL, first it needs to be on the
         // negative side of the plane x = 0.
-        if ((p0.x < 0.0) && (p1.x < 0.0) && (p2.x < 0.0)) {
-            var p0Behind = p0.y < 0.0;
-            var p1Behind = p1.y < 0.0;
-            var p2Behind = p2.y < 0.0;
-
-            offsetPointFromXZPlane(p0, p0Behind);
-            offsetPointFromXZPlane(p1, p1Behind);
-            offsetPointFromXZPlane(p2, p2Behind);
-
-            var numBehind = 0;
-            numBehind += p0Behind ? 1 : 0;
-            numBehind += p1Behind ? 1 : 0;
-            numBehind += p2Behind ? 1 : 0;
-
-            var indices = splitTriangleResult.indices;
-
-            if (numBehind === 1) {
-                indices[1] = 3;
-                indices[2] = 4;
-                indices[5] = 6;
-                indices[7] = 6;
-                indices[8] = 5;
-
-                if (p0Behind) {
-                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
-                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
-
-                    indices[0] = 0;
-                    indices[3] = 1;
-                    indices[4] = 2;
-                    indices[6] = 1;
-                } else if (p1Behind) {
-                    getXZIntersectionOffsetPoints(p1, p0, u1, q1);
-                    getXZIntersectionOffsetPoints(p1, p2, u2, q2);
-
-                    indices[0] = 1;
-                    indices[3] = 2;
-                    indices[4] = 0;
-                    indices[6] = 2;
-                } else if (p2Behind) {
-                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
-                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
-
-                    indices[0] = 2;
-                    indices[3] = 0;
-                    indices[4] = 1;
-                    indices[6] = 0;
-                }
-            } else if (numBehind === 2) {
-                indices[2] = 4;
-                indices[4] = 4;
-                indices[5] = 3;
-                indices[7] = 5;
-                indices[8] = 6;
-
-                if (!p0Behind) {
-                    getXZIntersectionOffsetPoints(p0, p1, u1, q1);
-                    getXZIntersectionOffsetPoints(p0, p2, u2, q2);
-
-                    indices[0] = 1;
-                    indices[1] = 2;
-                    indices[3] = 1;
-                    indices[6] = 0;
-                } else if (!p1Behind) {
-                    getXZIntersectionOffsetPoints(p1, p2, u1, q1);
-                    getXZIntersectionOffsetPoints(p1, p0, u2, q2);
-
-                    indices[0] = 2;
-                    indices[1] = 0;
-                    indices[3] = 2;
-                    indices[6] = 1;
-                } else if (!p2Behind) {
-                    getXZIntersectionOffsetPoints(p2, p0, u1, q1);
-                    getXZIntersectionOffsetPoints(p2, p1, u2, q2);
-
-                    indices[0] = 0;
-                    indices[1] = 1;
-                    indices[3] = 0;
-                    indices[6] = 2;
-                }
-            }
-
-            var positions = splitTriangleResult.positions;
-            positions[0] = p0;
-            positions[1] = p1;
-            positions[2] = p2;
-            splitTriangleResult.length = 3;
-
-            if (numBehind === 1 || numBehind === 2) {
-                positions[3] = u1;
-                positions[4] = u2;
-                positions[5] = q1;
-                positions[6] = q2;
-                splitTriangleResult.length = 7;
-            }
-
-            return splitTriangleResult;
+        if ((p0.x >= 0.0) || (p1.x >= 0.0) || (p2.x >= 0.0)) {
+            return undefined;
         }
 
-        return undefined;
+        var p0Behind = p0.y < 0.0;
+        var p1Behind = p1.y < 0.0;
+        var p2Behind = p2.y < 0.0;
+
+        offsetPointFromXZPlane(p0, p0Behind);
+        offsetPointFromXZPlane(p1, p1Behind);
+        offsetPointFromXZPlane(p2, p2Behind);
+
+        var numBehind = 0;
+        numBehind += p0Behind ? 1 : 0;
+        numBehind += p1Behind ? 1 : 0;
+        numBehind += p2Behind ? 1 : 0;
+
+        var indices = splitTriangleResult.indices;
+
+        if (numBehind === 1) {
+            indices[1] = 3;
+            indices[2] = 4;
+            indices[5] = 6;
+            indices[7] = 6;
+            indices[8] = 5;
+
+            if (p0Behind) {
+                getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                indices[0] = 0;
+                indices[3] = 1;
+                indices[4] = 2;
+                indices[6] = 1;
+            } else if (p1Behind) {
+                getXZIntersectionOffsetPoints(p1, p0, u1, q1);
+                getXZIntersectionOffsetPoints(p1, p2, u2, q2);
+
+                indices[0] = 1;
+                indices[3] = 2;
+                indices[4] = 0;
+                indices[6] = 2;
+            } else if (p2Behind) {
+                getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                indices[0] = 2;
+                indices[3] = 0;
+                indices[4] = 1;
+                indices[6] = 0;
+            }
+        } else if (numBehind === 2) {
+            indices[2] = 4;
+            indices[4] = 4;
+            indices[5] = 3;
+            indices[7] = 5;
+            indices[8] = 6;
+
+            if (!p0Behind) {
+                getXZIntersectionOffsetPoints(p0, p1, u1, q1);
+                getXZIntersectionOffsetPoints(p0, p2, u2, q2);
+
+                indices[0] = 1;
+                indices[1] = 2;
+                indices[3] = 1;
+                indices[6] = 0;
+            } else if (!p1Behind) {
+                getXZIntersectionOffsetPoints(p1, p2, u1, q1);
+                getXZIntersectionOffsetPoints(p1, p0, u2, q2);
+
+                indices[0] = 2;
+                indices[1] = 0;
+                indices[3] = 2;
+                indices[6] = 1;
+            } else if (!p2Behind) {
+                getXZIntersectionOffsetPoints(p2, p0, u1, q1);
+                getXZIntersectionOffsetPoints(p2, p1, u2, q2);
+
+                indices[0] = 0;
+                indices[1] = 1;
+                indices[3] = 0;
+                indices[6] = 2;
+            }
+        }
+
+        var positions = splitTriangleResult.positions;
+        positions[0] = p0;
+        positions[1] = p1;
+        positions[2] = p2;
+        splitTriangleResult.length = 3;
+
+        if (numBehind === 1 || numBehind === 2) {
+            positions[3] = u1;
+            positions[4] = u2;
+            positions[5] = q1;
+            positions[6] = q2;
+            splitTriangleResult.length = 7;
+        }
+
+        return splitTriangleResult;
     }
 
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
@@ -1808,7 +1850,7 @@ define([
      * -180/180 degrees.  This is not required for 3D drawing, but is required for
      * correcting drawing in 2D and Columbus view.
      *
-     * @param {Geometry} geometry The geometry to modify, which is modified in place.
+     * @param {Geometry} geometry The geometry to modify.
      *
      * @returns {Geometry} The modified <code>geometry</code> argument, with it's primitives split at the International Date Line.
      *
