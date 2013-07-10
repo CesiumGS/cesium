@@ -110,10 +110,6 @@
                             "wrapS": "REPEAT",
                             "wrapT": "REPEAT"
                         }
-                    },
-                    {
-                        "parameter": "shininess",
-                        "value": 38.4
                     }
                 ]
             },

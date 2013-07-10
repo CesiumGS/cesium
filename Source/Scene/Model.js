@@ -8,15 +8,21 @@ define([
         '../Core/loadText',
         '../Core/loadImage',
         '../Core/Queue',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Matrix4',
         '../Core/BoundingSphere',
         '../Core/IndexDatatype',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Renderer/TextureWrap',
+        '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureMagnificationFilter',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/DrawCommand',
+        '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
         defined,
@@ -27,15 +33,21 @@ define([
         loadText,
         loadImage,
         Queue,
+        Cartesian2,
         Cartesian3,
+        Cartesian4,
         Matrix4,
         BoundingSphere,
         IndexDatatype,
         ComponentDatatype,
         PrimitiveType,
+        TextureWrap,
+        TextureMinificationFilter,
+        TextureMagnificationFilter,
         BufferUsage,
         BlendingState,
         DrawCommand,
+        createPickFragmentShaderSource,
         SceneMode) {
     "use strict";
 // TODO: remove before merge to master
@@ -76,6 +88,10 @@ define([
 
     LoadResources.prototype.finishedBufferViewsCreation = function() {
         return ((this.pendingBufferLoads === 0) && (this.bufferViewsToCreate.length === 0));
+    };
+
+    LoadResources.prototype.finishedTextureCreation = function() {
+        return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
     };
 
     /**
@@ -268,10 +284,16 @@ define([
         if (loadResources.programsToCreate.length > 0) {
             var name = loadResources.programsToCreate.dequeue();
             var program = programs[name];
+
+            var vs = shaders[program.vertexShader];
+            var fs = shaders[program.fragmentShader];
+// TODO: glTF needs translucent flag so we know if we need its fragment shader.
+            var pickFS = createPickFragmentShaderSource(fs, 'uniform');
+
             program.extra = defaultValue(program.extra, {});
-            program.extra.czmProgram = context.getShaderCache().getShaderProgram(
-                shaders[program.vertexShader],
-                shaders[program.fragmentShader]);
+            program.extra.czmProgram = context.getShaderCache().getShaderProgram(vs, fs);
+            program.extra.czmPickProgram = context.getShaderCache().getShaderProgram(vs, pickFS);
+// TODO: in theory, czmPickProgram could have a different set of attribute locations
         }
     }
 
@@ -426,6 +448,177 @@ define([
         }
     }
 
+    var gltfSemanticUniforms = {
+// TODO: All semantics
+        WORLD : function(uniformState) {
+            return function() {
+                return uniformState.getModel();
+            };
+        },
+        VIEW : function(uniformState) {
+            return function() {
+                return uniformState.getView();
+            };
+        },
+        PROJECTION : function(uniformState) {
+            return function() {
+                return uniformState.getProjection();
+            };
+        },
+        WORLDVIEW : function(uniformState) {
+            return function() {
+                return uniformState.getModelView();
+            };
+        },
+        VIEWPROJECTION : function(uniformState) {
+            return function() {
+                return uniformState.getViewProjection();
+            };
+        },
+        WORLDVIEWPROJECTION : function(uniformState) {
+            return function() {
+                return uniformState.getModelViewProjection();
+            };
+        },
+        WORLDINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseModel();
+            };
+        },
+        VIEWINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseView();
+            };
+        },
+        PROJECTIONINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseProjection();
+            };
+        },
+        WORLDVIEWINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseModelView();
+            };
+        },
+        VIEWPROJECTIONINVERSE : function(uniformState) {
+            return function() {
+                return uniformState.getInverseViewProjection();
+            };
+        },
+        WORLDVIEWINVERSETRANSPOSE : function(uniformState) {
+            return function() {
+                return uniformState.getNormal();
+            };
+        }
+    };
+
+    var gltfUniformFunctions = {
+// TODO: All types
+         FLOAT : function(value, model, context) {
+             return function() {
+                 return value;
+             };
+         },
+         FLOAT_VEC2 : function(value, model, context) {
+             var v = Cartesian2.fromArray(value);
+
+             return function() {
+                 return v;
+             };
+         },
+         FLOAT_VEC3 : function(value, model, context) {
+             var v = Cartesian3.fromArray(value);
+
+             return function() {
+                 return v;
+             };
+         },
+         FLOAT_VEC4 : function(value, model, context) {
+             var v = Cartesian4.fromArray(value);
+
+             return function() {
+                 return v;
+             };
+         },
+         SAMPLER_2D : function(value, model, context) {
+             var images = model.gltf.images;
+             var texture = images[value.image].extra.czmTexture;
+
+             texture.setSampler(context.createSampler({
+                 wrapS : TextureWrap[value.wrapS],
+                 wrapT : TextureWrap[value.wrapT],
+                 minificationFilter : TextureMinificationFilter[value.minFilter],
+                 magnificationFilter : TextureMagnificationFilter[value.magFilter]
+             }));
+
+             return function() {
+                 return texture;
+             };
+         }
+    };
+
+    function createUniformMaps(model, context) {
+        var loadResources = model._loadResources;
+
+// TODO: more fine-grained texture dependencies
+        if (!loadResources.finishedTextureCreation()) {
+            return;
+        }
+
+        var name;
+        var materials = model.gltf.materials;
+        var techniques = model.gltf.techniques;
+
+        for (name in materials) {
+            if (materials.hasOwnProperty(name)) {
+                var material = materials[name];
+                var instanceTechnique = material.instanceTechnique;
+                var technique = techniques[instanceTechnique.technique];
+                var parameters = technique.parameters;
+                var pass = technique.passes[technique.pass];
+                var instanceProgram = pass.instanceProgram;
+                var uniforms = instanceProgram.uniforms;
+
+                var parameterValues = {};
+
+                // Uniform parameters for this pass
+                for (name in uniforms) {
+                    if (uniforms.hasOwnProperty(name)) {
+                        var parameterName = uniforms[name];
+                        var parameter = parameters[parameterName];
+                        parameterValues[parameterName] = {
+                            uniformName : name,
+// TODO: account for parameter.type with semantic
+                            func : defined(parameter.semantic) ? gltfSemanticUniforms[parameter.semantic](context.getUniformState()) : undefined
+                        };
+                    }
+                }
+
+                // Parameter overrides by the instance technique
+// TODO: this overrides semantics?  What should the glTF spec say?
+                var instanceParameters = instanceTechnique.values;
+                var length = instanceParameters.length;
+                for (var i = 0; i < length; ++i) {
+                    var instanceParam = instanceParameters[i];
+                    var parameterValue = parameterValues[instanceParam.parameter];
+                    parameterValue.func = gltfUniformFunctions[parameters[instanceParam.parameter].type](instanceParam.value, model, context);
+                }
+
+                // Create uniform map
+                var uniformMap = {};
+                for (name in parameterValues) {
+                    if (parameterValues.hasOwnProperty(name)) {
+                        var pv = parameterValues[name];
+                        uniformMap[pv.uniformName] = pv.func;
+                    }
+                }
+
+                instanceTechnique.extra = defaultValue(instanceProgram.extra, {});
+                instanceTechnique.extra.czmUniformMap = uniformMap;
+            }
+        }
+    }
+
     function createCommand(model, node, context) {
         node.extra = defaultValue(node.extra, {});
         node.extra.czmMeshesCommands = {};
@@ -450,13 +643,10 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var primitive = primitives[i];
                     var ix = indices[primitive.indices];
-                    var technique = techniques[materials[primitive.material].instanceTechnique.technique];
+                    var instanceTechnique = materials[primitive.material].instanceTechnique;
+                    var technique = techniques[instanceTechnique.technique];
                     var pass = technique.passes[technique.pass];
-
-                    var sp = programs[pass.instanceProgram.program].extra.czmProgram;
-                    var rs = pass.states.extra.czmRenderState;
-
-debugger;
+                    var instanceProgram = pass.instanceProgram;
 
                     var boundingSphere;
                     var positionAttribute = primitive.semantics.POSITION;
@@ -465,23 +655,41 @@ debugger;
                         boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                     }
 
+                    var modelMatrix = new Matrix4(); // computed in update()
+                    var primitiveType = PrimitiveType[primitive.primitive];
+                    var vertexArray = primitive.extra.czmVertexArray;
+                    var count = ix.count;
+                    var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
+                    var uniformMap = instanceTechnique.extra.czmUniformMap;
+                    var rs = pass.states.extra.czmRenderState;
+
                     var command = new DrawCommand();
                     command.boundingVolume = boundingSphere;
-                    command.modelMatrix = new Matrix4();                                    // computed in update()
-                    command.primitiveType = PrimitiveType[primitive.primitive];
-                    command.vertexArray = primitive.extra.czmVertexArray;
-                    command.count = ix.count;
-                    command.offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);    // glTF has offset in bytes.  Cesium has offsets in indices
-                    command.shaderProgram = sp;
-                    command.uniformMap = undefined;
+                    command.modelMatrix = modelMatrix;
+                    command.primitiveType = primitiveType;
+                    command.vertexArray = vertexArray;
+                    command.count = count;
+                    command.offset = offset;
+                    command.shaderProgram = programs[instanceProgram.program].extra.czmProgram;
+                    command.uniformMap = uniformMap;
                     command.renderState = rs;
 
                     var pickCommand = new DrawCommand();
-                    // TODO: set pickCommand
+                    pickCommand.boundingVolume = boundingSphere;
+                    pickCommand.modelMatrix = modelMatrix;
+                    pickCommand.primitiveType = primitiveType;
+                    pickCommand.vertexArray = vertexArray;
+                    pickCommand.count = count;
+                    pickCommand.offset = offset;
+                    pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
+// TODO: add czm_pickColor
+                    pickCommand.uniformMap = uniformMap;
+                    pickCommand.renderState = rs;
 
                     meshesCommands[i] = {
                         command : command,
-                        pickCommand : pickCommand
+                        pickCommand : pickCommand,
+                        modelMatrix : modelMatrix
                     };
                 }
 
@@ -521,7 +729,9 @@ debugger;
         createTextures(model, context);
 
         createVertexArrays(model, context); // using glTF meshes
-        createRenderStates(model, context);
+        createRenderStates(model, context); // using glTF materials/techniques/passes/states
+        createUniformMaps(model, context);   // using glTF materials/techniques/passes/instanceProgram
+
         createCommands(model, context);     // using glTF scene
     }
 
@@ -605,6 +815,7 @@ debugger;
         var gltf = this.gltf;
         destroyExtra(gltf.bufferViews, 'czmBuffer');
         destroyExtra(gltf.program, 'czmProgram');
+        destroyExtra(gltf.program, 'czmPickProgram');
         destroyExtra(gltf.images, 'czmTexture');
 
         return destroyObject(this);

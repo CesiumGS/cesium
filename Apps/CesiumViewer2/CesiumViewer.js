@@ -146,8 +146,6 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-        // ../../../Apps/CesiumViewer/Gallery/model/duck/duck.json
-
         loadText('./Gallery/model/duck/duck.json').then(function(data) {
             var json = JSON.parse(data);
             var model = new Model({
