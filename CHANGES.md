@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b19 - 2013-08-XX
+
+* Breaking changes:
+   * The solid color Material now takes an `emission` uniform to enable visibility in low light conditions.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:
