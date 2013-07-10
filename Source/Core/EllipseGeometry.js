@@ -3,10 +3,12 @@ define([
         './defaultValue',
         './BoundingSphere',
         './Cartesian3',
+        './Cartographic',
         './ComponentDatatype',
         './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
+        './GeographicProjection',
         './GeometryAttribute',
         './GeometryAttributes',
         './Math',
@@ -18,10 +20,12 @@ define([
         defaultValue,
         BoundingSphere,
         Cartesian3,
+        Cartographic,
         ComponentDatatype,
         IndexDatatype,
         DeveloperError,
         Ellipsoid,
+        GeographicProjection,
         GeometryAttribute,
         GeometryAttributes,
         CesiumMath,
@@ -69,6 +73,8 @@ define([
     var unitPosScratch = new Cartesian3();
     var eastVecScratch = new Cartesian3();
     var northVecScratch = new Cartesian3();
+    var scratchCartographic = new Cartographic();
+    var projectedCenterScratch = new Cartesian3();
 
     /**
      * A {@link Geometry} that represents vertices and indices for an ellipse on the ellipsoid.
@@ -262,12 +268,16 @@ define([
         var tangent;
         var binormal;
 
+        var projection = new GeographicProjection(ellipsoid);
+        var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
+
         var length = positions.length;
         for (i = 0; i < length; i += 3) {
             position = Cartesian3.fromArray(positions, i, scratchCartesian2);
 
             if (vertexFormat.st) {
-                var relativeToCenter = Cartesian3.subtract(position, center);
+                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
+                var relativeToCenter = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
                 textureCoordinates[textureCoordIndex++] = (relativeToCenter.x + semiMajorAxis) / (2.0 * semiMajorAxis);
                 textureCoordinates[textureCoordIndex++] = (relativeToCenter.y + semiMinorAxis) / (2.0 * semiMinorAxis);
             }
