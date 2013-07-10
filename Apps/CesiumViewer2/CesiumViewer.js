@@ -151,7 +151,7 @@ define([
         loadText('./Gallery/model/duck/duck.json').then(function(data) {
             var json = JSON.parse(data);
             var model = new Model({
-                json : json,
+                gltf : json,
                 basePath : './Gallery/model/duck/'
             });
             scene.getPrimitives().add(model);

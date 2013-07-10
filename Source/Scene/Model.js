@@ -90,7 +90,7 @@ define([
         /**
          * DOC_TBA
          */
-        this.json = options.json;
+        this.gltf = options.gltf;
 
         /**
          * DOC_TBA
@@ -125,7 +125,7 @@ define([
     }
 
     function parseBuffers(model) {
-        var buffers = model.json.buffers;
+        var buffers = model.gltf.buffers;
         for (var name in buffers) {
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
@@ -136,7 +136,7 @@ define([
     }
 
     function parseBufferViews(model) {
-        var bufferViews = model.json.bufferViews;
+        var bufferViews = model.gltf.bufferViews;
         for (var name in bufferViews) {
             if (bufferViews.hasOwnProperty(name)) {
                 model._loadResources.bufferViewsToCreate.enqueue(name);
@@ -153,7 +153,7 @@ define([
     }
 
     function parseShaders(model) {
-        var shaders = model.json.shaders;
+        var shaders = model.gltf.shaders;
         for (var name in shaders) {
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
@@ -164,7 +164,7 @@ define([
     }
 
     function parsePrograms(model) {
-        var programs = model.json.programs;
+        var programs = model.gltf.programs;
         for (var name in programs) {
             if (programs.hasOwnProperty(name)) {
                 model._loadResources.programsToCreate.enqueue(name);
@@ -184,7 +184,7 @@ define([
     }
 
     function parseImages(model) {
-        var images = model.json.images;
+        var images = model.gltf.images;
         for (var name in images) {
             if (images.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
@@ -194,7 +194,7 @@ define([
         }
     }
 
-    function parseJson(model) {
+    function parse(model) {
         parseBuffers(model);
         parseBufferViews(model);
         parseShaders(model);
@@ -214,7 +214,7 @@ define([
 
         var raw;
         var bufferView;
-        var bufferViews = model.json.bufferViews;
+        var bufferViews = model.gltf.bufferViews;
         var buffers = loadResources.buffers;
 
         while (loadResources.bufferViewsToCreate.length > 0) {
@@ -234,7 +234,7 @@ define([
         // The Cesium Renderer requires knowing the datatype for an index buffer
         // at creation type, which is not part of the glTF bufferview so loop
         // through glTF indices to create the bufferview's index buffer.
-        var indices = model.json.indices;
+        var indices = model.gltf.indices;
         for (var name in indices) {
             if (indices.hasOwnProperty(name)) {
                 var instance = indices[name];
@@ -261,7 +261,7 @@ define([
             return;
         }
 
-        var programs = model.json.programs;
+        var programs = model.gltf.programs;
         var shaders = loadResources.shaders;
 
         // Create one program per frame
@@ -277,7 +277,7 @@ define([
 
     function createTextures(model, context) {
         var loadResources = model._loadResources;
-        var images = model.json.images;
+        var images = model.gltf.images;
 
         // Create one texture per frame
         if (loadResources.texturesToCreate.length > 0) {
@@ -315,9 +315,10 @@ define([
 
     function getSemanticToAttributeLocations(model, primitive) {
 // TODO: this could be done per material, not per mesh, if we don't change glTF
-        var programs = model.json.programs;
-        var techniques = model.json.techniques;
-        var materials = model.json.materials;
+        var gltf = model.gltf;
+        var programs = gltf.programs;
+        var techniques = gltf.techniques;
+        var materials = gltf.materials;
 
         // Retrieve the compiled shader program to assign index values to attributes
         var semanticToAttributeLocations = {};
@@ -349,10 +350,11 @@ define([
              return;
          }
 
-         var bufferViews = model.json.bufferViews;
-         var attributes = model.json.attributes;
-         var indices = model.json.indices;
-         var meshes = model.json.meshes;
+         var gltf = model.gltf;
+         var bufferViews = gltf.bufferViews;
+         var attributes = gltf.attributes;
+         var indices = gltf.indices;
+         var meshes = gltf.meshes;
          var name;
 
          for (name in meshes) {
@@ -401,7 +403,7 @@ define([
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
 
-            var techniques = model.json.techniques;
+            var techniques = model.gltf.techniques;
             for (var name in techniques) {
                 if (techniques.hasOwnProperty(name)) {
                     var technique = techniques[name];
@@ -428,15 +430,15 @@ define([
         node.extra = defaultValue(node.extra, {});
         node.extra.czmMeshesCommands = {};
 
-        var json = model.json;
+        var gltf = model.gltf;
 
-        var attributes = json.attributes;
-        var indices = json.indices;
-        var meshes = json.meshes;
+        var attributes = gltf.attributes;
+        var indices = gltf.indices;
+        var meshes = gltf.meshes;
 
-        var programs = json.programs;
-        var techniques = json.techniques;
-        var materials = json.materials;
+        var programs = gltf.programs;
+        var techniques = gltf.techniques;
+        var materials = gltf.materials;
 
         var name;
         for (name in meshes) {
@@ -496,10 +498,11 @@ debugger;
             return;
         }
 
-        var scenes = model.json.scenes;
-        var nodes = model.json.nodes;
+        var gltf = model.gltf;
+        var scenes = gltf.scenes;
+        var nodes = gltf.nodes;
 
-        var scene = scenes[model.json.scene];
+        var scene = scenes[gltf.scene];
         var sceneNodes = scene.nodes;
         var length = sceneNodes.length;
 
@@ -534,10 +537,10 @@ debugger;
             return;
         }
 
-        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.json)) {
+        if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
             this._loadResources = new LoadResources();
-            parseJson(this);
+            parse(this);
         }
 
         if (this._state === ModelState.LOADING) {
@@ -599,10 +602,10 @@ debugger;
      * model = model && model.destroy();
      */
     Model.prototype.destroy = function() {
-        var json = this.json;
-        destroyExtra(json.bufferViews, 'czmBuffer');
-        destroyExtra(json.program, 'czmProgram');
-        destroyExtra(json.images, 'czmTexture');
+        var gltf = this.gltf;
+        destroyExtra(gltf.bufferViews, 'czmBuffer');
+        destroyExtra(gltf.program, 'czmProgram');
+        destroyExtra(gltf.images, 'czmTexture');
 
         return destroyObject(this);
     };
