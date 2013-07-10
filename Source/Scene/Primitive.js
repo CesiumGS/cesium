@@ -66,7 +66,7 @@ define([
      * @alias Primitive
      * @constructor
      *
-     * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
+     * @param {Array|GeometryInstance} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
      * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
@@ -143,8 +143,6 @@ define([
          * @type Array
          *
          * @default undefined
-         *
-         * @readonly
          */
         this.geometryInstances = options.geometryInstances;
 
