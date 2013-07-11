@@ -41,7 +41,6 @@ define(function() {
 
         /**
          * The transformation from the geometry in model space to world space.
-<<<<<<< HEAD
          * <p>
          * When <code>undefined</code>, the geometry is assumed to be defined in world space.
          * </p>
