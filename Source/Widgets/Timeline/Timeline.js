@@ -493,7 +493,14 @@ define([
             var leftMargin = width / 6;
             var rightMargin = 5 * width / 6;
 
-            if ((this._autoPan === -1 && this._clock.multiplier > 0) || (this._autoPan === 1 && this._clock.multiplier < 0)) {
+            if (this._lastXPos < 0 || this._lastXPos > width) {
+                seconds = this._startJulian.getSecondsDifference(this._scrubJulian);
+                this.zoomTo(this._startJulian.addSeconds(seconds), this._endJulian.addSeconds(seconds));
+            }
+
+            if ((this._lastXPos < leftMargin && this._autoPan === 1) || (this._lastXPos > rightMargin && this._autoPan === -1)) {
+                this._autoPan = 0;
+            } else if ((this._autoPan === -1 && this._clock.multiplier > 0) || (this._autoPan === 1 && this._clock.multiplier < 0)) {
                 this._autoPan = 0;
             } else if (this._clock.shouldAnimate === true) {
                 if (xPos < leftMargin && this._clock.multiplier < 0) {
