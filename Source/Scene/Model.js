@@ -160,6 +160,13 @@ define([
         this.scale = defaultValue(options.scale, 1.0);
         this._scale = this.scale;
 
+        /**
+         * DOC_TBA
+         *
+         * @readonly
+         */
+        this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
         this._computedModelMatrix = Matrix4.IDENTITY.clone();   // Derived from modelMatrix and scale
         this._nodeStack = [];                                   // To reduce allocations in update()
 
@@ -683,6 +690,7 @@ define([
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
         var pickIds = model._pickIds;
+        var debugShowBoundingVolume = model.debugShowBoundingVolume;
 
         var gltf = model.gltf;
 
@@ -741,6 +749,7 @@ define([
                     command.uniformMap = uniformMap;
                     command.renderState = rs;
                     command.owner = owner;
+                    command.debugShowBoundingVolume = debugShowBoundingVolume;
                     colorCommands.push(command);
 
 // TODO: Create type for pick owner?  Use for all primitives.

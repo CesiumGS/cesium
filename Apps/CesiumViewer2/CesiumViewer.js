@@ -163,6 +163,7 @@ define([
                 basePath : './Gallery/model/duck/',
                 modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
                 scale : 100000.0
+//                debugShowBoundingVolume : true
             });
             scene.getPrimitives().add(model);
         });
