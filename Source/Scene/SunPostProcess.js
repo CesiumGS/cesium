@@ -186,6 +186,7 @@ define([
             var vertexArray = getVertexArray(context);
 
             var downSampleCommand = this._downSampleCommand = new DrawCommand();
+            downSampleCommand.owner = this;
             downSampleCommand.primitiveType = primitiveType;
             downSampleCommand.vertexArray = vertexArray;
             downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
@@ -193,6 +194,7 @@ define([
             downSampleCommand.framebuffer = this._downSampleFBO1;
 
             var brightPassCommand = this._brightPassCommand = new DrawCommand();
+            brightPassCommand.owner = this;
             brightPassCommand.primitiveType = primitiveType;
             brightPassCommand.vertexArray = vertexArray;
             brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeIndices);
@@ -214,6 +216,7 @@ define([
             var sigma = 2.0;
 
             var blurXCommand = this._blurXCommand = new DrawCommand();
+            blurXCommand.owner = this;
             blurXCommand.primitiveType = primitiveType;
             blurXCommand.vertexArray = vertexArray;
             blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
@@ -231,6 +234,7 @@ define([
             blurXCommand.framebuffer = this._downSampleFBO1;
 
             var blurYCommand = this._blurYCommand = new DrawCommand();
+            blurYCommand.owner = this;
             blurYCommand.primitiveType = primitiveType;
             blurYCommand.vertexArray = vertexArray;
             blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
@@ -248,6 +252,7 @@ define([
             blurYCommand.framebuffer = this._downSampleFBO2;
 
             var additiveBlendCommand = this._blendCommand = new DrawCommand();
+            additiveBlendCommand.owner = this;
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
@@ -261,6 +266,7 @@ define([
             };
 
             var fullScreenCommand = this._fullScreenCommand = new DrawCommand();
+            fullScreenCommand.owner = this;
             fullScreenCommand.primitiveType = primitiveType;
             fullScreenCommand.vertexArray = vertexArray;
             fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
