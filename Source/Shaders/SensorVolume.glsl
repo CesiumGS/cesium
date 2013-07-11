@@ -1,4 +1,5 @@
 uniform vec4 u_intersectionColor;
+uniform float u_intersectionWidth;
 
 bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointWC)
 {
@@ -25,6 +26,11 @@ bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointWC)
 vec4 getIntersectionColor()
 {
     return u_intersectionColor;
+}
+
+float getIntersectionWidth()
+{
+    return u_intersectionWidth;
 }
 
 vec2 sensor2dTextureCoordinates(float sensorRadius, vec3 pointMC)

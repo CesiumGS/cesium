@@ -261,6 +261,32 @@ vec4 czm_windowToEyeCoordinates(vec4 fragmentCoordinate)
     return q;
 }
 
+/**
+ * Creates a matrix that transforms vectors from tangent space to eye space.
+ *
+ * @name czm_tangentToEyeSpaceMatrix
+ * @glslFunction
+ * 
+ * @param {vec3} normalEC The normal vector in eye coordinates.
+ * @param {vec3} tangentEC The tangent vector in eye coordinates.
+ * @param {vec3} binormalEC The binormal vector in eye coordinates.
+ *
+ * @returns {mat3} The matrix that transforms from tangent space to eye space.
+ *
+ * @example
+ * mat3 tangentToEye = czm_tangentToEyeSpaceMatrix(normalEC, tangentEC, binormalEC);
+ * vec3 normal = tangentToEye * texture2D(normalMap, st).xyz;
+ */
+mat3 czm_tangentToEyeSpaceMatrix(vec3 normalEC, vec3 tangentEC, vec3 binormalEC)
+{
+    vec3 normal = normalize(normalEC);
+    vec3 tangent = normalize(tangentEC);
+    vec3 binormal = normalize(binormalEC);
+    return mat3(tangent.x,  tangent.y,  tangent.z,
+                binormal.x, binormal.y, binormal.z,
+                normal.x,   normal.y,   normal.z);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -732,12 +758,35 @@ const int czm_morphing = 3;
  * @name czm_columbusViewMorph
  * @glslFunction
  */
-vec4 czm_columbusViewMorph(vec3 position2D, vec3 position3D, float time)
+vec4 czm_columbusViewMorph(vec4 position2D, vec4 position3D, float time)
 {
     // Just linear for now.
-    vec3 p = mix(position2D, position3D, time);
+    vec3 p = mix(position2D.xyz, position3D.xyz, time);
     return vec4(p, 1.0);
-} 
+}
+
+/**
+ * Returns a position in model coordinates relative to eye taking into
+ * account the current scene mode: 3D, 2D, or Columbus view.
+ * <p>
+ * This uses standard position attributes, <code>position3DHigh</code>, 
+ * <code>position3DLow</code>, <code>position2DHigh</code>, and <code>position2DLow</code>, 
+ * and should be used when writing a vertex shader for an {@link Appearance}.
+ * </p>
+ *
+ * @name czm_computePosition
+ * @glslFunction
+ *
+ * @returns {vec4} The position relative to eye.
+ *
+ * @example
+ * vec4 p = czm_computePosition();
+ * v_positionEC = (czm_modelViewRelativeToEye * p).xyz;
+ * gl_Position = czm_modelViewProjectionRelativeToEye * p;
+ *
+ * @see czm_translateRelativeToEye
+ */
+vec4 czm_computePosition();
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1046,20 +1095,21 @@ float czm_latitudeToWebMercatorFraction(float latitude, float southMercatorYLow,
  * 
  * void main() 
  * {
- *   vec3 p = czm_translateRelativeToEye(positionHigh, positionLow);
- *   gl_Position = czm_modelViewProjectionRelativeToEye * vec4(p, 1.0);
+ *   vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
+ *   gl_Position = czm_modelViewProjectionRelativeToEye * p;
  * }
  *
  * @see czm_modelViewRelativeToEye
  * @see czm_modelViewProjectionRelativeToEye
+ * @see czm_computePosition
  * @see EncodedCartesian3
  */
-vec3 czm_translateRelativeToEye(vec3 high, vec3 low)
+vec4 czm_translateRelativeToEye(vec3 high, vec3 low)
 {
     vec3 highDifference = high - czm_encodedCameraPositionMCHigh;
     vec3 lowDifference = low - czm_encodedCameraPositionMCLow;
 
-    return highDifference + lowDifference;
+    return vec4(highDifference + lowDifference, 1.0);
 }
 
 /**

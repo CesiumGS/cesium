@@ -4,14 +4,14 @@ defineSuite([
          'Specs/destroyScene',
          'Core/destroyObject',
          'Core/BoundingSphere',
-         'Core/BoxTessellator',
+         'Core/BoxGeometry',
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Color',
          'Core/defaultValue',
          'Core/Math',
          'Core/Matrix4',
-         'Core/MeshFilters',
+         'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Renderer/BlendingState',
          'Renderer/BufferUsage',
@@ -25,14 +25,14 @@ defineSuite([
          destroyScene,
          destroyObject,
          BoundingSphere,
-         BoxTessellator,
+         BoxGeometry,
          Cartesian2,
          Cartesian3,
          Color,
          defaultValue,
          CesiumMath,
          Matrix4,
-         MeshFilters,
+         GeometryPipeline,
          PrimitiveType,
          BlendingState,
          BufferUsage,
@@ -222,13 +222,13 @@ defineSuite([
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
                 var maximumCorner = dimensions.multiplyByScalar(0.5);
                 var minimumCorner = maximumCorner.negate();
-                var mesh = BoxTessellator.compute({
+                var geometry = new BoxGeometry({
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
                 });
-                var attributeIndices = MeshFilters.createAttributeIndices(mesh);
-                this._va = context.createVertexArrayFromMesh({
-                    mesh: mesh,
+                var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+                this._va = context.createVertexArrayFromGeometry({
+                    geometry: geometry,
                     attributeIndices: attributeIndices,
                     bufferUsage: BufferUsage.STATIC_DRAW
                 });

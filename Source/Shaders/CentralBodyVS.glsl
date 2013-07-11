@@ -74,8 +74,8 @@ vec4 getPositionMorphingMode(vec3 position3DWC)
     // We do not do RTC while morphing, so there is potential for jitter.
     // This is unlikely to be noticable, though.
     float yPositionFraction = get2DYPositionFraction();
-    vec3 position2DWC = vec3(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)));
-    vec4 morphPosition = czm_columbusViewMorph(position2DWC, position3DWC, czm_morphTime);
+    vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
+    vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
     return czm_modelViewProjection * morphPosition;
 }
 

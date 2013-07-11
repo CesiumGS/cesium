@@ -236,6 +236,7 @@ define([
             pyramid.radius = Number.POSITIVE_INFINITY;
             pyramid.showIntersection = true;
             pyramid.intersectionColor = Color.YELLOW;
+            pyramid.intersectionWidth = 5.0;
             pyramid.material = Material.fromType(context, Material.ColorType);
         } else {
             pyramid = dynamicPyramidVisualizer._pyramidCollection[pyramidVisualizerIndex];
@@ -271,6 +272,14 @@ define([
             var intersectionColor = property.getValue(time, intersectionColor);
             if (typeof intersectionColor !== 'undefined') {
                 pyramid.intersectionColor = intersectionColor;
+            }
+        }
+
+        property = dynamicPyramid.intersectionWidth;
+        if (typeof property !== 'undefined') {
+            var intersectionWidth = property.getValue(time, intersectionWidth);
+            if (typeof intersectionWidth !== 'undefined') {
+                pyramid.intersectionWidth = intersectionWidth;
             }
         }
 

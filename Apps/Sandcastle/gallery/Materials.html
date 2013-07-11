@@ -35,8 +35,8 @@ require([
 {
     "use strict";
 
-    var polygon;
-    var worldPolygon;
+    var extent;
+    var worldExtent;
     var polyline;
 
     function applyAlphaMapMaterial(primitive, scene) {
@@ -496,29 +496,29 @@ require([
         var compositeMaterialMenu = new DropDownMenu({ style: "display: none;"});
         var polylineMaterialMenu = new DropDownMenu({ style: "display: none;"});
 
-        function togglePolygonVisibility() {
-            polygon.show = true;
-            worldPolygon.show = false;
+        function toggleExtentVisibility() {
+            extent.show = true;
+            worldExtent.show = false;
             polyline.setShow(false);
         }
         
-        function toggleWorldPolygonVisibility() {
-            worldPolygon.show = true;
-            polygon.show = false;
+        function toggleWorldExtentVisibility() {
+            worldExtent.show = true;
+            extent.show = false;
             polyline.setShow(false);
         }
         
         function togglePolylineVisibility() {
             polyline.setShow(true);
-            worldPolygon.show = false;
-            polygon.show = false;
+            worldExtent.show = false;
+            extent.show = false;
         }
 
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Alpha Map',
             onClick: function() {
-                togglePolygonVisibility();
-                applyAlphaMapMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyAlphaMapMaterial(extent, scene);
                 Sandcastle.highlight(applyAlphaMapMaterial);
             }
         }));
@@ -526,8 +526,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Asphalt',
             onClick: function() {
-                togglePolygonVisibility();
-                applyAsphaltMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyAsphaltMaterial(extent, scene);
                 Sandcastle.highlight(applyAsphaltMaterial);
             }
         }));
@@ -535,8 +535,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Blob',
             onClick: function() {
-                togglePolygonVisibility();
-                applyBlobMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyBlobMaterial(extent, scene);
                 Sandcastle.highlight(applyBlobMaterial);
             }
         }));
@@ -544,8 +544,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Brick',
             onClick: function() {
-                togglePolygonVisibility();
-                applyBrickMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyBrickMaterial(extent, scene);
                 Sandcastle.highlight(applyBrickMaterial);
             }
         }));
@@ -553,8 +553,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Bump Map',
             onClick: function() {
-                togglePolygonVisibility();
-                applyBumpMapMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyBumpMapMaterial(extent, scene);
                 Sandcastle.highlight(applyBumpMapMaterial);
             }
         }));
@@ -562,8 +562,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Cement',
             onClick: function() {
-                togglePolygonVisibility();
-                applyCementMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyCementMaterial(extent, scene);
                 Sandcastle.highlight(applyCementMaterial);
             }
         }));
@@ -571,8 +571,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Checkerboard',
             onClick: function() {
-                togglePolygonVisibility();
-                applyCheckerboardMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyCheckerboardMaterial(extent, scene);
                 Sandcastle.highlight(applyCheckerboardMaterial);
             }
         }));
@@ -580,8 +580,8 @@ require([
         compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 1',
             onClick: function() {
-                togglePolygonVisibility();
-                applyCompositeMaterial1(polygon, scene);
+                toggleExtentVisibility();
+                applyCompositeMaterial1(extent, scene);
                 Sandcastle.highlight(applyCompositeMaterial1);
             }
         }));
@@ -589,8 +589,8 @@ require([
         compositeMaterialMenu.addChild(new MenuItem({
             label: 'Composite Example 2',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyCompositeMaterial2(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyCompositeMaterial2(worldExtent, scene);
                 Sandcastle.highlight(applyCompositeMaterial2);
             }
         }));
@@ -598,8 +598,8 @@ require([
         commonMaterialMenu.addChild(new MenuItem({
             label: 'Color',
             onClick: function() {
-                togglePolygonVisibility();
-                applyColorMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyColorMaterial(extent, scene);
                 Sandcastle.highlight(applyColorMaterial);
             }
         }));
@@ -607,8 +607,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Diffuse',
             onClick: function() {
-                togglePolygonVisibility();
-                applyDiffuseMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyDiffuseMaterial(extent, scene);
                 Sandcastle.highlight(applyDiffuseMaterial);
             }
         }));
@@ -616,8 +616,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Dot',
             onClick: function() {
-                togglePolygonVisibility();
-                applyDotMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyDotMaterial(extent, scene);
                 Sandcastle.highlight(applyDotMaterial);
             }
         }));
@@ -625,8 +625,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Emission Map',
             onClick: function() {
-                togglePolygonVisibility();
-                applyEmissionMapMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyEmissionMapMaterial(extent, scene);
                 Sandcastle.highlight(applyEmissionMapMaterial);
             }
         }));
@@ -634,8 +634,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Facet',
             onClick: function() {
-                togglePolygonVisibility();
-                applyFacetMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyFacetMaterial(extent, scene);
                 Sandcastle.highlight(applyFacetMaterial);
             }
         }));
@@ -643,8 +643,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Fresnel',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyFresnelMaterial(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyFresnelMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyFresnelMaterial);
             }
         }));
@@ -652,8 +652,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Grass',
             onClick: function() {
-                togglePolygonVisibility();
-                applyGrassMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyGrassMaterial(extent, scene);
                 Sandcastle.highlight(applyGrassMaterial);
             }
         }));
@@ -661,8 +661,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Grid',
             onClick: function() {
-                togglePolygonVisibility(polygon, worldPolygon);
-                applyGridMaterial(polygon, scene);
+                toggleExtentVisibility(extent, worldExtent);
+                applyGridMaterial(extent, scene);
                 Sandcastle.highlight(applyGridMaterial);
             }
         }));
@@ -670,8 +670,8 @@ require([
         commonMaterialMenu.addChild(new MenuItem({
             label: 'Image',
             onClick: function() {
-                togglePolygonVisibility();
-                applyImageMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyImageMaterial(extent, scene);
                 Sandcastle.highlight(applyImageMaterial);
             }
         }));
@@ -679,8 +679,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Normal Map',
             onClick: function() {
-                togglePolygonVisibility();
-                applyNormalMapMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyNormalMapMaterial(extent, scene);
                 Sandcastle.highlight(applyNormalMapMaterial);
             }
         }));
@@ -688,8 +688,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Reflection',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyReflectionMaterial(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyReflectionMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyReflectionMaterial);
             }
         }));
@@ -697,8 +697,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Refraction',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyRefractionMaterial(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyRefractionMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyRefractionMaterial);
             }
         }));
@@ -706,8 +706,8 @@ require([
         baseMaterialMenu.addChild(new MenuItem({
             label: 'Specular Map',
             onClick: function() {
-                togglePolygonVisibility();
-                applySpecularMapMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applySpecularMapMaterial(extent, scene);
                 Sandcastle.highlight(applySpecularMapMaterial);
             }
         }));
@@ -715,8 +715,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Stripe',
             onClick: function() {
-                togglePolygonVisibility();
-                applyStripeMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyStripeMaterial(extent, scene);
                 Sandcastle.highlight(applyStripeMaterial);
             }
         }));
@@ -724,8 +724,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'TieDye',
             onClick: function() {
-                togglePolygonVisibility();
-                applyTieDyeMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyTieDyeMaterial(extent, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
             }
         }));
@@ -733,8 +733,8 @@ require([
         proceduralTextureMenu.addChild(new MenuItem({
             label: 'Wood',
             onClick: function() {
-                togglePolygonVisibility();
-                applyWoodMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyWoodMaterial(extent, scene);
                 Sandcastle.highlight(applyWoodMaterial);
             }
         }));
@@ -742,8 +742,8 @@ require([
         miscMaterialMenu.addChild(new MenuItem({
             label: 'Water',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyWaterMaterial(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyWaterMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyWaterMaterial);
             }
         }));
@@ -751,8 +751,8 @@ require([
         miscMaterialMenu.addChild(new MenuItem({
             label: 'Erosion',
             onClick: function() {
-                togglePolygonVisibility();
-                applyErosionMaterial(polygon, scene);
+                toggleExtentVisibility();
+                applyErosionMaterial(extent, scene);
                 Sandcastle.highlight(applyErosionMaterial);
             }
         }));
@@ -760,8 +760,8 @@ require([
         miscMaterialMenu.addChild(new MenuItem({
             label: 'RimLighting',
             onClick: function() {
-                toggleWorldPolygonVisibility();
-                applyRimLightingMaterial(worldPolygon, scene);
+                toggleWorldExtentVisibility();
+                applyRimLightingMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyRimLightingMaterial);
             }
         }));
@@ -835,22 +835,25 @@ require([
         var primitives = scene.getPrimitives();
         var ellipsoid = widget.centralBody.getEllipsoid();
 
-        polygon = new Cesium.Polygon();
-        polygon.configureExtent(new Cesium.Extent(
-            Cesium.Math.toRadians(-120.0),
-            Cesium.Math.toRadians(20.0),
-            Cesium.Math.toRadians(-60.0),
-            Cesium.Math.toRadians(40.0)));
-        primitives.add(polygon);
+        extent = new Cesium.ExtentPrimitive({
+            extent : new Cesium.Extent(
+                             Cesium.Math.toRadians(-120.0),
+                             Cesium.Math.toRadians(20.0),
+                             Cesium.Math.toRadians(-60.0),
+                             Cesium.Math.toRadians(40.0))
+        });
+        primitives.add(extent);
 
-        worldPolygon = new Cesium.Polygon();
-        worldPolygon.configureExtent(new Cesium.Extent(
-                Cesium.Math.toRadians(-180.0),
-                Cesium.Math.toRadians(-90.0),
-                Cesium.Math.toRadians(180.0),
-                Cesium.Math.toRadians(90.0)));
-        worldPolygon.show = false;
-        primitives.add(worldPolygon);
+        worldExtent = new Cesium.Polygon();
+        worldExtent = new Cesium.ExtentPrimitive({
+            extent : new Cesium.Extent(
+                             Cesium.Math.toRadians(-180.0),
+                             Cesium.Math.toRadians(-90.0),
+                             Cesium.Math.toRadians(180.0),
+                             Cesium.Math.toRadians(90.0)),
+            show : false
+        });
+        primitives.add(worldExtent);
         
         var polylines = new Cesium.PolylineCollection();
         polyline = polylines.add({

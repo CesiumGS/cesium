@@ -137,6 +137,7 @@ defineSuite([
         cone.innerHalfAngle = new MockProperty(0.3);
         cone.outerHalfAngle = new MockProperty(0.4);
         cone.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        cone.intersectionWidth = new MockProperty(0.5);
         cone.showIntersection = new MockProperty(true);
         cone.radius = new MockProperty(123.5);
         cone.show = new MockProperty(true);
@@ -162,6 +163,7 @@ defineSuite([
         expect(c.innerHalfAngle).toEqual(testObject.cone.innerHalfAngle.getValue(time));
         expect(c.outerHalfAngle).toEqual(testObject.cone.outerHalfAngle.getValue(time));
         expect(c.intersectionColor).toEqual(testObject.cone.intersectionColor.getValue(time));
+        expect(c.intersectionWidth).toEqual(testObject.cone.intersectionWidth.getValue(time));
         expect(c.showIntersection).toEqual(testObject.cone.showIntersection.getValue(time));
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));

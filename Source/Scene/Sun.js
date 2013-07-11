@@ -50,9 +50,6 @@ define([
 
         /**
          * Determines if the sun will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type {Boolean}
          * @default true
