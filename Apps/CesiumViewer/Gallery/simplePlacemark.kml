@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+<Document>
+   <Style id="randomColorIcon">
+      <IconStyle>
+         <color>ff00ff00</color>
+         <colorMode>random</colorMode>
+         <scale>1.1</scale>
+         <Icon>
+            <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>
+         </Icon>
+      </IconStyle>
+   </Style>
+   <Placemark>
+      <name>IconStyle.kml</name>
+      <styleUrl>#randomColorIcon</styleUrl>
+      <Point>
+         <coordinates>-9.171441666666666,38.67883055555556,0</coordinates>
+      </Point>
+   </Placemark>
+</Document>
+</kml>
+
