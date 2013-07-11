@@ -124,13 +124,48 @@ define([
          *
          * @default true
          */
-        this.show = true;
+        this.show = defaultValue(options.show, true);
+
+        /**
+         * The 4x4 transformation matrix that transforms the model from model to world coordinates.
+         * When this is the identity matrix, the model is drawn in world coordinates, i.e., Earth's WGS84 coordinates.
+         * Local reference frames can be used by providing a different transformation matrix, like that returned
+         * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
+         * shaders via {@link czm_model} and derived uniforms.
+         *
+         * @type {Matrix4}
+         *
+         * @default {@link Matrix4.IDENTITY}
+         *
+         * @example
+         * var origin = ellipsoid.cartographicToCartesian(
+         *   Cartographic.fromDegrees(-95.0, 40.0, 200000.0));
+         * m.modelMatrix = Transforms.eastNorthUpToFixedFrame(origin);
+         *
+         * @see Transforms.eastNorthUpToFixedFrame
+         * @see czm_model
+         */
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        this._modelMatrix = Matrix4.clone(this.modelMatrix);
+
+        /**
+         * A uniform scale applied to this model before the {@link Model#modelMatrix}.
+         * Values greater than <code>1.0</code> increase the size of the model; values
+         * less than <code>1.0</code> decrease.
+         *
+         * @type {Number}
+         *
+         * @default 1.0
+         */
+        this.scale = defaultValue(options.scale, 1.0);
+        this._scale = this.scale;
+
+        this._computedModelMatrix = Matrix4.IDENTITY.clone();   // Derived from modelMatrix and scale
+        this._nodeStack = [];                                   // To reduce allocations in update()
 
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
 
-        this._colorCommands = [];
-        this._pickCommands = [];
         this._commandLists = new CommandLists();
         this._pickIds = [];
     };
@@ -645,8 +680,8 @@ define([
         node.extra = defaultValue(node.extra, {});
         node.extra.czmMeshesCommands = {};
 
-        var colorCommands = model._colorCommands;
-        var pickCommands = model._pickCommands;
+        var colorCommands = model._commandLists.colorList;
+        var pickCommands = model._commandLists.pickList;
         var pickIds = model._pickIds;
 
         var gltf = model.gltf;
@@ -679,11 +714,9 @@ define([
                     var positionAttribute = primitive.semantics.POSITION;
                     if (defined(positionAttribute)) {
                         var a = attributes[positionAttribute];
-//                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                     }
 
-//                    var modelMatrix = new Matrix4(); // computed in update()
-                    var modelMatrix = Matrix4.fromUniformScale(100000.0);
                     var primitiveType = PrimitiveType[primitive.primitive];
                     var vertexArray = primitive.extra.czmVertexArray;
                     var count = ix.count;
@@ -698,8 +731,8 @@ define([
                     };
 
                     var command = new DrawCommand();
-                    command.boundingVolume = boundingSphere;
-                    command.modelMatrix = modelMatrix;
+                    command.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
+                    command.modelMatrix = new Matrix4();                           // computed in update()
                     command.primitiveType = primitiveType;
                     command.vertexArray = vertexArray;
                     command.count = count;
@@ -720,8 +753,8 @@ define([
                         }], false, false);
 
                     var pickCommand = new DrawCommand();
-                    pickCommand.boundingVolume = boundingSphere;
-                    pickCommand.modelMatrix = modelMatrix;
+                    pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
+                    pickCommand.modelMatrix = new Matrix4();                           // computed in update()
                     pickCommand.primitiveType = primitiveType;
                     pickCommand.vertexArray = vertexArray;
                     pickCommand.count = count;
@@ -735,7 +768,7 @@ define([
                     meshesCommands[i] = {
                         command : command,
                         pickCommand : pickCommand,
-                        modelMatrix : modelMatrix // Reference to model matrix for both commands
+                        unscaledBoundingSphere : boundingSphere
                     };
                 }
 
@@ -783,6 +816,60 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    function updateModelMatrix(model) {
+        var gltf = model.gltf;
+        var scenes = gltf.scenes;
+        var nodes = gltf.nodes;
+
+        var scene = scenes[gltf.scene];
+        var sceneNodes = scene.nodes;
+        var length = sceneNodes.length;
+
+        var nodeStack = model._nodeStack;
+        var scale = model.scale;
+
+        for (var i = 0; i < length; ++i) {
+            nodeStack.push(nodes[sceneNodes[i]]);
+
+            while (nodeStack.length > 0) {
+                var n = nodeStack.pop();
+
+//TODO: handle camera and light nodes
+                if (!defined(n.meshes)) {
+                    continue;
+                }
+
+                var meshCommands = n.extra.czmMeshesCommands;
+
+                var name;
+                for (name in meshCommands) {
+                    if (meshCommands.hasOwnProperty(name)) {
+                        var meshCommand = meshCommands[name];
+                        var meshCommandLength = meshCommand.length;
+                        for (var j = 0 ; j < meshCommandLength; ++j) {
+                            var primitiveCommand = meshCommand[j];
+                            Matrix4.clone(model._computedModelMatrix, primitiveCommand.command.modelMatrix);
+                            Matrix4.clone(model._computedModelMatrix, primitiveCommand.pickCommand.modelMatrix);
+
+                            var bs = primitiveCommand.unscaledBoundingSphere;
+                            if (defined(bs)) {
+                                var radius = bs.radius * scale;
+                                primitiveCommand.command.boundingVolume.radius = radius;
+                                primitiveCommand.pickCommand.boundingVolume.radius = radius;
+                            }
+                        }
+                    }
+                }
+
+                var children = n.children;
+                var childrenLength = children.length;
+                for (i = 0; i < childrenLength; ++i) {
+                    nodeStack.push(nodes[children[i]]);
+                }
+            }
+        }
+    }
+
     /**
      * @private
      */
@@ -799,6 +886,7 @@ define([
             parse(this);
         }
 
+        var justLoaded = false;
         var commandLists = this._commandLists;
 
         if (this._state === ModelState.LOADING) {
@@ -809,9 +897,19 @@ define([
             if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+                justLoaded = true;
+            }
+        }
 
-                commandLists.colorList = this._colorCommands;
-                commandLists.pickList = this._pickCommands;
+        // Update modelMatrix throughout the tree as needed
+        if (this._state === ModelState.LOADED) {
+            if (!Matrix4.equals(this._modelMatrix, this.modelMatrix) || (this._scale !== this.scale) || justLoaded) {
+
+                Matrix4.clone(this.modelMatrix, this._modelMatrix);
+                this._scale = this.scale;
+                Matrix4.multiplyByUniformScale(this.modelMatrix, this.scale, this._computedModelMatrix);
+
+                updateModelMatrix(this);
             }
         }
 

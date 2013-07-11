@@ -1,6 +1,8 @@
 /*global define*/
 define([
         'Core/loadText',
+        'Core/Cartesian3',
+        'Core/Matrix4',
         'Scene/Model',
         'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
@@ -15,6 +17,8 @@ define([
         'domReady!'
     ], function(
         loadText,
+        Cartesian3,
+        Matrix4,
         Model,
         ScreenSpaceEventHandler,
         ScreenSpaceEventType,
@@ -156,7 +160,9 @@ define([
             var json = JSON.parse(data);
             var model = new Model({
                 gltf : json,
-                basePath : './Gallery/model/duck/'
+                basePath : './Gallery/model/duck/',
+                modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
+                scale : 100000.0
             });
             scene.getPrimitives().add(model);
         });
