@@ -220,12 +220,13 @@ define(['../Core/createGuid',
                 var icon = getElementValue(node,'href');
                 var hotSpot = getElementValue(node, 'hotSpot');
                 var color = getElementValue(node,'color');
+                color = color.split("").reverse().join(""); //KML uses abgr instead of rgba
                 var colorMode = getElementValue(node, 'colorMode');
 
                 //constant property or dynamic property?
                 dynamicObject.billboard.image = icon && new DynamicProperty(icon);
                 dynamicObject.billboard.scale = scale && new DynamicProperty(scale);
-                dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color)); //Do I need to switch the alpha value?
+                dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color));
                 //not sure how to map these
                 dynamicObject.billboard.heading = heading && new DynamicProperty(heading); //pixel offset?
                 dynamicObject.billboard.hotSpot =  hotSpot && new DynamicProperty(hotSpot);
