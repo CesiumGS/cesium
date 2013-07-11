@@ -774,14 +774,6 @@
                 "technique": "technique1",
                 "values": [
                     {
-                        "parameter": "ambient",
-                        "value": [
-                            0.2,
-                            0.2,
-                            0.2
-                        ]
-                    },
-                    {
                         "parameter": "diffuse",
                         "value": {
                             "image": "image_1",
@@ -807,14 +799,6 @@
             "instanceTechnique": {
                 "technique": "technique2",
                 "values": [
-                    {
-                        "parameter": "ambient",
-                        "value": [
-                            0.2,
-                            0.2,
-                            0.2
-                        ]
-                    },
                     {
                         "parameter": "diffuse",
                         "value": [
@@ -844,14 +828,6 @@
                 "technique": "technique1",
                 "values": [
                     {
-                        "parameter": "ambient",
-                        "value": [
-                            0.2,
-                            0.2,
-                            0.2
-                        ]
-                    },
-                    {
                         "parameter": "diffuse",
                         "value": {
                             "image": "image_2",
@@ -878,14 +854,6 @@
                 "technique": "technique3",
                 "values": [
                     {
-                        "parameter": "ambient",
-                        "value": [
-                            0.2,
-                            0.2,
-                            0.2
-                        ]
-                    },
-                    {
                         "parameter": "diffuse",
                         "value": [
                             1,
@@ -909,14 +877,6 @@
             "instanceTechnique": {
                 "technique": "technique1",
                 "values": [
-                    {
-                        "parameter": "ambient",
-                        "value": [
-                            0.2,
-                            0.2,
-                            0.2
-                        ]
-                    },
                     {
                         "parameter": "diffuse",
                         "value": {

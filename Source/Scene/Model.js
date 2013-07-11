@@ -94,6 +94,10 @@ define([
         return ((this.pendingBufferLoads === 0) && (this.bufferViewsToCreate.length === 0));
     };
 
+    LoadResources.prototype.finishedProgramCreation = function() {
+        return ((this.pendingShaderLoads === 0) && (this.programsToCreate.length === 0));
+    };
+
     LoadResources.prototype.finishedTextureCreation = function() {
         return ((this.pendingTextureLoads === 0) && (this.texturesToCreate.length === 0));
     };
@@ -419,7 +423,7 @@ define([
         var loadResources = model._loadResources;
 
 // TODO: more fine-grained mesh-to-buffer-views dependencies
-         if (!loadResources.finishedBufferViewsCreation()) {
+         if (!loadResources.finishedBufferViewsCreation() || !loadResources.finishedProgramCreation()) {
              return;
          }
 
@@ -794,19 +798,15 @@ define([
             return;
         }
 
-        var gltf = model.gltf;
-        var scenes = gltf.scenes;
-        var nodes = gltf.nodes;
+        var nodes = model.gltf.nodes;
 
-        var scene = scenes[gltf.scene];
-        var sceneNodes = scene.nodes;
-        var length = sceneNodes.length;
-
-        for (var i = 0; i < length; ++i) {
-            var node = nodes[sceneNodes[i]];
-// TODO: handle camera and light nodes
-            if (defined(node.meshes)) {
-                createCommand(model, node, context);
+        for (var name in nodes) {
+            if (nodes.hasOwnProperty(name)) {
+                var node = nodes[name];
+             // TODO: handle camera and light nodes
+                if (defined(node.meshes)) {
+                    createCommand(model, node, context);
+                }
             }
         }
     }
@@ -818,7 +818,7 @@ define([
 
         createVertexArrays(model, context); // using glTF meshes
         createRenderStates(model, context); // using glTF materials/techniques/passes/states
-        createUniformMaps(model, context);   // using glTF materials/techniques/passes/instanceProgram
+        createUniformMaps(model, context);  // using glTF materials/techniques/passes/instanceProgram
 
         createCommands(model, context);     // using glTF scene
     }
@@ -838,33 +838,39 @@ define([
         var scale = model.scale;
 
         for (var i = 0; i < length; ++i) {
-            nodeStack.push(nodes[sceneNodes[i]]);
+            var node = nodes[sceneNodes[i]];
+            nodeStack.push({
+                node : node,
+                transformToRoot : Matrix4.fromColumnMajorArray(node.matrix)
+            });
 
             while (nodeStack.length > 0) {
-                var n = nodeStack.pop();
+                var top = nodeStack.pop();
+                var n = top.node;
+                var transformToRoot = top.transformToRoot;
 
 //TODO: handle camera and light nodes
-                if (!defined(n.meshes)) {
-                    continue;
-                }
+                if (defined(n.extra) && defined(n.extra.czmMeshesCommands)) {
+                    var meshCommands = n.extra.czmMeshesCommands;
+                    var name;
+                    for (name in meshCommands) {
+                        if (meshCommands.hasOwnProperty(name)) {
+                            var meshCommand = meshCommands[name];
+                            var meshCommandLength = meshCommand.length;
+                            for (var j = 0 ; j < meshCommandLength; ++j) {
+                                var primitiveCommand = meshCommand[j];
+                                var command = primitiveCommand.command;
+                                var pickCommand = primitiveCommand.pickCommand;
 
-                var meshCommands = n.extra.czmMeshesCommands;
+                                Matrix4.multiply(model._computedModelMatrix, transformToRoot, command.modelMatrix);
+                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
 
-                var name;
-                for (name in meshCommands) {
-                    if (meshCommands.hasOwnProperty(name)) {
-                        var meshCommand = meshCommands[name];
-                        var meshCommandLength = meshCommand.length;
-                        for (var j = 0 ; j < meshCommandLength; ++j) {
-                            var primitiveCommand = meshCommand[j];
-                            Matrix4.clone(model._computedModelMatrix, primitiveCommand.command.modelMatrix);
-                            Matrix4.clone(model._computedModelMatrix, primitiveCommand.pickCommand.modelMatrix);
-
-                            var bs = primitiveCommand.unscaledBoundingSphere;
-                            if (defined(bs)) {
-                                var radius = bs.radius * scale;
-                                primitiveCommand.command.boundingVolume.radius = radius;
-                                primitiveCommand.pickCommand.boundingVolume.radius = radius;
+                                var bs = primitiveCommand.unscaledBoundingSphere;
+                                if (defined(bs)) {
+                                    var radius = bs.radius * scale;
+                                    command.boundingVolume.radius = radius;
+                                    pickCommand.boundingVolume.radius = radius;
+                                }
                             }
                         }
                     }
@@ -872,8 +878,12 @@ define([
 
                 var children = n.children;
                 var childrenLength = children.length;
-                for (i = 0; i < childrenLength; ++i) {
-                    nodeStack.push(nodes[children[i]]);
+                for (var k = 0; k < childrenLength; ++k) {
+                    var child = nodes[children[k]];
+                    nodeStack.push({
+                        node : child,
+                        transformToRoot : Matrix4.multiply(transformToRoot, Matrix4.fromColumnMajorArray(child.matrix))
+                    });
                 }
             }
         }
