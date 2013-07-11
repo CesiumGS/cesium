@@ -65,10 +65,10 @@ require([
     "use strict";
     
     var longitude = Cesium.Math.toRadians(-90.0);
-    var latitude = 0.0;
+    var latitude = Cesium.Math.toRadians(30.0);
     var altitude = 3000000.0;
     var clock = 0.0;
-    var cone = 0.0;
+    var cone = Cesium.Math.toRadians(15.0);
     var twist = 0.0;
     var selection = 'Rectangular';
     
