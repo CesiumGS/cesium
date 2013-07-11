@@ -544,6 +544,13 @@ define([
              var images = model.gltf.images;
              var texture = images[value.image].extra.czmTexture;
 
+             if ((value.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
+                 (value.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
+                 (value.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
+                 (value.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
+                 texture.generateMipmap();
+             }
+
              texture.setSampler(context.createSampler({
                  wrapS : TextureWrap[value.wrapS],
                  wrapT : TextureWrap[value.wrapT],
