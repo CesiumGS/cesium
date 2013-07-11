@@ -2,6 +2,8 @@
 define([
         'Core/loadText',
         'Scene/Model',
+        'Core/ScreenSpaceEventHandler',
+        'Core/ScreenSpaceEventType',
         ///////////////////////////////////////////////////////////////////////
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
@@ -14,6 +16,8 @@ define([
     ], function(
         loadText,
         Model,
+        ScreenSpaceEventHandler,
+        ScreenSpaceEventType,
         ///////////////////////////////////////////////////////////////////////
         CzmlDataSource,
         GeoJsonDataSource,
@@ -81,12 +85,12 @@ define([
 
         var scene = viewer.scene;
         var context = scene.getContext();
-        if (endUserOptions.debug) {
+//        if (endUserOptions.debug) {
             context.setValidateShaderProgram(true);
             context.setValidateFramebuffer(true);
             context.setLogShaderCompilation(true);
             context.setThrowOnWebGLError(true);
-        }
+//        }
 
         if (typeof endUserOptions.source !== 'undefined') {
             var source;
@@ -145,6 +149,8 @@ define([
         }
 
         ///////////////////////////////////////////////////////////////////////
+        scene.getPrimitives().setCentralBody(undefined);
+        scene.skyBox = undefined;
 
         loadText('./Gallery/model/duck/duck.json').then(function(data) {
             var json = JSON.parse(data);
@@ -154,5 +160,18 @@ define([
             });
             scene.getPrimitives().add(model);
         });
+
+
+        var handler = new ScreenSpaceEventHandler(scene.getCanvas());
+        handler.setInputAction(
+            function (movement) {
+                var pickedObject = scene.pick(movement.endPosition);
+                if (typeof pickedObject !== 'undefined') {
+                    console.log("Node " + pickedObject.node.name + ", Mesh " + pickedObject.mesh.name);
+                }
+            },
+            ScreenSpaceEventType.MOUSE_MOVE
+        );
+
     }
 });

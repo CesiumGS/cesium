@@ -23,6 +23,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
         '../Renderer/DrawCommand',
+        '../Renderer/CommandLists',
         '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
@@ -49,6 +50,7 @@ define([
         BufferUsage,
         BlendingState,
         DrawCommand,
+        CommandLists,
         createPickFragmentShaderSource,
         SceneMode) {
     "use strict";
@@ -126,6 +128,10 @@ define([
 
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
+
+        this._colorCommands = [];
+        this._pickCommands = [];
+        this._commandLists = new CommandLists();
         this._pickIds = [];
     };
 
@@ -639,7 +645,10 @@ define([
         node.extra = defaultValue(node.extra, {});
         node.extra.czmMeshesCommands = {};
 
+        var colorCommands = model._colorCommands;
+        var pickCommands = model._pickCommands;
         var pickIds = model._pickIds;
+
         var gltf = model.gltf;
 
         var attributes = gltf.attributes;
@@ -670,16 +679,23 @@ define([
                     var positionAttribute = primitive.semantics.POSITION;
                     if (defined(positionAttribute)) {
                         var a = attributes[positionAttribute];
-                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
+//                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                     }
 
-                    var modelMatrix = new Matrix4(); // computed in update()
+//                    var modelMatrix = new Matrix4(); // computed in update()
+                    var modelMatrix = Matrix4.fromUniformScale(100000.0);
                     var primitiveType = PrimitiveType[primitive.primitive];
                     var vertexArray = primitive.extra.czmVertexArray;
                     var count = ix.count;
                     var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
                     var uniformMap = instanceTechnique.extra.czmUniformMap;
                     var rs = pass.states.extra.czmRenderState;
+                    var owner = {
+                        instance : model,
+                        node : node,
+                        mesh : mesh,
+                        primitive : primitive
+                    };
 
                     var command = new DrawCommand();
                     command.boundingVolume = boundingSphere;
@@ -691,14 +707,10 @@ define([
                     command.shaderProgram = programs[instanceProgram.program].extra.czmProgram;
                     command.uniformMap = uniformMap;
                     command.renderState = rs;
+                    command.owner = owner;
+                    colorCommands.push(command);
 
 // TODO: Create type for pick owner?  Use for all primitives.
-                    var owner = {
-                        instance : model,
-                        node : node,
-                        mesh : mesh,
-                        primitive : primitive
-                    };
                     var pickId = context.createPickId(owner);
                     pickIds.push(pickId);
 
@@ -717,11 +729,13 @@ define([
                     pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
                     pickCommand.uniformMap = pickUniformMap;
                     pickCommand.renderState = rs;
+                    pickCommand.owner = owner;
+                    pickCommands.push(pickCommand);
 
                     meshesCommands[i] = {
                         command : command,
                         pickCommand : pickCommand,
-                        modelMatrix : modelMatrix
+                        modelMatrix : modelMatrix // Reference to model matrix for both commands
                     };
                 }
 
@@ -785,6 +799,8 @@ define([
             parse(this);
         }
 
+        var commandLists = this._commandLists;
+
         if (this._state === ModelState.LOADING) {
             // Incrementally create WebGL resources as buffers/shaders/textures are downloaded
             createResources(this, context);
@@ -793,8 +809,13 @@ define([
             if (loadResources.finishedPendingLoads() && loadResources.finishedResourceCreation()) {
                 this._state = ModelState.LOADED;
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
+
+                commandLists.colorList = this._colorCommands;
+                commandLists.pickList = this._pickCommands;
             }
         }
+
+        commandList.push(commandLists);
     };
 
     /**
