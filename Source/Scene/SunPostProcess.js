@@ -140,7 +140,8 @@ define([
                         0.0, 1.0
                     ]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         vertexArray = context.createVertexArrayFromGeometry({

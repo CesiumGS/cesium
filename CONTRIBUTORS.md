@@ -9,6 +9,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Ed Mackey](https://github.com/emackey)
    * [Dan Bagnell](https://github.com/bagnell)
    * [Scott Hunter](https://github.com/shunter)
+   * [Frank Stoner](https://github.com/fstoner)
    * [Matthew Ford](https://github.com/mrmattf)
    * [Tom Fili](https://github.com/tfili)
    * [Matthew Amato](https://github.com/mramato)

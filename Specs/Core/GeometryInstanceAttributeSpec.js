@@ -22,40 +22,41 @@ defineSuite([
         expect(color.value).toEqual([255, 255, 0, 255]);
     });
 
-    it('clone', function() {
-        var color = new GeometryInstanceAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 4,
-            normalize : true,
-            value : new Uint8Array([255, 255, 0, 255])
-        });
-        var clone = GeometryInstanceAttribute.clone(color);
-
-        expect(clone.componentDatatype).toEqual(ComponentDatatype.UNSIGNED_BYTE);
-        expect(clone.componentsPerAttribute).toEqual(4);
-        expect(clone.normalize).toEqual(true);
-        expect(clone.value).not.toBe(color.value);
-        expect(clone.value instanceof Uint8Array);
-        expect(color.value).toEqual([255, 255, 0, 255]);
+    it('constructor throws without componentDatatype', function() {
+        expect(function() {
+            return new GeometryInstanceAttribute({
+                componentsPerAttribute : 4,
+                value : new Uint8Array([255, 255, 0, 255])
+            });
+        }).toThrow();
     });
 
-    it('clone with result parameter', function() {
-        var color = new GeometryInstanceAttribute({
-            componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-            componentsPerAttribute : 4,
-            normalize : true,
-            value : new Uint8Array([255, 255, 0, 255])
-        });
-        var result = new GeometryInstanceAttribute();
-        var clone = GeometryInstanceAttribute.clone(color, result);
+    it('constructor throws without componentsPerAttribute', function() {
+        expect(function() {
+            return new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                value : new Uint8Array([255, 255, 0, 255])
+            });
+        }).toThrow();
+    });
 
-        expect(clone).toBe(result);
-        expect(clone.componentDatatype).toEqual(ComponentDatatype.UNSIGNED_BYTE);
-        expect(clone.componentsPerAttribute).toEqual(4);
-        expect(clone.normalize).toEqual(true);
-        expect(clone.value).not.toBe(color.value);
-        expect(clone.value instanceof Uint8Array);
-        expect(color.value).toEqual([255, 255, 0, 255]);
+    it('constructor throws when componentsPerAttribute is less than 1 or greater than 4', function() {
+        expect(function() {
+            return new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 7,
+                value : new Uint8Array([255, 255, 0, 255])
+            });
+        }).toThrow();
+    });
+
+    it('constructor throws without values', function() {
+        expect(function() {
+            return new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4
+            });
+        }).toThrow();
     });
 
 });

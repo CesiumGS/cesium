@@ -11,6 +11,9 @@ define([
         '../Core/BoundingSphere',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
+        '../Core/GeometryInstance',
+        '../Core/GeometryInstanceAttribute',
         '../Core/ComponentDatatype',
         '../Core/Cartesian3',
         '../Renderer/BufferUsage',
@@ -31,6 +34,9 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
+        GeometryInstance,
+        GeometryInstanceAttribute,
         ComponentDatatype,
         Cartesian3,
         BufferUsage,
@@ -43,16 +49,16 @@ define([
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
-     * as shown in Code Example 1 below, or from an array of instances, even if the geometry is from different
+     * as shown in example 1 below, or from an array of instances, even if the geometry is from different
      * geometry types, e.g., an {@link ExtentGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
      * <p>
      * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
-     * {@link Material} and {@link Renderstate}.  Roughly, the geometry instance defines the structure and placement,
+     * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and max most of them, and to easily add new geometry types and appearances.
+     * and match most of them and add a new geometry or appearance independently of each other.
      * </p>
      * <p>
-     * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
+     * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
      * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
@@ -60,11 +66,11 @@ define([
      * @alias Primitive
      * @constructor
      *
-     * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
+     * @param {Array|GeometryInstance} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
+     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -105,7 +111,7 @@ define([
      * var ellipsoidInstance = new GeometryInstance({
      *   geometry : new EllipsoidGeometry({
      *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
+     *     radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
@@ -137,8 +143,6 @@ define([
          * @type Array
          *
          * @default undefined
-         *
-         * @readonly
          */
         this.geometryInstances = options.geometryInstances;
 
@@ -190,7 +194,7 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._allowColumbusView = defaultValue(options.allowColumbusView, true);
+        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
         this._perInstanceAttributes = undefined;
@@ -207,6 +211,64 @@ define([
 
         this._commandLists = new CommandLists();
     };
+
+    function cloneAttribute(attribute) {
+        return new GeometryAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            values : new attribute.values.constructor(attribute.values)
+        });
+    }
+
+    function cloneGeometry(geometry) {
+        var attributes = geometry.attributes;
+        var newAttributes = new GeometryAttributes();
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
+                newAttributes[property] = cloneAttribute(attributes[property]);
+            }
+        }
+
+        var indices;
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            indices = new sourceValues.constructor(sourceValues);
+        }
+
+        return new Geometry({
+            attributes : newAttributes,
+            indices : indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : BoundingSphere.clone(geometry.boundingSphere)
+        });
+    }
+
+    function cloneGeometryInstanceAttribute(attribute) {
+        return new GeometryInstanceAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            value : new attribute.value.constructor(attribute.value)
+        });
+    }
+
+    function cloneInstance(instance) {
+        var attributes = instance.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
+            }
+        }
+
+        return new GeometryInstance({
+            geometry : cloneGeometry(instance.geometry),
+            modelMatrix : Matrix4.clone(instance.modelMatrix),
+            id : instance.id, // Shallow copy
+            attributes : newAttributes
+        });
+    }
 
     function addPickColorAttribute(primitive, instances, context) {
         var length = instances.length;
@@ -245,7 +307,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._allowColumbusView;
+        var toWorld = !primitive._allow3DOnly;
         var length = instances.length;
         var i;
 
@@ -350,7 +412,7 @@ define([
         transformToWorldCoordinates(primitive, instances);
 
         // Clip to IDL
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             for (i = 0; i < length; ++i) {
                 GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
@@ -375,7 +437,7 @@ define([
         var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry, projection);
 
@@ -502,7 +564,7 @@ define([
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
         var attributes;
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             attributes =
                 'attribute vec3 position2DHigh;\n' +
                 'attribute vec3 position2DLow;\n';
@@ -513,7 +575,7 @@ define([
         var computePosition =
             '\nvec4 czm_computePosition()\n' +
             '{\n';
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             computePosition +=
                 '    vec4 p;\n' +
                 '    if (czm_morphTime == 1.0)\n' +
@@ -601,11 +663,8 @@ define([
         if (!this.show ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
             (typeof this.appearance === 'undefined') ||
-            (frameState.mode !== SceneMode.SCENE3D && !this._allowColumbusView)) {
-            return;
-        }
-
-        if (!frameState.passes.color && !frameState.passes.pick) {
+            (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
+            (!frameState.passes.color && !frameState.passes.pick)) {
             return;
         }
 
@@ -619,19 +678,19 @@ define([
         if (this._va.length === 0) {
             var projection = frameState.scene2D.projection;
 
-            var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
+            var instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
             // Copy instances first since most pipeline operations modify the geometry and instance in-place.
             length = instances.length;
             var insts = new Array(length);
             for (i = 0; i < length; ++i) {
-                insts[i] = instances[i].clone();
+                insts[i] = cloneInstance(instances[i]);
             }
             var geometries = geometryPipeline(this, insts, context, projection);
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             this._boundingSphere = geometries[0].boundingSphere;
-            if (this._allowColumbusView && typeof this._boundingSphere !== 'undefined') {
+            if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
