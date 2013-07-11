@@ -184,7 +184,7 @@ define([
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
         /**
-         * The width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
          *
          * @type {Number}
          * @default 5.0

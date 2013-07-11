@@ -88,7 +88,7 @@ define([
          */
         this.intersectionColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the width of the line formed by the intersection of the cone and other central bodies.
+         * A DynamicProperty of type CzmlNumber which determines the approximate pixel width of the line formed by the intersection of the cone and other central bodies.
          * @type {DynamicProperty}
          * @default undefined
          */
