@@ -14,6 +14,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/GeographicProjection',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
@@ -55,6 +57,8 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
+        Geometry,
+        GeometryAttribute,
         Intersect,
         CesiumMath,
         Matrix4,
@@ -337,7 +341,7 @@ define([
         var occludeePoint;
         var occluded;
         var datatype;
-        var mesh;
+        var geometry;
         var rect;
         var positions;
         var occluder = centralBody._occluder;
@@ -367,17 +371,17 @@ define([
 
                 if (typeof centralBody._northPoleCommand.vertexArray === 'undefined') {
                     centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                    mesh = {
+                    geometry = new Geometry({
                         attributes : {
-                            position : {
+                            position : new GeometryAttribute({
                                 componentDatatype : ComponentDatatype.FLOAT,
                                 componentsPerAttribute : 2,
                                 values : positions
-                            }
+                            })
                         }
-                    };
-                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                        mesh : mesh,
+                    });
+                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                        geometry : geometry,
                         attributeIndices : {
                             position : 0
                         },
@@ -385,7 +389,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                 }
             }
         }
@@ -415,17 +419,17 @@ define([
 
                  if (typeof centralBody._southPoleCommand.vertexArray === 'undefined') {
                      centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                     mesh = {
+                     geometry = new Geometry({
                          attributes : {
-                             position : {
+                             position : new GeometryAttribute({
                                  componentDatatype : ComponentDatatype.FLOAT,
                                  componentsPerAttribute : 2,
                                  values : positions
-                             }
+                             })
                          }
-                     };
-                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                         mesh : mesh,
+                     });
+                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                         geometry : geometry,
                          attributeIndices : {
                              position : 0
                          },
@@ -433,7 +437,7 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                  }
             }
         }
@@ -491,7 +495,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
+            if (mode === SceneMode.SCENE3D || (mode === SceneMode.COLUMBUS_VIEW && !(this.terrainProvider instanceof EllipsoidTerrainProvider))) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true
@@ -547,21 +551,19 @@ define([
 
         // depth plane
         if (!this._depthCommand.vertexArray) {
-            var mesh = {
+            var geometry = new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : depthQuad
-                    }
+                    })
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [0, 1, 2, 2, 1, 3]
-                }]
-            };
-            this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
-                mesh : mesh,
+                indices : [0, 1, 2, 2, 1, 3],
+                primitiveType : PrimitiveType.TRIANGLES
+            });
+            this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
+                geometry : geometry,
                 attributeIndices : {
                     position : 0
                 },
@@ -569,7 +571,7 @@ define([
             });
         } else {
             var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
         }
 
         var shaderCache = context.getShaderCache();

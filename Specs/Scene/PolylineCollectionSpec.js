@@ -430,7 +430,7 @@ defineSuite([
 
     it('renders 64K vertices of same polyline', function() {
         var positions = [];
-        for ( var i = 0; i < (64 * 1024) / 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -455,7 +455,7 @@ defineSuite([
 
     it('creates two vertex arrays and renders', function() {
         var positions = [];
-        for ( var i = 0; i < (64 * 1024) / 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -498,7 +498,7 @@ defineSuite([
 
     it('renders more than 64K vertices of same polyline', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -757,7 +757,7 @@ defineSuite([
 
     it('renders more than 64K vertices of different polylines', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
                 x : -1,
                 y : -1,
@@ -797,7 +797,7 @@ defineSuite([
 
     it('renders more than 64K vertices of different polylines of different widths', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024 - 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES - 2; ++i) {
             positions.push({
                 x : -1,
                 y : -1,
