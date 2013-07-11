@@ -4,6 +4,11 @@ Change Log
 Beta Releases
 -------------
 
+### b19 - 2013-08-05
+
+* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:
