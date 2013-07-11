@@ -37,21 +37,6 @@ define(['../Core/createGuid',
                 topojson) {
     "use strict";
 
-    //DynamicPositionProperty is pretty hard to use with non-CZML based data
-    //For now we create two of our own properties for exposing GeoJSON
-    //data.
-    var ConstantPositionProperty = function(value) {
-        this._value = value;
-    };
-
-    ConstantPositionProperty.prototype.getValue = function(time, result) {
-        var value = this._value;
-        if (typeof value.clone === 'function') {
-            return value.clone(result);
-        }
-        return value;
-    };
-
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple dynamicObject,
     //we can't use it for them either.
@@ -123,7 +108,7 @@ define(['../Core/createGuid',
     function processPoint(dataSource, geoJson, geometry, crsFunction, source) {
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPoint);
-        dynamicObject.position = new ConstantPositionProperty(crsFunction(geometry.coordinates));
+        dynamicObject.position = new ConstantProperty(crsFunction(geometry.coordinates));
     }
 
     function processMultiPoint(dataSource, geoJson, geometry, crsFunction, source) {
@@ -131,14 +116,14 @@ define(['../Core/createGuid',
         for ( var i = 0; i < coordinates.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPoint);
-            dynamicObject.position = new ConstantPositionProperty(crsFunction(coordinates[i]));
+            dynamicObject.position = new ConstantProperty(crsFunction(coordinates[i]));
         }
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, source) {
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultLine);
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
+        dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates, crsFunction));
     }
 
     function processMultiLineString(dataSource, geoJson, geometry, crsFunction, source) {
@@ -146,7 +131,7 @@ define(['../Core/createGuid',
         for ( var i = 0; i < lineStrings.length; i++) {
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultLine);
-            dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
+            dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(lineStrings[i], crsFunction));
         }
     }
 
@@ -154,7 +139,7 @@ define(['../Core/createGuid',
         //TODO Holes
         var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
         dynamicObject.merge(dataSource.defaultPolygon);
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
+        dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(geometry.coordinates[0], crsFunction));
     }
 
     function processTopology(dataSource, geoJson, geometry, crsFunction, source) {
@@ -174,7 +159,7 @@ define(['../Core/createGuid',
             var polygon = polygons[i];
             var dynamicObject = createObject(geoJson, dataSource._dynamicObjectCollection);
             dynamicObject.merge(dataSource.defaultPolygon);
-            dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
+            dynamicObject.vertexPositions = new ConstantProperty(coordinatesArrayToCartesianArray(polygon[0], crsFunction));
         }
     }
 

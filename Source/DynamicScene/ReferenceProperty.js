@@ -103,6 +103,18 @@ define([
     };
 
     /**
+     * If the property varies with simulation time, this function returns true.  If the property
+     * is constant or changes in ways not related to simulation time, this function returns false.
+     *
+     * @memberof Property
+     * @returns {Boolean} True if the property varies with simulation time, false otherwise.
+     */
+    ReferenceProperty.prototype.getIsTimeVarying = function() {
+        var targetProperty = resolve(this);
+        return typeof targetProperty !== 'undefined' ? targetProperty.getIsTimeVarying() : undefined;
+    };
+
+    /**
      * Retrieves the value of the property at the specified time.
      *
      * @param time The time to evaluate the property.
@@ -112,6 +124,9 @@ define([
     ReferenceProperty.prototype.getValue = function(time, result) {
         var targetProperty = resolve(this);
         return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
+    };
+
+    ReferenceProperty.prototype.sampleValue = function() {
     };
 
     return ReferenceProperty;

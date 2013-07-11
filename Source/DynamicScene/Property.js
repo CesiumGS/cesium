@@ -9,19 +9,25 @@ define(['../Core/DeveloperError'
     }
 
     /**
-     * The base class for all properties, which represent a single value that can optionally
-     * vary over simulation time.  This type cannot be instantiated directly.
+     * The base class for all properties, which represent a value that can optionally
+     * vary over time.  This type cannot be instantiated directly.
      *
      * @alias Property
      * @constructor
      *
      * @see ConstantProperty
-     * @see DynamicProperty
+     * @see SampledProperty
+     * @see CompositeProperty
+     * @see TimeIntervalCollectionProperty
      * @see PositionProperty
+     * @see CompositePositionProperty
      */
     var Property = throwInstantiationError();
 
     /**
+     * If the property varies with simulation time, this function returns true.  If the property
+     * is constant or changes in ways not related to simulation time, this function returns false.
+     *
      * @memberof Property
      * @returns {Boolean} True if the property varies with simulation time, false otherwise.
      */

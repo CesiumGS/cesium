@@ -1,25 +1,37 @@
 /*global define*/
-define(['../Core/DeveloperError'
+define(['../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/TimeIntervalCollection'
         ], function(
-                DeveloperError) {
+                defineProperties,
+                DeveloperError,
+                TimeIntervalCollection) {
     "use strict";
 
-    function throwInstantiationError() {
-        throw new DeveloperError('This type should not be instantiated directly.');
-    }
-
     /**
-     * The base class for all properties, which represent a single value that can optionally
-     * vary over simulation time.  This type cannot be instantiated directly.
+     * A {@link Property} which is defined by an TimeIntervalCollection, where the
+     * data property of the interval represents the value at simulation time.
      *
-     * @alias Property
+     * @alias TimeIntervalCollectionProperty
      * @constructor
-     *
-     * @see ConstantProperty
-     * @see DynamicProperty
-     * @see PositionProperty
      */
-    var Property = throwInstantiationError();
+    var TimeIntervalCollectionProperty = function() {
+        this._intervals = new TimeIntervalCollection();
+    };
+
+    defineProperties(TimeIntervalCollectionProperty.prototype, {
+        /**
+         * Gets the interval collection.
+         * @memberof TimeIntervalCollectionProperty.prototype
+         *
+         * @type {TimeIntervalCollection}
+         */
+        interval : {
+            get : function() {
+                return this._intervals;
+            }
+        }
+    });
 
     /**
      * Returns a value indicating if this property varies with simulation time.
@@ -27,7 +39,9 @@ define(['../Core/DeveloperError'
      *
      * @returns {Boolean} True if the property varies with simulation time, false otherwise.
      */
-    Property.prototype.getIsTimeVarying = throwInstantiationError();
+    TimeIntervalCollectionProperty.prototype.getIsTimeVarying = function() {
+        return true;
+    };
 
     /**
      * Returns the value of the property at the specified simulation time.
@@ -37,7 +51,21 @@ define(['../Core/DeveloperError'
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    Property.prototype.getValue = throwInstantiationError();
+    TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {
+        if (typeof time === 'undefined') {
+            throw new DeveloperError('time is required');
+        }
+
+        var data;
+        var interval = this._intervals.findIntervalContainingDate(time);
+        if (typeof interval !== 'undefined') {
+            data = interval.data;
+            if (typeof data !== 'undefined' && typeof data.clone === 'function') {
+                return data.clone(result);
+            }
+        }
+        return data;
+    };
 
     /**
      * Returns the value of the property.
@@ -50,7 +78,8 @@ define(['../Core/DeveloperError'
      * @param {Object} [resultTimes] An array containing all of the sampled times which corresponds to the result at the same index in resultValues.
      * @param {Object} [resultValues] An array containing all of the samples values, which correspond to the times
      */
-    Property.prototype.sampleValue = throwInstantiationError();
+    TimeIntervalCollectionProperty.prototype.sampleValue = function() {
+    };
 
-    return Property;
+    return TimeIntervalCollectionProperty;
 });

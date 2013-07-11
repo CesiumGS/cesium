@@ -468,7 +468,7 @@ defineSuite(['DynamicScene/GeoJsonDataSource',
         });
         runs(function() {
             var pointObject = dynamicObjectCollection.getObjects()[0];
-            expect(pointObject.position.getValueCartesian()).toEqual(coordinatesToCartesian(point.coordinates));
+            expect(pointObject.position.getValue()).toEqual(coordinatesToCartesian(point.coordinates));
         });
     });
 
