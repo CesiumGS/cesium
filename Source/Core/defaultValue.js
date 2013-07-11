@@ -15,7 +15,7 @@ define([
      * param = defaultValue(param, 'default');
      */
     var defaultValue = function(a, b) {
-        if (typeof a !== 'undefined') {
+        if (a !== undefined) {
             return a;
         }
         return b;

@@ -222,7 +222,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
-     * @memberof Polygon
+     * @memberof Extent
      *
      * @return {undefined}
      *

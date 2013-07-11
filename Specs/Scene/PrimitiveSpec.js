@@ -157,7 +157,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         var commands = [];
@@ -176,7 +176,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.passes.color = false;
@@ -192,11 +192,11 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not render when allowColumbusView is false and the scene mode is SCENE2D', function() {
+    it('does not render when allow3DOnly is true and the scene mode is SCENE2D', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.mode = SceneMode.SCENE2D;
@@ -209,11 +209,11 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('does not render when allowColumbusView is false and the scene mode is COLUMBUS_VIEW', function() {
+    it('does not render when allow3DOnly is true and the scene mode is COLUMBUS_VIEW', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
@@ -226,11 +226,11 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('renders in Columbus view when allowColumbusView is true', function() {
+    it('renders in Columbus view when allow3DOnly is false', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : true
+            allow3DOnly : false
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
@@ -263,11 +263,11 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('renders in 2D when allowColumbusView is true', function() {
+    it('renders in 2D when allow3DOnly is false', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : true
+            allow3DOnly : false
         });
 
         frameState.mode = SceneMode.SCENE2D;
@@ -310,7 +310,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -341,7 +341,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -377,7 +377,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
         primitive.update(context, frameState, []);
 
@@ -397,7 +397,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -429,7 +429,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -458,7 +458,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -513,7 +513,7 @@ defineSuite([
     it('shader validation', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
-            allowColumbusView : false,
+            allow3DOnly : true,
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
             })
@@ -528,7 +528,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         primitive.update(context, frameState, []);
@@ -545,7 +545,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         primitive.update(context, frameState, []);
@@ -561,7 +561,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         primitive.update(context, frameState, []);
@@ -577,7 +577,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         expect(function() {
@@ -591,7 +591,7 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allowColumbusView : false
+            allow3DOnly : true
         });
 
         primitive.update(context, frameState, []);
