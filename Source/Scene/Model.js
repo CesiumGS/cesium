@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/combine',
         '../Core/defined',
         '../Core/defaultValue',
         '../Core/destroyObject',
@@ -25,6 +26,7 @@ define([
         '../Renderer/createPickFragmentShaderSource',
         './SceneMode'
     ], function(
+        combine,
         defined,
         defaultValue,
         destroyObject,
@@ -124,6 +126,7 @@ define([
 
         this._state = ModelState.NEEDS_LOAD;
         this._loadResources = undefined;
+        this._pickIds = [];
     };
 
     ///////////////////////////////////////////////////////////////////////////
@@ -626,10 +629,17 @@ define([
         }
     }
 
+    function createPickColorFunction(color) {
+        return function() {
+            return color;
+        };
+    }
+
     function createCommand(model, node, context) {
         node.extra = defaultValue(node.extra, {});
         node.extra.czmMeshesCommands = {};
 
+        var pickIds = model._pickIds;
         var gltf = model.gltf;
 
         var attributes = gltf.attributes;
@@ -643,6 +653,7 @@ define([
         var name;
         for (name in meshes) {
             if (meshes.hasOwnProperty(name)) {
+                var mesh = meshes[name];
                 var primitives = meshes[name].primitives;
                 var length = primitives.length;
                 var meshesCommands = new Array(length);
@@ -681,6 +692,21 @@ define([
                     command.uniformMap = uniformMap;
                     command.renderState = rs;
 
+// TODO: Create type for pick owner?  Use for all primitives.
+                    var owner = {
+                        instance : model,
+                        node : node,
+                        mesh : mesh,
+                        primitive : primitive
+                    };
+                    var pickId = context.createPickId(owner);
+                    pickIds.push(pickId);
+
+                    var pickUniformMap = combine([
+                        uniformMap, {
+                            czm_pickColor : createPickColorFunction(pickId.color)
+                        }], false, false);
+
                     var pickCommand = new DrawCommand();
                     pickCommand.boundingVolume = boundingSphere;
                     pickCommand.modelMatrix = modelMatrix;
@@ -689,8 +715,7 @@ define([
                     pickCommand.count = count;
                     pickCommand.offset = offset;
                     pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
-// TODO: add czm_pickColor
-                    pickCommand.uniformMap = uniformMap;
+                    pickCommand.uniformMap = pickUniformMap;
                     pickCommand.renderState = rs;
 
                     meshesCommands[i] = {
@@ -824,6 +849,12 @@ define([
         destroyExtra(gltf.program, 'czmProgram');
         destroyExtra(gltf.program, 'czmPickProgram');
         destroyExtra(gltf.images, 'czmTexture');
+
+        var pickIds = this._pickIds;
+        var length = pickIds.length;
+        for (var i = 0; i < length; ++i) {
+            pickIds.destroy();
+        }
 
         return destroyObject(this);
     };
