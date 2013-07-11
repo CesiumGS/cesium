@@ -103,7 +103,7 @@ define([
      *       CesiumMath.toRadians(-100.0),
      *       CesiumMath.toRadians(40.0))
      *     }),
-     *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
+     *   id : 'extent',
      *   attribute : {
      *     color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
      *   }
@@ -115,7 +115,7 @@ define([
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-     *   id : 'object returned when this instance is picked and to get/set per-instance attributes',
+     *   id : 'ellipsoid',
      *   attribute : {
      *     color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
      *   }
@@ -197,8 +197,8 @@ define([
         this._allow3DOnly = defaultValue(options.allow3DOnly, false);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
-        this._perInstanceAttributes = undefined;
-        this._perInstanceAttributesCache = {};
+        this._perInstanceAttributes = {};
+        this._lastPerInstanceAttributeIndex = 0;
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -488,7 +488,8 @@ define([
     }
 
     function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
-        var indices = {};
+        var ids = [];
+        var indices = [];
 
         var names = getCommonPerInstanceAttributeNames(instances);
         var length = instances.length;
@@ -518,12 +519,16 @@ define([
                         }
                     }
 
-                    if (typeof indices[instance.id] === 'undefined') {
-                        indices[instance.id] = {};
+                    if (typeof ids[i] === 'undefined') {
+                        ids[i] = instance.id;
                     }
 
-                    if (typeof indices[instance.id][name] === 'undefined') {
-                        indices[instance.id][name] = {
+                    if (typeof indices[i] === 'undefined') {
+                        indices[i] = {};
+                    }
+
+                    if (typeof indices[i][name] === 'undefined') {
+                        indices[i][name] = {
                             dirty : false,
                             value : instance.attributes[name].value,
                             indices : []
@@ -537,7 +542,7 @@ define([
                     var count;
                     if (offset + tempVertexCount < size) {
                         count = tempVertexCount;
-                        indices[instance.id][name].indices.push({
+                        indices[i][name].indices.push({
                             attribute : attribute,
                             offset : offset,
                             count : count
@@ -545,7 +550,7 @@ define([
                         offsets[name] = offset + tempVertexCount;
                     } else {
                         count = size - offset;
-                        indices[instance.id][name].indices.push({
+                        indices[i][name].indices.push({
                             attribute : attribute,
                             offset : offset,
                             count : count
@@ -559,7 +564,10 @@ define([
             }
         }
 
-        return indices;
+        return {
+            ids : ids,
+            indices : indices
+        };
     }
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
@@ -791,37 +799,36 @@ define([
 
         // Update per-instance attributes
         if (this._perInstanceAttributes._dirty) {
-            var perInstance = this._perInstanceAttributes;
-            for (var id in perInstance) {
-                if (perInstance.hasOwnProperty(id) && id !== '_dirty') {
-                    var perInstanceAttributes = perInstance[id];
-                    for (var name in perInstanceAttributes) {
-                        if (perInstanceAttributes.hasOwnProperty(name)) {
-                            var attribute = perInstanceAttributes[name];
-                            if (attribute.dirty) {
-                                var value = attribute.value;
-                                var indices = attribute.indices;
-                                length = indices.length;
-                                for (i = 0; i < length; ++i) {
-                                    var index = indices[i];
-                                    var offset = index.offset;
-                                    var count = index.count;
+            var perInstanceIndices = this._perInstanceAttributes.indices;
+            length = perInstanceIndices.length;
+            for (i = 0; i < length; ++i) {
+                var perInstanceAttributes = perInstanceIndices[i];
+                for (var name in perInstanceAttributes) {
+                    if (perInstanceAttributes.hasOwnProperty(name)) {
+                        var attribute = perInstanceAttributes[name];
+                        if (attribute.dirty) {
+                            var value = attribute.value;
+                            var indices = attribute.indices;
+                            var indicesLength = indices.length;
+                            for (var j = 0; j < indicesLength; ++j) {
+                                var index = indices[j];
+                                var offset = index.offset;
+                                var count = index.count;
 
-                                    var vaAttribute = index.attribute;
-                                    var componentDatatype = vaAttribute.componentDatatype;
-                                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
+                                var vaAttribute = index.attribute;
+                                var componentDatatype = vaAttribute.componentDatatype;
+                                var componentsPerAttribute = vaAttribute.componentsPerAttribute;
 
-                                    var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
-                                    for (var j = 0; j < count; ++j) {
-                                        typedArray.set(value, j * componentsPerAttribute);
-                                    }
-
-                                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
-                                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
+                                var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                                for (var k = 0; k < count; ++k) {
+                                    typedArray.set(value, k * componentsPerAttribute);
                                 }
 
-                                attribute.dirty = false;
+                                var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                                vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                             }
+
+                            attribute.dirty = false;
                         }
                     }
                 }
@@ -893,20 +900,27 @@ define([
             throw new DeveloperError('id is required');
         }
 
-        var cachedObject = this._perInstanceAttributesCache[id];
-        if (typeof cachedObject !== 'undefined') {
-            return cachedObject;
-        }
-
         if (typeof this._perInstanceAttributes === 'undefined') {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
 
-        var perInstanceAttributes = this._perInstanceAttributes[id];
-        if (typeof perInstanceAttributes === 'undefined') {
+        var index = -1;
+        var lastIndex = this._lastPerInstanceAttributeIndex;
+        var ids = this._perInstanceAttributes.ids;
+        var length = ids.length;
+        for (var i = 0; i < length; ++i) {
+            var curIndex = (lastIndex + i) % length;
+            if (id === ids[curIndex]) {
+                index = curIndex;
+                break;
+            }
+        }
+
+        if (index === -1) {
             return undefined;
         }
 
+        var perInstanceAttributes = this._perInstanceAttributes.indices[index];
         var attributes = {};
 
         for (var name in perInstanceAttributes) {
@@ -918,7 +932,7 @@ define([
             }
         }
 
-        this._perInstanceAttributesCache[id] = attributes;
+        this._lastPerInstanceAttributeIndex = index;
 
         return attributes;
     };

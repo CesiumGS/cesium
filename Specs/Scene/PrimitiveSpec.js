@@ -557,22 +557,6 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     });
 
-    it('getGeometryInstanceAttributes caches results', function() {
-        var primitive = new Primitive({
-            geometryInstances : extentInstance1,
-            appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
-        });
-
-        primitive.update(context, frameState, []);
-
-        var attributes1 = primitive.getGeometryInstanceAttributes('extent1');
-        var attributes2 = primitive.getGeometryInstanceAttributes('extent1');
-        expect(attributes1).toBe(attributes2);
-
-        primitive = primitive && primitive.destroy();
-    });
-
     it('getGeometryInstanceAttributes throws if update was not called', function() {
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
