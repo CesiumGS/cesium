@@ -12,6 +12,7 @@ define(['../Core/createGuid',
         '../Core/loadXML',
         './DynamicProperty',
         './DynamicClock',
+        './DynamicObject',
         './DynamicObjectCollection',
         './DynamicPoint',
         './DynamicPolyline',
@@ -32,6 +33,7 @@ define(['../Core/createGuid',
                 loadXML,
                 DynamicProperty,
                 DynamicClock,
+                DynamicObject,
                 DynamicObjectCollection,
                 DynamicPoint,
                 DynamicPolyline,
@@ -118,6 +120,15 @@ define(['../Core/createGuid',
             return hotSpot;
         }
             return element && element.firstChild.data; //protecting from TypeError
+    }
+
+    function getEmbeddedStyle(node){
+        //TODO find a more efficient solution
+        var style = node.getElementsByTagName('IconStyle');
+        style = node.getElementsByTagName('LabelStyle');
+        style = node.getElementsByTagName('LineStyle');
+        style = node.getElementsByTagName('PolyStyle');
+        return style;
     }
 
     // KML processing functions
@@ -253,7 +264,7 @@ define(['../Core/createGuid',
         var styleCollection = new DynamicObjectCollection();
         for ( var i = 0, len = stylesArray.length; i < len; i++){
             var styleNode = stylesArray.item(i);
-            styleNode.id = getId(styleNode);
+            styleNode.id = '#' + getId(styleNode);
             var styleObject = styleCollection.getOrCreateObject(styleNode.id);
 
             processStyle(styleNode, styleObject);
@@ -266,23 +277,19 @@ define(['../Core/createGuid',
 
         array = kml.getElementsByTagName('Placemark');
         for (i = 0, len = array.length; i < len; i++){
-//            //Then, when iterating placemarks you do something like this
-//
-//            If(placemark node has embedded style) {
-//
-//                //process the style directly
-//
-//                processStyle(styleNode, placemarkDynamicObject);
-//
-//            } else {
-//
-//                //Shared style uri, so get the already processed style and merge it with this object.
-//
-//                var styleObject = styleCollection.getObject(style Uri);
-//
-//                placemarkDynamicObject.merge(styleObject);
-//            }
-            processPlacemark(dataSource, array[i], dynamicObjectCollection);
+            var placemarkDynamicObject = new DynamicObject();
+            var embeddedStyleNode = getEmbeddedStyle(array[i]);
+
+            if(embeddedStyleNode.length > 0){
+                processStyle(embeddedStyleNode, placemarkDynamicObject);
+            } else {
+                var styleUrl = array[i].getElementsByTagName('styleUrl');
+                if(styleUrl.length > 0){
+                    var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                    placemarkDynamicObject.merge(styleObj);
+                }
+            }
+            processPlacemark(dataSource, array[i], dynamicObjectCollection); //placemarkDynamicObject?
         }
     }
 
