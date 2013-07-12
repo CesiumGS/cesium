@@ -159,6 +159,16 @@ define([
          */
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
+        /**
+         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         *
+         * @type {Number}
+         * @default 5.0
+         *
+         * @see CustomSensorVolume#showIntersection
+         */
+        this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
+
         var customSensorOptions = clone(options);
         customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
         this._customSensor = new CustomSensorVolume(customSensorOptions);
@@ -187,6 +197,7 @@ define([
         s.radius = this.radius;
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
+        s.intersectionWidth = this.intersectionWidth;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 

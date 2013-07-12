@@ -88,6 +88,12 @@ define([
          */
         this.intersectionColor = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the approximate pixel width of the line formed by the intersection of the cone and other central bodies.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.intersectionWidth = undefined;
+        /**
          * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility
          * @type {DynamicProperty}
          * @default undefined
@@ -212,6 +218,15 @@ define([
             intersectionColor.processCzmlIntervals(coneData.intersectionColor, interval);
         }
 
+        if (typeof coneData.intersectionWidth !== 'undefined') {
+            var intersectionWidth = cone.intersectionWidth;
+            if (typeof intersectionWidth === 'undefined') {
+                cone.intersectionWidth = intersectionWidth = new DynamicProperty(CzmlNumber);
+                coneUpdated = true;
+            }
+            intersectionWidth.processCzmlIntervals(coneData.intersectionWidth, interval);
+        }
+
         if (typeof coneData.capMaterial !== 'undefined') {
             var capMaterial = cone.capMaterial;
             if (typeof capMaterial === 'undefined') {
@@ -279,6 +294,7 @@ define([
             targetCone.radius = defaultValue(targetCone.radius, coneToMerge.radius);
             targetCone.showIntersection = defaultValue(targetCone.showIntersection, coneToMerge.showIntersection);
             targetCone.intersectionColor = defaultValue(targetCone.intersectionColor, coneToMerge.intersectionColor);
+            targetCone.intersectionWidth = defaultValue(targetCone.intersectionWidth, coneToMerge.intersectionWidth);
             targetCone.capMaterial = defaultValue(targetCone.capMaterial, coneToMerge.capMaterial);
             targetCone.innerMaterial = defaultValue(targetCone.innerMaterial, coneToMerge.innerMaterial);
             targetCone.outerMaterial = defaultValue(targetCone.outerMaterial, coneToMerge.outerMaterial);
