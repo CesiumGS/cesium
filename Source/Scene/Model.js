@@ -798,14 +798,32 @@ define([
             return;
         }
 
-        var nodes = model.gltf.nodes;
+        // Create commands for nodes in the default scene.
 
-        for (var name in nodes) {
-            if (nodes.hasOwnProperty(name)) {
-                var node = nodes[name];
-             // TODO: handle camera and light nodes
+        var gltf = model.gltf;
+        var nodes = gltf.nodes;
+
+        var scene = gltf.scenes[gltf.scene];
+        var sceneNodes = scene.nodes;
+        var length = sceneNodes.length;
+
+        var stack = [];
+
+        for (var i = 0; i < length; ++i) {
+            stack.push(nodes[sceneNodes[i]]);
+
+            while (stack.length > 0) {
+                var node = stack.pop();
+
+                // TODO: handle camera and light nodes
                 if (defined(node.meshes)) {
                     createCommand(model, node, context);
+                }
+
+                var children = node.children;
+                var childrenLength = children.length;
+                for (var k = 0; k < childrenLength; ++k) {
+                    stack.push(nodes[children[k]]);
                 }
             }
         }
@@ -838,16 +856,16 @@ define([
         var scale = model.scale;
 
         for (var i = 0; i < length; ++i) {
-            var node = nodes[sceneNodes[i]];
+            var n = nodes[sceneNodes[i]];
             nodeStack.push({
-                node : node,
-                transformToRoot : Matrix4.fromColumnMajorArray(node.matrix)
+                node : n,
+                transformToRoot : Matrix4.fromColumnMajorArray(n.matrix)
             });
 
             while (nodeStack.length > 0) {
                 var top = nodeStack.pop();
-                var n = top.node;
                 var transformToRoot = top.transformToRoot;
+                n = top.node;
 
 //TODO: handle camera and light nodes
                 if (defined(n.extra) && defined(n.extra.czmMeshesCommands)) {
