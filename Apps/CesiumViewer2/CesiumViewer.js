@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        'Core/loadText',
         'Core/Cartesian3',
         'Core/Matrix4',
         'Scene/Model',
@@ -16,7 +15,6 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
-        loadText,
         Cartesian3,
         Matrix4,
         Model,
@@ -156,26 +154,17 @@ define([
         scene.getPrimitives().setCentralBody(undefined);
         scene.skyBox = undefined;
 
-      loadText('./Gallery/model/duck/duck.json').then(function(data) {
-//      loadText('./Gallery/model/SuperMurdoch/SuperMurdoch.json').then(function(data) {
-//      loadText('./Gallery/model/rambler/Rambler.json').then(function(data) {
-//      loadText('./Gallery/model/wine/wine.json').then(function(data) {
-            var json = JSON.parse(data);
-            var model = new Model({
-                gltf : json,
-                basePath : './Gallery/model/duck/',
-//                basePath : './Gallery/model/SuperMurdoch/',
-//                basePath : './Gallery/model/rambler/',
-//                basePath : './Gallery/model/wine/',
+//      var url = './Gallery/model/SuperMurdoch/SuperMurdoch.json';
+//      var url = './Gallery/model/rambler/Rambler.json';
+//      var url = './Gallery/model/wine/wine.json';
+        var url = './Gallery/model/duck/duck.json';
 
-//                modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
-//                scale : 100000.0
-                scale : 100000.0
-//                debugShowBoundingVolume : true
-            });
-            scene.getPrimitives().add(model);
-        });
-
+        scene.getPrimitives().add(Model.fromText({
+            url : url,
+//          modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
+          scale : 100000.0
+//          debugShowBoundingVolume : true
+        }));
 
         var handler = new ScreenSpaceEventHandler(scene.getCanvas());
         handler.setInputAction(

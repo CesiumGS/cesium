@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/loadArrayBuffer',
         '../Core/loadText',
@@ -31,6 +32,7 @@ define([
         defined,
         defaultValue,
         destroyObject,
+        DeveloperError,
         Enumeration,
         loadArrayBuffer,
         loadText,
@@ -180,6 +182,36 @@ define([
 
         this._commandLists = new CommandLists();
         this._pickIds = [];
+    };
+
+    /**
+     * DOC_TBA
+     */
+    Model.fromText = function(options) {
+        if (!defined(options) || !defined(options.url)) {
+            throw new DeveloperError('options.url is required');
+        }
+
+        var url = options.url;
+        var basePath = '';
+        var i = url.lastIndexOf('/');
+        if (i !== -1) {
+            basePath = url.substring(0, i + 1);
+        }
+
+        var model = new Model({
+            show : options.show,
+            modelMatrix : options.modelMatrix,
+            scale : options.scale,
+            debugShowBoundingVolume : options.debugShowBoundingVolume
+        });
+
+        loadText(url, options.headers).then(function(data) {
+            model.gltf = JSON.parse(data);
+            model.basePath = basePath;
+        });
+
+        return model;
     };
 
     ///////////////////////////////////////////////////////////////////////////
