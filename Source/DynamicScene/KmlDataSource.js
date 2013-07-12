@@ -10,6 +10,7 @@ define(['../Core/createGuid',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/loadXML',
+        './ConstantProperty',
         './DynamicProperty',
         './DynamicClock',
         './DynamicObject',
@@ -31,6 +32,7 @@ define(['../Core/createGuid',
                 Event,
                 Iso8601,
                 loadXML,
+                ConstantProperty,
                 DynamicProperty,
                 DynamicClock,
                 DynamicObject,
@@ -215,22 +217,16 @@ define(['../Core/createGuid',
             if(node.nodeName === "IconStyle"){
                 dynamicObject.billboard = new DynamicBillboard();
                 //Map style to billboard properties
+                //TODO heading, hotSpot and ColorMode
                 var scale = getElementValue(node, 'scale');
-                var heading = getElementValue(node, 'heading');
                 var icon = getElementValue(node,'href');
-                var hotSpot = getElementValue(node, 'hotSpot');
                 var color = getElementValue(node,'color');
                 color = color.split("").reverse().join(""); //KML uses abgr instead of rgba
-                var colorMode = getElementValue(node, 'colorMode');
 
                 //constant property or dynamic property?
-                dynamicObject.billboard.image = icon && new DynamicProperty(icon);
+                dynamicObject.billboard.image = icon && new ConstantProperty(icon);
                 dynamicObject.billboard.scale = scale && new DynamicProperty(scale);
                 dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color));
-                //not sure how to map these
-                dynamicObject.billboard.heading = heading && new DynamicProperty(heading); //pixel offset?
-                dynamicObject.billboard.hotSpot =  hotSpot && new DynamicProperty(hotSpot);
-                dynamicObject.billboard.colorMode = colorMode && new DynamicProperty(colorMode);
             }
             if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
