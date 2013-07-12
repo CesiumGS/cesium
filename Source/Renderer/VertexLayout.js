@@ -7,7 +7,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
      *
      * @exports VertexLayout
      *
-     * @see Context#createVertexArrayFromMesh
+     * @see Context#createVertexArrayFromGeometry
      */
     var VertexLayout = {
         /**

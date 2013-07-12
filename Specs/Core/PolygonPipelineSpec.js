@@ -18,8 +18,8 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('cleanUp removes duplicate points', function() {
-        var positions = PolygonPipeline.cleanUp([
+    it('removeDuplicates removes duplicate points', function() {
+        var positions = PolygonPipeline.removeDuplicates([
                                                  new Cartesian3(1.0, 1.0, 1.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
@@ -33,8 +33,8 @@ defineSuite([
                                        ]);
     });
 
-    it('cleanUp removes duplicate first and last points', function() {
-        var positions = PolygonPipeline.cleanUp([
+    it('removeDuplicates removes duplicate first and last points', function() {
+        var positions = PolygonPipeline.removeDuplicates([
                                                  new Cartesian3(1.0, 1.0, 1.0),
                                                  new Cartesian3(2.0, 2.0, 2.0),
                                                  new Cartesian3(3.0, 3.0, 3.0),
@@ -48,15 +48,15 @@ defineSuite([
                                        ]);
     });
 
-    it('cleanUp throws without positions', function() {
+    it('removeDuplicates throws without positions', function() {
         expect(function() {
-            PolygonPipeline.cleanUp();
+            PolygonPipeline.removeDuplicates();
         }).toThrow();
     });
 
-    it('cleanUp throws without three positions', function() {
+    it('removeDuplicates throws without three positions', function() {
         expect(function() {
-            PolygonPipeline.cleanUp([Cartesian3.ZERO, Cartesian3.ZERO]);
+            PolygonPipeline.removeDuplicates([Cartesian3.ZERO, Cartesian3.ZERO]);
         }).toThrow();
     });
 
@@ -175,142 +175,6 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////
 
-    it('wrapLongitude subdivides triangle it crosses the international date line, p0 behind', function() {
-        var positions = [new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, 1.0, 2.0), new Cartesian3(-1.0, 2.0, 2.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 3, 4, 1, 2, 6, 1, 6, 5]);
-        expect(positions[0].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, 1.0, 2.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, 2.0, 2.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude subdivides triangle it crosses the international date line, p1 behind', function() {
-        var positions = [new Cartesian3(-1.0, 1.0, 2.0), new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, 2.0, 2.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([1, 3, 4, 2, 0, 6, 2, 6, 5]);
-        expect(positions[0].equals(new Cartesian3(-1.0, 1.0, 2.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, 2.0, 2.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude subdivides triangle it crosses the international date line, p2 behind', function() {
-        var positions = [new Cartesian3(-1.0, 1.0, 2.0), new Cartesian3(-1.0, 2.0, 2.0), new Cartesian3(-1.0, -1.0, 0.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([2, 3, 4, 0, 1, 6, 0, 6, 5]);
-        expect(positions[0].equals(new Cartesian3(-1.0, 1.0, 2.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, 2.0, 2.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude subdivides triangle it crosses the international date line, p0 ahead', function() {
-        var positions = [new Cartesian3(-1.0, 2.0, 0.0), new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, -1.0, 0.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([1, 2, 4, 1, 4, 3, 0, 5, 6]);
-        expect(positions[0].equals(new Cartesian3(-1.0, 2.0, 0.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude subdivides triangle it crosses the international date line, p1 ahead', function() {
-        var positions = [new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, 2.0, 0.0), new Cartesian3(-1.0, -1.0, 0.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([2, 0, 4, 2, 4, 3, 1, 5, 6]);
-        expect(positions[0].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, 2.0, 0.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude subdivides triangle it crosses the international date line, p2 ahead', function() {
-        var positions = [new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, -1.0, 0.0), new Cartesian3(-1.0, 2.0, 0.0)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 1, 4, 0, 4, 3, 2, 5, 6]);
-        expect(positions[0].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1.0, -1.0, 0.0))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1.0, 2.0, 0.0))).toEqual(true);
-        expect(positions.length).toEqual(7);
-    });
-
-    it('wrapLongitude returns offsets triangle that touches the international date line', function() {
-        var positions = [new Cartesian3(-1, 0, 1), new Cartesian3(-1, CesiumMath.EPSILON14, 2), new Cartesian3(-2, 2, 2)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 1, 2]);
-        expect(positions[0].equals(new Cartesian3(-1, CesiumMath.EPSILON11, 1))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1, CesiumMath.EPSILON11, 2))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-2, 2, 2))).toEqual(true);
-        expect(positions.length).toEqual(3);
-    });
-
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, behind', function() {
-        var positions = [new Cartesian3(-1, -1, 1), new Cartesian3(-1, -2, 1), new Cartesian3(-1, -2, 2)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 1, 2]);
-        expect(positions[0].equals(new Cartesian3(-1, -1, 1))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1, -2, 1))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1, -2, 2))).toEqual(true);
-        expect(positions.length).toEqual(3);
-    });
-
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, ahead', function() {
-        var positions = [new Cartesian3(-1, 1, 1), new Cartesian3(-1, 2, 1), new Cartesian3(-1, 2, 2)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 1, 2]);
-        expect(positions[0].equals(new Cartesian3(-1, 1, 1))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(-1, 2, 1))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(-1, 2, 2))).toEqual(true);
-        expect(positions.length).toEqual(3);
-    });
-
-    it('wrapLongitude returns the same points if the triangle doesn\'t cross the international date line, positive x', function() {
-        var positions = [new Cartesian3(1, 1, 1), new Cartesian3(1, 2, 1), new Cartesian3(1, 2, 2)];
-        var indices = [0, 1, 2];
-        indices = PolygonPipeline.wrapLongitude(positions, indices);
-        expect(indices).toEqual([0, 1, 2]);
-        expect(positions[0].equals(new Cartesian3(1, 1, 1))).toEqual(true);
-        expect(positions[1].equals(new Cartesian3(1, 2, 1))).toEqual(true);
-        expect(positions[2].equals(new Cartesian3(1, 2, 2))).toEqual(true);
-        expect(positions.length).toEqual(3);
-    });
-
-    it('wrapLongitude throws with count indices not multiple of three', function() {
-        expect(function() {
-            PolygonPipeline.wrapLongitude([Cartesian3.ZERO, Cartesian3.ZERO], [0, 0, 0, 0]);
-        }).toThrow();
-    });
-
-    it('wrapLongitude throws with < 3 indices', function() {
-        expect(function() {
-            PolygonPipeline.wrapLongitude([Cartesian3.ZERO, Cartesian3.ZERO], []);
-        }).toThrow();
-    });
-
-    it('wrapLongitude throws without positions', function() {
-        expect(function() {
-            PolygonPipeline.wrapLongitude();
-        }).toThrow();
-    });
-
-    it('wrapLongitude throws without indices', function() {
-        expect(function() {
-            PolygonPipeline.wrapLongitude([Cartesian3.ZERO, Cartesian3.ZERO]);
-        }).toThrow();
-    });
-
-    ///////////////////////////////////////////////////////////////////////
-
     it('computeSubdivision throws without positions', function() {
         expect(function() {
             PolygonPipeline.computeSubdivision();
@@ -360,9 +224,9 @@ defineSuite([
         expect(subdivision.attributes.position.values[7]).toEqual(0.0);
         expect(subdivision.attributes.position.values[8]).toEqual(0.0);
 
-        expect(subdivision.indexLists[0].values[0]).toEqual(0);
-        expect(subdivision.indexLists[0].values[1]).toEqual(1);
-        expect(subdivision.indexLists[0].values[2]).toEqual(2);
+        expect(subdivision.indices[0]).toEqual(0);
+        expect(subdivision.indices[1]).toEqual(1);
+        expect(subdivision.indices[2]).toEqual(2);
     });
 
     it('eliminateHoles throws an exception without an outerRing', function() {
