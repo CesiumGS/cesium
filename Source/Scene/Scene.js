@@ -208,10 +208,8 @@ define([
          * </p>
          *
          * @type Function
-         * @default undefined
          *
-         * @see DrawCommand
-         * @see ClearCommand
+         * @default undefined
          *
          * @example
          * // Do not execute any commands.
@@ -224,6 +222,9 @@ define([
          * scene.debugCommandFilter = function(command) {
          *     return command.owner === billboards;
          * };
+         *
+         * @see DrawCommand
+         * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
 
