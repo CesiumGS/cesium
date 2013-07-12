@@ -124,6 +124,12 @@ define([
         this.label = undefined;
 
         /**
+         * Gets or sets the model.
+         * @type DynamicModel
+         */
+        this.model = undefined;
+
+        /**
          * Gets or sets the path.
          * @type {DynamicPath}
          * @default undefined
