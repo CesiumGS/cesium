@@ -10,8 +10,8 @@ varying vec3 v_mPos;
 attribute vec2 a_texcoord0;
 varying vec2 v_texcoord0;
 void main(void) {
-v_normal = normalize(u_normalMatrix * a_normal);
 vec4 pos = u_worldViewMatrix * vec4(a_position,1.0);
+v_normal = normalize(u_normalMatrix * a_normal);
 v_lightDirection = vec3(u_worldViewMatrix * (vec4((vec3(0.,0.,-1.) - a_position.xyz) ,1.0)));
 v_mPos = pos.xyz;
 v_texcoord0 = a_texcoord0;

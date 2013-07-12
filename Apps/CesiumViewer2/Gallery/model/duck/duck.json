@@ -103,13 +103,7 @@
                 "values": [
                     {
                         "parameter": "diffuse",
-                        "value": {
-                            "image": "image_0",
-                            "magFilter": "LINEAR",
-                            "minFilter": "LINEAR_MIPMAP_LINEAR",
-                            "wrapS": "REPEAT",
-                            "wrapT": "REPEAT"
-                        }
+                        "value": "texture_image_0"
                     },
                     {
                         "parameter": "emission",
@@ -240,6 +234,14 @@
             "vertexShader": "duck0VS"
         }
     },
+    "samplers": {
+        "sampler_0": {
+            "magFilter": "LINEAR",
+            "minFilter": "LINEAR_MIPMAP_LINEAR",
+            "wrapS": "REPEAT",
+            "wrapT": "REPEAT"
+        }
+    },
     "scene": "defaultScene",
     "scenes": {
         "defaultScene": {
@@ -353,6 +355,15 @@
                     }
                 }
             }
+        }
+    },
+    "textures": {
+        "texture_image_0": {
+            "format": "RGBA",
+            "internalFormat": "RGBA",
+            "sampler": "sampler_0",
+            "source": "image_0",
+            "target": "TEXTURE_2D"
         }
     }
 }

@@ -775,13 +775,7 @@
                 "values": [
                     {
                         "parameter": "diffuse",
-                        "value": {
-                            "image": "image_1",
-                            "magFilter": "LINEAR",
-                            "minFilter": "LINEAR",
-                            "wrapS": "REPEAT",
-                            "wrapT": "REPEAT"
-                        }
+                        "value": "texture_image_1"
                     },
                     {
                         "parameter": "reflective",
@@ -829,13 +823,7 @@
                 "values": [
                     {
                         "parameter": "diffuse",
-                        "value": {
-                            "image": "image_2",
-                            "magFilter": "LINEAR",
-                            "minFilter": "LINEAR",
-                            "wrapS": "REPEAT",
-                            "wrapT": "REPEAT"
-                        }
+                        "value": "texture_image_2"
                     },
                     {
                         "parameter": "reflective",
@@ -879,13 +867,7 @@
                 "values": [
                     {
                         "parameter": "diffuse",
-                        "value": {
-                            "image": "image_0",
-                            "magFilter": "LINEAR",
-                            "minFilter": "LINEAR",
-                            "wrapS": "REPEAT",
-                            "wrapT": "REPEAT"
-                        }
+                        "value": "texture_image_0"
                     },
                     {
                         "parameter": "reflective",
@@ -11632,6 +11614,14 @@
             "vertexShader": "wine4VS"
         }
     },
+    "samplers": {
+        "sampler_0": {
+            "magFilter": "LINEAR",
+            "minFilter": "LINEAR",
+            "wrapS": "REPEAT",
+            "wrapT": "REPEAT"
+        }
+    },
     "scene": "defaultScene",
     "scenes": {
         "defaultScene": {
@@ -11893,6 +11883,29 @@
                     }
                 }
             }
+        }
+    },
+    "textures": {
+        "texture_image_0": {
+            "format": "RGBA",
+            "internalFormat": "RGBA",
+            "sampler": "sampler_0",
+            "source": "image_0",
+            "target": "TEXTURE_2D"
+        },
+        "texture_image_1": {
+            "format": "RGBA",
+            "internalFormat": "RGBA",
+            "sampler": "sampler_0",
+            "source": "image_1",
+            "target": "TEXTURE_2D"
+        },
+        "texture_image_2": {
+            "format": "RGBA",
+            "internalFormat": "RGBA",
+            "sampler": "sampler_0",
+            "source": "image_2",
+            "target": "TEXTURE_2D"
         }
     }
 }
