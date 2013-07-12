@@ -75,6 +75,7 @@ define([
         this.texturesToCreate = new Queue();
         this.pendingTextureLoads = 0;
 
+        this.createSamplers = true;
         this.createRenderStates = true;
     }
 
@@ -254,12 +255,13 @@ define([
          };
     }
 
-    function parseImages(model) {
+    function parseTextures(model) {
         var images = model.gltf.images;
-        for (var name in images) {
-            if (images.hasOwnProperty(name)) {
+        var textures = model.gltf.textures;
+        for (var name in textures) {
+            if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
-                var imagePath = model.basePath + images[name].path;
+                var imagePath = model.basePath + images[textures[name].source].path;
                 loadImage(imagePath).then(imageLoad(model, name), failedLoad);
             }
         }
@@ -270,7 +272,7 @@ define([
         parseBufferViews(model);
         parseShaders(model);
         parsePrograms(model);
-        parseImages(model);
+        parseTextures(model);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -352,17 +354,42 @@ define([
         }
     }
 
+    function createSamplers(model, context) {
+        var loadResources = model._loadResources;
+
+        if (loadResources.createSamplers) {
+            loadResources.createSamplers = false;
+
+            var samplers = model.gltf.samplers;
+            for (var name in samplers) {
+                if (samplers.hasOwnProperty(name)) {
+                    var sampler = samplers[name];
+
+                    sampler.extra = defaultValue(sampler.extra, {});
+                    sampler.extra.czmSampler = context.createSampler({
+                        wrapS : TextureWrap[sampler.wrapS],
+                        wrapT : TextureWrap[sampler.wrapT],
+                        minificationFilter : TextureMinificationFilter[sampler.minFilter],
+                        magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
+                    });
+
+                }
+            }
+        }
+    }
+
     function createTextures(model, context) {
         var loadResources = model._loadResources;
-        var images = model.gltf.images;
+        var textures = model.gltf.textures;
 
         // Create one texture per frame
         if (loadResources.texturesToCreate.length > 0) {
             var textureToCreate = loadResources.texturesToCreate.dequeue();
 
-            var image = images[textureToCreate.name];
-            image.extra = defaultValue(image.extra, {});
-            image.extra.czmTexture = context.createTexture2D({
+// TODO: consider target, format, and internalFormat
+            var texture = textures[textureToCreate.name];
+            texture.extra = defaultValue(texture.extra, {});
+            texture.extra.czmTexture = context.createTexture2D({
                 source : textureToCreate.image,
                 flipY : false
             });
@@ -596,25 +623,21 @@ define([
              };
          },
          SAMPLER_2D : function(value, model, context) {
-             var images = model.gltf.images;
-             var texture = images[value.image].extra.czmTexture;
+             var texture = model.gltf.textures[value];
+             var tx = texture.extra.czmTexture;
+             var sampler = model.gltf.samplers[texture.sampler];
 
-             if ((value.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
-                 (value.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
-                 (value.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
-                 (value.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
-                 texture.generateMipmap();
+             if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
+                 (sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
+                 (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
+                 (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
+                 tx.generateMipmap();
              }
 
-             texture.setSampler(context.createSampler({
-                 wrapS : TextureWrap[value.wrapS],
-                 wrapT : TextureWrap[value.wrapT],
-                 minificationFilter : TextureMinificationFilter[value.minFilter],
-                 magnificationFilter : TextureMagnificationFilter[value.magFilter]
-             }));
+             tx.setSampler(sampler.extra.czmSampler);
 
              return function() {
-                 return texture;
+                 return tx;
              };
          }
     };
@@ -832,6 +855,7 @@ define([
     function createResources(model, context) {
         createBuffers(model, context);      // using glTF bufferViews
         createPrograms(model, context);
+        createSamplers(model, context);
         createTextures(model, context);
 
         createVertexArrays(model, context); // using glTF meshes

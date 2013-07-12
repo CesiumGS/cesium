@@ -156,15 +156,15 @@ define([
         scene.getPrimitives().setCentralBody(undefined);
         scene.skyBox = undefined;
 
-//      loadText('./Gallery/model/duck/duck.json').then(function(data) {
-      loadText('./Gallery/model/SuperMurdoch/SuperMurdoch.json').then(function(data) {
+      loadText('./Gallery/model/duck/duck.json').then(function(data) {
+//      loadText('./Gallery/model/SuperMurdoch/SuperMurdoch.json').then(function(data) {
 //      loadText('./Gallery/model/rambler/Rambler.json').then(function(data) {
 //      loadText('./Gallery/model/wine/wine.json').then(function(data) {
             var json = JSON.parse(data);
             var model = new Model({
                 gltf : json,
-//                basePath : './Gallery/model/duck/',
-                basePath : './Gallery/model/SuperMurdoch/',
+                basePath : './Gallery/model/duck/',
+//                basePath : './Gallery/model/SuperMurdoch/',
 //                basePath : './Gallery/model/rambler/',
 //                basePath : './Gallery/model/wine/',
 
