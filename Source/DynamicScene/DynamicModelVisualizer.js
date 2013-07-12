@@ -122,7 +122,7 @@ define([
     DynamicModelVisualizer.prototype.removeAllPrimitives = function() {
         if (typeof this._dynamicObjectCollection !== 'undefined') {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
-            for (var i = dynamicObjects.length - 1; i > -1; i--) {
+            for ( var i = dynamicObjects.length - 1; i > -1; i--) {
                 this._primitives.remove(dynamicObjects[i]._modelPrimitive);
                 dynamicObjects[i]._modelPrimitive.destroy();
                 dynamicObjects[i]._modelPrimitive = undefined;
@@ -204,34 +204,36 @@ define([
         }
 
         if (typeof model === 'undefined' || uri !== dynamicObject._modelPrimitiveUri) {
-            dynamicObject._modelPrimitiveUri = uri;
+            model = Model.fromText({
+                url : uri
+            });
 
-            this._primitives.add(model);
-            model = new Model();
+            dynamicObject._modelPrimitiveUri = uri;
             model.dynamicObject = dynamicObject;
             model.show = true;
             model.scale = 1.0;
             model._visualizerOrientation = Quaternion.IDENTITY.clone();
+            this._primitives.add(model);
             dynamicObject._modelPrimitive = model;
+        }
+
+        position = defaultValue(positionProperty.getValueCartesian(time, position), model._visualizerPosition);
+        var orientationProperty = dynamicObject.orientation;
+        if (typeof orientationProperty !== 'undefined') {
+            orientation = defaultValue(orientationProperty.getValue(time, orientation), model._visualizerOrientation);
         } else {
-            position = defaultValue(positionProperty.getValueCartesian(time, position), model._visualizerPosition);
-            var orientationProperty = dynamicObject.orientation;
-            if (typeof orientationProperty !== 'undefined') {
-                orientation = defaultValue(orientationProperty.getValue(time, orientation), model._visualizerOrientation);
-            } else {
-                orientation = model._visualizerOrientation;
-            }
+            orientation = model._visualizerOrientation;
+        }
 
-            if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (!position.equals(model._visualizerPosition) || !orientation.equals(model._visualizerOrientation))) {
-                Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, model.modelMatrix);
-                model._visualizerPosition = position.clone(model._visualizerPosition);
-                model._visualizerOrientation = orientation.clone(model._visualizerOrientation);
-            }
+        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (!position.equals(model._visualizerPosition) || !orientation.equals(model._visualizerOrientation))) {
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, model.modelMatrix);
+            model._visualizerPosition = position.clone(model._visualizerPosition);
+            model._visualizerOrientation = orientation.clone(model._visualizerOrientation);
+        }
 
-            var scaleProperty = dynamicModel.scale;
-            if (typeof scaleProperty !== 'undefined') {
-                model.scale = scaleProperty.getValue(time, model.scale);
-            }
+        var scaleProperty = dynamicModel.scale;
+        if (typeof scaleProperty !== 'undefined') {
+            model.scale = scaleProperty.getValue(time, model.scale);
         }
     };
 
