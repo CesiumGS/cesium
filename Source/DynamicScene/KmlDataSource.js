@@ -66,11 +66,9 @@ define(['../Core/createGuid',
         if (typeof id === 'undefined') {
             id = createGuid();
         } else {
-            var i = 2;
             var finalId = id;
             while (typeof dynamicObjectCollection.getObject(finalId) !== 'undefined') {
-                finalId = id + "_" + i;
-                i++;
+                finalId = createGuid();
             }
             id = finalId;
         }
