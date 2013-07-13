@@ -134,7 +134,7 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, placemark, dynamicObjectCollection) {
+    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection) {
         placemark.id = getId(placemark);
         dynamicObjectCollection.getOrCreateObject(placemark.id); //dataSource._dynamicObjectCollection...?
 
@@ -149,12 +149,12 @@ define(['../Core/createGuid',
                 if (typeof geometryHandler === 'undefined') {
                     throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
-                geometryHandler(dataSource, placemark, node);
+                geometryHandler(dataSource, placemark, node, dynamicObjectCollection, styleCollection);
             }
         }
     }
 
-    function processPoint(dataSource, kml, node) {
+    function processPoint(dataSource, kml, node, dynamicObjectCollection, styleCollection) {
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
@@ -164,10 +164,20 @@ define(['../Core/createGuid',
         var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
         var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
         var dynamicObject = createObject(node, dataSource._dynamicObjectCollection);
-        //dynamicObject.merge(dataSource.defaultPoint);  What are the defaults for KML?
-        dynamicObject.position = new ConstantPositionProperty(cartesian3);
 
-        //add the new dynamicObject to dataSource._dynamicObjectCollection?
+        var embeddedStyle = getEmbeddedStyle(kml);
+        if(embeddedStyle.length > 0){
+            processStyle(embeddedStyle, dynamicObject);
+        } else {
+            var styleUrl = kml.getElementsByTagName('styleUrl');
+            if(styleUrl.length > 0){
+                var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                dynamicObject.merge(styleObj);
+            } else {
+                throw new RuntimeError('Undefined style');
+            }
+        }
+        dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
     function processLineString(dataSource, kml, node){
@@ -286,7 +296,7 @@ define(['../Core/createGuid',
                     placemarkDynamicObject.merge(styleObj);
                 }
             }
-            processPlacemark(dataSource, array[i], dynamicObjectCollection); //placemarkDynamicObject?
+            processPlacemark(dataSource, array[i], dynamicObjectCollection, styleCollection); //placemarkDynamicObject?
         }
     }
 
