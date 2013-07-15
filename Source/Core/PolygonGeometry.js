@@ -592,13 +592,13 @@ define([
             }
 
             var wallGeo = new Geometry({
-                attributes : {
+                attributes : new GeometryAttributes({
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : edgePositions
                     })
-                },
+                }),
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
@@ -645,13 +645,13 @@ define([
                 }
 
                 wallGeo = new Geometry({
-                    attributes : {
+                    attributes : new GeometryAttributes({
                         position : new GeometryAttribute({
                             componentDatatype : ComponentDatatype.DOUBLE,
                             componentsPerAttribute : 3,
                             values : edgePositions
                         })
-                    },
+                    }),
                     indices : indices,
                     primitiveType : PrimitiveType.TRIANGLES
                 });
@@ -688,13 +688,13 @@ define([
                 indices[edgeIndex++] = LR;
             }
             var wallsGeo = new Geometry({
-                attributes : {
+                attributes : new GeometryAttributes({
                     position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
                         values : edgePositions
                     })
-                },
+                }),
                 indices : indices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
@@ -989,7 +989,7 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = new GeometryAttributes(attributes);
+        this.attributes = attributes;
 
         /**
          * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
