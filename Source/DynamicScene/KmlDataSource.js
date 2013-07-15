@@ -223,11 +223,11 @@ define(['../Core/createGuid',
                 var scale = getElementValue(node, 'scale');
                 var icon = getElementValue(node,'href');
                 var color = getElementValue(node,'color');
-                color = color.split("").reverse().join(""); //KML uses abgr instead of rgba
+                color = color && color.split("").reverse().join(""); //KML uses abgr instead of rgba
 
                 dynamicObject.billboard.image = icon && new ConstantProperty(icon);
-                dynamicObject.billboard.scale = scale && new DynamicProperty(scale);
-                dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color));
+                dynamicObject.billboard.scale = scale && new ConstantProperty(scale);
+                dynamicObject.billboard.color = color && new ConstantProperty(Color.fromRgba(color));
             }
             if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
@@ -357,7 +357,7 @@ define(['../Core/createGuid',
      * @returns {Boolean} True if the data is varies with simulation time, false otherwise.
      */
     KmlDataSource.prototype.getIsTimeVarying = function() {
-        return false;
+        return true;
     };
 
     /**
