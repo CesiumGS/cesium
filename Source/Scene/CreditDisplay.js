@@ -189,12 +189,12 @@ define([
 
         if (credit.hasImage()) {
             var imageCredits = this._currentFrameCredits.imageCredits;
-            if (!contains(imageCredits, credit)) {
+            if (!contains(imageCredits, credit) && !contains(this._defaultImageCredits, credit)) {
                 imageCredits.push(credit);
             }
         } else {
             var textCredits = this._currentFrameCredits.textCredits;
-            if (!contains(textCredits, credit)) {
+            if (!contains(textCredits, credit) && !contains(this._defaultTextCredits, credit)) {
                 textCredits.push(credit);
             }
         }
@@ -271,16 +271,14 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.endFrame = function() {
-        var textCredits = this._currentFrameCredits.textCredits;
-        var imageCredits = this._currentFrameCredits.imageCredits;
-        var defaultTextCredits = this._defaultTextCredits;
-        var defaultImageCredits = this._defaultImageCredits;
+        var textCredits = this._defaultTextCredits.concat(this._currentFrameCredits.textCredits);
+        var imageCredits = this._defaultImageCredits.concat(this._currentFrameCredits.imageCredits);
 
-        displayTextCredits(this, defaultTextCredits.concat(textCredits));
-        displayImageCredits(this, defaultImageCredits.concat(imageCredits));
+        displayTextCredits(this, textCredits);
+        displayImageCredits(this, imageCredits);
 
-        this._displayedCredits.textCredits = textCredits.concat(defaultTextCredits);
-        this._displayedCredits.imageCredits = imageCredits.concat(defaultImageCredits);
+        this._displayedCredits.textCredits = textCredits;
+        this._displayedCredits.imageCredits = imageCredits;
     };
 
 
