@@ -375,6 +375,7 @@ define(['../Core/createGuid',
 
         this._dynamicObjectCollection.clear();
         loadKML(this, kml, source);
+        this._changed.raiseEvent(this);
     };
 
 
