@@ -116,4 +116,148 @@ defineSuite([
         }).toThrow();
     });
 
+    it('computes positions extruded', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual((9+8+4)*3*2);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
+    });
+
+    it('computes all attributes extruded', function() {
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.ALL,
+            extent : new Extent(-2.0, -1.0, 0.0, 1.0),
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2
+            }
+        });
+        expect(m.attributes.position.values.length).toEqual((9+8+4)*3*2);
+        expect(m.attributes.st.values.length).toEqual((9+8+4)*2*2);
+        expect(m.attributes.normal.values.length).toEqual((9+8+4)*3*2);
+        expect(m.attributes.tangent.values.length).toEqual((9+8+4)*3*2);
+        expect(m.attributes.binormal.values.length).toEqual((9+8+4)*3*2);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
+    });
+
+    it('compute positions with rotation extruded', function() {
+        var extent = new Extent(-1, -1, 1, 1);
+        var angle = CesiumMath.PI_OVER_TWO;
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITIONS_ONLY,
+            extent: extent,
+            rotation: angle,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2
+            }
+        });
+        var positions = m.attributes.position.values;
+        var length = positions.length;
+
+        expect(length).toEqual((9+8+4)*3*2);
+        expect(m.indices.length).toEqual((8*2 + 4*4)*3);
+
+        var unrotatedSECorner = extent.getSoutheast();
+        var projection = new GeographicProjection();
+        var projectedSECorner = projection.project(unrotatedSECorner);
+        var rotation = Matrix2.fromRotation(angle);
+        var rotatedSECornerCartographic = projection.unproject(rotation.multiplyByVector(projectedSECorner));
+        var rotatedSECorner = Ellipsoid.WGS84.cartographicToCartesian(rotatedSECornerCartographic);
+        var actual = new Cartesian3(positions[length-21], positions[length-20], positions[length-19]);
+        expect(actual).toEqualEpsilon(rotatedSECorner, CesiumMath.EPSILON6);
+    });
+
+    it('computes extruded top open', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2,
+                closeTop: false
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual((((8+4)*2)+9)*3);
+        expect(m.indices.length).toEqual((8 + 4*4)*3);
+    });
+
+    it('computes extruded bottom open', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2,
+                closeBottom: false
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual((((8+4)*2)+9)*3);
+        expect(m.indices.length).toEqual((8 + 4*4)*3);
+    });
+
+    it('computes extruded top and bottom open', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 2,
+                closeTop: false,
+                closeBottom: false
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual((8+4)*2*3);
+        expect(m.indices.length).toEqual(4*3*4);
+    });
+
+    it('computes non-extruded extent if height is not specified', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(9 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
+    });
+
+    it('computes non-extruded extent if height is small', function() {
+        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
+        var m = new ExtentGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            extent : extent,
+            granularity : 1.0,
+            extrudedOptions: {
+                height: 0.1
+            }
+        });
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(9 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
+    });
+
 });
