@@ -55,6 +55,7 @@ define([
 
     var nw = new Cartesian3();
     var nwCartographic = new Cartographic();
+    var stNWCartographic = new Cartographic();
     var centerCartographic = new Cartographic();
     var center = new Cartesian3();
     var rotationMatrix = new Matrix2();
@@ -77,17 +78,16 @@ define([
     var stLatitude, stLongitude;
 
     function computePosition(params, row, col, maxHeight, minHeight) {
-        var extent = params.extent;
         var radiiSquared = params.radiiSquared;
 
         var latitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
-        stLatitude = extent.north - params.granularityY * row;
+        stLatitude = stNWCartographic.latitude - params.stGranYCos * row - col * params.stGranXSin;
         var cosLatitude = cos(latitude);
         var nZ = sin(latitude);
         var kZ = radiiSquared.z * nZ;
 
         var longitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
-        stLongitude = extent.west + col * params.granularityX;
+        stLongitude = stNWCartographic.longitude - row * params.stGranYSin + col * params.stGranXCos;
 
         var nX = cosLatitude * cos(longitude);
         var nY = cosLatitude * sin(longitude);
@@ -607,11 +607,12 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.height] Height of extruded surface
-     * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
-     * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
+     * @param {Number} [options.extrudedOptions.height] Height of extruded surface.
+     * @param {Boolean} [options.extrudedOptions.closeTop=true] <code>true</code> to render top of the extruded extent; <code>false</code> otherwise.
+     * @param {Boolean} [options.extrudedOptions.closeBottom=true] <code>true</code> to render bottom of the extruded extent; <code>false</code> otherwise.
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -621,6 +622,7 @@ define([
      * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
      * @exception {DeveloperError} Rotated extent is invalid.
+     * @exception {DeveloperError} Rotated texture coordinates are invalid.
      *
      * @example
      * var extent = new ExtentGeometry({
@@ -649,29 +651,45 @@ define([
         var radiiSquared = ellipsoid.getRadiiSquared();
 
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = defaultValue(options.rotation, 0.0);
+        var rotation = options.rotation;
+        var stRotation = options.stRotation;
 
         // for computing texture coordinates
         var lonScalar = 1.0 / (extent.east - extent.west);
         var latScalar = 1.0 / (extent.north - extent.south);
 
         extent.getNorthwest(nwCartographic);
+        Cartographic.clone(nwCartographic, stNWCartographic);
         extent.getCenter(centerCartographic);
-        var latitude, longitude;
+        proj.project(centerCartographic, center);
 
-        var granYCos = granularityY * cos(rotation);
-        var granYSin = granularityY * sin(rotation);
-        var granXCos = granularityX * cos(rotation);
-        var granXSin = granularityX * sin(rotation);
+        var granYCos = granularityY;
+        var granXCos = granularityX;
+        var granYSin = 0.0;
+        var granXSin = 0.0;
 
-        if (rotation !== 0) {
+        var latitude;
+        var longitude;
+        var cosRotation;
+        var sinRotation;
+
+        if (typeof rotation !== 'undefined') {
+            cosRotation = cos(rotation);
+            granYCos *= cosRotation;
+            granXCos *= cosRotation;
+
+            sinRotation = sin(rotation);
+            granYSin = granularityY * sinRotation;
+            granXSin = granularityX * sinRotation;
+
             proj.project(nwCartographic, nw);
-            proj.project(centerCartographic, center);
+
             nw.subtract(center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
             rotationMatrix.multiplyByVector(nw, nw);
             nw.add(center, nw);
             proj.unproject(nw, nwCartographic);
+
             latitude = nwCartographic.latitude;
             longitude = nwCartographic.longitude;
 
@@ -683,6 +701,39 @@ define([
             }
         }
 
+        var stGranYCos = granularityY;
+        var stGranXCos = granularityX;
+        var stGranYSin = 0.0;
+        var stGranXSin = 0.0;
+
+        if (typeof stRotation !== 'undefined') {
+            cosRotation = cos(stRotation);
+            stGranYCos = granularityY * cosRotation;
+            stGranXCos = granularityX * cosRotation;
+
+            sinRotation = sin(stRotation);
+            stGranYSin = granularityY * sinRotation;
+            stGranXSin = granularityX * sinRotation;
+
+            proj.project(stNWCartographic, nw);
+
+            nw.subtract(center, nw);
+            Matrix2.fromRotation(rotation, rotationMatrix);
+            rotationMatrix.multiplyByVector(nw, nw);
+            nw.add(center, nw);
+            proj.unproject(nw, stNWCartographic);
+
+            latitude = stNWCartographic.latitude;
+            longitude = stNWCartographic.longitude;
+
+            if (!isValidLatLon(latitude, longitude) ||
+                    !isValidLatLon(latitude + (width - 1) * stGranXSin, longitude + (width - 1) * stGranXCos) ||
+                    !isValidLatLon(latitude - stGranYCos * (height - 1), longitude + (height - 1) * stGranYSin) ||
+                    !isValidLatLon(latitude - stGranYCos * (height - 1) + (width - 1) * stGranXSin, longitude + (height - 1) * stGranYSin + (width - 1) * stGranXCos)) {
+                throw new DeveloperError('Rotated texture coordinates for extent are invalid.');
+            }
+        }
+
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var size = width * height;
 
@@ -691,8 +742,10 @@ define([
             granYSin : granYSin,
             granXCos : granXCos,
             granXSin : granXSin,
-            granularityY : granularityY,
-            granularityX : granularityX,
+            stGranYCos : stGranYCos,
+            stGranXCos : stGranXCos,
+            stGranYSin : stGranYSin,
+            stGranXSin : stGranYSin,
             radiiSquared : radiiSquared,
             ellipsoid : ellipsoid,
             lonScalar : lonScalar,
