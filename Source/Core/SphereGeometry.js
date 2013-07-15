@@ -1,12 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './EllipsoidGeometry',
-        './Ellipsoid'
+        './Cartesian3',
+        './EllipsoidGeometry'
     ], function(
         defaultValue,
-        EllipsoidGeometry,
-        Ellipsoid) {
+        Cartesian3,
+        EllipsoidGeometry) {
     "use strict";
 
     /**
@@ -29,8 +29,8 @@ define([
      */
     var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1);
-        var ellipsoid = new Ellipsoid(radius, radius, radius);
-        options.ellipsoid = ellipsoid;
+        var radii = new Cartesian3(radius, radius, radius);
+        options.radii = radii;
         var ellipsoidGeometry = new EllipsoidGeometry(options);
 
         /**
