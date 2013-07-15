@@ -228,6 +228,7 @@ define([
     var position;
     var orientation;
     var intersectionColor;
+    var intersectionWidth;
     function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
         var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject.cone;
@@ -280,6 +281,7 @@ define([
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(context, Material.ColorType);
             cone.intersectionColor = Color.YELLOW;
+            cone.intersectionWidth = 5.0;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
         } else {
@@ -366,6 +368,14 @@ define([
             intersectionColor = property.getValue(time, intersectionColor);
             if (typeof intersectionColor !== 'undefined') {
                 cone.intersectionColor = intersectionColor;
+            }
+        }
+
+        property = dynamicCone.intersectionWidth;
+        if (typeof property !== 'undefined') {
+            intersectionWidth = property.getValue(time, intersectionWidth);
+            if (typeof intersectionWidth !== 'undefined') {
+                cone.intersectionWidth = intersectionWidth;
             }
         }
     }

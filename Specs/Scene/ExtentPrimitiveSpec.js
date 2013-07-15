@@ -90,7 +90,7 @@ defineSuite([
     });
 
     it('gets the default granularity', function() {
-        expect(extent.granularity).toEqual(CesiumMath.toRadians(1.0));
+        expect(extent.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
     });
 
     it('renders', function() {

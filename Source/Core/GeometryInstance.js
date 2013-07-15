@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defaultValue',
+        './DeveloperError',
         './Matrix4',
         './Geometry',
         './GeometryInstanceAttribute'
     ], function(
         defaultValue,
+        DeveloperError,
         Matrix4,
         Geometry,
         GeometryInstanceAttribute) {
@@ -20,10 +22,12 @@ define([
      * @alias GeometryInstance
      * @constructor
      *
-     * @param {Geometry} [options.geometry=undefined] The geometry to instance.
+     * @param {Geometry} options.geometry The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Context#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
      * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
+     *
+     * @exception {DeveloperError} options.geometry is required.
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -57,6 +61,10 @@ define([
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        if (typeof options.geometry === 'undefined') {
+            throw new DeveloperError('options.geometry is required.');
+        }
+
         /**
          * The geometry being instanced.
          *
@@ -76,7 +84,7 @@ define([
          *
          * @default Matrix4.IDENTITY
          */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
          * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
@@ -99,41 +107,6 @@ define([
          * @default undefined
          */
         this.attributes = defaultValue(options.attributes, {});
-    };
-
-    /**
-     * Duplicates a GeometryInstance instance, including a deep copy of the geometry.
-     * <p>
-     * {@link GeometryInstance#id} is shallow copied so that the same <code>
-     * id</code> reference is returned by {@link Context#pick} regardless of
-     * if the geometry instance was cloned.
-     * </p>
-     *
-     * @memberof GeometryInstance
-     *
-     * @param {Geometry} [result] The object onto which to store the result.
-     *
-     * @return {Geometry} The modified result parameter or a new GeometryInstance instance if one was not provided.
-     */
-    GeometryInstance.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
-            result = new GeometryInstance();
-        }
-
-        result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
-        result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
-        result.id = this.id;                                // Shallow copy
-
-        var attributes = this.attributes;
-        var newAttributes = {};
-        for (var property in attributes) {
-            if (attributes.hasOwnProperty(property)) {
-                newAttributes[property] = GeometryInstanceAttribute.clone(attributes[property]);
-            }
-        }
-        result.attributes = newAttributes;
-
-        return result;
     };
 
     return GeometryInstance;

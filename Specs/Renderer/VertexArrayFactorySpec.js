@@ -65,7 +65,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var va = context.createVertexArrayFromGeometry({
@@ -94,7 +95,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var va = context.createVertexArrayFromGeometry({
@@ -130,7 +132,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var va = context.createVertexArrayFromGeometry({
@@ -171,7 +174,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var va = context.createVertexArrayFromGeometry({
@@ -215,7 +219,8 @@ defineSuite([
                     componentsPerAttribute : 4,
                     values : [1, 1, 1, 1, 2, 2, 2, 2]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var va = context.createVertexArrayFromGeometry({
@@ -264,7 +269,8 @@ defineSuite([
                     componentsPerAttribute : 1,
                     values : [2]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
@@ -324,7 +330,8 @@ defineSuite([
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
@@ -398,7 +405,8 @@ defineSuite([
                     componentsPerAttribute : 1,
                     values : [5]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
@@ -465,7 +473,8 @@ defineSuite([
                     componentsPerAttribute : 1,
                     values : [75, 100]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
@@ -544,6 +553,7 @@ defineSuite([
 
     it('creates an index buffer', function() {
         var geometry = new Geometry({
+            attributes : {},
             indices : [0],
             primitiveType : PrimitiveType.POINTS
         });
@@ -572,7 +582,8 @@ defineSuite([
                     componentsPerAttribute : 1,
                     values : [1.0, 2.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         expect(function() {
@@ -596,7 +607,8 @@ defineSuite([
                     componentsPerAttribute : 1,
                     values : [1.0]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.POINTS
         });
 
         expect(function() {

@@ -24,6 +24,9 @@ Beta Releases
    * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
    * Added `surfaceHeight` parameter to `Extent.subsample`.
+   * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
+* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
 * Added `ExtentPrimitive`.
 * Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added `PolylinePipeline.removeDuplicates`.
@@ -32,6 +35,7 @@ Beta Releases
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added `extrudedOptions` parameters to `ExtentGeometry`, in which height, closeTop and closeBottom can be specified
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
 ### b18 - 2013-07-01
