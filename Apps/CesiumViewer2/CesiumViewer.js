@@ -161,8 +161,8 @@ define([
 
         scene.getPrimitives().add(Model.fromText({
             url : url,
-//          modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
-          scale : 100000.0
+          modelMatrix : Matrix4.fromTranslation(new Cartesian3(0.0, 0.0, 6000000.0)),
+          scale : 10000.0,
 //          debugShowBoundingVolume : true
         }));
 

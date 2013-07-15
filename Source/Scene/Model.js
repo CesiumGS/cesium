@@ -744,7 +744,8 @@ define([
 
     function createCommand(model, node, context) {
         node.extra = defaultValue(node.extra, {});
-        node.extra.czmMeshesCommands = {};
+        node.extra.czmMeshesCommands = defaultValue(node.extra.czmMeshesCommands, {});
+        var czmMeshesCommands = node.extra.czmMeshesCommands;
 
         var colorCommands = model._commandLists.colorList;
         var pickCommands = model._commandLists.pickList;
@@ -765,10 +766,16 @@ define([
         var meshesLength = meshes.length;
 
         for (var j = 0; j < meshesLength; ++j) {
-            var mesh = gltfMeshes[meshes[j]];
+            var name = meshes[j];
+            var mesh = gltfMeshes[name];
             var primitives = mesh.primitives;
             var length = primitives.length;
-            var meshesCommands = new Array(length);
+
+            // The glTF node hierarchy is a DAG so a node can have more than one
+            // parent, so a node may already have commands.  If so, append more
+            // since they will have a different model matrix.
+            czmMeshesCommands[name] = defaultValue(czmMeshesCommands[name], []);
+            var meshesCommands = czmMeshesCommands[name];
 
             for (var i = 0; i < length; ++i) {
                 var primitive = primitives[i];
@@ -823,7 +830,6 @@ define([
 
                 var pickCommand = new DrawCommand();
                 pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
-                pickCommand.modelMatrix = new Matrix4();                           // computed in update()
                 pickCommand.primitiveType = primitiveType;
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
@@ -834,14 +840,12 @@ define([
                 pickCommand.owner = owner;
                 pickCommands.push(pickCommand);
 
-                meshesCommands[i] = {
+                meshesCommands.push({
                     command : command,
                     pickCommand : pickCommand,
                     unscaledBoundingSphere : boundingSphere
-                };
+                });
             }
-
-            node.extra.czmMeshesCommands[name] = meshesCommands;
         }
     }
 
