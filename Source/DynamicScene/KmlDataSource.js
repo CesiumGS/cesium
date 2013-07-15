@@ -83,20 +83,25 @@ define(['../Core/createGuid',
         for (i = 0; i < el.childNodes.length; i++) {
             text = text + el.childNodes[i].nodeValue;
         }
-        text = text.split(/[\s\n]+/);
-        for (i = 0; i < text.length; i++) {
-            var ll = text[i].split(',');
-            if (ll.length < 2) {
-                continue;
-            }
-            coords.push(ll[0]);
-            coords.push(ll[1]);
-            if(typeof ll[2] === 'undefined'){
-                coords.push(ll[2]); //defaultValue will handle it
-            } else {
-                coords.push(parseInt(ll[2], 10));
-            }
-        }
+        var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
+        coords = regExp.exec(text);
+        coords[0] = parseFloat(coords[1], 10);
+        coords[1] = parseFloat(coords[2].substring(1), 10);
+        coords[2] = coords[3] && parseFloat(coords[3].substring(1), 10);
+        coords.pop();
+        //        for (i = 0; i < text.length; i++) {
+//            var ll = text[i].split(',');
+//            if (ll.length < 2) {
+//                continue;
+//            }
+//            coords.push(ll[0]);
+//            coords.push(ll[1]);
+//            if(typeof ll[2] === 'undefined'){
+//                coords.push(ll[2]); //defaultValue will handle it
+//            } else {
+//                coords.push(parseInt(ll[2], 10));
+//            }
+//        }
         return coords;
     }
 
