@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0)),
             semiMinorAxis : 200000.0,
             semiMajorAxis : 500000.0,
-            bearing : Cesium.Math.toRadians(30.0),
+            rotation : Cesium.Math.toRadians(30.0),
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
         })
     });
@@ -151,7 +151,7 @@ require(['Cesium'], function(Cesium) {
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        ellipsoid : new Cesium.Ellipsoid(0.5, 0.5, 1.0)
+        radii : new Cesium.Cartesian3(0.5, 0.5, 1.0)
     });
 
     instances = [];

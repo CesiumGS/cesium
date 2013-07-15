@@ -12,14 +12,14 @@ define([
     var coords = new Cartesian3();
 
     /**
-     * Determines if a 2D point is inside a triangle.
+     * Determines if a point is inside a triangle.
      *
      * @exports pointInsideTriangle
      *
-     * @param {Cartesian2} point The point to test.
-     * @param {Cartesian2} p0 The first point of the triangle.
-     * @param {Cartesian2} p1 The second point of the triangle.
-     * @param {Cartesian2} p2 The third point of the triangle.
+     * @param {Cartesian2|Cartesian3} point The point to test.
+     * @param {Cartesian2|Cartesian3} p0 The first point of the triangle.
+     * @param {Cartesian2|Cartesian3} p1 The second point of the triangle.
+     * @param {Cartesian2|Cartesian3} p2 The third point of the triangle.
      *
      * @return {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
      *

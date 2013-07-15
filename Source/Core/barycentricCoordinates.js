@@ -7,15 +7,19 @@ define([
         DeveloperError) {
     "use strict";
 
+    var scratchCartesian1 = new Cartesian3();
+    var scratchCartesian2 = new Cartesian3();
+    var scratchCartesian3 = new Cartesian3();
+
     /**
      * Computes the barycentric coordinates for a point with respect to a triangle.
      *
      * @exports pointInsideTriangle
      *
-     * @param {Cartesian3} point The point to test.
-     * @param {Cartesian3} p0 The first point of the triangle, corresponding to the barycentric x-axis.
-     * @param {Cartesian3} p1 The second point of the triangle, corresponding to the barycentric y-axis.
-     * @param {Cartesian3} p2 The third point of the triangle, corresponding to the barycentric z-axis.
+     * @param {Cartesian2|Cartesian3} point The point to test.
+     * @param {Cartesian2|Cartesian3} p0 The first point of the triangle, corresponding to the barycentric x-axis.
+     * @param {Cartesian2|Cartesian3} p1 The second point of the triangle, corresponding to the barycentric y-axis.
+     * @param {Cartesian2|Cartesian3} p2 The third point of the triangle, corresponding to the barycentric z-axis.
      * @param {Cartesian3} [result] The object onto which to store the result.
      *
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
@@ -40,9 +44,9 @@ define([
         }
 
         // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
-        var v0 = p1.subtract(p0);
-        var v1 = p2.subtract(p0);
-        var v2 = point.subtract(p0);
+        var v0 = p1.subtract(p0, scratchCartesian1);
+        var v1 = p2.subtract(p0, scratchCartesian2);
+        var v2 = point.subtract(p0, scratchCartesian3);
 
         var dot00 = v0.dot(v0);
         var dot01 = v0.dot(v1);

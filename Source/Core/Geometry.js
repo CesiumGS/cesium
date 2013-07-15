@@ -25,7 +25,13 @@ define([
      * @alias Geometry
      * @constructor
      *
-     * @param {Object} [options=undefined] An object with properties corresponding to Geometry properties as shown in the code example.
+     * @param {GeometryAttributes} options.attributes Attributes, which make up the geometry's vertices.
+     * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
+     * @param {Array} [options.indices] Optional index data that determines the primitives in the geometry.
+     * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
+
+     * @exception {DeveloperError} options.attributes is required.
+     * @exception {DeveloperError} options.primitiveType is required.
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
@@ -48,6 +54,8 @@ define([
      *   boundingSphere : BoundingSphere.fromVertices(positions)
      * });
      *
+     * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html">Geometry and Appearances Demo</a>
+     *
      * @see PolygonGeometry
      * @see ExtentGeometry
      * @see EllipseGeometry
@@ -59,6 +67,14 @@ define([
      */
     var Geometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.attributes === 'undefined') {
+            throw new DeveloperError('options.attributes is required.');
+        }
+
+        if (typeof options.primitiveType === 'undefined') {
+            throw new DeveloperError('options.primitiveType is required.');
+        }
 
         /**
          * Attributes, which make up the geometry's vertices.  Each property in this object corresponds to a
@@ -107,7 +123,7 @@ define([
          * @see GeometryAttribute
          * @see VertexFormat
          */
-        this.attributes = defaultValue(options.attributes, {});
+        this.attributes = options.attributes;
 
         /**
          * Optional index data that - along with {@link Geometry#primitiveType} -
@@ -116,11 +132,6 @@ define([
          * @type Array
          *
          * @default undefined
-         *
-         * @example
-         * // Two triangles with shared vertices
-         * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.indices = options.indices;
 
@@ -131,69 +142,18 @@ define([
          * @type PrimitiveType
          *
          * @default undefined
-         *
-         * @example
-         * // Two triangles with shared vertices
-         * geometry.primitiveType = PrimitiveType.TRIANGLES;
-         * geometry.indices = new Uint16Array([0, 1, 2, 0, 2, 3]);
          */
         this.primitiveType = options.primitiveType;
 
         /**
-         * An optional bounding sphere that fully enclosed the geometry.  This is
+         * An optional bounding sphere that fully encloses the geometry.  This is
          * commonly used for culling.
          *
          * @type BoundingSphere
          *
          * @default undefined
-         *
-         * @example
-         * geometry.boundingSphere = BoundingSphere.fromVertices(positions);
          */
         this.boundingSphere = options.boundingSphere;
-    };
-
-    /**
-     * Duplicates a Geometry instance, including a deep copy of the attributes and indices.
-     *
-     * @memberof Geometry
-     *
-     * @param {Geometry} geometry The geometry to duplicate.  If this is undefined, undefined is returned.
-     * @param {Geometry} [result] The object onto which to store the result.
-     *
-     * @return {Geometry} The modified result parameter or a new Geometry instance if one was not provided.
-     *
-     * @example
-     * result.geometry = Geometry.clone(this.geometry);
-     */
-    Geometry.clone = function(geometry, result) {
-        if (typeof geometry === 'undefined') {
-            return undefined;
-        }
-
-        if (typeof result === 'undefined') {
-            result = new Geometry();
-        }
-
-        var attributes = geometry.attributes;
-        var newAttributes = {};
-        for (var property in attributes) {
-            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
-                newAttributes[property] = attributes[property].clone();
-            }
-        }
-        result.attributes = newAttributes;
-
-        if (typeof geometry.indices !== 'undefined') {
-            var sourceValues = geometry.indices;
-            result.indices = new sourceValues.constructor(sourceValues);
-        } else {
-            result.indices = undefined;
-        }
-        result.primitiveType = geometry.primitiveType;
-        result.boundingSphere = BoundingSphere.clone(geometry.boundingSphere, result.boundingSphere);
-
-        return result;
     };
 
     /**

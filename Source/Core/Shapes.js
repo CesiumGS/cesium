@@ -110,7 +110,7 @@ define([
                 throw new DeveloperError('radius must be greater than zero.');
             }
 
-            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
+            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }
@@ -162,7 +162,7 @@ define([
             }
 
             bearing = bearing || 0.0;
-            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
+            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
 
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');

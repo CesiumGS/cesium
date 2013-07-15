@@ -709,7 +709,7 @@ define([
             if (!surface._debug.boundingSphereVA) {
                 var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
                 var sphere = new EllipsoidGeometry({
-                    ellipsoid : new Ellipsoid(radius, radius, radius),
+                    radii : new Cartesian3(radius, radius, radius),
                     numberOfPartitions : 10
                 });
                 GeometryPipeline.toWireframe(sphere);
