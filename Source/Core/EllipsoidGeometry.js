@@ -30,9 +30,8 @@ define([
     var scratchDirection = new Cartesian3();
 
     function addEdgePositions(i0, i1, numberOfPartitions, positions) {
-        var indices = [];
+        var indices = new Array(2 + numberOfPartitions - 1);
         indices[0] = i0;
-        indices[2 + (numberOfPartitions - 1) - 1] = i1;
 
         var origin = positions[i0];
         var direction = Cartesian3.subtract(positions[i1], positions[i0], scratchDirection);
@@ -45,6 +44,8 @@ define([
             indices[i] = positions.length;
             positions.push(position);
         }
+
+        indices[2 + (numberOfPartitions - 1) - 1] = i1;
 
         return indices;
     }
@@ -113,6 +114,7 @@ define([
     var normal = new Cartesian3();
     var tangent = new Cartesian3();
     var binormal = new Cartesian3();
+    var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
     /**
      * A {@link Geometry} that represents vertices and indices for an ellipsoid centered at the origin.
@@ -120,7 +122,7 @@ define([
      * @alias EllipsoidGeometry
      * @constructor
      *
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.UNIT_SPHERE] The ellipsoid used to create vertex attributes.
+     * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
      * @param {Number} [options.numberOfPartitions=32] The number of times to partition the ellipsoid in a plane formed by two radii in a single quadrant.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
@@ -129,13 +131,14 @@ define([
      * @example
      * var ellipsoid = new EllipsoidGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   ellipsoid : new Ellipsoid(1000000.0, 500000.0, 500000.0)
+     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0)
      * });
      */
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.UNIT_SPHERE);
+        var radii = defaultValue(options.radii, defaultRadii);
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var numberOfPartitions = defaultValue(options.numberOfPartitions, 32);
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -213,7 +216,6 @@ define([
 
         if (vertexFormat.position) {
             // Expand cube into ellipsoid and flatten values
-            var radii = ellipsoid.getRadii();
             var flattenedPositions = new Float64Array(length * 3);
 
             for (i = j = 0; i < length; ++i) {

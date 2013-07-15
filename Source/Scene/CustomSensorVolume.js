@@ -157,7 +157,7 @@ define([
          * </p>
          *
          * @type {Material}
-         * @default Material.fromType(undefined, Material.ColorType) 
+         * @default Material.fromType(undefined, Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
@@ -181,6 +181,16 @@ define([
          */
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
+        /**
+         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         *
+         * @type {Number}
+         * @default 5.0
+         *
+         * @see CustomSensorVolume#showIntersection
+         */
+        this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
+
         var that = this;
         this._uniforms = {
             u_showThroughEllipsoid : function() {
@@ -194,6 +204,9 @@ define([
             },
             u_intersectionColor : function() {
                 return that.intersectionColor;
+            },
+            u_intersectionWidth : function() {
+                return that.intersectionWidth;
             }
         };
 

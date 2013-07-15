@@ -76,13 +76,14 @@ define([
      * @return String The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
-        var flat = this.flat ? '#define FLAT \n#line 0 \n' : '#line 0 \n';
-        var faceForward = this.faceForward ? '#define FACE_FORWARD \n#line 0 \n' : '#line 0 \n';
+        var flat = this.flat ? '#define FLAT 1\n#line 0 \n' : '#line 0 \n';
+        var faceForward = this.faceForward ? '#define FACE_FORWARD 1\n#line 0 \n' : '#line 0 \n';
 
         if (typeof this.material !== 'undefined') {
             return '#line 0\n' +
                 this.material.shaderSource +
                 flat +
+                faceForward +
                 this.fragmentShaderSource;
         }
 

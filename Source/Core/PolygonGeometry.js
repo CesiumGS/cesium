@@ -825,19 +825,21 @@ define([
             height = Math.max(h, height);
         }
 
-        var positions = options.positions;
         var polygonHierarchy = options.polygonHierarchy;
+        if (typeof polygonHierarchy === 'undefined') {
+            throw new DeveloperError('options.polygonHierarchy is required.');
+        }
 
-        var geometries = [];
-        var geometry;
+//        var geometries = [];
+  //      var geometry;
         var boundingSphere;
-        var i;
+      //  var i;
         var walls;
         var topAndBottom;
         var outerPositions;
         var computeAttributes = (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
-        if (typeof positions !== 'undefined') {
+/*        if (typeof positions !== 'undefined') {
             // create from positions
             outerPositions = positions;
             boundingSphere = BoundingSphere.fromPoints(positions);
@@ -866,95 +868,97 @@ define([
                     geometries.push(geometry);
                 }
             }
-        } else if (typeof polygonHierarchy !== 'undefined') {
-            // create from a polygon hierarchy
-            // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            var polygons = [];
-            var queue = new Queue();
-            queue.enqueue(polygonHierarchy);
-            polygonHierarchy = [];
-            while (queue.length !== 0) {
-                var outerNode = queue.dequeue();
-                var outerRing = outerNode.positions;
+        } else if (typeof polygonHierarchy !== 'undefined') {*/
 
-                if (outerRing.length < 3) {
-                    throw new DeveloperError('At least three positions are required.');
-                }
 
-                var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-                if (numChildren === 0) {
-                    // The outer polygon is a simple polygon with no nested inner polygon.
-                    polygonHierarchy.push({
-                        outerRing: outerRing,
-                        holes: []
-                    });
-                    polygons.push(outerNode.positions);
-                } else {
-                    // The outer polygon contains inner polygons
-                    var holes = [];
-                    for (i = 0; i < numChildren; i++) {
-                        var hole = outerNode.holes[i];
-                        holes.push(hole.positions);
+        // create from a polygon hierarchy
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var polygons = [];
+        var queue = new Queue();
+        queue.enqueue(polygonHierarchy);
+        polygonHierarchy = [];
+        var i;
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
 
-                        var numGrandchildren = 0;
-                        if (typeof hole.holes !== 'undefined') {
-                            numGrandchildren = hole.holes.length;
-                        }
-
-                        for (var j = 0; j < numGrandchildren; j++) {
-                            queue.enqueue(hole.holes[j]);
-                        }
-                    }
-                    polygonHierarchy.push({
-                        outerRing: outerRing,
-                        holes: holes
-                    });
-                    var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
-                    polygons.push(combinedPolygon);
-                }
+            if (outerRing.length < 3) {
+                throw new DeveloperError('At least three positions are required.');
             }
 
-            outerPositions =  polygons[0];
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            if (numChildren === 0) {
+                // The outer polygon is a simple polygon with no nested inner polygon.
+                polygonHierarchy.push({
+                    outerRing: outerRing,
+                    holes: []
+                });
+                polygons.push(outerNode.positions);
+            } else {
+                // The outer polygon contains inner polygons
+                var holes = [];
+                for (i = 0; i < numChildren; i++) {
+                    var hole = outerNode.holes[i];
+                    holes.push(hole.positions);
 
-            // The bounding volume is just around the boundary points, so there could be cases for
-            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-            // volume doesn't cover the polygon.
-            boundingSphere = BoundingSphere.fromPoints(outerPositions);
-
-            for (i = 0; i < polygons.length; i++) {
-                if (extrude) {
-                    geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i]);
-                    if (typeof geometry !== 'undefined') {
-                        topAndBottom = geometry.topAndBottom;
-                        topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                        if (computeAttributes) {
-                            topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
-                        }
-                        geometries.push(topAndBottom);
-
-                        walls = geometry.walls;
-                        for (var k = 0; k < walls.length; k++) {
-                            var wall = walls[k];
-                            wall.geometry = scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
-                            if (computeAttributes) {
-                                wall.geometry = computeWallAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation);
-                            }
-                            geometries.push(wall);
-                        }
+                    var numGrandchildren = 0;
+                    if (typeof hole.holes !== 'undefined') {
+                        numGrandchildren = hole.holes.length;
                     }
-                } else {
-                    geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
-                    if (typeof geometry !== 'undefined') {
-                        geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
-                        if (computeAttributes) {
-                            geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                        }
-                        geometries.push(geometry);
+
+                    for (var j = 0; j < numGrandchildren; j++) {
+                        queue.enqueue(hole.holes[j]);
                     }
                 }
+                polygonHierarchy.push({
+                    outerRing: outerRing,
+                    holes: holes
+                });
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                polygons.push(combinedPolygon);
             }
-        } else {
-            throw new DeveloperError('positions or hierarchy must be supplied.');
+        }
+
+        outerPositions =  polygons[0];
+        // The bounding volume is just around the boundary points, so there could be cases for
+        // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+        // volume doesn't cover the polygon.
+        boundingSphere = BoundingSphere.fromPoints(outerPositions);
+
+        var geometry;
+        var geometries = [];
+
+        for (i = 0; i < polygons.length; i++) {
+            if (extrude) {
+                geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i]);
+                if (typeof geometry !== 'undefined') {
+                    topAndBottom = geometry.topAndBottom;
+                    topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
+                    if (computeAttributes) {
+                        topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
+                    }
+                    geometries.push(topAndBottom);
+
+                    walls = geometry.walls;
+                    for (var k = 0; k < walls.length; k++) {
+                        var wall = walls[k];
+                        wall.geometry = scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
+                        if (computeAttributes) {
+                            wall.geometry = computeWallAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation);
+                        }
+                        geometries.push(wall);
+                    }
+                }
+            } else {
+                geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
+                if (typeof geometry !== 'undefined') {
+                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
+                    if (computeAttributes) {
+                        geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
+                    }
+                    geometries.push(geometry);
+                }
+            }
         }
 
         geometry = GeometryPipeline.combine(geometries);
@@ -1007,6 +1011,56 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = boundingSphere;
+    };
+
+    /**
+     * Creates a polygon from an array of positions.
+     *
+     * @memberof PolygonGeometry
+     *
+     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {Number} [options.extrudedHeight=0.0] The height of the polygon extrusion.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} options.positions is required.
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @example
+     * // create a polygon from points
+     * var geometry = new PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
+     */
+    PolygonGeometry.fromPositions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.positions === 'undefined') {
+            throw new DeveloperError('options.positions is required.');
+        }
+
+        var newOptions = {
+            polygonHierarchy : {
+                positions : options.positions
+            },
+            height : options.height,
+            extrudedHeight : options.extrudedHeight,
+            vertexFormat : options.vertexFormat,
+            stRotation : options.stRotation,
+            ellipsoid : options.ellipsoid,
+            granularity : options.granularity
+        };
+        return new PolygonGeometry(newOptions);
     };
 
     return PolygonGeometry;

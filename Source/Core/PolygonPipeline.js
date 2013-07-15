@@ -574,7 +574,7 @@ define([
                 throw new DeveloperError('The number of indices must be divisable by three.');
             }
 
-            granularity = defaultValue(granularity, CesiumMath.toRadians(1.0));
+            granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
             if (granularity <= 0.0) {
                 throw new DeveloperError('granularity must be greater than zero.');
             }

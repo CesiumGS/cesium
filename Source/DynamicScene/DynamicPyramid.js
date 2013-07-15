@@ -66,6 +66,12 @@ define([
          */
         this.intersectionColor = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the approximate pixel width of the line formed by the intersection of the pyramid and other central bodies.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.intersectionWidth = undefined;
+        /**
          * A DynamicMaterialProperty which determines the material.
          * @type {DynamicMaterialProperty}
          * @default undefined
@@ -144,6 +150,15 @@ define([
             intersectionColor.processCzmlIntervals(pyramidData.intersectionColor, interval);
         }
 
+        if (typeof pyramidData.intersectionWidth !== 'undefined') {
+            var intersectionWidth = pyramid.intersectionWidth;
+            if (typeof intersectionWidth === 'undefined') {
+                pyramid.intersectionWidth = intersectionWidth = new DynamicProperty(CzmlNumber);
+                pyramidUpdated = true;
+            }
+            intersectionWidth.processCzmlIntervals(pyramidData.intersectionWidth, interval);
+        }
+
         if (typeof pyramidData.material !== 'undefined') {
             var material = pyramid.material;
             if (typeof material === 'undefined') {
@@ -189,6 +204,7 @@ define([
             targetPyramid.radius = defaultValue(targetPyramid.radius, pyramidToMerge.radius);
             targetPyramid.showIntersection = defaultValue(targetPyramid.showIntersection, pyramidToMerge.showIntersection);
             targetPyramid.intersectionColor = defaultValue(targetPyramid.intersectionColor, pyramidToMerge.intersectionColor);
+            targetPyramid.intersectionWidth = defaultValue(targetPyramid.intersectionWidth, pyramidToMerge.intersectionWidth);
             targetPyramid.material = defaultValue(targetPyramid.material, pyramidToMerge.material);
         }
     };

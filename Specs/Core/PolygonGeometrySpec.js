@@ -16,15 +16,21 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('throws without positions or hierarchy', function() {
+    it('throws without hierarchy', function() {
         expect(function() {
             return new PolygonGeometry();
         }).toThrow();
     });
 
+    it('throws without positions', function() {
+        expect(function() {
+            return PolygonGeometry.fromPositions();
+        }).toThrow();
+    });
+
     it('throws with less than three positions', function() {
         expect(function() {
-            return new PolygonGeometry({ positions : [new Cartesian3()] });
+            return PolygonGeometry.fromPositions({ positions : [new Cartesian3()] });
         }).toThrow();
     });
 
@@ -44,7 +50,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         expect(function() {
-            return new PolygonGeometry({
+            return PolygonGeometry.fromPositions({
                 positions : [
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
@@ -81,7 +87,7 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var p = new PolygonGeometry({
+        var p = PolygonGeometry.fromPositions({
             vertexformat : VertexFormat.POSITION_ONLY,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
@@ -97,7 +103,7 @@ defineSuite([
     });
 
     it('computes all attributes', function() {
-        var p = new PolygonGeometry({
+        var p = PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.ALL,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
@@ -189,7 +195,7 @@ defineSuite([
     });
 
     it('computes positions extruded', function() {
-        var p = new PolygonGeometry({
+        var p = PolygonGeometry.fromPositions({
             vertexformat : VertexFormat.POSITION_ONLY,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
@@ -206,7 +212,7 @@ defineSuite([
     });
 
     it('computes all attributes extruded', function() {
-        var p = new PolygonGeometry({
+        var p = PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.ALL,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
