@@ -80,14 +80,14 @@ define([
         var extent = params.extent;
         var radiiSquared = params.radiiSquared;
 
-        var latitude = nwCartographic.latitude - params.granYCos*row + col*params.granXSin;
-        stLatitude = extent.north - params.granularityY*row;
+        var latitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
+        stLatitude = extent.north - params.granularityY * row;
         var cosLatitude = cos(latitude);
         var nZ = sin(latitude);
         var kZ = radiiSquared.z * nZ;
 
-        var longitude = nwCartographic.longitude + row*params.granYSin + col*params.granXCos;
-        stLongitude = extent.west + col*params.granularityX;
+        var longitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
+        stLongitude = extent.west + col * params.granularityX;
 
         var nX = cosLatitude * cos(longitude);
         var nY = cosLatitude * sin(longitude);
@@ -116,31 +116,31 @@ define([
 
 
     function createAttributes(vertexFormat, attributes) {
-        var geo = new Geometry ({
-            attributes: {},
-            primitiveType: PrimitiveType.TRIANGLES
+        var geo = new Geometry({
+            attributes : new GeometryAttributes(),
+            primitiveType : PrimitiveType.TRIANGLES
         });
         if (vertexFormat.position) {
             geo.attributes.position = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.DOUBLE,
-                componentsPerAttribute: 3,
-                values: attributes.positions
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : attributes.positions
             });
         }
         if (vertexFormat.normal) {
             geo.attributes.normal = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 3,
-                values: attributes.normals
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attributes.normals
             });
         }
         if (vertexFormat.tangent) {
             geo.attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : attributes.tangents
-                });
-            }
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attributes.tangents
+            });
+        }
         if (vertexFormat.binormal) {
             geo.attributes.binormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -160,8 +160,8 @@ define([
 
         var attrIndex = 0;
         var bottomOffset = (top) ? length / 2 : 0;
-        length = (top && bottom) ? length/2 : length;
-        for (var i = 0; i < length; i+=3) {
+        length = (top && bottom) ? length / 2 : length;
+        for ( var i = 0; i < length; i += 3) {
             var p = Cartesian3.fromArray(positions, i, position);
             var attrIndex1 = attrIndex + 1;
             var attrIndex2 = attrIndex + 2;
@@ -213,13 +213,12 @@ define([
             }
             attrIndex += 3;
         }
-        return createAttributes(vertexFormat,
-                {
-            positions: positions,
-            normals: normals,
-            tangents: tangents,
-            binormals: binormals
-                });
+        return createAttributes(vertexFormat, {
+            positions : positions,
+            normals : normals,
+            tangents : tangents,
+            binormals : binormals
+        });
     }
 
     function calculateAttributesWall(positions, vertexFormat, ellipsoid) {
@@ -232,7 +231,7 @@ define([
         var attrIndex = 0;
         var recomputeNormal = true;
         var bottomOffset = length / 2;
-        for (var i = 0; i < bottomOffset; i+=3) {
+        for ( var i = 0; i < bottomOffset; i += 3) {
             var p = Cartesian3.fromArray(positions, i, position);
             var attrIndex1 = attrIndex + 1;
             var attrIndex2 = attrIndex + 2;
@@ -287,13 +286,12 @@ define([
             }
             attrIndex += 3;
         }
-        return createAttributes(vertexFormat,
-                {
-            positions: positions,
-            normals: normals,
-            tangents: tangents,
-            binormals: binormals
-                });
+        return createAttributes(vertexFormat, {
+            positions : positions,
+            normals : normals,
+            tangents : tangents,
+            binormals : binormals
+        });
     }
 
     function calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, offset) {
@@ -301,8 +299,8 @@ define([
         var stLon = (stLongitude - extent.west) * params.lonScalar;
         var stLat = (stLatitude - extent.south) * params.latScalar;
         if (typeof offset !== 'undefined') {
-            wallTextureCoordinates[stIndex +  offset] = stLon;
-            wallTextureCoordinates[stIndex + 1 +  offset] = stLat;
+            wallTextureCoordinates[stIndex + offset] = stLon;
+            wallTextureCoordinates[stIndex + 1 + offset] = stLat;
         }
         wallTextureCoordinates[stIndex++] = stLon;
         wallTextureCoordinates[stIndex++] = stLat;
@@ -319,7 +317,7 @@ define([
         return wallPositions;
     }
 
-    function constructExtent(options, vertexFormat, params){
+    function constructExtent(options, vertexFormat, params) {
         var extent = params.extent;
         var ellipsoid = params.ellipsoid;
         var size = params.size;
@@ -374,15 +372,15 @@ define([
         geo.indices = indices;
         if (vertexFormat.st) {
             geo.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : textureCoordinates
-                });
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
+            });
         }
 
         return {
-                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
-                geometry: geo
+            boundingSphere : BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+            geometry : geo
         };
     }
 
@@ -394,7 +392,7 @@ define([
         var size = params.size;
         var ellipsoid = params.ellipsoid;
         var extrudedOptions = options.extrudedOptions;
-        if (typeof extrudedOptions.height !== 'number'){
+        if (typeof extrudedOptions.height !== 'number') {
             return constructExtent(options, vertexFormat, params);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
@@ -404,10 +402,10 @@ define([
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
-        var closeBottom  = defaultValue(extrudedOptions.closeBottom, true);
+        var closeBottom = defaultValue(extrudedOptions.closeBottom, true);
 
-        var perimeterPositions = 2*width + 2*height - 4;
-        var wallCount = (perimeterPositions + 4)*2;
+        var perimeterPositions = 2 * width + 2 * height - 4;
+        var wallCount = (perimeterPositions + 4) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
         var wallTextureCoordinates = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
@@ -430,7 +428,8 @@ define([
         for (col = 0; col < width; col++) {
             computePosition(params, row, col, maxHeight, minHeight);
             wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
-            posIndex += 3;            if (vertexFormat.st) {
+            posIndex += 3;
+            if (vertexFormat.st) {
                 stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
             }
         }
@@ -446,7 +445,7 @@ define([
         }
 
         row = 0;
-        for (col = width-1; col >= 0; col--) {
+        for (col = width - 1; col >= 0; col--) {
             computePosition(params, row, col, maxHeight, minHeight);
             wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
             posIndex += 3;
@@ -459,10 +458,10 @@ define([
 
         if (vertexFormat.st) {
             geo.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : wallTextureCoordinates
-                });
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : wallTextureCoordinates
+            });
         }
 
         var wallIndices = IndexDatatype.createTypedArray(wallCount, perimeterPositions * 6);
@@ -477,8 +476,8 @@ define([
         for (i = 0; i < length - 1; i++) {
             upperLeft = i;
             upperRight = upperLeft + 1;
-            var p1 = Cartesian3.fromArray(wallPositions, upperLeft*3, v1Scratch);
-            var p2 = Cartesian3.fromArray(wallPositions, upperRight*3, v2Scratch);
+            var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
+            var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
             if (p1.equalsEpsilon(p2, CesiumMath.EPSILON10)) {
                 continue;
             }
@@ -516,7 +515,7 @@ define([
 
             posIndex = 0;
             stIndex = 0;
-            bottomOffset = (closeBottom && closeTop) ? size*3 : 0;
+            bottomOffset = (closeBottom && closeTop) ? size * 3 : 0;
             for (row = 0; row < height; ++row) {
                 for (col = 0; col < width; ++col) {
                     computePosition(params, row, col, maxH, minH);
@@ -556,7 +555,7 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        topBottomIndices[indicesIndex++]= upperRight + bottomOffset;
+                        topBottomIndices[indicesIndex++] = upperRight + bottomOffset;
                         topBottomIndices[indicesIndex++] = lowerLeft + bottomOffset;
                         topBottomIndices[indicesIndex++] = upperLeft + bottomOffset;
                         topBottomIndices[indicesIndex++] = lowerRight + bottomOffset;
@@ -577,7 +576,14 @@ define([
                 ++index;
             }
             topBottomGeo.indices = topBottomIndices;
-            geo = GeometryPipeline.combine([new GeometryInstance({geometry: topBottomGeo}), new GeometryInstance({geometry: geo})]);
+            geo = GeometryPipeline.combine([
+                new GeometryInstance({
+                    geometry : topBottomGeo
+                }),
+                new GeometryInstance({
+                    geometry : geo
+                })
+            ]);
         }
 
         var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
@@ -585,8 +591,8 @@ define([
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
-            boundingSphere: boundingSphere,
-            geometry: geo
+            boundingSphere : boundingSphere,
+            geometry : geo
         };
     }
 
@@ -670,9 +676,9 @@ define([
             longitude = nwCartographic.longitude;
 
             if (!isValidLatLon(latitude, longitude) ||
-                    !isValidLatLon(latitude + (width-1)*granXSin, longitude + (width-1)*granXCos) ||
-                    !isValidLatLon(latitude - granYCos*(height-1), longitude + (height-1)*granYSin) ||
-                    !isValidLatLon(latitude - granYCos*(height-1) + (width-1)*granXSin, longitude + (height-1)*granYSin + (width-1)*granXCos)) {
+                    !isValidLatLon(latitude + (width - 1) * granXSin, longitude + (width - 1) * granXCos) ||
+                    !isValidLatLon(latitude - granYCos * (height - 1), longitude + (height - 1) * granYSin) ||
+                    !isValidLatLon(latitude - granYCos * (height - 1) + (width - 1) * granXSin, longitude + (height - 1) * granYSin + (width - 1) * granXCos)) {
                 throw new DeveloperError('Rotated extent is invalid.');
             }
         }
@@ -681,31 +687,30 @@ define([
         var size = width * height;
 
         var params = {
-            granYCos: granYCos,
-            granYSin: granYSin,
-            granXCos: granXCos,
-            granXSin: granXSin,
-            granularityY: granularityY,
-            granularityX: granularityX,
-            radiiSquared: radiiSquared,
-            ellipsoid: ellipsoid,
-            lonScalar: lonScalar,
-            latScalar: latScalar,
-            extent: extent,
-            width: width,
-            height: height,
-            surfaceHeight: surfaceHeight,
-            size: size
+            granYCos : granYCos,
+            granYSin : granYSin,
+            granXCos : granXCos,
+            granXSin : granXSin,
+            granularityY : granularityY,
+            granularityX : granularityX,
+            radiiSquared : radiiSquared,
+            ellipsoid : ellipsoid,
+            lonScalar : lonScalar,
+            latScalar : latScalar,
+            extent : extent,
+            width : width,
+            height : height,
+            surfaceHeight : surfaceHeight,
+            size : size
         };
 
-        var o;
-
+        var extentGeometry;
         if (typeof options.extrudedOptions !== 'undefined') {
-            o = constructExtrudedExtent(options, vertexFormat, params);
+            extentGeometry = constructExtrudedExtent(options, vertexFormat, params);
         } else {
-            o = constructExtent(options, vertexFormat, params);
+            extentGeometry = constructExtent(options, vertexFormat, params);
         }
-        var geometry = o.geometry;
+        var geometry = extentGeometry.geometry;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -728,7 +733,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = o.boundingSphere;
+        this.boundingSphere = extentGeometry.boundingSphere;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
