@@ -8,6 +8,8 @@ define([
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         './Material',
         '../Renderer/BufferUsage',
         '../Renderer/BlendingState',
@@ -24,6 +26,8 @@ define([
         BoundingRectangle,
         ComponentDatatype,
         PrimitiveType,
+        Geometry,
+        GeometryAttribute,
         Material,
         BufferUsage,
         BlendingState,
@@ -56,13 +60,10 @@ define([
 
         /**
          * Determines if the viewport quad primitive will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type {Boolean}
          * @default true
-        */
+         */
         this.show = true;
 
         if (typeof rectangle === 'undefined') {
@@ -119,9 +120,9 @@ define([
             return vertexArray;
         }
 
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -130,9 +131,9 @@ define([
                         1.0,  1.0,
                        -1.0,  1.0
                     ]
-                },
+                }),
 
-                textureCoordinates : {
+                textureCoordinates : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -141,12 +142,13 @@ define([
                         1.0, 1.0,
                         0.0, 1.0
                     ]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        vertexArray = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        vertexArray = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             bufferUsage : BufferUsage.STATIC_DRAW
         });

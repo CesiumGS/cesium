@@ -68,15 +68,15 @@ void main()
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
     {
-        p = vec4(czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz), 1.0);
-        prev = vec4(czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz), 1.0);
-        next = vec4(czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz), 1.0);
+        p = czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz);
+        prev = czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz);
+        next = czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz);
     }
     else if (czm_morphTime == 0.0)
     {
-        p = vec4(czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy), 1.0);
-        prev = vec4(czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy), 1.0);
-        next = vec4(czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy), 1.0);
+        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);
+        prev = czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy);
+        next = czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy);
     }
     else
     {

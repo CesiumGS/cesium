@@ -7,6 +7,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -31,6 +33,8 @@ define([
         ComponentDatatype,
         defaultValue,
         destroyObject,
+        Geometry,
+        GeometryAttribute,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -113,9 +117,9 @@ define([
             return vertexArray;
         }
 
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -124,9 +128,9 @@ define([
                         1.0,  1.0,
                        -1.0,  1.0
                     ]
-                },
+                }),
 
-                textureCoordinates : {
+                textureCoordinates : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -135,12 +139,13 @@ define([
                         1.0, 1.0,
                         0.0, 1.0
                     ]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        vertexArray = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        vertexArray = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             bufferUsage : BufferUsage.STATIC_DRAW
         });

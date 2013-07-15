@@ -15,7 +15,7 @@ define(function() {
      * }
      */
     var defined = function(value) {
-        return typeof value !== 'undefined';
+        return value !== undefined;
     };
 
     return defined;

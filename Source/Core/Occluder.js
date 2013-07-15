@@ -374,7 +374,7 @@ define([
         }
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-        var positions = extent.subsample(ellipsoid, computeOccludeePointFromExtentScratch);
+        var positions = extent.subsample(ellipsoid, 0.0, computeOccludeePointFromExtentScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // TODO: get correct ellipsoid center

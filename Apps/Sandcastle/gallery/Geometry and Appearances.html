@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Geometry and Appearances.">
+    <meta name="cesium-sandcastle-labels" content="Beginner">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source'
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium + require.js">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+require(['Cesium'], function(Cesium) {
+    "use strict";
+
+    var viewer = new Cesium.Viewer('cesiumContainer');
+    
+    var scene = viewer.scene;
+    var primitives = scene.getPrimitives();
+    var ellipsoid = viewer.centralBody.getEllipsoid();
+    
+    // Combine instances for an extent, polygon, ellipse, and circle into a single primitive.
+    
+    var extentInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.ExtentGeometry({
+            extent : Cesium.Extent.fromDegrees(-92.0, 30.0, -85.0, 40.0),
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+
+    var polygonInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : {
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cesium.Cartographic.fromDegrees(-109.0, 30.0),
+                    Cesium.Cartographic.fromDegrees(-95.0, 30.0),
+                    Cesium.Cartographic.fromDegrees(-95.0, 40.0),
+                    Cesium.Cartographic.fromDegrees(-109.0, 40.0)
+                ]),
+                holes : [{
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cesium.Cartographic.fromDegrees(-107.0, 31.0),
+                        Cesium.Cartographic.fromDegrees(-107.0, 39.0),
+                        Cesium.Cartographic.fromDegrees(-97.0, 39.0),
+                        Cesium.Cartographic.fromDegrees(-97.0, 31.0)
+                    ]),
+                    holes : [{
+                        positions : ellipsoid.cartographicArrayToCartesianArray([
+                            Cesium.Cartographic.fromDegrees(-105.0, 33.0),
+                            Cesium.Cartographic.fromDegrees(-99.0, 33.0),
+                            Cesium.Cartographic.fromDegrees(-99.0, 37.0),
+                            Cesium.Cartographic.fromDegrees(-105.0, 37.0)
+                        ]),
+                        holes : [{
+                            positions : ellipsoid.cartographicArrayToCartesianArray([
+                                Cesium.Cartographic.fromDegrees(-103.0, 34.0),
+                                Cesium.Cartographic.fromDegrees(-101.0, 34.0),
+                                Cesium.Cartographic.fromDegrees(-101.0, 36.0),
+                                Cesium.Cartographic.fromDegrees(-103.0, 36.0)
+                            ])
+                        }]
+                    }]
+                }]
+            },
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+    
+    var ellipseInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipseGeometry({
+            center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0)),
+            semiMinorAxis : 200000.0,
+            semiMajorAxis : 500000.0,
+            rotation : Cesium.Math.toRadians(30.0),
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+
+    var circleInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.CircleGeometry({
+            center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-72.0, 35.0)),
+            radius : 200000.0,
+            vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
+        })
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
+        appearance : new Cesium.EllipsoidSurfaceAppearance({
+            material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+        })
+    }));
+
+    // Combine instances each with a unique color.
+    // We can combine heterogeneous geometries as we 
+    // do here as long as vertex formats match. 
+    var instances = [];
+    var i;
+    var height;
+    
+    for (i = 0; i < 5; ++i) {
+        height = 200000.0 * i;
+
+        instances.push(new Cesium.GeometryInstance({
+            geometry : new Cesium.CircleGeometry({
+                center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-65.0, 35.0)),
+                radius : 200000.0,
+                height : height,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        }));
+        
+        instances.push(new Cesium.GeometryInstance({
+            geometry : new Cesium.ExtentGeometry({
+                extent : Cesium.Extent.fromDegrees(-62.0, 33.0, -57.0, 38.0),
+                height : height,
+                vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        }));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : instances,
+        appearance : new Cesium.PerInstanceColorAppearance()
+    }));
+    
+    // Create box and ellipsoid boxes, and use the instance's
+    // modelMatrix to scale and position them.
+    var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
+    });
+    var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        radii : new Cesium.Cartesian3(0.5, 0.5, 1.0)
+    });
+
+    instances = [];
+    for (i = 0; i < 5; ++i) {
+        height = 100000.0 + (200000.0 * i);
+        
+        instances.push(new Cesium.GeometryInstance({
+            geometry : boxGeometry,
+            modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
+        }));
+        
+        instances.push(new Cesium.GeometryInstance({
+            geometry : ellipsoidGeometry,
+            modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+                ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
+        }));
+    }
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : instances,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+    
+    // Combine several polylines, each with a unique color.
+    // Override the appearance render state to change the
+    // line on system's that support it (Linx/Mac).
+    
+    instances = [];
+    
+    for (i = 0; i < 40; i += 2) {
+        instances.push(new Cesium.GeometryInstance({
+            geometry : new Cesium.SimplePolylineGeometry({
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cesium.Cartographic.fromDegrees(-100.0 + i, 48.0),
+                    Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0)
+                ])
+            }),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
+        }));
+    }
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : instances,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
+    
+    // Create a single wall
+    var wallInstance = new Cesium.GeometryInstance({
+        geometry : new Cesium.WallGeometry({
+            positions : ellipsoid.cartographicArrayToCartesianArray([
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 42.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-95.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 45.0, 100000.0),
+                Cesium.Cartographic.fromDegrees(-100.0, 42.0, 100000.0)
+            ])
+        })
+    });
+    var wallMaterial = Cesium.Material.fromType(scene.getContext(), 'Checkerboard');
+    var wallPrimitive = new Cesium.Primitive({
+        geometryInstances : wallInstance,
+        appearance : new Cesium.MaterialAppearance({
+            material : wallMaterial,
+            faceForward : true
+        })
+    });
+    wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
+    scene.getPrimitives().add(wallPrimitive);
+    
+    Sandcastle.finishedLoading();
+});
+</script>
+</body>
+</html>
