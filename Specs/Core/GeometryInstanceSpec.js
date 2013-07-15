@@ -61,99 +61,10 @@ defineSuite([
         expect(attributes).toBe(attributes);
     });
 
-    it('clone', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                        0.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0
-                    ])
-                })
-            },
-            indices : new Uint16Array([0, 1, 2]),
-            primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
-        });
-        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 9000000.0));
-        var attributes = {
-            color : new GeometryInstanceAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true,
-                value : new Uint8Array([255, 255, 0, 255])
-            })
-        };
-        var instance = new GeometryInstance({
-            geometry : geometry,
-            modelMatrix : modelMatrix,
-            id : 'geometry',
-            attributes : attributes
-        });
-        var clone = instance.clone();
-
-        expect(clone.geometry).toBeDefined();
-        expect(clone.geometry.attributes).toBeDefined();
-        expect(clone.geometry.attributes.position).toBeDefined();
-        expect(clone.geometry.indices).toBeDefined();
-
-        expect(clone.modelMatrix).toEqual(instance.modelMatrix);
-        expect(clone.id).toEqual(instance.id);
-
-        expect(clone.attributes).toBeDefined();
-        expect(clone.attributes.color).toBeDefined();
-    });
-
-    it('clone with result parameter', function() {
-        var geometry = new Geometry({
-            attributes : {
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : new Float64Array([
-                        0.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0,
-                        0.0, 1.0, 0.0
-                    ])
-                })
-            },
-            indices : new Uint16Array([0, 1, 2]),
-            primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : new BoundingSphere(new Cartesian3(0.5, 0.5, 0.0), 1.0)
-        });
-        var modelMatrix = Matrix4.multiplyByTranslation(Matrix4.IDENTITY, new Cartesian3(0.0, 0.0, 9000000.0));
-        var attributes = {
-            color : new GeometryInstanceAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true,
-                value : new Uint8Array([255, 255, 0, 255])
-            })
-        };
-        var instance = new GeometryInstance({
-            geometry : geometry,
-            modelMatrix : modelMatrix,
-            id : 'geometry',
-            attributes : attributes
-        });
-        var result = new GeometryInstance();
-        var clone = instance.clone(result);
-
-        expect(clone).toBe(result);
-
-        expect(clone.geometry).toBeDefined();
-        expect(clone.geometry.attributes).toBeDefined();
-        expect(clone.geometry.attributes.position).toBeDefined();
-        expect(clone.geometry.indices).toBeDefined();
-
-        expect(clone.modelMatrix).toEqual(instance.modelMatrix);
-        expect(clone.id).toEqual(instance.id);
-
-        expect(clone.attributes).toBeDefined();
-        expect(clone.attributes.color).toBeDefined();
+    it('constructor throws without geometry', function() {
+        expect(function() {
+            return new GeometryInstance();
+        }).toThrow();
     });
 
 });

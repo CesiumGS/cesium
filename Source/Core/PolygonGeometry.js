@@ -127,28 +127,29 @@ define([
      * @alias PolygonGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] An array of positions that defined the corner points of the polygon.
-     * @param {Object} [options.polygonHierarchy] A polygon hierarchy that can include holes.
+     * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      *
+     * @exception {DeveloperError} polygonHierarchy is required.
      * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
      * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
      *
      * @example
      * // create a polygon from points
      * var geometry = new PolygonGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
+     *     polygonHierarchy : {
+     *         positions : ellipsoid.cartographicArrayToCartesianArray([
+     *             Cartographic.fromDegrees(-72.0, 40.0),
+     *             Cartographic.fromDegrees(-70.0, 35.0),
+     *             Cartographic.fromDegrees(-75.0, 30.0),
+     *             Cartographic.fromDegrees(-70.0, 30.0),
+     *             Cartographic.fromDegrees(-68.0, 40.0)
+     *         ])
+     *     }
      * });
      *
      * // create a nested polygon with holes
@@ -192,85 +193,69 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var stRotation = defaultValue(options.stRotation, 0.0);
         var height = defaultValue(options.height, 0.0);
 
-        var positions = options.positions;
         var polygonHierarchy = options.polygonHierarchy;
+        if (typeof polygonHierarchy === 'undefined') {
+            throw new DeveloperError('options.polygonHierarchy is required.');
+        }
 
-        var geometries = [];
-        var geometry;
-        var boundingSphere;
+        // create from a polygon hierarchy
+        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
+        var polygons = [];
+        var queue = new Queue();
+        queue.enqueue(polygonHierarchy);
+
         var i;
 
-        var outerPositions;
+        while (queue.length !== 0) {
+            var outerNode = queue.dequeue();
+            var outerRing = outerNode.positions;
 
-        if (typeof positions !== 'undefined') {
-            // create from positions
-            outerPositions = positions;
+            if (outerRing.length < 3) {
+                throw new DeveloperError('At least three positions are required.');
+            }
 
-            boundingSphere = BoundingSphere.fromPoints(positions);
-            geometry = createGeometryFromPositions(ellipsoid, positions, granularity);
+            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
+            if (numChildren === 0) {
+                // The outer polygon is a simple polygon with no nested inner polygon.
+                polygons.push(outerNode.positions);
+            } else {
+                // The outer polygon contains inner polygons
+                var holes = [];
+                for (i = 0; i < numChildren; i++) {
+                    var hole = outerNode.holes[i];
+                    holes.push(hole.positions);
+
+                    var numGrandchildren = 0;
+                    if (typeof hole.holes !== 'undefined') {
+                        numGrandchildren = hole.holes.length;
+                    }
+
+                    for (var j = 0; j < numGrandchildren; j++) {
+                        queue.enqueue(hole.holes[j]);
+                    }
+                }
+                var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
+                polygons.push(combinedPolygon);
+            }
+        }
+
+        var outerPositions =  polygons[0];
+        // The bounding volume is just around the boundary points, so there could be cases for
+        // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
+        // volume doesn't cover the polygon.
+        var boundingSphere = BoundingSphere.fromPoints(outerPositions);
+
+        var geometry;
+        var geometries = [];
+        for (var k = 0; k < polygons.length; k++) {
+            geometry = createGeometryFromPositions(ellipsoid, polygons[k], granularity);
             if (typeof geometry !== 'undefined') {
                 geometries.push(geometry);
             }
-        } else if (typeof polygonHierarchy !== 'undefined') {
-            // create from a polygon hierarchy
-            // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            var polygons = [];
-            var queue = new Queue();
-            queue.enqueue(polygonHierarchy);
-
-            while (queue.length !== 0) {
-                var outerNode = queue.dequeue();
-                var outerRing = outerNode.positions;
-
-                if (outerRing.length < 3) {
-                    throw new DeveloperError('At least three positions are required.');
-                }
-
-                var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-                if (numChildren === 0) {
-                    // The outer polygon is a simple polygon with no nested inner polygon.
-                    polygons.push(outerNode.positions);
-                } else {
-                    // The outer polygon contains inner polygons
-                    var holes = [];
-                    for (i = 0; i < numChildren; i++) {
-                        var hole = outerNode.holes[i];
-                        holes.push(hole.positions);
-
-                        var numGrandchildren = 0;
-                        if (typeof hole.holes !== 'undefined') {
-                            numGrandchildren = hole.holes.length;
-                        }
-
-                        for (var j = 0; j < numGrandchildren; j++) {
-                            queue.enqueue(hole.holes[j]);
-                        }
-                    }
-                    var combinedPolygon = PolygonPipeline.eliminateHoles(outerRing, holes);
-                    polygons.push(combinedPolygon);
-                }
-            }
-
-            polygonHierarchy = polygons;
-
-            outerPositions =  polygonHierarchy[0];
-            // The bounding volume is just around the boundary points, so there could be cases for
-            // contrived polygons on contrived ellipsoids - very oblate ones - where the bounding
-            // volume doesn't cover the polygon.
-            boundingSphere = BoundingSphere.fromPoints(outerPositions);
-
-            for (i = 0; i < polygonHierarchy.length; i++) {
-                geometry = createGeometryFromPositions(ellipsoid, polygonHierarchy[i], granularity);
-                if (typeof geometry !== 'undefined') {
-                    geometries.push(geometry);
-                }
-            }
-        } else {
-            throw new DeveloperError('positions or hierarchy must be supplied.');
         }
 
         geometry = GeometryPipeline.combine(geometries);
@@ -437,6 +422,54 @@ define([
          * @type BoundingSphere
          */
         this.boundingSphere = boundingSphere;
+    };
+
+    /**
+     * Creates a polygon from an array of positions.
+     *
+     * @memberof PolygonGeometry
+     *
+     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} options.positions is required.
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @example
+     * // create a polygon from points
+     * var geometry = new PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
+     */
+    PolygonGeometry.fromPositions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.positions === 'undefined') {
+            throw new DeveloperError('options.positions is required.');
+        }
+
+        var newOptions = {
+            polygonHierarchy : {
+                positions : options.positions
+            },
+            height : options.height,
+            vertexFormat : options.vertexFormat,
+            stRotation : options.stRotation,
+            ellipsoid : options.ellipsoid,
+            granularity : options.granularity
+        };
+        return new PolygonGeometry(newOptions);
     };
 
     return PolygonGeometry;

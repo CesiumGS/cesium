@@ -183,7 +183,7 @@ defineSuite([
     });
 
     it('gets the default granularity', function() {
-        expect(polygon.granularity).toEqual(CesiumMath.toRadians(1.0));
+        expect(polygon.granularity).toEqual(CesiumMath.RADIANS_PER_DEGREE);
     });
 
     it('renders', function() {
