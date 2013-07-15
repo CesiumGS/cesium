@@ -198,7 +198,7 @@ define([
             }
         }
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -599,7 +599,7 @@ define([
             }
         }
 
-        var attributes = {};
+        var attributes = new GeometryAttributes();
 
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -817,7 +817,7 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = new GeometryAttributes(o.attributes);
+        this.attributes = o.attributes;
 
         /**
          * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
