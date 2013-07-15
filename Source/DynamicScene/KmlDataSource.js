@@ -83,25 +83,14 @@ define(['../Core/createGuid',
         for (i = 0; i < el.childNodes.length; i++) {
             text = text + el.childNodes[i].nodeValue;
         }
+
         var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
         coords = regExp.exec(text);
         coords[0] = parseFloat(coords[1], 10);
         coords[1] = parseFloat(coords[2].substring(1), 10);
         coords[2] = coords[3] && parseFloat(coords[3].substring(1), 10);
         coords.pop();
-        //        for (i = 0; i < text.length; i++) {
-//            var ll = text[i].split(',');
-//            if (ll.length < 2) {
-//                continue;
-//            }
-//            coords.push(ll[0]);
-//            coords.push(ll[1]);
-//            if(typeof ll[2] === 'undefined'){
-//                coords.push(ll[2]); //defaultValue will handle it
-//            } else {
-//                coords.push(parseInt(ll[2], 10));
-//            }
-//        }
+
         return coords;
     }
 
@@ -139,7 +128,7 @@ define(['../Core/createGuid',
     // KML processing functions
     function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection) {
         placemark.id = getId(placemark);
-        dynamicObjectCollection.getOrCreateObject(placemark.id); //dataSource._dynamicObjectCollection...?
+        dynamicObjectCollection.getOrCreateObject(placemark.id);
 
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
@@ -236,7 +225,6 @@ define(['../Core/createGuid',
                 var color = getElementValue(node,'color');
                 color = color.split("").reverse().join(""); //KML uses abgr instead of rgba
 
-                //constant property or dynamic property?
                 dynamicObject.billboard.image = icon && new ConstantProperty(icon);
                 dynamicObject.billboard.scale = scale && new DynamicProperty(scale);
                 dynamicObject.billboard.color = color && new DynamicProperty(Color.fromRgba(color));
