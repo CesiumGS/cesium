@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './DeveloperError',
         './Cartesian3',
         './Cartesian4',
         './IntersectionTests',
@@ -8,6 +9,7 @@ define([
         './Plane'
     ], function(
         defaultValue,
+        DeveloperError,
         Cartesian3,
         Cartesian4,
         IntersectionTests,
@@ -110,6 +112,50 @@ define([
             positions : cartesians,
             lengths : segments
         };
+    };
+
+    /**
+     * Removes adjacent duplicate positions in an array of positions.
+     *
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The array of positions.  Each element is usually a {@see Cartesian3}, but all that is required is that the object have an <code>equals</code> function.
+     *
+     * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
+     *
+     * @exception {DeveloperError} positions is required.
+     *
+     * @example
+     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
+     * var positions = [
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+     */
+    PolylinePipeline.removeDuplicates = function(positions) {
+        if (typeof positions  === 'undefined') {
+            throw new DeveloperError('positions is required.');
+        }
+
+        var length = positions.length;
+        if (length < 2) {
+            return positions.slice(0);
+        }
+
+        var cleanedPositions = [];
+        cleanedPositions.push(positions[0]);
+
+        for (var i = 1; i < length; ++i) {
+            var v0 = positions[i - 1];
+            var v1 = positions[i];
+
+            if (!v0.equals(v1)) {
+                cleanedPositions.push(v1); // Shallow copy!
+            }
+        }
+
+        return cleanedPositions;
     };
 
     return PolylinePipeline;

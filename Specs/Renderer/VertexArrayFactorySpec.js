@@ -3,7 +3,9 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/ComponentDatatype',
-         'Core/MeshFilters',
+         'Core/Geometry',
+         'Core/GeometryAttribute',
+         'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Core/IndexDatatype',
          'Renderer/BufferUsage',
@@ -13,7 +15,9 @@ defineSuite([
          createContext,
          destroyContext,
          ComponentDatatype,
-         MeshFilters,
+         Geometry,
+         GeometryAttribute,
+         GeometryPipeline,
          PrimitiveType,
          IndexDatatype,
          BufferUsage,
@@ -40,13 +44,13 @@ defineSuite([
     });
 
     it('creates with no arguments', function() {
-        va = context.createVertexArrayFromMesh();
+        va = context.createVertexArrayFromGeometry();
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.getIndexBuffer()).not.toBeDefined();
     });
 
-    it('creates with no mesh', function() {
-        va = context.createVertexArrayFromMesh({
+    it('creates with no geometry', function() {
+        va = context.createVertexArrayFromGeometry({
             vertexLayout : VertexLayout.INTERLEAVED
         });
         expect(va.getNumberOfAttributes()).toEqual(0);
@@ -54,25 +58,26 @@ defineSuite([
     });
 
     it('creates a single-attribute vertex (non-interleaved)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh)
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(1);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = mesh.attributes.position;
+        var position = geometry.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
@@ -83,19 +88,20 @@ defineSuite([
     });
 
     it('creates a single-attribute vertex (interleaved)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 1.0, 1.0, 1.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
@@ -103,7 +109,7 @@ defineSuite([
         expect(va.getNumberOfAttributes()).toEqual(1);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = mesh.attributes.position;
+        var position = geometry.attributes.position;
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
@@ -114,37 +120,38 @@ defineSuite([
     });
 
     it('creates a homogeneous multiple-attribute vertex (non-interleaved)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                customPosition : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 2.0, 2.0, 2.0]
-                },
-                normal : {
+                }),
+                customNormal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh)
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry)
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = mesh.attributes.position;
+        var position = geometry.attributes.customPosition;
         expect(va.getAttribute(0).index).toEqual(0);
         expect(va.getAttribute(0).componentDatatype).toEqual(position.componentDatatype);
         expect(va.getAttribute(0).componentsPerAttribute).toEqual(position.componentsPerAttribute);
         expect(va.getAttribute(0).offsetInBytes).toEqual(0);
         expect(va.getAttribute(0).strideInBytes).toEqual(0); // Tightly packed
 
-        var normal = mesh.attributes.position;
+        var normal = geometry.attributes.customNormal;
         expect(va.getAttribute(1).index).toEqual(1);
         expect(va.getAttribute(1).componentDatatype).toEqual(normal.componentDatatype);
         expect(va.getAttribute(1).componentsPerAttribute).toEqual(normal.componentsPerAttribute);
@@ -155,32 +162,33 @@ defineSuite([
     });
 
     it('creates a homogeneous multiple-attribute vertex (interleaved)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                customPosition : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 2.0, 2.0, 2.0]
-                },
-                normal : {
+                }),
+                customNormal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [1.0, 1.0, 1.0, 3.0, 3.0, 3.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = mesh.attributes.position;
-        var normal = mesh.attributes.position;
+        var position = geometry.attributes.customPosition;
+        var normal = geometry.attributes.customNormal;
         var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + normal.componentDatatype.sizeInBytes * normal.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
@@ -199,32 +207,33 @@ defineSuite([
     });
 
     it('creates a heterogeneous multiple-attribute vertex (interleaved)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 2.0, 2.0, 2.0]
-                },
-                colors : {
+                }),
+                colors : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 4,
                     values : [1, 1, 1, 1, 2, 2, 2, 2]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
-            attributeIndices : MeshFilters.createAttributeIndices(mesh),
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
             vertexLayout : VertexLayout.INTERLEAVED
         });
 
         expect(va.getNumberOfAttributes()).toEqual(2);
         expect(va.getIndexBuffer()).not.toBeDefined();
 
-        var position = mesh.attributes.position;
-        var colors = mesh.attributes.colors;
+        var position = geometry.attributes.position;
+        var colors = geometry.attributes.colors;
         var expectedStride = position.componentDatatype.sizeInBytes * position.componentsPerAttribute + colors.componentDatatype.sizeInBytes * colors.componentsPerAttribute;
 
         expect(va.getAttribute(0).index).toEqual(0);
@@ -243,29 +252,30 @@ defineSuite([
     });
 
     it('sorts interleaved attributes from large to small components', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                bytes : {
+                bytes : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.BYTE,
                     componentsPerAttribute : 1,
                     values : [0]
-                },
-                shorts : {
+                }),
+                shorts : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.SHORT,
                     componentsPerAttribute : 1,
                     values : [1]
-                },
-                floats : {
+                }),
+                floats : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [2]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
         });
@@ -307,25 +317,26 @@ defineSuite([
     });
 
     it('sorts interleaved attributes from large to small components (2)', function() {
-        // TODO:  Color should be normalized
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                color : {
+                color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 4,
+                    normalize : true,
                     values : [255, 0, 0, 255, 0, 255, 0, 255]
-                },
-                position : {
+                }),
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
         });
@@ -372,34 +383,35 @@ defineSuite([
     });
 
     it('sorts interleaved attributes from large to small components (3)', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                unsignedByteAttribute : {
+                unsignedByteAttribute : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 2,
                     values : [1, 2]
-                },
-                unsignedShortAttribute : {
+                }),
+                unsignedShortAttribute : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
                     componentsPerAttribute : 1,
                     values : [3]
-                },
-                byteAttribute : {
+                }),
+                byteAttribute : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.BYTE,
                     componentsPerAttribute : 1,
                     values : [4]
-                },
-                shortAttribute : {
+                }),
+                shortAttribute : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.SHORT,
                     componentsPerAttribute : 1,
                     values : [5]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
         });
@@ -438,36 +450,36 @@ defineSuite([
     });
 
     it('creates a custom interleaved vertex', function() {
-        // TODO:  Color should be normalized
-
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-                },
-                color : {
+                }),
+                color : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 3,
+                    normalize : true,
                     values : [255, 0, 0, 0, 255, 0]
-                },
-                normal : {
+                }),
+                normal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 3,
                     values : [1.0, 0.0, 0.0, 0.0, 1.0, 0.0]
-                },
-                temperature : {
+                }),
+                temperature : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_SHORT,
                     componentsPerAttribute : 1,
                     values : [75, 100]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var attributeIndices = MeshFilters.createAttributeIndices(mesh);
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             vertexLayout : VertexLayout.INTERLEAVED
         });
@@ -540,85 +552,68 @@ defineSuite([
     });
 
     it('creates an index buffer', function() {
-        var mesh = {
-            indexLists : [{
-                primitiveType : PrimitiveType.POINTS,
-                values : [0]
-            }]
-        };
+        var geometry = new Geometry({
+            attributes : {},
+            indices : [0],
+            primitiveType : PrimitiveType.POINTS
+        });
 
-        var va = context.createVertexArrayFromMesh({
-            mesh : mesh
+        var va = context.createVertexArrayFromGeometry({
+            geometry : geometry
         });
 
         expect(va.getNumberOfAttributes()).toEqual(0);
         expect(va.getIndexBuffer()).toBeDefined();
         expect(va.getIndexBuffer().getUsage()).toEqual(BufferUsage.DYNAMIC_DRAW); // Default
         expect(va.getIndexBuffer().getIndexDatatype()).toEqual(IndexDatatype.UNSIGNED_SHORT);
-        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(mesh.indexLists[0].values.length);
-    });
-
-    it('throws with multiple index lists', function() {
-        var mesh = {
-            indexLists : [{
-                primitiveType : PrimitiveType.POINTS,
-                values : [0]
-            }, {
-                primitiveType : PrimitiveType.POINTS,
-                values : [1]
-            }]
-        };
-
-        expect(function() {
-            return context.createVertexArrayFromMesh({
-                mesh : mesh
-            });
-        }).toThrow();
+        expect(va.getIndexBuffer().getNumberOfIndices()).toEqual(geometry.indices.length);
     });
 
     it('throws with different number of interleaved attributes', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [0.0]
-                },
-                normal : {
+                }),
+                normal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [1.0, 2.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
         expect(function() {
-            return context.createVertexArrayFromMesh({
-                mesh : mesh,
+            return context.createVertexArrayFromGeometry({
+                geometry : geometry,
                 vertexLayout : VertexLayout.INTERLEAVED
             });
         }).toThrow();
     });
 
     it('throws with duplicate indices', function() {
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [0.0]
-                },
-                normal : {
+                }),
+                normal : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 1,
                     values : [1.0]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.POINTS
+        });
 
         expect(function() {
-            return context.createVertexArrayFromMesh({
-                mesh : mesh,
+            return context.createVertexArrayFromGeometry({
+                geometry : geometry,
                 attributeIndices : {
                     position : 0,
                     normal : 0

@@ -253,7 +253,7 @@ define([
             throw new DeveloperError('extent is required.');
         }
 
-        var positions = extent.subsample(ellipsoid, subsampleScratch);
+        var positions = extent.subsample(ellipsoid, 0.0, subsampleScratch);
         var bs = BoundingSphere.fromPoints(positions);
 
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make

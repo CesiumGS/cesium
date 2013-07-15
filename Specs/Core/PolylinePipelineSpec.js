@@ -49,4 +49,33 @@ defineSuite([
         expect(segments.lengths[0]).toEqual(2);
         expect(segments.lengths[1]).toEqual(2);
     });
+
+    it('removeDuplicates to return one positions', function() {
+        var positions = [Cartesian3.ZERO];
+        var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+        expect(nonDuplicatePositions).not.toBe(positions);
+        expect(nonDuplicatePositions).toEqual(positions);
+    });
+
+    it('removeDuplicates to remove duplicates', function() {
+        var positions = [
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(2.0, 2.0, 2.0),
+            new Cartesian3(3.0, 3.0, 3.0),
+            new Cartesian3(3.0, 3.0, 3.0)];
+        var expectedPositions = [
+            new Cartesian3(1.0, 1.0, 1.0),
+            new Cartesian3(2.0, 2.0, 2.0),
+            new Cartesian3(3.0, 3.0, 3.0)];
+        var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+        expect(nonDuplicatePositions).not.toBe(expectedPositions);
+        expect(nonDuplicatePositions).toEqual(expectedPositions);
+    });
+
+    it('removeDuplicates throws without positions', function() {
+        expect(function() {
+            PolylinePipeline.removeDuplicates();
+        }).toThrow();
+    });
 });
