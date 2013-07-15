@@ -755,93 +755,93 @@ define([
 
         var attributes = gltf.attributes;
         var indices = gltf.indices;
-        var meshes = gltf.meshes;
+        var gltfMeshes = gltf.meshes;
 
         var programs = gltf.programs;
         var techniques = gltf.techniques;
         var materials = gltf.materials;
 
-        var name;
-        for (name in meshes) {
-            if (meshes.hasOwnProperty(name)) {
-                var mesh = meshes[name];
-                var primitives = meshes[name].primitives;
-                var length = primitives.length;
-                var meshesCommands = new Array(length);
+        var meshes = node.meshes;
+        var meshesLength = meshes.length;
 
-                for (var i = 0; i < length; ++i) {
-                    var primitive = primitives[i];
-                    var ix = indices[primitive.indices];
-                    var instanceTechnique = materials[primitive.material].instanceTechnique;
-                    var technique = techniques[instanceTechnique.technique];
-                    var pass = technique.passes[technique.pass];
-                    var instanceProgram = pass.instanceProgram;
+        for (var j = 0; j < meshesLength; ++j) {
+            var mesh = gltfMeshes[meshes[j]];
+            var primitives = mesh.primitives;
+            var length = primitives.length;
+            var meshesCommands = new Array(length);
 
-                    var boundingSphere;
-                    var positionAttribute = primitive.semantics.POSITION;
-                    if (defined(positionAttribute)) {
-                        var a = attributes[positionAttribute];
-                        boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
-                    }
+            for (var i = 0; i < length; ++i) {
+                var primitive = primitives[i];
+                var ix = indices[primitive.indices];
+                var instanceTechnique = materials[primitive.material].instanceTechnique;
+                var technique = techniques[instanceTechnique.technique];
+                var pass = technique.passes[technique.pass];
+                var instanceProgram = pass.instanceProgram;
 
-                    var primitiveType = PrimitiveType[primitive.primitive];
-                    var vertexArray = primitive.extra.czmVertexArray;
-                    var count = ix.count;
-                    var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
-                    var uniformMap = instanceTechnique.extra.czmUniformMap;
-                    var rs = pass.states.extra.czmRenderState;
-                    var owner = {
-                        instance : model,
-                        node : node,
-                        mesh : mesh,
-                        primitive : primitive
-                    };
-
-                    var command = new DrawCommand();
-                    command.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
-                    command.modelMatrix = new Matrix4();                           // computed in update()
-                    command.primitiveType = primitiveType;
-                    command.vertexArray = vertexArray;
-                    command.count = count;
-                    command.offset = offset;
-                    command.shaderProgram = programs[instanceProgram.program].extra.czmProgram;
-                    command.uniformMap = uniformMap;
-                    command.renderState = rs;
-                    command.owner = owner;
-                    command.debugShowBoundingVolume = debugShowBoundingVolume;
-                    colorCommands.push(command);
-
-// TODO: Create type for pick owner?  Use for all primitives.
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-
-                    var pickUniformMap = combine([
-                        uniformMap, {
-                            czm_pickColor : createPickColorFunction(pickId.color)
-                        }], false, false);
-
-                    var pickCommand = new DrawCommand();
-                    pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
-                    pickCommand.modelMatrix = new Matrix4();                           // computed in update()
-                    pickCommand.primitiveType = primitiveType;
-                    pickCommand.vertexArray = vertexArray;
-                    pickCommand.count = count;
-                    pickCommand.offset = offset;
-                    pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
-                    pickCommand.uniformMap = pickUniformMap;
-                    pickCommand.renderState = rs;
-                    pickCommand.owner = owner;
-                    pickCommands.push(pickCommand);
-
-                    meshesCommands[i] = {
-                        command : command,
-                        pickCommand : pickCommand,
-                        unscaledBoundingSphere : boundingSphere
-                    };
+                var boundingSphere;
+                var positionAttribute = primitive.semantics.POSITION;
+                if (defined(positionAttribute)) {
+                    var a = attributes[positionAttribute];
+                    boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(a.min), Cartesian3.fromArray(a.max));
                 }
 
-                node.extra.czmMeshesCommands[name] = meshesCommands;
+                var primitiveType = PrimitiveType[primitive.primitive];
+                var vertexArray = primitive.extra.czmVertexArray;
+                var count = ix.count;
+                var offset = (ix.byteOffset / IndexDatatype[ix.type].sizeInBytes);  // glTF has offset in bytes.  Cesium has offsets in indices
+                var uniformMap = instanceTechnique.extra.czmUniformMap;
+                var rs = pass.states.extra.czmRenderState;
+                var owner = {
+                    instance : model,
+                    node : node,
+                    mesh : mesh,
+                    primitive : primitive
+                };
+
+                var command = new DrawCommand();
+                command.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
+                command.modelMatrix = new Matrix4();                           // computed in update()
+                command.primitiveType = primitiveType;
+                command.vertexArray = vertexArray;
+                command.count = count;
+                command.offset = offset;
+                command.shaderProgram = programs[instanceProgram.program].extra.czmProgram;
+                command.uniformMap = uniformMap;
+                command.renderState = rs;
+                command.owner = owner;
+                command.debugShowBoundingVolume = debugShowBoundingVolume;
+                colorCommands.push(command);
+
+// TODO: Create type for pick owner?  Use for all primitives.
+                var pickId = context.createPickId(owner);
+                pickIds.push(pickId);
+
+                var pickUniformMap = combine([
+                    uniformMap, {
+                        czm_pickColor : createPickColorFunction(pickId.color)
+                    }], false, false);
+
+                var pickCommand = new DrawCommand();
+                pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
+                pickCommand.modelMatrix = new Matrix4();                           // computed in update()
+                pickCommand.primitiveType = primitiveType;
+                pickCommand.vertexArray = vertexArray;
+                pickCommand.count = count;
+                pickCommand.offset = offset;
+                pickCommand.shaderProgram = programs[instanceProgram.program].extra.czmPickProgram;
+                pickCommand.uniformMap = pickUniformMap;
+                pickCommand.renderState = rs;
+                pickCommand.owner = owner;
+                pickCommands.push(pickCommand);
+
+                meshesCommands[i] = {
+                    command : command,
+                    pickCommand : pickCommand,
+                    unscaledBoundingSphere : boundingSphere
+                };
             }
+
+            node.extra.czmMeshesCommands[name] = meshesCommands;
         }
     }
 
