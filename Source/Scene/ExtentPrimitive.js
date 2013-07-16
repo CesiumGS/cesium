@@ -105,7 +105,7 @@ define([
         this._rotation = undefined;
 
         /**
-         * The angle, in radians, relative to north that the polygon's texture is rotated.
+         * The angle, in radians, relative to north that the primitive's texture is rotated.
          * Positive angles rotate counter-clockwise.
          *
          * @type Number
