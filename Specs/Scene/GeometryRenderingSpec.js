@@ -29,6 +29,8 @@ defineSuite([
          'Scene/Primitive',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
+         'Scene/EllipsoidSurfaceAppearance',
+         'Scene/Material',
          'Specs/render',
          'Specs/pick',
          'Specs/createCanvas',
@@ -66,6 +68,8 @@ defineSuite([
          Primitive,
          SceneMode,
          OrthographicFrustum,
+         EllipsoidSurfaceAppearance,
+         Material,
          render,
          pick,
          createCanvas,
@@ -105,18 +109,20 @@ defineSuite([
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
 
-    function render3D(instance, afterView, boundingSphere) {
+    function render3D(instance, afterView, appearance) {
+        if (typeof appearance === 'undefined') {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+            appearance : appearance
         });
 
         var frameState = createFrameState();
-
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -149,7 +155,7 @@ defineSuite([
         camera.position.z = center.x + radius;
     }
 
-    function renderCV(instance, afterView, boundingSphere) {
+    function renderCV(instance, afterView) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -166,8 +172,7 @@ defineSuite([
                                                   0.0, 0.0, 0.0, 1.0);
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphereCV(frameState.camera, sphere, instance.modelMatrix);
+        viewSphereCV(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -206,7 +211,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
     }
 
-    function render2D(instance, boundingSphere) {
+    function render2D(instance) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -229,8 +234,7 @@ defineSuite([
         frameState.camera.frustum = frustum;
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere2D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere2D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -242,7 +246,7 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function pickGeometry(instance, afterView, boundingSphere) {
+    function pickGeometry(instance, afterView) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -251,9 +255,7 @@ defineSuite([
         });
 
         var frameState = createFrameState();
-
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -487,6 +489,25 @@ defineSuite([
                 }
             });
             render3D(rotated);
+        });
+
+        it('rotated texture', function() {
+            var rotated = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent,
+                    stRotation : CesiumMath.PI_OVER_TWO
+                }),
+                id : 'extent',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            var appearance = new EllipsoidSurfaceAppearance({
+                material : Material.fromType(undefined, 'Stripe')
+            });
+            render3D(rotated, undefined, appearance);
         });
 
         it('at height', function() {
