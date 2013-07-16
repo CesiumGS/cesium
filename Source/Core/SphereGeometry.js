@@ -32,7 +32,6 @@ define([
     var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
-        options.radii = radii;
         var ellipsoidOptions = {
                 radii: radii,
                 numberOfPartitions: options.numberOfPartitions,
