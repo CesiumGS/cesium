@@ -3,6 +3,7 @@ define([
         './clone',
         './defaultValue',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
@@ -24,6 +25,7 @@ define([
         clone,
         defaultValue,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -55,9 +57,10 @@ define([
 
     var nw = new Cartesian3();
     var nwCartographic = new Cartographic();
-    var stNWCartographic = new Cartographic();
     var centerCartographic = new Cartographic();
     var center = new Cartesian3();
+    var stExtent = new Extent();
+    var textureMatrix = new Matrix2();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
     var position = new Cartesian3();
@@ -70,6 +73,7 @@ define([
 
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
+    var textureCoordsScratch = new Cartesian2();
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -80,17 +84,14 @@ define([
     function computePosition(params, row, col, maxHeight, minHeight) {
         var radiiSquared = params.radiiSquared;
 
-        var latitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
-        stLatitude = stNWCartographic.latitude - params.stGranYCos * row - col * params.stGranXSin;
-        var cosLatitude = cos(latitude);
-        var nZ = sin(latitude);
+        stLatitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
+        var cosLatitude = cos(stLatitude);
+        var nZ = sin(stLatitude);
         var kZ = radiiSquared.z * nZ;
 
-        var longitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
-        stLongitude = stNWCartographic.longitude - row * params.stGranYSin + col * params.stGranXCos;
-
-        var nX = cosLatitude * cos(longitude);
-        var nY = cosLatitude * sin(longitude);
+        stLongitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
+        var nX = cosLatitude * cos(stLongitude);
+        var nY = cosLatitude * sin(stLongitude);
 
         var kX = radiiSquared.x * nX;
         var kY = radiiSquared.y * nY;
@@ -295,15 +296,20 @@ define([
     }
 
     function calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, offset) {
-        var extent = params.extent;
-        var stLon = (stLongitude - extent.west) * params.lonScalar;
-        var stLat = (stLatitude - extent.south) * params.latScalar;
+        textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
+        textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+
+        Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
+
+        textureCoordsScratch.x += 0.5;
+        textureCoordsScratch.y += 0.5;
+
         if (typeof offset !== 'undefined') {
-            wallTextureCoordinates[stIndex + offset] = stLon;
-            wallTextureCoordinates[stIndex + 1 + offset] = stLat;
+            wallTextureCoordinates[stIndex + offset] = textureCoordsScratch.x;
+            wallTextureCoordinates[stIndex + 1 + offset] = textureCoordsScratch.y;
         }
-        wallTextureCoordinates[stIndex++] = stLon;
-        wallTextureCoordinates[stIndex++] = stLat;
+        wallTextureCoordinates[stIndex++] = textureCoordsScratch.x;
+        wallTextureCoordinates[stIndex++] = textureCoordsScratch.y;
         return stIndex;
     }
 
@@ -318,7 +324,6 @@ define([
     }
 
     function constructExtent(options, vertexFormat, params) {
-        var extent = params.extent;
         var ellipsoid = params.ellipsoid;
         var size = params.size;
         var height = params.height;
@@ -340,8 +345,16 @@ define([
                 positions[posIndex++] = position.z;
 
                 if (vertexFormat.st) {
-                    textureCoordinates[stIndex++] = (stLongitude - extent.west) * params.lonScalar;
-                    textureCoordinates[stIndex++] = (stLatitude - extent.south) * params.latScalar;
+                    textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
+                    textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+
+                    Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
+
+                    textureCoordsScratch.x += 0.5;
+                    textureCoordsScratch.y += 0.5;
+
+                    textureCoordinates[stIndex++] = textureCoordsScratch.x;
+                    textureCoordinates[stIndex++] = textureCoordsScratch.y;
                 }
             }
         }
@@ -654,35 +667,26 @@ define([
         var rotation = options.rotation;
         var stRotation = options.stRotation;
 
-        // for computing texture coordinates
-        var lonScalar = 1.0 / (extent.east - extent.west);
-        var latScalar = 1.0 / (extent.north - extent.south);
-
+        Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);
-        Cartographic.clone(nwCartographic, stNWCartographic);
-        extent.getCenter(centerCartographic);
-        proj.project(centerCartographic, center);
 
         var granYCos = granularityY;
         var granXCos = granularityX;
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        var latitude;
-        var longitude;
-        var cosRotation;
-        var sinRotation;
-
         if (typeof rotation !== 'undefined') {
-            cosRotation = cos(rotation);
+            var cosRotation = cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
 
-            sinRotation = sin(rotation);
+            var sinRotation = sin(rotation);
             granYSin = granularityY * sinRotation;
             granXSin = granularityX * sinRotation;
 
             proj.project(nwCartographic, nw);
+            extent.getCenter(centerCartographic);
+            proj.project(centerCartographic, center);
 
             nw.subtract(center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
@@ -690,48 +694,41 @@ define([
             nw.add(center, nw);
             proj.unproject(nw, nwCartographic);
 
-            latitude = nwCartographic.latitude;
-            longitude = nwCartographic.longitude;
+            var latitude = nwCartographic.latitude;
+            var latitude0 = latitude + (width - 1) * granXSin;
+            var latitude1 = latitude - granYCos * (height - 1);
+            var latitude2 = latitude - granYCos * (height - 1) + (width - 1) * granXSin;
 
-            if (!isValidLatLon(latitude, longitude) ||
-                    !isValidLatLon(latitude + (width - 1) * granXSin, longitude + (width - 1) * granXCos) ||
-                    !isValidLatLon(latitude - granYCos * (height - 1), longitude + (height - 1) * granYSin) ||
-                    !isValidLatLon(latitude - granYCos * (height - 1) + (width - 1) * granXSin, longitude + (height - 1) * granYSin + (width - 1) * granXCos)) {
-                throw new DeveloperError('Rotated extent is invalid.');
-            }
-        }
+            var north = Math.max(latitude, latitude0, latitude1, latitude2);
+            var south = Math.min(latitude, latitude0, latitude1, latitude2);
 
-        var stGranYCos = granularityY;
-        var stGranXCos = granularityX;
-        var stGranYSin = 0.0;
-        var stGranXSin = 0.0;
+            var longitude = nwCartographic.longitude;
+            var longitude0 = longitude + (width - 1) * granXCos;
+            var longitude1 = longitude + (height - 1) * granYSin;
+            var longitude2 = longitude + (height - 1) * granYSin + (width - 1) * granXCos;
 
-        if (typeof stRotation !== 'undefined') {
-            cosRotation = cos(stRotation);
-            stGranYCos = granularityY * cosRotation;
-            stGranXCos = granularityX * cosRotation;
+            var east = Math.max(longitude, longitude0, longitude1, longitude2);
+            var west = Math.min(longitude, longitude0, longitude1, longitude2);
 
-            sinRotation = sin(stRotation);
-            stGranYSin = granularityY * sinRotation;
-            stGranXSin = granularityX * sinRotation;
-
-            proj.project(stNWCartographic, nw);
-
-            nw.subtract(center, nw);
-            Matrix2.fromRotation(rotation, rotationMatrix);
-            rotationMatrix.multiplyByVector(nw, nw);
-            nw.add(center, nw);
-            proj.unproject(nw, stNWCartographic);
-
-            latitude = stNWCartographic.latitude;
-            longitude = stNWCartographic.longitude;
-
-            if (!isValidLatLon(latitude, longitude) ||
-                    !isValidLatLon(latitude + (width - 1) * stGranXSin, longitude + (width - 1) * stGranXCos) ||
-                    !isValidLatLon(latitude - stGranYCos * (height - 1), longitude + (height - 1) * stGranYSin) ||
-                    !isValidLatLon(latitude - stGranYCos * (height - 1) + (width - 1) * stGranXSin, longitude + (height - 1) * stGranYSin + (width - 1) * stGranXCos)) {
+            if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
+                    !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
                 throw new DeveloperError('Rotated texture coordinates for extent are invalid.');
             }
+
+            stExtent.north = north;
+            stExtent.south = south;
+            stExtent.east = east;
+            stExtent.west = west;
+        }
+
+        var lonScalar = 1.0 / (stExtent.east - stExtent.west);
+        var latScalar = 1.0 / (stExtent.north - stExtent.south);
+
+        if (typeof stRotation !== 'undefined') {
+            // negate angle for a counter-clockwise rotation
+            Matrix2.fromRotation(-stRotation, textureMatrix);
+        } else {
+            Matrix2.clone(Matrix2.IDENTITY, textureMatrix);
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -742,10 +739,6 @@ define([
             granYSin : granYSin,
             granXCos : granXCos,
             granXSin : granXSin,
-            stGranYCos : stGranYCos,
-            stGranXCos : stGranXCos,
-            stGranYSin : stGranYSin,
-            stGranXSin : stGranYSin,
             radiiSquared : radiiSquared,
             ellipsoid : ellipsoid,
             lonScalar : lonScalar,
