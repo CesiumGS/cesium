@@ -56,8 +56,6 @@ define([
         createPickFragmentShaderSource,
         SceneMode) {
     "use strict";
-// TODO: remove before merge to master
-/*global console*/
 
     var ModelState = {
         NEEDS_LOAD : new Enumeration(0, 'NEEDS_LOAD'),
@@ -830,6 +828,7 @@ define([
 
                 var pickCommand = new DrawCommand();
                 pickCommand.boundingVolume = BoundingSphere.clone(boundingSphere); // updated in update()
+                pickCommand.modelMatrix = new Matrix4();                           // computed in update()
                 pickCommand.primitiveType = primitiveType;
                 pickCommand.vertexArray = vertexArray;
                 pickCommand.count = count;
