@@ -63,7 +63,7 @@ require([
     Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider)
 {
     "use strict";
-    
+  
     var longitude = Cesium.Math.toRadians(-90.0);
     var latitude = Cesium.Math.toRadians(30.0);
     var altitude = 3000000.0;
@@ -71,12 +71,12 @@ require([
     var cone = Cesium.Math.toRadians(15.0);
     var twist = 0.0;
     var selection = 'Rectangular';
-    
+  
     function getModelMatrix(ellipsoid)
     {
         var location = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, altitude));
         var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(location);
-        var orientation = ((Cesium.Matrix3.fromRotationZ(clock)).multiply(Cesium.Matrix3.fromRotationY(cone))).multiply(Cesium.Matrix3.fromRotationX(twist));  
+        var orientation = ((Cesium.Matrix3.fromRotationZ(clock)).multiply(Cesium.Matrix3.fromRotationY(cone))).multiply(Cesium.Matrix3.fromRotationX(twist));
         return modelMatrix.multiply(Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO));
     }
 
@@ -114,7 +114,7 @@ require([
         customSensor.radius = 20000000.0;
         customSensor.setDirections(directions);
     }
-    
+  
     function createUserInterface(viewer, sensors) {
         var ellipsoid = viewer.centralBody.getEllipsoid();
         var scene = viewer.scene;
@@ -122,20 +122,20 @@ require([
         primitives.add(sensors);
 
         var sensorMenu = new DropDownMenu({ style: 'display: none;'});
-        
+      
         function updateSensor()
         {
             sensors.removeAll();
             switch (selection)
             {
             case 'Rectangular':
-                addRectangularSensor(sensors, ellipsoid, scene);                
+                addRectangularSensor(sensors, ellipsoid, scene);
                 break;
             case 'Custom':
-                addCustomSensor(sensors, ellipsoid, scene);                
+                addCustomSensor(sensors, ellipsoid, scene);
                 break;
             case 'Rectangular':
-                addRectangularSensor(sensors, ellipsoid, scene);        
+                addRectangularSensor(sensors, ellipsoid, scene);
             }
         }
 
@@ -159,7 +159,7 @@ require([
             label : 'Select a sensor',
             dropDown: sensorMenu
         }).placeAt('toolbar');
-        
+      
         var longitudeSlider = new HorizontalSlider({
             value : longitude,
             minimum : -Math.PI,
@@ -237,14 +237,14 @@ require([
             }
         });
         twistSlider.placeAt('twistSlider');
-        
+      
         updateSensor();
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
         sceneModePicker : false //sensors currently only work in 3D
     });
-    
+  
     viewer.screenSpaceEventHandler.setInputAction(function(movement) {
         var pickedPrimitive = viewer.scene.pick(movement.endPosition);
         Sandcastle.highlight(pickedPrimitive);
