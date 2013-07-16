@@ -103,6 +103,30 @@ require(['Cesium'], function(Cesium) {
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
     }));
+        
+    // Create extruded extent
+    var extrudedExtent = new Cesium.GeometryInstance({
+        geometry: new Cesium.ExtentGeometry({
+            extent: Cesium.Extent.fromDegrees(-110.0, 38.0, -107.0, 40.0),
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 700000,
+            rotation: Cesium.Math.toRadians(45.0),
+            extrudedOptions: {
+                height: 1000000
+            }
+        }),
+        attributes: {
+            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+        }
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: extrudedExtent,
+        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false,
+            closed: true
+        })
+    }));
 
     // Combine instances each with a unique color.
     // We can combine heterogeneous geometries as we 
