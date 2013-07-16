@@ -33,56 +33,6 @@ define([
         WindingOrder) {
     "use strict";
 
-    function DoublyLinkedList() {
-        this.head = undefined;
-        this.tail = undefined;
-        this.length = 0;
-    }
-
-    DoublyLinkedList.prototype.add = function(item) {
-        if (defined(item)) {
-            var node = {
-                item : item,
-                previous : this.tail,
-                next : undefined
-            };
-
-            if (defined(this.tail)) {
-                this.tail.next = node;
-                this.tail = node;
-            } else {
-                // Insert into empty list.
-                this.head = node;
-                this.tail = node;
-            }
-
-            ++this.length;
-        }
-    };
-
-    DoublyLinkedList.prototype.remove = function(item) {
-        if (defined(item)) {
-            if (defined(item.previous) && defined(item.next)) {
-                item.previous.next = item.next;
-                item.next.previous = item.previous;
-            } else if (defined(item.previous )) {
-                // Remove last node.
-                item.previous.next = undefined;
-                this.tail = item.previous;
-            } else if (defined(item.next)) {
-                // Remove first node.
-                item.next.previous = undefined;
-                this.head = item.next;
-            } else {
-                // Remove last node in linked list.
-                this.head = undefined;
-                this.tail = undefined;
-            }
-
-            --this.length;
-        }
-    };
-
     function isTipConvex(p0, p1, p2) {
         var u = p1.subtract(p0);
         var v = p2.subtract(p1);
@@ -375,6 +325,208 @@ define([
         return newPolygonVertices;
     }
 
+    /**
+     * Use seeded pseudo-random number to be testable
+     *
+     * @param {int} length
+     * @returns {int} random integer from 0 to length-1
+     *
+     * @private
+     */
+    function getRandomIndex(length) {
+        var random = '0.'+Math.sin(rseed).toString().substr(5);
+        rseed+=0.2;
+        var i = Math.floor(random*length);
+        if (i === length) {
+            i--;
+        }
+        return i;
+    }
+    var rseed = 0;
+
+    /**
+     * Determine whether a cut between two polygon vertices is clean.
+     *
+     * @param {int} a1i - Index of first vertex
+     * @param {int} a2i - Index of second vertex
+     * @param {Array} pArray - Array of { position, index } objects representing polygon
+     * @returns {Boolean} - A cut from the first vertex to the second is internal and does not cross any other sides
+     *
+     * @private
+     */
+    function cleanCut(a1i, a2i, pArray) {
+        return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
+                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
+                !pArray[a1i].position.equals(pArray[a2i].position);
+    }
+
+    /**
+     * Determine whether the cut formed between the two vertices is internal
+     * to the angle formed by the sides connecting at the first vertex.
+     *
+     * @param {int} a1i - Index of first vertex
+     * @param {int} a2i - Index of second vertex
+     * @param {Array} pArray - Array of { position, index } objects representing polygon
+     * @returns {Boolean} - The cut formed between the two vertices is internal to the angle at vertex 1
+     *
+     * @private
+     */
+    function internalCut(a1i, a2i, pArray) {
+        /* Get the nodes from the array */
+        var a1 = pArray[a1i];
+        var a2 = pArray[a2i];
+
+        /* Define side and cut vectors */
+        var before = a1i-1;
+        var after = a1i+1;
+        if (before < 0) { before = pArray.length-1; }
+        if (after === pArray.length) { after = 0; }
+
+        var s1 = pArray[before].position.subtract(a1.position);
+        var s2 = pArray[after].position.subtract(a1.position);
+        var cut = a2.position.subtract(a1.position);
+
+        /* Convert to 3-dimensional so we can use cross product */
+        s1 = new Cartesian3(s1.x, s1.y, 0);
+        s2 = new Cartesian3(s2.x, s2.y, 0);
+        cut = new Cartesian3(cut.x, cut.y, 0);
+
+        /* Do the vector math */
+        if (s1.equals(cut) || s2.equals(cut)) {
+            return false;
+        } else if (s1.cross(s2).z < 0) {
+            if (s1.cross(cut).z < 0 && cut.cross(s2).z < 0) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (s1.cross(cut).z > 0 && cut.cross(s2).z > 0) {
+                return false;
+            } else {
+                return true;
+            }
+        }
+    }
+
+    /**
+     * Determine whether this segment intersects any other polygon sides.
+     *
+     * @param {Cartesian2} a1 - Position of first vertex
+     * @param {Cartesian2} a2 - Position of second vertex
+     * @param {Array} pArray - Array of { position, index } objects representing polygon
+     * @returns {Boolean} - The segment between a1 and a2 intersect another polygon side
+     *
+     * @private
+     */
+    function intersectsSide(a1, a2, pArray) {
+        for (var i = 0; i < pArray.length-1; i++) {
+            /* Two points */
+            var b1 = pArray[i].position;
+            var b2 = pArray[i+1].position;
+
+            /* If there's a duplicate point, there's no intersection here. */
+            if (a1.equals(b1) || a2.equals(b2) || a1.equals(b2) || a2.equals(b1)) {
+                continue;
+            }
+
+            /* Slopes */
+            var slopeA = (a2.y-a1.y)/(a2.x-a1.x);
+            var slopeB = (b2.y-b1.y)/(b2.x-b1.x);
+
+            /* Calculate intersection point */
+            var intX = (a1.y - b1.y - slopeA*a1.x + slopeB*b1.x)/(slopeB - slopeA);
+            var intY = slopeA*intX + a1.y - slopeA*a1.x;
+
+            /* Is intersection point between segments? */
+            var intersects =
+                isBetween(intX, a1.x, a2.x) &&
+                isBetween(intY, a1.y, a2.y) &&
+                isBetween(intX, b1.x, b2.x) &&
+                isBetween(intY, b1.y, b2.y);
+
+            /* If intersecting, the cut is not clean */
+            if (intersects) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Determine whether number is between n1 and n2.
+     * Do not include number === n1 or number === n2.
+     *
+     * @param {number} number - The number tested
+     * @param {number} n1 - First bound
+     * @param {number} n2 - Secound bound
+     * @returns {Boolean} - number is between n1 and n2
+     *
+     * @private
+     */
+    function isBetween(number, n1, n2) {
+        return (number > n1 || number > n2) && (number < n1 || number < n2);
+    }
+
+    /**
+     * This recursive algorithm takes a polygon, randomly selects two vertices
+     * which form a clean cut through the polygon, and divides the polygon
+     * then continues to "chop" the two resulting polygons.
+     *
+     * @exception {DeveloperError} - Invalid polygon: must have at least three vertices.
+     * @exception {DeveloperERror} - Tried x times to find a vild cut and couldn't.
+     *
+     * @param {Array} nodeArray - Array of { position, index } objects representing polygon
+     * @returns {Array} - Index array representing triangles that fill the polygon
+     *
+     * @private
+     */
+    function randomChop(nodeArray) {
+
+        /* Determine & verify number of vertices */
+        var numVertices = nodeArray.length;
+        if (numVertices === 3) {
+            return [ nodeArray[0].index, nodeArray[1].index, nodeArray[2].index ];
+        } else if (nodeArray.length < 3) {
+            throw new DeveloperError('Invalid polygon: must have at least three vertices.');
+        }
+
+        /* Search for clean cut */
+        var cutFound = false;
+        var tries = 0;
+        while (!cutFound) {
+            /* Make sure we don't go into an endless loop */
+            var maxTries = nodeArray.length*10;
+            if (tries > maxTries) {
+                throw new DeveloperError('Tried '+maxTries+' times to find a valid cut and couldn\'t.');
+            }
+            tries++;
+
+            /* Generate random indices */
+            var index1 = getRandomIndex(nodeArray.length);
+            var index2 = index1+1;
+            while (Math.abs(index1-index2) < 2 || Math.abs(index1-index2) > nodeArray.length-2)  {
+                index2 = getRandomIndex(nodeArray.length);
+            }
+
+            /* Make sure index2 is bigger */
+            if (index1 > index2) {
+                var index = index1;
+                index1 = index2;
+                index2 = index;
+            }
+
+            /* Check for a clean cut */
+            if (cleanCut(index1, index2, nodeArray)) {
+                /* Divide polygon */
+                var nodeArray2 = nodeArray.splice(index1, (index2-index1+1), nodeArray[index1], nodeArray[index2]);
+
+                /* Chop up resulting polygons */
+                return randomChop(nodeArray).concat(randomChop(nodeArray2));
+            }
+        }
+    }
+
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
@@ -459,16 +611,15 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Triangulate a polygon
          *
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
+         *
+         * @param {Array} positions - Cartesian2 array containing the vertices of the polygon
+         * @returns {Array} - Index array representing triangles that fill the polygon
          */
-        earClip2D : function(positions) {
-            // PERFORMANCE_IDEA:  This is slow at n^3.  Make it faster with:
-            //   * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
-            //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
+        triangulate : function(positions) {
 
             if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
@@ -479,68 +630,204 @@ define([
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            var remainingPositions = new DoublyLinkedList();
-
+            /* Keep track of indices for later */
+            var nodeArray = [];
             for ( var i = 0; i < length; ++i) {
-                remainingPositions.add({
+                nodeArray[i] = {
                     position : positions[i],
                     index : i
-                });
+                };
             }
 
-            var indices = [];
+            /* Recursive chop */
+            return this.randomChop(nodeArray);
 
-            var previousNode = remainingPositions.head;
-            var node = previousNode.next;
-            var nextNode = node.next;
+        },
 
-            var bailCount = length * length;
+        /**
+         * Use seeded pseudo-random number so we're testable
+         *
+         * @param {int} length
+         * @returns {int} random integer from 0 to length-1
+         */
+        getRandomIndex : function(length) {
+            if (!this.rseed) this.rseed = 0;
+            var random = '0.'+Math.sin(this.rseed).toString().substr(5);
+            this.rseed+=0.2;
+            var i = Math.floor(random*length);
+            if (i === length) {
+                i--;
+            }
+            return i;
+        },
 
-            while (remainingPositions.length > 3) {
-                var p0 = previousNode.item.position;
-                var p1 = node.item.position;
-                var p2 = nextNode.item.position;
+        /**
+         * Determine whether a cut between two polygon vertices is clean.
+         *
+         * @param {int} a1i - Index of first vertex
+         * @param {int} a2i - Index of second vertex
+         * @param {Array} pArray - Array of { position, index } objects representing polygon
+         * @returns {Boolean} - A cut from the first vertex to the second is internal and does not cross any other sides
+         */
+        cleanCut: function(a1i, a2i, pArray) {
+            return (this.internalCut(a1i, a2i, pArray) && this.internalCut(a2i, a1i, pArray)) &&
+                    !this.intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
+                    !pArray[a1i].position.equals(pArray[a2i].position);
+        },
 
-                if (isTipConvex(p0, p1, p2)) {
-                    var isEar = true;
+        /**
+         * Determine whether the cut formed between the two vertices is internal
+         * to the angle formed by the sides connecting at the first vertex.
+         *
+         * @param {int} a1i - Index of first vertex
+         * @param {int} a2i - Index of second vertex
+         * @param {Array} pArray - Array of { position, index } objects representing polygon
+         * @returns {Boolean} - The cut formed between the two vertices is internal to the angle at vertex 1
+         */
+        internalCut: function(a1i, a2i, pArray) {
+            /* Get the nodes from the array */
+            var a1 = pArray[a1i];
+            var a2 = pArray[a2i];
 
-                    for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
-                        if (pointInsideTriangle(n.item.position, p0, p1, p2)) {
-                            isEar = false;
-                            break;
-                        }
-                    }
+            /* Define side and cut vectors */
+            var before = a1i-1;
+            var after = a1i+1;
+            if (before < 0) before = pArray.length-1;
+            if (after === pArray.length) after = 0;
 
-                    if (isEar) {
-                        indices.push(previousNode.item.index);
-                        indices.push(node.item.index);
-                        indices.push(nextNode.item.index);
+            var s1 = pArray[before].position.subtract(a1.position);
+            var s2 = pArray[after].position.subtract(a1.position);
+            var cut = a2.position.subtract(a1.position);
 
-                        remainingPositions.remove(node);
+            /* Convert to 3-dimensional so we can use cross product */
+            s1 = new Cartesian3(s1.x, s1.y, 0);
+            s2 = new Cartesian3(s2.x, s2.y, 0);
+            cut = new Cartesian3(cut.x, cut.y, 0);
 
-                        node = nextNode;
-                        nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-                        continue;
-                    }
+            /* Do the vector math */
+            if (s1.equals(cut) || s2.equals(cut)) {
+                return false;
+            } else if (s1.cross(s2).z < 0) {
+                if (s1.cross(cut).z < 0 && cut.cross(s2).z < 0) {
+                    return true;
+                } else {
+                    return false;
                 }
-
-                previousNode = previousNode.next ? previousNode.next : remainingPositions.head;
-                node = node.next ? node.next : remainingPositions.head;
-                nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-
-                if (--bailCount === 0) {
-                    break;
+            } else {
+                if (s1.cross(cut).z > 0 && cut.cross(s2).z > 0) {
+                    return false;
+                } else {
+                    return true;
                 }
             }
+        },
 
-            var n0 = remainingPositions.head;
-            var n1 = n0.next;
-            var n2 = n1.next;
-            indices.push(n0.item.index);
-            indices.push(n1.item.index);
-            indices.push(n2.item.index);
+        /**
+         * Determine whether this segment intersects any other polygon sides.
+         *
+         * @param {Cartesian2} a1 - Position of first vertex
+         * @param {Cartesian2} a2 - Position of second vertex
+         * @param {Array} pArray - Array of { position, index } objects representing polygon
+         * @returns {Boolean} - The segment between a1 and a2 intersect another polygon side
+         */
+        intersectsSide : function(a1, a2, pArray) {
+            for (var i = 0; i < pArray.length-1; i++) {
+                /* Two points */
+                var b1 = pArray[i].position;
+                var b2 = pArray[i+1].position;
 
-            return indices;
+                /* If there's a duplicate point, there's no intersection here. */
+                if (a1.equals(b1) || a2.equals(b2) || a1.equals(b2) || a2.equals(b1)) {
+                    continue;
+                }
+
+                /* Slopes */
+                var slopeA = (a2.y-a1.y)/(a2.x-a1.x);
+                var slopeB = (b2.y-b1.y)/(b2.x-b1.x);
+
+                /* Calculate intersection point */
+                var intX = (a1.y - b1.y - slopeA*a1.x + slopeB*b1.x)/(slopeB - slopeA);
+                var intY = slopeA*intX + a1.y - slopeA*a1.x;
+
+                /* Is intersection point between segments? */
+                var intersects =
+                    this.isBetween(intX, a1.x, a2.x) &&
+                    this.isBetween(intY, a1.y, a2.y) &&
+                    this.isBetween(intX, b1.x, b2.x) &&
+                    this.isBetween(intY, b1.y, b2.y);
+
+                /* If intersecting, the cut is not clean */
+                if (intersects) {
+                    return true;
+                }
+            }
+            return false;
+        },
+
+        /**
+         * Determine whether number is between n1 and n2.
+         * Do not include number === n1 or number === n2.
+         *
+         * @param {number} number - The number tested
+         * @param {number} n1 - First bound
+         * @param {number} n2 - Secound bound
+         * @returns {Boolean} - number is between n1 and n2
+         */
+        isBetween: function(number, n1, n2) {
+            return (number > n1 || number > n2) && (number < n1 || number < n2);
+        },
+
+        /**
+         * This recursive algorithm takes a polygon, randomly selects two vertices
+         * which form a clean cut through the polygon, and divides the polygon
+         * then continues to "chop" the two resulting polygons.
+         *
+         * @param {Array} nodeArray - Array of { position, index } objects representing polygon
+         * @returns {Array} - Index array representing triangles that fill the polygon
+         */
+        randomChop : function(nodeArray) {
+
+            /* Determine & verify number of vertices */
+            var numVertices = nodeArray.length;
+            if (numVertices === 3) {
+                return [ nodeArray[0].index, nodeArray[1].index, nodeArray[2].index ];
+            } else if (nodeArray.length < 3) {
+                throw new DeveloperError('Invalid polygon: must have at least three vertices.');
+            }
+
+            /* Search for clean cut */
+            var cutFound = false;
+            var tries = 0;
+            while (!cutFound) {
+                /* Make sure we don't go into an endless loop */
+                if (tries > 10000) {
+                    throw { name: "TooManyCutAttemptsError", message: "Tried 100 times to find a valid cut and didn't." };
+                }
+                tries++;
+
+                /* Generate random indices */
+                var index1 = this.getRandomIndex(nodeArray.length);
+                var index2 = index1+1;
+                while (Math.abs(index1-index2) < 2 || Math.abs(index1-index2) > nodeArray.length-2)  {
+                    var index2 = this.getRandomIndex(nodeArray.length);
+                }
+
+                /* Make sure index2 is bigger */
+                if (index1 > index2) {
+                    var index = index1;
+                    index1 = index2;
+                    index2 = index;
+                }
+
+                /* Check for a clean cut */
+                if (this.cleanCut(index1, index2, nodeArray)) {
+                    /* Divide polygon */
+                    var nodeArray2 = nodeArray.splice(index1, (index2-index1+1), nodeArray[index1], nodeArray[index2]);
+
+                    /* Chop up resulting polygons */
+                    return this.randomChop(nodeArray).concat(this.randomChop(nodeArray2));
+                }
+            }
         },
 
         /**
