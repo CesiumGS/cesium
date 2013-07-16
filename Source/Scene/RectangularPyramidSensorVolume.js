@@ -43,9 +43,10 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.  The default is <code>true</code>.
+         * When <code>true</code>, a polyline is shown where the sensor outline intersections the central body.
          *
          * @type {Boolean}
+         *
          * @default true
          *
          * @see RectangularPyramidSensorVolume#intersectionColor
@@ -56,9 +57,6 @@ define([
          * <p>
          * Determines if a sensor intersecting the ellipsoid is drawn through the ellipsoid and potentially out
          * to the other side, or if the part of the sensor intersecting the ellipsoid stops at the ellipsoid.
-         * </p>
-         * <p>
-         * The default is <code>false</code>, meaning the sensor will not go through the ellipsoid.
          * </p>
          *
          * @type {Boolean}
@@ -161,6 +159,16 @@ define([
          */
         this.intersectionColor = Color.clone(defaultValue(options.intersectionColor, Color.WHITE));
 
+        /**
+         * The approximate pixel width of the polyline where the sensor outline intersects the central body.  The default is 5.0.
+         *
+         * @type {Number}
+         * @default 5.0
+         *
+         * @see CustomSensorVolume#showIntersection
+         */
+        this.intersectionWidth = defaultValue(options.intersectionWidth, 5.0);
+
         var customSensorOptions = clone(options);
         customSensorOptions._pickIdThis = defaultValue(options._pickIdThis, this);
         this._customSensor = new CustomSensorVolume(customSensorOptions);
@@ -189,6 +197,7 @@ define([
         s.radius = this.radius;
         s.material = this.material;
         s.intersectionColor = this.intersectionColor;
+        s.intersectionWidth = this.intersectionWidth;
 
         if ((this._xHalfAngle !== this.xHalfAngle) || (this._yHalfAngle !== this.yHalfAngle)) {
 

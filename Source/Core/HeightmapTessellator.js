@@ -19,11 +19,6 @@ define([
      * Contains functions to create a mesh from a heightmap image.
      *
      * @exports HeightmapTessellator
-     *
-     * @see ExtentTessellator
-     * @see CubeMapEllipsoidTessellator
-     * @see BoxTessellator
-     * @see PlaneTessellator
      */
     var HeightmapTessellator = {};
 

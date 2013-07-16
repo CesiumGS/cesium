@@ -128,6 +128,7 @@ defineSuite([
         var pyramid = testObject.pyramid = new DynamicPyramid();
         pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         pyramid.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        pyramid.intersectionWidth = new MockProperty(0.5);
         pyramid.showIntersection = new MockProperty(true);
         pyramid.radius = new MockProperty(123.5);
         pyramid.show = new MockProperty(true);
@@ -139,6 +140,7 @@ defineSuite([
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var p = scene.getPrimitives().get(0);
         expect(p.intersectionColor).toEqual(testObject.pyramid.intersectionColor.getValue(time));
+        expect(p.intersectionWidth).toEqual(testObject.pyramid.intersectionWidth.getValue(time));
         expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));

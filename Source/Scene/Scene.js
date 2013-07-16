@@ -477,6 +477,8 @@ define([
 
         if (typeof sunCommand !== 'undefined' && sunVisible) {
             sunCommand.execute(context, passState);
+            scene._sunPostProcess.execute(context);
+            passState.framebuffer = undefined;
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -486,7 +488,7 @@ define([
         for (var i = 0; i < numFrustums; ++i) {
             clearDepthStencil.execute(context, passState);
 
-            var index = numFrustums - i - 1.0;
+            var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
             frustum.near = frustumCommands.near;
             frustum.far = frustumCommands.far;
@@ -498,11 +500,6 @@ define([
             for (var j = 0; j < length; ++j) {
                 commands[j].execute(context, passState);
             }
-        }
-
-        if (sunVisible) {
-            scene._sunPostProcess.execute(context);
-            passState.framebuffer = undefined;
         }
     }
 
