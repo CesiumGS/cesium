@@ -103,7 +103,8 @@ require(['Cesium'], function(Cesium) {
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
     }));
-    
+        
+    // Create extruded extent
     var extrudedExtent = new Cesium.GeometryInstance({
         geometry: new Cesium.ExtentGeometry({
             extent: Cesium.Extent.fromDegrees(-110.0, 38.0, -107.0, 40.0),
@@ -111,9 +112,7 @@ require(['Cesium'], function(Cesium) {
             height: 700000,
             rotation: Cesium.Math.toRadians(45.0),
             extrudedOptions: {
-                height: 1500000,
-                closeTop: true,
-                closeBottom: true
+                height: 1000000
             }
         }),
         attributes: {
