@@ -39,9 +39,9 @@ Beta Releases
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
-* Added `extrudedOptions` parameters to `ExtentGeometry`, in which height, closeTop and closeBottom can be specified
 * Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Added extrusion to `ExtentGeometry`
 
 ### b18 - 2013-07-01
 
