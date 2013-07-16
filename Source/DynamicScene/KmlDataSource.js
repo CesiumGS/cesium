@@ -155,7 +155,7 @@ define(['../Core/createGuid',
 
         var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
         var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-        var dynamicObject = createObject(node, dataSource._dynamicObjectCollection);
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
 
         var embeddedStyle = getEmbeddedStyle(kml);
         if(embeddedStyle.length > 0){
