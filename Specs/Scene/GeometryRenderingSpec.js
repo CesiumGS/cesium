@@ -5,6 +5,7 @@ defineSuite([
          'Core/CylinderGeometry',
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
+         'Core/SphereGeometry',
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
@@ -43,6 +44,7 @@ defineSuite([
          CylinderGeometry,
          EllipseGeometry,
          EllipsoidGeometry,
+         SphereGeometry,
          ExtentGeometry,
          PolygonGeometry,
          SimplePolylineGeometry,
@@ -454,6 +456,40 @@ defineSuite([
                 modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
                 id : 'ellipsoid',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
+    describe('SphereGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new SphereGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    radius : 1000000.0
+                }),
+                modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
+                id : 'sphere',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
