@@ -120,8 +120,23 @@ require(['Cesium'], function(Cesium) {
         }
     });
     
+    var cylinderInstance = new Cesium.GeometryInstance({
+                geometry : new Cesium.CylinderGeometry({
+                    length: 2.5,
+                    topRadius: 0.8,
+                    bottomRadius: 2.0,
+                    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            id: 'cylinder',
+            modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0)), 90000.0),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        });
+    
     primitives.add(new Cesium.Primitive({
-        geometryInstances: extrudedExtent,
+        geometryInstances: [extrudedExtent, cylinderInstance],
         appearance: new Cesium.PerInstanceColorAppearance({
             translucent: false,
             closed: true
