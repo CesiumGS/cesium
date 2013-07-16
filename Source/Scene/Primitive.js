@@ -824,6 +824,7 @@ define([
                     var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
                     vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                 }
+                attribute.dirty = false;
             }
 
             attributes.length = 0;
@@ -866,8 +867,12 @@ define([
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
 
-            perInstanceAttributes[name].value = value;
-            dirtyList.push(perInstanceAttributes[name]);
+            var attribute = perInstanceAttributes[name];
+            attribute.value = value;
+            if (!attribute.dirty) {
+                dirtyList.push(attribute);
+                attribute.dirty = true;
+            }
         };
     }
 
