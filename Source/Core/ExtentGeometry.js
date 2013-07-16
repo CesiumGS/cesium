@@ -635,7 +635,6 @@ define([
      * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
      * @exception {DeveloperError} Rotated extent is invalid.
-     * @exception {DeveloperError} Rotated texture coordinates are invalid.
      *
      * @example
      * var extent = new ExtentGeometry({
@@ -712,7 +711,7 @@ define([
 
             if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
                     !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
-                throw new DeveloperError('Rotated texture coordinates for extent are invalid.');
+                throw new DeveloperError('Rotated extent is invalid.');
             }
 
             stExtent.north = north;
