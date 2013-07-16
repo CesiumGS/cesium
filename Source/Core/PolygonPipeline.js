@@ -106,7 +106,7 @@ define([
     function isVertexEar (v0, v, v1, reflexList){
         for (var i = 0; i < reflexList.length; i++) {
             var n = reflexList[i];
-            if (pointInsideTriangle2D(n, v0, v, v1)) {
+            if (pointInsideTriangle(n, v0, v, v1)) {
                 return false;
             }
         }
