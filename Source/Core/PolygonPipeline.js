@@ -651,7 +651,7 @@ define([
          * @returns {int} random integer from 0 to length-1
          */
         getRandomIndex : function(length) {
-            if (!this.rseed) this.rseed = 0;
+            if (!this.rseed) { this.rseed = 0; }
             var random = '0.'+Math.sin(this.rseed).toString().substr(5);
             this.rseed+=0.2;
             var i = Math.floor(random*length);
@@ -692,8 +692,8 @@ define([
             /* Define side and cut vectors */
             var before = a1i-1;
             var after = a1i+1;
-            if (before < 0) before = pArray.length-1;
-            if (after === pArray.length) after = 0;
+            if (before < 0) { before = pArray.length-1; }
+            if (after === pArray.length) { after = 0; }
 
             var s1 = pArray[before].position.subtract(a1.position);
             var s2 = pArray[after].position.subtract(a1.position);
@@ -809,7 +809,7 @@ define([
                 var index1 = this.getRandomIndex(nodeArray.length);
                 var index2 = index1+1;
                 while (Math.abs(index1-index2) < 2 || Math.abs(index1-index2) > nodeArray.length-2)  {
-                    var index2 = this.getRandomIndex(nodeArray.length);
+                    index2 = this.getRandomIndex(nodeArray.length);
                 }
 
                 /* Make sure index2 is bigger */
