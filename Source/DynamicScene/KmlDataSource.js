@@ -223,7 +223,7 @@ define(['../Core/createGuid',
                 var scale = getElementValue(node, 'scale');
                 var icon = getElementValue(node,'href');
                 var color = getElementValue(node,'color');
-                color = color && color.split("").reverse().join(""); //KML uses abgr instead of rgba
+                color = parseInt(color,16);
 
                 dynamicObject.billboard.image = icon && new ConstantProperty(icon);
                 dynamicObject.billboard.scale = scale && new ConstantProperty(scale);
