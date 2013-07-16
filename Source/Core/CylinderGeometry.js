@@ -55,16 +55,18 @@ define([
      *
      */
     var CylinderGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var length = options.length;
-        if (length <= 0) {
+        if (typeof length === 'undefined' || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0');
         }
         var topRadius = options.topRadius;
-        if (topRadius < 0) {
+        if (typeof topRadius === 'undefined' || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0');
         }
         var bottomRadius = options.bottomRadius;
-        if (bottomRadius < 0) {
+        if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0');
         }
         if (bottomRadius === 0 && topRadius === 0) {
@@ -73,7 +75,7 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
-        var slices = defaultValue(options.slices, 3);
+        var slices = defaultValue(options.slices, 100);
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3');
         }
@@ -94,6 +96,7 @@ define([
         var binormals = (vertexFormat.binormal) ? new Float32Array(numVertices * 3) : undefined;
 
         var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
+        var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
         var i;
         var index = 0;
         var bottomIndex = 0;
@@ -101,6 +104,11 @@ define([
         var normalIndex = 0;
         var tangentIndex = 0;
         var binormalIndex = 0;
+
+        var normal = normalScratch;
+        normal.z = 0;
+        var tangent = tangentScratch;
+        var binormal = binormalScratch;
         for (i = 0; i < slices; i++) {
             var angle = i / slices * CesiumMath.TWO_PI;
             var x = Math.cos(angle);
@@ -126,12 +134,40 @@ define([
             positions[index++] = topZ;
 
             if (computeNormal) {
-                normals[normalIndex++] = x;
-                normals[normalIndex++] = y;
-                normals[normalIndex++] = 0;
-                normals[normalIndex++] = x;
-                normals[normalIndex++] = y;
-                normals[normalIndex++] = 0;
+                normal.x = x;
+                normal.y = y;
+
+                if (computeTangent) {
+                    tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                }
+
+                if (vertexFormat.normal) {
+                    normals[normalIndex++] = x;
+                    normals[normalIndex++] = y;
+                    normals[normalIndex++] = 0;
+                    normals[normalIndex++] = x;
+                    normals[normalIndex++] = y;
+                    normals[normalIndex++] = 0;
+                }
+
+                if (vertexFormat.tangent) {
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                }
             }
         }
 
@@ -139,15 +175,39 @@ define([
 
         if (computeNormal) {
             for (i = 0; i < slices; i++) {
-                normals[normalIndex++] = 0;
-                normals[normalIndex++] = 0;
-                normals[normalIndex++] = -1;
+                if (vertexFormat.normal) {
+                    normals[normalIndex++] = 0;
+                    normals[normalIndex++] = 0;
+                    normals[normalIndex++] = -1;
+                }
+                if (vertexFormat.tangent) {
+                    tangents[tangentIndex++] = 1;
+                    tangents[tangentIndex++] = 0;
+                    tangents[tangentIndex++] = 0;
+                }
+                if (vertexFormat.binormal) {
+                    binormals[binormalIndex++] = 0;
+                    binormals[binormalIndex++] = -1;
+                    binormals[binormalIndex++] = 0;
+                }
             }
 
             for (i = 0; i < slices; i++) {
-                normals[normalIndex++] = 0;
-                normals[normalIndex++] = 0;
-                normals[normalIndex++] = 1;
+                if (vertexFormat.normal) {
+                    normals[normalIndex++] = 0;
+                    normals[normalIndex++] = 0;
+                    normals[normalIndex++] = 1;
+                }
+                if (vertexFormat.tangent) {
+                    tangents[tangentIndex++] = 1;
+                    tangents[tangentIndex++] = 0;
+                    tangents[tangentIndex++] = 0;
+                }
+                if (vertexFormat.binormal) {
+                    binormals[binormalIndex++] = 0;
+                    binormals[binormalIndex++] = 1;
+                    binormals[binormalIndex++] = 0;
+                }
             }
         }
 
@@ -185,54 +245,7 @@ define([
             indices[index++] = threeSlices + i;
             indices[index++] = threeSlices + i + 1;
         }
-        var normal;
-        var tangent;
-        var binormal;
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            for (i = 0; i < numVertices / 2; i++) {
-                normal = Cartesian3.fromArray(normals, i*3, normalScratch);
-                tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangentScratch).normalize(tangentScratch);
-                if (vertexFormat.tangent) {
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                }
-                if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormalScratch).normalize(binormalScratch);
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                }
-            }
 
-            for (i = 0; i < numVertices / 2; i+=2) {
-                normal = Cartesian3.fromArray(normals, (i + numVertices / 2)*3, normalScratch);
-                tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangentScratch).normalize(tangentScratch);
-                if (vertexFormat.tangent) {
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-
-                    var tangentOffset = tangentIndex + numVertices / 2;
-                    tangents[tangentOffset] = tangent.x;
-                    tangents[tangentOffset + 1] = tangent.y;
-                    tangents[tangentOffset + 2] = tangent.z;
-
-                }
-                if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormalScratch).normalize(binormalScratch);
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-
-                    var binormalOffset = binormalIndex + numVertices / 2;
-                    binormals[binormalOffset] = binormal.x;
-                    binormals[binormalOffset +1] = binormal.y;
-                    binormals[binormalOffset + 2] = binormal.z;
-
-                }
-            }
-        }
         var textureCoordIndex = 0;
         if (vertexFormat.st) {
             for (i = 0; i < numVertices; i++) {
