@@ -1,46 +1,25 @@
 /*global define*/
 define([
-        '../../Core/createGuid',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../createCommand',
-        './AddCzmlDataSourcePanel',
+        './DataSourceViewModel',
+        './DataSourcePanelViewModel',
         '../../ThirdParty/knockout'
     ], function(
-        createGuid,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         Event,
         createCommand,
-        AddCzmlDataSourcePanel,
+        DataSourceViewModel,
+        DataSourcePanelViewModel,
         knockout) {
     "use strict";
-
-    function DataSourceViewModel(name, rootViewModel, dynamicObject) {
-        var that = this;
-
-        this.rootViewModel = rootViewModel;
-        this.dynamicObject = dynamicObject;
-
-        this.id = 'cesium-dataSourceBrowser-node-' + createGuid();
-        this.name = name;
-        this.children = [];
-        this.expanded = false;
-
-        knockout.track(this, ['name', 'children', 'expanded']);
-
-        this.hasChildren = undefined;
-        knockout.defineProperty(this, 'hasChildren', function() {
-            return that.children.length > 0;
-        });
-    }
-
-    DataSourceViewModel.prototype.select = function() {
-        this.rootViewModel.selectedItem = this;
-    };
 
     /**
      * The view model for {@link DataSourceBrowser}.
@@ -48,18 +27,28 @@ define([
      * @constructor
      *
      * @param {DataSourceCollection} dataSourceCollection The data source collection to use.
-     * @param {Array} [addDataSourcePanels=DataSourceBrowserViewModel.defaultAddDataSourcePanels] An array of handlers that will be used when adding a data source.
+     * @param {Array} [dataSourcePanels=DataSourcePanelViewModel.defaultDataSourcePanels] An array of panels that will be presented as options when adding a data source.
      *
      * @exception {DeveloperError} dataSourceCollection is required.
      */
-    var DataSourceBrowserViewModel = function(dataSourceCollection, addDataSourcePanels) {
-        if (typeof dataSourceCollection === 'undefined') {
+    var DataSourceBrowserViewModel = function(dataSourceCollection, dataSourcePanels) {
+        if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
+
+        var that = this;
 
         dataSourceCollection.dataSourceAdded.addEventListener(this._onDataSourceAdded, this);
         dataSourceCollection.dataSourceRemoved.addEventListener(this._onDataSourceRemoved, this);
         this._dataSourceCollection = dataSourceCollection;
+
+        this._dataSourcePanelViewModel = new DataSourcePanelViewModel(this, dataSourcePanels);
+        this._onObjectSelected = new Event();
+
+        this._addDataSourceCommand = createCommand(function() {
+            that._dataSourcePanelViewModel.activeDataSourcePanel = undefined;
+            that._dataSourcePanelViewModel.visible = true;
+        });
 
         /**
          * Gets or sets the currently loaded data sources.  This property is observable.
@@ -75,25 +64,7 @@ define([
          */
         this.addDataSourceTooltip = 'Add Data Source';
 
-        /**
-         * Gets or sets whether the "add data source" panel is visible.  This property is observable.
-         *
-         * @type Boolean
-         */
-        this.addDataSourceVisible = false;
-
-        this.addDataSourcePanels = defaultValue(addDataSourcePanels, DataSourceBrowserViewModel.defaultAddDataSourcePanels).slice(0);
-
-        this.activeAddDataSourcePanel = undefined;
-
-        knockout.track(this, ['dataSources', 'addDataSourceTooltip', 'addDataSourceVisible', 'addDataSourcePanels', 'activeAddDataSourcePanel']);
-
-        var that = this;
-
-        this._addDataSourceCommand = createCommand(function() {
-            that.addDataSourceVisible = true;
-            that.activeAddDataSourcePanel = undefined;
-        });
+        knockout.track(this, ['dataSources', 'addDataSourceTooltip']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -103,16 +74,12 @@ define([
             },
             set : function(value) {
                 selectedViewModel(value);
-                if (typeof value !== 'undefined' && typeof value.dynamicObject !== 'undefined') {
+                if (defined(value) && defined(value.dynamicObject)) {
                     that._onObjectSelected.raiseEvent(value.dynamicObject);
                 }
             }
         });
-
-        this._onObjectSelected = new Event();
     };
-
-    DataSourceBrowserViewModel.defaultAddDataSourcePanels = [AddCzmlDataSourcePanel];
 
     defineProperties(DataSourceBrowserViewModel.prototype, {
         /**
@@ -124,6 +91,18 @@ define([
         addDataSourceCommand : {
             get : function() {
                 return this._addDataSourceCommand;
+            }
+        },
+
+        /**
+         * Gets the view model for the data source panel.
+         * @memberof DataSourceBrowserViewModel.prototype
+         *
+         * @type {DataSourcePanelViewModel}
+         */
+        dataSourcePanelViewModel : {
+            get : function() {
+                return this._dataSourcePanelViewModel;
             }
         },
 

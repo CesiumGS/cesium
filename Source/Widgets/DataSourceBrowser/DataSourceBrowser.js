@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/createGuid',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -9,6 +10,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         createGuid,
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -18,11 +20,11 @@ define([
     "use strict";
 
     var DataSourceBrowser = function(container, dataSourceCollection) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof dataSourceCollection === 'undefined') {
+        if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
 
@@ -41,7 +43,9 @@ define([
         var addDataSourceButton = document.createElement('span');
         addDataSourceButton.textContent = 'Add';
         addDataSourceButton.className = 'cesium-dataSourceBrowser-addDataSource';
-        addDataSourceButton.setAttribute('data-bind', 'attr: { title: addDataSourceTooltip }, click: addDataSourceCommand');
+        addDataSourceButton.setAttribute('data-bind', '\
+attr: { title: addDataSourceTooltip },\
+click: addDataSourceCommand');
         element.appendChild(addDataSourceButton);
 
         var templateElement = document.createElement('script');
@@ -66,48 +70,54 @@ define([
         rootDataSourcesElement.setAttribute('data-bind', 'template: { name: "' + templateID + '", foreach: dataSources }');
         element.appendChild(rootDataSourcesElement);
 
-        var addDataSourceContainer = document.createElement('div');
-        addDataSourceContainer.className = 'cesium-dataSourceBrowser-addDataSourceContainer';
-        addDataSourceContainer.setAttribute('data-bind', '\
-                css: { "cesium-dataSourceBrowser-visible" : addDataSourceVisible,\
-                       "cesium-dataSourceBrowser-hidden" : !addDataSourceVisible }');
-        element.appendChild(addDataSourceContainer);
+        var dataSourceContainer = document.createElement('div');
+        dataSourceContainer.className = 'cesium-dataSourceBrowser-dataSourceContainer';
+        dataSourceContainer.setAttribute('data-bind', '\
+with: dataSourcePanelViewModel,\
+css: { "cesium-dataSourceBrowser-visible" : dataSourcePanelViewModel.visible,\
+       "cesium-dataSourceBrowser-hidden" : !dataSourcePanelViewModel.visible }');
+        element.appendChild(dataSourceContainer);
 
         var addDataSourceLabel = document.createElement('span');
         addDataSourceLabel.textContent = 'Add Data Source';
-        addDataSourceContainer.appendChild(addDataSourceLabel);
+        dataSourceContainer.appendChild(addDataSourceLabel);
 
-        var addDataSourceOptions = document.createElement('div');
-        addDataSourceOptions.className = 'cesium-dataSourceBrowser-addDataSourceOptions';
-        addDataSourceOptions.setAttribute('data-bind', 'foreach: addDataSourcePanels');
-        addDataSourceContainer.appendChild(addDataSourceOptions);
+        var dataSourceOptions = document.createElement('div');
+        dataSourceOptions.className = 'cesium-dataSourceBrowser-dataSourceOptions';
+        dataSourceOptions.setAttribute('data-bind', 'foreach: dataSourcePanels');
+        dataSourceContainer.appendChild(dataSourceOptions);
 
-        var addDataSourceOption = document.createElement('div');
-        addDataSourceOption.setAttribute('data-bind', '\
-                text : description,\
-                css: {"cesium-dataSourceBrowser-addDataSourceSelected" : $data === $parent.activeAddDataSourcePanel},\
-                click: function($data) { $parent.activeAddDataSourcePanel = $data }');
-        addDataSourceOptions.appendChild(addDataSourceOption);
+        var dataSourceOption = document.createElement('div');
+        dataSourceOption.setAttribute('data-bind', '\
+text : description,\
+css: {"cesium-dataSourceBrowser-dataSourceSelected" : $data === $parent.activeDataSourcePanel},\
+click: function($data) { $parent.activeDataSourcePanel = $data }');
+        dataSourceOptions.appendChild(dataSourceOption);
 
-        var activeAddDataSourcePanelContainer = document.createElement('div');
-        addDataSourceContainer.appendChild(activeAddDataSourcePanelContainer);
+        var activeDataSourcePanelContainer = document.createElement('div');
+        activeDataSourcePanelContainer.setAttribute('data-bind', '\
+dataSourceBrowserActivePanel : activeDataSourcePanel');
+        dataSourceContainer.appendChild(activeDataSourcePanelContainer);
 
-        this._activeAddDataSourcePanel = undefined;
+        var finishAddDataSourceButton = document.createElement('button');
+        finishAddDataSourceButton.textContent = 'Finish';
+        finishAddDataSourceButton.setAttribute('data-bind', '\
+click: finishCommand,\
+enable: finishCommand.canExecute');
+        dataSourceContainer.appendChild(finishAddDataSourceButton);
 
-        var that = this;
-        function activeAddDataSourcePanelCallback(AddDataSourcePanel) {
-            if (typeof that._activeAddDataSourcePanel !== 'undefined') {
-                if (that._activeAddDataSourcePanel.constructor === AddDataSourcePanel) {
-                    return;
+        knockout.bindingHandlers.dataSourceBrowserActivePanel = {
+            update : function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
+                while (element.hasChildNodes()) {
+                    element.removeChild(element.lastChild);
                 }
-                that._activeAddDataSourcePanel = that._activeAddDataSourcePanel.destroy();
-            }
-            if (typeof AddDataSourcePanel !== 'undefined') {
-                that._activeAddDataSourcePanel = new AddDataSourcePanel(activeAddDataSourcePanelContainer);
-            }
-        }
 
-        this._activeAddDataSourcePanelSubscription = knockout.getObservable(viewModel, 'activeAddDataSourcePanel').subscribe(activeAddDataSourcePanelCallback);
+                var newActivePanel = valueAccessor();
+                if (defined(newActivePanel)) {
+                    element.appendChild(newActivePanel.element);
+                }
+            }
+        };
 
         knockout.applyBindings(viewModel, element);
     };
