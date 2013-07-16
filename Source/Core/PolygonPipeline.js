@@ -800,8 +800,9 @@ define([
             var tries = 0;
             while (!cutFound) {
                 /* Make sure we don't go into an endless loop */
-                if (tries > 10000) {
-                    throw { name: "TooManyCutAttemptsError", message: "Tried 100 times to find a valid cut and didn't." };
+                var maxTries = nodeArray.length*10;
+                if (tries > maxTries) {
+                    throw new DeveloperError('Tried '+maxTries+' times to find a valid cut and couldn\'t.');
                 }
                 tries++;
 
