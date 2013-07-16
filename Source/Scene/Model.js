@@ -1061,14 +1061,32 @@ define([
     Model.prototype.destroy = function() {
         var gltf = this.gltf;
         destroyExtra(gltf.bufferViews, 'czmBuffer');
-        destroyExtra(gltf.program, 'czmProgram');
-        destroyExtra(gltf.program, 'czmPickProgram');
-        destroyExtra(gltf.images, 'czmTexture');
+        destroyExtra(gltf.programs, 'czmProgram');
+        destroyExtra(gltf.programs, 'czmPickProgram');
+        destroyExtra(gltf.textures, 'czmTexture');
+
+        var meshes = gltf.meshes;
+        var name;
+
+        for (name in meshes) {
+            if (meshes.hasOwnProperty(name)) {
+                var primitives = meshes[name].primitives;
+
+                for (name in primitives) {
+                    if (primitives.hasOwnProperty(name)) {
+                        var extra = primitives[name].extra;
+                        if (defined(extra) && defined(extra.czmVertexArray)) {
+                            extra.czmVertexArray = extra.czmVertexArray.destroy();
+                        }
+                    }
+                }
+            }
+        }
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
         for (var i = 0; i < length; ++i) {
-            pickIds.destroy();
+            pickIds[i].destroy();
         }
 
         return destroyObject(this);
