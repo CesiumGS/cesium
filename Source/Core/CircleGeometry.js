@@ -23,6 +23,7 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} radius is required.
@@ -56,6 +57,7 @@ define([
             semiMinorAxis : radius,
             ellipsoid : options.ellipsoid,
             height : options.height,
+            extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
             vertexFormat : options.vertexFormat
         };
