@@ -116,11 +116,11 @@ define([
             var id = JSON.stringify([
                                      character,
                                      font,
-                                     fillColor.toString(),
-                                     outlineColor.toString(),
+                                     fillColor.toRgba(),
+                                     outlineColor.toRgba(),
                                      outlineWidth,
-                                     style.toString(),
-                                     verticalOrigin.toString()
+                                     +style,
+                                     +verticalOrigin
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
