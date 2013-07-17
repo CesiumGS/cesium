@@ -44,7 +44,7 @@ define([
     };
 
     /**
-     * Returns tre if the credit has an imageUrl
+     * Returns true if the credit has an imageUrl
      *
      * @returns {Boolean}
      */

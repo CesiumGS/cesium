@@ -20,18 +20,18 @@ define([
                 var a = document.createElement('a');
                 a.textContent = text;
                 a.href = link;
-                a.target = "_blank";
+                a.target = '_blank';
                 span.appendChild(a);
             } else {
                 span.textContent = text;
             }
-            span.className = "cesium-credit-text";
+            span.className = 'cesium-credit-text';
             credit.element = span;
         }
         if (container.hasChildNodes()) {
             var del = document.createElement('span');
             del.textContent = delimiter;
-            del.className = "cesium-credit-delimiter";
+            del.className = 'cesium-credit-delimiter';
             container.appendChild(del);
         }
         container.appendChild(credit.element);
@@ -44,7 +44,7 @@ define([
             var span = document.createElement('span');
             var content = document.createElement('img');
             content.src = credit.getImageUrl();
-            content.style["vertical-align"] = "bottom";
+            content.style['vertical-align'] = 'bottom';
             if (typeof text !== 'undefined') {
                 content.alt = text;
                 content.title = text;
@@ -54,12 +54,12 @@ define([
                 var a = document.createElement('a');
                 a.appendChild(content);
                 a.href = link;
-                a.target = "_blank";
+                a.target = '_blank';
                 span.appendChild(a);
             } else {
                 span.appendChild(content);
             }
-            span.className = "cesium-credit-image";
+            span.className = 'cesium-credit-image';
             credit.element = span;
         }
         container.appendChild(credit.element);
@@ -67,7 +67,7 @@ define([
 
     function contains(credits, credit) {
         var len = credits.length;
-        for (var i = 0; i < len; i++) {
+        for ( var i = 0; i < len; i++) {
             var existingCredit = credits[i];
             if (Credit.equals(existingCredit, credit)) {
                 return true;
@@ -76,11 +76,11 @@ define([
         return false;
     }
 
-    function hideCredit(credit, isText) {
+    function removeCredit(credit) {
         var element = credit.element;
         if (typeof element !== 'undefined') {
             var container = element.parentNode;
-            if (isText) {
+            if (!credit.hasImage()) {
                 var delimiter = element.previousSibling;
                 if (delimiter === null) {
                     delimiter = element.nextSibling;
@@ -93,12 +93,12 @@ define([
         }
     }
 
-    function displayTextCredits(creditDisplay, textCredits){
+    function displayTextCredits(creditDisplay, textCredits) {
         var i;
         var index;
         var credit;
         var displayedTextCredits = creditDisplay._displayedCredits.textCredits;
-        for(i = 0; i < textCredits.length; i++) {
+        for (i = 0; i < textCredits.length; i++) {
             credit = textCredits[i];
             index = displayedTextCredits.indexOf(credit);
             if (index === -1) {
@@ -109,17 +109,17 @@ define([
         }
         for (i = 0; i < displayedTextCredits.length; i++) {
             credit = displayedTextCredits[i];
-            hideCredit(credit, true);
+            removeCredit(credit);
         }
 
     }
 
-    function displayImageCredits(creditDisplay, imageCredits){
+    function displayImageCredits(creditDisplay, imageCredits) {
         var i;
         var index;
         var credit;
         var displayedImageCredits = creditDisplay._displayedCredits.imageCredits;
-        for(i = 0; i < imageCredits.length; i++) {
+        for (i = 0; i < imageCredits.length; i++) {
             credit = imageCredits[i];
             index = displayedImageCredits.indexOf(credit);
             if (index === -1) {
@@ -130,7 +130,7 @@ define([
         }
         for (i = 0; i < displayedImageCredits.length; i++) {
             credit = displayedImageCredits[i];
-            hideCredit(credit, false);
+            removeCredit(credit);
         }
     }
 
@@ -166,17 +166,17 @@ define([
         this._defaultTextCredits = [];
 
         this._displayedCredits = {
-                imageCredits: [],
-                textCredits: []
+            imageCredits : [],
+            textCredits : []
         };
         this._currentFrameCredits = {
-                imageCredits: [],
-                textCredits: []
+            imageCredits : [],
+            textCredits : []
         };
     };
 
     /**
-     * Adds a credit to the list of current credits to be displayed in the in the credit container
+     * Adds a credit to the list of current credits to be displayed in the credit container
      *
      * @memberof CreditDisplay
      *
@@ -281,13 +281,33 @@ define([
         this._displayedCredits.imageCredits = imageCredits;
     };
 
-
+    /**
+     * Destroys the resources held by this object.  Destroying an object allows for deterministic
+     * release of resources, instead of relying on the garbage collector to destroy this object.
+     * <br /><br />
+     * Once an object is destroyed, it should not be used; calling any function other than
+     * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
+     * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @memberof CreditDisplay
+     *
+     * @return {undefined}
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
     CreditDisplay.prototype.destroy = function() {
-        this._container.innerHTML = '';
+        this._container.removeChild(this._textContainer);
+        this._container.removeChild(this._imageContainer);
+
         return destroyObject(this);
     };
 
-
+    /**
+     * Returns true if this object was destroyed; otherwise, false.
+     * <br /><br />
+     *
+     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     */
     CreditDisplay.prototype.isDestroyed = function() {
         return false;
     };

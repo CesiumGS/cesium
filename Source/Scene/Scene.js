@@ -95,12 +95,12 @@ define([
             creditDisplay = new CreditDisplay(creditContainer);
         } else {
             var creditDiv = document.createElement('div');
-            creditDiv.style.position = "absolute";
-            creditDiv.style.bottom = "0";
-            creditDiv.style["text-shadow"] = "0px 0px 2px #000000";
-            creditDiv.style.color = "#ffffff";
-            creditDiv.style["font-size"] = "10pt";
-            creditDiv.style["padding-right"] = "5px";
+            creditDiv.style.position = 'absolute';
+            creditDiv.style.bottom = '0';
+            creditDiv.style['text-shadow'] = '0px 0px 2px #000000';
+            creditDiv.style.color = '#ffffff';
+            creditDiv.style['font-size'] = '10pt';
+            creditDiv.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditDiv);
             creditDisplay = new CreditDisplay(creditDiv);
         }
