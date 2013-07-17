@@ -1507,4 +1507,19 @@ defineSuite([
             label.computeScreenSpacePosition(context, undefined);
         }).toThrow();
     });
+
+    it('destroys texture atlas when destroying', function() {
+        labels.add({
+            text : 'a'
+        });
+        labels.update(context, frameState, []);
+
+        var textureAtlas = labels._textureAtlas;
+        expect(textureAtlas.isDestroyed()).toBe(false);
+
+        labels = labels.destroy();
+
+        expect(textureAtlas.isDestroyed()).toBe(true);
+    });
+
 }, 'WebGL');
