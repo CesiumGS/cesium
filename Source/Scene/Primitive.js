@@ -199,6 +199,7 @@ define([
         this._boundingSphere2D = undefined;
         this._perInstanceAttributes = {};
         this._lastPerInstanceAttributeIndex = 0;
+        this._dirtyAttributes = [];
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -798,43 +799,35 @@ define([
         }
 
         // Update per-instance attributes
-        if (this._perInstanceAttributes._dirty) {
-            var perInstanceIndices = this._perInstanceAttributes.indices;
-            length = perInstanceIndices.length;
+        if (this._dirtyAttributes.length > 0) {
+            var attributes = this._dirtyAttributes;
+            length = attributes.length;
             for (i = 0; i < length; ++i) {
-                var perInstanceAttributes = perInstanceIndices[i];
-                for (var name in perInstanceAttributes) {
-                    if (perInstanceAttributes.hasOwnProperty(name)) {
-                        var attribute = perInstanceAttributes[name];
-                        if (attribute.dirty) {
-                            var value = attribute.value;
-                            var indices = attribute.indices;
-                            var indicesLength = indices.length;
-                            for (var j = 0; j < indicesLength; ++j) {
-                                var index = indices[j];
-                                var offset = index.offset;
-                                var count = index.count;
+                var attribute = attributes[i];
+                var value = attribute.value;
+                var indices = attribute.indices;
+                var indicesLength = indices.length;
+                for (var j = 0; j < indicesLength; ++j) {
+                    var index = indices[j];
+                    var offset = index.offset;
+                    var count = index.count;
 
-                                var vaAttribute = index.attribute;
-                                var componentDatatype = vaAttribute.componentDatatype;
-                                var componentsPerAttribute = vaAttribute.componentsPerAttribute;
+                    var vaAttribute = index.attribute;
+                    var componentDatatype = vaAttribute.componentDatatype;
+                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
 
-                                var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
-                                for (var k = 0; k < count; ++k) {
-                                    typedArray.set(value, k * componentsPerAttribute);
-                                }
-
-                                var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
-                                vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
-                            }
-
-                            attribute.dirty = false;
-                        }
+                    var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                    for (var k = 0; k < count; ++k) {
+                        typedArray.set(value, k * componentsPerAttribute);
                     }
+
+                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
                 }
+                attribute.dirty = false;
             }
 
-            this._perInstanceAttributes._dirty = false;
+            attributes.length = 0;
         }
 
         var boundingSphere;
@@ -868,15 +861,18 @@ define([
         };
     }
 
-    function createSetFunction(name, perInstanceAttributes, container) {
+    function createSetFunction(name, perInstanceAttributes, dirtyList) {
         return function (value) {
             if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
 
-            perInstanceAttributes[name].value = value;
-            perInstanceAttributes[name].dirty = true;
-            container._dirty = true;
+            var attribute = perInstanceAttributes[name];
+            attribute.value = value;
+            if (!attribute.dirty) {
+                dirtyList.push(attribute);
+                attribute.dirty = true;
+            }
         };
     }
 
@@ -926,8 +922,8 @@ define([
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
                 Object.defineProperty(attributes, name, {
-                    get : createGetFunction(name, perInstanceAttributes, this._perInstanceAttributes),
-                    set : createSetFunction(name, perInstanceAttributes, this._perInstanceAttributes)
+                    get : createGetFunction(name, perInstanceAttributes),
+                    set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
                 });
             }
         }

@@ -493,6 +493,8 @@ define([
 
         if (typeof sunCommand !== 'undefined' && sunVisible) {
             sunCommand.execute(context, passState);
+            scene._sunPostProcess.execute(context);
+            passState.framebuffer = undefined;
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
@@ -514,11 +516,6 @@ define([
             for (var j = 0; j < length; ++j) {
                 commands[j].execute(context, passState);
             }
-        }
-
-        if (sunVisible) {
-            scene._sunPostProcess.execute(context);
-            passState.framebuffer = undefined;
         }
     }
 
