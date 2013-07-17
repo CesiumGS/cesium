@@ -11,7 +11,6 @@ define([
         './defaultValue',
         './pointInsideTriangle',
         './ComponentDatatype',
-        './IndexDatatype',
         './PrimitiveType',
         './Queue',
         './WindingOrder'
@@ -27,7 +26,6 @@ define([
         defaultValue,
         pointInsideTriangle,
         ComponentDatatype,
-        IndexDatatype,
         PrimitiveType,
         Queue,
         WindingOrder) {

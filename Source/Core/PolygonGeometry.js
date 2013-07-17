@@ -798,7 +798,7 @@ define([
      *
      * @example
      * // create a polygon from points
-     *     var geometry = new PolygonGeometry({
+     * var geometry = new PolygonGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0),
