@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './clone',
         './defaultValue',
         './BoundingSphere',
         './Cartesian3',
@@ -20,6 +21,7 @@ define([
         './Quaternion',
         './VertexFormat'
     ], function(
+        clone,
         defaultValue,
         BoundingSphere,
         Cartesian3,
@@ -329,7 +331,7 @@ define([
              positions[positionIndex++] = reflectedPosition.z;
 
              if (doPerimeter) {
-                 outerRight.push(position.z, position.y, position.x);
+                 outerRight.unshift(position.x, position.y, position.z);
                  if (i !== 0) {
                      outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
                  }
@@ -366,7 +368,7 @@ define([
              positions[positionIndex++] = reflectedPosition.z;
 
              if (doPerimeter) {
-                 outerRight.push(position.z, position.y, position.x);
+                 outerRight.unshift(position.x, position.y, position.z);
                  if (i !== 1) {
                      outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
                  }
@@ -385,7 +387,6 @@ define([
          };
 
          if (doPerimeter) {
-             outerRight.reverse();
              r.outerPositions = outerRight.concat(outerLeft);
          }
 
@@ -648,21 +649,32 @@ define([
         var UR;
         var LL;
         var LR;
-        var indices = [];
         var length = positions.length/3;
+        var indices = IndexDatatype.createTypedArray(length, length * 6);
+        var index = 0;
         for (var i = 0; i < length - 1; i++) {
             UL = i;
             LL = i + length;
             UR = UL + 1;
             LR = UR + length;
-            indices.push(UL, LL, UR, UR, LL, LR);
+            indices[index++] = UL;
+            indices[index++] = LL;
+            indices[index++] = UR;
+            indices[index++] = UR;
+            indices[index++] = LL;
+            indices[index++] = LR;
         }
 
         UL = length - 1;
         LL = i + length;
         UR = 0;
         LR = UR + length;
-        indices.push(UL, LL, UR, UR, LL, LR);
+        indices[index++] = UL;
+        indices[index++] = LL;
+        indices[index++] = UR;
+        indices[index++] = UR;
+        indices[index++] = LL;
+        indices[index++] = LR;
 
         return indices;
     }
@@ -674,11 +686,11 @@ define([
         var ellipsoid = options.ellipsoid;
         var semiMajorAxis = options.semiMajorAxis;
         var scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scratchCartesian1), options.height, scratchCartesian1);
-        topBoundingSphere.center = Cartesian3.add(center, scaledNormal);
+        topBoundingSphere.center = Cartesian3.add(center, scaledNormal, topBoundingSphere.center);
         topBoundingSphere.radius = semiMajorAxis;
 
         scaledNormal = Cartesian3.multiplyByScalar(ellipsoid.geodeticSurfaceNormal(center, scaledNormal), options.extrudedHeight, scaledNormal);
-        bottomBoundingSphere.center = Cartesian3.add(center, scaledNormal);
+        bottomBoundingSphere.center = Cartesian3.add(center, scaledNormal, bottomBoundingSphere.center);
         bottomBoundingSphere.radius = semiMajorAxis;
 
         var cep = computeEllipsePositions(options, true);
@@ -689,7 +701,7 @@ define([
         var topBottomAttributes = computeTopBottomAttributes(positions, options, true);
         var indices = topIndices(numPts);
         var length = indices.length;
-        indices = indices.concat(new Array(indices.length));
+        indices.length = length * 2;
         var posLength = positions.length/3;
         for (var i = 0; i < length; i+=3) {
             indices[i + length] = indices[i + 2] + posLength;
@@ -730,7 +742,8 @@ define([
     }
 
     /**
-     * Computes vertices and indices for an ellipse on the ellipsoid.
+     *
+     * A {@link Geometry} that represents geometry for an ellipse on an ellipsoid
      *
      * @alias EllipseGeometry
      * @constructor
@@ -740,7 +753,7 @@ define([
      * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion.
+     * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
@@ -765,13 +778,6 @@ define([
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        options.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        options.rotation = defaultValue(options.rotation, 0.0);
-        options.height = defaultValue(options.height, 0.0);
-        options.extrudedHeight = defaultValue(options.extrudedHeight, options.height);
-        options.granularity = defaultValue(options.granularity, 0.02);
-        options.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
         if (typeof options.center === 'undefined') {
             throw new DeveloperError('center is required.');
         }
@@ -788,24 +794,32 @@ define([
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
 
-        if (options.granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
-        }
-
         if (options.semiMajorAxis < options.semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
-        var extrude = (options.height !== options.extrudedHeight);
+        var newOptions = clone(options);
+        newOptions.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        newOptions.rotation = defaultValue(options.rotation, 0.0);
+        newOptions.height = defaultValue(options.height, 0.0);
+        newOptions.granularity = defaultValue(options.granularity, 0.02);
+        newOptions.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+
+        if (newOptions.granularity <= 0.0) {
+            throw new DeveloperError('granularity must be greater than zero.');
+        }
+
+        var extrude = (typeof newOptions.extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
+
         var o;
         if (extrude) {
-            var h = options.extrudedHeight;
-            var height = options.height;
-            options.extrudedHeight = Math.min(h, height);
-            options.height = Math.max(h, height);
-            o = computeExtrudedEllipse(options);
+            var h = newOptions.extrudedHeight;
+            var height = newOptions.height;
+            newOptions.extrudedHeight = Math.min(h, height);
+            newOptions.height = Math.max(h, height);
+            o = computeExtrudedEllipse(newOptions);
         } else {
-            o = computeEllipse(options);
+            o = computeEllipse(newOptions);
         }
 
 
