@@ -703,7 +703,7 @@ define([
                         values : flattenedPositions
                     })
                 },
-                indices : IndexDatatype.createTypedArray(length, subdividedIndices),
+                indices : subdividedIndices,
                 primitiveType : PrimitiveType.TRIANGLES
             });
         },
