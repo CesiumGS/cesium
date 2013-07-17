@@ -615,7 +615,7 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var stRotation = defaultValue(options.stRotation, 0.0);
         var height = defaultValue(options.height, 0.0);
 
@@ -798,15 +798,15 @@ define([
      *
      * @example
      * // create a polygon from points
-     *    polygonHierarchy : {
-     *         positions : ellipsoid.cartographicArrayToCartesianArray([
-     *             Cartographic.fromDegrees(-72.0, 40.0),
-     *             Cartographic.fromDegrees(-70.0, 35.0),
-     *             Cartographic.fromDegrees(-75.0, 30.0),
-     *             Cartographic.fromDegrees(-70.0, 30.0),
-     *             Cartographic.fromDegrees(-68.0, 40.0)
-     *         ])
-     *     }
+     *     var geometry = new PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
