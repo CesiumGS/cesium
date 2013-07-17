@@ -236,6 +236,18 @@ define(['../Core/createGuid',
             if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
                 //Map style to line properties
+                //TODO PhysicalWidth, Visibility, ColorMode
+                var labelColor = getElementValue(node,'color');
+                var labelWidth = getElementValue(node,'width');
+                var labelOuterColor = getElementValue(node,'gx:outerColor');
+                var labelOuterWidth = getElementValue(node,'gx:outerWidth');
+                labelColor = parseInt(labelColor,16);
+                labelOuterColor = parseInt(labelOuterColor, 16);
+
+                dynamicObject.polyline.color = labelColor && new ConstantProperty(Color.fromRgba(labelColor));
+                dynamicObject.polyline.width = labelWidth && new ConstantProperty(labelWidth);
+                dynamicObject.polyline.outlineColor = labelOuterColor && new ConstantProperty(Color.fromRgba(labelOuterColor));
+                dynamicObject.polyline.outlineWidth = labelOuterWidth && new ConstantProperty(labelOuterWidth);
             }
             if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = new DynamicPolygon();
