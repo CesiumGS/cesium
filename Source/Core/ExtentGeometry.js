@@ -3,6 +3,7 @@ define([
         './clone',
         './defaultValue',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
@@ -24,6 +25,7 @@ define([
         clone,
         defaultValue,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -57,6 +59,8 @@ define([
     var nwCartographic = new Cartographic();
     var centerCartographic = new Cartographic();
     var center = new Cartesian3();
+    var stExtent = new Extent();
+    var textureMatrix = new Matrix2();
     var rotationMatrix = new Matrix2();
     var proj = new GeographicProjection();
     var position = new Cartesian3();
@@ -69,6 +73,7 @@ define([
 
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
+    var textureCoordsScratch = new Cartesian2();
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -77,20 +82,16 @@ define([
     var stLatitude, stLongitude;
 
     function computePosition(params, row, col, maxHeight, minHeight) {
-        var extent = params.extent;
         var radiiSquared = params.radiiSquared;
 
-        var latitude = nwCartographic.latitude - params.granYCos*row + col*params.granXSin;
-        stLatitude = extent.north - params.granularityY*row;
-        var cosLatitude = cos(latitude);
-        var nZ = sin(latitude);
+        stLatitude = nwCartographic.latitude - params.granYCos * row + col * params.granXSin;
+        var cosLatitude = cos(stLatitude);
+        var nZ = sin(stLatitude);
         var kZ = radiiSquared.z * nZ;
 
-        var longitude = nwCartographic.longitude + row*params.granYSin + col*params.granXCos;
-        stLongitude = extent.west + col*params.granularityX;
-
-        var nX = cosLatitude * cos(longitude);
-        var nY = cosLatitude * sin(longitude);
+        stLongitude = nwCartographic.longitude + row * params.granYSin + col * params.granXCos;
+        var nX = cosLatitude * cos(stLongitude);
+        var nY = cosLatitude * sin(stLongitude);
 
         var kX = radiiSquared.x * nX;
         var kY = radiiSquared.y * nY;
@@ -116,31 +117,31 @@ define([
 
 
     function createAttributes(vertexFormat, attributes) {
-        var geo = new Geometry ({
-            attributes: {},
-            primitiveType: PrimitiveType.TRIANGLES
+        var geo = new Geometry({
+            attributes : new GeometryAttributes(),
+            primitiveType : PrimitiveType.TRIANGLES
         });
         if (vertexFormat.position) {
             geo.attributes.position = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.DOUBLE,
-                componentsPerAttribute: 3,
-                values: attributes.positions
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : attributes.positions
             });
         }
         if (vertexFormat.normal) {
             geo.attributes.normal = new GeometryAttribute({
-                componentDatatype: ComponentDatatype.FLOAT,
-                componentsPerAttribute: 3,
-                values: attributes.normals
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attributes.normals
             });
         }
         if (vertexFormat.tangent) {
             geo.attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : attributes.tangents
-                });
-            }
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attributes.tangents
+            });
+        }
         if (vertexFormat.binormal) {
             geo.attributes.binormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
@@ -160,8 +161,8 @@ define([
 
         var attrIndex = 0;
         var bottomOffset = (top) ? length / 2 : 0;
-        length = (top && bottom) ? length/2 : length;
-        for (var i = 0; i < length; i+=3) {
+        length = (top && bottom) ? length / 2 : length;
+        for ( var i = 0; i < length; i += 3) {
             var p = Cartesian3.fromArray(positions, i, position);
             var attrIndex1 = attrIndex + 1;
             var attrIndex2 = attrIndex + 2;
@@ -213,13 +214,12 @@ define([
             }
             attrIndex += 3;
         }
-        return createAttributes(vertexFormat,
-                {
-            positions: positions,
-            normals: normals,
-            tangents: tangents,
-            binormals: binormals
-                });
+        return createAttributes(vertexFormat, {
+            positions : positions,
+            normals : normals,
+            tangents : tangents,
+            binormals : binormals
+        });
     }
 
     function calculateAttributesWall(positions, vertexFormat, ellipsoid) {
@@ -232,7 +232,7 @@ define([
         var attrIndex = 0;
         var recomputeNormal = true;
         var bottomOffset = length / 2;
-        for (var i = 0; i < bottomOffset; i+=3) {
+        for ( var i = 0; i < bottomOffset; i += 3) {
             var p = Cartesian3.fromArray(positions, i, position);
             var attrIndex1 = attrIndex + 1;
             var attrIndex2 = attrIndex + 2;
@@ -287,25 +287,29 @@ define([
             }
             attrIndex += 3;
         }
-        return createAttributes(vertexFormat,
-                {
-            positions: positions,
-            normals: normals,
-            tangents: tangents,
-            binormals: binormals
-                });
+        return createAttributes(vertexFormat, {
+            positions : positions,
+            normals : normals,
+            tangents : tangents,
+            binormals : binormals
+        });
     }
 
     function calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, offset) {
-        var extent = params.extent;
-        var stLon = (stLongitude - extent.west) * params.lonScalar;
-        var stLat = (stLatitude - extent.south) * params.latScalar;
+        textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
+        textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+
+        Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
+
+        textureCoordsScratch.x += 0.5;
+        textureCoordsScratch.y += 0.5;
+
         if (typeof offset !== 'undefined') {
-            wallTextureCoordinates[stIndex +  offset] = stLon;
-            wallTextureCoordinates[stIndex + 1 +  offset] = stLat;
+            wallTextureCoordinates[stIndex + offset] = textureCoordsScratch.x;
+            wallTextureCoordinates[stIndex + 1 + offset] = textureCoordsScratch.y;
         }
-        wallTextureCoordinates[stIndex++] = stLon;
-        wallTextureCoordinates[stIndex++] = stLat;
+        wallTextureCoordinates[stIndex++] = textureCoordsScratch.x;
+        wallTextureCoordinates[stIndex++] = textureCoordsScratch.y;
         return stIndex;
     }
 
@@ -319,8 +323,7 @@ define([
         return wallPositions;
     }
 
-    function constructExtent(options, vertexFormat, params){
-        var extent = params.extent;
+    function constructExtent(options, vertexFormat, params) {
         var ellipsoid = params.ellipsoid;
         var size = params.size;
         var height = params.height;
@@ -342,8 +345,16 @@ define([
                 positions[posIndex++] = position.z;
 
                 if (vertexFormat.st) {
-                    textureCoordinates[stIndex++] = (stLongitude - extent.west) * params.lonScalar;
-                    textureCoordinates[stIndex++] = (stLatitude - extent.south) * params.latScalar;
+                    textureCoordsScratch.x = (stLongitude - stExtent.west) * params.lonScalar - 0.5;
+                    textureCoordsScratch.y = (stLatitude - stExtent.south) * params.latScalar - 0.5;
+
+                    Matrix2.multiplyByVector(textureMatrix, textureCoordsScratch, textureCoordsScratch);
+
+                    textureCoordsScratch.x += 0.5;
+                    textureCoordsScratch.y += 0.5;
+
+                    textureCoordinates[stIndex++] = textureCoordsScratch.x;
+                    textureCoordinates[stIndex++] = textureCoordsScratch.y;
                 }
             }
         }
@@ -374,15 +385,15 @@ define([
         geo.indices = indices;
         if (vertexFormat.st) {
             geo.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : textureCoordinates
-                });
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : textureCoordinates
+            });
         }
 
         return {
-                boundingSphere: BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
-                geometry: geo
+            boundingSphere : BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+            geometry : geo
         };
     }
 
@@ -394,7 +405,7 @@ define([
         var size = params.size;
         var ellipsoid = params.ellipsoid;
         var extrudedOptions = options.extrudedOptions;
-        if (typeof extrudedOptions.height !== 'number'){
+        if (typeof extrudedOptions.height !== 'number') {
             return constructExtent(options, vertexFormat, params);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
@@ -404,10 +415,10 @@ define([
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
-        var closeBottom  = defaultValue(extrudedOptions.closeBottom, true);
+        var closeBottom = defaultValue(extrudedOptions.closeBottom, true);
 
-        var perimeterPositions = 2*width + 2*height - 4;
-        var wallCount = (perimeterPositions + 4)*2;
+        var perimeterPositions = 2 * width + 2 * height - 4;
+        var wallCount = (perimeterPositions + 4) * 2;
 
         var wallPositions = new Float64Array(wallCount * 3);
         var wallTextureCoordinates = (vertexFormat.st) ? new Float32Array(wallCount * 2) : undefined;
@@ -430,7 +441,8 @@ define([
         for (col = 0; col < width; col++) {
             computePosition(params, row, col, maxHeight, minHeight);
             wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
-            posIndex += 3;            if (vertexFormat.st) {
+            posIndex += 3;
+            if (vertexFormat.st) {
                 stIndex = calculateST(vertexFormat, stIndex, wallTextureCoordinates, params, wallCount);
             }
         }
@@ -446,7 +458,7 @@ define([
         }
 
         row = 0;
-        for (col = width-1; col >= 0; col--) {
+        for (col = width - 1; col >= 0; col--) {
             computePosition(params, row, col, maxHeight, minHeight);
             wallPositions = addWallPositions(wallPositions, posIndex, bottomOffset);
             posIndex += 3;
@@ -459,10 +471,10 @@ define([
 
         if (vertexFormat.st) {
             geo.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : wallTextureCoordinates
-                });
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : wallTextureCoordinates
+            });
         }
 
         var wallIndices = IndexDatatype.createTypedArray(wallCount, perimeterPositions * 6);
@@ -477,8 +489,8 @@ define([
         for (i = 0; i < length - 1; i++) {
             upperLeft = i;
             upperRight = upperLeft + 1;
-            var p1 = Cartesian3.fromArray(wallPositions, upperLeft*3, v1Scratch);
-            var p2 = Cartesian3.fromArray(wallPositions, upperRight*3, v2Scratch);
+            var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
+            var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
             if (p1.equalsEpsilon(p2, CesiumMath.EPSILON10)) {
                 continue;
             }
@@ -516,7 +528,7 @@ define([
 
             posIndex = 0;
             stIndex = 0;
-            bottomOffset = (closeBottom && closeTop) ? size*3 : 0;
+            bottomOffset = (closeBottom && closeTop) ? size * 3 : 0;
             for (row = 0; row < height; ++row) {
                 for (col = 0; col < width; ++col) {
                     computePosition(params, row, col, maxH, minH);
@@ -556,7 +568,7 @@ define([
                     lowerRight = lowerLeft + 1;
                     upperRight = upperLeft + 1;
                     if (closeBottom) {
-                        topBottomIndices[indicesIndex++]= upperRight + bottomOffset;
+                        topBottomIndices[indicesIndex++] = upperRight + bottomOffset;
                         topBottomIndices[indicesIndex++] = lowerLeft + bottomOffset;
                         topBottomIndices[indicesIndex++] = upperLeft + bottomOffset;
                         topBottomIndices[indicesIndex++] = lowerRight + bottomOffset;
@@ -577,7 +589,14 @@ define([
                 ++index;
             }
             topBottomGeo.indices = topBottomIndices;
-            geo = GeometryPipeline.combine([new GeometryInstance({geometry: topBottomGeo}), new GeometryInstance({geometry: geo})]);
+            geo = GeometryPipeline.combine([
+                new GeometryInstance({
+                    geometry : topBottomGeo
+                }),
+                new GeometryInstance({
+                    geometry : geo
+                })
+            ]);
         }
 
         var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
@@ -585,8 +604,8 @@ define([
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
-            boundingSphere: boundingSphere,
-            geometry: geo
+            boundingSphere : boundingSphere,
+            geometry : geo
         };
     }
 
@@ -601,11 +620,12 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the extent lies.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
-     * @param {Number} [options.rotation=0.0] The rotation of the extent in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.height] Height of extruded surface
-     * @param {Boolean} [options.extrudedOptions.closeTop=true] Render top of extrusion
-     * @param {Number} [options.extrudedOptions.closeBottom=true] Render bottom of extrusion
+     * @param {Number} [options.extrudedOptions.height] Height of extruded surface.
+     * @param {Boolean} [options.extrudedOptions.closeTop=true] <code>true</code> to render top of the extruded extent; <code>false</code> otherwise.
+     * @param {Boolean} [options.extrudedOptions.closeBottom=true] <code>true</code> to render bottom of the extruded extent; <code>false</code> otherwise.
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -643,69 +663,99 @@ define([
         var radiiSquared = ellipsoid.getRadiiSquared();
 
         var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = defaultValue(options.rotation, 0.0);
+        var rotation = options.rotation;
+        var stRotation = options.stRotation;
 
-        // for computing texture coordinates
-        var lonScalar = 1.0 / (extent.east - extent.west);
-        var latScalar = 1.0 / (extent.north - extent.south);
-
+        Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);
-        extent.getCenter(centerCartographic);
-        var latitude, longitude;
 
-        var granYCos = granularityY * cos(rotation);
-        var granYSin = granularityY * sin(rotation);
-        var granXCos = granularityX * cos(rotation);
-        var granXSin = granularityX * sin(rotation);
+        var granYCos = granularityY;
+        var granXCos = granularityX;
+        var granYSin = 0.0;
+        var granXSin = 0.0;
 
-        if (rotation !== 0) {
+        if (typeof rotation !== 'undefined') {
+            var cosRotation = cos(rotation);
+            granYCos *= cosRotation;
+            granXCos *= cosRotation;
+
+            var sinRotation = sin(rotation);
+            granYSin = granularityY * sinRotation;
+            granXSin = granularityX * sinRotation;
+
             proj.project(nwCartographic, nw);
+            extent.getCenter(centerCartographic);
             proj.project(centerCartographic, center);
+
             nw.subtract(center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
             rotationMatrix.multiplyByVector(nw, nw);
             nw.add(center, nw);
             proj.unproject(nw, nwCartographic);
-            latitude = nwCartographic.latitude;
-            longitude = nwCartographic.longitude;
 
-            if (!isValidLatLon(latitude, longitude) ||
-                    !isValidLatLon(latitude + (width-1)*granXSin, longitude + (width-1)*granXCos) ||
-                    !isValidLatLon(latitude - granYCos*(height-1), longitude + (height-1)*granYSin) ||
-                    !isValidLatLon(latitude - granYCos*(height-1) + (width-1)*granXSin, longitude + (height-1)*granYSin + (width-1)*granXCos)) {
+            var latitude = nwCartographic.latitude;
+            var latitude0 = latitude + (width - 1) * granXSin;
+            var latitude1 = latitude - granYCos * (height - 1);
+            var latitude2 = latitude - granYCos * (height - 1) + (width - 1) * granXSin;
+
+            var north = Math.max(latitude, latitude0, latitude1, latitude2);
+            var south = Math.min(latitude, latitude0, latitude1, latitude2);
+
+            var longitude = nwCartographic.longitude;
+            var longitude0 = longitude + (width - 1) * granXCos;
+            var longitude1 = longitude + (height - 1) * granYSin;
+            var longitude2 = longitude + (height - 1) * granYSin + (width - 1) * granXCos;
+
+            var east = Math.max(longitude, longitude0, longitude1, longitude2);
+            var west = Math.min(longitude, longitude0, longitude1, longitude2);
+
+            if (!isValidLatLon(north, west) || !isValidLatLon(north, east) ||
+                    !isValidLatLon(south, west) || !isValidLatLon(south, east)) {
                 throw new DeveloperError('Rotated extent is invalid.');
             }
+
+            stExtent.north = north;
+            stExtent.south = south;
+            stExtent.east = east;
+            stExtent.west = west;
+        }
+
+        var lonScalar = 1.0 / (stExtent.east - stExtent.west);
+        var latScalar = 1.0 / (stExtent.north - stExtent.south);
+
+        if (typeof stRotation !== 'undefined') {
+            // negate angle for a counter-clockwise rotation
+            Matrix2.fromRotation(-stRotation, textureMatrix);
+        } else {
+            Matrix2.clone(Matrix2.IDENTITY, textureMatrix);
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var size = width * height;
 
         var params = {
-            granYCos: granYCos,
-            granYSin: granYSin,
-            granXCos: granXCos,
-            granXSin: granXSin,
-            granularityY: granularityY,
-            granularityX: granularityX,
-            radiiSquared: radiiSquared,
-            ellipsoid: ellipsoid,
-            lonScalar: lonScalar,
-            latScalar: latScalar,
-            extent: extent,
-            width: width,
-            height: height,
-            surfaceHeight: surfaceHeight,
-            size: size
+            granYCos : granYCos,
+            granYSin : granYSin,
+            granXCos : granXCos,
+            granXSin : granXSin,
+            radiiSquared : radiiSquared,
+            ellipsoid : ellipsoid,
+            lonScalar : lonScalar,
+            latScalar : latScalar,
+            extent : extent,
+            width : width,
+            height : height,
+            surfaceHeight : surfaceHeight,
+            size : size
         };
 
-        var o;
-
+        var extentGeometry;
         if (typeof options.extrudedOptions !== 'undefined') {
-            o = constructExtrudedExtent(options, vertexFormat, params);
+            extentGeometry = constructExtrudedExtent(options, vertexFormat, params);
         } else {
-            o = constructExtent(options, vertexFormat, params);
+            extentGeometry = constructExtent(options, vertexFormat, params);
         }
-        var geometry = o.geometry;
+        var geometry = extentGeometry.geometry;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -728,7 +778,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = o.boundingSphere;
+        this.boundingSphere = extentGeometry.boundingSphere;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
