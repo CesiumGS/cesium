@@ -48,12 +48,12 @@ define([
         var start = ellipsoid.cartesianToCartographic(p1, carto1);
         var end = ellipsoid.cartesianToCartographic(p2, carto2);
 
-        var arc = new EllipoidGeodesic(ellipsoid, start, end);
+        var arc = new EllipoidGeodesic(start, end, ellipsoid);
 
-        var surfaceDistanceBetweenPoints = arc.surfaceDistance / (numPoints - 1);
+        var surfaceDistanceBetweenPoints = arc.surfaceDistance() / (numPoints - 1);
 
         for (var i = 1; i < numPoints - 1; i++) {
-            var cart = arc.InterpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
+            var cart = arc.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
             result[i] = ellipsoid.CartographicToCartesian(cart);
         }
         start.height = 0;
