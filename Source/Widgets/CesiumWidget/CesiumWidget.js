@@ -395,8 +395,8 @@ define([
      * @memberof CesiumWidget
      */
     CesiumWidget.prototype.render = function() {
-        var currentTime = this._clock.tick();
         this._scene.initializeFrame();
+        var currentTime = this._clock.tick();
         if (this._canRender) {
             this._scene.render(currentTime);
         }
