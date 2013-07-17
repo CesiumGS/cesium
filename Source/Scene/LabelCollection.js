@@ -619,9 +619,9 @@ define([
      * labels = labels && labels.destroy();
      */
     LabelCollection.prototype.destroy = function() {
-        // removeAll destroys the texture atlas
         this.removeAll();
-        this._billboardCollection.destroy();
+        this._billboardCollection = this._billboardCollection.destroy();
+        this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
         return destroyObject(this);
     };
 
