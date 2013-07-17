@@ -38,6 +38,7 @@ Beta Releases
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added extrusion to `ExtentGeometry`* Added `Credit` and `CreditDisplay` for displaying credits on the screen.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:
