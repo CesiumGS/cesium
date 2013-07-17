@@ -33,13 +33,14 @@ define([
      * @alias ExtentPrimitive
      * @constructor
      *
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
-     * @param {Extent} [extent=undefined] The extent, which defines the rectangular region to draw.
-     * @param {Number} [granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
-     * @param {Number} [height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
-     * @param {Number} [rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
-     * @param {Boolean} [show=true] Determines if this primitive will be shown.
-     * @param {Material} [material=undefined] The surface appearance of the primitive.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid that the extent is drawn on.
+     * @param {Extent} [options.extent=undefined] The extent, which defines the rectangular region to draw.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude in the underlying geometry.
+     * @param {Number} [options.height=0.0] The height, in meters, that the extent is raised above the {@link ExtentPrimitive#ellipsoid}.
+     * @param {Number} [options.rotation=0.0] The angle, in radians, relative to north that the extent is rotated.  Positive angles rotate counter-clockwise.
+     * @param {Number} [options.textureRotationAngle=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+     * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
+     * @param {Material} [options.material=undefined] The surface appearance of the primitive.
      *
      * @example
      * var extentPrimitive = new ExtentPrimitive({
@@ -104,6 +105,17 @@ define([
         this._rotation = undefined;
 
         /**
+         * The angle, in radians, relative to north that the primitive's texture is rotated.
+         * Positive angles rotate counter-clockwise.
+         *
+         * @type Number
+         *
+         * @default 0.0
+         */
+        this.textureRotationAngle = defaultValue(options.textureRotationAngle, 0.0);
+        this._textureRotationAngle = undefined;
+
+        /**
          * Determines if this primitive will be shown.
          *
          * @type Boolean
@@ -162,13 +174,15 @@ define([
             (this._ellipsoid !== this.ellipsoid) ||
             (this._granularity !== this.granularity) ||
             (this._height !== this.height) ||
-            (this._rotation !== this.rotation)) {
+            (this._rotation !== this.rotation) ||
+            (this._textureRotationAngle !== this.textureRotationAngle)) {
 
             this._extent = Extent.clone(this.extent, this._extent);
             this._ellipsoid = this.ellipsoid;
             this._granularity = this.granularity;
             this._height = this.height;
             this._rotation = this.rotation;
+            this._textureRotationAngle = this.textureRotationAngle;
 
             var instance = new GeometryInstance({
                 geometry : new ExtentGeometry({
@@ -177,7 +191,8 @@ define([
                     ellipsoid : this.ellipsoid,
                     granularity : this.granularity,
                     height : this.height,
-                    rotation : this.rotation
+                    rotation : this.rotation,
+                    stRotation : this.textureRotationAngle
                 }),
                 id : this
             });
