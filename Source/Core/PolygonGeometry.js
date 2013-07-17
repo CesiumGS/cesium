@@ -529,34 +529,36 @@ define([
     }
 
     /**
-     * Computes vertices and indices for a polygon on the ellipsoid. The polygon is either defined
+     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
      * by an array of Cartesian points, or a polygon hierarchy.
      *
      * @alias PolygonGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] An array of positions that defined the corner points of the polygon.
-     * @param {Object} [options.polygonHierarchy] A polygon hierarchy that can include holes.
+     * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {Number} [options.extrudedHeight=0.0] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.toRadians(1.0)] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.extrudedHeight] Height of extruded surface
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} polygonHierarchy is required.
      * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} positions or polygonHierarchy must be supplied.
      * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
      *
      * @example
      * // create a polygon from points
      * var geometry = new PolygonGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
+     *     polygonHierarchy : {
+     *         positions : ellipsoid.cartographicArrayToCartesianArray([
+     *             Cartographic.fromDegrees(-72.0, 40.0),
+     *             Cartographic.fromDegrees(-70.0, 35.0),
+     *             Cartographic.fromDegrees(-75.0, 30.0),
+     *             Cartographic.fromDegrees(-70.0, 30.0),
+     *             Cartographic.fromDegrees(-68.0, 40.0)
+     *         ])
+     *     }
      * });
      *
      * // create a nested polygon with holes
@@ -749,14 +751,14 @@ define([
          * An object containing {@link GeometryAttribute} properties named after each of the
          * <code>true</code> values of the {@link VertexFormat} option.
          *
-         * @type Object
+         * @type GeometryAttributes
          *
          * @see Geometry#attributes
          */
         this.attributes = attributes;
 
         /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
+         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
@@ -796,15 +798,15 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var geometry = new PolygonGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
-     * });
+     *    polygonHierarchy : {
+     *         positions : ellipsoid.cartographicArrayToCartesianArray([
+     *             Cartographic.fromDegrees(-72.0, 40.0),
+     *             Cartographic.fromDegrees(-70.0, 35.0),
+     *             Cartographic.fromDegrees(-75.0, 30.0),
+     *             Cartographic.fromDegrees(-70.0, 30.0),
+     *             Cartographic.fromDegrees(-68.0, 40.0)
+     *         ])
+     *     }
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
