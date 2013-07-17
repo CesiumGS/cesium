@@ -107,9 +107,8 @@ define([
         }
 
         var indices = PolygonPipeline.earClip2D(positions2D);
-        var geometry = PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity);
         return new GeometryInstance({
-            geometry : geometry
+            geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
         });
     }
 
@@ -128,7 +127,7 @@ define([
     var appendTextureCoordinatesQuaternion = new Quaternion();
     var appendTextureCoordinatesMatrix3 = new Matrix3();
 
-    function computeWallAttributes(vertexFormat, geometry, outerPositions, ellipsoid, stRotation) {
+    function computeAttributes(vertexFormat, geometry, outerPositions, ellipsoid, stRotation, bottom, wall) {
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
             // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
@@ -159,154 +158,14 @@ define([
             var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
             var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
-            length /= 2;
-            var stOffset = length * 2 / 3;
+            var bottomOffset = length / 2;
+            var bottomOffset2 = length * 2 / 3;
 
-            for (var i = 0; i < length; i += 3) {
-                var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
-
-                if (vertexFormat.st) {
-                    var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
-                    var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
-                    Cartesian2.subtract(st, origin, st);
-
-                    textureCoordinates[textureCoordIndex + stOffset] = st.x / boundingRectangle.width;
-                    textureCoordinates[textureCoordIndex + stOffset + 1] = st.y / boundingRectangle.height;
-
-                    textureCoordinates[textureCoordIndex++] = st.x / boundingRectangle.width;
-                    textureCoordinates[textureCoordIndex++] = st.y / boundingRectangle.height;
-                }
-
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                    var attrIndex1 = attrIndex + 1;
-                    var attrIndex2 = attrIndex + 2;
-
-                    p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
-                    if (recomputeNormal) {
-                        p2 = Cartesian3.fromArray(flatPositions, i + length, p2);
-                        p1.subtract(position, p1);
-                        p2.subtract(position, p2);
-                        normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
-                        recomputeNormal = false;
-                    }
-                    if (vertexFormat.tangent || vertexFormat.binormal) {
-                        binormal = ellipsoid.geodeticSurfaceNormal(position, binormal);
-                        if (vertexFormat.tangent) {
-                            tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
-                        }
-                    }
-
-                    if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
-                        recomputeNormal = true;
-                    }
-
-                    if (vertexFormat.normal) {
-                        normals[attrIndex + length] = normal.x;
-                        normals[attrIndex1 + length] = normal.y;
-                        normals[attrIndex2 + length] = normal.z;
-
-                        normals[attrIndex] = normal.x;
-                        normals[attrIndex1] = normal.y;
-                        normals[attrIndex2] = normal.z;
-                    }
-
-                    if (vertexFormat.tangent) {
-                        tangents[attrIndex + length] = tangent.x;
-                        tangents[attrIndex1 + length] = tangent.y;
-                        tangents[attrIndex2 + length] = tangent.z;
-
-                        tangents[attrIndex] = tangent.x;
-                        tangents[attrIndex1] = tangent.y;
-                        tangents[attrIndex2] = tangent.z;
-                    }
-
-                    if (vertexFormat.binormal) {
-                        binormals[attrIndex + length] = binormal.x;
-                        binormals[attrIndex1 + length] = binormal.y;
-                        binormals[attrIndex2 + length] = binormal.z;
-
-                        binormals[attrIndex] = binormal.x;
-                        binormals[attrIndex1] = binormal.y;
-                        binormals[attrIndex2] = binormal.z;
-                    }
-                    attrIndex += 3;
-                }
-            }
-
-            if (vertexFormat.st) {
-                geometry.attributes.st = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    values : textureCoordinates
-                });
-            }
-
-            if (vertexFormat.normal) {
-                geometry.attributes.normal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : normals
-                });
-            }
-
-            if (vertexFormat.tangent) {
-                geometry.attributes.tangent = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : tangents
-                });
-            }
-
-            if (vertexFormat.binormal) {
-                geometry.attributes.binormal = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    values : binormals
-                });
-            }
-        }
-        return geometry;
-    }
-
-    function computeTopBottomAttributes(vertexFormat, geometry, outerPositions, ellipsoid, stRotation, top, bottom) {
-        if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-            // PERFORMANCE_IDEA: Compute before subdivision, then just interpolate during subdivision.
-            // PERFORMANCE_IDEA: Compute with createGeometryFromPositions() for fast path when there's no holes.
-            var cleanedPositions = PolygonPipeline.removeDuplicates(outerPositions);
-            var tangentPlane = EllipsoidTangentPlane.fromPoints(cleanedPositions, ellipsoid);
-            var boundingRectangle = computeBoundingRectangle(tangentPlane, outerPositions, stRotation, scratchBoundingRectangle);
-
-            var origin = appendTextureCoordinatesOrigin;
-            origin.x = boundingRectangle.x;
-            origin.y = boundingRectangle.y;
-
-            var flatPositions = geometry.attributes.position.values;
-            var length = flatPositions.length;
-
-            var textureCoordinates = vertexFormat.st ? new Float32Array(2 * (length / 3)) : undefined;
-            var normals = vertexFormat.normal ? new Float32Array(length) : undefined;
-            var tangents = vertexFormat.tangent ? new Float32Array(length) : undefined;
-            var binormals = vertexFormat.binormal ? new Float32Array(length) : undefined;
-
-            var textureCoordIndex = 0;
-            var attrIndex = 0;
-
-            var normal = scratchNormal;
-            var tangent = scratchTangent;
-
-            var rotation = Quaternion.fromAxisAngle(tangentPlane._plane.normal, stRotation, appendTextureCoordinatesQuaternion);
-            var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
-
-            var bottomOffset = (top) ? length / 2 : 0;
-            var bottomOffset2 = bottomOffset * 2 / 3;
-
-            if (top && bottom) {
+            if (bottom & !wall) {
                 length /= 2;
             }
 
             for (var i = 0; i < length; i += 3) {
-                var attrIndex1 = attrIndex + 1;
-                var attrIndex2 = attrIndex + 2;
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
 
                 if (vertexFormat.st) {
@@ -319,78 +178,93 @@ define([
                         textureCoordinates[textureCoordIndex + 1 + bottomOffset2] = st.y / boundingRectangle.height;
                     }
 
-                    if (top){
-                        textureCoordinates[textureCoordIndex] = st.x / boundingRectangle.width;
-                        textureCoordinates[textureCoordIndex + 1] = st.y / boundingRectangle.height;
-                    }
+                    textureCoordinates[textureCoordIndex] = st.x / boundingRectangle.width;
+                    textureCoordinates[textureCoordIndex + 1] = st.y / boundingRectangle.height;
 
                     textureCoordIndex += 2;
                 }
 
-                if (vertexFormat.normal) {
-                    normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                    var attrIndex1 = attrIndex + 1;
+                    var attrIndex2 = attrIndex + 2;
 
-                    if (bottom) {
-                        normals[attrIndex + bottomOffset] = -normal.x;
-                        normals[attrIndex1 + bottomOffset] = -normal.y;
-                        normals[attrIndex2 + bottomOffset] = -normal.z;
+                    if (wall) {
+                        p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
+                        if (recomputeNormal) {
+                            p2 = Cartesian3.fromArray(flatPositions, i + length, p2);
+                            p1.subtract(position, p1);
+                            p2.subtract(position, p2);
+                            normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
+                            recomputeNormal = false;
+                        }
+
+                        if (vertexFormat.tangent || vertexFormat.binormal) {
+                            binormal = ellipsoid.geodeticSurfaceNormal(position, binormal);
+                            if (vertexFormat.tangent) {
+                                tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                            }
+                        }
+
+                        if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
+                            recomputeNormal = true;
+                        }
+
+                    } else {
+                        normal = ellipsoid.geodeticSurfaceNormal(position, normal);
+                        if (vertexFormat.tangent || vertexFormat.binormal) {
+                            tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                            tangent = Matrix3.multiplyByVector(textureMatrix, tangent, tangent).normalize(tangent);
+                            if (vertexFormat.binormal) {
+                                binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                            }
+                        }
                     }
 
-                    if (top) {
+                    if (vertexFormat.normal) {
+                        if (bottom && !wall) {
+                            normals[attrIndex + bottomOffset] = -normal.x;
+                            normals[attrIndex1 + bottomOffset] = -normal.y;
+                            normals[attrIndex2 + bottomOffset] = -normal.z;
+                        } else {
+                            normals[attrIndex + bottomOffset] = normal.x;
+                            normals[attrIndex1 + bottomOffset] = normal.y;
+                            normals[attrIndex2 + bottomOffset] = normal.z;
+                        }
+
                         normals[attrIndex] = normal.x;
                         normals[attrIndex1] = normal.y;
                         normals[attrIndex2] = normal.z;
                     }
-                }
 
-                if (vertexFormat.tangent) {
-                    if (!vertexFormat.normal) {
-                        ellipsoid.geodeticSurfaceNormal(position, normal);
-                    }
+                    if (vertexFormat.tangent) {
+                        if (bottom && !wall) {
+                            tangents[attrIndex + bottomOffset] = -tangent.x;
+                            tangents[attrIndex1 + bottomOffset] = -tangent.y;
+                            tangents[attrIndex2 + bottomOffset] = -tangent.z;
+                        } else {
+                            tangents[attrIndex + bottomOffset] = tangent.x;
+                            tangents[attrIndex1 + bottomOffset] = tangent.y;
+                            tangents[attrIndex2 + bottomOffset] = tangent.z;
+                        }
 
-                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
-                    Cartesian3.normalize(tangent, tangent);
-
-                    if (bottom) {
-                        tangents[attrIndex + bottomOffset] = -tangent.x;
-                        tangents[attrIndex1 + bottomOffset] = -tangent.y;
-                        tangents[attrIndex2 + bottomOffset] = -tangent.z;
-                    }
-
-                    if (top) {
                         tangents[attrIndex] = tangent.x;
                         tangents[attrIndex1] = tangent.y;
                         tangents[attrIndex2] = tangent.z;
                     }
-                }
 
-                if (vertexFormat.binormal) {
-                    if (!vertexFormat.normal) {
-                        ellipsoid.geodeticSurfaceNormal(position, normal);
-                    }
+                    if (vertexFormat.binormal) {
+                        if (bottom) {
+                            binormals[attrIndex + bottomOffset] = binormal.x;
+                            binormals[attrIndex1 + bottomOffset] = binormal.y;
+                            binormals[attrIndex2 + bottomOffset] = binormal.z;
+                        }
 
-                    if (!vertexFormat.tangent) {
-                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
-                    }
-
-                    var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
-                    Cartesian3.normalize(binormal, binormal);
-
-                    if (bottom) {
-                        binormals[attrIndex + bottomOffset] = binormal.x;
-                        binormals[attrIndex1 + bottomOffset] = binormal.y;
-                        binormals[attrIndex2 + bottomOffset] = binormal.z;
-                    }
-
-                    if (top) {
                         binormals[attrIndex] = binormal.x;
                         binormals[attrIndex1] = binormal.y;
                         binormals[attrIndex2] = binormal.z;
                     }
+                    attrIndex += 3;
                 }
-                attrIndex += 3;
             }
 
             if (vertexFormat.st) {
@@ -760,7 +634,6 @@ define([
         var walls;
         var topAndBottom;
         var outerPositions;
-        var computeAttributes = (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
@@ -825,18 +698,14 @@ define([
                 if (typeof geometry !== 'undefined') {
                     topAndBottom = geometry.topAndBottom;
                     topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                    if (computeAttributes) {
-                        topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
-                    }
+                    topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
                     geometries.push(topAndBottom);
 
                     walls = geometry.walls;
                     for (var k = 0; k < walls.length; k++) {
                         var wall = walls[k];
                         wall.geometry = scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
-                        if (computeAttributes) {
-                            wall.geometry = computeWallAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation);
-                        }
+                        wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
                         geometries.push(wall);
                     }
                 }
@@ -846,9 +715,7 @@ define([
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
                 if (typeof geometry !== 'undefined') {
                     geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
-                    if (computeAttributes) {
-                        geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                    }
+                    geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
                     geometries.push(geometry);
                 }
             }
@@ -962,4 +829,3 @@ define([
 
     return PolygonGeometry;
 });
-
