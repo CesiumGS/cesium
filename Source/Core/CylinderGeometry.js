@@ -43,13 +43,22 @@ define([
      * @param {Number} options.length The length of the cylinder
      * @param {Number} options.topRadius The radius of the top of the cylinder
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
-     * @param {Number} options.slices
+     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0
      * @exception {DeveloperError} options.topRadius must be greater than 0
      * @exception {DeveloperError} options.bottomRadius must be greater than 0
+     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0
+     * @exception {DeveloperError} options.slices must be greater that 3
      *
      * @example
+     * // create cylinder geometry
+     * var cylinder = new Cesium.CylinderGeometry({
+     *     length: 200000,
+     *     topRadius: 80000,
+     *     bottomRadius: 200000,
+     * });
      *
      */
     var CylinderGeometry = function(options) {
@@ -68,7 +77,7 @@ define([
             throw new DeveloperError('options.bottomRadius must be greater than 0');
         }
         if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('Both bottomRadius and topRadius cannot equal 0');
+            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
@@ -246,9 +255,9 @@ define([
 
         var textureCoordIndex = 0;
         if (vertexFormat.st) {
+            var rad = Math.max(topRadius, bottomRadius);
             for (i = 0; i < numVertices; i++) {
                 var position = Cartesian3.fromArray(positions, i * 3, positionScratch);
-                var rad = Math.max(topRadius, bottomRadius);
                 st[textureCoordIndex++] = (position.x + rad) / (2.0 * rad);
                 st[textureCoordIndex++] = (position.y + rad) / (2.0 * rad);
             }
@@ -295,7 +304,7 @@ define([
             });
         }
 
-        radiusScratch.x = length;
+        radiusScratch.x = length * 0.5;
         radiusScratch.y = Math.max(bottomRadius, topRadius);
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, radiusScratch.magnitude());
