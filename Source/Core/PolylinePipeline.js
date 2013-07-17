@@ -2,16 +2,20 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartographic',
         './Cartesian3',
         './Cartesian4',
+        './EllipsoidGeodesic',
         './IntersectionTests',
         './Matrix4',
         './Plane'
     ], function(
         defaultValue,
         DeveloperError,
+        Cartographic,
         Cartesian3,
         Cartesian4,
+        EllipoidGeodesic,
         IntersectionTests,
         Matrix4,
         Plane) {
@@ -32,6 +36,33 @@ define([
     var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
+
+    var carto1 = new Cartographic();
+    var carto2 = new Cartographic();
+    function generateCartesianArc(p1, p2, granularity, ellipsoid) {
+        var separationAngle = Cartesian3.angleBetween(p1, p2);
+        var numPoints = Math.ceil(separationAngle/granularity) + 1;
+
+        var result = new Array(numPoints);
+
+        var start = ellipsoid.cartesianToCartographic(p1, carto1);
+        var end = ellipsoid.cartesianToCartographic(p2, carto2);
+
+        var arc = new EllipoidGeodesic(ellipsoid, start, end);
+
+        var surfaceDistanceBetweenPoints = arc.surfaceDistance / (numPoints - 1);
+
+        for (var i = 1; i < numPoints - 1; i++) {
+            var cart = arc.InterpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
+            result[i] = ellipsoid.CartographicToCartesian(cart);
+        }
+        start.height = 0;
+        end.height = 0;
+        result[0] = ellipsoid.cartographicToCartesian(start);
+        result[numPoints - 1] = ellipsoid.cartographicToCartesian(end);
+
+        return result;
+    }
 
     /**
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
@@ -156,6 +187,10 @@ define([
         }
 
         return cleanedPositions;
+    };
+
+    PolylinePipeline.scaleToSurface = function(positions, granularity) {
+
     };
 
     return PolylinePipeline;
