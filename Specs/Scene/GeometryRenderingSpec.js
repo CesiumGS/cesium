@@ -2,6 +2,7 @@
 defineSuite([
          'Core/BoxGeometry',
          'Core/CircleGeometry',
+         'Core/CylinderGeometry',
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
          'Core/SphereGeometry',
@@ -42,6 +43,7 @@ defineSuite([
      ], 'Scene/GeometryRendering', function(
          BoxGeometry,
          CircleGeometry,
+         CylinderGeometry,
          EllipseGeometry,
          EllipsoidGeometry,
          SphereGeometry,
@@ -319,6 +321,42 @@ defineSuite([
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
             });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
+    describe('CylinderGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new CylinderGeometry({
+                    length: 5,
+                    topRadius: 3,
+                    bottomRadius: 5,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            }),
+            id: 'cylinder',
+            modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        });
         });
 
         it('3D', function() {
