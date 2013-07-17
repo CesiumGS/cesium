@@ -5,7 +5,6 @@ define([
         './Cartesian2',
         './Cartesian3',
         './Math',
-        './Ellipsoid',
         './ComponentDatatype',
         './IndexDatatype',
         './PrimitiveType',
@@ -19,7 +18,6 @@ define([
         Cartesian2,
         Cartesian3,
         CesiumMath,
-        Ellipsoid,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
@@ -212,7 +210,7 @@ define([
         }
 
         var numIndices = 18 * slices - 24;
-        var indices = new Array(numIndices);
+        var indices = IndexDatatype.createTypedArray(numVertices, numIndices);
         index = 0;
         var j = 0;
         for (i = 0; i < slices - 1; i++) {
@@ -250,8 +248,9 @@ define([
         if (vertexFormat.st) {
             for (i = 0; i < numVertices; i++) {
                 var position = Cartesian3.fromArray(positions, i * 3, positionScratch);
-                st[textureCoordIndex++] = (position.x + topRadius) / (2.0 * topRadius);
-                st[textureCoordIndex++] = (position.y + topRadius) / (2.0 * topRadius);
+                var rad = Math.max(topRadius, bottomRadius);
+                st[textureCoordIndex++] = (position.x + rad) / (2.0 * rad);
+                st[textureCoordIndex++] = (position.y + rad) / (2.0 * rad);
             }
         }
 
@@ -316,7 +315,7 @@ define([
          *
          * @type Array
          */
-        this.indices = IndexDatatype.createTypedArray(positions.length/3, indices);
+        this.indices = indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
