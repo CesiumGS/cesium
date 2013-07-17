@@ -368,7 +368,6 @@ define([
         return geometry;
     }
 
-
     var computeBoundingRectangleCartesian2 = new Cartesian2();
     var computeBoundingRectangleCartesian3 = new Cartesian3();
     var computeBoundingRectangleQuaternion = new Quaternion();
@@ -830,46 +829,11 @@ define([
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
 
-//        var geometries = [];
-  //      var geometry;
         var boundingSphere;
-      //  var i;
         var walls;
         var topAndBottom;
         var outerPositions;
         var computeAttributes = (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
-
-/*        if (typeof positions !== 'undefined') {
-            // create from positions
-            outerPositions = positions;
-            boundingSphere = BoundingSphere.fromPoints(positions);
-            if (extrude) {
-                geometry = createGeometryFromPositionsExtruded(ellipsoid, positions, granularity);
-                if (typeof geometry !== 'undefined') {
-                    walls = geometry.walls;
-                    topAndBottom = geometry.topAndBottom;
-                    walls.geometry = scaleToGeodeticHeightExtruded(walls.geometry, height, extrudedHeight, ellipsoid);
-                    topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                    if (computeAttributes) {
-                        walls.geometry = computeWallAttributes(vertexFormat, walls.geometry, outerPositions, ellipsoid, stRotation);
-                        topAndBottom.geometry = computeTopBottomAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
-                    }
-                    geometries.push(walls, topAndBottom);
-                }
-            } else {
-                geometry = createGeometryFromPositions(ellipsoid, positions, granularity);
-                if (typeof geometry !== 'undefined') {
-                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
-
-                    if (computeAttributes) {
-                        geometry.geometry = computeTopBottomAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, true, false);
-                    }
-
-                    geometries.push(geometry);
-                }
-            }
-        } else if (typeof polygonHierarchy !== 'undefined') {*/
-
 
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
