@@ -6,6 +6,7 @@ define([
         '../Core/writeTextToCanvas',
         '../Core/DeveloperError',
         '../Core/Event',
+        './Credit',
         './GeographicTilingScheme',
         './HeightmapTerrainData',
         './TerrainProvider',
@@ -17,6 +18,7 @@ define([
         writeTextToCanvas,
         DeveloperError,
         Event,
+        Credit,
         GeographicTilingScheme,
         HeightmapTerrainData,
         TerrainProvider,
@@ -33,7 +35,7 @@ define([
      *
      * @param {String} description.url The URL of the Cesium terrain server.
      * @param {Proxy} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
-     * @param {String} [description.credit] A string crediting the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see TerrainProvider
      */
@@ -64,12 +66,11 @@ define([
 
         this._errorEvent = new Event();
 
-        this._logo = undefined;
-        if (typeof description.credit !== 'undefined') {
-            this._logo = writeTextToCanvas(description.credit, {
-                font : '12px sans-serif'
-            });
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
         }
+        this._credit = credit;
     };
 
     /**
@@ -150,17 +151,15 @@ define([
     };
 
     /**
-     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
+     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
      * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#isReady} returns true.
      *
      * @memberof CesiumTerrainProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     * @returns {Credit} The credit, or undefined if no credix exists
      */
-    CesiumTerrainProvider.prototype.getLogo = function() {
-        return this._logo;
+    CesiumTerrainProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
     /**

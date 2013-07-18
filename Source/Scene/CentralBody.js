@@ -29,6 +29,7 @@ define([
         '../Renderer/DrawCommand',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
+        './CreditDisplay',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './Material',
@@ -72,6 +73,7 @@ define([
         DrawCommand,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
+        CreditDisplay,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         Material,
@@ -157,17 +159,6 @@ define([
          * @default Cartesian3(1.0, 1.0, 1.0)
          */
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
-
-        /**
-         * The offset, relative to the bottom left corner of the viewport,
-         * where the logo for terrain and imagery providers will be drawn.
-         *
-         * @type {Cartesian2}
-         * @default {@link Cartesian2.ZERO}
-         */
-        this.logoOffset = Cartesian2.ZERO.clone();
-        this._logos = [];
-        this._logoQuad = undefined;
 
         /**
          * Determines if the central body will be shown.
@@ -716,7 +707,7 @@ define([
                     this._rsColor,
                     this._projection);
 
-            updateLogos(this, context, frameState, commandList);
+            displayCredits(this, frameState);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
@@ -792,112 +783,22 @@ define([
         return destroyObject(this);
     };
 
-    var logoData = {
-        logos : undefined,
-        logoIndex : 0,
-        rebuildLogo : false,
-        totalLogoWidth : 0,
-        totalLogoHeight : 0
-    };
-
-    function updateLogos(centralBody, context, frameState, commandList) {
-        logoData.logos = centralBody._logos;
-        logoData.logoIndex = 0;
-        logoData.rebuildLogo = false;
-        logoData.totalLogoWidth = 0;
-        logoData.totalLogoHeight = 0;
-
-        checkLogo(logoData, centralBody._surface._terrainProvider);
+    function displayCredits(centralBody, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        var credit = centralBody._surface._terrainProvider.getCredit();
+        if (typeof credit !== 'undefined') {
+            creditDisplay.addCredit(credit);
+        }
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                checkLogo(logoData, layer.getImageryProvider());
-            }
-        }
-
-        if (logoData.logos.length !== logoData.logoIndex) {
-            logoData.rebuildLogo = true;
-            logoData.logos.length = logoData.logoIndex;
-        }
-
-        var totalLogoWidth = logoData.totalLogoWidth;
-        var totalLogoHeight = logoData.totalLogoHeight;
-
-        var logoQuad = centralBody._logoQuad;
-        if (totalLogoWidth === 0 || totalLogoHeight === 0) {
-            if (typeof logoQuad !== 'undefined') {
-                logoQuad.material = logoQuad.material && logoQuad.material.destroy();
-                logoQuad.destroy();
-                centralBody._logoQuad = undefined;
-            }
-            return;
-        }
-
-        if (typeof logoQuad === 'undefined') {
-            logoQuad = new ViewportQuad();
-            logoQuad.material.destroy();
-            logoQuad.material = Material.fromType(context, Material.ImageType);
-            logoQuad.material.uniforms.image = undefined;
-
-            centralBody._logoQuad = logoQuad;
-        }
-
-        var logoOffset = centralBody.logoOffset;
-        var rectangle = logoQuad.rectangle;
-        rectangle.x = logoOffset.x;
-        rectangle.y = logoOffset.y;
-        rectangle.width = totalLogoWidth;
-        rectangle.height = totalLogoHeight;
-
-        if (logoData.rebuildLogo) {
-            var texture = logoQuad.material.uniforms.image;
-
-            // always delete and recreate the texture to get rid of leftover pixels
-            texture = texture && texture.destroy();
-            texture = context.createTexture2D({
-                width : totalLogoWidth,
-                height : totalLogoHeight
-            });
-            logoQuad.material.uniforms.image = texture;
-
-            var yOffset = 0;
-            for (i = 0, len = logoData.logos.length; i < len; i++) {
-                var logo = logoData.logos[i];
-                if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, yOffset);
-                    yOffset += logo.height + 2;
+                credit = layer.getImageryProvider().getCredit();
+                if (typeof credit !== 'undefined') {
+                    creditDisplay.addCredit(credit);
                 }
             }
-        }
-
-        if (typeof logoQuad !== 'undefined') {
-            logoQuad.update(context, frameState, commandList);
-        }
-    }
-
-    function checkLogo(logoData, logoSource) {
-        if (typeof logoSource.isReady === 'function' && !logoSource.isReady()) {
-            return;
-        }
-
-        var logo;
-        if (typeof logoSource.getLogo === 'function') {
-            logo = logoSource.getLogo();
-        } else {
-            logo = undefined;
-        }
-
-        if (logoData.logos[logoData.logoIndex] !== logo) {
-            logoData.rebuildLogo = true;
-            logoData.logos[logoData.logoIndex] = logo;
-        }
-        logoData.logoIndex++;
-
-        if (typeof logo !== 'undefined') {
-            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
-            logoData.totalLogoHeight += logo.height + 2;
         }
     }
 
