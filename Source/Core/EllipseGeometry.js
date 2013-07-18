@@ -145,7 +145,7 @@ define([
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis) - 0.5;
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
 
                 Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
 
@@ -560,7 +560,7 @@ define([
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis) - 0.5;
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
 
                 Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
 
