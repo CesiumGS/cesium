@@ -165,8 +165,6 @@ define(['../Core/createGuid',
             if(styleUrl.length > 0){
                 var styleObj = styleCollection.getObject(styleUrl[0].textContent);
                 dynamicObject.merge(styleObj);
-            } else {
-                throw new RuntimeError('Undefined style');
             }
         }
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
