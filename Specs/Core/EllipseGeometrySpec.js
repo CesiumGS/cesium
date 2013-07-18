@@ -116,7 +116,7 @@ defineSuite([
             granularity : 0.75,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
-            extrudedHeight: 50000
+            extrudedHeight : 50000
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
@@ -132,7 +132,7 @@ defineSuite([
             granularity : 0.75,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
-            extrudedHeight: 50000
+            extrudedHeight : 50000
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
