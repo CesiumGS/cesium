@@ -1,17 +1,21 @@
 /*global defineSuite*/
 defineSuite([
          'Core/PolygonGeometry',
+         'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
+         'Core/Shapes',
          'Core/VertexFormat'
      ], function(
          PolygonGeometry,
+         BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
          CesiumMath,
+         Shapes,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -192,6 +196,20 @@ defineSuite([
 
         expect(p.attributes.position.values.length).toEqual(3 * 14);
         expect(p.indices.length).toEqual(3 * 10);
+    });
+
+    it('computes correct bounding sphere at height 0', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
+        var positions = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), 10000);
+
+        var p = PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.ALL,
+            positions : positions,
+            granularity : CesiumMath.PI_OVER_THREE
+        });
+
+        expect(p.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
     });
 
 }, 'WebGL');
