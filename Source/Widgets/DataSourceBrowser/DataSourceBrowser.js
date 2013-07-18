@@ -66,9 +66,10 @@ click: addDataSourceCommand');
 
         element.appendChild(templateElement);
 
-        var rootDataSourcesElement = document.createElement('ul');
-        rootDataSourcesElement.setAttribute('data-bind', 'template: { name: "' + templateID + '", foreach: dataSources }');
-        element.appendChild(rootDataSourcesElement);
+        var dataSourcesElement = document.createElement('ul');
+        dataSourcesElement.className = 'cesium-dataSourceBrowser-dataSources';
+        dataSourcesElement.setAttribute('data-bind', 'template: { name: "' + templateID + '", foreach: dataSources }');
+        element.appendChild(dataSourcesElement);
 
         var dataSourceContainer = document.createElement('div');
         dataSourceContainer.className = 'cesium-dataSourceBrowser-dataSourceContainer';

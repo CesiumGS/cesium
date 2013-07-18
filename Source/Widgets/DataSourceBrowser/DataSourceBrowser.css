@@ -1,10 +1,10 @@
-.cesium-dataSourceBrowser ul,.cesium-dataSourceBrowser li {
+.cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
     padding: 0;
     margin: 0;
     list-style: none;
 }
 
-.cesium-dataSourceBrowser input {
+.cesium-dataSourceBrowser-dataSources input {
     position: absolute;
     opacity: 0;
 }
@@ -18,38 +18,38 @@
     user-select: none;
 }
 
-.cesium-dataSourceBrowser input+label+ul {
+.cesium-dataSourceBrowser-dataSources input+label+ul {
     margin: 0 0 0 22px;
 }
 
-.cesium-dataSourceBrowser input~ul {
+.cesium-dataSourceBrowser-dataSources input~ul {
     display: none;
 }
 
-.cesium-dataSourceBrowser label,.cesium-dataSourceBrowser input,.cesium-dataSourceBrowser label::before {
-    cursor: pointer;
-}
-
-.cesium-dataSourceBrowser input:checked~ul {
+.cesium-dataSourceBrowser-dataSources input:checked~ul {
     display: block;
 }
 
-.cesium-dataSourceBrowser label,.cesium-dataSourceBrowser label::before {
+.cesium-dataSourceBrowser-dataSources label,.cesium-dataSourceBrowser-dataSources input,.cesium-dataSourceBrowser-dataSources label::before {
+    cursor: pointer;
+}
+
+.cesium-dataSourceBrowser-dataSources label,.cesium-dataSourceBrowser-dataSources label::before {
     background: url(../Images/DataSourceBrowserIcons.png) no-repeat;
 }
 
-.cesium-dataSourceBrowser label,.cesium-dataSourceBrowser a,.cesium-dataSourceBrowser label::before {
+.cesium-dataSourceBrowser-dataSources label,.cesium-dataSourceBrowser-dataSources a,.cesium-dataSourceBrowser-dataSources label::before {
     display: inline-block;
     height: 16px;
     line-height: 16px; ,
     vertical-align: middle;
 }
 
-.cesium-dataSourceBrowser label {
+.cesium-dataSourceBrowser-dataSources label {
     background-position: 18px 0;
 }
 
-.cesium-dataSourceBrowser label::before {
+.cesium-dataSourceBrowser-dataSources label::before {
     content: "";
     width: 16px;
     margin: 0 22px 0 0;
@@ -57,7 +57,7 @@
     background-position: 0 -32px;
 }
 
-.cesium-dataSourceBrowser input:checked+label::before {
+.cesium-dataSourceBrowser-dataSources input:checked+label::before {
     background-position: 0 -16px;
 }
 
