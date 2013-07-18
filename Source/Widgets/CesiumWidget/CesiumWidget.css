@@ -3,13 +3,13 @@
 	height: 100%;
 }
 
-.cesium-widget-logo {
-	background-image: url(../Images/Cesium_Logo_overlay.png);
+.cesium-widget-credits {
 	display: block;
 	position: absolute;
-	bottom: 4px;
+	bottom: 0;
 	left: 0;
-	text-decoration: none;
-	width: 118px;
-	height: 26px;
+	color: #ffffff;
+	font-size: 10pt;
+	text-shadow: 0px 0px 2px #000000;
+	padding-right: 5px;
 }

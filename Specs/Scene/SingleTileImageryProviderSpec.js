@@ -118,7 +118,7 @@ defineSuite([
         var providerWithCredit;
 
         runs(function() {
-            expect(provider.getLogo()).toBeUndefined();
+            expect(provider.getCredit()).toBeUndefined();
 
             providerWithCredit = new SingleTileImageryProvider({
                 url : 'Data/Images/Red16x16.png',
@@ -131,7 +131,7 @@ defineSuite([
         }, 'imagery provider to become ready');
 
         runs(function() {
-            expect(providerWithCredit.getLogo()).toBeDefined();
+            expect(providerWithCredit.getCredit()).toBeDefined();
         });
     });
 

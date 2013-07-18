@@ -72,7 +72,7 @@ defineSuite([
         var provider = new CesiumTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getLogo()).toBeUndefined();
+        expect(provider.getCredit()).toBeUndefined();
     });
 
     it('logo is defined if credit is provided', function() {
@@ -80,7 +80,7 @@ defineSuite([
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
-        expect(provider.getLogo()).toBeDefined();
+        expect(provider.getCredit()).toBeDefined();
     });
 
     it('has a water mask', function() {

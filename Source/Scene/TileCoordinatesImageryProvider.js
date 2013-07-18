@@ -201,14 +201,14 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *
      * @memberof TileCoordinatesImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    TileCoordinatesImageryProvider.prototype.getLogo = function() {
+    TileCoordinatesImageryProvider.prototype.getCredit = function() {
         return undefined;
     };
 
