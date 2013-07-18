@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
         '../Core/Matrix4',
+        '../Core/Math',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
@@ -32,6 +33,7 @@ define([
         Cartesian4,
         EncodedCartesian3,
         Matrix4,
+        CesiumMath,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
@@ -57,21 +59,20 @@ define([
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
-    var SIXTYFOURK = 64 * 1024;
 
     var attributeIndices = {
-        position3DHigh : 0,
-        position3DLow : 1,
-        position2DHigh : 2,
-        position2DLow : 3,
-        prevPosition3DHigh : 4,
-        prevPosition3DLow : 5,
-        prevPosition2DHigh : 6,
-        prevPosition2DLow : 7,
-        nextPosition3DHigh : 8,
-        nextPosition3DLow : 9,
-        nextPosition2DHigh : 10,
-        nextPosition2DLow : 11,
+        positionHigh : 0,
+        positionLow : 1,
+        positionMorphHigh : 2,
+        positionMorphLow : 3,
+        prevPositionHigh : 4,
+        prevPositionLow : 5,
+        prevPositionMorphHigh : 6,
+        prevPositionMorphLow : 7,
+        nextPositionHigh : 8,
+        nextPositionLow : 9,
+        nextPositionMorphHigh : 10,
+        nextPositionMorphLow : 11,
         texCoordExpandWidthAndShow : 12,
         pickColor : 13
     };
@@ -130,7 +131,8 @@ define([
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
          *
-         * @type Matrix4
+         * @type {Matrix4}
+         * @default {@link Matrix4.IDENTITY}
          *
          * @see Transforms.eastNorthUpToFixedFrame
          * @see czm_model
@@ -743,83 +745,83 @@ define([
 
                     vbo += vertexBufferOffset[k];
 
-                    var positionHighOffset = 6 * (k * (positionSizeInBytes * SIXTYFOURK) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
+                    var positionHighOffset = 6 * (k * (positionSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
                     var positionLowOffset = positionSizeInBytes + positionHighOffset;
                     var prevPositionHighOffset =  positionSizeInBytes + positionLowOffset;
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * SIXTYFOURK) - vbo * pickColorSizeInBytes;
-                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * SIXTYFOURK) - vbo * texCoordExpandWidthAndShowSizeInBytes;
+                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * pickColorSizeInBytes;
+                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandWidthAndShowSizeInBytes;
 
                     var attributes = [{
-                        index : attributeIndices.position3DHigh,
+                        index : attributeIndices.positionHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.position3DLow,
+                        index : attributeIndices.positionLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.position2DHigh,
+                        index : attributeIndices.positionMorphHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.position2DLow,
+                        index : attributeIndices.positionMorphLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : positionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.prevPosition3DHigh,
+                        index : attributeIndices.prevPositionHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : prevPositionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.prevPosition3DLow,
+                        index : attributeIndices.prevPositionLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : prevPositionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.prevPosition2DHigh,
+                        index : attributeIndices.prevPositionMorphHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : prevPositionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.prevPosition2DLow,
+                        index : attributeIndices.prevPositionMorphLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : prevPositionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.nextPosition3DHigh,
+                        index : attributeIndices.nextPositionHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : nextPositionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.nextPosition3DLow,
+                        index : attributeIndices.nextPositionLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : nextPositionLowOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.nextPosition2DHigh,
+                        index : attributeIndices.nextPositionMorphHigh,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : nextPositionHighOffset,
                         strideInBytes : 6 * positionSizeInBytes
                     }, {
-                        index : attributeIndices.nextPosition2DLow,
+                        index : attributeIndices.nextPositionMorphLow,
                         componentsPerAttribute : 3,
                         componentDatatype : ComponentDatatype.FLOAT,
                         offsetInBytes : nextPositionLowOffset,
@@ -839,40 +841,35 @@ define([
                         normalize : true
                     }];
 
-                    var buffer3D;
-                    var bufferProperty3D;
-                    var buffer2D;
-                    var bufferProperty2D;
+                    var buffer;
+                    var bufferProperty;
+                    var bufferMorph;
+                    var bufferPropertyMorph;
 
-                    if (mode === SceneMode.SCENE3D) {
-                        buffer3D = collection._positionBuffer;
-                        bufferProperty3D = 'vertexBuffer';
-                        buffer2D = emptyVertexBuffer;
-                        bufferProperty2D = 'value';
-                    } else if (mode === SceneMode.SCENE2D || mode === SceneMode.COLUMBUS_VIEW) {
-                        buffer3D = emptyVertexBuffer;
-                        bufferProperty3D = 'value';
-                        buffer2D = collection._positionBuffer;
-                        bufferProperty2D = 'vertexBuffer';
+                    if (typeof position3DBuffer === 'undefined') {
+                        buffer = collection._positionBuffer;
+                        bufferProperty = 'vertexBuffer';
+                        bufferMorph = emptyVertexBuffer;
+                        bufferPropertyMorph = 'value';
                     } else {
-                        buffer3D = position3DBuffer;
-                        bufferProperty3D = 'vertexBuffer';
-                        buffer2D = collection._positionBuffer;
-                        bufferProperty2D = 'vertexBuffer';
+                        buffer = collection._positionBuffer;
+                        bufferProperty = 'vertexBuffer';
+                        bufferMorph = position3DBuffer;
+                        bufferPropertyMorph = 'vertexBuffer';
                     }
 
-                    attributes[0][bufferProperty3D] = buffer3D;
-                    attributes[1][bufferProperty3D] = buffer3D;
-                    attributes[2][bufferProperty2D] = buffer2D;
-                    attributes[3][bufferProperty2D] = buffer2D;
-                    attributes[4][bufferProperty3D] = buffer3D;
-                    attributes[5][bufferProperty3D] = buffer3D;
-                    attributes[6][bufferProperty2D] = buffer2D;
-                    attributes[7][bufferProperty2D] = buffer2D;
-                    attributes[8][bufferProperty3D] = buffer3D;
-                    attributes[9][bufferProperty3D] = buffer3D;
-                    attributes[10][bufferProperty2D] = buffer2D;
-                    attributes[11][bufferProperty2D] = buffer2D;
+                    attributes[0][bufferProperty] = buffer;
+                    attributes[1][bufferProperty] = buffer;
+                    attributes[2][bufferPropertyMorph] = bufferMorph;
+                    attributes[3][bufferPropertyMorph] = bufferMorph;
+                    attributes[4][bufferProperty] = buffer;
+                    attributes[5][bufferProperty] = buffer;
+                    attributes[6][bufferPropertyMorph] = bufferMorph;
+                    attributes[7][bufferPropertyMorph] = bufferMorph;
+                    attributes[8][bufferProperty] = buffer;
+                    attributes[9][bufferProperty] = buffer;
+                    attributes[10][bufferPropertyMorph] = bufferMorph;
+                    attributes[11][bufferPropertyMorph] = bufferMorph;
 
                     var va = context.createVertexArray(attributes, indexBuffer);
                     collection._vertexArrays.push({
@@ -1246,7 +1243,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1278,7 +1275,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

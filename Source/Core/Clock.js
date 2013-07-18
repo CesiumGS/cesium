@@ -84,19 +84,19 @@ define([
 
         /**
          * The start time of the clock.
-         * @type JulianDate
+         * @type {JulianDate}
          */
         this.startTime = startTime;
 
         /**
          * The stop time of the clock.
-         * @type JulianDate
+         * @type {JulianDate}
          */
         this.stopTime = stopTime;
 
         /**
          * The current time.
-         * @type JulianDate
+         * @type {JulianDate}
          */
         this.currentTime = currentTime;
 
@@ -105,25 +105,29 @@ define([
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
-         * @type Number
+         * @type {Number}
+         * @default 1.0
          */
         this.multiplier = defaultValue(description.multiplier, 1.0);
 
         /**
          * Determines if calls to <code>tick</code> are frame dependent or system clock dependent.
          * @type ClockStep
+         * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
         this.clockStep = defaultValue(description.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
-         * @type ClockRange
+         * @type {ClockRange}
+         * @default {@link ClockRange.UNBOUNDED}
          */
         this.clockRange = defaultValue(description.clockRange, ClockRange.UNBOUNDED);
 
         /**
          * Determines if tick should actually advance time.
-         * @type Boolean
+         * @type {Boolean}
+         * @default true
          */
         this.shouldAnimate = defaultValue(description.shouldAnimate, true);
 

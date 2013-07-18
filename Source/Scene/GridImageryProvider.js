@@ -89,13 +89,25 @@ define([
 
     /**
      * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link BingMapsImageryProvider#isReady} returns true.
+     * not be called before {@link GridImageryProvider#isReady} returns true.
      *
      * @memberof GridImageryProvider
      *
      * @returns {Number} The maximum level.
      */
     GridImageryProvider.prototype.getMaximumLevel = function() {
+        return undefined;
+    };
+
+    /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link GridImageryProvider#isReady} returns true.
+     *
+     * @memberof GridImageryProvider
+     *
+     * @returns {Number} The minimum level.
+     */
+    GridImageryProvider.prototype.getMinimumLevel = function() {
         return undefined;
     };
 
@@ -251,14 +263,14 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *
      * @memberof GridImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    GridImageryProvider.prototype.getLogo = function() {
+    GridImageryProvider.prototype.getCredit = function() {
         return undefined;
     };
 

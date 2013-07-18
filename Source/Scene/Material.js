@@ -361,25 +361,29 @@ define([
     var Material = function(description) {
         /**
          * The material type. Can be an existing type or a new type. If no type is specified in fabric, type is a GUID.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.type = undefined;
 
         /**
          * The glsl shader source for this material.
-         * @type String
+         * @type {String}
+         * @default undefined
          */
         this.shaderSource = undefined;
 
         /**
          * Maps sub-material names to Material objects.
-         * @type Object
+         * @type {Object}
+         * @default undefined
          */
         this.materials = undefined;
 
         /**
          * Maps uniform names to their values.
-         * @type Object
+         * @type {Object}
+         * @default undefined
          */
         this.uniforms = undefined;
         this._uniforms = undefined;
@@ -662,10 +666,13 @@ define([
         'mat4' : Matrix4
     };
     function returnUniform(material, uniformId, originalUniformType) {
+        var uniformType;
         return function() {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
-            var uniformType = getUniformType(uniformValue);
+            if (typeof uniformType === 'undefined') {
+                uniformType = getUniformType(uniformValue);
+            }
 
             if (originalUniformType === 'sampler2D' && (uniformType === originalUniformType || uniformValue instanceof Texture)) {
                 if (uniformType === originalUniformType) {

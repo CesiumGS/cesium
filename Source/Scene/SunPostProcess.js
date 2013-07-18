@@ -140,7 +140,8 @@ define([
                         0.0, 1.0
                     ]
                 })
-            }
+            },
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         vertexArray = context.createVertexArrayFromGeometry({
@@ -366,7 +367,7 @@ define([
 
         sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
         var limbWC = Transforms.pointToWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
-        var sunSize = Cartesian2.subtract(limbWC, sunPositionWC, limbWC).magnitude() * 30.0 * 2.0;
+        var sunSize = Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) * 30.0 * 2.0;
 
         var size = sizeScratch;
         size.x = sunSize;

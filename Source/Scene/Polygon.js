@@ -71,9 +71,9 @@ define([
          *
          * @type Number
          *
-         * @default CesiumMath.toRadians(1.0)
+         * @default CesiumMath.RADIANS_PER_DEGREE
          */
-        this.granularity = defaultValue(options.granularity, CesiumMath.toRadians(1.0));
+        this.granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._granularity = undefined;
 
         /**
@@ -100,8 +100,7 @@ define([
         /**
          * Determines if this primitive will be shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = defaultValue(options.show, true);
@@ -116,7 +115,8 @@ define([
          * The default material is <code>Material.ColorType</code>.
          * </p>
          *
-         * @type Material
+         * @type {Material}
+         * @default Material.fromType(undefined, Material.ColorType)
          *
          * @example
          * // 1. Change the color of the default material to yellow
@@ -276,18 +276,32 @@ define([
                 return;
             }
 
-            var instance = new GeometryInstance({
-                geometry : new PolygonGeometry({
-                    positions : this._positions,
-                    polygonHierarchy : this._polygonHierarchy,
-                    height : this.height,
-                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
-                    stRotation : this.textureRotationAngle,
-                    ellipsoid : this.ellipsoid,
-                    granularity : this.granularity
-                }),
-                pickData : this
-            });
+            var instance;
+            if (typeof this._positions !== 'undefined') {
+                instance = new GeometryInstance({
+                    geometry : PolygonGeometry.fromPositions({
+                        positions : this._positions,
+                        height : this.height,
+                        vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                        stRotation : this.textureRotationAngle,
+                        ellipsoid : this.ellipsoid,
+                        granularity : this.granularity
+                    }),
+                    id : this
+                });
+            } else {
+                instance = new GeometryInstance({
+                    geometry : new PolygonGeometry({
+                        polygonHierarchy : this._polygonHierarchy,
+                        height : this.height,
+                        vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                        stRotation : this.textureRotationAngle,
+                        ellipsoid : this.ellipsoid,
+                        granularity : this.granularity
+                    }),
+                    id : this
+                });
+            }
 
             this._primitive = new Primitive({
                 geometryInstances : instance,

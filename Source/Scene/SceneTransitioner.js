@@ -57,26 +57,32 @@ define([
         /**
          * Gets or sets the amount of time, in milliseconds, for
          * transition animations to complete.
+         *
          * @type {Number}
+         * @default 2000
          */
         this.morphDuration = 2000;
 
         /**
          * Gets or sets whether or not to instantly complete the
          * transition animation on user input.
+         *
          * @type {Boolean}
+         * @default true
          */
         this.completeMorphOnUserInput = true;
 
         /**
          * Gets the event fired at the beginning of a transition.
          * @type {Event}
+         * @default Event()
          */
         this.onTransitionStart = new Event();
 
         /**
          * Gets the event fired at the completion of a transition.
          * @type {Event}
+         * @default Event()
          */
         this.onTransitionComplete = new Event();
 

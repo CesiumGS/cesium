@@ -44,42 +44,62 @@ define([
     var DynamicBillboard = function() {
         /**
          * A DynamicProperty of type CzmlImage which determines the billboard's texture.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.image = undefined;
         /**
          * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.scale = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the billboard's rotation.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.rotation = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's aligned axis.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.alignedAxis = undefined;
+        /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.horizontalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.verticalOrigin = undefined;
         /**
          * A DynamicProperty of type CzmlColor which determines the billboard's color.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.color = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.eyeOffset = undefined;
         /**
          * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.pixelOffset = undefined;
         /**
          * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
-         * @type DynamicProperty
+         * @type {DynamicProperty}
+         * @default undefined
          */
         this.show = undefined;
     };
@@ -174,6 +194,24 @@ define([
             scale.processCzmlIntervals(billboardData.scale, interval);
         }
 
+        if (typeof billboardData.rotation !== 'undefined') {
+            var rotation = billboard.rotation;
+            if (typeof rotation === 'undefined') {
+                billboard.rotation = rotation = new DynamicProperty(CzmlNumber);
+                billboardUpdated = true;
+            }
+            rotation.processCzmlIntervals(billboardData.rotation, interval);
+        }
+
+        if (typeof billboardData.alignedAxis !== 'undefined') {
+            var alignedAxis = billboard.alignedAxis;
+            if (typeof alignedAxis === 'undefined') {
+                billboard.alignedAxis = alignedAxis = new DynamicProperty(CzmlCartesian3);
+                billboardUpdated = true;
+            }
+            alignedAxis.processCzmlIntervals(billboardData.alignedAxis, interval);
+        }
+
         if (typeof billboardData.show !== 'undefined') {
             var show = billboard.show;
             if (typeof show === 'undefined') {
@@ -222,6 +260,8 @@ define([
             targetBillboard.image = defaultValue(targetBillboard.image, billboardToMerge.image);
             targetBillboard.pixelOffset = defaultValue(targetBillboard.pixelOffset, billboardToMerge.pixelOffset);
             targetBillboard.scale = defaultValue(targetBillboard.scale, billboardToMerge.scale);
+            targetBillboard.rotation = defaultValue(targetBillboard.rotation, billboardToMerge.rotation);
+            targetBillboard.alignedAxis = defaultValue(targetBillboard.alignedAxis, billboardToMerge.alignedAxis);
             targetBillboard.show = defaultValue(targetBillboard.show, billboardToMerge.show);
             targetBillboard.verticalOrigin = defaultValue(targetBillboard.verticalOrigin, billboardToMerge.verticalOrigin);
         }

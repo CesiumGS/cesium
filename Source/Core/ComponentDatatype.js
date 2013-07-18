@@ -26,8 +26,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1400
      */
     ComponentDatatype.BYTE = new Enumeration(0x1400, 'BYTE');
     ComponentDatatype.BYTE.sizeInBytes = Int8Array.BYTES_PER_ELEMENT;
@@ -45,8 +46,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1401
      */
     ComponentDatatype.UNSIGNED_BYTE = new Enumeration(0x1401, 'UNSIGNED_BYTE');
     ComponentDatatype.UNSIGNED_BYTE.sizeInBytes = Uint8Array.BYTES_PER_ELEMENT;
@@ -64,8 +66,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1402
      */
     ComponentDatatype.SHORT = new Enumeration(0x1402, 'SHORT');
     ComponentDatatype.SHORT.sizeInBytes = Int16Array.BYTES_PER_ELEMENT;
@@ -83,8 +86,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1403
      */
     ComponentDatatype.UNSIGNED_SHORT = new Enumeration(0x1403, 'UNSIGNED_SHORT');
     ComponentDatatype.UNSIGNED_SHORT.sizeInBytes = Uint16Array.BYTES_PER_ELEMENT;
@@ -102,8 +106,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x1406
      */
     ComponentDatatype.FLOAT = new Enumeration(0x1406, 'FLOAT');
     ComponentDatatype.FLOAT.sizeInBytes = Float32Array.BYTES_PER_ELEMENT;
@@ -122,8 +127,9 @@ define(['./Enumeration'], function(Enumeration) {
      *
      * @memberOf ComponentDatatype
      *
-     * @constant
      * @type {Enumeration}
+     * @constant
+     * @default 0x140A
      */
     ComponentDatatype.DOUBLE = new Enumeration(0x140A, 'DOUBLE');
     ComponentDatatype.DOUBLE.sizeInBytes = Float64Array.BYTES_PER_ELEMENT;

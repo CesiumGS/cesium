@@ -38,6 +38,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultAlpha = undefined;
 
@@ -52,6 +53,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultBrightness = undefined;
 
@@ -66,6 +68,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultContrast = undefined;
 
@@ -78,6 +81,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultHue = undefined;
 
@@ -91,6 +95,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultSaturation = undefined;
 
@@ -104,6 +109,7 @@ define([
          * frame and for every tile, so it must be fast.
          *
          * @type {Number}
+         * @default undefined
          */
         this.defaultGamma = undefined;
 
@@ -168,6 +174,22 @@ define([
     };
 
     /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link ImageryProvider#isReady} returns true.  Generally,
+     * a minimum level should only be used when the extent of the imagery is small
+     * enough that the number of tiles at the minimum level is small.  An imagery
+     * provider with more than a few tiles at the minimum level will lead to
+     * rendering problems.
+     *
+     * @returns {Number} The minimum level, or undefined if there is no minimum level.
+     *
+     * @exception {DeveloperError} <code>getMinimumLevel</code> must not be called before the imagery provider is ready.
+     */
+    ImageryProvider.prototype.getMinimumLevel = function() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    };
+
+    /**
      * Gets the tiling scheme used by this provider.  This function should
      * not be called before {@link ImageryProvider#isReady} returns true.
      *
@@ -214,16 +236,14 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link ImageryProvider#isReady} returns true.
      *
      * @memberof ImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    ImageryProvider.prototype.getLogo = function() {
+    ImageryProvider.prototype.getCredit = function() {
         throw new DeveloperError('This type should not be instantiated directly.');
     };
 

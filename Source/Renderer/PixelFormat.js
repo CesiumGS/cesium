@@ -11,56 +11,63 @@ define(['../Core/Enumeration'], function(Enumeration) {
         /**
          * A pixel format containing a depth value.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1902
          */
         DEPTH_COMPONENT : new Enumeration(0x1902, 'DEPTH_COMPONENT'),
 
         /**
          * A pixel format containing a depth and stencil value, most often used with {@link PixelDatatype.UNSIGNED_INT_24_8_WEBGL}.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x84F9
          */
         DEPTH_STENCIL : new Enumeration(0x84F9, 'DEPTH_STENCIL'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1906
          */
         ALPHA : new Enumeration(0x1906, 'ALPHA'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1907
          */
         RGB : new Enumeration(0x1907, 'RGB'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1908
          */
         RGBA : new Enumeration(0x1908, 'RGBA'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1909
          */
         LUMINANCE : new Enumeration(0x1909, 'LUMINANCE'),
 
         /**
          * DOC_TBA
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x190A
          */
         LUMINANCE_ALPHA : new Enumeration(0x190A, 'LUMINANCE_ALPHA'),
 

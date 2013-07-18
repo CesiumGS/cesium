@@ -7,6 +7,7 @@ define([
         '../Core/loadXML',
         '../Core/writeTextToCanvas',
         '../Core/Extent',
+        './Credit',
         './ImageryProvider',
         './WebMercatorTilingScheme',
         './GeographicTilingScheme'
@@ -18,6 +19,7 @@ define([
         loadXML,
         writeTextToCanvas,
         Extent,
+        Credit,
         ImageryProvider,
         WebMercatorTilingScheme,
         GeographicTilingScheme) {
@@ -34,7 +36,10 @@ define([
      * @param {String} [description.url='.'] Path to image tiles on server.
      * @param {String} [description.fileExtension='png'] The file extension for images on the server.
      * @param {Object} [description.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
-     * @param {String} [description.credit=''] A string crediting the data source, which is displayed on the canvas.
+     * @param {Credit|String} [description.credit=''] A credit for the data source, which is displayed on the canvas.
+     * @param {Number} [description.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
+     *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
+     *                 to result in rendering problems.
      * @param {Number} [description.maximumLevel=18] The maximum level-of-detail supported by the imagery provider.
      * @param {Extent} [description.extent=Extent.MAX_VALUE] The extent, in radians, covered by the image.
      * @param {TilingScheme} [description.tilingScheme] The tiling scheme specifying how the ellipsoidal
@@ -88,11 +93,10 @@ define([
         this._errorEvent = new Event();
 
         var credit = description.credit;
-        if (typeof credit !== 'undefined') {
-            this._logo = writeTextToCanvas(credit, {
-                font : '12px sans-serif'
-            });
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
         }
+        this._credit = credit;
 
         var that = this;
 
@@ -104,6 +108,7 @@ define([
             that._tileWidth = defaultValue(description.tileWidth, parseInt(format.getAttribute('width'), 10));
             that._tileHeight = defaultValue(description.tileHeight, parseInt(format.getAttribute('height'), 10));
             var tilesets = xml.getElementsByTagName('TileSet');
+            that._minimumLevel = defaultValue(description.minimumLevel, parseInt(tilesets[0].getAttribute('order'), 10));
             that._maximumLevel = defaultValue(description.maximumLevel, parseInt(tilesets[tilesets.length - 1].getAttribute('order'), 10));
 
             // extent handling
@@ -136,6 +141,16 @@ define([
             }
             if (that._extent.north > tilingScheme.getExtent().north) {
                 that._extent.north = tilingScheme.getExtent().north;
+            }
+
+            // Check the number of tiles at the minimum level.  If it's more than four,
+            // try requesting the lower levels anyway, because starting at the higher minimum
+            // level will cause too many tiles to be downloaded and rendered.
+            var swTile = tilingScheme.positionToTileXY(that._extent.getSouthwest(), that._minimumLevel);
+            var neTile = tilingScheme.positionToTileXY(that._extent.getNortheast(), that._minimumLevel);
+            var tileCount = (Math.abs(neTile.x - swTile.x) + 1) * (Math.abs(neTile.y - swTile.y) + 1);
+            if (tileCount > 4) {
+                that._minimumLevel = 0;
             }
 
             that._tilingScheme = tilingScheme;
@@ -218,6 +233,21 @@ define([
             throw new DeveloperError('getTileHeight must not be called before the imagery provider is ready.');
         }
         return this._tileHeight;
+    };
+
+    /**
+     * Gets the minimum level-of-detail that can be requested.  This function should
+     * not be called before {@link TileMapServiceImageryProvider#isReady} returns true.
+     *
+     * @memberof TileMapServiceImageryProvider
+     *
+     * @returns {Number} The minimum level.
+     */
+    TileMapServiceImageryProvider.prototype.getMinimumLevel = function() {
+        if (!this._ready) {
+            throw new DeveloperError('getMinimumLevel must not be called before the imagery provider is ready.');
+        }
+        return this._minimumLevel;
     };
 
     /**
@@ -335,15 +365,15 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link TileMapServiceImageryProvider#isReady} returns true.
      *
      * @memberof TileMapServiceImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    TileMapServiceImageryProvider.prototype.getLogo = function() {
-        return this._logo;
+    TileMapServiceImageryProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
     return TileMapServiceImageryProvider;

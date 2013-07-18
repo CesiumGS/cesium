@@ -5,12 +5,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Construct polygons from a set of points, an extent, or a nested hierarchy and apply materials to them.">
+    <meta name="cesium-sandcastle-labels" content="">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
     require.config({
-        baseUrl : '../../../Source'
+        baseUrl : '../../../Source',
+        waitSeconds : 60
     });
     </script>
 </head>
@@ -40,14 +42,14 @@ require(['Cesium'], function(Cesium) {
         ]));
         primitives.add(polygon);
         
-        polygon = new Cesium.Polygon();
+        polygon = new Cesium.ExtentPrimitive();
         Sandcastle.declare(polygon);
-        polygon.configureExtent(new Cesium.Extent(
+        polygon.extent = new Cesium.Extent(
                 Cesium.Math.toRadians(-110.0),
                 Cesium.Math.toRadians(0.0),
                 Cesium.Math.toRadians(-90.0),
-                Cesium.Math.toRadians(20.0)),
-                0.0, Cesium.Math.toRadians(45));
+                Cesium.Math.toRadians(20.0));
+        polygon.rotation = Cesium.Math.toRadians(45);
         polygon.material = Cesium.Material.fromType(scene.getContext(), Cesium.Material.ColorType);
         polygon.material.uniforms.color = {red: 1.0, green: 0.0, blue: 1.0, alpha: 0.75};
         primitives.add(polygon);
@@ -99,14 +101,13 @@ require(['Cesium'], function(Cesium) {
         primitives.add(polygonHierarchy);
 
         // Create a polygon from an extent
-        var polygonExtent = new Cesium.Polygon();
+        var polygonExtent = new Cesium.ExtentPrimitive();
         Sandcastle.declare(polygonExtent);  // For highlighting on mouseover in Sandcastle.
-        polygonExtent.configureExtent(
-                new Cesium.Extent(
+        polygonExtent.extent = new Cesium.Extent(
                         Cesium.Math.toRadians(-180.0),
                         Cesium.Math.toRadians(50.0),
                         Cesium.Math.toRadians(180.0),
-                        Cesium.Math.toRadians(90.0)));
+                        Cesium.Math.toRadians(90.0));
         primitives.add(polygonExtent);
 
         // Apply a material to a polygon

@@ -1,16 +1,20 @@
 /*global define*/
 define([
+        '../Core/defaultValue',
         '../Core/DeveloperError',
-        '../Core/Color',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/Matrix4',
         './Primitive',
         './PerInstanceColorAppearance'
     ], function(
+        defaultValue,
         DeveloperError,
-        Color,
+        ColorGeometryInstanceAttribute,
         GeometryInstance,
         GeometryPipeline,
+        Matrix4,
         Primitive,
         PerInstanceColorAppearance) {
     "use strict";
@@ -23,8 +27,8 @@ define([
      *
      * @exports createTangentSpaceDebugPrimitive
      *
-     * @param {Geometry} geometry The <code>Geometry</code> instance with the attribute.
-     * @param {Number} [length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
+     * @param {Geometry} options.geometry The <code>Geometry</code> instance with the attribute.
+     * @param {Number} [options.length=10000.0] The length of each line segment in meters.  This can be negative to point the vector in the opposite direction.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
      *
      * @returns {Primitive} A new <code>Primitive<code> instance with geometry for the vectors.
@@ -40,22 +44,25 @@ define([
      * }));
      */
     function createTangentSpaceDebugPrimitive(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var instances = [];
 
         var geometry = options.geometry;
-
         if (typeof geometry === 'undefined') {
-            throw new DeveloperError('options is required.');
+            throw new DeveloperError('options.geometry is required.');
         }
 
         var attributes = geometry.attributes;
-        var modelMatrix = options.modelMatrix;
-        var length = options.length;
+        var modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
+        var length = defaultValue(options.length, 10000.0);
 
         if (typeof attributes.normal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', length),
-              color : new Color(1.0, 0.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -63,7 +70,9 @@ define([
         if (typeof attributes.binormal !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
-              color : new Color(0.0, 1.0, 0.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 1.0, 0.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }
@@ -71,7 +80,9 @@ define([
         if (typeof attributes.tangent !== 'undefined') {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
-              color : new Color(0.0, 0.0, 1.0, 1.0),
+              attributes : {
+                  color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 1.0)
+              },
               modelMatrix : modelMatrix
             }));
         }

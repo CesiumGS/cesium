@@ -84,7 +84,7 @@ require(['Cesium'], function(Cesium) {
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0)),
             semiMinorAxis : 200000.0,
             semiMajorAxis : 500000.0,
-            bearing : Cesium.Math.toRadians(30.0),
+            rotation : Cesium.Math.toRadians(30.0),
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
         })
     });
@@ -101,6 +101,61 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
         appearance : new Cesium.EllipsoidSurfaceAppearance({
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
+        })
+    }));
+        
+    // Create extruded extent
+    var extrudedExtent = new Cesium.GeometryInstance({
+        geometry: new Cesium.ExtentGeometry({
+            extent: Cesium.Extent.fromDegrees(-110.0, 38.0, -107.0, 40.0),
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 700000,
+            rotation: Cesium.Math.toRadians(45.0),
+            extrudedOptions: {
+                height: 1000000
+            }
+        }),
+        attributes: {
+            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+        }
+    });
+    
+        // Create extruded extent
+    var extrudedEllipse = new Cesium.GeometryInstance({
+        geometry : new Cesium.EllipseGeometry({
+            center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-110.0, 35.0)),
+            semiMinorAxis : 100000.0,
+            semiMajorAxis : 200000.0,
+            rotation : Cesium.Math.toRadians(-40.0),
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 300000,
+            extrudedHeight: 700000
+        }),
+        attributes: {
+            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+        }
+    });
+
+    // cylinder
+    var cylinderInstance = new Cesium.GeometryInstance({
+                geometry : new Cesium.CylinderGeometry({
+                    length: 200000,
+                    topRadius: 150000,
+                    bottomRadius: 300000,
+                    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+            }),
+            id: 'cylinder',
+            modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0)),
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: [extrudedEllipse, extrudedExtent, cylinderInstance],        appearance: new Cesium.PerInstanceColorAppearance({
+            translucent: false,
+            closed: true
         })
     }));
 
@@ -121,7 +176,9 @@ require(['Cesium'], function(Cesium) {
                 height : height,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
         }));
         
         instances.push(new Cesium.GeometryInstance({
@@ -130,7 +187,9 @@ require(['Cesium'], function(Cesium) {
                 height : height,
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 0.5)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
         }));
     }
 
@@ -141,12 +200,13 @@ require(['Cesium'], function(Cesium) {
     
     // Create box and ellipsoid boxes, and use the instance's
     // modelMatrix to scale and position them.
-    var boxGeometry = new Cesium.BoxGeometry({
-        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+    var boxGeometry = Cesium.BoxGeometry.fromDimensions({
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+        dimensions : new Cesium.Cartesian3(1.0, 1.0, 1.0)
     });
     var ellipsoidGeometry = new Cesium.EllipsoidGeometry({
         vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
-        ellipsoid : new Cesium.Ellipsoid(0.5, 0.5, 1.0)
+        radii : new Cesium.Cartesian3(0.5, 0.5, 1.0)
     });
 
     instances = [];
@@ -157,14 +217,18 @@ require(['Cesium'], function(Cesium) {
             geometry : boxGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
         }));
         
         instances.push(new Cesium.GeometryInstance({
             geometry : ellipsoidGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
         }));
     }
     
@@ -190,7 +254,9 @@ require(['Cesium'], function(Cesium) {
                     Cesium.Cartographic.fromDegrees(-102.0 + i, 48.0)
                 ])
             }),
-            color : new Cesium.Color(Math.random(), Math.random(), Math.random(), 1.0)
+            attributes : {
+                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            }
         }));
     }
     
@@ -202,7 +268,7 @@ require(['Cesium'], function(Cesium) {
                 depthTest : {
                     enabled : true
                 },
-                lineWidth : 4.0
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
     }));

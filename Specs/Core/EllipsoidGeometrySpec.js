@@ -25,7 +25,6 @@ defineSuite([
     it('computes positions', function() {
         var m = new EllipsoidGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             numberOfPartitions : 1
         });
 
@@ -37,7 +36,6 @@ defineSuite([
     it('compute all vertex attributes', function() {
         var m = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             numberOfPartitions : 2
         });
 
@@ -52,7 +50,6 @@ defineSuite([
     it('computes attributes for a unit sphere', function() {
         var m = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,
-            ellipsoid : Ellipsoid.UNIT_SPHERE,
             numberOfPartitions : 3
         });
 

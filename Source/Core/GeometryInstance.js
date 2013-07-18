@@ -1,12 +1,16 @@
 /*global define*/
 define([
         './defaultValue',
+        './DeveloperError',
         './Matrix4',
-        './Geometry'
+        './Geometry',
+        './GeometryInstanceAttribute'
     ], function(
         defaultValue,
+        DeveloperError,
         Matrix4,
-        Geometry) {
+        Geometry,
+        GeometryInstanceAttribute) {
     "use strict";
 
     /**
@@ -18,10 +22,12 @@ define([
      * @alias GeometryInstance
      * @constructor
      *
-     * @param {Geometry} [options.geometry=undefined] The geometry to instance.
+     * @param {Geometry} options.geometry The geometry to instance.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The model matrix that transforms to transform the geometry from model to world coordinates.
-     * @param {Color} [options.color=undefined] The color of the instance when a per-instance color appearance is used.
-     * @param {Object} [options.pickData=undefined] A user-defined object to return when the instance is picked with {@link Context#pick}
+     * @param {Object} [options.id=undefined] A user-defined object to return when the instance is picked with {@link Context#pick} or get/set per-instance attributes with {@link Primitive#getGeometryInstanceAttributes}.
+     * @param {Object} [options.attributes] Per-instance attributes like a show or color attribute shown in the example below.
+     *
+     * @exception {DeveloperError} options.geometry is required.
      *
      * @example
      * // Create geometry for a box, and two instances that refer to it.
@@ -32,24 +38,32 @@ define([
      *   dimensions : new Cartesian3(1000000.0, 1000000.0, 500000.0)
      * }),
      * var instanceBottom = new GeometryInstance({
-     *     geometry : geometry,
-     *     modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-     *       ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
-     *     color : Color.AQUA,
-     *     pickData : 'bottom'
+     *   geometry : geometry,
+     *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 1000000.0)),
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'bottom'
      * });
      * var instanceTop = new GeometryInstance({
      *   geometry : geometry,
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883))), new Cartesian3(0.0, 0.0, 3000000.0)),
-     *   color : Color.WHITE,
-     *   pickData : 'top'
+     *   attributes : {
+     *     color : new ColorGeometryInstanceAttribute(Color.AQUA)
+     *   }
+     *   id : 'top'
      * });
      *
      * @see Geometry
      */
     var GeometryInstance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.geometry === 'undefined') {
+            throw new DeveloperError('options.geometry is required.');
+        }
 
         /**
          * The geometry being instanced.
@@ -70,52 +84,29 @@ define([
          *
          * @default Matrix4.IDENTITY
          */
-        this.modelMatrix = defaultValue(options.modelMatrix, Matrix4.IDENTITY.clone());
+        this.modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
 
         /**
-         * The color of the geometry when a per-instance color appearance is used.
+         * User-defined object returned when the instance is picked or used to get/set per-instance attributes.
          *
-         * @type Color
-         *
-         * @default undefined
-         */
-        this.color = options.color;
-
-        /**
-         * User-defined object returned when the instance is picked.
+         * @type Object
          *
          * @default undefined
          *
          * @see Context#pick
+         * @see Primitive#getGeometryInstanceAttributes
          */
-        this.pickData = options.pickData;
-    };
+        this.id = options.id;
 
-    /**
-     * Duplicates a GeometryInstance instance, including a deep copy of the geometry.
-     * <p>
-     * {@link GeometryInstance#pickData} is shallow copied so that the same <code>
-     * pickData</code> reference is returned by {@link Context#pick} regardless of
-     * if the geometry instance was cloned.
-     * </p>
-     *
-     * @memberof GeometryInstance
-     *
-     * @param {Geometry} [result] The object onto which to store the result.
-     *
-     * @return {Geometry} The modified result parameter or a new GeometryInstance instance if one was not provided.
-     */
-    GeometryInstance.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
-            result = new GeometryInstance();
-        }
-
-        result.geometry = Geometry.clone(this.geometry);    // Looses type info, e.g., BoxGeometry to Geometry.
-        result.modelMatrix = this.modelMatrix.clone(result.modelMatrix);
-        result.color = (typeof this.color !== 'undefined') ? this.color.clone() : undefined;
-        result.pickData = this.pickData;                    // Shadow copy
-
-        return result;
+        /**
+         * Per-instance attributes like {@link ColorGeometryInstanceAttribute} or {@link ShowGeometryInstanceAttribute}.
+         * {@link Geometry} attributes varying per vertex; these attributes are constant for the entire instance.
+         *
+         * @type Object
+         *
+         * @default undefined
+         */
+        this.attributes = defaultValue(options.attributes, {});
     };
 
     return GeometryInstance;

@@ -11,6 +11,9 @@ define([
         '../Core/BoundingSphere',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
+        '../Core/GeometryAttributes',
+        '../Core/GeometryInstance',
+        '../Core/GeometryInstanceAttribute',
         '../Core/ComponentDatatype',
         '../Core/Cartesian3',
         '../Renderer/BufferUsage',
@@ -31,6 +34,9 @@ define([
         BoundingSphere,
         Geometry,
         GeometryAttribute,
+        GeometryAttributes,
+        GeometryInstance,
+        GeometryInstanceAttribute,
         ComponentDatatype,
         Cartesian3,
         BufferUsage,
@@ -43,28 +49,28 @@ define([
 
     /**
      * A primitive represents geometry in the {@link Scene}.  The geometry can be from a single {@link GeometryInstance}
-     * as shown in Code Example 1 below, or from an array of instances, even if the geometry is from different
+     * as shown in example 1 below, or from an array of instances, even if the geometry is from different
      * geometry types, e.g., an {@link ExtentGeometry} and an {@link EllipsoidGeometry} as shown in Code Example 2.
      * <p>
      * A primitive combines geometry instances with an {@link Appearance} that describes the full shading, including
-     * {@link Material} and {@link Renderstate}.  Roughly, the geometry instance defines the structure and placement,
+     * {@link Material} and {@link RenderState}.  Roughly, the geometry instance defines the structure and placement,
      * and the appearance defines the visual characteristics.  Decoupling geometry and appearance allows us to mix
-     * and max most of them, and to easily add new geometry types and appearances.
+     * and match most of them and add a new geometry or appearance independently of each other.
      * </p>
      * <p>
-     * Combing multiple instances in one primitive is called batching, and significantly improves performance for static data.
-     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#pickData}.  Using
+     * Combining multiple instances into one primitive is called batching, and significantly improves performance for static data.
+     * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
      *
      * @alias Primitive
      * @constructor
      *
-     * @param {Array} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
+     * @param {Array|GeometryInstance} [options.geometryInstances=undefined] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance=undefined] The appearance used to render the primitive.
-     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre- and post-vertex-shader caches.
+     * @param {Boolean} [options.vertexCacheOptimize=true] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
      * @param {Boolean} [options.releaseGeometryInstances=true] When <code>true</code>, the primitive does not keep a reference to the input <code>geometryInstances</code> to save memory.
-     * @param {Boolean} [options.allowColumbusView=true] When <code>true</code>, each geometry instance is prepared for rendering in Columbus view and 2D.
+     * @param {Boolean} [options.allow3DOnly=false] When <code>true</code>, each geometry instance will only be rendered in 3D.
      *
      * @example
      * // 1. Draw a translucent ellipse on the surface with a checkerboard pattern
@@ -77,7 +83,7 @@ define([
      *       semiMajorAxis : 1000000.0,
      *       bearing : CesiumMath.PI_OVER_FOUR
      *   }),
-     *   pickData : 'object returned when this instance is picked'
+     *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      * var primitive = new Primitive({
      *   geometryInstances : instance,
@@ -97,18 +103,22 @@ define([
      *       CesiumMath.toRadians(-100.0),
      *       CesiumMath.toRadians(40.0))
      *     }),
-     *   pickData : 'object returned when this extent is picked',
-     *   color : new Color(0.0, 1.0, 1.0, 0.5)
+     *   id : 'extent',
+     *   attribute : {
+     *     color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.5)
+     *   }
      * });
      * var ellipsoidInstance = new GeometryInstance({
      *   geometry : new EllipsoidGeometry({
      *     vertexFormat : VertexFormat.POSITION_AND_NORMAL,
-     *     ellipsoid : new Ellipsoid(500000.0, 500000.0, 1000000.0)
+     *     radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
      *   }),
      *   modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
      *     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
-     *   pickData : 'object returned when this ellipsoid is picked',
-     *   color : new Color(1.0, 0.0, 1.0, 0.5)
+     *   id : 'ellipsoid',
+     *   attribute : {
+     *     color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
+     *   }
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
@@ -133,8 +143,6 @@ define([
          * @type Array
          *
          * @default undefined
-         *
-         * @readonly
          */
         this.geometryInstances = options.geometryInstances;
 
@@ -186,9 +194,12 @@ define([
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
         // When true, geometry is transformed to world coordinates even if there is a single
         // geometry or all geometries are in the same reference frame.
-        this._allowColumbusView = defaultValue(options.allowColumbusView, true);
+        this._allow3DOnly = defaultValue(options.allow3DOnly, false);
         this._boundingSphere = undefined;
         this._boundingSphere2D = undefined;
+        this._perInstanceAttributes = {};
+        this._lastPerInstanceAttributeIndex = 0;
+        this._dirtyAttributes = [];
 
         this._va = [];
         this._attributeIndices = undefined;
@@ -202,53 +213,62 @@ define([
         this._commandLists = new CommandLists();
     };
 
-    function hasPerInstanceColor(instances) {
-        var perInstanceColor = false;
-        var length = instances.length;
-        for (var i = 0; i < length; ++i) {
-            if (typeof instances[i].color !== 'undefined') {
-                perInstanceColor = true;
-                break;
-            }
-        }
-
-        return perInstanceColor;
+    function cloneAttribute(attribute) {
+        return new GeometryAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            values : new attribute.values.constructor(attribute.values)
+        });
     }
 
-    function addColorAttribute(primitive, instances, context) {
-        var length = instances.length;
-
-        for (var i = 0; i < length; ++i) {
-            var instance = instances[i];
-            var geometry = instance.geometry;
-            var attributes = geometry.attributes;
-            var positionAttr = attributes.position;
-            var numberOfComponents = 4 * (positionAttr.values.length / positionAttr.componentsPerAttribute);
-
-            attributes.color = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 4,
-                normalize : true,
-                values : new Uint8Array(numberOfComponents)
-            });
-
-            var color = instance.color;
-
-            if (typeof color !== 'undefined') {
-                var red = Color.floatToByte(color.red);
-                var green = Color.floatToByte(color.green);
-                var blue = Color.floatToByte(color.blue);
-                var alpha = Color.floatToByte(color.alpha);
-                var values = attributes.color.values;
-
-                for (var j = 0; j < numberOfComponents; j += 4) {
-                    values[j] = red;
-                    values[j + 1] = green;
-                    values[j + 2] = blue;
-                    values[j + 3] = alpha;
-                }
+    function cloneGeometry(geometry) {
+        var attributes = geometry.attributes;
+        var newAttributes = new GeometryAttributes();
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
+                newAttributes[property] = cloneAttribute(attributes[property]);
             }
         }
+
+        var indices;
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            indices = new sourceValues.constructor(sourceValues);
+        }
+
+        return new Geometry({
+            attributes : newAttributes,
+            indices : indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : BoundingSphere.clone(geometry.boundingSphere)
+        });
+    }
+
+    function cloneGeometryInstanceAttribute(attribute) {
+        return new GeometryInstanceAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            value : new attribute.value.constructor(attribute.value)
+        });
+    }
+
+    function cloneInstance(instance) {
+        var attributes = instance.attributes;
+        var newAttributes = {};
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property)) {
+                newAttributes[property] = cloneGeometryInstanceAttribute(attributes[property]);
+            }
+        }
+
+        return new GeometryInstance({
+            geometry : cloneGeometry(instance.geometry),
+            modelMatrix : Matrix4.clone(instance.modelMatrix),
+            id : instance.id, // Shallow copy
+            attributes : newAttributes
+        });
     }
 
     function addPickColorAttribute(primitive, instances, context) {
@@ -268,7 +288,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var pickId = context.createPickId(defaultValue(instance.pickData, primitive));
+            var pickId = context.createPickId(defaultValue(instance.id, primitive));
             primitive._pickIds.push(pickId);
 
             var pickColor = pickId.color;
@@ -288,7 +308,7 @@ define([
     }
 
     function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = primitive._allowColumbusView;
+        var toWorld = !primitive._allow3DOnly;
         var length = instances.length;
         var i;
 
@@ -313,45 +333,112 @@ define([
         }
     }
 
+    function getCommonPerInstanceAttributeNames(instances) {
+        var length = instances.length;
+
+        var attributesInAllInstances = [];
+        var attributes0 = instances[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = instances[i].attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances.push(name);
+                }
+            }
+        }
+
+        return attributesInAllInstances;
+    }
+
+    function addPerInstanceAttributes(primitive, instances, names) {
+        var length = instances.length;
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var instanceAttributes = instance.attributes;
+            var geometry = instance.geometry;
+            var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var attribute = instanceAttributes[name];
+                var componentDatatype = attribute.componentDatatype;
+                var value = attribute.value;
+                var componentsPerAttribute = value.length;
+
+                var buffer = componentDatatype.createTypedArray(numberOfVertices * componentsPerAttribute);
+                for (var k = 0; k < numberOfVertices; ++k) {
+                    buffer.set(value, k * componentsPerAttribute);
+                }
+
+                geometry.attributes[name] = new GeometryAttribute({
+                    componentDatatype : componentDatatype,
+                    componentsPerAttribute : componentsPerAttribute,
+                    normalize : attribute.normalize,
+                    values : buffer
+                });
+            }
+        }
+    }
+
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
     function geometryPipeline(primitive, instances, context, projection) {
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
-        for (var j = 1; j < length; ++j) {
-            if (instances[j].geometry.primitiveType !== primitiveType) {
+        for (var i = 1; i < length; ++i) {
+            if (instances[i].geometry.primitiveType !== primitiveType) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }
 
-        // Copy instances first since most pipeline operations modify the geometry and instance in-place.
-        var insts = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            insts[i] = instances[i].clone();
-        }
-
         // Unify to world coordinates before combining.
-        transformToWorldCoordinates(primitive, insts);
+        transformToWorldCoordinates(primitive, instances);
 
         // Clip to IDL
-        if (primitive._allowColumbusView) {
-            for (var k = 0; k < length; ++k) {
-                GeometryPipeline.wrapLongitude(instances[k].geometry);
+        if (!primitive._allow3DOnly) {
+            for (i = 0; i < length; ++i) {
+                GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
         }
 
-        // Add color attribute if any geometries have per-instance color
-        if (hasPerInstanceColor(insts)) {
-            addColorAttribute(primitive, insts, context);
+        // Add pickColor attribute for picking individual instances
+        addPickColorAttribute(primitive, instances, context);
+
+        // add attributes to the geometry for each per-instance attribute
+        var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
+        addPerInstanceAttributes(primitive, instances, perInstanceAttributeNames);
+
+        // Optimize for vertex shader caches
+        if (primitive._vertexCacheOptimize) {
+            for (i = 0; i < length; ++i) {
+                GeometryPipeline.reorderForPostVertexCache(instances[i].geometry);
+                GeometryPipeline.reorderForPreVertexCache(instances[i].geometry);
+            }
         }
 
-        // Add pickColor attribute for picking individual instances
-        addPickColorAttribute(primitive, insts, context);
-
         // Combine into single geometry for better rendering performance.
-        var geometry = GeometryPipeline.combine(insts);
+        var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry, projection);
 
@@ -370,9 +457,123 @@ define([
         return [geometry];
     }
 
+    function createPerInstanceVAAttributes(context, geometry, attributeIndices, names) {
+        var vaAttributes = [];
+
+        var bufferUsage = BufferUsage.DYNAMIC_DRAW;
+        var attributes = geometry.attributes;
+
+        var length = names.length;
+        for (var i = 0; i < length; ++i) {
+            var name = names[i];
+            var attribute = attributes[name];
+
+            var componentDatatype = attribute.componentDatatype;
+            if (componentDatatype === ComponentDatatype.DOUBLE) {
+                componentDatatype = ComponentDatatype.FLOAT;
+            }
+
+            var vertexBuffer = context.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
+            vaAttributes.push({
+                index : attributeIndices[name],
+                vertexBuffer : vertexBuffer,
+                componentDatatype : componentDatatype,
+                componentsPerAttribute : attribute.componentsPerAttribute,
+                normalize : attribute.normalize
+            });
+
+            delete attributes[name];
+        }
+
+        return vaAttributes;
+    }
+
+    function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
+        var ids = [];
+        var indices = [];
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = instances.length;
+        var offsets = {};
+        var vaIndices = {};
+
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var index = attributeIndices[name];
+
+                var tempVertexCount = numberOfVertices;
+                while (tempVertexCount > 0) {
+                    var vaIndex = defaultValue(vaIndices[name], 0);
+                    var va = vertexArrays[vaIndex];
+                    var vaLength = va.getNumberOfAttributes();
+
+                    var attribute;
+                    for (var k = 0; k < vaLength; ++k) {
+                        attribute = va.getAttribute(k);
+                        if (attribute.index === index) {
+                            break;
+                        }
+                    }
+
+                    if (typeof ids[i] === 'undefined') {
+                        ids[i] = instance.id;
+                    }
+
+                    if (typeof indices[i] === 'undefined') {
+                        indices[i] = {};
+                    }
+
+                    if (typeof indices[i][name] === 'undefined') {
+                        indices[i][name] = {
+                            dirty : false,
+                            value : instance.attributes[name].value,
+                            indices : []
+                        };
+                    }
+
+                    var size = attribute.vertexBuffer.getSizeInBytes() / attribute.componentDatatype.sizeInBytes;
+                    size /= attribute.componentsPerAttribute;
+                    var offset = defaultValue(offsets[name], 0);
+
+                    var count;
+                    if (offset + tempVertexCount < size) {
+                        count = tempVertexCount;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = offset + tempVertexCount;
+                    } else {
+                        count = size - offset;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = 0;
+                        vaIndices[name] = vaIndex + 1;
+                    }
+
+                    tempVertexCount -= count;
+                }
+            }
+        }
+
+        return {
+            ids : ids,
+            indices : indices
+        };
+    }
+
     function createColumbusViewShader(primitive, vertexShaderSource) {
         var attributes;
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             attributes =
                 'attribute vec3 position2DHigh;\n' +
                 'attribute vec3 position2DLow;\n';
@@ -383,7 +584,7 @@ define([
         var computePosition =
             '\nvec4 czm_computePosition()\n' +
             '{\n';
-        if (primitive._allowColumbusView) {
+        if (!primitive._allow3DOnly) {
             computePosition +=
                 '    vec4 p;\n' +
                 '    if (czm_morphTime == 1.0)\n' +
@@ -424,6 +625,23 @@ define([
         return renamedVS + '\n' + pickMain;
     }
 
+    function appendShow(primitive, vertexShaderSource) {
+        if (typeof primitive._attributeIndices.show === 'undefined') {
+            return vertexShaderSource;
+        }
+
+        var renamedVS = vertexShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_non_show_main()');
+        var showMain =
+            'attribute float show;\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_show_main(); \n' +
+            '    gl_Position *= show; \n' +
+            '}';
+
+        return renamedVS + '\n' + showMain;
+    }
+
     function validateShaderMatching(shaderProgram, attributeIndices) {
         // For a VAO and shader program to be compatible, the VAO must have
         // all active attribute in the shader program.  The VAO may have
@@ -454,11 +672,8 @@ define([
         if (!this.show ||
             ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
             (typeof this.appearance === 'undefined') ||
-            (frameState.mode !== SceneMode.SCENE3D && !this._allowColumbusView)) {
-            return;
-        }
-
-        if (!frameState.passes.color && !frameState.passes.pick) {
+            (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
+            (!frameState.passes.color && !frameState.passes.pick)) {
             return;
         }
 
@@ -472,39 +687,44 @@ define([
         if (this._va.length === 0) {
             var projection = frameState.scene2D.projection;
 
-            var instances = (this.geometryInstances instanceof Array) ? this.geometryInstances : [this.geometryInstances];
-            var geometries = geometryPipeline(this, instances, context, projection);
-
-            length = geometries.length;
-            if (this._vertexCacheOptimize) {
-                // Optimize for vertex shader caches
-                for (i = 0; i < length; ++i) {
-                    GeometryPipeline.reorderForPostVertexCache(geometries[i]);
-                    GeometryPipeline.reorderForPreVertexCache(geometries[i]);
-                }
+            var instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+            // Copy instances first since most pipeline operations modify the geometry and instance in-place.
+            length = instances.length;
+            var insts = new Array(length);
+            for (i = 0; i < length; ++i) {
+                insts[i] = cloneInstance(instances[i]);
             }
+            var geometries = geometryPipeline(this, insts, context, projection);
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             this._boundingSphere = geometries[0].boundingSphere;
-            if (this._allowColumbusView && typeof this._boundingSphere !== 'undefined') {
+            if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
+            var geometry;
+            var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(insts);
+
             var va = [];
+            length = geometries.length;
             for (i = 0; i < length; ++i) {
+                geometry = geometries[i];
+                var vaAttributes = createPerInstanceVAAttributes(context, geometry, this._attributeIndices, perInstanceAttributeNames);
                 va.push(context.createVertexArrayFromGeometry({
-                    geometry : geometries[i],
+                    geometry : geometry,
                     attributeIndices : this._attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
-                    vertexLayout : VertexLayout.INTERLEAVED
+                    vertexLayout : VertexLayout.INTERLEAVED,
+                    vertexArrayAttributes : vaAttributes
                 }));
             }
 
             this._va = va;
+            this._perInstanceAttributes = computePerInstanceAttributeIndices(insts, va, this._attributeIndices);
 
             for (i = 0; i < length; ++i) {
-                var geometry = geometries[i];
+                geometry = geometries[i];
 
                 // renderState, shaderProgram, and uniformMap for commands are set below.
 
@@ -531,7 +751,6 @@ define([
         var createSP = false;
 
         if (this._appearance !== appearance) {
-
             this._appearance = appearance;
             this._material = material;
             createRS = true;
@@ -548,6 +767,7 @@ define([
         if (createSP) {
             var shaderCache = context.getShaderCache();
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
+            vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
@@ -578,6 +798,38 @@ define([
             }
         }
 
+        // Update per-instance attributes
+        if (this._dirtyAttributes.length > 0) {
+            var attributes = this._dirtyAttributes;
+            length = attributes.length;
+            for (i = 0; i < length; ++i) {
+                var attribute = attributes[i];
+                var value = attribute.value;
+                var indices = attribute.indices;
+                var indicesLength = indices.length;
+                for (var j = 0; j < indicesLength; ++j) {
+                    var index = indices[j];
+                    var offset = index.offset;
+                    var count = index.count;
+
+                    var vaAttribute = index.attribute;
+                    var componentDatatype = vaAttribute.componentDatatype;
+                    var componentsPerAttribute = vaAttribute.componentsPerAttribute;
+
+                    var typedArray = componentDatatype.createTypedArray(count * componentsPerAttribute);
+                    for (var k = 0; k < count; ++k) {
+                        typedArray.set(value, k * componentsPerAttribute);
+                    }
+
+                    var offsetInBytes = offset * componentsPerAttribute * componentDatatype.sizeInBytes;
+                    vaAttribute.vertexBuffer.copyFromArrayView(typedArray, offsetInBytes);
+                }
+                attribute.dirty = false;
+            }
+
+            attributes.length = 0;
+        }
+
         var boundingSphere;
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingSphere = this._boundingSphere;
@@ -601,6 +853,84 @@ define([
         }
 
         commandList.push(this._commandLists);
+    };
+
+    function createGetFunction(name, perInstanceAttributes) {
+        return function() {
+            return perInstanceAttributes[name].value;
+        };
+    }
+
+    function createSetFunction(name, perInstanceAttributes, dirtyList) {
+        return function (value) {
+            if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
+                throw new DeveloperError('value must be and array with length between 1 and 4.');
+            }
+
+            var attribute = perInstanceAttributes[name];
+            attribute.value = value;
+            if (!attribute.dirty) {
+                dirtyList.push(attribute);
+                attribute.dirty = true;
+            }
+        };
+    }
+
+    /**
+     * Returns the modifiable per-instance attributes for a {@link GeometryInstance}.
+     *
+     * @param {Object} id The id of the {@link GeometryInstance}.
+     *
+     * @returns {Object} The typed array in the attribute's format or undefined if the is no instance with id.
+     *
+     * @exception {DeveloperError} id is required.
+     * @exception {DeveloperError} must call update before calling getGeometryInstanceAttributes.
+     *
+     * @example
+     * var attributes = primitive.getGeometryInstanceAttributes('an id');
+     * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
+     * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
+     */
+    Primitive.prototype.getGeometryInstanceAttributes = function(id) {
+        if (typeof id === 'undefined') {
+            throw new DeveloperError('id is required');
+        }
+
+        if (typeof this._perInstanceAttributes === 'undefined') {
+            throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
+        }
+
+        var index = -1;
+        var lastIndex = this._lastPerInstanceAttributeIndex;
+        var ids = this._perInstanceAttributes.ids;
+        var length = ids.length;
+        for (var i = 0; i < length; ++i) {
+            var curIndex = (lastIndex + i) % length;
+            if (id === ids[curIndex]) {
+                index = curIndex;
+                break;
+            }
+        }
+
+        if (index === -1) {
+            return undefined;
+        }
+
+        var perInstanceAttributes = this._perInstanceAttributes.indices[index];
+        var attributes = {};
+
+        for (var name in perInstanceAttributes) {
+            if (perInstanceAttributes.hasOwnProperty(name)) {
+                Object.defineProperty(attributes, name, {
+                    get : createGetFunction(name, perInstanceAttributes),
+                    set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
+                });
+            }
+        }
+
+        this._lastPerInstanceAttributeIndex = index;
+
+        return attributes;
     };
 
     /**

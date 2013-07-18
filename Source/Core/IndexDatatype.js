@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './Enumeration',
-        './DeveloperError'
+        './DeveloperError',
+        './Math'
     ], function(
         Enumeration,
-        DeveloperError) {
+        DeveloperError,
+        CesiumMath) {
     "use strict";
 
     /**
@@ -19,8 +21,9 @@ define([
          * 8-bit unsigned byte enumeration corresponding to <code>UNSIGNED_BYTE</code> and the type
          * of an element in <code>Uint8Array</code>.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1401
          */
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
 
@@ -28,8 +31,9 @@ define([
          * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
          * of an element in <code>Uint16Array</code>.
          *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1403
          */
         UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
 
@@ -86,7 +90,7 @@ define([
             throw new DeveloperError('numberOfVertices is required.');
         }
 
-        if (numberOfVertices > 64 * 1024) {
+        if (numberOfVertices > CesiumMath.SIXTY_FOUR_KILOBYTES) {
             return new Uint32Array(indicesLengthOrArray);
         }
 

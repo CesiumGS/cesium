@@ -53,8 +53,7 @@ define([
         /**
          * Determines if the atmosphere is shown.
          *
-         * @type Boolean
-         *
+         * @type {Boolean}
          * @default true
          */
         this.show = true;
@@ -133,7 +132,7 @@ define([
 
         if (typeof command.vertexArray === 'undefined') {
             var geometry = new EllipsoidGeometry({
-                ellipsoid : Ellipsoid.fromCartesian3(this._ellipsoid.getRadii().multiplyByScalar(1.025)),
+                radii : this._ellipsoid.getRadii().multiplyByScalar(1.025),
                 numberOfPartitions : 60
             });
             command.vertexArray = context.createVertexArrayFromGeometry({
