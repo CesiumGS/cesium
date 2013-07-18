@@ -2,12 +2,14 @@
 defineSuite([
          'Core/PolylinePipeline',
          'Core/Cartesian3',
+         'Core/Math',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Transforms'
      ], function(
          PolylinePipeline,
          Cartesian3,
+         CesiumMath,
          Cartographic,
          Ellipsoid,
          Transforms) {
@@ -78,4 +80,42 @@ defineSuite([
             PolylinePipeline.removeDuplicates();
         }).toThrow();
     });
+
+    it('scaleToSurface throws without positions', function() {
+        expect(function() {
+            PolylinePipeline.scaleToSurface();
+        }).toThrow();
+    });
+
+    it('scaleToSurface throws without granularity', function() {
+        expect(function() {
+            PolylinePipeline.scaleToSurface([]);
+        }).toThrow();
+    });
+
+    it('scaleToSurface throws without ellipsoid', function() {
+        expect(function() {
+            PolylinePipeline.scaleToSurface([], 1);
+        }).toThrow();
+    });
+
+    it('scaleToSurface subdivides in half', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+        var p3 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(45, 0));
+        var positions = [p1, p2];
+
+        var newPositions = PolylinePipeline.scaleToSurface(positions, CesiumMath.PI_OVER_TWO/2, ellipsoid);
+
+        expect(newPositions.length).toEqual(3);
+        var p1n = newPositions[0];
+        var p3n = newPositions[1];
+        var p2n = newPositions[2];
+        expect(p1.equalsEpsilon(p1n, CesiumMath.EPSILON4)).toEqual(true);
+        expect(p2.equalsEpsilon(p2n, CesiumMath.EPSILON4)).toEqual(true);
+        expect(p3.equalsEpsilon(p3n, CesiumMath.EPSILON4)).toEqual(true);
+    });
+
+
 });

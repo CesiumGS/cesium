@@ -37,6 +37,29 @@ define([
         WindingOrder) {
     "use strict";
 
+    function subdivideHeights(p0, p1, h0, h1, granularity) {
+        var angleBetween = Cartesian3.angleBetween(p0, p1);
+        var n = angleBetween/granularity;
+        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
+        if (countDivide < 1) {
+            countDivide = 0;
+        }
+        var numVertices = Math.pow(2, countDivide);
+        var dHeight = h1 - h0;
+        var heightPerVertex = dHeight / numVertices;
+
+        var heights = new Array(numVertices);
+        var index = 0;
+        heights[index++] = h0;
+        for (var i = 1; i < numVertices; i++) {
+            var h = h0 + i*heightPerVertex;
+            heights[index++] = h;
+        }
+        heights[index++] = h1;
+
+        return heights;
+    }
+
     function removeDuplicates(positions, topHeights, bottomHeights, cleanedPositions, cleanedTopHeights, cleanedBottomHeights) {
         var length = positions.length;
 
@@ -72,6 +95,7 @@ define([
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
     var scratchCartesian3Position3 = new Cartesian3();
+    var scratchCartesian3Position4 = new Cartesian3();
     var scratchBinormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchNormal = new Cartesian3();
@@ -84,6 +108,7 @@ define([
      * @constructor
      *
      * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Array} [maximumHeights] An array parallel to <code>positions</code> that give the maximum height of the
      *        wall at <code>positions</code>. If undefined, the height of each position in used.
      * @param {Array} [minimumHeights] An array parallel to <code>positions</code> that give the minimum height of the
@@ -115,8 +140,6 @@ define([
         var wallPositions = options.positions;
         var maximumHeights = options.maximumHeights;
         var minimumHeights = options.minimumHeights;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         if (typeof wallPositions === 'undefined') {
             throw new DeveloperError('positions is required.');
@@ -129,6 +152,10 @@ define([
         if (typeof minimumHeights !== 'undefined' && minimumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
+
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
         var cleanedPositions = [];
         var cleanedMaximumHeights = (typeof maximumHeights !== 'undefined') ? [] : undefined;
@@ -159,7 +186,36 @@ define([
 
         var i;
         var length = wallPositions.length;
-        var size = 2 * (length - 1) * 2 * 3;
+        if (typeof maximumHeights === 'undefined') {
+            maximumHeights = [];
+            for (i = 0; i < length; i++) {
+                var c1 = ellipsoid.cartesianToCartographic(wallPositions[i], scratchCartographic);
+                maximumHeights[i] = c1.height;
+            }
+        }
+        var newMaxHeights = [];
+        var newMinHeights;
+        for (i = 0; i < length-1; i++) {
+            var p1 = wallPositions[i];
+            var p2 = wallPositions[i + 1];
+            var h1 = maximumHeights[i];
+            var h2 = maximumHeights[i + 1];
+            newMaxHeights = newMaxHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
+
+            if (typeof minimumHeights !== 'undefined') {
+                newMinHeights = [];
+                p1 = wallPositions[i];
+                p2 = wallPositions[i + 1];
+                h1 = minimumHeights[i];
+                h2 = minimumHeights[i + 1];
+                newMinHeights = newMinHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
+            }
+        }
+
+        wallPositions = PolylinePipeline.scaleToSurface(wallPositions, granularity, ellipsoid);
+
+        length = wallPositions.length;
+        var size = length * 2 * 3;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
         var normals = vertexFormat.normal ? new Float32Array(size) : undefined;
@@ -179,102 +235,100 @@ define([
         var tangent = scratchTangent;
         var binormal = scratchBinormal;
         var recomputeNormal = true;
-        for (i = 0; i < length - 1; ++i) {
-            for (var j = 0; j < 2; ++j) {
-                var index = i + j;
+        for (i = 0; i < length; ++i) {
+            var pos = wallPositions[i];
+            var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic);
 
-                var pos = wallPositions[index];
-                var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic);
+            c.height = newMaxHeights[i];
 
-                if (typeof maximumHeights !== 'undefined') {
-                    c.height = maximumHeights[index];
-                }
-                var topPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position1);
+            var topPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position1);
 
+            c.height = 0.0;
+            if (typeof newMinHeights !== 'undefined') {
+                c.height += newMinHeights[i];
+            } else {
                 c.height = 0.0;
-                if (typeof minimumHeights !== 'undefined') {
-                    c.height += minimumHeights[index];
+            }
+
+            var bottomPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position2);
+
+            if (vertexFormat.position) {
+                // insert the lower point
+                positions[positionIndex++] = bottomPosition.x;
+                positions[positionIndex++] = bottomPosition.y;
+                positions[positionIndex++] = bottomPosition.z;
+
+                // insert the upper point
+                positions[positionIndex++] = topPosition.x;
+                positions[positionIndex++] = topPosition.y;
+                positions[positionIndex++] = topPosition.z;
+            }
+
+            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
+                var nextPosition;
+                if (i + 1 < length) {
+                    nextPosition = Cartesian3.clone(wallPositions[i + 1], scratchCartesian3Position3);
+                }
+
+                if (recomputeNormal) {
+                    var scalednextPosition = nextPosition.subtract(topPosition, scratchCartesian3Position4);
+                    bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
+                    normal = Cartesian3.cross(bottomPosition, scalednextPosition, normal).normalize(normal);
+                    recomputeNormal = false;
+                }
+
+                if (nextPosition.equalsEpsilon(pos, CesiumMath.EPSILON6)) {
+                    recomputeNormal = true;
                 } else {
-                    c.height = 0.0;
-                }
-
-                var bottomPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position2);
-
-                if (vertexFormat.position) {
-                    // insert the lower point
-                    positions[positionIndex++] = bottomPosition.x;
-                    positions[positionIndex++] = bottomPosition.y;
-                    positions[positionIndex++] = bottomPosition.z;
-
-                    // insert the upper point
-                    positions[positionIndex++] = topPosition.x;
-                    positions[positionIndex++] = topPosition.y;
-                    positions[positionIndex++] = topPosition.z;
-                }
-
-                if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                    var nextPosition;
-                    if (index + 1 < length) {
-                        nextPosition = Cartesian3.clone(wallPositions[index + 1], scratchCartesian3Position3);
-                    }
-
-                    if (recomputeNormal) {
-                        nextPosition = nextPosition.subtract(topPosition, nextPosition);
-                        bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
-                        normal = Cartesian3.cross(bottomPosition, nextPosition, normal).normalize(normal);
-                        if (vertexFormat.tangent) {
-                            tangent = nextPosition.normalize(tangent);
-                        }
-                        if (vertexFormat.binormal) {
-                            binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                        }
-                        recomputeNormal = false;
-                    }
-
-                    if (j === 1) {
-                        recomputeNormal = true;
-                    }
-
-                    if (vertexFormat.normal) {
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
-
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
-                    }
-
                     if (vertexFormat.tangent) {
-                        tangents[tangentIndex++] = tangent.x;
-                        tangents[tangentIndex++] = tangent.y;
-                        tangents[tangentIndex++] = tangent.z;
-
-                        tangents[tangentIndex++] = tangent.x;
-                        tangents[tangentIndex++] = tangent.y;
-                        tangents[tangentIndex++] = tangent.z;
+                        tangent = nextPosition.subtract(pos, tangent).normalize(tangent);//scalednextPosition.normalize(tangent);
                     }
-
                     if (vertexFormat.binormal) {
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
-
-                        binormals[binormalIndex++] = binormal.x;
-                        binormals[binormalIndex++] = binormal.y;
-                        binormals[binormalIndex++] = binormal.z;
+                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
                     }
                 }
 
-                if (vertexFormat.st) {
-                    var s = index / (length - 1);
 
-                    textureCoordinates[textureCoordIndex++] = s;
-                    textureCoordinates[textureCoordIndex++] = 0.0;
 
-                    textureCoordinates[textureCoordIndex++] = s;
-                    textureCoordinates[textureCoordIndex++] = 1.0;
+                if (vertexFormat.normal) {
+                    normals[normalIndex++] = normal.x;
+                    normals[normalIndex++] = normal.y;
+                    normals[normalIndex++] = normal.z;
+
+                    normals[normalIndex++] = normal.x;
+                    normals[normalIndex++] = normal.y;
+                    normals[normalIndex++] = normal.z;
                 }
+
+                if (vertexFormat.tangent) {
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+
+                    tangents[tangentIndex++] = tangent.x;
+                    tangents[tangentIndex++] = tangent.y;
+                    tangents[tangentIndex++] = tangent.z;
+                }
+
+                if (vertexFormat.binormal) {
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+
+                    binormals[binormalIndex++] = binormal.x;
+                    binormals[binormalIndex++] = binormal.y;
+                    binormals[binormalIndex++] = binormal.z;
+                }
+            }
+
+            if (vertexFormat.st) {
+                var s = i / (length - 1);
+
+                textureCoordinates[textureCoordIndex++] = s;
+                textureCoordinates[textureCoordIndex++] = 0.0;
+
+                textureCoordinates[textureCoordIndex++] = s;
+                textureCoordinates[textureCoordIndex++] = 1.0;
             }
         }
 

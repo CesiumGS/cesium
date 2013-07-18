@@ -50,11 +50,11 @@ define([
 
         var arc = new EllipoidGeodesic(start, end, ellipsoid);
 
-        var surfaceDistanceBetweenPoints = arc.surfaceDistance() / (numPoints - 1);
+        var surfaceDistanceBetweenPoints = arc.getSurfaceDistance() / (numPoints - 1);
 
         for (var i = 1; i < numPoints - 1; i++) {
             var cart = arc.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
-            result[i] = ellipsoid.CartographicToCartesian(cart);
+            result[i] = ellipsoid.cartographicToCartesian(cart);
         }
         start.height = 0;
         end.height = 0;
@@ -189,8 +189,41 @@ define([
         return cleanedPositions;
     };
 
-    PolylinePipeline.scaleToSurface = function(positions, granularity) {
+    /**
+     * Removes adjacent duplicate positions in an array of positions.
+     *
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Number} granularity The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} ellipsoid The ellipsoid on which the positions lie.
+     *
+     * @returns {Array} A new array of {Cartesian3} positions that have been subdivided and raised to the surface of the ellipsoid.
+     *
+     * @exception {DeveloperError} positions, granularity and ellipsoid are required
+     *
+     * @example
+     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
+     * var positions = [
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(1.0, 1.0, 1.0),
+     *     new Cartesian3(2.0, 2.0, 2.0)];
+     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+     */
+    PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
+        if (typeof positions === 'undefined' || typeof granularity === 'undefined' || typeof ellipsoid === 'undefined') {
+            throw new DeveloperError('positions, granularity and ellipsoid are required');
+        }
 
+        var length = positions.length;
+        var newPositions = [];
+        for (var i = 0; i < length - 1; i++) {
+            var p0 = positions[i];
+            var p1 = positions[i+1];
+            newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
+        }
+
+        return newPositions;
     };
 
     return PolylinePipeline;
