@@ -679,39 +679,39 @@ defineSuite([
             text : 'a'
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(1);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
 
         labels.add({
             text : 'a'
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(1);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(1);
 
         labels.add({
             text : 'abcd'
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(4);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
 
         labels.add({
             text : 'abc'
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(4);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(4);
 
         var label = labels.add({
             text : 'de'
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(5);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(5);
 
         label.setFont('30px "Open Sans"');
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(7);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
         label.setStyle(LabelStyle.OUTLINE);
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(9);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
 
         label.setFillColor({
             red : 1.0,
@@ -720,7 +720,7 @@ defineSuite([
             alpha : 1.0
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(11);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(11);
 
         label.setOutlineColor({
             red : 1.0,
@@ -729,25 +729,25 @@ defineSuite([
             alpha : 1.0
         });
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
 
         // vertical origin only affects glyph positions, not glyphs themselves.
         label.setVerticalOrigin(VerticalOrigin.CENTER);
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
         label.setVerticalOrigin(VerticalOrigin.TOP);
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
 
         //even though we originally started with 30px sans-serif, other properties used to create the id have changed
         label.setFont('30px sans-serif');
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(15);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(15);
 
         //Changing thickness requires new glyphs
         label.setOutlineWidth(3);
         labels.update(context, frameState, []);
-        expect(labels._textureCount).toEqual(17);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(17);
     });
 
     it('should reuse billboards that are not needed any more', function() {
@@ -764,43 +764,6 @@ defineSuite([
         label.setText('def');
         labels.update(context, frameState, []);
         expect(labels._billboardCollection.getLength()).toEqual(3);
-    });
-
-    it('should compact unused billboards after several frames', function() {
-        var label = labels.add({
-            text : 'abc'
-        });
-        labels.update(context, frameState, []);
-        expect(labels._billboardCollection.getLength()).toEqual(3);
-
-        label.setText('a');
-        labels.update(context, frameState, []);
-        expect(labels._billboardCollection.getLength()).toEqual(3);
-
-        for ( var i = 0; i < 150; ++i) {
-            labels.update(context, frameState, []);
-        }
-
-        expect(labels._billboardCollection.getLength()).toEqual(1);
-    });
-
-    it('should remove all glyphs several frames after calling remove', function() {
-        var label = labels.add({
-            text : 'blah blah'
-        });
-        labels.update(context, frameState, []);
-
-        expect(labels._textureCount).toEqual(5);
-        expect(labels._billboardCollection.getLength()).toEqual(8);
-
-        labels.remove(label);
-
-        for ( var i = 0; i < 150; ++i) {
-            labels.update(context, frameState, []);
-        }
-
-        expect(labels._textureCount).toEqual(0);
-        expect(labels._billboardCollection.getLength()).toEqual(0);
     });
 
     describe('Label', function() {
@@ -1544,4 +1507,19 @@ defineSuite([
             label.computeScreenSpacePosition(context, undefined);
         }).toThrow();
     });
+
+    it('destroys texture atlas when destroying', function() {
+        labels.add({
+            text : 'a'
+        });
+        labels.update(context, frameState, []);
+
+        var textureAtlas = labels._textureAtlas;
+        expect(textureAtlas.isDestroyed()).toBe(false);
+
+        labels = labels.destroy();
+
+        expect(textureAtlas.isDestroyed()).toBe(true);
+    });
+
 }, 'WebGL');

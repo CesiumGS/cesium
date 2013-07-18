@@ -40,7 +40,7 @@ defineSuite([
         expect(widget.isDestroyed()).toEqual(false);
         expect(widget.container).toBeInstanceOf(HTMLElement);
         expect(widget.canvas).toBeInstanceOf(HTMLElement);
-        expect(widget.cesiumLogo).toBeInstanceOf(HTMLElement);
+        expect(widget.creditContainer).toBeInstanceOf(HTMLElement);
         expect(widget.scene).toBeInstanceOf(Scene);
         expect(widget.centralBody).toBeInstanceOf(CentralBody);
         expect(widget.clock).toBeInstanceOf(Clock);

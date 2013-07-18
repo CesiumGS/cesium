@@ -28,7 +28,8 @@ define([
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
-        './SunPostProcess'
+        './SunPostProcess',
+        './CreditDisplay'
     ], function(
         CesiumMath,
         Color,
@@ -58,7 +59,8 @@ define([
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
-        SunPostProcess) {
+        SunPostProcess,
+        CreditDisplay) {
     "use strict";
 
     /**
@@ -70,6 +72,7 @@ define([
      *
      * @param {HTMLCanvasElement} canvas The HTML canvas element to create the scene for.
      * @param {Object} [contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  Default values are shown in the code example below.
+     * @param {HTMLElement} [creditContainer=undefined] The HTML element in which the credits will be displayed.
      *
      * @see CesiumWidget
      * @see <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a>
@@ -85,10 +88,23 @@ define([
      *     preserveDrawingBuffer : false
      * });
      */
-    var Scene = function(canvas, contextOptions) {
+    var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
-
-        this._frameState = new FrameState();
+        var creditDisplay;
+        if (typeof creditContainer !== 'undefined') {
+            creditDisplay = new CreditDisplay(creditContainer);
+        } else {
+            var creditDiv = document.createElement('div');
+            creditDiv.style.position = 'absolute';
+            creditDiv.style.bottom = '0';
+            creditDiv.style['text-shadow'] = '0px 0px 2px #000000';
+            creditDiv.style.color = '#ffffff';
+            creditDiv.style['font-size'] = '10pt';
+            creditDiv.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(creditDiv);
+            creditDisplay = new CreditDisplay(creditDiv);
+        }
+        this._frameState = new FrameState(creditDisplay);
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
@@ -548,6 +564,7 @@ define([
         updateFrameState(this, frameNumber, time);
         frameState.passes.color = true;
         frameState.passes.overlay = true;
+        frameState.creditDisplay.beginFrame();
 
         us.update(frameState);
 
@@ -561,6 +578,7 @@ define([
         var passState = this._passState;
         executeCommands(this, passState);
         executeOverlayCommands(this, passState);
+        frameState.creditDisplay.endFrame();
     };
 
     var orthoPickingFrustum = new OrthographicFrustum();
@@ -693,6 +711,7 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();
+        this._frameState.creditDisplay.destroy();
         return destroyObject(this);
     };
 

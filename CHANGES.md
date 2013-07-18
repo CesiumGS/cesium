@@ -25,6 +25,7 @@ Beta Releases
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
+   * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
 * Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
 * Added `ExtentPrimitive`.
@@ -36,7 +37,8 @@ Beta Releases
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
-* Added extrusion to `ExtentGeometry`
+* Added extrusion to `ExtentGeometry`.
+* Added `Credit` and `CreditDisplay` for displaying credits on the screen.
 
 ### b18 - 2013-07-01
 
