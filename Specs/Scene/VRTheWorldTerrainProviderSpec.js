@@ -120,7 +120,7 @@ defineSuite([
         var provider = new VRTheWorldTerrainProvider({
             url : 'made/up/url'
         });
-        expect(provider.getLogo()).toBeUndefined();
+        expect(provider.getCredit()).toBeUndefined();
     });
 
     it('logo is defined if credit is provided', function() {
@@ -128,7 +128,7 @@ defineSuite([
             url : 'made/up/url',
             credit : 'thanks to our awesome made up contributors!'
         });
-        expect(provider.getLogo()).toBeDefined();
+        expect(provider.getCredit()).toBeDefined();
     });
 
     it('does not have a water mask', function() {
