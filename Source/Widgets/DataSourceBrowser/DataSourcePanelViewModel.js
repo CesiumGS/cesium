@@ -5,14 +5,16 @@ define([
         '../../Core/defineProperties',
         '../createCommand',
         './CzmlDataSourcePanel',
-        '../../ThirdParty/knockout'
+        '../../ThirdParty/knockout',
+        '../../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         createCommand,
         CzmlDataSourcePanel,
-        knockout) {
+        knockout,
+        when) {
     "use strict";
 
     var DataSourcePanelViewModel = function(dataSourceBrowserViewModel, dataSourcePanels) {
@@ -20,13 +22,7 @@ define([
 
         this._dataSourceBrowserViewModel = dataSourceBrowserViewModel;
 
-        var finishing = knockout.observable();
-
-        this._finishCommand = createCommand(function() {
-            that.activeDataSourcePanel.finish();
-        }, knockout.computed(function() {
-            return !finishing() && defined(that.activeDataSourcePanel);
-        }));
+        var finishing = knockout.observable(false);
 
         /**
          *
@@ -46,6 +42,19 @@ define([
         this.visible = false;
 
         knockout.track(this, ['visible', 'dataSourcePanels', 'activeDataSourcePanel']);
+
+        this._finishCommand = createCommand(function() {
+            finishing(true);
+            when(that.activeDataSourcePanel.finish(that._dataSourceBrowserViewModel.dataSources), function(result) {
+                finishing(false);
+                if (result) {
+                    that.activeDataSourcePanel.activeDataSourcePanel = undefined;
+                    that.visible = false;
+                }
+            });
+        }, knockout.computed(function() {
+            return !finishing() && defined(that.activeDataSourcePanel);
+        }));
     };
 
     defineProperties(DataSourcePanelViewModel.prototype, {

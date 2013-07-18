@@ -50,12 +50,7 @@ define([
             that._dataSourcePanelViewModel.visible = true;
         });
 
-        /**
-         * Gets or sets the currently loaded data sources.  This property is observable.
-         *
-         * @type Array
-         */
-        this.dataSources = [];
+        this.dataSourceViewModels = [];
 
         /**
          * Gets or sets the tooltip for the "add data source" button.  This property is observable.
@@ -64,7 +59,9 @@ define([
          */
         this.addDataSourceTooltip = 'Add Data Source';
 
-        knockout.track(this, ['dataSources', 'addDataSourceTooltip']);
+        this._dataSourceViewModels = [];
+
+        knockout.track(this, ['dataSourceViewModels', 'addDataSourceTooltip', '_dataSourceViewModels']);
 
         this.selectedItem = undefined;
         var selectedViewModel = knockout.observable();
@@ -78,6 +75,16 @@ define([
                     that._onObjectSelected.raiseEvent(value.dynamicObject);
                 }
             }
+        });
+
+        /**
+         * Gets the view models for the currently loaded data sources.  This property is observable.
+         *
+         * @type Array
+         */
+        this.dataSourceViewModels = undefined;
+        knockout.defineProperty(this, 'dataSourceViewModels', function() {
+            return that._dataSourceViewModels;
         });
     };
 
@@ -116,6 +123,17 @@ define([
             get : function() {
                 return this._onObjectSelected;
             }
+        },
+
+        /**
+         * Gets the set of {@link DataSource} instances to be visualized.
+         * @memberof DataSourceBrowserViewModel.prototype
+         * @type {DataSourceCollection}
+         */
+        dataSources : {
+            get : function() {
+                return this._dataSourceCollection;
+            }
         }
     });
 
@@ -131,15 +149,15 @@ define([
             dataSourceViewModel.children.push(dynamicObjectViewModel);
         }
 
-        this.dataSources.push(dataSourceViewModel);
+        this._dataSourceViewModels.push(dataSourceViewModel);
     };
 
     DataSourceBrowserViewModel.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-        var dataSources = this.dataSources;
-        for ( var i = 0, len = dataSources.length; i < len; ++i) {
-            var dataSourceViewModel = dataSources[i];
+        var dataSourceViewModels = this._dataSourceViewModels;
+        for ( var i = 0, len = dataSourceViewModels.length; i < len; ++i) {
+            var dataSourceViewModel = dataSourceViewModels[i];
             if (dataSourceViewModel._dataSource === dataSource) {
-                dataSources.splice(i, 1);
+                dataSourceViewModels.splice(i, 1);
                 return;
             }
         }
