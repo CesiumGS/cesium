@@ -221,11 +221,16 @@ require([
         url : 'http://www.vr-theworld.com/vr-theworld/tiles1.0.0/73/',
         credit : 'Terrain data courtesy VT MÄK'
     });
+    
+    var mesh = new Cesium.CesiumMeshTerrainProvider({
+        url : 'http://172.16.37.34/mesh'
+    });
 
     var terrainProviders = [
         { name : 'CesiumTerrainProvider', provider : cesiumTerrainProvider },
         { name : 'EllipsoidTerrainProvider', provider : ellipsoidProvider },
-        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider }
+        { name : 'VRTheWorldTerrainProvider', provider : vrTheWorldProvider },
+        { name : 'Mesh', provider : mesh }
     ];
 
     centralBody.terrainProvider = cesiumTerrainProvider;
