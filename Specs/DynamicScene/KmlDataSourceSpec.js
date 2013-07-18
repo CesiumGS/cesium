@@ -2,12 +2,14 @@
 defineSuite(['DynamicScene/KmlDataSource',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicBillboard',
+             'DynamicScene/DynamicPolyline',
              'Core/loadXML',
              'Core/Event'
             ], function(
                     KmlDataSource,
                     DynamicObjectCollection,
                     DynamicBillboard,
+                    DynamicPolyline,
                     loadXML,
                     Event) {
     "use strict";
@@ -38,6 +40,26 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
         expect(dataSource.getDynamicObjectCollection().getObjects()[0].billboard).toBeInstanceOf(DynamicBillboard);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].position).toBeDefined();
+    });
+
+    it('handlesLineGeometry', function() {
+        var txt = '<?xml version="1.0" encoding="UTF-8"?> <kml xmlns="http://www.opengis.net/kml/2.2"><Document>';
+        txt = txt + '<name>LineString.kml</name>  <open>1</open> <LookAt><longitude>-122.36415</longitude><latitude>37.824553</latitude>';
+        txt = txt + '<altitude>0</altitude><range>150</range>    <tilt>50</tilt> <heading>0</heading> </LookAt>';
+        txt = txt + '<Placemark> <name>unextruded</name> <LineString> <extrude>1</extrude><tessellate>1</tessellate>';
+        txt = txt + '<coordinates>-122.364383,37.824664,0 -122.364152,37.824322,0</coordinates></LineString></Placemark>';
+        txt = txt + '<Placemark> <name>extruded</name><LineString><extrude>1</extrude><tessellate>1</tessellate><altitudeMode>relativeToGround</altitudeMode>';
+        txt = txt + '<coordinates>-122.364167,37.824787,50 -122.363917,37.824423,50</coordinates></LineString></Placemark></Document></kml>';
+        var dataSource = new KmlDataSource();
+
+        var parser=new DOMParser();
+        var xmlDoc=parser.parseFromString(txt,"text/xml");
+
+        dataSource.load(xmlDoc);
+        expect(dataSource.getDynamicObjectCollection()).toBeInstanceOf(DynamicObjectCollection);
+        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].polyline).toBeInstanceOf(DynamicPolyline);
         expect(dataSource.getDynamicObjectCollection().getObjects()[0].position).toBeDefined();
     });
 

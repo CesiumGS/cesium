@@ -172,7 +172,12 @@ define(['../Core/createGuid',
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
-    function processLineString(dataSource, kml, node){
+    function processLineString(dataSource, kml, node, dynamicObjectCollection, styleCollection){
+        var el = node.getElementsByTagName('coordinates');
+        var coordinates = [];
+        for (var j = 0; j < el.length; j++) {
+            coordinates = coordinates.concat(readCoordinates(el[j]));
+        }
 
     }
 
