@@ -262,9 +262,9 @@ define([
         geometry = PolygonPipeline.scaleToGeodeticHeight(geometry, height, ellipsoid);
 
         var center = boundingSphere.center;
-        var mag = center.magnitude();
-        ellipsoid.geodeticSurfaceNormal(center, center);
-        Cartesian3.multiplyByScalar(center, mag + height, center);
+        ellipsoid.geodeticSurfaceNormal(center, scratchNormal);
+        Cartesian3.multiplyByScalar(scratchNormal, height, scratchNormal);
+        Cartesian3.add(center, scratchNormal, center);
 
         var attributes = new GeometryAttributes();
 
