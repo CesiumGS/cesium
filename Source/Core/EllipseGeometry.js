@@ -144,10 +144,13 @@ define([
                 var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
-                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
+                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis) - 0.5;
 
                 Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
+
+                texCoordScratch.x += 0.5;
+                texCoordScratch.y += 0.5;
 
                 if (extrude) {
                     textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
@@ -556,10 +559,13 @@ define([
                 var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
-                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
+                texCoordScratch.y = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis) - 0.5;
 
                 Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
+
+                texCoordScratch.x += 0.5;
+                texCoordScratch.y += 0.5;
 
                 textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
                 textureCoordinates[textureCoordIndex + 1 + stOffset] = texCoordScratch.y;
