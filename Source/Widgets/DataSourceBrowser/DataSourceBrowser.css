@@ -1,3 +1,18 @@
+.cesium-dataSourceBrowser {
+    font-family: sans-serif;
+    font-size: 11px;
+    color: #edffff;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    overflow: auto;
+    width: 300px;
+    max-height: 500px;
+    background-color: rgba(38, 38, 38, 0.75);
+    padding: 6px;
+    border-radius: 10px;    
+}
+
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
     padding: 0;
     margin: 0;
@@ -7,15 +22,6 @@
 .cesium-dataSourceBrowser-dataSources input {
     position: absolute;
     opacity: 0;
-}
-
-.cesium-dataSourceBrowser {
-    font-family: sans-serif;
-    font-size: 11px;
-    color: #edffff;
-    -moz-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;
 }
 
 .cesium-dataSourceBrowser-dataSources input+label+ul {
@@ -41,7 +47,6 @@
 .cesium-dataSourceBrowser-dataSources label,.cesium-dataSourceBrowser-dataSources a,.cesium-dataSourceBrowser-dataSources label::before {
     display: inline-block;
     height: 16px;
-    line-height: 16px; ,
     vertical-align: middle;
 }
 
