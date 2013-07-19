@@ -81,4 +81,38 @@ defineSuite([
         expect(m.attributes.binormal.values.length).toEqual(3 * 24);
         expect(m.indices.length).toEqual(3 * 34);
     });
+
+    it('computes positions extruded', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var m = new CircleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            ellipsoid : ellipsoid,
+            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            granularity : 0.75,
+            radius : 1.0,
+            extrudedHeight: 10000
+        });
+
+        expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
+        expect(m.indices.length).toEqual(3 * (34 + 10) * 2);
+    });
+
+    it('compute all vertex attributes extruded', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var m = new CircleGeometry({
+            vertexFormat : VertexFormat.ALL,
+            ellipsoid : ellipsoid,
+            center : ellipsoid.cartographicToCartesian(new Cartographic()),
+            granularity : 0.75,
+            radius : 1.0,
+            extrudedHeight: 10000
+        });
+
+        expect(m.attributes.position.values.length).toEqual(3 * (24 + 10) * 2);
+        expect(m.attributes.st.values.length).toEqual(2 * (24 + 10) * 2);
+        expect(m.attributes.normal.values.length).toEqual(3 * (24 + 10) * 2);
+        expect(m.attributes.tangent.values.length).toEqual(3 * (24 + 10) * 2);
+        expect(m.attributes.binormal.values.length).toEqual(3 * (24 + 10) * 2);
+        expect(m.indices.length).toEqual(3 * (34 + 10) * 2);
+    });
 });

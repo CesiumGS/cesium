@@ -55,6 +55,18 @@ define([
          */
         this.scale = undefined;
         /**
+         * A DynamicProperty of type CzmlNumber which determines the billboard's rotation.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.rotation = undefined;
+        /**
+         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's aligned axis.
+         * @type {DynamicProperty}
+         * @default undefined
+         */
+        this.alignedAxis = undefined;
+        /**
          * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
          * @type {DynamicProperty}
          * @default undefined
@@ -182,6 +194,24 @@ define([
             scale.processCzmlIntervals(billboardData.scale, interval);
         }
 
+        if (typeof billboardData.rotation !== 'undefined') {
+            var rotation = billboard.rotation;
+            if (typeof rotation === 'undefined') {
+                billboard.rotation = rotation = new DynamicProperty(CzmlNumber);
+                billboardUpdated = true;
+            }
+            rotation.processCzmlIntervals(billboardData.rotation, interval);
+        }
+
+        if (typeof billboardData.alignedAxis !== 'undefined') {
+            var alignedAxis = billboard.alignedAxis;
+            if (typeof alignedAxis === 'undefined') {
+                billboard.alignedAxis = alignedAxis = new DynamicProperty(CzmlCartesian3);
+                billboardUpdated = true;
+            }
+            alignedAxis.processCzmlIntervals(billboardData.alignedAxis, interval);
+        }
+
         if (typeof billboardData.show !== 'undefined') {
             var show = billboard.show;
             if (typeof show === 'undefined') {
@@ -230,6 +260,8 @@ define([
             targetBillboard.image = defaultValue(targetBillboard.image, billboardToMerge.image);
             targetBillboard.pixelOffset = defaultValue(targetBillboard.pixelOffset, billboardToMerge.pixelOffset);
             targetBillboard.scale = defaultValue(targetBillboard.scale, billboardToMerge.scale);
+            targetBillboard.rotation = defaultValue(targetBillboard.rotation, billboardToMerge.rotation);
+            targetBillboard.alignedAxis = defaultValue(targetBillboard.alignedAxis, billboardToMerge.alignedAxis);
             targetBillboard.show = defaultValue(targetBillboard.show, billboardToMerge.show);
             targetBillboard.verticalOrigin = defaultValue(targetBillboard.verticalOrigin, billboardToMerge.verticalOrigin);
         }

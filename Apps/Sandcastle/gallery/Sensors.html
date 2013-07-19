@@ -22,26 +22,69 @@
 <body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
 <style>
     @import url(../templates/bucket.css);
+    .sandcastle-loading #toolbar {
+        display: none;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+<table id="layerTable">
+  <tr>
+      <td>Longitude</td>
+      <td id="longitudeSlider"></td>
+  </tr>
+  <tr>
+      <td>Latitude</td>
+      <td id="latitudeSlider"></td>
+  </tr>
+  <tr>
+      <td>Altitude</td>
+      <td id="altitudeSlider"></td>
+  </tr>
+  <tr>
+      <td>Clock</td>
+      <td id="clockSlider"></td>
+  </tr>
+  <tr>
+      <td>Cone</td>
+      <td id="coneSlider"></td>
+  </tr>
+  <tr>
+      <td>Twist</td>
+      <td id="twistSlider"></td>
+  </tr>
+</table>
+</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
+    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem', 'dijit/form/HorizontalSlider'
 ], function(
-    Cesium,  DropDownButton, DropDownMenu, MenuItem)
+    Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider)
 {
     "use strict";
+  
+    var longitude = Cesium.Math.toRadians(-90.0);
+    var latitude = Cesium.Math.toRadians(30.0);
+    var altitude = 3000000.0;
+    var clock = 0.0;
+    var cone = Cesium.Math.toRadians(15.0);
+    var twist = 0.0;
+    var selection = 'Rectangular';
+  
+    function getModelMatrix(ellipsoid)
+    {
+        var location = ellipsoid.cartographicToCartesian(new Cesium.Cartographic(longitude, latitude, altitude));
+        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(location);
+        var orientation = ((Cesium.Matrix3.fromRotationZ(clock)).multiply(Cesium.Matrix3.fromRotationY(cone))).multiply(Cesium.Matrix3.fromRotationX(twist));
+        return modelMatrix.multiply(Cesium.Matrix4.fromRotationTranslation(orientation, Cesium.Cartesian3.ZERO));
+    }
 
     function addRectangularSensor(sensors, ellipsoid, scene) {
         var rectangularPyramidSensor = sensors.addRectangularPyramid();
         Sandcastle.declare(rectangularPyramidSensor);   // For highlighting in Sandcastle.
 
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
-
-        rectangularPyramidSensor.modelMatrix = modelMatrix;
+        rectangularPyramidSensor.modelMatrix = getModelMatrix(ellipsoid);
         rectangularPyramidSensor.radius = 20000000.0;
         rectangularPyramidSensor.xHalfAngle = Cesium.Math.toRadians(40.0);
         rectangularPyramidSensor.yHalfAngle = Cesium.Math.toRadians(20.0);
@@ -59,8 +102,6 @@ require([
         var customSensor = sensors.addCustom();
         Sandcastle.declare(customSensor);    // For highlighting in Sandcastle.
 
-        var modelMatrix = Cesium.Transforms.northEastDownToFixedFrame(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-90.0, 0.0)));
-        modelMatrix = modelMatrix.multiply(Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(3000000.0, 0.0, -3000000.0)));
         var directions = [];
         for (var i = 0; i < 8; ++i) {
             directions.push({
@@ -69,32 +110,48 @@ require([
             });
         }
 
-        customSensor.modelMatrix = modelMatrix;
+        customSensor.modelMatrix = getModelMatrix(ellipsoid);
         customSensor.radius = 20000000.0;
         customSensor.setDirections(directions);
     }
-
-    function createButtons(viewer, sensors) {
+  
+    function createUserInterface(viewer, sensors) {
         var ellipsoid = viewer.centralBody.getEllipsoid();
         var scene = viewer.scene;
         var primitives = scene.getPrimitives();
         primitives.add(sensors);
 
         var sensorMenu = new DropDownMenu({ style: 'display: none;'});
+      
+        function updateSensor()
+        {
+            sensors.removeAll();
+            switch (selection)
+            {
+            case 'Rectangular':
+                addRectangularSensor(sensors, ellipsoid, scene);
+                break;
+            case 'Custom':
+                addCustomSensor(sensors, ellipsoid, scene);
+                break;
+            case 'Rectangular':
+                addRectangularSensor(sensors, ellipsoid, scene);
+            }
+        }
 
         sensorMenu.addChild(new MenuItem({
             label: 'Rectangular',
             onClick: function() {
-                sensors.removeAll();
-                addRectangularSensor(sensors, ellipsoid, scene);
+                selection = 'Rectangular';
+                updateSensor();
             }
         }));
 
         sensorMenu.addChild(new MenuItem({
             label: 'Custom',
             onClick: function() {
-                sensors.removeAll();
-                addCustomSensor(sensors, ellipsoid, scene);
+                selection = 'Custom';
+                updateSensor();
             }
         }));
 
@@ -102,20 +159,99 @@ require([
             label : 'Select a sensor',
             dropDown: sensorMenu
         }).placeAt('toolbar');
+      
+        var longitudeSlider = new HorizontalSlider({
+            value : longitude,
+            minimum : -Math.PI,
+            maximum : Math.PI,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                longitude = value;
+                updateSensor();
+            }
+        });
+        longitudeSlider.placeAt('longitudeSlider');
+
+        var latitudeSlider = new HorizontalSlider({
+            value : latitude,
+            minimum : -Math.PI / 2.0,
+            maximum : Math.PI / 2.0,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                latitude = value;
+                updateSensor();
+            }
+        });
+        latitudeSlider.placeAt('latitudeSlider');
+
+        var altitudeSlider = new HorizontalSlider({
+            value : altitude,
+            minimum : 0.0,
+            maximum : 35786000.0,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                altitude = value;
+                updateSensor();
+            }
+        });
+        altitudeSlider.placeAt('altitudeSlider');
+
+        var clockSlider = new HorizontalSlider({
+            value : clock,
+            minimum : -Math.PI,
+            maximum : Math.PI,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                clock = value;
+                updateSensor();
+            }
+        });
+        clockSlider.placeAt('clockSlider');
+
+        var coneSlider = new HorizontalSlider({
+            value : cone,
+            minimum : -Math.PI,
+            maximum : Math.PI,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                cone = value;
+                updateSensor();
+            }
+        });
+        coneSlider.placeAt('coneSlider');
+
+        var twistSlider = new HorizontalSlider({
+            value : twist,
+            minimum : -Math.PI,
+            maximum : Math.PI,
+            intermediateChanges : true,
+            style : "width:150px;",
+            onChange : function(value) {
+                twist = value;
+                updateSensor();
+            }
+        });
+        twistSlider.placeAt('twistSlider');
+      
+        updateSensor();
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer', {
         sceneModePicker : false //sensors currently only work in 3D
     });
-    
+  
     viewer.screenSpaceEventHandler.setInputAction(function(movement) {
         var pickedPrimitive = viewer.scene.pick(movement.endPosition);
         Sandcastle.highlight(pickedPrimitive);
     }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
     var sensors = new Cesium.SensorVolumeCollection();
-    createButtons(viewer, sensors);
-    addRectangularSensor(sensors, viewer.centralBody.getEllipsoid(), viewer.scene);
+    createUserInterface(viewer, sensors);
 
     Sandcastle.finishedLoading();
 });

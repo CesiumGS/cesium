@@ -2,8 +2,10 @@
 defineSuite([
          'Core/BoxGeometry',
          'Core/CircleGeometry',
+         'Core/CylinderGeometry',
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
+         'Core/SphereGeometry',
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
@@ -29,6 +31,8 @@ defineSuite([
          'Scene/Primitive',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
+         'Scene/EllipsoidSurfaceAppearance',
+         'Scene/Material',
          'Specs/render',
          'Specs/pick',
          'Specs/createCanvas',
@@ -39,8 +43,10 @@ defineSuite([
      ], 'Scene/GeometryRendering', function(
          BoxGeometry,
          CircleGeometry,
+         CylinderGeometry,
          EllipseGeometry,
          EllipsoidGeometry,
+         SphereGeometry,
          ExtentGeometry,
          PolygonGeometry,
          SimplePolylineGeometry,
@@ -66,6 +72,8 @@ defineSuite([
          Primitive,
          SceneMode,
          OrthographicFrustum,
+         EllipsoidSurfaceAppearance,
+         Material,
          render,
          pick,
          createCanvas,
@@ -105,18 +113,20 @@ defineSuite([
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }
 
-    function render3D(instance, afterView, boundingSphere) {
+    function render3D(instance, afterView, appearance) {
+        if (typeof appearance === 'undefined') {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+            appearance : appearance
         });
 
         var frameState = createFrameState();
-
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -149,7 +159,7 @@ defineSuite([
         camera.position.z = center.x + radius;
     }
 
-    function renderCV(instance, afterView, boundingSphere) {
+    function renderCV(instance, afterView) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -166,8 +176,7 @@ defineSuite([
                                                   0.0, 0.0, 0.0, 1.0);
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphereCV(frameState.camera, sphere, instance.modelMatrix);
+        viewSphereCV(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -206,7 +215,7 @@ defineSuite([
         frustum.bottom = -frustum.top;
     }
 
-    function render2D(instance, boundingSphere) {
+    function render2D(instance) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -229,8 +238,7 @@ defineSuite([
         frameState.camera.frustum = frustum;
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere2D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere2D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
         context.getUniformState().update(frameState);
 
         ClearCommand.ALL.execute(context);
@@ -242,7 +250,7 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function pickGeometry(instance, afterView, boundingSphere) {
+    function pickGeometry(instance, afterView) {
         var primitive = new Primitive({
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
@@ -251,9 +259,7 @@ defineSuite([
         });
 
         var frameState = createFrameState();
-
-        var sphere = defaultValue(instance.geometry.boundingSphere, boundingSphere);
-        viewSphere3D(frameState.camera, sphere, instance.modelMatrix);
+        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
 
         if (typeof afterView === 'function') {
             afterView(frameState);
@@ -315,6 +321,42 @@ defineSuite([
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
             });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
+    describe('CylinderGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new CylinderGeometry({
+                    length: 5,
+                    topRadius: 3,
+                    bottomRadius: 5,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            }),
+            id: 'cylinder',
+            modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        });
         });
 
         it('3D', function() {
@@ -439,6 +481,40 @@ defineSuite([
         });
     }, 'WebGL');
 
+    describe('SphereGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new SphereGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    radius : 1000000.0
+                }),
+                modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20))), new Cartesian3(0.0, 0.0, 1000000.0)),
+                id : 'sphere',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
     describe('ExtentGeometry', function() {
         var instance;
         var extent;
@@ -473,7 +549,7 @@ defineSuite([
             pickGeometry(instance);
         });
 
-        it('rotated', function() {
+        it('rotated geometry', function() {
             var rotated = new GeometryInstance({
                 geometry : new ExtentGeometry({
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
@@ -481,12 +557,26 @@ defineSuite([
                     extent : extent,
                     rotation : CesiumMath.PI_OVER_FOUR
                 }),
-                id : 'extent',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
             });
             render3D(rotated);
+        });
+
+        it('rotated texture', function() {
+            var rotated = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent,
+                    stRotation : CesiumMath.PI_OVER_TWO
+                })
+            });
+            var appearance = new EllipsoidSurfaceAppearance({
+                material : Material.fromType(undefined, 'Stripe')
+            });
+            render3D(rotated, undefined, appearance);
         });
 
         it('at height', function() {
@@ -497,12 +587,109 @@ defineSuite([
                     extent : extent,
                     height : 100000.0
                 }),
-                id : 'extent',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
             });
             render3D(atHeight);
+        });
+    }, 'WebGL');
+
+    describe('Extruded ExtentGeometry', function() {
+        var instance;
+        var extent;
+        var extrudedHeight;
+        var geometryHeight;
+        beforeAll(function() {
+            extent = Extent.fromDegrees(0, 0, 1, 1);
+            extrudedHeight = 200000.0;
+            geometryHeight = 100000.0;
+            instance = new GeometryInstance({
+                geometry : new ExtentGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    extent : extent,
+                    height : geometryHeight,
+                    extrudedOptions : {
+                        height : extrudedHeight
+                    }
+                }),
+                id : 'extent',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('renders bottom', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders north wall', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders south wall', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders west wall', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders east wall', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
         });
     }, 'WebGL');
 

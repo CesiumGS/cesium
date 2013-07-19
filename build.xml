@@ -42,9 +42,7 @@
 	</target>
 
 	<target name="release" description="A full release build that creates a shippable product, including building apps and generating documentation.">
-		<antcall target="combine">
-			<param name="build.minification" value="true" />
-		</antcall>
+		<antcall target="minify" />
 		<antcall target="generateDocumentation" />
 		<antcall target="buildApps" />
 	</target>
@@ -350,6 +348,11 @@
 	<target name="combineJavaScript" depends="setNodePath,combineJavaScript.createUnminified,combineJavaScript.copyUnminified,combineJavaScript.createMinified" />
 
 	<target name="minifyCSS" depends="setNodePath">
+		<copy todir="${buildOutputDirectory}" includeEmptyDirs="false" overwrite="true">
+			<fileset dir="${sourceDirectory}">
+				<include name="**/*.css" />
+			</fileset>
+		</copy>
 		<apply executable="${nodePath}" dir="${buildOutputDirectory}" relative="true">
 			<arg value="${rjsPath}" />
 			<arg value="-o" />
