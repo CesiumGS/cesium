@@ -34,6 +34,7 @@ define([
         './FrustumCommands',
         './Primitive',
         './PerInstanceColorAppearance',
+        './SunPostProcess',
         './CreditDisplay'
     ], function(
         CesiumMath,
