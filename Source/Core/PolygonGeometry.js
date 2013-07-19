@@ -379,10 +379,58 @@ define([
         return positions;
     }
 
+    function computeWallIndices(positions, granularity){
+        var edgePositions = [];
+        var subdividedEdge;
+        var edgeIndex;
+        var UL, UR, LL, LR;
+        var i;
+
+        var length = positions.length;
+        for (i = 0; i < length; i++) {
+            subdividedEdge = subdivideLine(positions[i], positions[(i+1)%length], granularity);
+            edgePositions = edgePositions.concat(subdividedEdge);
+        }
+
+        edgePositions = edgePositions.concat(edgePositions);
+        length = edgePositions.length;
+        var indices = IndexDatatype.createTypedArray(length/3, length - positions.length*6);
+        edgeIndex = 0;
+        length /= 6;
+
+        for (i = 0 ; i < length; i++) {
+            UL = i;
+            UR = UL + 1;
+            p1 = Cartesian3.fromArray(edgePositions, UL*3, p1);
+            p2 = Cartesian3.fromArray(edgePositions, UR*3, p2);
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
+                continue;
+            }
+            LL = UL + length;
+            LR = LL + 1;
+            indices[edgeIndex++] = UL;
+            indices[edgeIndex++] = LL;
+            indices[edgeIndex++] = UR;
+            indices[edgeIndex++] = UR;
+            indices[edgeIndex++] = LL;
+            indices[edgeIndex++] = LR;
+        }
+
+        return new Geometry({
+            attributes : new GeometryAttributes({
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.DOUBLE,
+                    componentsPerAttribute : 3,
+                    values : edgePositions
+                })
+            }),
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+    }
 
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity, hierarchy) {
         var topGeo = createGeometryFromPositions(ellipsoid, positions, granularity).geometry;
-
         var edgePoints = topGeo.attributes.position.values;
         var indices = topGeo.indices;
         var topBottomPositions = edgePoints.concat(edgePoints);
@@ -419,110 +467,25 @@ define([
                 })
         };
 
-        var edgePositions = [];
-        var subdividedEdge;
-        var edgeIndex;
-        var UL, UR, LL, LR;
-
         geos.walls = [];
         var outerRing = hierarchy.outerRing;
         var windingOrder = PolygonPipeline.computeWindingOrder2D(outerRing);
         if (windingOrder === WindingOrder.CLOCKWISE) {
-            outerRing.reverse();
+            outerRing = outerRing.reverse();
         }
-
-        length = outerRing.length;
-        for (i = 0; i < length; i++) {
-            subdividedEdge = subdivideLine(outerRing[i], outerRing[(i+1)%length], granularity);
-            edgePositions = edgePositions.concat(subdividedEdge);
-        }
-        edgePositions = edgePositions.concat(edgePositions);
-        length = edgePositions.length;
-        indices = IndexDatatype.createTypedArray(length/3, length - outerRing.length*6);
-        edgeIndex = 0;
-        length /= 6;
-        for (i = 0 ; i < length; i++) {
-            UL = i;
-            UR = UL + 1;
-            p1 = Cartesian3.fromArray(edgePositions, UL*3, p1);
-            p2 = Cartesian3.fromArray(edgePositions, UR*3, p2);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
-                continue;
-            }
-            LL = UL + length;
-            LR = LL + 1;
-            indices[edgeIndex++] = UL;
-            indices[edgeIndex++] = LL;
-            indices[edgeIndex++] = UR;
-            indices[edgeIndex++] = UR;
-            indices[edgeIndex++] = LL;
-            indices[edgeIndex++] = LR;
-        }
-
-        var wallGeo = new Geometry({
-            attributes : new GeometryAttributes({
-                position : new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.DOUBLE,
-                    componentsPerAttribute : 3,
-                    values : edgePositions
-                })
-            }),
-            indices : indices,
-            primitiveType : PrimitiveType.TRIANGLES
-        });
-
+        var wallGeo = computeWallIndices(outerRing, granularity);
         geos.walls.push(new GeometryInstance({
             geometry: wallGeo
         }));
 
         var holes = hierarchy.holes;
         for (i = 0; i < holes.length; i++) {
-            edgePositions = [];
-            var j;
             var hole = holes[i];
             windingOrder = PolygonPipeline.computeWindingOrder2D(hole);
             if (windingOrder !== WindingOrder.CLOCKWISE) {
                 hole = hole.reverse();
             }
-            length = hole.length;
-            for (j = 0; j < length; j++) {
-                subdividedEdge = subdivideLine(hole[j], hole[(j+1)%length], granularity);
-                edgePositions = edgePositions.concat(subdividedEdge);
-            }
-            edgePositions = edgePositions.concat(edgePositions);
-            length = edgePositions.length;
-            indices = IndexDatatype.createTypedArray(length/3, length - hole.length*6);
-            length /= 6;
-            edgeIndex = 0;
-            for (j = 0 ; j < length; j++) {
-                UL = j;
-                UR = UL + 1;
-                p1 = Cartesian3.fromArray(edgePositions, UL*3, p1);
-                p2 = Cartesian3.fromArray(edgePositions, UR*3, p2);
-                if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON6)) {
-                    continue;
-                }
-                LL = UL + length;
-                LR = LL + 1;
-                indices[edgeIndex++] = UL;
-                indices[edgeIndex++] = LL;
-                indices[edgeIndex++] = UR;
-                indices[edgeIndex++] = UR;
-                indices[edgeIndex++] = LL;
-                indices[edgeIndex++] = LR;
-            }
-
-            wallGeo = new Geometry({
-                attributes : new GeometryAttributes({
-                    position : new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : edgePositions
-                    })
-                }),
-                indices : indices,
-                primitiveType : PrimitiveType.TRIANGLES
-            });
+            wallGeo = computeWallIndices(hole, granularity);
             geos.walls.push(new GeometryInstance({
                 geometry: wallGeo
             }));
