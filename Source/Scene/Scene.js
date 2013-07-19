@@ -75,6 +75,20 @@ define([
         CreditDisplay) {
     "use strict";
 
+    function createFrustumDebugFragmentShaderSource(fragmentShaderSource, color) {
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
+        var pickMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_old_main(); \n' +
+            '    gl_FragColor.rgb *= vec3(1.0, 0.0, 0.0); \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
      * a scene is not created directly; instead, it is implicitly created by {@link CesiumWidget}.
@@ -243,6 +257,11 @@ define([
          * @see ClearCommand
          */
         this.debugCommandFilter = undefined;
+
+        /**
+         * DOC_TBA
+         */
+        this.debugShowFrustums = false;
 
         this._debugSphere = undefined;
 
@@ -486,6 +505,10 @@ define([
     function executeCommand(command, scene, context, passState) {
         if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
             return;
+        }
+
+        if (debugShowFrustums) {
+            command.shaderProgram
         }
 
         command.execute(context, passState);
