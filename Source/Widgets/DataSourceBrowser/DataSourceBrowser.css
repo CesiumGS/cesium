@@ -5,12 +5,16 @@
     -moz-user-select: none;
     -webkit-user-select: none;
     user-select: none;
+}
+
+.cesium-dataSourceBrowser-dataSourcesContainer,.cesium-dataSourceBrowser-dataSourcePanelContainer {
+    background-color: rgba(38, 38, 38, 0.75);
+    padding: 6px;
+    border-radius: 10px;
     overflow: auto;
     width: 300px;
     max-height: 500px;
-    background-color: rgba(38, 38, 38, 0.75);
-    padding: 6px;
-    border-radius: 10px;    
+    float: left;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
@@ -66,13 +70,17 @@
     background-position: 0 -16px;
 }
 
-.cesium-dataSourceBrowser-addDataSourcePanel {
+.cesium-dataSourceBrowser-dataSourcePanelContainer {
 }
 
-.cesium-dataSourceBrowser-visible {
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected {
+    color: #ffeb00;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-visible {
     display: block;
 }
 
-.cesium-dataSourceBrowser-hidden {
+.cesium-dataSourceBrowser-dataSourcePanelContainer-hidden {
     display: none;
 }
