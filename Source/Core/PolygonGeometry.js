@@ -159,9 +159,9 @@ define([
             var textureMatrix = Matrix3.fromQuaternion(rotation, appendTextureCoordinatesMatrix3);
 
             var bottomOffset = length / 2;
-            var bottomOffset2 = length * 2 / 3;
+            var bottomOffset2 = length / 3;
 
-            if (bottom & !wall) {
+            if (bottom) {
                 length /= 2;
             }
 
@@ -189,13 +189,20 @@ define([
                     var attrIndex2 = attrIndex + 2;
 
                     if (wall) {
-                        p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
-                        if (recomputeNormal) {
-                            p2 = Cartesian3.fromArray(flatPositions, i + length, p2);
-                            p1.subtract(position, p1);
-                            p2.subtract(position, p2);
-                            normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
-                            recomputeNormal = false;
+                        if (i+3 < length) {
+                            p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
+
+                            if (recomputeNormal) {
+                                p2 = Cartesian3.fromArray(flatPositions, i + length, p2);
+                                p1.subtract(position, p1);
+                                p2.subtract(position, p2);
+                                normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
+                                recomputeNormal = false;
+                            }
+
+                            if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
+                                recomputeNormal = true;
+                            }
                         }
 
                         if (vertexFormat.tangent || vertexFormat.binormal) {
@@ -203,10 +210,6 @@ define([
                             if (vertexFormat.tangent) {
                                 tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
                             }
-                        }
-
-                        if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
-                            recomputeNormal = true;
                         }
 
                     } else {
@@ -399,13 +402,13 @@ define([
             newIndices[i + 2 + ilength] = i0;
         }
         var topAndBottomGeo = new Geometry({
-            attributes: {
+            attributes: new GeometryAttributes({
                 position: new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
                     values : topBottomPositions
                 })
-            },
+            }),
             indices: newIndices,
             primitiveType: topGeo.primitiveType
         });
@@ -727,14 +730,15 @@ define([
         geometry = GeometryPipeline.combine(geometries);
 
         var center = boundingSphere.center;
-        var mag = center.magnitude();
-        scratchPosition = ellipsoid.geodeticSurfaceNormal(center, scratchPosition);
-        center = Cartesian3.multiplyByScalar(scratchPosition, mag + height, center);
+        scratchNormal = ellipsoid.geodeticSurfaceNormal(center, scratchNormal);
+        scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, height, scratchPosition);
+        center = Cartesian3.add(center, scratchPosition, center);
 
         if (extrude) {
             scratchBoundingSphere = boundingSphere.clone(scratchBoundingSphere);
             center = scratchBoundingSphere.center;
-            center = Cartesian3.multiplyByScalar(scratchPosition, mag + extrudedHeight, center);
+            scratchPosition = Cartesian3.multiplyByScalar(scratchNormal, extrudedHeight, scratchPosition);
+            center = Cartesian3.add(center, scratchPosition, center);
             boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
         }
 

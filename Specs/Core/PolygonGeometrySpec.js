@@ -1,17 +1,21 @@
 /*global defineSuite*/
 defineSuite([
          'Core/PolygonGeometry',
+         'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
+         'Core/Shapes',
          'Core/VertexFormat'
      ], function(
          PolygonGeometry,
+         BoundingSphere,
          Cartesian3,
          Cartographic,
          Ellipsoid,
          CesiumMath,
+         Shapes,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -194,9 +198,23 @@ defineSuite([
         expect(p.indices.length).toEqual(3 * 10);
     });
 
+    it('computes correct bounding sphere at height 0', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
+        var positions = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), 10000);
+
+        var p = PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.ALL,
+            positions : positions,
+            granularity : CesiumMath.PI_OVER_THREE
+        });
+
+        expect(p.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
+    });
+
     it('computes positions extruded', function() {
         var p = PolygonGeometry.fromPositions({
-            vertexformat : VertexFormat.POSITION_ONLY,
+            vertexFormat : VertexFormat.POSITION_ONLY,
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
                 Cartographic.fromDegrees(50.0, -50.0, 0.0),
@@ -212,14 +230,15 @@ defineSuite([
     });
 
     it('computes all attributes extruded', function() {
-        var p = PolygonGeometry.fromPositions({
+        var p = new PolygonGeometry({
             vertexFormat : VertexFormat.ALL,
-            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-                Cartographic.fromDegrees(-50.0, -50.0, 0.0),
-                Cartographic.fromDegrees(50.0, -50.0, 0.0),
-                Cartographic.fromDegrees(50.0, 50.0, 0.0),
-                Cartographic.fromDegrees(-50.0, 50.0, 0.0)
-            ]),
+            polygonHierarchy: {
+                    positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(-50.0, -50.0, 0.0),
+                        Cartographic.fromDegrees(50.0, -50.0, 0.0),
+                        Cartographic.fromDegrees(50.0, 50.0, 0.0),
+                        Cartographic.fromDegrees(-50.0, 50.0, 0.0)
+                    ])},
             granularity : CesiumMath.PI_OVER_THREE,
             extrudedHeight: 30000
         });
@@ -259,7 +278,7 @@ defineSuite([
         };
 
         var p = new PolygonGeometry({
-            vertexformat : VertexFormat.POSITION_ONLY,
+            vertexFormat : VertexFormat.POSITION_ONLY,
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE,
             extrudedHeight: 30000
