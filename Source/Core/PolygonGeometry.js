@@ -703,7 +703,7 @@ define([
                 if (typeof geometry !== 'undefined') {
                     topAndBottom = geometry.topAndBottom;
                     topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
-                    topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, true);
+                    topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
                     geometries.push(topAndBottom);
 
                     walls = geometry.walls;
