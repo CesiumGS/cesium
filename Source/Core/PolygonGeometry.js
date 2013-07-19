@@ -503,7 +503,7 @@ define([
      *
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the polygon.
+     * @param {Number} [options.extrudedHeight] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
@@ -585,8 +585,8 @@ define([
         var stRotation = defaultValue(options.stRotation, 0.0);
         var height = defaultValue(options.height, 0.0);
 
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
-        var extrude = (height !== extrudedHeight);
+        var extrudedHeight = defaultValue(options.extrudedHeight, undefined);
+        var extrude = (typeof extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6));
         if (extrude) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
@@ -753,7 +753,7 @@ define([
      *
      * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight=0.0] The height of the polygon extrusion.
+     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
