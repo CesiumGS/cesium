@@ -789,6 +789,112 @@ defineSuite([
         });
     }, 'WebGL');
 
+
+    describe('Extruded PolygonGeometry', function() {
+        var instance;
+        var extrudedHeight;
+        var geometryHeight;
+
+        beforeAll(function() {
+            extrudedHeight = 200000.0;
+            geometryHeight = 100000.0;
+
+            instance = new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 55.0),
+                        Cartographic.fromDegrees(0.0, 55.0)
+                    ]),
+                    height: geometryHeight,
+                    extrudedHeight: extrudedHeight
+                }),
+                id : 'extrudedPolygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('renders bottom', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 1', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(CesiumMath.PI, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 2', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 3', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateLeft(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 4', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+    }, 'WebGL');
+
+
     describe('WallGeometry', function() {
         var instance;
         var afterViewCV;
