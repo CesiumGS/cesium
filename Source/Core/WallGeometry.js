@@ -39,23 +39,26 @@ define([
 
     function subdivideHeights(p0, p1, h0, h1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var n = angleBetween/granularity;
-        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
-        if (countDivide < 1) {
-            countDivide = 0;
+        var numPoints = Math.ceil(angleBetween/granularity) + 1;
+        var heights = new Array(numPoints);
+        var i;
+        if (h0 === h1) {
+            for (i = 0; i < numPoints; i++) {
+                heights[i] = h0;
+            }
+            return heights;
         }
-        var numVertices = Math.pow(2, countDivide);
-        var dHeight = h1 - h0;
-        var heightPerVertex = dHeight / numVertices;
 
-        var heights = new Array(numVertices);
-        var index = 0;
-        heights[index++] = h0;
-        for (var i = 1; i < numVertices; i++) {
+        var dHeight = h1 - h0;
+        var heightPerVertex = dHeight / (numPoints - 1);
+
+        for (i = 1; i < numPoints - 1; i++) {
             var h = h0 + i*heightPerVertex;
-            heights[index++] = h;
+            heights[i] = h;
         }
-        heights[index++] = h1;
+
+        heights[0] = h0;
+        heights[numPoints - 1] = h1;
 
         return heights;
     }
@@ -194,7 +197,7 @@ define([
             }
         }
         var newMaxHeights = [];
-        var newMinHeights;
+        var newMinHeights = (typeof minimumHeights !== 'undefined') ? [] : undefined;
         for (i = 0; i < length-1; i++) {
             var p1 = wallPositions[i];
             var p2 = wallPositions[i + 1];
@@ -203,7 +206,6 @@ define([
             newMaxHeights = newMaxHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
 
             if (typeof minimumHeights !== 'undefined') {
-                newMinHeights = [];
                 p1 = wallPositions[i];
                 p2 = wallPositions[i + 1];
                 h1 = minimumHeights[i];

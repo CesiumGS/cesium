@@ -58,10 +58,10 @@ defineSuite([
         expect(w.indices.length).toEqual(2 * 3);
 
         var cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 0));
-        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON9);
+        expect(cartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON8);
 
         cartographic = ellipsoid.cartesianToCartographic(Cartesian3.fromArray(positions, 3));
-        expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON9);
+        expect(cartographic.height).toEqualEpsilon(1000.0, CesiumMath.EPSILON8);
     });
 
     it('creates positions with minimum and maximum heights', function() {
