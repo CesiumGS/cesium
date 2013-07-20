@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/defined',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -41,6 +42,7 @@ define([
         Color,
         defaultValue,
         destroyObject,
+        defined,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -74,20 +76,6 @@ define([
         SunPostProcess,
         CreditDisplay) {
     "use strict";
-
-    function createFrustumDebugFragmentShaderSource(fragmentShaderSource, color) {
-        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_old_main()');
-        var pickMain =
-            'void main() \n' +
-            '{ \n' +
-            '    czm_old_main(); \n' +
-            '    gl_FragColor.rgb *= vec3(1.0, 0.0, 0.0); \n' +
-            '}';
-
-        return renamedFS + '\n' + pickMain;
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -261,7 +249,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowFrustums = false;
+        this.debugShowFrustums = true;
+//        this.debugShowFrustums = false;
 
         this._debugSphere = undefined;
 
@@ -390,6 +379,10 @@ define([
     }
 
     function insertIntoBin(scene, command, distance) {
+        if (scene.debugShowFrustums) {
+            command.debugOverlappingFrustums = 0;
+        }
+
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
         for (var i = 0; i < length; ++i) {
@@ -409,6 +402,10 @@ define([
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands[frustumCommands.index++] = command;
+
+            if (scene.debugShowFrustums) {
+                command.debugOverlappingFrustums |= (1 << i);
+            }
 
             if (command.executeInClosestFrustum) {
                 break;
@@ -502,16 +499,46 @@ define([
         }
     }
 
+    function createFrustumDebugFragmentShaderSource(command) {
+        var fragmentShaderSource = command.shaderProgram.fragmentShaderSource;
+        var renamedFS = fragmentShaderSource.replace(/void\s+main\s*\(\s*(?:void)?\s*\)/g, 'void czm_frustumDebug_main()');
+
+        // Support up to three frustums.  If a command overlaps all
+        // three, it's code is not changed.
+        var r = (command.debugOverlappingFrustums & (1 << 0)) ? '1.0' : '0.0';
+        var g = (command.debugOverlappingFrustums & (1 << 1)) ? '1.0' : '0.0';
+        var b = (command.debugOverlappingFrustums & (1 << 2)) ? '1.0' : '0.0';
+
+        var pickMain =
+            'void main() \n' +
+            '{ \n' +
+            '    czm_frustumDebug_main(); \n' +
+            '    gl_FragColor.rgb *= vec3(' + r + ', ' + g + ', ' + b + '); \n' +
+            '}';
+
+        return renamedFS + '\n' + pickMain;
+    }
+
     function executeCommand(command, scene, context, passState) {
         if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
             return;
         }
 
-        if (debugShowFrustums) {
-            command.shaderProgram
-        }
+        if (!scene.debugShowFrustums) {
+            command.execute(context, passState);
+        } else {
+            if (defined(command.shaderProgram)) {
+                // Replace shader for frustum visualization
+                var sp = command.shaderProgram;
+                command.shaderProgram = context.getShaderCache().getShaderProgram(
+                    sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), sp.attributeLocations);
 
-        command.execute(context, passState);
+                command.execute(context, passState);
+
+                command.shaderProgram.release();
+                command.shaderProgram = sp;
+            }
+        }
 
         if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
             // Debug code to draw bounding volume for command.  Not optimized!

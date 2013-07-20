@@ -2210,6 +2210,24 @@ define([
         this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.vertexShaderSource = vertexShaderSource;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.fragmentShaderSource = fragmentShaderSource;
+
+        /**
+         * DOC_TBA
+         * @readonly
+         */
+        this.attributeLocations = findVertexAttributeLocations(gl, program, numberOfVertexAttributes);
     };
 
     function extractShaderVersion(source) {
@@ -2634,6 +2652,16 @@ define([
         }
 
         return attributes;
+    }
+
+    function findVertexAttributeLocations(gl, program, numberOfAttributes) {
+        var attributeLocations = {};
+        for ( var i = 0; i < numberOfAttributes; ++i) {
+            var attr = gl.getActiveAttrib(program, i);
+            attributeLocations[attr.name] = gl.getAttribLocation(program, attr.name);
+        }
+
+        return attributeLocations;
     }
 
     function findUniforms(gl, program) {

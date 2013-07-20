@@ -163,6 +163,11 @@ define(function() {
          * @see DrawCommand#boundingVolume
          */
         this.debugShowBoundingVolume = false;
+
+        /**
+         * @private
+         */
+        this.debugOverlappingFrustums = 0;
     };
 
     /**
