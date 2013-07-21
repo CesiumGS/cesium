@@ -252,6 +252,17 @@ define([
         this.debugShowFrustums = true;
 //        this.debugShowFrustums = false;
 
+        /**
+         * DOC_TBA
+         */
+        this.debugComputeFrustumsPerCommand = true;
+//        this.debugShowFrustumsPerCommand = false;
+
+        this._debugFrustumsPerCommand = {
+            totalCommands : 0,
+            commandsInFrustums : [0, 0, 0, 0]
+        };
+
         this._debugSphere = undefined;
 
         // initial guess at frustums.
@@ -385,6 +396,8 @@ define([
 
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
+        var frustumCount = 0;
+
         for (var i = 0; i < length; ++i) {
             var frustumCommands = frustumCommandsList[i];
             var curNear = frustumCommands.near;
@@ -407,9 +420,16 @@ define([
                 command.debugOverlappingFrustums |= (1 << i);
             }
 
+            ++frustumCount;
+
             if (command.executeInClosestFrustum) {
                 break;
             }
+        }
+
+        if (scene.debugComputeFrustumsPerCommand) {
+            ++scene._debugFrustumsPerCommand.totalCommands;
+            ++scene._debugFrustumsPerCommand.commandsInFrustums[frustumCount];
         }
     }
 
@@ -423,6 +443,11 @@ define([
 
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
+
+        if (scene.debugComputeFrustumsPerCommand) {
+            scene._debugFrustumsPerCommand.totalCommands = 0;
+            scene._debugFrustumsPerCommand.commandsInFrustums = [0, 0, 0, 0];
+        }
 
         var frustumCommandsList = scene._frustumCommandsList;
         var frustumsLength = frustumCommandsList.length;
