@@ -29,6 +29,9 @@ define([
      * @param {PrimitiveType} options.primitiveType The type of primitives in the geometry.
      * @param {Array} [options.indices] Optional index data that determines the primitives in the geometry.
      * @param {BoundingSphere} [options.boundingSphere] An optional bounding sphere that fully enclosed the geometry.
+
+     * @exception {DeveloperError} options.attributes is required.
+     * @exception {DeveloperError} options.primitiveType is required.
      *
      * @example
      * // Create geometry with a position attribute and indexed lines.
