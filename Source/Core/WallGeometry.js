@@ -37,6 +37,16 @@ define([
         WindingOrder) {
     "use strict";
 
+    var scratchCartographic1 = new Cartographic();
+    var scratchCartographic2 = new Cartographic();
+    var scratchCartesian3Position1 = new Cartesian3();
+    var scratchCartesian3Position2 = new Cartesian3();
+    var scratchCartesian3Position3 = new Cartesian3();
+    var scratchCartesian3Position4 = new Cartesian3();
+    var scratchBinormal = new Cartesian3();
+    var scratchTangent = new Cartesian3();
+    var scratchNormal = new Cartesian3();
+
     function subdivideHeights(p0, p1, h0, h1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
         var numPoints = Math.ceil(angleBetween/granularity) + 1;
@@ -63,45 +73,84 @@ define([
         return heights;
     }
 
-    function removeDuplicates(positions, topHeights, bottomHeights, cleanedPositions, cleanedTopHeights, cleanedBottomHeights) {
-        var length = positions.length;
-
-        cleanedPositions.push(positions[0]);
-
-        if (typeof topHeights !== 'undefined') {
-            cleanedTopHeights.push(topHeights[0]);
-        }
-
-        if (typeof bottomHeights !== 'undefined') {
-            cleanedBottomHeights.push(bottomHeights[0]);
-        }
-
-        for (var i = 1; i < length; ++i) {
-            var v0 = positions[i - 1];
-            var v1 = positions[i];
-
-            if (!Cartesian3.equals(v0, v1)) {
-                cleanedPositions.push(v1); // Shallow copy!
-
-                if (typeof topHeights !== 'undefined') {
-                    cleanedTopHeights.push(topHeights[i]);
-                }
-
-                if (typeof bottomHeights !== 'undefined') {
-                    cleanedBottomHeights.push(bottomHeights[i]);
-                }
-            }
-        }
+    function latLonEquals(c0, c1) {
+        return ((CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON6)));
     }
 
-    var scratchCartographic = new Cartographic();
-    var scratchCartesian3Position1 = new Cartesian3();
-    var scratchCartesian3Position2 = new Cartesian3();
-    var scratchCartesian3Position3 = new Cartesian3();
-    var scratchCartesian3Position4 = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
-    var scratchTangent = new Cartesian3();
-    var scratchNormal = new Cartesian3();
+    function cleanPositions(ellipsoid, positions, topHeights, bottomHeights) {
+        var hasBottomHeights = (typeof bottomHeights !== 'undefined');
+        var hasTopHeights = (typeof topHeights !== 'undefined');
+        var cleanedPositions = [];
+        var cleanedTopHeights = [];
+        var cleanedBottomHeights = hasBottomHeights ? [] : undefined;
+
+        var current = 0;
+        var next = 1;
+        var v0 = positions[current];
+        var c0 = ellipsoid.cartesianToCartographic(v0, scratchCartographic1);
+        var length = positions.length;
+        while (next < length) {
+            var v1 = positions[next];
+            var c1 = ellipsoid.cartesianToCartographic(v1, scratchCartographic2);
+
+            if (!latLonEquals(c0, c1)) {
+                cleanedPositions.push(v0);
+                if (hasTopHeights) {
+                    cleanedTopHeights.push(topHeights[current]);
+                } else {
+                    cleanedTopHeights.push(c0.height);
+                }
+                if (hasBottomHeights) {
+                    cleanedBottomHeights.push(bottomHeights[current]);
+                }
+                if (next === length - 1) {
+                    cleanedPositions.push(v1);
+                    if (hasTopHeights) {
+                        cleanedTopHeights.push(topHeights[next]);
+                    } else {
+                        cleanedTopHeights.push(c1.height);
+                    }
+                    if (hasBottomHeights) {
+                        cleanedBottomHeights.push(bottomHeights[next]);
+                    }
+                }
+                v0 = positions[next];
+                current = next;
+                c0 = c1.clone(c0);
+            } else if (c0.height < c1.height){
+                if (next === length - 1) {
+                    cleanedPositions.push(v1);
+                    if (hasTopHeights) {
+                        cleanedTopHeights.push(topHeights[next]);
+                    } else {
+                        cleanedTopHeights.push(c1.height);
+                    }
+                    if (hasBottomHeights) {
+                        cleanedBottomHeights.push(bottomHeights[next]);
+                    }
+                }
+                v0 = positions[next];
+                current = next;
+                c0 = c1.clone(c0);
+            } else if (next === length - 1) {
+                cleanedPositions.push(v0);
+                if (hasTopHeights) {
+                    cleanedTopHeights.push(topHeights[current]);
+                } else {
+                    cleanedTopHeights.push(c0.height);
+                }
+                if (hasBottomHeights) {
+                    cleanedBottomHeights.push(bottomHeights[current]);
+                }
+            }
+            next++;
+        }
+        return {
+            positions: cleanedPositions,
+            topHeights: cleanedTopHeights,
+            bottomHeights: cleanedBottomHeights
+        };
+    }
 
     /**
      * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
@@ -122,6 +171,7 @@ define([
      * @exception {DeveloperError} positions is required.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
+     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
      *
      * @example
      * var positions = [
@@ -160,14 +210,15 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        var cleanedPositions = [];
-        var cleanedMaximumHeights = (typeof maximumHeights !== 'undefined') ? [] : undefined;
-        var cleanedMinimumHeights = (typeof minimumHeights !== 'undefined') ? [] : undefined;
-        removeDuplicates(wallPositions, maximumHeights, minimumHeights, cleanedPositions, cleanedMaximumHeights, cleanedMinimumHeights);
+        var o = cleanPositions(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
-        wallPositions = cleanedPositions;
-        maximumHeights = cleanedMaximumHeights;
-        minimumHeights = cleanedMinimumHeights;
+        wallPositions = o.positions;
+        maximumHeights = o.topHeights;
+        minimumHeights = o.bottomHeights;
+
+        if (wallPositions < 2) {
+            throw new DeveloperError('unique positions must be greater than or equal to 2');
+        }
 
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise
@@ -176,10 +227,7 @@ define([
 
             if (PolygonPipeline.computeWindingOrder2D(positions2D) === WindingOrder.CLOCKWISE) {
                 wallPositions.reverse();
-
-                if (typeof maximumHeights !== 'undefined') {
-                    maximumHeights.reverse();
-                }
+                maximumHeights.reverse();
 
                 if (typeof minimumHeights !== 'undefined') {
                     minimumHeights.reverse();
@@ -189,13 +237,6 @@ define([
 
         var i;
         var length = wallPositions.length;
-        if (typeof maximumHeights === 'undefined') {
-            maximumHeights = [];
-            for (i = 0; i < length; i++) {
-                var c1 = ellipsoid.cartesianToCartographic(wallPositions[i], scratchCartographic);
-                maximumHeights[i] = c1.height;
-            }
-        }
         var newMaxHeights = [];
         var newMinHeights = (typeof minimumHeights !== 'undefined') ? [] : undefined;
         for (i = 0; i < length-1; i++) {
@@ -239,7 +280,7 @@ define([
         var recomputeNormal = true;
         for (i = 0; i < length; ++i) {
             var pos = wallPositions[i];
-            var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic);
+            var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic1);
 
             c.height = newMaxHeights[i];
 
@@ -289,8 +330,6 @@ define([
                         binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
                     }
                 }
-
-
 
                 if (vertexFormat.normal) {
                     normals[normalIndex++] = normal.x;
@@ -375,7 +414,6 @@ define([
                 values : textureCoordinates
             });
         }
-
 
         // prepare the side walls, two triangles for each wall
         //
@@ -492,17 +530,20 @@ define([
 
         var min = options.minimumHeight;
         var max = options.maximumHeight;
-        if (typeof min !== 'undefined' || typeof max !== 'undefined') {
+
+        var doMin = (typeof min !== 'undefined');
+        var doMax = (typeof max !== 'undefined');
+        if (doMin || doMax) {
             var length = positions.length;
-            minHeights = (typeof min !== 'undefined') ? new Array(length) : undefined;
-            maxHeights = (typeof max !== 'undefined') ? new Array(length) : undefined;
+            minHeights = (doMin) ? new Array(length) : undefined;
+            maxHeights = (doMax) ? new Array(length) : undefined;
 
             for (var i = 0; i < length; ++i) {
-                if (typeof min !== 'undefined') {
+                if (doMin) {
                     minHeights[i] = min;
                 }
 
-                if (typeof max !== 'undefined') {
+                if (doMax) {
                     maxHeights[i] = max;
                 }
             }
