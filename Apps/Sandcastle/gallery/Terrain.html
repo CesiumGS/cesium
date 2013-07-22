@@ -8,19 +8,16 @@
     <meta name="cesium-sandcastle-labels" content="Tutorial">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
+
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -33,45 +30,31 @@
 </div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium',
-    'dijit/DropDownMenu',
-    'dijit/MenuItem',
-    'dijit/form/Button',
-    'dijit/form/DropDownButton'
+    'Cesium'
 ], function(
-    Cesium,
-    DropDownMenu,
-    MenuItem,
-    Button,
-    DropDownButton) {
+    Cesium) {
     "use strict";
 
     function createTerrainMenu(terrainProviders) {
-        var menu = new DropDownMenu();
-        var button = new DropDownButton({
-            label : terrainProviders[0].name,
-            dropDown : menu
-        });
-
-        function createTerrainMenuItem(button, providerInfo) {
-            return new MenuItem({
-                label : providerInfo.name,
-                onClick : function() {
-                    centralBody.terrainProvider = providerInfo.provider;
-                    button.set('label', providerInfo.name);
-                }
-            });
-        }
+        var toolbar = document.getElementById('terrainMenu');
+        
+        var menu = document.createElement('select');
+        menu.className = 'button';
+        menu.onchange = function() {
+            centralBody.terrainProvider = terrainProviders[this.selectedIndex].provider;
+        };
+        toolbar.appendChild(menu);
 
         for (var i = 0, len = terrainProviders.length; i < len; ++i) {
-            menu.addChild(createTerrainMenuItem(button, terrainProviders[i]));
+            var option = document.createElement('option');
+            option.textContent = terrainProviders[i].name;
+            menu.appendChild(option);
         }
-
-        button.placeAt('terrainMenu');
-
-        new Button({
-            label: 'Mount Everest',
-            onClick: function() {
+        
+        toolbar = document.getElementById('zoomButtons');
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
                 var eye, target, up;
 
                 if (scene.mode === Cesium.SceneMode.SCENE3D) {
@@ -87,12 +70,13 @@ require([
                 } else {
                     scene.getCamera().controller.viewExtent(new Cesium.Extent(1.516102969, 0.48744464, 1.518102969, 0.48944464));
                 }
-            }
-        }).placeAt('zoomButtons');
-
-        new Button({
-            label: 'Half Dome',
-            onClick: function() {
+            };
+        button.textContent = 'Mount Everest';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
                 var eye, target, up;
 
                 if (scene.mode === Cesium.SceneMode.SCENE3D) {
@@ -108,12 +92,13 @@ require([
                 } else {
                     scene.getCamera().controller.viewExtent(new Cesium.Extent(-2.08724538, 0.6577939, -2.08524538, 0.6597939));
                 }
-            }
-        }).placeAt('zoomButtons');
+            };
+        button.textContent = 'Half Dome';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'San Francisco Bay',
-            onClick: function() {
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
                 var eye, target, up;
 
                 if (scene.mode === Cesium.SceneMode.SCENE3D) {
@@ -129,9 +114,11 @@ require([
                 } else {
                     scene.getCamera().controller.viewExtent(new Cesium.Extent(-2.147621889, 0.64829691, -2.125621889, 0.67029691));
                 }
-            }
-        }).placeAt('zoomButtons');
+            };
+        button.textContent = 'San Francisco Bay';
+        toolbar.appendChild(button);
         
+ 
         var terrainSamplePositions;
         var billboards;
         var labels;
@@ -180,9 +167,10 @@ require([
             scene.getPrimitives().add(labels);
         }
         
-        new Button({
-            label: 'Sample Everest Terrain',
-            onClick: function() {
+        toolbar = document.getElementById('sampleButtons');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
                 var gridWidth = 41;
                 var gridHeight = 41;
                 var everestLatitude = Cesium.Math.toRadians(27.988257);
@@ -200,8 +188,9 @@ require([
                 }
                 
                 Cesium.when(Cesium.sampleTerrain(centralBody.terrainProvider, 11, terrainSamplePositions), sampleTerrainSuccess);
-            }
-        }).placeAt('sampleButtons');
+            };
+        button.textContent = 'Sample Everest Terrain';
+        toolbar.appendChild(button);
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
