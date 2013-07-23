@@ -26,7 +26,6 @@ var errors = [];
 
 var jsFileRegex = /\.js$/i;
 var htmlFileRegex = /\.html$/i;
-var sandcastleScriptRegex = /<script id="cesium_sandcastle_script">([\S\s]*?)<\/script>/img;
 
 var filesChecked = 0;
 forEachFile('sourcefiles', function(relativePath, file) {
@@ -45,6 +44,7 @@ forEachFile('sourcefiles', function(relativePath, file) {
         source = contents;
         options = jsHintOptions;
     } else if (htmlFileRegex.test(relativePath)) {
+        var sandcastleScriptRegex = /<script id="cesium_sandcastle_script">([\S\s]*?)<\/script>/img;
         var result = sandcastleScriptRegex.exec(contents);
         if (result === null) {
             return;
