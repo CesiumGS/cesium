@@ -23,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var gallery = '../../CesiumViewer/Gallery/';
@@ -158,36 +154,36 @@ require([
         var button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                czmlSatellites();
-                Sandcastle.highlight(czmlSatellites);
-            };
+            czmlSatellites();
+            Sandcastle.highlight(czmlSatellites);
+        };
         button.textContent = 'Satellites';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                czmlSensors();
-                Sandcastle.highlight(czmlSensors);
-            };
+            czmlSensors();
+            Sandcastle.highlight(czmlSensors);
+        };
         button.textContent = 'Sensors';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                czmlVehicle();
-                Sandcastle.highlight(czmlVehicle);
-            };
+            czmlVehicle();
+            Sandcastle.highlight(czmlVehicle);
+        };
         button.textContent = 'Vehicle';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                useBuiltInCzml();
-                Sandcastle.highlight(useBuiltInCzml);
-            };
+            useBuiltInCzml();
+            Sandcastle.highlight(useBuiltInCzml);
+        };
         button.textContent = 'Built-in CZML';
         toolbar.appendChild(button);
     }

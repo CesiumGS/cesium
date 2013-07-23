@@ -23,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var handler;
@@ -396,60 +392,60 @@ require([
         var button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                pickCartographicPosition(scene, ellipsoid);
-                Sandcastle.highlight(pickCartographicPosition);
-            };
+            cleanup();
+            pickCartographicPosition(scene, ellipsoid);
+            Sandcastle.highlight(pickCartographicPosition);
+        };
         button.textContent = 'Show Cartographic Position on Mouse Over';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                pickBillboard(scene, ellipsoid);
-                Sandcastle.highlight(pickBillboard);
-            };
+            cleanup();
+            pickBillboard(scene, ellipsoid);
+            Sandcastle.highlight(pickBillboard);
+        };
         button.textContent = 'Pick Billboard';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                animateBillboardOnPick(scene, ellipsoid);
-                Sandcastle.highlight(animateBillboardOnPick);
-            };
+            cleanup();
+            animateBillboardOnPick(scene, ellipsoid);
+            Sandcastle.highlight(animateBillboardOnPick);
+        };
         button.textContent = 'Animate Billboard on Pick';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                erodeSensorOnClick(scene, ellipsoid);
-                Sandcastle.highlight(erodeSensorOnClick);
-            };
+            cleanup();
+            erodeSensorOnClick(scene, ellipsoid);
+            Sandcastle.highlight(erodeSensorOnClick);
+        };
         button.textContent = 'Erode Sensor on Click';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                layerCompositePrimitive(scene, ellipsoid);
-                Sandcastle.highlight(layerCompositePrimitive);
-            };
+            cleanup();
+            layerCompositePrimitive(scene, ellipsoid);
+            Sandcastle.highlight(layerCompositePrimitive);
+        };
         button.textContent = 'Layer Primitives';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                cleanup();
-                drawExtent(scene, ellipsoid);
-                Sandcastle.highlight(drawExtent);
-            };
+            cleanup();
+            drawExtent(scene, ellipsoid);
+            Sandcastle.highlight(drawExtent);
+        };
         button.textContent = 'Drag to Draw Extent';
         toolbar.appendChild(button);
     }

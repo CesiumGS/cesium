@@ -23,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     function addLabel(scene, ellipsoid) {
@@ -102,40 +98,40 @@ require([
         var button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                primitives.removeAll();
-                addLabel(scene, ellipsoid);
-                Sandcastle.highlight(addLabel);
-            };
+            primitives.removeAll();
+            addLabel(scene, ellipsoid);
+            Sandcastle.highlight(addLabel);
+        };
         button.textContent = 'Add label';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                primitives.removeAll();
-                setLabelFont(scene, ellipsoid);
-                Sandcastle.highlight(setLabelFont);
-            };
+            primitives.removeAll();
+            setLabelFont(scene, ellipsoid);
+            Sandcastle.highlight(setLabelFont);
+        };
         button.textContent = 'Set font';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                primitives.removeAll();
-                setLabelProperties(scene, ellipsoid);
-                Sandcastle.highlight(setLabelProperties);
-            };
+            primitives.removeAll();
+            setLabelProperties(scene, ellipsoid);
+            Sandcastle.highlight(setLabelProperties);
+        };
         button.textContent = 'Set properties';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                primitives.removeAll();
-                addLabelsInReferenceFrame(scene, ellipsoid);
-                Sandcastle.highlight(addLabelsInReferenceFrame);
-            };
+            primitives.removeAll();
+            addLabelsInReferenceFrame(scene, ellipsoid);
+            Sandcastle.highlight(addLabelsInReferenceFrame);
+        };
         button.textContent = 'Add labels in reference frame';
         toolbar.appendChild(button);       
     }

@@ -119,10 +119,11 @@ require([
   
     function createUserInterface(viewer, sensors) {
         var tp = new TitlePane({
-                title: 'Manipulate Sensor',
-                id:'title-pane',
-                content: document.getElementById('pane'),
-                open: false});
+            title: 'Manipulate Sensor',
+            id:'title-pane',
+            content: document.getElementById('pane'),
+            open: false
+        });
         document.getElementById("toolbar").appendChild(tp.domNode);
 
         

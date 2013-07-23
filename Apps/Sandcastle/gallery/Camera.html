@@ -23,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -224,50 +220,50 @@ require([
         var button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                reset(scene);
-                flyToSanDiego(scene);
-                Sandcastle.highlight(flyToSanDiego);
-            };
+            reset(scene);
+            flyToSanDiego(scene);
+            Sandcastle.highlight(flyToSanDiego);
+        };
         button.textContent = 'Fly to San Diego';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                reset(scene);
-                flyToMyLocation(scene);
-                Sandcastle.highlight(flyToMyLocation);
-            };
+            reset(scene);
+            flyToMyLocation(scene);
+            Sandcastle.highlight(flyToMyLocation);
+        };
         button.textContent = 'Fly to My Location';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                reset(scene);
-                flyToExtent(scene);
-                Sandcastle.highlight(flyToExtent);
-            };
+            reset(scene);
+            flyToExtent(scene);
+            Sandcastle.highlight(flyToExtent);
+        };
         button.textContent = 'Fly to Extent';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                reset(scene);
-                viewAnExtent(scene);
-                Sandcastle.highlight(viewAnExtent);
-            };
+            reset(scene);
+            viewAnExtent(scene);
+            Sandcastle.highlight(viewAnExtent);
+        };
         button.textContent = 'View an Extent';
         toolbar.appendChild(button);
         
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                reset(scene);
-                eastNorthUp(scene);
-                Sandcastle.highlight(eastNorthUp);
-            };
+            reset(scene);
+            eastNorthUp(scene);
+            Sandcastle.highlight(eastNorthUp);
+        };
         button.textContent = 'Set camera reference frame';
         toolbar.appendChild(button);
     }

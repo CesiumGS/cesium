@@ -24,11 +24,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var extent;
@@ -595,7 +591,6 @@ require([
         baseMaterialMenu.className = 'button';
         baseMaterialMenu.appendChild(title);
         baseMaterialMenu.onchange = function(){
-            debugger;
             if (this.selectedIndex === 1){
                 toggleExtentVisibility();
                 applyAlphaMapMaterial(extent, scene);

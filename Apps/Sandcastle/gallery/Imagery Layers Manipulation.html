@@ -188,10 +188,11 @@ require([
 
     function createLayerUserInterface() {
         var tp = new TitlePane({
-                title: 'Manipulate Layers', 
-                id:'title-pane', 
-                content: '<table id="layerTable"></table>',
-                open: false});
+            title: 'Manipulate Layers', 
+            id:'title-pane', 
+            content: '<table id="layerTable"></table>',
+            open: false
+        });
         document.getElementById("toolbar").appendChild(tp.domNode);
         updateUserInterface(imageryLayerCollection);
     }

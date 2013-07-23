@@ -23,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium'
-], function(
-    Cesium)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     function createButtons(scene) {
@@ -37,16 +33,16 @@ require([
         var button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                scene.scene2D.projection = new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84);
-            };
+            scene.scene2D.projection = new Cesium.GeographicProjection(Cesium.Ellipsoid.WGS84);
+        };
         button.textContent = 'Geographic';
         toolbar.appendChild(button);
 
         button = document.createElement('button');
         button.className = 'button';
         button.onclick = function() {
-                scene.scene2D.projection = new Cesium.WebMercatorProjection(Cesium.Ellipsoid.WGS84);
-            };
+            scene.scene2D.projection = new Cesium.WebMercatorProjection(Cesium.Ellipsoid.WGS84);
+        };
         button.textContent = 'Web Mercator';
         toolbar.appendChild(button);
     }

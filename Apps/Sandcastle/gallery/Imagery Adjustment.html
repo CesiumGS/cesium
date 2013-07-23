@@ -69,11 +69,12 @@ require([
 
     function createAdjustmentUserInterface() {
         var tp = new TitlePane({
-                title: 'Adjust Imagery',
-                id:'title-pane',
-                content: document.getElementById('layerTable'),
-                open: false});
-        document.getElementById("toolbar").appendChild(tp.domNode);
+            title: 'Adjust Imagery',
+            id:'title-pane',
+            content: document.getElementById('layerTable'),
+            open: false
+        });
+        document.getElementById('toolbar').appendChild(tp.domNode);
         brightnessSlider = new HorizontalSlider({
             value : imageryLayerCollection.get(0).brightness,
             minimum : 0.0,
