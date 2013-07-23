@@ -95,22 +95,15 @@ body {
     background:-o-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
     background:-ms-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
     background:linear-gradient(to bottom, #f9f9f9 5%, #dedede 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#f9f9f9', endColorstr='#dedede',GradientType=0);
-    
-    background-color:#f9f9f9;
-    
-    -moz-border-radius:3px;
-    -webkit-border-radius:3px;
+
     border-radius:3px;
-    
     border:1px solid #dcdcdc;
-    
     display:inline-block;
     font-family:arial;
     font-size:12px;
-    padding:3px 5px;
+    padding:5px 10px;
+    margin:3px;
     text-decoration:none;
-    
     text-shadow:0px 1px 0px #ffffff;   
 }
 
@@ -121,9 +114,6 @@ body {
     background:-o-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
     background:-ms-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
     background:linear-gradient(to bottom, #dedede 5%, #f9f9f9 100%);
-    filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#dedede', endColorstr='#f9f9f9',GradientType=0);
-    
-    background-color:#dedede;
 }
 
 .button:active {
