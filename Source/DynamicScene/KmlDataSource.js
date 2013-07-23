@@ -132,10 +132,22 @@ define(['../Core/createGuid',
         return style;
     }
 
+    function getColor(node, colorType){
+        var color;
+        if(typeof colorType ===  'undefined'){
+            color = getElementValue(node,'color');
+        } else {
+            color = getElementValue(node, colorType);
+        }
+        color = parseInt(color,16);
+        return color;
+    }
+
     // KML processing functions
     function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection) {
         placemark.id = getId(placemark);
-        dynamicObjectCollection.getOrCreateObject(placemark.id);
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
+        dynamicObject.name = getElementValue(placemark, 'name');
 
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
@@ -171,6 +183,9 @@ define(['../Core/createGuid',
             var styleUrl = kml.getElementsByTagName('styleUrl');
             if(styleUrl.length > 0){
                 var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                if(typeof styleObj.label !== 'undefined'){ //TODO find a better way to set the text part of labels...
+                    styleObj.label.text = dynamicObject.name;
+                }
                 dynamicObject.merge(styleObj);
             }
         }
@@ -232,8 +247,7 @@ define(['../Core/createGuid',
                 //TODO heading, hotSpot and ColorMode
                 var scale = getElementValue(node, 'scale');
                 var icon = getElementValue(node,'href');
-                var color = getElementValue(node,'color');
-                color = parseInt(color,16);
+                var color = getColor(node);
 
                 dynamicObject.billboard.image = icon && new ConstantProperty(icon);
                 dynamicObject.billboard.scale = scale && new ConstantProperty(scale);
@@ -242,22 +256,27 @@ define(['../Core/createGuid',
             if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
                 //Map style to label properties
+                //TODO ColorMode
+                var labelScale = getElementValue(node, 'scale');
+                var labelColor = getColor(node);
+
+                dynamicObject.label.scale = labelScale && new ConstantProperty(labelScale);
+                dynamicObject.label.fillcolor = labelColor && new ConstantProperty(Color.fromRgba(labelColor));
+                dynamicObject.label.text = dynamicObject.name && new ConstantProperty(dynamicObject.name);
             }
             if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility, ColorMode
-                var labelColor = getElementValue(node,'color');
-                var labelWidth = getElementValue(node,'width');
-                var labelOuterColor = getElementValue(node,'gx:outerColor');
-                var labelOuterWidth = getElementValue(node,'gx:outerWidth');
-                labelColor = parseInt(labelColor,16);
-                labelOuterColor = parseInt(labelOuterColor, 16);
+                var lineColor = getColor(node);
+                var lineWidth = getElementValue(node,'width');
+                var lineOuterColor = getColor(node,'gx:outerColor');
+                var lineOuterWidth = getElementValue(node,'gx:outerWidth');
 
-                dynamicObject.polyline.color = labelColor && new ConstantProperty(Color.fromRgba(labelColor));
-                dynamicObject.polyline.width = labelWidth && new ConstantProperty(labelWidth);
-                dynamicObject.polyline.outlineColor = labelOuterColor && new ConstantProperty(Color.fromRgba(labelOuterColor));
-                dynamicObject.polyline.outlineWidth = labelOuterWidth && new ConstantProperty(labelOuterWidth);
+                dynamicObject.polyline.color = lineColor && new ConstantProperty(Color.fromRgba(lineColor));
+                dynamicObject.polyline.width = lineWidth && new ConstantProperty(lineWidth);
+                dynamicObject.polyline.outlineColor = lineOuterColor && new ConstantProperty(Color.fromRgba(lineOuterColor));
+                dynamicObject.polyline.outlineWidth = lineOuterWidth && new ConstantProperty(lineOuterWidth);
             }
             if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = new DynamicPolygon();
