@@ -84,14 +84,21 @@ define(['../Core/createGuid',
             text = text + el.childNodes[i].nodeValue;
         }
 
-        var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
-        coords = regExp.exec(text);
-        coords[0] = parseFloat(coords[1], 10);
-        coords[1] = parseFloat(coords[2].substring(1), 10);
-        coords[2] = coords[3] && parseFloat(coords[3].substring(1), 10);
-        coords.pop();
-
-        return coords;
+        var coordsArray = text.split(' '); //TODO add every whitespace character as a possible separator by using regExp
+        var finalCoords = [];
+        for(var j = 0; coordsArray[j]; j++){
+            var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
+            coords[j] = regExp.exec(coordsArray[j]);
+            coords[j].shift(); //the first element is not needed, remove it
+            finalCoords.push([]); //new inner array
+            finalCoords[j][0] = parseFloat(coords[j][0], 10);
+            finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
+            finalCoords[j][2] = coords[j][2] && parseFloat(coords[j][2].substring(1), 10);
+        }
+        if(finalCoords.length === 1){
+            return finalCoords[0]; //single tuple
+        }
+        return finalCoords;
     }
 
     function getId(node){
