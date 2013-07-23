@@ -184,7 +184,7 @@ define(['../Core/createGuid',
             if(styleUrl.length > 0){
                 var styleObj = styleCollection.getObject(styleUrl[0].textContent);
                 if(typeof styleObj.label !== 'undefined'){ //TODO find a better way to set the text part of labels...
-                    styleObj.label.text = dynamicObject.name;
+                    styleObj.label.text = new ConstantProperty(dynamicObject.name);
                 }
                 dynamicObject.merge(styleObj);
             }
@@ -261,7 +261,7 @@ define(['../Core/createGuid',
                 var labelColor = getColor(node);
 
                 dynamicObject.label.scale = labelScale && new ConstantProperty(labelScale);
-                dynamicObject.label.fillcolor = labelColor && new ConstantProperty(Color.fromRgba(labelColor));
+                dynamicObject.label.fillColor = labelColor && new ConstantProperty(Color.fromRgba(labelColor)); //not sure how to set font color
                 dynamicObject.label.text = dynamicObject.name && new ConstantProperty(dynamicObject.name);
             }
             if(node.nodeName ===  "LineStyle")   {
