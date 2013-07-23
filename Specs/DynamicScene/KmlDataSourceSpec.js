@@ -1,20 +1,24 @@
 /*global defineSuite*/
 defineSuite(['DynamicScene/KmlDataSource',
+             'DynamicScene/ConstantProperty',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicPolyline',
              'Core/loadXML',
              'Core/Cartographic',
+             'Core/Color',
              'Core/Ellipsoid',
              'Core/Event',
              'Core/Math'
             ], function(
                     KmlDataSource,
+                    ConstantProperty,
                     DynamicObjectCollection,
                     DynamicBillboard,
                     DynamicPolyline,
                     loadXML,
                     Cartographic,
+                    Color,
                     Ellipsoid,
                     Event,
                     CesiumMath) {
@@ -75,6 +79,43 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(xmlDoc);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
         expect(dataSource.getDynamicObjectCollection().getObjects()[0].position.getValueCartesian()).toEqual(cartesianPosition);
+    });
+
+    it('handles Point Geometry with LabelStyle', function() {
+        var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+        var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
+        var name = new ConstantProperty('LabelStyle.kml');
+        var scale = new ConstantProperty('1.5');
+        var color = new ConstantProperty(Color.fromRgba(parseInt('ff0000cc', 16)));
+        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="randomLabelColor">\
+                <LabelStyle>\
+                    <color>ff0000cc</color>\
+                    <scale>1.5</scale>\
+                </LabelStyle>\
+            </Style>\
+            <Placemark>\
+                <name>LabelStyle.kml</name>\
+                <styleUrl>#randomLabelColor</styleUrl>\
+            <Point>\
+                <coordinates>1,2,0</coordinates>\
+            </Point>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(pointKml, "text/xml");
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(xmlDoc);
+        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].position.getValueCartesian()).toEqual(cartesianPosition);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.text._value).toEqual(name._value);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.scale._value).toEqual(scale._value);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.fillColor._value).toEqual(color._value);
     });
 
     it('handles Line Geometry with two sets of coordinates', function() {
