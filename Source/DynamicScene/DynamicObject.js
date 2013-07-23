@@ -179,6 +179,13 @@ define([
          * @default undefined
          */
         this.viewFrom = undefined;
+
+        /**
+         * Gets or sets the HTML content of a balloon that will be visible upon clicking the object.
+         * @type {String}
+         * @default undefined
+         */
+        this.balloon = undefined;
     };
 
     /**

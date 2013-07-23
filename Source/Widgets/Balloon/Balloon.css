@@ -1,0 +1,51 @@
+.cesium-balloon-wrapper {
+    position: absolute;
+}
+
+.cesium-balloon {
+    z-index: 2;
+}
+
+.cesium-balloon-content {
+    position: relative;
+    background-color: #fff;
+    border-radius: 3px;
+    padding: 5px;
+    z-index: 1;
+}
+
+.cesium-balloon-point {
+    background-color: #fff;
+    height: 20px;
+    width: 20px;
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    transform: rotate(45deg);
+    padding: 1px;
+    margin: -15px auto 0;
+    position: relative;
+    bottom: 0;
+}
+
+.cesium-balloon-wrapper-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.25s linear;
+    -webkit-transition: opacity 0.25s linear;
+    -moz-transition: opacity 0.25s linear;
+}
+
+.cesium-balloon-wrapper-hidden {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -webkit-transition: visibility 0s 0.25s, opacity 0.25s linear;
+    -moz-transition: visibility 0s 0.25s, opacity 0.25s linear;
+}
+
+.ceisum-balloon-close {
+    color: #f00;
+    text-align: right;
+}
