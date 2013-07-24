@@ -7,19 +7,15 @@
     <meta name="description" content="Use the mouse to select and manipulate objects in the scene.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -27,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button'
-], function(
-    Cesium, Button)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var handler;
@@ -395,60 +387,67 @@ require([
     function createButtons(widget) {
         var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
-
-        new Button({
-            label: 'Show Cartographic Position on Mouse Over',
-            onClick: function() {
-                cleanup();
-                pickCartographicPosition(scene, ellipsoid);
-                Sandcastle.highlight(pickCartographicPosition);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Pick Billboard',
-            onClick: function() {
-                cleanup();
-                pickBillboard(scene, ellipsoid);
-                Sandcastle.highlight(pickBillboard);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Animate Billboard on Pick',
-            onClick: function() {
-                cleanup();
-                animateBillboardOnPick(scene, ellipsoid);
-                Sandcastle.highlight(animateBillboardOnPick);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Erode Sensor on Click',
-            onClick: function() {
-                cleanup();
-                erodeSensorOnClick(scene, ellipsoid);
-                Sandcastle.highlight(erodeSensorOnClick);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Layer Primitives',
-            onClick: function() {
-                cleanup();
-                layerCompositePrimitive(scene, ellipsoid);
-                Sandcastle.highlight(layerCompositePrimitive);
-            }
-        }).placeAt('toolbar');
+        var toolbar = document.getElementById('toolbar');
         
-        new Button({
-            label: 'Drag to Draw Extent',
-            onClick: function() {
-                cleanup();
-                drawExtent(scene, ellipsoid);
-                Sandcastle.highlight(drawExtent);
-            }
-        }).placeAt('toolbar');
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            pickCartographicPosition(scene, ellipsoid);
+            Sandcastle.highlight(pickCartographicPosition);
+        };
+        button.textContent = 'Show Cartographic Position on Mouse Over';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            pickBillboard(scene, ellipsoid);
+            Sandcastle.highlight(pickBillboard);
+        };
+        button.textContent = 'Pick Billboard';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            animateBillboardOnPick(scene, ellipsoid);
+            Sandcastle.highlight(animateBillboardOnPick);
+        };
+        button.textContent = 'Animate Billboard on Pick';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            erodeSensorOnClick(scene, ellipsoid);
+            Sandcastle.highlight(erodeSensorOnClick);
+        };
+        button.textContent = 'Erode Sensor on Click';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            layerCompositePrimitive(scene, ellipsoid);
+            Sandcastle.highlight(layerCompositePrimitive);
+        };
+        button.textContent = 'Layer Primitives';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            cleanup();
+            drawExtent(scene, ellipsoid);
+            Sandcastle.highlight(drawExtent);
+        };
+        button.textContent = 'Drag to Draw Extent';
+        toolbar.appendChild(button);
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
