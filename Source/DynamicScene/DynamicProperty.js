@@ -64,22 +64,20 @@ define([
     //a huge number of arguments.  See https://code.google.com/p/chromium/issues/detail?id=56588
     function arrayInsert(array, startIndex, items) {
         var i;
+        var arrayLength = array.length;
         var itemsLength = items.length;
-        var itemsToMove = array.length - startIndex;
+        var newLength = arrayLength + itemsLength;
 
-        if (itemsToMove > 0) {
-            var tmp = array.splice(startIndex, itemsToMove);
-            array.length += itemsLength;
-            for (i = 0; i < itemsLength; i++) {
-                array[startIndex++] = items[i];
+        array.length = newLength;
+        if (arrayLength !== startIndex) {
+            var q = arrayLength - 1;
+            for (i = newLength - 1; i >= startIndex; i--) {
+                array[i] = array[q--];
             }
-            for (i = 0; i < itemsToMove; i++) {
-                array[startIndex++] = tmp[i];
-            }
-        } else {
-            for (i = 0; i < itemsLength; i++) {
-                array.push(items[i]);
-            }
+        }
+
+        for (i = 0; i < itemsLength; i++) {
+            array[startIndex++] = items[i];
         }
     }
 
