@@ -17,67 +17,78 @@ define([
         knockout) {
     "use strict";
 
-    var BalloonViewModel = function(balloonElement, contentElement, balloonDiv) {
-        var that = this;
-        this._balloonElement = defaultValue(balloonElement, document.body);
-        this._balloonDiv = balloonDiv;
+    var BalloonViewModel = function(scene, container, contentElement, balloonElement) {
+        this._scene = scene;
+        this._balloonElement = balloonElement;
         this._contentElement = contentElement;
+        this._con = contentElement.innerHTML;
+        this._position = new Cartesian2();
         this._callback = function() {};
         document.addEventListener(function(){}, this._callback);
 
-        this.balloonVisible = false;
-        this.positionX = '0';
-        this.positionY = '0';
-        knockout.track(this, ['balloonVisible', 'positionX', 'positionY']);
+        this.dragging = false;
 
-        this._showBalloon = createCommand(function() {
-            that.balloonVisible = true;
+        this._balloonVisible = false;
+        this._positionX = '0';
+        this._positionY = '0';
+        this._updateContent = false;
+        this._updatePosition = false;
+        knockout.track(this, ['_balloonVisible', '_positionX', '_positionY']);
+
+        var that = this;
+
+        this._render = createCommand(function() { //TODO: streamline so positions don't run over fade
+            if (that._updateContent) {
+                that._balloonVisible = false;
+                setTimeout(function () {
+                    that._contentElement.innerHTML = that._content;
+                    that._positionX = that._position.x + 'px';
+                    that._positionY = that._position.y + 'px';
+                    that._balloonVisible = true;
+                    that.balloonVisible = true;
+                }, 250);
+                that._updatePosition = false;
+                that._updateContent = false;
+            } else if (that._updatePosition) {
+                that._balloonVisible = that.balloonVisible;
+                that._positionX = that._position.x + 'px';
+                that._positionY = that._position.y + 'px';
+                that._updatePosition = false;
+            }
         });
-
-        this._hideBalloon = createCommand(function() {
-            that.balloonVisible = false;
-        });
-
     };
 
     defineProperties(BalloonViewModel.prototype, {
+        render: {
+            get: function() {
+                return this._render;
+            }
+        },
+
         content : {
             get : function() {
-                return this._contentElement.innerHTML;
+                return this._content;
             },
             set : function(value) {
                 if (typeof value !== 'string') {
                     throw new DeveloperError('value must be a string');
                 }
-                this._contentElement.innerHTML = value;
-                this.balloonVisible = true;
-            }
-        },
-
-        showBalloon: {
-            get: function() {
-                return this._showBalloon;
-            }
-        },
-
-        hideBalloon: {
-            get: function() {
-                return this._hideBalloon;
+                if (value !== this._content) {
+                    this._content = value;
+                    this._updateContent = true;
+                }
             }
         },
 
         screenPosition: {
             get : function() {
-                return this.position;
+                return this._position;
             },
             set: function(value) {
-                var that = this;
-                setTimeout(function () {
-                    var height = that._balloonDiv.offsetHeight;
-                    var width = that._balloonDiv.offsetWidth / 2;
-                    that.positionX = Math.max((value.x - width), 0) + 'px';
-                    that.positionY = Math.max((value.y - height - 20), 0) + 'px';
-                }, 25);
+                if (!Cartesian2.equals(this._position, value)) {
+                    this._position = Cartesian2.clone(value, this._position);
+                    this._updatePosition = true;
+                }
             }
         }
     });

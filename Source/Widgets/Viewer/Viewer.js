@@ -296,7 +296,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var balloonContainer = document.createElement('div');
             balloonContainer.className = 'cesium-viewer-balloonContainer';
             viewerContainer.appendChild(balloonContainer);
-            balloon = new Balloon(balloonContainer, defaultValue(options.balloonElement, container));
+            balloon = new Balloon(balloonContainer, cesiumWidget.scene);
         }
 
         this._container = container;
@@ -661,6 +661,9 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype.render = function() {
         this._cesiumWidget.render();
+        if (typeof this._balloon !== 'undefined') {
+            this._balloon.render();
+        }
     };
 
     /**

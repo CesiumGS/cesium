@@ -15,6 +15,7 @@ define([
         '../Core/Interval',
         '../Core/Matrix4',
         '../Core/JulianDate',
+        '../Core/Transforms',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -46,6 +47,7 @@ define([
         Interval,
         Matrix4,
         JulianDate,
+        Transforms,
         Context,
         ClearCommand,
         PassState,
@@ -688,6 +690,25 @@ define([
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
         return this._pickFramebuffer.end(scratchRectangle);
+    };
+
+    /**
+     * Converts a cartesian position to a window position.
+     *
+     * @param {Cartesian3} position The cartesian position
+     *
+     * @returns {Cartesain2} The screen coordinates of the given position;
+     */
+    Scene.prototype.computeWindowPosition  = function(position) {
+        if (typeof position === 'undefined') {
+            return undefined;
+        }
+
+        var uniformState = this._context.getUniformState();
+        var modelViewProjectionMatrix = uniformState.getModelViewProjection();
+        var viewportTransformation = uniformState.getViewportTransformation();
+        var point = Transforms.pointToWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, position);
+        return point;
     };
 
     /**
