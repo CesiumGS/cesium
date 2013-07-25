@@ -351,7 +351,7 @@ define([
         }
 
         var dataSource = this;
-        return loadJson(url).then(function(geoJson) {
+        return when(loadJson(url), function(geoJson) {
             return dataSource.load(geoJson, url);
         }, function(error) {
             dataSource._error.raiseEvent(dataSource, error);
