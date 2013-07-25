@@ -1,5 +1,6 @@
 /*global define*/
-define(['../Core/ClockRange',
+define([
+        '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -7,17 +8,19 @@ define(['../Core/ClockRange',
         '../Core/loadJson',
         './DynamicClock',
         './processCzml',
-        './DynamicObjectCollection'
-        ], function(
-                ClockRange,
-                ClockStep,
-                DeveloperError,
-                Event,
-                Iso8601,
-                loadJson,
-                DynamicClock,
-                processCzml,
-                DynamicObjectCollection) {
+        './DynamicObjectCollection',
+        '../ThirdParty/when'
+    ], function(
+        ClockRange,
+        ClockStep,
+        DeveloperError,
+        Event,
+        Iso8601,
+        loadJson,
+        DynamicClock,
+        processCzml,
+        DynamicObjectCollection,
+        when) {
     "use strict";
 
     function loadCzml(dataSource, czml, sourceUri) {
@@ -164,10 +167,11 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        return loadJson(url).then(function(czml) {
+        return when(loadJson(url), function(czml) {
             dataSource.process(czml, url);
         }, function(error) {
-            this._error.raiseEvent(this, error);
+            dataSource._error.raiseEvent(dataSource, error);
+            return when.reject(error);
         });
     };
 
@@ -186,10 +190,11 @@ define(['../Core/ClockRange',
         }
 
         var dataSource = this;
-        return loadJson(url).then(function(czml) {
+        return when(loadJson(url), function(czml) {
             dataSource.load(czml, url);
         }, function(error) {
-            this._error.raiseEvent(this, error);
+            dataSource._error.raiseEvent(dataSource, error);
+            return when.reject(error);
         });
     };
 
