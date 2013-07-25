@@ -1,21 +1,24 @@
 /*global defineSuite*/
-defineSuite(['DynamicScene/CzmlDataSource',
-             'DynamicScene/DynamicObjectCollection',
-             'Core/ClockRange',
-             'Core/ClockStep',
-             'Core/Event',
-             'Core/loadJson',
-             'Core/JulianDate',
-             'Core/TimeInterval'
-            ], function(
-                    CzmlDataSource,
-                    DynamicObjectCollection,
-                    ClockRange,
-                    ClockStep,
-                    Event,
-                    loadJson,
-                    JulianDate,
-                    TimeInterval) {
+defineSuite([
+        'DynamicScene/CzmlDataSource',
+        'DynamicScene/DynamicObjectCollection',
+        'Core/ClockRange',
+        'Core/ClockStep',
+        'Core/Event',
+        'Core/loadJson',
+        'Core/JulianDate',
+        'Core/TimeInterval',
+        'ThirdParty/when'
+    ], function(
+        CzmlDataSource,
+        DynamicObjectCollection,
+        ClockRange,
+        ClockStep,
+        Event,
+        loadJson,
+        JulianDate,
+        TimeInterval,
+        when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -66,11 +69,6 @@ defineSuite(['DynamicScene/CzmlDataSource',
         range : ClockRange[clockCzml.clock.range],
         step : ClockStep[clockCzml.clock.step]
     };
-
-    var errorCounter;
-    function errorEventCounter() {
-        errorCounter++;
-    }
 
     it('default constructor has expected values', function() {
         var dataSource = new CzmlDataSource();
@@ -224,5 +222,51 @@ defineSuite(['DynamicScene/CzmlDataSource',
         expect(function() {
             dataSource.loadUrl(undefined);
         }).toThrow();
+    });
+
+    it('raises error when an error occurs in loadUrl', function() {
+        var dataSource = new CzmlDataSource();
+
+        var spy = jasmine.createSpy('errorEvent');
+        dataSource.getErrorEvent().addEventListener(spy);
+
+        var promise = dataSource.loadUrl('Data/Images/Blue.png'); //not JSON
+
+        var resolveSpy = jasmine.createSpy('resolve');
+        var rejectSpy = jasmine.createSpy('reject');
+        when(promise, resolveSpy, rejectSpy);
+
+        waitsFor(function() {
+            return rejectSpy.wasCalled;
+        });
+
+        runs(function() {
+            expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
+            expect(rejectSpy).toHaveBeenCalledWith(jasmine.any(Error));
+            expect(resolveSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    it('raises error when an error occurs in processUrl', function() {
+        var dataSource = new CzmlDataSource();
+
+        var spy = jasmine.createSpy('errorEvent');
+        dataSource.getErrorEvent().addEventListener(spy);
+
+        var promise = dataSource.processUrl('Data/Images/Blue.png'); //not JSON
+
+        var resolveSpy = jasmine.createSpy('resolve');
+        var rejectSpy = jasmine.createSpy('reject');
+        when(promise, resolveSpy, rejectSpy);
+
+        waitsFor(function() {
+            return rejectSpy.wasCalled;
+        });
+
+        runs(function() {
+            expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
+            expect(rejectSpy).toHaveBeenCalledWith(jasmine.any(Error));
+            expect(resolveSpy).not.toHaveBeenCalled();
+        });
     });
 });
