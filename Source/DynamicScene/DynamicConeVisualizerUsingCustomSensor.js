@@ -372,7 +372,7 @@ define([
 
         property = dynamicCone.intersectionWidth;
         if (typeof property !== 'undefined') {
-            var intersectionWidth = property.getValue(time, intersectionWidth);
+            var intersectionWidth = property.getValue(time);
             if (typeof intersectionWidth !== 'undefined') {
                 cone.intersectionWidth = intersectionWidth;
             }
