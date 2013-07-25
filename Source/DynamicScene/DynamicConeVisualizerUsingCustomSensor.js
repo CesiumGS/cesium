@@ -1,26 +1,30 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/Quaternion',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
         '../Scene/Material'
-       ], function(
-         defaultValue,
-         DeveloperError,
-         destroyObject,
-         Color,
-         CesiumMath,
-         Matrix3,
-         Matrix4,
-         Spherical,
-         CustomSensorVolume,
-         Material) {
+    ], function(
+        Cartesian3,
+        Color,
+        defaultValue,
+        destroyObject,
+        DeveloperError,
+        Quaternion,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
+        Spherical,
+        CustomSensorVolume,
+        Material) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -225,6 +229,8 @@ define([
         return destroyObject(this);
     };
 
+    var cachedPosition = new Cartesian3();
+    var cachedOrientation = new Quaternion();
     function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
         var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject.cone;
@@ -342,16 +348,16 @@ define([
             }
         }
 
-        var position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
-        var orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
+        var position = positionProperty.getValueCartesian(time, cachedPosition);
+        var orientation = orientationProperty.getValue(time, cachedOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
-            position.clone(cone._visualizerPosition);
-            orientation.clone(cone._visualizerOrientation);
+            cone._visualizerPosition = position.clone(cone._visualizerPosition);
+            cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
         }
 
         var material = dynamicCone.outerMaterial;
