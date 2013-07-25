@@ -225,10 +225,6 @@ define([
         return destroyObject(this);
     };
 
-    var position;
-    var orientation;
-    var intersectionColor;
-    var intersectionWidth;
     function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
         var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject.cone;
@@ -280,7 +276,7 @@ define([
 
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(context, Material.ColorType);
-            cone.intersectionColor = Color.YELLOW;
+            cone.intersectionColor = Color.YELLOW.clone();
             cone.intersectionWidth = 5.0;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
@@ -346,8 +342,8 @@ define([
             }
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
-        orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
+        var position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
+        var orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
@@ -365,15 +361,12 @@ define([
 
         property = dynamicCone.intersectionColor;
         if (typeof property !== 'undefined') {
-            intersectionColor = property.getValue(time, intersectionColor);
-            if (typeof intersectionColor !== 'undefined') {
-                cone.intersectionColor = intersectionColor;
-            }
+            property.getValue(time, cone.intersectionColor);
         }
 
         property = dynamicCone.intersectionWidth;
         if (typeof property !== 'undefined') {
-            intersectionWidth = property.getValue(time, intersectionWidth);
+            var intersectionWidth = property.getValue(time, intersectionWidth);
             if (typeof intersectionWidth !== 'undefined') {
                 cone.intersectionWidth = intersectionWidth;
             }
