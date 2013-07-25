@@ -4,6 +4,7 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -35,6 +36,7 @@ define([
         Color,
         defaultValue,
         destroyObject,
+        DeveloperError,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -708,6 +710,8 @@ define([
      *
      * @returns {Array} Array of picked primitives.
      *
+     * @exception {DeveloperError} unknown method of hiding primitive.
+     *
      * @example
      * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
      */
@@ -720,13 +724,28 @@ define([
             pickedPrimitives.push(primitive);
 
             // hide the picked primitive and call picking again to get the next primitive
-            primitive.show = false;
+            if(typeof primitive.setShow !== 'undefined') {
+                primitive.setShow(false);
+            }
+            else if (typeof primitive.show !== 'undefined'){
+                primitive.show = false;
+            }
+            else {
+                throw new DeveloperError('unknown method of hiding primitive.');
+            }
+
             primitive = this.pick(windowPosition);
         }
 
         // unhide the picked primitives
         for(var i=0; i<pickedPrimitives.length; ++i) {
-            pickedPrimitives[i].show = true;
+
+            if(typeof pickedPrimitives[i].setShow !== 'undefined') {
+                pickedPrimitives[i].setShow(true);
+            }
+            else {
+                pickedPrimitives[i].show = true;
+            }
         }
 
         return pickedPrimitives;
