@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/Cartesian2',
         '../../Core/Cartesian3',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
@@ -10,6 +11,7 @@ define([
         './BalloonViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        Cartesian2,
         Cartesian3,
         defineProperties,
         DeveloperError,
@@ -20,29 +22,15 @@ define([
         BalloonViewModel,
         knockout) {
     "use strict";
-    var position;
-    var pickedObject;
+    var screenPosition = new Cartesian2();
 
-    function updatePosition(widget, screenPosition) {
-        var containerWidth = widget.container.clientWidth;
-        var containerHeight = widget.container.clientHeight;
-
-        var width = widget._element.offsetWidth;
-        var height = widget._element.offsetHeight;
-        screenPosition.x = Math.min(Math.max((screenPosition.x - width/2), 0), containerWidth - width);
-        screenPosition.y = Math.min(Math.max((screenPosition.y + 20), 0), containerHeight - height);
-
-        return screenPosition;
-    }
-
-    function mouseOrTouch(widget, e) {
+    function clickOrTouch(widget, e) {
         var scene = widget._scene;
         var viewModel = widget.viewModel;
-        var dragging = viewModel.dragging;
 
         var clientX;
         var clientY;
-        if (e.type === 'touchstart' || e.type === 'touchmove') {
+        if (e.type === 'touchend') {
             clientX = e.touches[0].clientX;
             clientY = e.touches[0].clientY;
         } else {
@@ -50,34 +38,15 @@ define([
             clientY = e.clientY;
         }
 
-        if (e.type === 'mouseup') {
-            var newPickedObject = scene.pick({x: clientX, y: clientY});
-            if (typeof newPickedObject !== 'undefined' && typeof newPickedObject.balloon !== 'undefined') {
-                position = newPickedObject.getPosition();
-                if (typeof position !== 'undefined') {
-                    if (pickedObject === newPickedObject) {
-                        viewModel.screenPosition = updatePosition(widget, scene.computeWindowPosition(position));
-                    } else {
-                        viewModel.content = newPickedObject.balloon;
-                        viewModel.screenPosition = updatePosition(widget, scene.computeWindowPosition(position));
-                        pickedObject = newPickedObject;
-                    }
-
-                }
+        var pickedObject = scene.pick({x: clientX, y: clientY});
+        if (typeof pickedObject !== 'undefined' && typeof pickedObject.balloon !== 'undefined') {
+            if (typeof pickedObject.computeScreenSpacePosition === 'function') {
+                viewModel.computeScreenPosition = function() { return pickedObject.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()); };
+            } else if (typeof pickedObject.getPosition === 'function') {
+                var position = pickedObject.getPosition();
+                viewModel.computeScreenPosition = function() { return scene.computeWindowPosition( position, screenPosition); };
             }
-            viewModel.dragging = false;
-        } else if (e.type === 'mousedown' || (dragging && e.type === 'mousemove') ||
-                (e.type === 'touchstart' && e.touches.length === 1) ||
-                (dragging && e.type === 'touchmove' && e.touches.length === 1)) {
-
-            if ((e.type === 'mousedown') || (e.type === 'touchstart')) {
-                viewModel.dragging = true;
-            } else if (dragging && (e.type === 'touchmove' || e.type === 'mousemove') &&
-                viewModel.balloonVisible && typeof position !== 'undefined') {
-                viewModel.screenPosition = updatePosition(widget, scene.computeWindowPosition(position));
-            } else {
-                viewModel.dragging = false;
-            }
+            viewModel.content = pickedObject.balloon;
         }
     }
 
@@ -89,13 +58,13 @@ define([
         container = getElement(container);
 
         this._container = container;
-        this._scene = scene;
         var el = document.createElement('div');
         this._element = el;
+        this._scene = scene;
         el.className = 'cesium-balloon-wrapper';
         container.appendChild(el);
         el.setAttribute('data-bind',
-                'css: { "cesium-balloon-wrapper-visible" : _balloonVisible, "cesium-balloon-wrapper-hidden" : !_balloonVisible },\
+                'css: { "cesium-balloon-wrapper-visible" : balloonVisible, "cesium-balloon-wrapper-hidden" : !balloonVisible },\
                 style: { "bottom" : _positionY, "left" : _positionX}');
 
         var contentWrapper = document.createElement('div');
@@ -120,20 +89,16 @@ define([
         point.className = 'cesium-balloon-point';
         el.appendChild(point);
 
-        var viewModel = new BalloonViewModel(scene, container, this._content, this._element);
+        var viewModel = new BalloonViewModel(scene, this._content, this._element, this._container);
         this._viewModel = viewModel;
 
         var that = this;
         var mouseCallback = function(e) {
-            mouseOrTouch(that, e);
+            clickOrTouch(that, e);
         };
 
-        document.addEventListener('mousedown', mouseCallback, true);
-        document.addEventListener('touchstart', mouseCallback, true);
-        document.addEventListener('mousemove', mouseCallback, true);
-        document.addEventListener('touchmove', mouseCallback, true);
-        document.addEventListener('mouseup', mouseCallback, true);
-        document.addEventListener('touchend', mouseCallback, true);
+        document.addEventListener('click', mouseCallback, false);
+        document.addEventListener('touchend', mouseCallback, false);
 
         knockout.applyBindings(this._viewModel, this._element);
     };
@@ -165,11 +130,7 @@ define([
     };
 
     Balloon.prototype.render = function() {
-        var viewModel = this.viewModel;
-        if (typeof position !== 'undefined') {
-            viewModel.screenPosition = updatePosition(this, this._scene.computeWindowPosition(position));
-            viewModel.render();
-        }
+        this.viewModel.render();
     };
 
     return Balloon;

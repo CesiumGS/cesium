@@ -699,7 +699,7 @@ define([
      *
      * @returns {Cartesain2} The screen coordinates of the given position;
      */
-    Scene.prototype.computeWindowPosition  = function(position) {
+    Scene.prototype.computeWindowPosition  = function(position, result) {
         if (typeof position === 'undefined') {
             return undefined;
         }
@@ -707,7 +707,8 @@ define([
         var uniformState = this._context.getUniformState();
         var modelViewProjectionMatrix = uniformState.getModelViewProjection();
         var viewportTransformation = uniformState.getViewportTransformation();
-        var point = Transforms.pointToWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, position);
+        var point = Transforms.pointToWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, position, result);
+
         return point;
     };
 

@@ -1,61 +1,78 @@
 /*global define*/
 define([
         '../../Core/Cartesian2',
+        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defineProperties',
-        '../../Core/destroyObject',
         '../../Core/DeveloperError',
-        '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
+        Cartesian3,
         defaultValue,
         defineProperties,
-        destroyObject,
         DeveloperError,
-        createCommand,
         knockout) {
     "use strict";
 
-    var BalloonViewModel = function(scene, container, contentElement, balloonElement) {
+    function shiftPosition(viewModel, position){
+        var containerWidth = viewModel._container.clientWidth;
+        var containerHeight = viewModel._container.clientHeight;
+
+        var width = viewModel._balloonElement.offsetWidth;
+        var height = viewModel._balloonElement.offsetHeight;
+        position.x = Math.min(Math.max((position.x - width/2), 0), containerWidth - width);
+        position.y = Math.min(Math.max((position.y + 20), 0), containerHeight - height);
+
+        return position;
+    }
+
+    var BalloonViewModel = function(scene, contentElement, balloonElement, container) {
         this._scene = scene;
+        this._container = container;
         this._balloonElement = balloonElement;
         this._contentElement = contentElement;
-        this._con = contentElement.innerHTML;
-        this._position = new Cartesian2();
-        this._callback = function() {};
-        document.addEventListener(function(){}, this._callback);
+        this._content = contentElement.innerHTML;
+        this._computeScreenPosition = undefined;
 
-        this.dragging = false;
-
-        this._balloonVisible = false;
+        this.balloonVisible = false;
         this._positionX = '0';
         this._positionY = '0';
         this._updateContent = false;
         this._updatePosition = false;
-        knockout.track(this, ['_balloonVisible', '_positionX', '_positionY']);
+        this._timerRunning = false;
+
+        knockout.track(this, ['balloonVisible', '_positionX', '_positionY']);
 
         var that = this;
 
-        this._render = createCommand(function() { //TODO: streamline so positions don't run over fade
-            if (that._updateContent) {
-                that._balloonVisible = false;
-                setTimeout(function () {
-                    that._contentElement.innerHTML = that._content;
-                    that._positionX = that._position.x + 'px';
-                    that._positionY = that._position.y + 'px';
-                    that._balloonVisible = true;
-                    that.balloonVisible = true;
-                }, 250);
-                that._updatePosition = false;
-                that._updateContent = false;
-            } else if (that._updatePosition) {
-                that._balloonVisible = that.balloonVisible;
-                that._positionX = that._position.x + 'px';
-                that._positionY = that._position.y + 'px';
-                that._updatePosition = false;
+        this._render = function() {
+            if (!that._timerRunning) {
+                if (that._updateContent) {
+                    that.balloonVisible = false;
+                    that._timerRunning = true;
+                    setTimeout(function () {
+                        that._contentElement.innerHTML = that._content;
+                        if (typeof that._computeScreenPosition === 'function') {
+                            var screenPos = that._computeScreenPosition();
+                            if (typeof screenPos !== 'undefined') {
+                                screenPos = shiftPosition(that, screenPos);
+                                that._positionX = screenPos.x + 'px';
+                                that._positionY = screenPos.y + 'px';
+                            }
+                        }
+                        that.balloonVisible = true;
+                        that._timerRunning = false;
+                    }, 100);
+                    that._updateContent = false;
+                } else  if (typeof that._computeScreenPosition === 'function') {
+                    var screenPos = that._computeScreenPosition();
+                    screenPos = shiftPosition(that, screenPos);
+                    that._positionX = screenPos.x + 'px';
+                    that._positionY = screenPos.y + 'px';
+                }
             }
-        });
+        };
     };
 
     defineProperties(BalloonViewModel.prototype, {
@@ -71,36 +88,23 @@ define([
             },
             set : function(value) {
                 if (typeof value !== 'string') {
-                    throw new DeveloperError('value must be a string');
+                    throw new DeveloperError('content value must be a string');
                 }
-                if (value !== this._content) {
-                    this._content = value;
-                    this._updateContent = true;
-                }
+                this._content = value;
+                this._updateContent = true;
+                this.balloonVisible = true;
             }
         },
 
-        screenPosition: {
-            get : function() {
-                return this._position;
-            },
+        computeScreenPosition: {
             set: function(value) {
-                if (!Cartesian2.equals(this._position, value)) {
-                    this._position = Cartesian2.clone(value, this._position);
-                    this._updatePosition = true;
+                if (typeof value !== 'function') {
+                    throw new DeveloperError('computeScreenPosition must be a function');
                 }
+                this._computeScreenPosition = value;
             }
         }
     });
-
-    BalloonViewModel.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    BalloonViewModel.prototype.destroy = function() {
-        document.removeEventListener(function(){}, this._callback);
-        destroyObject(this);
-    };
 
     return BalloonViewModel;
 });
