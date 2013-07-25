@@ -117,6 +117,12 @@ click: finishCommand,\
 enable: finishCommand.canExecute');
         dataSourcePanelFooter.appendChild(finishAddDataSourceButton);
 
+        var finishAddDataSourceError = document.createElement('span');
+        finishAddDataSourceError.setAttribute('data-bind', '\
+visible: error !== "",\
+text: error');
+        dataSourcePanelFooter.appendChild(finishAddDataSourceError);
+
         knockout.bindingHandlers.dataSourceBrowserActivePanel = {
             update : function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
                 while (element.hasChildNodes()) {

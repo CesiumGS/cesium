@@ -5,6 +5,7 @@ define([
         '../../Core/defineProperties',
         '../createCommand',
         './CzmlDataSourcePanel',
+        './GeoJsonDataSourcePanel',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
@@ -13,6 +14,7 @@ define([
         defineProperties,
         createCommand,
         CzmlDataSourcePanel,
+        GeoJsonDataSourcePanel,
         knockout,
         when) {
     "use strict";
@@ -41,9 +43,15 @@ define([
          */
         this.visible = false;
 
-        knockout.track(this, ['visible', 'dataSourcePanels', 'activeDataSourcePanel']);
+        /**
+         *
+         */
+        this.error = '';
+
+        knockout.track(this, ['dataSourcePanels', 'activeDataSourcePanel', 'visible', 'error']);
 
         this._finishCommand = createCommand(function() {
+            that.error = '';
             finishing(true);
             when(that.activeDataSourcePanel.finish(that._dataSourceBrowserViewModel.dataSources), function(result) {
                 finishing(false);
@@ -51,6 +59,9 @@ define([
                     that.activeDataSourcePanel.activeDataSourcePanel = undefined;
                     that.visible = false;
                 }
+            }, function (err) {
+                that.error = err;
+                finishing(false);
             });
         }, knockout.computed(function() {
             return !finishing() && defined(that.activeDataSourcePanel);
@@ -74,7 +85,7 @@ define([
     /**
      *
      */
-    DataSourcePanelViewModel.defaultDataSourcePanels = [new CzmlDataSourcePanel()];
+    DataSourcePanelViewModel.defaultDataSourcePanels = [new CzmlDataSourcePanel(), new GeoJsonDataSourcePanel()];
 
     return DataSourcePanelViewModel;
 });
