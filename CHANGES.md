@@ -39,6 +39,7 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added extrusion to `ExtentGeometry`.
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
+* Added `Scene.drillPick` to return list of all primitives at a screen space position.
 
 ### b18 - 2013-07-01
 

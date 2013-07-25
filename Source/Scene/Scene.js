@@ -661,8 +661,15 @@ define([
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
 
     /**
-     * DOC_TBA
+     * Returns the first (top) primitive in the scene at a particular window coordinate or undefined
+     * if nothing is at the location.
+     *
      * @memberof Scene
+     *
+     * @param {Cartesian2} Window coordinates to perform picking on.
+     *
+     * @returns {Object} Picked primitive.
+     *
      */
     Scene.prototype.pick = function(windowPosition) {
         var context = this._context;
@@ -688,6 +695,41 @@ define([
 
         executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
         return this._pickFramebuffer.end(scratchRectangle);
+    };
+
+
+    /**
+     * Returns a list of primitives at a particular window coordinate position. The primitives in the list are ordered
+     * by their visual order in the scene (front to back).
+     *
+     * @memberof Scene
+     *
+     * @param {Cartesian2} Window coordinates to perform picking on.
+     *
+     * @returns {Array} Array of picked primitives.
+     *
+     * @example
+     * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
+     */
+    Scene.prototype.drillPick = function(windowPosition) {
+
+        var pickedPrimitives = [];
+
+        var primitive = this.pick(windowPosition);
+        while(typeof primitive !== 'undefined') {
+            pickedPrimitives.push(primitive);
+
+            // hide the picked primitive and call picking again to get the next primitive
+            primitive.show = false;
+            primitive = this.pick(windowPosition);
+        }
+
+        // unhide the picked primitives
+        for(var i=0; i<pickedPrimitives.length; ++i) {
+            pickedPrimitives[i].show = true;
+        }
+
+        return pickedPrimitives;
     };
 
     /**
