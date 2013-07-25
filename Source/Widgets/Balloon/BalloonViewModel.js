@@ -16,15 +16,60 @@ define([
     "use strict";
 
     function shiftPosition(viewModel, position){
+        var pointX;
+        var pointY;
+        var posX;
+        var posY;
+
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
         var width = viewModel._balloonElement.offsetWidth;
         var height = viewModel._balloonElement.offsetHeight;
-        position.x = Math.min(Math.max((position.x - width/2), 0), containerWidth - width);
-        position.y = Math.min(Math.max((position.y + 20), 0), containerHeight - height);
 
-        return position;
+        var top = position.y > containerHeight;
+        var bottom = position.y < -10;
+        var left = position.x < 0;
+        var right = position.x > containerWidth;
+        if (bottom) {
+            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
+            posY = 15;
+            pointX = Math.min(Math.max((position.x - 11), 4), containerWidth - 29);
+            pointY = 4;
+        } else if (top) {
+            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
+            posY = containerHeight - height - 15;
+            pointX = Math.min(Math.max((position.x - 11), 4), containerWidth - 29);
+            pointY = containerHeight - 27;
+        } else if (left) {
+            posX = 15;
+            posY = Math.min(Math.max((position.y - height/2), 0), containerHeight - height);
+            pointX = 4;
+            pointY = Math.min(Math.max((position.y - 15), 4), containerHeight - 27);
+        } else if (right) {
+            posX = containerWidth - width - 15;
+            posY = Math.min(Math.max((position.y - height/2), 0), containerHeight - height);
+            pointX = containerWidth - 29;
+            pointY = Math.min(Math.max((position.y - 15), 4), containerHeight - 27);
+        } else {
+            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
+            posY = Math.min(Math.max((position.y + 25), 0), containerHeight - height);
+
+            pointX = position.x - 11;
+            pointY = position.y + 15;
+        }
+
+        return {
+            point: {
+                x: pointX,
+                y: pointY
+            },
+            screen: {
+                x: posX,
+                y: posY
+            }
+        };
+
     }
 
     var BalloonViewModel = function(scene, contentElement, balloonElement, container) {
@@ -36,13 +81,16 @@ define([
         this._computeScreenPosition = undefined;
 
         this.balloonVisible = false;
+        this._pointVisible = false;
         this._positionX = '0';
         this._positionY = '0';
+        this._pointX = '0';
+        this._pointY = '0';
         this._updateContent = false;
         this._updatePosition = false;
         this._timerRunning = false;
 
-        knockout.track(this, ['balloonVisible', '_positionX', '_positionY']);
+        knockout.track(this, ['_pointVisible', 'balloonVisible', '_positionX', '_positionY', '_pointX', '_pointY']);
 
         var that = this;
 
@@ -56,9 +104,12 @@ define([
                         if (typeof that._computeScreenPosition === 'function') {
                             var screenPos = that._computeScreenPosition();
                             if (typeof screenPos !== 'undefined') {
-                                screenPos = shiftPosition(that, screenPos);
-                                that._positionX = screenPos.x + 'px';
-                                that._positionY = screenPos.y + 'px';
+                                var pos = shiftPosition(that, screenPos);
+                                that._pointX = (pos.point.x) + 'px';
+                                that._pointY = (pos.point.y) + 'px';
+
+                                that._positionX = pos.screen.x + 'px';
+                                that._positionY = pos.screen.y + 'px';
                             }
                         }
                         that.balloonVisible = true;
@@ -67,9 +118,14 @@ define([
                     that._updateContent = false;
                 } else  if (typeof that._computeScreenPosition === 'function') {
                     var screenPos = that._computeScreenPosition();
-                    screenPos = shiftPosition(that, screenPos);
-                    that._positionX = screenPos.x + 'px';
-                    that._positionY = screenPos.y + 'px';
+                    if (typeof screenPos !== 'undefined') {
+                        var pos = shiftPosition(that, screenPos);
+                        that._pointX = (pos.point.x) + 'px';
+                        that._pointY = (pos.point.y) + 'px';
+
+                        that._positionX = pos.screen.x + 'px';
+                        that._positionY = pos.screen.y + 'px';
+                    }
                 }
             }
         };
