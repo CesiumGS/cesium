@@ -31,26 +31,29 @@ define([
         WindingOrder) {
     "use strict";
 
-    function DoublyLinkedList() {
+    function EarClipLinkedList() {
         this.head = undefined;
         this.tail = undefined;
         this.length = 0;
+        this.list = new Array(length);
     }
 
-    DoublyLinkedList.prototype.add = function(item) {
+    EarClipLinkedList.prototype.add = function(item, index) {
         if (typeof item !== 'undefined') {
             var node = {
                 item : item,
+                index: index,
                 previous : this.tail,
-                next : undefined
+                next : this.head
             };
+            this.list[index] = node;
 
-            if (typeof this.tail !== 'undefined') {
-                this.tail.next = node;
+            if (this.length === 0) {
+                this.head = node;
                 this.tail = node;
             } else {
-                // Insert into empty list.
-                this.head = node;
+                this.head.previous = node;
+                this.tail.next = node;
                 this.tail = node;
             }
 
@@ -58,35 +61,56 @@ define([
         }
     };
 
-    DoublyLinkedList.prototype.remove = function(item) {
-        if (typeof item !== 'undefined') {
-            if (typeof item.previous !== 'undefined' && typeof item.next  !== 'undefined') {
-                item.previous.next = item.next;
-                item.next.previous = item.previous;
-            } else if (typeof item.previous  !== 'undefined') {
-                // Remove last node.
-                item.previous.next = undefined;
-                this.tail = item.previous;
-            } else if (typeof item.next !== 'undefined') {
-                // Remove first node.
-                item.next.previous = undefined;
-                this.head = item.next;
-            } else {
-                // Remove last node in linked list.
-                this.head = undefined;
-                this.tail = undefined;
+    EarClipLinkedList.prototype.remove = function(index) {
+        if (typeof index !== 'undefined') {
+            var node = this.list[index];
+            if (typeof node !== 'undefined') {
+                if (this.length > 1) {
+                    node.previous.next = node.next;
+                    node.next.previous = node.previous;
+                    if (node === this.head) {
+                        this.head = node.next;
+                    }
+                    if (node === this.tail) {
+                        this.tail = node.previous;
+                    }
+                } else {
+                    // Remove last node in linked list.
+                    this.head = undefined;
+                    this.tail = undefined;
+                }
+                this.list[index] = undefined;
+                --this.length;
+                return node;
             }
-
-            --this.length;
         }
     };
 
+    EarClipLinkedList.prototype.clear = function() {
+        this.head = undefined;
+        this.tail = undefined;
+        this.length = 0;
+        this.list.length = 0;
+    };
+
+    var scratch1 = new Cartesian2();
+    var scratch2 = new Cartesian2();
     function isTipConvex(p0, p1, p2) {
-        var u = p1.subtract(p0);
-        var v = p2.subtract(p1);
+        var u = p1.subtract(p0, scratch1);
+        var v = p2.subtract(p1, scratch2);
 
         // Use the sign of the z component of the cross product
-        return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
+        return ((u.x * v.y) - (u.y * v.x)) > 0.0;
+    }
+
+    function isVertexEar (v0, v, v1, reflexList){
+        for (var i = 0; i < reflexList.length; i++) {
+            var n = reflexList[i];
+            if (pointInsideTriangle(n, v0, v, v1)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -376,6 +400,8 @@ define([
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
 
+    var polygonVertices = new EarClipLinkedList();
+
     /**
      * DOC_TBA
      *
@@ -457,16 +483,17 @@ define([
         },
 
         /**
-         * DOC_TBA
+         * Triangulates a polygon by an ear clipping method
+         *
+         * @param Array {Cartesian2} Array of points, representing polygon vertices
+         *
+         * @return Array {Number} Indices of vertices (in sets of three) representing triangles
          *
          * @exception {DeveloperError} positions is required.
          * @exception {DeveloperError} At least three positions are required.
          */
         earClip2D : function(positions) {
-            // PERFORMANCE_IDEA:  This is slow at n^3.  Make it faster with:
-            //   * http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-            //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
-            //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
+            // Based on http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
 
             if (typeof positions  === 'undefined') {
                 throw new DeveloperError('positions is required.');
@@ -477,66 +504,102 @@ define([
                 throw new DeveloperError('At least three positions are required.');
             }
 
-            var remainingPositions = new DoublyLinkedList();
-
-            for ( var i = 0; i < length; ++i) {
-                remainingPositions.add({
-                    position : positions[i],
-                    index : i
-                });
+            if (polygonVertices.length > 0) {
+                polygonVertices.clear();
             }
 
             var indices = [];
+            var reflex = [];
+            var isReflex = new Array(length);
+            var convex = [];
+            var earTips = [];
+            var isEarTip = new Array(length);
+            var v, v0, v1;
 
-            var previousNode = remainingPositions.head;
-            var node = previousNode.next;
-            var nextNode = node.next;
-
-            var bailCount = length * length;
-
-            while (remainingPositions.length > 3) {
-                var p0 = previousNode.item.position;
-                var p1 = node.item.position;
-                var p2 = nextNode.item.position;
-
-                if (isTipConvex(p0, p1, p2)) {
-                    var isEar = true;
-
-                    for ( var n = (nextNode.next ? nextNode.next : remainingPositions.head); n !== previousNode; n = (n.next ? n.next : remainingPositions.head)) {
-                        if (pointInsideTriangle(n.item.position, p0, p1, p2)) {
-                            isEar = false;
-                            break;
-                        }
-                    }
-
-                    if (isEar) {
-                        indices.push(previousNode.item.index);
-                        indices.push(node.item.index);
-                        indices.push(nextNode.item.index);
-
-                        remainingPositions.remove(node);
-
-                        node = nextNode;
-                        nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-                        continue;
-                    }
-                }
-
-                previousNode = previousNode.next ? previousNode.next : remainingPositions.head;
-                node = node.next ? node.next : remainingPositions.head;
-                nextNode = nextNode.next ? nextNode.next : remainingPositions.head;
-
-                if (--bailCount === 0) {
-                    break;
+            for (var i = 0; i < length; ++i) {
+                polygonVertices.add(positions[i], i); //add vertex list
+                v = positions[i];
+                v0 = (i === 0) ? positions[length-1] : positions[i-1];
+                v1 = positions[(i+1)%length];
+                if (isTipConvex(v0, v, v1)) {
+                    convex.push(i);
+                    isReflex[i] = false;
+                } else {
+                    reflex.push(positions[i]);
+                    isReflex[i] = true;
                 }
             }
 
-            var n0 = remainingPositions.head;
-            var n1 = n0.next;
-            var n2 = n1.next;
-            indices.push(n0.item.index);
-            indices.push(n1.item.index);
-            indices.push(n2.item.index);
+            if (reflex.length > 0) {
+                for (i = 0; i < convex.length; i++) {
+                    var index = convex[i];
+                    v = positions[index];
+                    v0 = (index === 0) ? positions[length-1] : positions[index-1];
+                    v1 = positions[(index+1)%length];
+                    if (isVertexEar(v0, v, v1, reflex)) {
+                        earTips.push(index);
+                        isEarTip[index] = true;
+                    } else {
+                        isEarTip[index] = false;
+                    }
+                }
+            } else {
+                earTips = convex;
+            }
+
+            while (polygonVertices.length > 3) {
+                v = polygonVertices.remove(earTips.pop());
+                v0 = v.previous;
+                v1 = v.next;
+                var v0index = v0.index;
+                var v1index = v1.index;
+                var v0item = v0.item;
+                var v1item = v1.item;
+                var v0previousitem = v0.previous.item;
+                var v0nextitem = v0.next.item;
+                var v1previousitem = v1.previous.item;
+                var v1nextitem = v1.next.item;
+
+                indices.push(v0index, v.index, v1index);
+
+                // Check adjacent vertices for changes
+                if (isReflex[v0index]) { // If reflex vertex is now convex
+                    if(isTipConvex(v0previousitem, v0item, v0nextitem)) {
+                        isReflex[v0index] = false;
+                        reflex.splice(reflex.indexOf(v0item), 1);
+                    }
+                }
+                if (isReflex[v1index]) { // If reflex vertex is now convex
+                    if(isTipConvex(v1previousitem, v1item, v1nextitem)) {
+                        isReflex[v1index] = false;
+                        reflex.splice(reflex.indexOf(v1item), 1);
+                    }
+                }
+                if (isEarTip[v0index]) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v0previousitem, v0item, v0nextitem, reflex)) {
+                        isEarTip[v0index] = false;
+                        earTips.splice(earTips.indexOf(v0index), 1);
+                    }
+                } else if(!isReflex[v0index]) { // If convex vertex is now also an ear tip
+                    if (isVertexEar(v0previousitem, v0item, v0nextitem, reflex)) { // If vertex is also an ear tip
+                        isEarTip[v0index] = true;
+                        earTips.push(v0index);
+                    }
+                }
+                if (isEarTip[v1index]) { // If tip that was previously an ear tip is no longer
+                    if (!isVertexEar(v1previousitem, v1item, v1nextitem, reflex)) {
+                        isEarTip[v1index] = false;
+                        earTips.splice(earTips.indexOf(v1index), 1);
+                    }
+                } else if (!isReflex[v1index]) { // If convex vertex is now also an ear tip
+                    if (isVertexEar(v1previousitem, v1item, v1nextitem, reflex)) {
+                        isEarTip[v1index] = true;
+                        earTips.push(v1index);
+                    }
+                }
+            }
+
+            indices.push(earTips[0], earTips[1], earTips[2]);
 
             return indices;
         },
