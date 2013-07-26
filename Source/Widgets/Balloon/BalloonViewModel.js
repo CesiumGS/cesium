@@ -81,6 +81,17 @@ define([
 
     }
 
+    /**
+     * The view model for {@link Balloon}.
+     * @alias BalloonViewModel
+     * @constructor
+
+     * @param {Scene} scene The scene instance to use.
+     * @param {Element} contentElement The element in which to display balloon content.
+     * @param {Element} balloonElement The element containing all elements that make up the balloon.
+     * @param {Element} container The element containing the balloon.
+
+     */
     var BalloonViewModel = function(scene, contentElement, balloonElement, container) {
         this._scene = scene;
         this._container = container;
@@ -140,12 +151,24 @@ define([
     };
 
     defineProperties(BalloonViewModel.prototype, {
+        /**
+         * Updates the view of the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Function}
+         */
         update: {
             get: function() {
                 return this._update;
             }
         },
 
+        /**
+         * Sets the object for which to display the balloon
+         * @memberof BalloonViewModel
+         *
+         * @type {Object}
+         */
         pickObject: {
             set: function(value) {
                 var scene = this._scene;

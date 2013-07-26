@@ -121,6 +121,11 @@ define([
                     viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                 }
             },
+            /**
+             * Gets or sets the object instance for which to display a balloon
+             * @memberof viewerDynamicObjectMixin.prototype
+             * @type {Object}
+             */
             balloonedObject: {
                 get: function() {
                     return balloonedObject;
@@ -139,6 +144,7 @@ define([
             eventHelper.removeAll();
 
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
+            viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK);
         });
     };
 
