@@ -4,7 +4,6 @@ define([
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -16,6 +15,7 @@ define([
         '../Core/Interval',
         '../Core/Matrix4',
         '../Core/JulianDate',
+        '../Core/RuntimeError',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -36,7 +36,6 @@ define([
         Color,
         defaultValue,
         destroyObject,
-        DeveloperError,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -48,6 +47,7 @@ define([
         Interval,
         Matrix4,
         JulianDate,
+        RuntimeError,
         Context,
         ClearCommand,
         PassState,
@@ -724,14 +724,14 @@ define([
             pickedPrimitives.push(primitive);
 
             // hide the picked primitive and call picking again to get the next primitive
-            if(typeof primitive.setShow !== 'undefined') {
+            if(typeof primitive.setShow === 'function') {
                 primitive.setShow(false);
             }
             else if (typeof primitive.show !== 'undefined'){
                 primitive.show = false;
             }
             else {
-                throw new DeveloperError('unknown method of hiding primitive.');
+                throw new RuntimeError('unknown method of hiding primitive.');
             }
 
             primitive = this.pick(windowPosition);
@@ -740,7 +740,7 @@ define([
         // unhide the picked primitives
         for(var i=0; i<pickedPrimitives.length; ++i) {
 
-            if(typeof pickedPrimitives[i].setShow !== 'undefined') {
+            if(typeof pickedPrimitives[i].setShow === 'function') {
                 pickedPrimitives[i].setShow(true);
             }
             else {
