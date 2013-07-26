@@ -29,6 +29,7 @@
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar">
+<div id="pane">
 <table id="layerTable">
   <tr>
       <td>Longitude</td>
@@ -56,11 +57,12 @@
   </tr>
 </table>
 </div>
+</div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem', 'dijit/form/HorizontalSlider'
+    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem', 'dijit/form/HorizontalSlider', 'dijit/TitlePane'
 ], function(
-    Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider)
+    Cesium,  DropDownButton, DropDownMenu, MenuItem, HorizontalSlider, TitlePane)
 {
     "use strict";
   
@@ -116,6 +118,15 @@ require([
     }
   
     function createUserInterface(viewer, sensors) {
+        var tp = new TitlePane({
+            title: 'Manipulate Sensor',
+            id:'title-pane',
+            content: document.getElementById('pane'),
+            open: false
+        });
+        document.getElementById("toolbar").appendChild(tp.domNode);
+
+        
         var ellipsoid = viewer.centralBody.getEllipsoid();
         var scene = viewer.scene;
         var primitives = scene.getPrimitives();
@@ -158,7 +169,7 @@ require([
         new DropDownButton({
             label : 'Select a sensor',
             dropDown: sensorMenu
-        }).placeAt('toolbar');
+        }).placeAt('pane');
       
         var longitudeSlider = new HorizontalSlider({
             value : longitude,
