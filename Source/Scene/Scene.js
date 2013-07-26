@@ -710,7 +710,7 @@ define([
      *
      * @returns {Array} Array of picked primitives.
      *
-     * @exception {DeveloperError} unknown method of hiding primitive.
+     * @exception {RuntimeError} unknown method of hiding primitive.
      *
      * @example
      * var pickedObjects = Scene.drillPick(new Cartesian2(100.0, 200.0));
