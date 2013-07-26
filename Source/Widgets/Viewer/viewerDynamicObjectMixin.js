@@ -63,12 +63,11 @@ define([
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
-            if (typeof dynamicObjectView !== 'undefined') {
-                dynamicObjectView.update(clock.currentTime);
-            }
-
             if (typeof balloonedObject !== 'undefined') {
                 viewer._balloon.viewModel.update();
+            }
+            if (typeof dynamicObjectView !== 'undefined') {
+                dynamicObjectView.update(clock.currentTime);
             }
         }
         eventHelper.add(viewer.clock.onTick, updateView);
@@ -116,6 +115,9 @@ define([
                 set : function(value) {
                     if (trackedObject !== value) {
                         trackedObject = value;
+                        if (trackedObject !== balloonedObject.dynamicObject && typeof trackedObject !== 'undefined') {
+                            viewer._balloon.viewModel.showBalloon = false;
+                        }
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
                     viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';

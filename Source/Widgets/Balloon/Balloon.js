@@ -43,7 +43,7 @@ define([
 
         this._container = container;
         container.setAttribute('data-bind',
-                'css: { "cesium-balloon-wrapper-visible" : balloonVisible, "cesium-balloon-wrapper-hidden" : !balloonVisible }');
+                'css: { "cesium-balloon-wrapper-visible" : showBalloon, "cesium-balloon-wrapper-hidden" : !showBalloon }');
         var el = document.createElement('div');
         this._element = el;
         el.className = 'cesium-balloon-wrapper';
@@ -52,30 +52,42 @@ define([
 
         var contentWrapper = document.createElement('div');
         contentWrapper.className = 'cesium-balloon-content';
+        contentWrapper.setAttribute('data-bind', 'style: {"max-width": _maxWidth, "max-height": _maxHeight}');
         el.appendChild(contentWrapper);
-        var exA = document.createElement('a');
-        exA.href = '#';
-        exA.className = 'cesium-balloon-close';
-        exA.setAttribute('data-bind', 'click: function(){balloonVisible = false; return false;}');
-        contentWrapper.appendChild(exA);
-        el.appendChild(contentWrapper);
+        var ex = document.createElement('a');
+        ex.href = '#';
+        ex.className = 'cesium-balloon-close';
+        ex.setAttribute('data-bind', 'click: function(){showBalloon = false; return false;}');
+        el.appendChild(ex);
+
 
         this._content = document.createElement('div');
-        var balloon = document.createElement('div');
-        balloon.className = 'cesium-balloon';
-        balloon.appendChild(this._content);
-        contentWrapper.appendChild(balloon);
+        contentWrapper.appendChild(this._content);
+        var pointContainer = document.createElement('div');
+        pointContainer.className = 'cesium-balloon-point-container';
+        pointContainer.setAttribute('data-bind',
+                'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right},\
+                style: { "bottom" : _pointY, "left" : _pointX}');
         var point = document.createElement('div');
         point.className = 'cesium-balloon-point';
-        point.setAttribute('data-bind', 'style: { "bottom" : _pointY, "left" : _pointX}');
-        container.appendChild(point);
+        point.setAttribute('data-bind',
+                'css: { "cesium-balloon-point-down" : _down,\
+                        "cesium-balloon-point-up" : _up,\
+                        "cesium-balloon-point-left" : _left,\
+                        "cesium-balloon-point-right" : _right}');
+        pointContainer.appendChild(point);
+        container.appendChild(pointContainer);
 
         var viewModel = new BalloonViewModel(scene, this._content, this._element, this._container);
         this._viewModel = viewModel;
 
+        this._pointContainer = pointContainer;
         this._point = point;
+        this._contentWrapper = contentWrapper;
 
+        knockout.applyBindings(this._viewModel, this._contentWrapper);
         knockout.applyBindings(this._viewModel, this._element);
+        knockout.applyBindings(this._viewModel, this._pointContainer);
         knockout.applyBindings(this._viewModel, this._point);
         knockout.applyBindings(this._viewModel, this._container);
     };

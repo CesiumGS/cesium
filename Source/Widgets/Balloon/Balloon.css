@@ -1,21 +1,32 @@
 .cesium-balloon-wrapper {
     position: absolute;
-    max-width: 25%;
-    max-height: 25%;
-    overflow: auto;
     font-size: 10pt;
     background-color: #fff;
-    border-radius: 3px;
+    border-radius: 5px;
     z-index: 1;
-}
-
-.cesium-balloon {
-    z-index: 2;
-    margin-top: 16px;
+    border: 1px solid #ccc;
+    padding: 5px
 }
 
 .cesium-balloon-content {
-    padding: 5px;
+    overflow: auto;
+    margin-right: 20px;
+}
+
+.cesium-balloon-point-container{
+    position: absolute;
+    overflow: hidden;
+    z-index: 2;
+}
+
+.cesium-balloon-point-container-downup {
+    height: 16px;
+    width: 32px;
+}
+
+.cesium-balloon-point-container-leftright {
+    height: 32px;
+    width: 16px;
 }
 
 .cesium-balloon-point {
@@ -27,8 +38,27 @@
     -ms-transform: rotate(45deg);
     -o-transform: rotate(45deg);
     transform: rotate(45deg);
-    padding: 1px;
-    position: absolute;
+    border: 1px solid #ccc;
+}
+
+.cesium-balloon-point-down {
+    margin-left: 5px;
+    margin-top: -11px;
+}
+
+.cesium-balloon-point-up {
+    margin-left: 5px;
+    margin-top: 5px;
+}
+
+.cesium-balloon-point-left {
+    margin-top: 5px;
+    margin-left: 5px;
+}
+
+.cesium-balloon-point-right {
+    margin-left: -11px;
+    margin-top: 5px;
 }
 
 .cesium-balloon-wrapper-visible {
@@ -48,7 +78,9 @@
 }
 
 .cesium-balloon-close {
-    float: right;
+    position: absolute;
+    top: 5px;
+    right: 5px;
     height: 16px;
     width: 16px;
     display: block;

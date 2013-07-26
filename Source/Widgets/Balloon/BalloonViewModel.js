@@ -14,7 +14,7 @@ define([
     "use strict";
 
     var screenPosition = new Cartesian2();
-    var pointMin = 4;
+    var pointMin = 0;
 
     function shiftPosition(viewModel, position){
         var pointX;
@@ -25,9 +25,12 @@ define([
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
-        var pointMaxY = containerHeight - 28;
-        var pointMaxX = containerWidth - 28;
-        var pointXOffset = position.x - 11;
+        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.25) + 'px';
+        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.25) + 'px';
+
+        var pointMaxY = containerHeight - 15;
+        var pointMaxX = containerWidth - 16;
+        var pointXOffset = position.x - 15;
 
         var width = viewModel._balloonElement.offsetWidth;
         var height = viewModel._balloonElement.offsetHeight;
@@ -41,44 +44,64 @@ define([
         var bottom = position.y < -10;
         var left = position.x < 0;
         var right = position.x > containerWidth;
+
         if (bottom) {
             posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = 15;
             pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
             pointY = pointMin;
+            viewModel._down = true;
+            viewModel._up = false;
+            viewModel._left = false;
+            viewModel._right = false;
         } else if (top) {
             posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
-            posY = containerHeight - height - 15;
+            posY = containerHeight - height - 14;
             pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
             pointY = pointMaxY;
+            viewModel._down = false;
+            viewModel._up = true;
+            viewModel._left = false;
+            viewModel._right = false;
         } else if (left) {
             posX = 15;
             posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
             pointX = pointMin;
             pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
+            viewModel._down = false;
+            viewModel._up = false;
+            viewModel._left = true;
+            viewModel._right = false;
         } else if (right) {
             posX = containerWidth - width - 15;
             posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
             pointX = pointMaxX;
             pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
+            viewModel._down = false;
+            viewModel._up = false;
+            viewModel._left = false;
+            viewModel._right = true;
         } else {
             posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
             pointX = pointXOffset;
-            pointY = position.y + 15;
+            pointY = Math.min(position.y + 10, posMaxY - 15);
+            viewModel._down = true;
+            viewModel._up = false;
+            viewModel._left = false;
+            viewModel._right = false;
         }
 
         return {
             point: {
-                x: pointX,
-                y: pointY
+                x: Math.floor(pointX),
+                y: Math.floor(pointY)
             },
             screen: {
-                x: posX,
-                y: posY
+                x: Math.floor(posX),
+                y: Math.floor(posY)
             }
         };
-
     }
 
     /**
@@ -107,16 +130,24 @@ define([
         this._updateContent = false;
         this._timerRunning = false;
 
-        this.balloonVisible = false;
+        this.showBalloon = false;
+        this._down = true;
+        this._up = false;
+        this._left = false;
+        this._right = false;
 
-        knockout.track(this, ['balloonVisible', '_positionX', '_positionY', '_pointX', '_pointY']);
+        this._maxWidth = Math.floor(this._container.clientWidth*0.25) + 'px';
+        this._maxHeight = Math.floor(this._container.clientHeight*0.25) + 'px';
+
+        knockout.track(this, ['showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
+                              '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight']);
 
         var that = this;
 
         this._update = function() {
             if (!that._timerRunning) {
                 if (that._updateContent) {
-                    that.balloonVisible = false;
+                    that.showBalloon = false;
                     that._timerRunning = true;
                     setTimeout(function () {
                         that._contentElement.innerHTML = that._content;
@@ -131,7 +162,7 @@ define([
                                 that._positionY = pos.screen.y + 'px';
                             }
                         }
-                        that.balloonVisible = true;
+                        that.showBalloon = true;
                         that._timerRunning = false;
                     }, 100);
                     that._updateContent = false;
@@ -181,7 +212,7 @@ define([
                     }
                     this._content = value.balloon;
                     this._updateContent = true;
-                    this.balloonVisible = true;
+                    this.showBalloon = true;
                 }
 
             }
