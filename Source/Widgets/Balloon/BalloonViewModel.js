@@ -172,9 +172,6 @@ define([
         pickObject: {
             set: function(value) {
                 var scene = this._scene;
-                if (typeof value.balloon === 'undefined') {
-                    value.balloon = '<a href="#">balloon data</a>';
-                }
                 if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
                     if (typeof value.computeScreenSpacePosition === 'function') {
                         this._computeScreenPosition = function() { return value.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()); };
