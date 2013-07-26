@@ -202,7 +202,12 @@ define(['../Core/createGuid',
     }
 
     function processLinearRing(dataSource, kml, node){
-
+        var el = node.getElementsByTagName('coordinates');
+        var coordinates = [];
+        for (var j = 0; j < el.length; j++) {
+            coordinates = coordinates.concat(readCoordinates(el[j]));
+        }
+        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum, altitudeMode
     }
 
     function processPolygon(dataSource, kml, node){
@@ -281,6 +286,7 @@ define(['../Core/createGuid',
             if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = new DynamicPolygon();
                 //Map style to polygon properties
+                //TODO Fill, Outline
             }
         }
     }
