@@ -12,7 +12,6 @@ define([
         '../../DynamicScene/DataSourceDisplay',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
-        '../Balloon/Balloon',
         '../BaseLayerPicker/BaseLayerPicker',
         '../BaseLayerPicker/createDefaultBaseLayers',
         '../CesiumWidget/CesiumWidget',
@@ -36,7 +35,6 @@ define([
         DataSourceDisplay,
         Animation,
         AnimationViewModel,
-        Balloon,
         BaseLayerPicker,
         createDefaultBaseLayers,
         CesiumWidget,
@@ -290,21 +288,11 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
-        //Balloon
-        var balloon;
-        if (typeof options.balloon === 'undefined' || options.balloon !== false) {
-            var balloonContainer = document.createElement('div');
-            balloonContainer.className = 'cesium-viewer-balloonContainer';
-            viewerContainer.appendChild(balloonContainer);
-            balloon = new Balloon(balloonContainer, cesiumWidget.scene);
-        }
-
         this._container = container;
         this._viewerContainer = viewerContainer;
         this._cesiumWidget = cesiumWidget;
         this._toolbar = toolbar;
         this._homeButton = homeButton;
-        this._balloon = balloon;
         this._sceneModePicker = sceneModePicker;
         this._baseLayerPicker = baseLayerPicker;
         this._animation = animation;
@@ -384,12 +372,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         animation : {
             get : function() {
                 return this._animation;
-            }
-        },
-
-        balloon : {
-            get : function() {
-                return this._balloon;
             }
         },
 
@@ -661,9 +643,6 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      */
     Viewer.prototype.render = function() {
         this._cesiumWidget.render();
-        if (typeof this._balloon !== 'undefined') {
-            this._balloon.render();
-        }
     };
 
     /**

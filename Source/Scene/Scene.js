@@ -699,7 +699,7 @@ define([
      *
      * @returns {Cartesain2} The screen coordinates of the given position;
      */
-    Scene.prototype.computeWindowPosition  = function(position, result) {
+    Scene.prototype.computeScreenSpacePosition  = function(position, result) {
         if (typeof position === 'undefined') {
             return undefined;
         }

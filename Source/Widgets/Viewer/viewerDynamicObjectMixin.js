@@ -6,6 +6,7 @@ define([
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../Balloon/Balloon',
         '../../DynamicScene/DynamicObjectView'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        Balloon,
         DynamicObjectView) {
     "use strict";
 
@@ -45,14 +47,28 @@ define([
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
 
+
+        //Balloon
+        var balloonContainer = document.createElement('div');
+        balloonContainer.className = 'cesium-viewer-balloonContainer';
+        viewer._viewerContainer.appendChild(balloonContainer);
+        var balloon = new Balloon(balloonContainer, viewer.scene);
+
+        viewer._balloon = balloon;
+
         var eventHelper = new EventHelper();
         var trackedObject;
         var dynamicObjectView;
+        var balloonedObject;
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
             if (typeof dynamicObjectView !== 'undefined') {
                 dynamicObjectView.update(clock.currentTime);
+            }
+
+            if (typeof balloonedObject !== 'undefined') {
+                viewer._balloon.viewModel.update();
             }
         }
         eventHelper.add(viewer.clock.onTick, updateView);
@@ -63,6 +79,13 @@ define([
                 typeof pickedPrimitive.dynamicObject !== 'undefined' &&
                 typeof pickedPrimitive.dynamicObject.position !== 'undefined') {
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
+            }
+        }
+
+        function showBalloon(e) {
+            var pickedPrimitive = viewer.scene.pick(e.position);
+            if (typeof pickedPrimitive !== 'undefined') {
+                viewer.balloonedObject = pickedPrimitive;
             }
         }
 
@@ -77,7 +100,8 @@ define([
         }
 
         //Subscribe to left clicks and zoom to the picked object.
-        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(showBalloon, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.RIGHT_CLICK);
 
         defineProperties(viewer, {
             /**
@@ -95,6 +119,17 @@ define([
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
                     viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                }
+            },
+            balloonedObject: {
+                get: function() {
+                    return balloonedObject;
+                },
+                set: function(value) {
+                    if (balloonedObject !== value || !viewer._balloon.viewModel.balloonVisible) {
+                        balloonedObject = value;
+                        viewer._balloon.viewModel.pickObject = balloonedObject;
+                    }
                 }
             }
         });

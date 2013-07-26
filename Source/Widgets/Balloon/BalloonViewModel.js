@@ -1,19 +1,20 @@
 /*global define*/
 define([
         '../../Core/Cartesian2',
-        '../../Core/Cartesian3',
         '../../Core/defaultValue',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
-        Cartesian3,
         defaultValue,
         defineProperties,
         DeveloperError,
         knockout) {
     "use strict";
+
+    var screenPosition = new Cartesian2();
+    var pointMin = 4;
 
     function shiftPosition(viewModel, position){
         var pointX;
@@ -24,38 +25,46 @@ define([
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
+        var pointMaxY = containerHeight - 28;
+        var pointMaxX = containerWidth - 28;
+        var pointXOffset = position.x - 11;
+
         var width = viewModel._balloonElement.offsetWidth;
         var height = viewModel._balloonElement.offsetHeight;
+
+        var posMaxY = containerHeight - height;
+        var posMaxX = containerWidth - width - 2;
+        var posMin = 0;
+        var posXOffset = position.x - width/2;
 
         var top = position.y > containerHeight;
         var bottom = position.y < -10;
         var left = position.x < 0;
         var right = position.x > containerWidth;
         if (bottom) {
-            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
+            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = 15;
-            pointX = Math.min(Math.max((position.x - 11), 4), containerWidth - 29);
-            pointY = 4;
+            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
+            pointY = pointMin;
         } else if (top) {
-            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
+            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = containerHeight - height - 15;
-            pointX = Math.min(Math.max((position.x - 11), 4), containerWidth - 29);
-            pointY = containerHeight - 27;
+            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
+            pointY = pointMaxY;
         } else if (left) {
             posX = 15;
-            posY = Math.min(Math.max((position.y - height/2), 0), containerHeight - height);
-            pointX = 4;
-            pointY = Math.min(Math.max((position.y - 15), 4), containerHeight - 27);
+            posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+            pointX = pointMin;
+            pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
         } else if (right) {
             posX = containerWidth - width - 15;
-            posY = Math.min(Math.max((position.y - height/2), 0), containerHeight - height);
-            pointX = containerWidth - 29;
-            pointY = Math.min(Math.max((position.y - 15), 4), containerHeight - 27);
+            posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+            pointX = pointMaxX;
+            pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
         } else {
-            posX = Math.min(Math.max((position.x - width/2), 0), containerWidth - width - 2);
-            posY = Math.min(Math.max((position.y + 25), 0), containerHeight - height);
-
-            pointX = position.x - 11;
+            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+            posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
+            pointX = pointXOffset;
             pointY = position.y + 15;
         }
 
@@ -80,21 +89,20 @@ define([
         this._content = contentElement.innerHTML;
         this._computeScreenPosition = undefined;
 
-        this.balloonVisible = false;
-        this._pointVisible = false;
         this._positionX = '0';
         this._positionY = '0';
         this._pointX = '0';
         this._pointY = '0';
         this._updateContent = false;
-        this._updatePosition = false;
         this._timerRunning = false;
 
-        knockout.track(this, ['_pointVisible', 'balloonVisible', '_positionX', '_positionY', '_pointX', '_pointY']);
+        this.balloonVisible = false;
+
+        knockout.track(this, ['balloonVisible', '_positionX', '_positionY', '_pointX', '_pointY']);
 
         var that = this;
 
-        this._render = function() {
+        this._update = function() {
             if (!that._timerRunning) {
                 if (that._updateContent) {
                     that.balloonVisible = false;
@@ -105,8 +113,8 @@ define([
                             var screenPos = that._computeScreenPosition();
                             if (typeof screenPos !== 'undefined') {
                                 var pos = shiftPosition(that, screenPos);
-                                that._pointX = (pos.point.x) + 'px';
-                                that._pointY = (pos.point.y) + 'px';
+                                that._pointX = pos.point.x + 'px';
+                                that._pointY = pos.point.y + 'px';
 
                                 that._positionX = pos.screen.x + 'px';
                                 that._positionY = pos.screen.y + 'px';
@@ -120,8 +128,8 @@ define([
                     var screenPos = that._computeScreenPosition();
                     if (typeof screenPos !== 'undefined') {
                         var pos = shiftPosition(that, screenPos);
-                        that._pointX = (pos.point.x) + 'px';
-                        that._pointY = (pos.point.y) + 'px';
+                        that._pointX = pos.point.x + 'px';
+                        that._pointY = pos.point.y + 'px';
 
                         that._positionX = pos.screen.x + 'px';
                         that._positionY = pos.screen.y + 'px';
@@ -132,33 +140,32 @@ define([
     };
 
     defineProperties(BalloonViewModel.prototype, {
-        render: {
+        update: {
             get: function() {
-                return this._render;
+                return this._update;
             }
         },
 
-        content : {
-            get : function() {
-                return this._content;
-            },
-            set : function(value) {
-                if (typeof value !== 'string') {
-                    throw new DeveloperError('content value must be a string');
-                }
-                this._content = value;
-                this._updateContent = true;
-                this.balloonVisible = true;
-            }
-        },
-
-        computeScreenPosition: {
+        pickObject: {
             set: function(value) {
-                if (typeof value !== 'function') {
-                    throw new DeveloperError('computeScreenPosition must be a function');
+                var scene = this._scene;
+                if (typeof value.balloon === 'undefined') {
+                    value.balloon = '<a href="#">balloon data</a>';
                 }
-                this._computeScreenPosition = value;
+                if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
+                    if (typeof value.computeScreenSpacePosition === 'function') {
+                        this._computeScreenPosition = function() { return value.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()); };
+                    } else if (typeof value.getPosition === 'function') {
+                        var position = value.getPosition();
+                        this._computeScreenPosition = function() { return scene.computeScreenSpacePosition( position, screenPosition); };
+                    }
+                    this._content = value.balloon;
+                    this._updateContent = true;
+                    this.balloonVisible = true;
+                }
+
             }
+
         }
     });
 
