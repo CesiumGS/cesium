@@ -101,6 +101,19 @@ define(['../Core/createGuid',
         return finalCoords;
     }
 
+    function crsFunction(coordinates) {
+        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
+        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+    }
+
+    function coordinatesArrayToCartesianArray(coordinates) {
+        var positions = new Array(coordinates.length);
+        for ( var i = 0; i < coordinates.length; i++) {
+            positions[i] = crsFunction(coordinates[i]);
+        }
+        return positions;
+    }
+
     function getId(node){
         var id = node.attributes.id && node.attributes.id.nodeValue;
         if (typeof id === 'undefined') {
@@ -172,8 +185,7 @@ define(['../Core/createGuid',
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
 
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        var cartesian3 = crsFunction(coordinates);
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
 
         var embeddedStyle = getEmbeddedStyle(kml);
@@ -199,6 +211,8 @@ define(['../Core/createGuid',
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
 
+        var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
 
     function processLinearRing(dataSource, kml, node){
