@@ -84,7 +84,7 @@ define(['../Core/createGuid',
             text = text + el.childNodes[i].nodeValue;
         }
 
-        var coordsArray = text.split(' '); //TODO add every whitespace character as a possible separator by using regExp
+        var coordsArray = text.split(/[\s\n]+/);
         var finalCoords = [];
         for(var j = 0; coordsArray[j]; j++){
             var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
