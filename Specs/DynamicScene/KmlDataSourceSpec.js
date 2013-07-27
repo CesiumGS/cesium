@@ -140,7 +140,8 @@ defineSuite(['DynamicScene/KmlDataSource',
         var dataSource = new KmlDataSource();
         dataSource.load(xmlDoc);
         expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
-        //TODO test the two positions defined
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
+        expect(dataSource.getDynamicObjectCollection().getObjects()[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
     });
 
     it('Simple Test loading Kml', function() {
