@@ -153,6 +153,9 @@ define(['../Core/createGuid',
             color = getElementValue(node, colorType);
         }
         color = parseInt(color,16);
+        if(isNaN(color)){
+            return undefined;
+        }
         return color;
     }
 
@@ -212,6 +215,16 @@ define(['../Core/createGuid',
         }
 
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
+        var embeddedStyle = getEmbeddedStyle(kml);
+        if(embeddedStyle.length > 0){
+            processStyle(embeddedStyle, dynamicObject);
+        } else {
+            var styleUrl = kml.getElementsByTagName('styleUrl');
+            if(styleUrl.length > 0){
+                var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                dynamicObject.merge(styleObj);
+            }
+        }
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
 
