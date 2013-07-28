@@ -119,7 +119,6 @@ define([
                             onComplete: function() {
                             }
                         }));
-
                     }
                 }
             }
