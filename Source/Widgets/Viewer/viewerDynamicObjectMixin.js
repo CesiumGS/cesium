@@ -112,13 +112,12 @@ define([
                 }
             },
             flyToObject : {
-                set : function(position) {
-                    if(position) {
+                set : function(object) {
+                    if(object) {
                         viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                            destination : position/*,
+                            destination : object,
                             onComplete: function() {
                             }
-                            */
                         }));
 
                     }
