@@ -21,6 +21,7 @@ define([
      * A mixin which adds behavior to the Viewer widget for dealing with DynamicObject instances.
      * This allows for DynamicObjects to be tracked with the camera, either by the viewer clicking
      * on them, or by setting the trackedObject property.
+     * This also allows for the camera to fly to a DynamicObject, but not track the DynamicObject
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDynamicObjectMixin
@@ -29,6 +30,7 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
+     * @exception {DeveloperError} flyToPosition is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -36,6 +38,13 @@ define([
      * var viewer = new Viewer('cesiumContainer');
      * viewer.extend(viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
+     *
+     * @example
+     * // Add support for working with DynamicObject instances to the Viewer.
+     * var dynamicObject = ... //A DynamicObject instance
+     * var viewer = new Viewer('cesiumContainer');
+     * viewer.extend(viewerDynamicObjectMixin);
+     * viewer.flyToPosition = dynamicObject; //Camera will now fly to, but not track, the dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
         if (typeof viewer === 'undefined') {
@@ -43,6 +52,9 @@ define([
         }
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
+        }
+        if (viewer.hasOwnProperty('flyToPosition')) {
+            throw new DeveloperError('flyToPosition is already defined by another mixin.');
         }
 
         var eventHelper = new EventHelper();
@@ -96,6 +108,18 @@ define([
                     }
                     viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                 }
+            },
+            flyToPosition : {
+              set : function(position) {
+                if(position) {
+                  var flight = Cesium.CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
+                    destination : position,
+                    onComplete: function() {
+                    }
+                  });
+                  viewer.scene.getAnimations().add(flight);
+                }
+              }
             }
         });
 
