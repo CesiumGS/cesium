@@ -2,6 +2,8 @@
 defineSuite([
          'Widgets/Viewer/viewerDynamicObjectMixin',
          'Core/Cartesian3',
+         'Core/GeographicProjection',
+         'Core/Ellipsoid',
          'DynamicScene/DynamicObject',
          'Scene/CameraFlightPath',
          'Specs/MockProperty',
@@ -9,6 +11,8 @@ defineSuite([
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
+         GeographicProjection,
+         Ellipsoid,
          DynamicObject,
          CameraFlightPath,
          MockProperty,
@@ -51,6 +55,20 @@ defineSuite([
         viewer.destroy();
     });
 
+    it('can set flyToObject', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+        
+        viewer.scene.getFrameState().scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
+
+        viewer.flyToObject = dynamicObject;
+
+        viewer.destroy();
+    });
+
     it('home button resets tracked object', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
@@ -78,9 +96,18 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws if dropTarget property already added by another mixin.', function() {
+    it('throws if trackedObject property already added by another mixin.', function() {
         var viewer = new Viewer(container);
         viewer.trackedObject = true;
+        expect(function() {
+            viewer.extend(viewerDynamicObjectMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
+    it('throws if flyToObject property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.flyToObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
         }).toThrow();
