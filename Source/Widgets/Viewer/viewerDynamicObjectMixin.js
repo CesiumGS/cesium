@@ -6,6 +6,7 @@ define([
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../Scene/CameraFlightPath',
         '../../DynamicScene/DynamicObjectView'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        CameraFlightPath,
         DynamicObjectView) {
     "use strict";
 
@@ -30,7 +32,7 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
-     * @exception {DeveloperError} flyToPosition is already defined by another mixin.
+     * @exception {DeveloperError} flyToObject is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -44,7 +46,7 @@ define([
      * var dynamicObject = ... //A DynamicObject instance
      * var viewer = new Viewer('cesiumContainer');
      * viewer.extend(viewerDynamicObjectMixin);
-     * viewer.flyToPosition = dynamicObject; //Camera will now fly to, but not track, the dynamicObject
+     * viewer.flyToObject = dynamicObject; //Camera will now fly to, but not track, the dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
         if (typeof viewer === 'undefined') {
@@ -53,8 +55,8 @@ define([
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('flyToPosition')) {
-            throw new DeveloperError('flyToPosition is already defined by another mixin.');
+        if (viewer.hasOwnProperty('flyToObject')) {
+            throw new DeveloperError('flyToObject is already defined by another mixin.');
         }
 
         var eventHelper = new EventHelper();
@@ -109,17 +111,18 @@ define([
                     viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                 }
             },
-            flyToPosition : {
-              set : function(position) {
-                if(position) {
-                  var flight = Cesium.CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                    destination : position,
-                    onComplete: function() {
+            flyToObject : {
+                set : function(position) {
+                    if(position) {
+                        viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
+                            destination : position/*,
+                            onComplete: function() {
+                            }
+                            */
+                        }));
+
                     }
-                  });
-                  viewer.scene.getAnimations().add(flight);
                 }
-              }
             }
         });
 
