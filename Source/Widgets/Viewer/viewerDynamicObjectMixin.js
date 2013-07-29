@@ -98,14 +98,13 @@ define([
                     }
                     var sceneMode = viewer.scene.getFrameState().mode;
 
-                    if( sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode  === SceneMode.SCENE2D) {
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                         viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
                     }
 
-                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D){
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
                         viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                     }
-
                 }
             }
         });
