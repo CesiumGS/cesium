@@ -636,6 +636,8 @@ define([
                 get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
             }
 
+            hasWaterMask = false;
+
             this._surfaceShaderSet.baseVertexShaderString =
                  (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
                  CentralBodyVS + '\n' +

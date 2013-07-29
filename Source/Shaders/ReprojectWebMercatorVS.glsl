@@ -7,6 +7,7 @@ uniform float u_southLatitude;
 uniform float u_southMercatorYHigh;
 uniform float u_southMercatorYLow;
 uniform float u_oneOverMercatorHeight;
+uniform mat4 czm_viewportOrthographic;
 
 varying vec2 v_textureCoordinates;
 

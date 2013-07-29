@@ -9,6 +9,8 @@ uniform vec4 u_tileExtent;
 uniform vec2 u_southAndNorthLatitude;
 uniform vec3 u_southMercatorYLowAndHighAndOneOverHeight;
 
+uniform mat4 czm_projection;
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 

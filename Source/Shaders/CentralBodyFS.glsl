@@ -83,7 +83,7 @@ vec3 sampleAndBlend(
 }
 
 vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
-vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue);
+//vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue);
 
 void main()
 {
@@ -104,7 +104,7 @@ void main()
 
     vec4 color = vec4(startDayColor, 1.0);
 
-#undef SHOW_REFLECTIVE_OCEAN
+//#undef SHOW_REFLECTIVE_OCEAN
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;

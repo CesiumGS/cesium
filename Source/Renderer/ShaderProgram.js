@@ -2265,24 +2265,25 @@ define([
         // This function has problems if the automatic uniform was declared with the
         // wrong datatype or with extra whitespace or comments in the declaration.
 
-        var modifiedSource = source;
-        var uniforms = allAutomaticUniforms;
-        for ( var uniform in uniforms) {
-            if (uniforms.hasOwnProperty(uniform)) {
-                var declaration = getAutomaticUniformDeclaration(uniforms, uniform);
-                var index = modifiedSource.indexOf(declaration);
-                if (index !== -1) {
-                    modifiedSource =
-                        modifiedSource.substring(0, index) +
-                        '/*' +
-                        modifiedSource.substring(index, declaration.length) +
-                        '*/' +
-                        modifiedSource.substring(index + declaration.length);
-                }
-            }
-        }
-
-        return modifiedSource;
+//        var modifiedSource = source;
+//        var uniforms = allAutomaticUniforms;
+//        for ( var uniform in uniforms) {
+//            if (uniforms.hasOwnProperty(uniform)) {
+//                var declaration = getAutomaticUniformDeclaration(uniforms, uniform);
+//                var index = modifiedSource.indexOf(declaration);
+//                if (index !== -1) {
+//                    modifiedSource =
+//                        modifiedSource.substring(0, index) +
+//                        '/*' +
+//                        modifiedSource.substring(index, declaration.length) +
+//                        '*/' +
+//                        modifiedSource.substring(index + declaration.length);
+//                }
+//            }
+//        }
+//
+//        return modifiedSource;
+        return source;
     }
 
     function getFragmentShaderPrecision() {
@@ -2535,9 +2536,10 @@ define([
 
         // Functions after constants and uniforms because functions depend on them.
         var definitions = getBuiltinConstants() +
-                          getAutomaticUniforms() +
+                          //getAutomaticUniforms() +
                           ShadersBuiltinFunctions + '\n\n' +
-                          '#line 0 \n';
+                          //'#line 0 \n';
+                          '';
 
         getShaderDefinitions = function() {
             return definitions;
