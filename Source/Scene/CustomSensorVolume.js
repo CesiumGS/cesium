@@ -73,12 +73,15 @@ define([
 
         this._frontFaceColorCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._frontFaceColorCommand.boundingVolume = new BoundingSphere();
+        this._frontFaceColorCommand.owner = this;
 
         this._backFaceColorCommand.primitiveType = this._frontFaceColorCommand.primitiveType;
         this._backFaceColorCommand.boundingVolume = this._frontFaceColorCommand.boundingVolume;
+        this._backFaceColorCommand.owner = this;
 
         this._pickCommand.primitiveType = this._frontFaceColorCommand.primitiveType;
         this._pickCommand.boundingVolume = this._frontFaceColorCommand.boundingVolume;
+        this._pickCommand.owner = this;
 
         /**
          * <code>true</code> if this sensor will be shown; otherwise, <code>false</code>
