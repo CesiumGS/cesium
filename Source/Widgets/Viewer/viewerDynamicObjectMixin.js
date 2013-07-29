@@ -31,13 +31,16 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
+     * @exception {DeveloperError} balloonedObject is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
      * var dynamicObject = ... //A DynamicObject instance
+     * var object = ... //A DynamicObject instance
      * var viewer = new Viewer('cesiumContainer');
      * viewer.extend(viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
+     * viewer.balloonedObject = object; //Balloon will now appear over object
      */
     var viewerDynamicObjectMixin = function(viewer) {
         if (typeof viewer === 'undefined') {
@@ -45,6 +48,9 @@ define([
         }
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
+        }
+        if (viewer.hasOwnProperty('balloonedObject')) {
+            throw new DeveloperError('balloonedObject is already defined by another mixin.');
         }
 
 
@@ -115,7 +121,7 @@ define([
                 set : function(value) {
                     if (trackedObject !== value) {
                         trackedObject = value;
-                        if (trackedObject !== balloonedObject.dynamicObject && typeof trackedObject !== 'undefined') {
+                        if (typeof balloonedObject !== 'undefined' && trackedObject !== balloonedObject.dynamicObject && typeof trackedObject !== 'undefined') {
                             viewer._balloon.viewModel.showBalloon = false;
                         }
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;

@@ -108,16 +108,32 @@ define([
      * The view model for {@link Balloon}.
      * @alias BalloonViewModel
      * @constructor
-
+     *
      * @param {Scene} scene The scene instance to use.
      * @param {Element} contentElement The element in which to display balloon content.
      * @param {Element} balloonElement The element containing all elements that make up the balloon.
-     * @param {Element} container The element containing the balloon.
-
+     * @param {Element} [container = document.body] The element containing the balloon.
+     *
+     * @exception {DeveloperError} scene is required.
+     * @exception {DeveloperError} contentElement is required.
+     * @exception {DeveloperError} balloonElement is required.
+     *
      */
     var BalloonViewModel = function(scene, contentElement, balloonElement, container) {
+        if (typeof scene === 'undefined') {
+            throw new DeveloperError('scene is required.');
+        }
+
+        if (typeof contentElement === 'undefined') {
+            throw new DeveloperError('contentElement is required.');
+        }
+
+        if (typeof balloonElement === 'undefined') {
+            throw new DeveloperError('balloonElement is required.');
+        }
+
         this._scene = scene;
-        this._container = container;
+        this._container = defaultValue(container, document.body);
         this._balloonElement = balloonElement;
         this._contentElement = contentElement;
         this._content = contentElement.innerHTML;
@@ -183,6 +199,57 @@ define([
 
     defineProperties(BalloonViewModel.prototype, {
         /**
+         * Gets or sets the HTML element containing the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Element}
+         */
+        container : {
+            get : function() {
+                return this._container;
+            },
+            set : function(value) {
+                if (!(value instanceof Element)) {
+                    throw new DeveloperError('value must be a valid Element.');
+                }
+                this._container = value;
+            }
+        },
+        /**
+         * Gets or sets the HTML element that makes up the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Element}
+         */
+        balloonElement : {
+            get : function() {
+                return this._balloonElement;
+            },
+            set : function(value) {
+                if (!(value instanceof Element)) {
+                    throw new DeveloperError('value must be a valid Element.');
+                }
+                this._balloonElement = value;
+            }
+        },
+        /**
+         * Gets or sets the HTML element that displays the content of the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Element}
+         */
+        contentElement : {
+            get : function() {
+                return this._contentElement;
+            },
+            set : function(value) {
+                if (!(value instanceof Element)) {
+                    throw new DeveloperError('value must be a valid Element.');
+                }
+                this._contentElement = value;
+            }
+        },
+        /**
          * Updates the view of the balloon
          * @memberof BalloonViewModel.prototype
          *
@@ -194,6 +261,17 @@ define([
             }
         },
 
+        /**
+         * Gets the scene to control.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Scene}
+         */
+        scene : {
+            get : function() {
+                return this._scene;
+            }
+        },
         /**
          * Sets the object for which to display the balloon
          * @memberof BalloonViewModel

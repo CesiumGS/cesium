@@ -25,7 +25,6 @@ define([
      * @param {Scene} scene The Scene instance to use.
      *
      * @exception {DeveloperError} container is required.
-     * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
      *
      * @see Fullscreen
@@ -33,10 +32,6 @@ define([
     var Balloon = function(container, scene) {
         if (typeof container === 'undefined') {
             throw new DeveloperError('container is required.');
-        }
-
-        if (typeof scene === 'undefined') {
-            throw new DeveloperError('scene is required.');
         }
 
         container = getElement(container);
@@ -134,7 +129,6 @@ define([
     Balloon.prototype.destroy = function() {
         var container = this._container;
         knockout.cleanNode(container);
-        this._viewModel.destroy();
         container.removeChild(this._element);
         return destroyObject(this);
     };

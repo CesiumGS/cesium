@@ -51,6 +51,29 @@ defineSuite([
         viewer.destroy();
     });
 
+    it('adds balloonedObject property', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+        expect(viewer.balloonedObject).toBeUndefined();
+        viewer.destroy();
+    });
+
+    it('can get and set balloonedObject', function() {
+        var viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+
+        viewer.balloonedObject = dynamicObject;
+        expect(viewer.balloonedObject).toBe(dynamicObject);
+
+        viewer.balloonedObject = undefined;
+        expect(viewer.balloonedObject).toBeUndefined();
+
+        viewer.destroy();
+    });
+
     it('home button resets tracked object', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
@@ -78,9 +101,18 @@ defineSuite([
         }).toThrow();
     });
 
-    it('throws if dropTarget property already added by another mixin.', function() {
+    it('throws if trackedObject property already added by another mixin.', function() {
         var viewer = new Viewer(container);
         viewer.trackedObject = true;
+        expect(function() {
+            viewer.extend(viewerDynamicObjectMixin);
+        }).toThrow();
+        viewer.destroy();
+    });
+
+    it('throws if balloonedObject property already added by another mixin.', function() {
+        var viewer = new Viewer(container);
+        viewer.balloonedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
         }).toThrow();
