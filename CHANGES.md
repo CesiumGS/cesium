@@ -31,6 +31,7 @@ Beta Releases
 * Added `ExtentPrimitive`.
 * Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added `PolylinePipeline.removeDuplicates`.
+* Added `PolylinePipeline.scaleToSurface`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `BoundingSphere.projectTo2D`.
@@ -39,6 +40,7 @@ Beta Releases
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added extrusion to `ExtentGeometry`.
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
+* Added `EllipsoidGeodesic`
 
 ### b18 - 2013-07-01
 
