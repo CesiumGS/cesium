@@ -335,6 +335,7 @@ define(['../Core/createGuid',
         var stylesArray = kml.getElementsByTagName('Style');
         var styleCollection = new DynamicObjectCollection();
         for ( var i = 0, len = stylesArray.length; i < len; i++){
+            //TODO check for external styles
             var styleNode = stylesArray.item(i);
             styleNode.id = '#' + getId(styleNode);
             var styleObject = styleCollection.getOrCreateObject(styleNode.id);
@@ -378,6 +379,7 @@ define(['../Core/createGuid',
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
+        this.externalStyles = {}; //cache to hold external styles
     };
 
     /**
