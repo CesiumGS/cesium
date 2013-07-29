@@ -72,6 +72,21 @@ define([
         }
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
+
+        //TODO Generate the HTML on demand rather than up-front to save memory and processing time.
+        var balloonHtml = '';
+        var properties = geoJson.properties;
+        if (typeof properties !== 'undefined') {
+            balloonHtml = '<table border="1">';
+            for ( var key in properties) {
+                if (properties.hasOwnProperty(key)) {
+                    balloonHtml += '<tr><td>' + key + '</td><td>' + properties[key] + '</td></tr>';
+                }
+            }
+            balloonHtml += '</table>';
+        }
+
+        dynamicObject.balloon = new ConstantProperty(balloonHtml);
         return dynamicObject;
     }
 
