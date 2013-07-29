@@ -468,9 +468,6 @@ define([
             --southeastTileCoordinates.x;
         }
 
-        var imageryMaxX = imageryTilingScheme.getNumberOfXTilesAtLevel(imageryLevel);
-        var imageryMaxY = imageryTilingScheme.getNumberOfYTilesAtLevel(imageryLevel);
-
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
 
