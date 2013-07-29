@@ -56,6 +56,9 @@ defineSuite([
     });
 
     afterEach(function() {
+        if (!polylines.isDestroyed()) {
+            polylines.destroy();
+        }
         us = null;
     });
 

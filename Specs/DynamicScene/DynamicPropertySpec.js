@@ -188,6 +188,28 @@ defineSuite([
         expect(property.getValue(epoch.addSeconds(4))).toBeUndefined();
     });
 
+    it('_mergeNewSamples works with huge data sets.', function() {
+        var times = [];
+        var values = [];
+        var epoch = new JulianDate();
+
+        var data = [];
+        var expectedTimes = [];
+        var expectedValues = [];
+
+        for ( var i = 0; i < 200000; i++) {
+            data.push(i);
+            data.push(i);
+            expectedTimes.push(epoch.addSeconds(i));
+            expectedValues.push(i);
+        }
+
+        DynamicProperty._mergeNewSamples(epoch, times, values, data, 1);
+
+        expect(times).toEqual(expectedTimes, JulianDate.compare);
+        expect(values).toEqual(expectedValues);
+    });
+
     it('_mergeNewSamples works for sorted non-intersecting data.', function() {
         var times = [];
         var values = [];

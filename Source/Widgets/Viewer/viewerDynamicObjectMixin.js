@@ -6,6 +6,7 @@ define([
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../Scene/SceneMode',
         '../Balloon/Balloon',
         '../../DynamicScene/DynamicObjectView'
     ], function(
@@ -15,6 +16,7 @@ define([
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        SceneMode,
         Balloon,
         DynamicObjectView) {
     "use strict";
@@ -52,7 +54,6 @@ define([
         if (viewer.hasOwnProperty('balloonedObject')) {
             throw new DeveloperError('balloonedObject is already defined by another mixin.');
         }
-
 
         //Balloon
         var balloonContainer = document.createElement('div');
@@ -126,7 +127,15 @@ define([
                         }
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
-                    viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    var sceneMode = viewer.scene.getFrameState().mode;
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
+                    }
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    }
                 }
             },
             /**

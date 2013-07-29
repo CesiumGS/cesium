@@ -7,19 +7,15 @@
     <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -27,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button'
-], function(
-    Cesium, Button)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var gallery = '../../CesiumViewer/Gallery/';
@@ -157,37 +149,43 @@ require([
     }
 
     function createButtons() {
-        new Button({
-            label: 'Satellites',
-            onClick: function() {
-                czmlSatellites();
-                Sandcastle.highlight(czmlSatellites);
-            }
-        }).placeAt('toolbar');
+        var toolbar = document.getElementById('toolbar');
+        
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            czmlSatellites();
+            Sandcastle.highlight(czmlSatellites);
+        };
+        button.textContent = 'Satellites';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            czmlSensors();
+            Sandcastle.highlight(czmlSensors);
+        };
+        button.textContent = 'Sensors';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'Sensors',
-            onClick: function() {
-                czmlSensors();
-                Sandcastle.highlight(czmlSensors);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            czmlVehicle();
+            Sandcastle.highlight(czmlVehicle);
+        };
+        button.textContent = 'Vehicle';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'Vehicle',
-            onClick: function() {
-                czmlVehicle();
-                Sandcastle.highlight(czmlVehicle);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Built-in CZML',
-            onClick: function() {
-                useBuiltInCzml();
-                Sandcastle.highlight(useBuiltInCzml);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            useBuiltInCzml();
+            Sandcastle.highlight(useBuiltInCzml);
+        };
+        button.textContent = 'Built-in CZML';
+        toolbar.appendChild(button);
     }
 
     // Initialize a viewer capable of drag-and-drop
