@@ -22,7 +22,7 @@ vec4 getPosition3DMode(vec3 position3DWC)
 {
     return czm_projection * (u_modifiedModelView * vec4(position3DAndHeight.xyz, 1.0));
 }
-
+/*
 float get2DMercatorYPositionFraction()
 {
     // The width of a tile at level 11, in radians and assuming a single root tile, is
@@ -46,37 +46,40 @@ float get2DMercatorYPositionFraction()
     }    
     return positionFraction;
 }
-
+*/
 float get2DGeographicYPositionFraction()
 {
     return textureCoordinates.y;
 }
 
-vec4 getPositionPlanarEarth(vec3 position3DWC, float height2D)
+/*vec4 getPositionPlanarEarth(vec3 position3DWC, float height2D)
 {
     float yPositionFraction = get2DYPositionFraction();
     vec4 rtcPosition2D = vec4(height2D, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);  
     return czm_projection * (u_modifiedModelView * rtcPosition2D);
-}
+}*/
 
 vec4 getPosition2DMode(vec3 position3DWC)
 {
-    return getPositionPlanarEarth(position3DWC, 0.0);
+return vec4(0.0);
+    //return getPositionPlanarEarth(position3DWC, 0.0);
 }
 
 vec4 getPositionColumbusViewMode(vec3 position3DWC)
 {
-    return getPositionPlanarEarth(position3DWC, position3DAndHeight.w);
+return vec4(0.0);
+    //return getPositionPlanarEarth(position3DWC, position3DAndHeight.w);
 }
 
 vec4 getPositionMorphingMode(vec3 position3DWC)
 {
     // We do not do RTC while morphing, so there is potential for jitter.
     // This is unlikely to be noticable, though.
-    float yPositionFraction = get2DYPositionFraction();
+    /*float yPositionFraction = get2DYPositionFraction();
     vec4 position2DWC = vec4(0.0, mix(u_tileExtent.st, u_tileExtent.pq, vec2(textureCoordinates.x, yPositionFraction)), 1.0);
     vec4 morphPosition = czm_columbusViewMorph(position2DWC, vec4(position3DWC, 1.0), czm_morphTime);
-    return czm_modelViewProjection * morphPosition;
+    return czm_modelViewProjection * morphPosition;*/
+	return vec4(0.0);
 }
 
 void main() 

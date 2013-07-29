@@ -104,6 +104,7 @@ void main()
 
     vec4 color = vec4(startDayColor, 1.0);
 
+#undef SHOW_REFLECTIVE_OCEAN
 #ifdef SHOW_REFLECTIVE_OCEAN
     vec2 waterMaskTranslation = u_waterMaskTranslationAndScale.xy;
     vec2 waterMaskScale = u_waterMaskTranslationAndScale.zw;
@@ -131,7 +132,7 @@ void main()
 
 #ifdef SHOW_REFLECTIVE_OCEAN
 
-float waveFade(float edge0, float edge1, float x)
+/*float waveFade(float edge0, float edge1, float x)
 {
     float y = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
     return pow(1.0 - y, 5.0);
@@ -192,6 +193,6 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float specular = specularIntensity * surfaceReflectance;
     
     return vec4(imageryColor + diffuseHighlight + nonDiffuseHighlight + specular, 1.0); 
-}
+}*/
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN

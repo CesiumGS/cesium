@@ -410,7 +410,7 @@
 		 upstreamProxyPort: the port number of the upstream proxy, default 80
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		-->
-		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" />
+		<server listenOnAllAddresses="true" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" />
 	</target>
 
 	<target name="runPublicServer" description="Runs a public web server.">

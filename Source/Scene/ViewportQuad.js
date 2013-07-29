@@ -199,9 +199,9 @@ define([
                 this._material = this.material;
 
                 var fsSource =
-                    '#line 0\n' +
+                    //'#line 0\n' +
                     this._material.shaderSource +
-                    '#line 0\n' +
+                    //'#line 0\n' +
                     ViewportQuadFS;
 
                 this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(

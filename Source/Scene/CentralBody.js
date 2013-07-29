@@ -568,12 +568,12 @@ define([
         var shaderCache = context.getShaderCache();
 
         if (typeof this._depthCommand.shaderProgram === 'undefined') {
-            this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
+            /*this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                     CentralBodyVSDepth,
                     '#line 0\n' +
                     CentralBodyFSDepth, {
                         position : 0
-                    });
+                    });*/
         }
 
         if (this._surface._terrainProvider.hasWaterMask() &&
@@ -647,15 +647,15 @@ define([
             this._surfaceShaderSet.baseFragmentShaderString =
                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
                 (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
-                '#line 0\n' +
+                //'#line 0\n' +
                 CentralBodyFS;
             this._surfaceShaderSet.invalidateShaders();
 
-            var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
-                CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
+            //var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
+            //    CentralBodyVSPole, CentralBodyFSPole, TerrainProvider.attributeIndices);
 
-            this._northPoleCommand.shaderProgram = poleShaderProgram;
-            this._southPoleCommand.shaderProgram = poleShaderProgram;
+            //this._northPoleCommand.shaderProgram = poleShaderProgram;
+            //this._southPoleCommand.shaderProgram = poleShaderProgram;
 
             this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
             this._hasWaterMask = hasWaterMask;
@@ -712,8 +712,8 @@ define([
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
                 if (!this.depthTestAgainstTerrain) {
-                    colorCommandList.push(this._clearDepthCommand);
-                    colorCommandList.push(this._depthCommand);
+                    //colorCommandList.push(this._clearDepthCommand);
+                    //colorCommandList.push(this._depthCommand);
                 }
             }
         }
@@ -721,7 +721,7 @@ define([
         if (pass.pick) {
             // Not actually pickable, but render depth-only so primitives on the backface
             // of the globe are not picked.
-            commandLists.pickList.push(this._depthCommand);
+            //commandLists.pickList.push(this._depthCommand);
         }
 
         if (!commandLists.empty()) {

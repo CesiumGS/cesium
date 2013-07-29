@@ -461,7 +461,7 @@ define([
         var us = context.getUniformState();
 
         var skyBoxCommand = (frameState.passes.color && typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = undefined; //(frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
