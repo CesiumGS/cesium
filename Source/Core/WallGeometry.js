@@ -77,74 +77,48 @@ define([
         return ((CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON6)));
     }
 
-    function cleanPositions(ellipsoid, positions, topHeights, bottomHeights) {
+    function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
         var hasBottomHeights = (typeof bottomHeights !== 'undefined');
         var hasTopHeights = (typeof topHeights !== 'undefined');
         var cleanedPositions = [];
         var cleanedTopHeights = [];
         var cleanedBottomHeights = hasBottomHeights ? [] : undefined;
 
-        var current = 0;
-        var next = 1;
-        var v0 = positions[current];
-        var c0 = ellipsoid.cartesianToCartographic(v0, scratchCartographic1);
         var length = positions.length;
-        while (next < length) {
-            var v1 = positions[next];
-            var c1 = ellipsoid.cartesianToCartographic(v1, scratchCartographic2);
-
-            if (!latLonEquals(c0, c1)) {
-                cleanedPositions.push(v0);
-                if (hasTopHeights) {
-                    cleanedTopHeights.push(topHeights[current]);
-                } else {
-                    cleanedTopHeights.push(c0.height);
-                }
-                if (hasBottomHeights) {
-                    cleanedBottomHeights.push(bottomHeights[current]);
-                }
-                if (next === length - 1) {
-                    cleanedPositions.push(v1);
-                    if (hasTopHeights) {
-                        cleanedTopHeights.push(topHeights[next]);
-                    } else {
-                        cleanedTopHeights.push(c1.height);
-                    }
-                    if (hasBottomHeights) {
-                        cleanedBottomHeights.push(bottomHeights[next]);
-                    }
-                }
-                v0 = positions[next];
-                current = next;
-                c0 = c1.clone(c0);
-            } else if (c0.height < c1.height){
-                if (next === length - 1) {
-                    cleanedPositions.push(v1);
-                    if (hasTopHeights) {
-                        cleanedTopHeights.push(topHeights[next]);
-                    } else {
-                        cleanedTopHeights.push(c1.height);
-                    }
-                    if (hasBottomHeights) {
-                        cleanedBottomHeights.push(bottomHeights[next]);
-                    }
-                }
-                v0 = positions[next];
-                current = next;
-                c0 = c1.clone(c0);
-            } else if (next === length - 1) {
-                cleanedPositions.push(v0);
-                if (hasTopHeights) {
-                    cleanedTopHeights.push(topHeights[current]);
-                } else {
-                    cleanedTopHeights.push(c0.height);
-                }
-                if (hasBottomHeights) {
-                    cleanedBottomHeights.push(bottomHeights[current]);
-                }
-            }
-            next++;
+        if (length < 2) {
+            return positions.slice(0);
         }
+
+        cleanedPositions.push(positions[0]);
+        var v0 = positions[0];
+        var c0 = ellipsoid.cartesianToCartographic(v0, scratchCartographic1);
+        if (hasTopHeights) {
+            c0.height = topHeights[0];
+        }
+        cleanedTopHeights.push(c0.height);
+        if (hasBottomHeights) {
+            cleanedBottomHeights.push(bottomHeights[0]);
+        }
+        for (var i = 1; i < length; ++i) {
+            var v1 = positions[i];
+            var c1 = ellipsoid.cartesianToCartographic(v1, scratchCartographic2);
+            if (hasTopHeights) {
+                c1.height = topHeights[i];
+            }
+            if (!latLonEquals(c0, c1)) {
+                cleanedPositions.push(v1); // Shallow copy!
+                cleanedTopHeights.push(c1.height);
+                if (hasBottomHeights) {
+                    cleanedBottomHeights.push(bottomHeights[i]);
+                }
+            } else if (c0.height < c1.height) {
+                cleanedTopHeights[i-1] = c1.height;
+            }
+
+            v0 = positions[i];
+            c0 = c1.clone(c0);
+        }
+
         return {
             positions: cleanedPositions,
             topHeights: cleanedTopHeights,
@@ -210,7 +184,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        var o = cleanPositions(ellipsoid, wallPositions, maximumHeights, minimumHeights);
+        var o = removeDuplicates(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
         wallPositions = o.positions;
         maximumHeights = o.topHeights;

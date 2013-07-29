@@ -226,7 +226,11 @@ define([
             var p1 = positions[i+1];
             newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
         }
-        newPositions.push(positions[length-1]);
+
+        var lastPoint = positions[length-1];
+        var cart = ellipsoid.cartesianToCartographic(lastPoint, carto1);
+        cart.height = 0;
+        newPositions.push(ellipsoid.cartographicToCartesian(cart));
 
         return newPositions;
     };
