@@ -87,18 +87,6 @@ defineSuite([
         }).toThrow();
     });
 
-    it('scaleToSurface throws without granularity', function() {
-        expect(function() {
-            PolylinePipeline.scaleToSurface([]);
-        }).toThrow();
-    });
-
-    it('scaleToSurface throws without ellipsoid', function() {
-        expect(function() {
-            PolylinePipeline.scaleToSurface([], 1);
-        }).toThrow();
-    });
-
     it('scaleToSurface subdivides in half', function() {
         var ellipsoid = Ellipsoid.WGS84;
         var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
@@ -116,6 +104,4 @@ defineSuite([
         expect(p2.equalsEpsilon(p2n, CesiumMath.EPSILON4)).toEqual(true);
         expect(p3.equalsEpsilon(p3n, CesiumMath.EPSILON4)).toEqual(true);
     });
-
-
 });

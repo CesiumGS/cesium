@@ -5,8 +5,10 @@ define([
         './Cartographic',
         './Cartesian3',
         './Cartesian4',
+        './Ellipsoid',
         './EllipsoidGeodesic',
         './IntersectionTests',
+        './Math',
         './Matrix4',
         './Plane'
     ], function(
@@ -15,8 +17,10 @@ define([
         Cartographic,
         Cartesian3,
         Cartesian4,
-        EllipoidGeodesic,
+        Ellipsoid,
+        EllipsoidGeodesic,
         IntersectionTests,
+        CesiumMath,
         Matrix4,
         Plane) {
     "use strict";
@@ -39,27 +43,24 @@ define([
 
     var carto1 = new Cartographic();
     var carto2 = new Cartographic();
+    var ellipsoidGeodesic = new EllipsoidGeodesic();
     function generateCartesianArc(p1, p2, granularity, ellipsoid) {
         var separationAngle = Cartesian3.angleBetween(p1, p2);
-        var numPoints = Math.ceil(separationAngle/granularity) + 1;
-
+        var numPoints = Math.ceil(separationAngle/granularity);
         var result = new Array(numPoints);
-
         var start = ellipsoid.cartesianToCartographic(p1, carto1);
         var end = ellipsoid.cartesianToCartographic(p2, carto2);
 
-        var arc = new EllipoidGeodesic(start, end, ellipsoid);
+        ellipsoidGeodesic.setEndPoints(start, end);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.getSurfaceDistance() / (numPoints);
 
-        var surfaceDistanceBetweenPoints = arc.getSurfaceDistance() / (numPoints - 1);
-
-        for (var i = 1; i < numPoints - 1; i++) {
-            var cart = arc.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
+        for (var i = 1; i < numPoints; i++) {
+            var cart = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints);
             result[i] = ellipsoid.cartographicToCartesian(cart);
         }
+
         start.height = 0;
-        end.height = 0;
         result[0] = ellipsoid.cartographicToCartesian(start);
-        result[numPoints - 1] = ellipsoid.cartographicToCartesian(end);
 
         return result;
     }
@@ -190,30 +191,33 @@ define([
     };
 
     /**
-     * Removes adjacent duplicate positions in an array of positions.
+     * Subdivides polyline and raises all points to the ellipsoid surface
      *
      * @memberof PolylinePipeline
      *
      * @param {Array} positions The array of positions of type {Cartesian3}.
-     * @param {Number} granularity The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Ellipsoid} ellipsoid The ellipsoid on which the positions lie.
+     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
      * @returns {Array} A new array of {Cartesian3} positions that have been subdivided and raised to the surface of the ellipsoid.
      *
-     * @exception {DeveloperError} positions, granularity and ellipsoid are required
+     * @exception {DeveloperError} positions is required
      *
      * @example
-     * // Returns [(1.0, 1.0, 1.0), (2.0, 2.0, 2.0)]
-     * var positions = [
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(1.0, 1.0, 1.0),
-     *     new Cartesian3(2.0, 2.0, 2.0)];
-     * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
+     * var positions = ellipsoid.cartographicArrayToCartesianArray([
+     *      Cartographic.fromDegrees(-105.0, 40.0),
+     *      Cartographic.fromDegrees(-100.0, 38.0),
+     *      Cartographic.fromDegrees(-105.0, 35.0),
+     *      Cartographic.fromDegrees(-100.0, 32.0)
+     * ]));
+     * var surfacePositions = PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
-        if (typeof positions === 'undefined' || typeof granularity === 'undefined' || typeof ellipsoid === 'undefined') {
-            throw new DeveloperError('positions, granularity and ellipsoid are required');
+        if (typeof positions === 'undefined') {
+            throw new DeveloperError('positions is required');
         }
+        granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var length = positions.length;
         var newPositions = [];
@@ -222,6 +226,7 @@ define([
             var p1 = positions[i+1];
             newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
         }
+        newPositions.push(positions[length-1]);
 
         return newPositions;
     };

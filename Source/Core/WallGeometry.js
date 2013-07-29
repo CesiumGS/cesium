@@ -239,6 +239,7 @@ define([
         var length = wallPositions.length;
         var newMaxHeights = [];
         var newMinHeights = (typeof minimumHeights !== 'undefined') ? [] : undefined;
+        var newWallPositions = [];
         for (i = 0; i < length-1; i++) {
             var p1 = wallPositions[i];
             var p2 = wallPositions[i + 1];
@@ -253,11 +254,11 @@ define([
                 h2 = minimumHeights[i + 1];
                 newMinHeights = newMinHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
             }
+
+            newWallPositions = newWallPositions.concat(PolylinePipeline.scaleToSurface([p1, p2], granularity, ellipsoid));
         }
 
-        wallPositions = PolylinePipeline.scaleToSurface(wallPositions, granularity, ellipsoid);
-
-        length = wallPositions.length;
+        length = newWallPositions.length;
         var size = length * 2 * 3;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
@@ -279,7 +280,7 @@ define([
         var binormal = scratchBinormal;
         var recomputeNormal = true;
         for (i = 0; i < length; ++i) {
-            var pos = wallPositions[i];
+            var pos = newWallPositions[i];
             var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic1);
 
             c.height = newMaxHeights[i];
@@ -310,7 +311,7 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
                 if (i + 1 < length) {
-                    nextPosition = Cartesian3.clone(wallPositions[i + 1], scratchCartesian3Position3);
+                    nextPosition = Cartesian3.clone(newWallPositions[i + 1], scratchCartesian3Position3);
                 }
 
                 if (recomputeNormal) {

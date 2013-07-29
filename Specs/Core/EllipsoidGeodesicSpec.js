@@ -14,13 +14,38 @@ defineSuite([
 
     it('throws without start', function() {
         expect(function() {
-            return new EllipsoidGeodesic();
+            var elGeo = new EllipsoidGeodesic();
+            return elGeo.interpolateUsingSurfaceDistance(0);
         }).toThrow();
     });
 
     it('throws without end', function() {
         expect(function() {
-            return new EllipsoidGeodesic(new Cartographic());
+            var elGeo = new EllipsoidGeodesic(new Cartographic(Math.PI, Math.PI));
+            return elGeo.interpolateUsingSurfaceDistance(0);
+        }).toThrow();
+    });
+
+    it('throws without unique position', function() {
+        expect(function() {
+            var elGeo = new EllipsoidGeodesic(new Cartographic(Math.PI, Math.PI), new Cartographic(0, Math.PI));
+            return elGeo.interpolateUsingSurfaceDistance(0);
+        }).toThrow();
+    });
+
+    it('setEndPoints throws without start', function() {
+        expect(function() {
+            var elGeo = new EllipsoidGeodesic();
+            elGeo.setEndPoints();
+        }).toThrow();
+    });
+
+    it('setEndPoints throws without end', function() {
+        expect(function() {
+            var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
+            var elGeo = new EllipsoidGeodesic();
+            elGeo.setEndPoints(start);
+            return elGeo.interpolateUsingSurfaceDistance(0);
         }).toThrow();
     });
 
@@ -35,6 +60,15 @@ defineSuite([
         expect(end).toEqual(geodesic.getEnd());
     });
 
+    it('sets end points', function() {
+        var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
+        var end = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO);
+        var geodesic = new EllipsoidGeodesic();
+        geodesic.setEndPoints(start, end);
+        expect(start).toEqual(geodesic.getStart());
+        expect(end).toEqual(geodesic.getEnd());
+    });
+
     it('computes distance at equator', function() {
         var ellipsoid = new Ellipsoid(6, 6, 3);
         var start = new Cartographic(CesiumMath.PI_OVER_TWO, 0);
@@ -42,7 +76,6 @@ defineSuite([
 
         var geodesic = new EllipsoidGeodesic(start, end, ellipsoid);
         expect(CesiumMath.PI_OVER_TWO * 6).toEqualEpsilon(geodesic.getSurfaceDistance(), CesiumMath.EPSILON11);
-
     });
 
     it('computes distance at meridian', function() {
@@ -102,5 +135,38 @@ defineSuite([
 
         expect(expectedMid.longitude).toEqualEpsilon(midpoint.longitude, CesiumMath.EPSILON13);
         expect(expectedMid.latitude).toEqualEpsilon(midpoint.latitude, CesiumMath.EPSILON13);
+    });
+
+    it('interpolates start and end points using fraction', function() {
+        var fifteenDegrees = Math.PI / 12;
+        var start = new Cartographic(fifteenDegrees, fifteenDegrees);
+        var thirtyDegrees = Math.PI / 6;
+        var end = new Cartographic(thirtyDegrees, thirtyDegrees);
+
+        var geodesic = new EllipsoidGeodesic(start, end);
+
+        var first = geodesic.interpolateUsingFraction(0);
+        var last = geodesic.interpolateUsingFraction(1);
+
+        expect(start.longitude).toEqualEpsilon(first.longitude, CesiumMath.EPSILON13);
+        expect(start.latitude).toEqualEpsilon(first.latitude, CesiumMath.EPSILON13);
+        expect(end.longitude).toEqualEpsilon(last.longitude, CesiumMath.EPSILON13);
+        expect(end.latitude).toEqualEpsilon(last.latitude, CesiumMath.EPSILON13);
+    });
+
+    it('interpolates midpoint using fraction', function() {
+        var fifteenDegrees = Math.PI / 12;
+        var start = new Cartographic(fifteenDegrees, 0);
+        var fortyfiveDegrees = Math.PI / 4;
+        var end = new Cartographic(fortyfiveDegrees, 0);
+        var thirtyDegrees = Math.PI / 6;
+        var expectedMid = new Cartographic(thirtyDegrees, 0);
+
+        var geodesic = new EllipsoidGeodesic(start, end);
+
+        var midpoint = geodesic.interpolateUsingFraction(0.5);
+
+        expect(expectedMid.longitude).toEqualEpsilon(midpoint.longitude, CesiumMath.EPSILON12);
+        expect(expectedMid.latitude).toEqualEpsilon(midpoint.latitude, CesiumMath.EPSILON12);
     });
 });
