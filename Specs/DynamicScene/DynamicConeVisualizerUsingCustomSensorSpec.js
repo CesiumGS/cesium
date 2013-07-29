@@ -142,18 +142,9 @@ defineSuite([
         cone.radius = new MockProperty(123.5);
         cone.show = new MockProperty(true);
 
-        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        redMaterial.uniforms.color = Color.RED;
-        var whiteMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        whiteMaterial.uniforms.color = Color.WHITE;
         var blueMaterial = Material.fromType(scene.getContext(), Material.ColorType);
         blueMaterial.uniforms.color = Color.BLUE;
-        var yellowMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        yellowMaterial.uniforms.color = Color.YELLOW;
-        cone.capMaterial = new MockProperty(redMaterial);
-        cone.innerMaterial = new MockProperty(whiteMaterial);
         cone.outerMaterial = new MockProperty(blueMaterial);
-        cone.silhouetteMaterial = new MockProperty(yellowMaterial);
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -173,6 +164,35 @@ defineSuite([
         cone.show.value = false;
         visualizer.update(time);
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
+    });
+
+    it('IntersectionColor is set correctly with multiple cones.', function() {
+        var time = new JulianDate();
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        visualizer = new DynamicConeVisualizerUsingCustomSensor(scene, dynamicObjectCollection);
+
+        var testObject = dynamicObjectCollection.getOrCreateObject('test');
+        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+
+        var testObject2 = dynamicObjectCollection.getOrCreateObject('test2');
+        testObject2.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject2.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+
+        var cone = testObject.cone = new DynamicCone();
+        cone.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
+
+        var cone2 = testObject2.cone = new DynamicCone();
+        cone2.intersectionColor = new MockProperty(new Color(0.4, 0.3, 0.2, 0.1));
+
+        visualizer.update(time);
+
+        expect(scene.getPrimitives().getLength()).toEqual(2);
+        var c = scene.getPrimitives().get(0);
+        expect(c.intersectionColor).toEqual(testObject.cone.intersectionColor.getValue(time));
+
+        c = scene.getPrimitives().get(1);
+        expect(c.intersectionColor).toEqual(testObject2.cone.intersectionColor.getValue(time));
     });
 
     it('An empty DynamicCone causes a ComplexConicSensor to be created with CZML defaults.', function() {

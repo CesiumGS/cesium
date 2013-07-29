@@ -54,9 +54,9 @@
 </div>
 <script id="cesium_sandcastle_script">
 require([
-    'Cesium', 'dijit/form/HorizontalSlider'
+    'Cesium', 'dijit/form/HorizontalSlider', 'dijit/TitlePane'
 ], function(
-    Cesium, HorizontalSlider)
+    Cesium, HorizontalSlider, TitlePane)
 {
     "use strict";
 
@@ -68,6 +68,13 @@ require([
     var gammaSlider;
 
     function createAdjustmentUserInterface() {
+        var tp = new TitlePane({
+            title: 'Adjust Imagery',
+            id:'title-pane',
+            content: document.getElementById('layerTable'),
+            open: false
+        });
+        document.getElementById('toolbar').appendChild(tp.domNode);
         brightnessSlider = new HorizontalSlider({
             value : imageryLayerCollection.get(0).brightness,
             minimum : 0.0,

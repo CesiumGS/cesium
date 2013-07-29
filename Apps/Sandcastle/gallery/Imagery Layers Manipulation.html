@@ -47,6 +47,7 @@
 require([
     'Cesium',
     'dojo/dom-construct',
+    'dijit/TitlePane',
     'dijit/DropDownMenu',
     'dijit/MenuItem',
     'dijit/form/Button',
@@ -56,6 +57,7 @@ require([
 ], function(
     Cesium,
     domConstruct,
+    TitlePane,
     DropDownMenu,
     MenuItem,
     Button,
@@ -145,7 +147,8 @@ require([
                 'TMS Image',
                 new Cesium.TileMapServiceImageryProvider({
                     url : '../images/cesium_maptiler/Cesium_Logo_Color'
-                }),0.2);
+                }),
+                0.2);
         addAdditionalLayerOption(
                 'Single image',
                 new Cesium.SingleTileImageryProvider({
@@ -185,13 +188,18 @@ require([
     }
 
     function createLayerUserInterface() {
-        domConstruct.place('<table id="layerTable"></table>', 'toolbar');
+        var tp = new TitlePane({
+            title: 'Manipulate Layers',
+            id:'title-pane',
+            content: '<table id="layerTable"></table>',
+            open: false
+        });
+        document.getElementById("toolbar").appendChild(tp.domNode);
         updateUserInterface(imageryLayerCollection);
     }
 
     function updateUserInterface() {
-        domConstruct.place('<table id="layerTable"></table>', 'layerTable', 'replace');
-
+        document.getElementById('layerTable').innerHTML = '';
         for (var i = imageryLayerCollection.getLength() - 1; i >= 0; --i) {
             var layer = imageryLayerCollection.get(i);
 
