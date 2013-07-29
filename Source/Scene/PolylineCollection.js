@@ -239,7 +239,7 @@ define([
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
-            this._polylines[polyline._index] = null; // Removed later
+            this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             if (typeof polyline._bucket !== 'undefined') {
@@ -941,7 +941,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (polyline) {
+                if (typeof polyline !== 'undefined') {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -954,10 +954,12 @@ define([
     function releaseShaders(collection) {
         var polylines = collection._polylines;
         var length = polylines.length;
-        for (var i = 0; i < length; ++i) {
-            var bucket = polylines[i]._bucket;
-            if (typeof bucket !== 'undefined') {
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+        for ( var i = 0; i < length; ++i) {
+            if (typeof polylines[i] !== 'undefined') {
+                var bucket = polylines[i]._bucket;
+                if (typeof bucket !== 'undefined') {
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                }
             }
         }
     }
@@ -980,7 +982,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (polylines[i]) {
+            if (typeof polylines[i] !== 'undefined') {
                 polylines[i]._destroy();
             }
         }

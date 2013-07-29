@@ -120,7 +120,7 @@ require(['Cesium'], function(Cesium) {
         }
     });
     
-        // Create extruded extent
+    // Create extruded extent
     var extrudedEllipse = new Cesium.GeometryInstance({
         geometry : new Cesium.EllipseGeometry({
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-110.0, 35.0)),
@@ -130,6 +130,26 @@ require(['Cesium'], function(Cesium) {
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             height: 300000,
             extrudedHeight: 700000
+        }),
+        attributes: {
+            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+        }
+    });
+
+    // Create extruded polygon
+    var extrudedPolygon = new Cesium.GeometryInstance({
+        geometry : new Cesium.PolygonGeometry({
+            polygonHierarchy : {
+                positions : ellipsoid.cartographicArrayToCartesianArray([
+                    Cesium.Cartographic.fromDegrees(-113.0, 30.0),
+                    Cesium.Cartographic.fromDegrees(-110.0, 30.0),
+                    Cesium.Cartographic.fromDegrees(-110.0, 33.0),
+                    Cesium.Cartographic.fromDegrees(-111.5, 31.0),
+                    Cesium.Cartographic.fromDegrees(-113.0, 33.0)
+                ])
+            },
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            extrudedHeight: 300000
         }),
         attributes: {
             color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
@@ -153,7 +173,8 @@ require(['Cesium'], function(Cesium) {
         });
     
     primitives.add(new Cesium.Primitive({
-        geometryInstances: [extrudedEllipse, extrudedExtent, cylinderInstance],        appearance: new Cesium.PerInstanceColorAppearance({
+        geometryInstances: [extrudedPolygon, extrudedEllipse, extrudedExtent, cylinderInstance],
+        appearance: new Cesium.PerInstanceColorAppearance({
             translucent: false,
             closed: true
         })

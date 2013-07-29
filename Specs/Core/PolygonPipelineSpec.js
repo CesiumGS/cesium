@@ -6,7 +6,8 @@ defineSuite([
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/WindingOrder',
-         'Core/Math'
+         'Core/Math',
+         'Core/Shapes'
      ], function(
          PolygonPipeline,
          Cartesian2,
@@ -14,7 +15,8 @@ defineSuite([
          Cartographic,
          Ellipsoid,
          WindingOrder,
-         CesiumMath) {
+         CesiumMath,
+         Shapes) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -424,5 +426,18 @@ defineSuite([
         expect(outerRing.length).toEqual(4);
         expect(innerRings.length).toEqual(4);
         expect(positions.length).toEqual(28);
+    });
+
+    it('elimitate holes does not add undefined to returned positions', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
+        var radius = 10000;
+        var outer = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), radius);
+        var inner = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), radius * 0.8);
+
+        var positions = PolygonPipeline.eliminateHoles(outer, [inner], ellipsoid);
+        expect(function() {
+            PolygonPipeline.removeDuplicates(positions);
+        }).not.toThrow();
     });
 });
