@@ -521,7 +521,6 @@ define([
         var vertexFormat = options.vertexFormat;
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
         var ellipsoid = options.ellipsoid;
         var height = options.height;
         var extrudedHeight = options.extrudedHeight;
