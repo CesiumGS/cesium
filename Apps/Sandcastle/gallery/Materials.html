@@ -8,19 +8,15 @@
     <meta name="cesium-sandcastle-labels" content="">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -28,11 +24,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/DropDownButton', 'dijit/DropDownMenu', 'dijit/MenuItem'
-], function(
-    Cesium, DropDownButton, DropDownMenu, MenuItem)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var extent;
@@ -488,14 +480,8 @@ require([
     function createButtons(widget) {
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
-
-        var commonMaterialMenu = new DropDownMenu({ style: "display: none;"});
-        var proceduralTextureMenu = new DropDownMenu({ style: "display: none;"});
-        var baseMaterialMenu = new DropDownMenu({ style: "display: none;"});
-        var miscMaterialMenu = new DropDownMenu({ style: "display: none;"});
-        var compositeMaterialMenu = new DropDownMenu({ style: "display: none;"});
-        var polylineMaterialMenu = new DropDownMenu({ style: "display: none;"});
-
+        var toolbar = document.getElementById('toolbar');
+        
         function toggleExtentVisibility() {
             extent.show = true;
             worldExtent.show = false;
@@ -514,320 +500,369 @@ require([
             extent.show = false;
         }
 
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Alpha Map',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyAlphaMapMaterial(extent, scene);
-                Sandcastle.highlight(applyAlphaMapMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Asphalt',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyAsphaltMaterial(extent, scene);
-                Sandcastle.highlight(applyAsphaltMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Blob',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyBlobMaterial(extent, scene);
-                Sandcastle.highlight(applyBlobMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Brick',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyBrickMaterial(extent, scene);
-                Sandcastle.highlight(applyBrickMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Bump Map',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyBumpMapMaterial(extent, scene);
-                Sandcastle.highlight(applyBumpMapMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Cement',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyCementMaterial(extent, scene);
-                Sandcastle.highlight(applyCementMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Checkerboard',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyCheckerboardMaterial(extent, scene);
-                Sandcastle.highlight(applyCheckerboardMaterial);
-            }
-        }));
-
-        compositeMaterialMenu.addChild(new MenuItem({
-            label: 'Composite Example 1',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyCompositeMaterial1(extent, scene);
-                Sandcastle.highlight(applyCompositeMaterial1);
-            }
-        }));
-
-        compositeMaterialMenu.addChild(new MenuItem({
-            label: 'Composite Example 2',
-            onClick: function() {
-                toggleWorldExtentVisibility();
-                applyCompositeMaterial2(worldExtent, scene);
-                Sandcastle.highlight(applyCompositeMaterial2);
-            }
-        }));
-
-        commonMaterialMenu.addChild(new MenuItem({
-            label: 'Color',
-            onClick: function() {
+        var commonMaterialMenu = document.createElement('select');
+        var title = document.createElement('option');
+        title.textContent = 'Common materials';
+        title.value = -1;
+        title.disabled = true;
+        commonMaterialMenu.className = 'button';
+        commonMaterialMenu.appendChild(title);
+        commonMaterialMenu.onchange = function() {
+            if (this.selectedIndex === 1) {
                 toggleExtentVisibility();
                 applyColorMaterial(extent, scene);
                 Sandcastle.highlight(applyColorMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Diffuse',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyDiffuseMaterial(extent, scene);
-                Sandcastle.highlight(applyDiffuseMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Dot',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyDotMaterial(extent, scene);
-                Sandcastle.highlight(applyDotMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Emission Map',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyEmissionMapMaterial(extent, scene);
-                Sandcastle.highlight(applyEmissionMapMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Facet',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyFacetMaterial(extent, scene);
-                Sandcastle.highlight(applyFacetMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Fresnel',
-            onClick: function() {
-                toggleWorldExtentVisibility();
-                applyFresnelMaterial(worldExtent, scene);
-                Sandcastle.highlight(applyFresnelMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Grass',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyGrassMaterial(extent, scene);
-                Sandcastle.highlight(applyGrassMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Grid',
-            onClick: function() {
-                toggleExtentVisibility(extent, worldExtent);
-                applyGridMaterial(extent, scene);
-                Sandcastle.highlight(applyGridMaterial);
-            }
-        }));
-
-        commonMaterialMenu.addChild(new MenuItem({
-            label: 'Image',
-            onClick: function() {
+            } else if (this.selectedIndex === 2) {
                 toggleExtentVisibility();
                 applyImageMaterial(extent, scene);
                 Sandcastle.highlight(applyImageMaterial);
             }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Normal Map',
-            onClick: function() {
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(commonMaterialMenu);
+        
+        var proceduralTextureMenu = document.createElement('select');
+        title = document.createElement('option');
+        title.textContent = 'Procedural textures';
+        title.value = -1;
+        title.disabled = true;
+        proceduralTextureMenu.className = 'button';
+        proceduralTextureMenu.appendChild(title);
+        proceduralTextureMenu.onchange = function() {
+            if (this.selectedIndex === 1) {
                 toggleExtentVisibility();
-                applyNormalMapMaterial(extent, scene);
-                Sandcastle.highlight(applyNormalMapMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Reflection',
-            onClick: function() {
-                toggleWorldExtentVisibility();
-                applyReflectionMaterial(worldExtent, scene);
-                Sandcastle.highlight(applyReflectionMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Refraction',
-            onClick: function() {
-                toggleWorldExtentVisibility();
-                applyRefractionMaterial(worldExtent, scene);
-                Sandcastle.highlight(applyRefractionMaterial);
-            }
-        }));
-
-        baseMaterialMenu.addChild(new MenuItem({
-            label: 'Specular Map',
-            onClick: function() {
+                applyAsphaltMaterial(extent, scene);
+                Sandcastle.highlight(applyAsphaltMaterial);
+            } else if (this.selectedIndex === 2) {
                 toggleExtentVisibility();
-                applySpecularMapMaterial(extent, scene);
-                Sandcastle.highlight(applySpecularMapMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Stripe',
-            onClick: function() {
+                applyBlobMaterial(extent, scene);
+                Sandcastle.highlight(applyBlobMaterial);
+            } else if (this.selectedIndex === 3) {
+                toggleExtentVisibility();
+                applyBrickMaterial(extent, scene);
+                Sandcastle.highlight(applyBrickMaterial);
+            } else if (this.selectedIndex === 4) {
+                toggleExtentVisibility();
+                applyCementMaterial(extent, scene);
+                Sandcastle.highlight(applyCementMaterial);
+            } else if (this.selectedIndex === 5) {
+                toggleExtentVisibility();
+                applyCheckerboardMaterial(extent, scene);
+                Sandcastle.highlight(applyCheckerboardMaterial);
+            } else if (this.selectedIndex === 6) {
+                toggleExtentVisibility();
+                applyDotMaterial(extent, scene);
+                Sandcastle.highlight(applyDotMaterial);
+            } else if (this.selectedIndex === 7) {
+                toggleExtentVisibility();
+                applyFacetMaterial(extent, scene);
+                Sandcastle.highlight(applyFacetMaterial);
+            } else if (this.selectedIndex === 8) {
+                toggleExtentVisibility();
+                applyGrassMaterial(extent, scene);
+                Sandcastle.highlight(applyGrassMaterial);
+            } else if (this.selectedIndex === 9) {
+                toggleExtentVisibility(extent, worldExtent);
+                applyGridMaterial(extent, scene);
+                Sandcastle.highlight(applyGridMaterial);
+            } else if (this.selectedIndex === 10) {
                 toggleExtentVisibility();
                 applyStripeMaterial(extent, scene);
                 Sandcastle.highlight(applyStripeMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'TieDye',
-            onClick: function() {
+            } else if (this.selectedIndex === 11) {
                 toggleExtentVisibility();
                 applyTieDyeMaterial(extent, scene);
                 Sandcastle.highlight(applyTieDyeMaterial);
-            }
-        }));
-
-        proceduralTextureMenu.addChild(new MenuItem({
-            label: 'Wood',
-            onClick: function() {
+            } else if (this.selectedIndex === 12) {
                 toggleExtentVisibility();
                 applyWoodMaterial(extent, scene);
                 Sandcastle.highlight(applyWoodMaterial);
             }
-        }));
+            
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(proceduralTextureMenu);
+        
+        var baseMaterialMenu = document.createElement('select');
+        title = document.createElement('option');
+        title.textContent = 'Base materials';
+        title.value = -1;
+        title.disabled = true;
+        baseMaterialMenu.className = 'button';
+        baseMaterialMenu.appendChild(title);
+        baseMaterialMenu.onchange = function(){
+            if (this.selectedIndex === 1){
+                toggleExtentVisibility();
+                applyAlphaMapMaterial(extent, scene);
+                Sandcastle.highlight(applyAlphaMapMaterial);
+            } else if (this.selectedIndex === 2) {
+                toggleExtentVisibility();
+                applyBumpMapMaterial(extent, scene);
+                Sandcastle.highlight(applyBumpMapMaterial);
+            } else if (this.selectedIndex === 3) {
+                toggleExtentVisibility();
+                applyDiffuseMaterial(extent, scene);
+                Sandcastle.highlight(applyDiffuseMaterial);
+            } else if (this.selectedIndex === 4) {
+                toggleExtentVisibility();
+                applyEmissionMapMaterial(extent, scene);
+                Sandcastle.highlight(applyEmissionMapMaterial);
+            } else if (this.selectedIndex === 5) {
+                toggleWorldExtentVisibility();
+                applyFresnelMaterial(worldExtent, scene);
+                Sandcastle.highlight(applyFresnelMaterial);
+            } else if (this.selectedIndex === 6) {
+                toggleExtentVisibility();
+                applyNormalMapMaterial(extent, scene);
+                Sandcastle.highlight(applyNormalMapMaterial);
+            } else if (this.selectedIndex === 7) {
+                toggleWorldExtentVisibility();
+                applyReflectionMaterial(worldExtent, scene);
+                Sandcastle.highlight(applyReflectionMaterial);
+            } else if (this.selectedIndex === 8) {
+                toggleWorldExtentVisibility();
+                applyRefractionMaterial(worldExtent, scene);
+                Sandcastle.highlight(applyRefractionMaterial);
+            } else if (this.selectedIndex === 9) {
+                toggleExtentVisibility();
+                applySpecularMapMaterial(extent, scene);
+                Sandcastle.highlight(applySpecularMapMaterial);
+            }
 
-        miscMaterialMenu.addChild(new MenuItem({
-            label: 'Water',
-            onClick: function() {
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(baseMaterialMenu);
+        
+        var miscMaterialMenu = document.createElement('select');
+        title = document.createElement('option');
+        title.textContent = 'Misc materials';
+        title.value = -1;
+        title.disabled = true;
+        miscMaterialMenu.className = 'button';
+        miscMaterialMenu.appendChild(title);
+        miscMaterialMenu.onchange = function(){
+            if (this.selectedIndex === 1) {
+                toggleExtentVisibility();
+                applyErosionMaterial(extent, scene);
+                Sandcastle.highlight(applyErosionMaterial);
+            } else if (this.selectedIndex === 2) {
+                toggleWorldExtentVisibility();
+                applyRimLightingMaterial(worldExtent, scene);
+                Sandcastle.highlight(applyRimLightingMaterial);
+            } else if (this.selectedIndex === 3) {
                 toggleWorldExtentVisibility();
                 applyWaterMaterial(worldExtent, scene);
                 Sandcastle.highlight(applyWaterMaterial);
             }
-        }));
-
-        miscMaterialMenu.addChild(new MenuItem({
-            label: 'Erosion',
-            onClick: function() {
-                toggleExtentVisibility();
-                applyErosionMaterial(extent, scene);
-                Sandcastle.highlight(applyErosionMaterial);
-            }
-        }));
-
-        miscMaterialMenu.addChild(new MenuItem({
-            label: 'RimLighting',
-            onClick: function() {
-                toggleWorldExtentVisibility();
-                applyRimLightingMaterial(worldExtent, scene);
-                Sandcastle.highlight(applyRimLightingMaterial);
-            }
-        }));
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(miscMaterialMenu);
         
-        polylineMaterialMenu.addChild(new MenuItem({
-            label: 'PolylineArrow',
-            onClick: function() {
+        var compositeMaterialMenu = document.createElement('select');
+        title = document.createElement('option');
+        title.textContent = 'Example composite materials';
+        title.value = -1;
+        title.disabled = true;
+        compositeMaterialMenu.className = 'button';
+        compositeMaterialMenu.appendChild(title);
+        compositeMaterialMenu.onchange = function(){
+            if (this.selectedIndex === 1){
+                toggleExtentVisibility();
+                applyCompositeMaterial1(extent, scene);
+                Sandcastle.highlight(applyCompositeMaterial1);
+            } else if (this.selectedIndex === 2) {
+                toggleWorldExtentVisibility();
+                applyCompositeMaterial2(worldExtent, scene);
+                Sandcastle.highlight(applyCompositeMaterial2);
+            }
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(compositeMaterialMenu);
+        
+        var polylineMaterialMenu = document.createElement('select');
+        title = document.createElement('option');
+        title.textContent = 'Polyline materials';
+        title.value = -1;
+        title.disabled = true;
+        polylineMaterialMenu.className = 'button';
+        polylineMaterialMenu.appendChild(title);
+        polylineMaterialMenu.onchange = function(){
+            if (this.selectedIndex === 1){
                 togglePolylineVisibility();
                 applyPolylineArrowMaterial(polyline, scene);
                 Sandcastle.highlight(applyPolylineArrowMaterial);
-            }
-        }));
-        
-        polylineMaterialMenu.addChild(new MenuItem({
-            label: 'PolylineGlow',
-            onClick: function() {
+            } else if (this.selectedIndex === 2) {
                 togglePolylineVisibility();
                 applyPolylineGlowMaterial(polyline, scene);
                 Sandcastle.highlight(applyPolylineGlowMaterial);
-            }
-        }));
-
-        polylineMaterialMenu.addChild(new MenuItem({
-            label: 'PolylineOutline',
-            onClick: function() {
+            } else if (this.selectedIndex === 3) {
                 togglePolylineVisibility();
                 applyPolylineOutlineMaterial(polyline, scene);
                 Sandcastle.highlight(applyPolylineOutlineMaterial);
             }
-        }));
+            this.selectedIndex = 0;
+        };
+        toolbar.appendChild(polylineMaterialMenu);
+        
+        var option = document.createElement('option');
+        option.textContent = 'Alpha Map';
+        option.value = 1;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Bump Map';
+        option.value = 2;
+        baseMaterialMenu.appendChild(option);
+                
+        option = document.createElement('option');
+        option.textContent = 'Diffuse';
+        option.value = 3;
+        baseMaterialMenu.appendChild(option);
+  
+        option = document.createElement('option');
+        option.textContent = 'Emission Map';
+        option.value = 4;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Fresnel';
+        option.value = 5;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Normal Map';
+        option.value = 6;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Reflection';
+        option.value = 7;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Refraction';
+        option.value = 8;
+        baseMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Specular Map';
+        option.value = 9;
+        baseMaterialMenu.appendChild(option);
+ 
+        
+        option = document.createElement('option');
+        option.textContent = 'Asphalt';
+        option.value = 1;
+        proceduralTextureMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Blob';
+        option.value = 2;
+        proceduralTextureMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Brick';
+        option.value = 3;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Common materials',
-            dropDown: commonMaterialMenu,
-            maxHeight: -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Cement';
+        option.value = 4;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Procedural textures',
-            dropDown: proceduralTextureMenu,
-            maxHeight: -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Checkerboard';
+        option.value = 5;
+        proceduralTextureMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Dot';
+        option.value = 6;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Base materials',
-            dropDown: baseMaterialMenu,
-            maxHeight: -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Facet';
+        option.value = 7;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Misc materials',
-            dropDown: miscMaterialMenu,
-            maxHeight: -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Grass';
+        option.value = 8;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Example composite materials',
-            dropDown: compositeMaterialMenu,
-            maxHeight: -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Grid';
+        option.value = 9;
+        proceduralTextureMenu.appendChild(option);
 
-        new DropDownButton({
-            label : 'Polyline materials',
-            dropDown : polylineMaterialMenu,
-            maxHeight : -1
-        }).placeAt('toolbar');
+        option = document.createElement('option');
+        option.textContent = 'Stripe';
+        option.value = 10;
+        proceduralTextureMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'TieDye';
+        option.value = 11;
+        proceduralTextureMenu.appendChild(option);
+
+        option = document.createElement('option');
+        option.textContent = 'Wood';
+        option.value = 12;
+        proceduralTextureMenu.appendChild(option);
+
+
+        option = document.createElement('option');
+        option.textContent = 'Composite Example 1';
+        option.value = 1;
+        compositeMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Composite Example 2';
+        option.value = 2;
+        compositeMaterialMenu.appendChild(option);
+
+
+        option = document.createElement('option');
+        option.textContent = 'Color';
+        option.value = 1;
+        commonMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'Image';
+        option.value = 2;
+        commonMaterialMenu.appendChild(option);
+
+
+        option = document.createElement('option');
+        option.textContent = 'Erosion';
+        option.value = 1;
+        miscMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'RimLighting';
+        option.value = 2;
+        miscMaterialMenu.appendChild(option);
+
+        option = document.createElement('option');
+        option.textContent = 'Water';
+        option.value = 3;
+        miscMaterialMenu.appendChild(option);
+        
+
+        option = document.createElement('option');
+        option.textContent = 'PolylineArrow';
+        option.value = 1;
+        polylineMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'PolylineGlow';
+        option.value = 2;
+        polylineMaterialMenu.appendChild(option);
+        
+        option = document.createElement('option');
+        option.textContent = 'PolylineOutline';
+        option.value = 3;
+        polylineMaterialMenu.appendChild(option);
     }
 
     function createPrimitives(widget) {

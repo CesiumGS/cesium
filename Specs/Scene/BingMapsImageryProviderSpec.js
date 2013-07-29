@@ -145,11 +145,11 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof provider.getLogo() !== 'undefined';
+            return typeof provider.getCredit() !== 'undefined';
         }, 'logo to become ready');
 
         runs(function() {
-            expect(provider.getLogo()).toBeInstanceOf(Image);
+            expect(provider.getCredit()).toBeInstanceOf(Object);
 
             loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (url.indexOf('blob:') !== 0) {

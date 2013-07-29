@@ -93,7 +93,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.getLogo()).toBeDefined();
+            expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new WebMercatorTilingScheme().getExtent());
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
@@ -174,7 +174,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getLogo()).toBeDefined();
+            expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
             expect(provider.isUsingPrecachedTiles()).toEqual(true);
@@ -239,7 +239,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toBeUndefined();
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getLogo()).toBeDefined();
+            expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeUndefined();
             expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
             expect(provider.isUsingPrecachedTiles()).toEqual(false);
@@ -323,7 +323,7 @@ defineSuite([
             expect(provider.getTileHeight()).toEqual(256);
             expect(provider.getMaximumLevel()).toEqual(2);
             expect(provider.getTilingScheme()).toBeInstanceOf(GeographicTilingScheme);
-            expect(provider.getLogo()).toBeDefined();
+            expect(provider.getCredit()).toBeDefined();
             expect(provider.getTileDiscardPolicy()).toBeInstanceOf(DiscardMissingTileImagePolicy);
             expect(provider.getExtent()).toEqual(new GeographicTilingScheme().getExtent());
             expect(provider.getProxy()).toEqual(proxy);

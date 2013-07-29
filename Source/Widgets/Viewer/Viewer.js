@@ -614,22 +614,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         if (resizeWidgets) {
             var logoBottom = 0;
-            var logoLeft = animationWidth;
+            var logoLeft = animationWidth + 5;
 
             if (timelineExists) {
-                logoBottom = this._timeline.container.clientHeight + 1;
+                logoBottom = this._timeline.container.clientHeight + 3;
                 this._timeline.container.style.left = animationWidth + 'px';
             }
 
             if (timelineExists || animationExists) {
-                var logo = cesiumWidget.cesiumLogo;
-                var logoStyle = logo.style;
-                logoStyle.bottom = logoBottom + 'px';
-                logoStyle.left = logoLeft + 'px';
-
-                var logoOffset = cesiumWidget.centralBody.logoOffset;
-                logoOffset.x = logoLeft + logo.clientWidth + 5;
-                logoOffset.y = logoBottom;
+                var creditContainer = cesiumWidget.creditContainer;
+                creditContainer.style.bottom = logoBottom + 'px';
+                creditContainer.style.left = logoLeft + 'px';
             }
         }
 

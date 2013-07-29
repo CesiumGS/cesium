@@ -308,6 +308,22 @@ define([
             }
         }
 
+        property = dynamicBillboard.rotation;
+        if (typeof property !== 'undefined') {
+            var rotation = property.getValue(time);
+            if (typeof rotation !== 'undefined') {
+                billboard.setRotation(rotation);
+            }
+        }
+
+        property = dynamicBillboard.alignedAxis;
+        if (typeof property !== 'undefined') {
+            var alignedAxis = property.getValue(time);
+            if (typeof alignedAxis !== 'undefined') {
+                billboard.setAlignedAxis(alignedAxis);
+            }
+        }
+
         property = dynamicBillboard.horizontalOrigin;
         if (typeof property !== 'undefined') {
             var horizontalOrigin = property.getValue(time);

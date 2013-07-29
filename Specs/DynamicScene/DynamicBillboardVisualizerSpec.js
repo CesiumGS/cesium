@@ -144,6 +144,8 @@ defineSuite([
             billboard.image = new MockProperty('Data/Images/Blue.png');
             billboard.eyeOffset = new MockProperty(new Cartesian3(1.0, 2.0, 3.0));
             billboard.scale = new MockProperty(12.5);
+            billboard.rotation = new MockProperty(1.5);
+            billboard.alignedAxis = new MockProperty(Cartesian3.UNIT_Z);
             billboard.horizontalOrigin = new MockProperty(HorizontalOrigin.RIGHT);
             billboard.verticalOrigin = new MockProperty(VerticalOrigin.TOP);
             billboard.pixelOffset = new MockProperty(new Cartesian2(3, 2));
@@ -161,6 +163,8 @@ defineSuite([
                     expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
+                    expect(bb.getRotation()).toEqual(testObject.billboard.rotation.getValue(time));
+                    expect(bb.getAlignedAxis()).toEqual(testObject.billboard.alignedAxis.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
                     expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
                     expect(bb.getPixelOffset()).toEqual(testObject.billboard.pixelOffset.getValue(time));
@@ -176,6 +180,8 @@ defineSuite([
             billboard.image = new MockProperty('Data/Images/Green.png');
             billboard.eyeOffset = new MockProperty(new Cartesian3(2.0, 3.0, 1.0));
             billboard.scale = new MockProperty(2.5);
+            billboard.rotation = new MockProperty(2.9);
+            billboard.alignedAxis = new MockProperty(Cartesian3.UNIT_Y);
             billboard.horizontalOrigin = new MockProperty(HorizontalOrigin.LEFT);
             billboard.verticalOrigin = new MockProperty(VerticalOrigin.BOTTOM);
             billboard.pixelOffset = new MockProperty(new Cartesian2(2, 3));
@@ -188,6 +194,8 @@ defineSuite([
                     expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
+                    expect(bb.getRotation()).toEqual(testObject.billboard.rotation.getValue(time));
+                    expect(bb.getAlignedAxis()).toEqual(testObject.billboard.alignedAxis.getValue(time));
                     expect(bb.getHorizontalOrigin()).toEqual(testObject.billboard.horizontalOrigin.getValue(time));
                     expect(bb.getVerticalOrigin()).toEqual(testObject.billboard.verticalOrigin.getValue(time));
                     expect(bb.getPixelOffset()).toEqual(testObject.billboard.pixelOffset.getValue(time));

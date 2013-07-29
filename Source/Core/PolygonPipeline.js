@@ -158,17 +158,17 @@ define([
      *
      * @param {Array} positions A list of Cartesian elements defining a polygon.
      * @param {Cartesian2} point The point to check.
-     * @returns {Boolean} <code>true></code> if <code>point</code> is found in <code>polygon</code>, <code>false</code> otherwise.
+     * @returns {Number} The index of <code>point</code> in <code>positions</code> or -1 if it was not found.
      *
      * @private
      */
     function isVertex(positions, point) {
         for ( var i = 0; i < positions.length; i++) {
             if (point.equals(positions[i])) {
-                return true;
+                return i;
             }
         }
-        return false;
+        return -1;
     }
 
     /**
@@ -249,51 +249,50 @@ define([
         var edgeIndices = [];
         var intersection = intersectPointWithRing(innerRingVertex, outerRing, edgeIndices);
 
-        var visibleVertex;
-        if (isVertex(outerRing, intersection)) {
-            visibleVertex = intersection;
-        } else {
-            // Set P to be the edge endpoint closest to the inner ring vertex
-            var d1 = (outerRing[edgeIndices[0]].subtract(innerRingVertex)).magnitudeSquared();
-            var d2 = (outerRing[edgeIndices[1]].subtract(innerRingVertex)).magnitudeSquared();
-            var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
+        var visibleVertex = isVertex(outerRing, intersection);
+        if (visibleVertex !== -1) {
+            return visibleVertex;
+        }
 
-            var reflexVertices = getReflexVertices(outerRing);
-            var reflexIndex = reflexVertices.indexOf(p);
-            if (reflexIndex !== -1) {
-                reflexVertices.splice(reflexIndex, 1); // Do not include p if it happens to be reflex.
+        // Set P to be the edge endpoint closest to the inner ring vertex
+        var d1 = (outerRing[edgeIndices[0]].subtract(innerRingVertex)).magnitudeSquared();
+        var d2 = (outerRing[edgeIndices[1]].subtract(innerRingVertex)).magnitudeSquared();
+        var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
+
+        var reflexVertices = getReflexVertices(outerRing);
+        var reflexIndex = reflexVertices.indexOf(p);
+        if (reflexIndex !== -1) {
+            reflexVertices.splice(reflexIndex, 1); // Do not include p if it happens to be reflex.
+        }
+
+        var pointsInside = [];
+        for ( var i = 0; i < reflexVertices.length; i++) {
+            var vertex = reflexVertices[i];
+            if (pointInsideTriangle(vertex, innerRingVertex, intersection, p)) {
+                pointsInside.push(vertex);
             }
+        }
 
-            var pointsInside = [];
-            for ( var i = 0; i < reflexVertices.length; i++) {
-                var vertex = reflexVertices[i];
-                if (pointInsideTriangle(vertex, innerRingVertex, intersection, p)) {
-                    pointsInside.push(vertex);
-                }
-            }
-
-            // If all reflexive vertices are outside the triangle formed by points
-            // innerRingVertex, intersection and P, then P is the visible vertex.
-            // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
-            var minAngle = Number.MAX_VALUE;
-            if (pointsInside.length > 0) {
-                var v1 = new Cartesian2(1.0, 0.0, 0.0);
-                for (i = 0; i < pointsInside.length; i++) {
-                    var v2 = pointsInside[i].subtract(innerRingVertex);
-                    var denominator = v1.magnitude() * v2.magnitude();
-                    if (denominator !== 0) {
-                        var angle = Math.abs(Math.acos(v1.dot(v2) / denominator));
-                        if (angle < minAngle) {
-                            minAngle = angle;
-                            p = pointsInside[i];
-                        }
+        // If all reflexive vertices are outside the triangle formed by points
+        // innerRingVertex, intersection and P, then P is the visible vertex.
+        // Otherwise, return the reflex vertex that minimizes the angle between <1,0> and <k, reflex>.
+        var minAngle = Number.MAX_VALUE;
+        if (pointsInside.length > 0) {
+            var v1 = new Cartesian2(1.0, 0.0, 0.0);
+            for (i = 0; i < pointsInside.length; i++) {
+                var v2 = pointsInside[i].subtract(innerRingVertex);
+                var denominator = v1.magnitude() * v2.magnitude();
+                if (denominator !== 0) {
+                    var angle = Math.abs(Math.acos(v1.dot(v2) / denominator));
+                    if (angle < minAngle) {
+                        minAngle = angle;
+                        p = pointsInside[i];
                     }
                 }
             }
-            visibleVertex = p;
         }
 
-        return outerRing.indexOf(visibleVertex);
+        return outerRing.indexOf(p);
     }
 
     /**

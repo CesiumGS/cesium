@@ -115,6 +115,8 @@ defineSuite([
     it('mergeProperties does not change a fully configured billboard', function() {
         var expectedImage = 'image';
         var expectedScale = 'scale';
+        var expectedRotation = 'rotation';
+        var expectedAlignedAxis = 'alignedAxis';
         var expectedHorizontalOrigin = 'horizontalOrigin';
         var expectedVerticalOrigin = 'verticalOrigin';
         var expectedColor = 'color';
@@ -126,17 +128,21 @@ defineSuite([
         objectToMerge.billboard = new DynamicBillboard();
         objectToMerge.billboard.image = 1;
         objectToMerge.billboard.scale = 2;
-        objectToMerge.billboard.horizontalOrigin = 3;
-        objectToMerge.billboard.verticalOrigin = 4;
-        objectToMerge.billboard.color = 5;
-        objectToMerge.billboard.eyeOffset = 6;
-        objectToMerge.billboard.pixelOffset = 7;
-        objectToMerge.billboard.show = 8;
+        objectToMerge.billboard.rotation = 3;
+        objectToMerge.billboard.alignedAxis = 4;
+        objectToMerge.billboard.horizontalOrigin = 5;
+        objectToMerge.billboard.verticalOrigin = 6;
+        objectToMerge.billboard.color = 7;
+        objectToMerge.billboard.eyeOffset = 8;
+        objectToMerge.billboard.pixelOffset = 9;
+        objectToMerge.billboard.show = 10;
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.billboard = new DynamicBillboard();
         targetObject.billboard.image = expectedImage;
         targetObject.billboard.scale = expectedScale;
+        targetObject.billboard.rotation = expectedRotation;
+        targetObject.billboard.alignedAxis = expectedAlignedAxis;
         targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
         targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
         targetObject.billboard.color = expectedColor;
@@ -148,6 +154,8 @@ defineSuite([
 
         expect(targetObject.billboard.image).toEqual(expectedImage);
         expect(targetObject.billboard.scale).toEqual(expectedScale);
+        expect(targetObject.billboard.rotation).toEqual(expectedRotation);
+        expect(targetObject.billboard.alignedAxis).toEqual(expectedAlignedAxis);
         expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
         expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
         expect(targetObject.billboard.color).toEqual(expectedColor);
@@ -161,12 +169,14 @@ defineSuite([
         objectToMerge.billboard = new DynamicBillboard();
         objectToMerge.billboard.image = 1;
         objectToMerge.billboard.scale = 2;
-        objectToMerge.billboard.horizontalOrigin = 3;
-        objectToMerge.billboard.verticalOrigin = 4;
-        objectToMerge.billboard.color = 5;
-        objectToMerge.billboard.eyeOffset = 6;
-        objectToMerge.billboard.pixelOffset = 7;
-        objectToMerge.billboard.show = 8;
+        objectToMerge.billboard.rotation = 3;
+        objectToMerge.billboard.alignedAxis = 4;
+        objectToMerge.billboard.horizontalOrigin = 5;
+        objectToMerge.billboard.verticalOrigin = 6;
+        objectToMerge.billboard.color = 7;
+        objectToMerge.billboard.eyeOffset = 8;
+        objectToMerge.billboard.pixelOffset = 9;
+        objectToMerge.billboard.show = 10;
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -174,6 +184,8 @@ defineSuite([
 
         expect(targetObject.billboard.image).toEqual(objectToMerge.billboard.image);
         expect(targetObject.billboard.scale).toEqual(objectToMerge.billboard.scale);
+        expect(targetObject.billboard.rotation).toEqual(objectToMerge.billboard.rotation);
+        expect(targetObject.billboard.alignedAxis).toEqual(objectToMerge.billboard.alignedAxis);
         expect(targetObject.billboard.horizontalOrigin).toEqual(objectToMerge.billboard.horizontalOrigin);
         expect(targetObject.billboard.verticalOrigin).toEqual(objectToMerge.billboard.verticalOrigin);
         expect(targetObject.billboard.color).toEqual(objectToMerge.billboard.color);
@@ -185,6 +197,8 @@ defineSuite([
     it('mergeProperties does not change when used with an undefined billboard', function() {
         var expectedImage = 'image';
         var expectedScale = 'scale';
+        var expectedRotation = 'rotation';
+        var expectedAlignedAxis = 'alignedAxis';
         var expectedHorizontalOrigin = 'horizontalOrigin';
         var expectedVerticalOrigin = 'verticalOrigin';
         var expectedColor = 'color';
@@ -198,6 +212,8 @@ defineSuite([
         targetObject.billboard = new DynamicBillboard();
         targetObject.billboard.image = expectedImage;
         targetObject.billboard.scale = expectedScale;
+        targetObject.billboard.rotation = expectedRotation;
+        targetObject.billboard.alignedAxis = expectedAlignedAxis;
         targetObject.billboard.horizontalOrigin = expectedHorizontalOrigin;
         targetObject.billboard.verticalOrigin = expectedVerticalOrigin;
         targetObject.billboard.color = expectedColor;
@@ -209,6 +225,8 @@ defineSuite([
 
         expect(targetObject.billboard.image).toEqual(expectedImage);
         expect(targetObject.billboard.scale).toEqual(expectedScale);
+        expect(targetObject.billboard.rotation).toEqual(expectedRotation);
+        expect(targetObject.billboard.alignedAxis).toEqual(expectedAlignedAxis);
         expect(targetObject.billboard.horizontalOrigin).toEqual(expectedHorizontalOrigin);
         expect(targetObject.billboard.verticalOrigin).toEqual(expectedVerticalOrigin);
         expect(targetObject.billboard.color).toEqual(expectedColor);
