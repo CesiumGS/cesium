@@ -6,7 +6,7 @@ uniform bool u_showIntersection;
 uniform bool u_showThroughEllipsoid;
 
 uniform float u_sensorRadius;
-uniform float u_backFace;
+uniform float u_normalDirection;
 
 varying vec3 v_positionWC;
 varying vec3 v_positionEC;
@@ -24,7 +24,7 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     materialInput.positionToEyeEC = positionToEyeEC;
     
     vec3 normalEC = normalize(v_normalEC);
-    materialInput.normalEC = mix(normalEC, -normalEC, u_backFace);
+    materialInput.normalEC = u_normalDirection * normalEC;
     
     czm_material material = czm_getMaterial(materialInput);
     return mix(czm_phong(normalize(positionToEyeEC), material), vec4(material.diffuse, material.alpha), 0.4);
