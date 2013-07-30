@@ -7,19 +7,15 @@
     <meta name="description" content="Fly to a specified location or view a geographic extent.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -27,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button'
-], function(
-    Cesium, Button)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
@@ -223,50 +215,57 @@ require([
     }
 
     function createButtons(scene) {
-        new Button({
-            label : "Fly to San Diego",
-            onClick : function() {
-                reset(scene);
-                flyToSanDiego(scene);
-                Sandcastle.highlight(flyToSanDiego);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : "Fly to My Location",
-            onClick : function() {
-                reset(scene);
-                flyToMyLocation(scene);
-                Sandcastle.highlight(flyToMyLocation);
-            }
-        }).placeAt('toolbar');
-      
-        new Button({
-            label : "Fly to Extent",
-            onClick : function() {
-                reset(scene);
-                flyToExtent(scene);
-                Sandcastle.highlight(flyToExtent);
-            }
-        }).placeAt('toolbar');
+        var toolbar = document.getElementById('toolbar');
         
-        new Button({
-            label : "View an Extent",
-            onClick : function() {
-                reset(scene);
-                viewAnExtent(scene);
-                Sandcastle.highlight(viewAnExtent);
-            }
-        }).placeAt('toolbar');
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            reset(scene);
+            flyToSanDiego(scene);
+            Sandcastle.highlight(flyToSanDiego);
+        };
+        button.textContent = 'Fly to San Diego';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            reset(scene);
+            flyToMyLocation(scene);
+            Sandcastle.highlight(flyToMyLocation);
+        };
+        button.textContent = 'Fly to My Location';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            reset(scene);
+            flyToExtent(scene);
+            Sandcastle.highlight(flyToExtent);
+        };
+        button.textContent = 'Fly to Extent';
+        toolbar.appendChild(button);
 
-        new Button({
-            label : "Set camera reference frame",
-            onClick : function() {
-                reset(scene);
-                eastNorthUp(scene);
-                Sandcastle.highlight(eastNorthUp);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            reset(scene);
+            viewAnExtent(scene);
+            Sandcastle.highlight(viewAnExtent);
+        };
+        button.textContent = 'View an Extent';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            reset(scene);
+            eastNorthUp(scene);
+            Sandcastle.highlight(eastNorthUp);
+        };
+        button.textContent = 'Set camera reference frame';
+        toolbar.appendChild(button);
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
