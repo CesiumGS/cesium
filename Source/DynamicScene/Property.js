@@ -49,10 +49,10 @@ define(['../Core/DeveloperError'
      *
      * @param {JulianDate} start The time of the first sample.  If there is no data at this time, the next earliest time is used.
      * @param {JulianDate} stop The time of the last sample.  If there is no data at this time, the latest previous time is used.
-     * @param {Number} [maximumStep] The suggested maximum step size to take between samples, specific implementations can ignore this value if it can produce an equivalent and optimal set of values.
-     * @param {Array} [requiredTimes] An array of JulianDate instances, sorted by time, earliest first, that must be sampled in addition to any other steps taken by the sampling function.
-     * @param {Object} [resultTimes] An array containing all of the sampled times which corresponds to the result at the same index in resultValues.
      * @param {Object} [resultValues] An array containing all of the samples values, which correspond to the times
+     * @param {Object} [resultTimes] An array containing all of the sampled times which corresponds to the result at the same index in resultValues.
+     * @param {Array} [requiredTimes] An array of JulianDate instances, sorted by time, earliest first, that must be sampled in addition to any other steps taken by the sampling function.
+     * @param {Number} [maximumStep] The suggested maximum step size to take between samples, specific implementations can ignore this value if it can produce an equivalent and optimal set of values.
      */
     Property.prototype.sampleValue = throwInstantiationError();
 

@@ -1,17 +1,21 @@
 /*global define*/
-define(function() {
+define(['../Core/DeveloperError'], function(DeveloperError) {
     "use strict";
 
     /**
-     * A {@link Property} which does not change with regard to simulation time.
+     * A {@link Property} whose value never changes.
      *
      * @alias ConstantProperty
      * @constructor
+     *
+     * @exception {DeveloperError} value is required.
      */
     var ConstantProperty = function(value) {
-        this._value = undefined;
-        this._clonable = false;
-        this.setValue(value);
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required.');
+        }
+        this._value = value;
+        this._clonable = typeof value !== 'undefined' && typeof value.clone === 'function';
     };
 
     /**
@@ -38,18 +42,16 @@ define(function() {
         return value;
     };
 
-    ConstantProperty.prototype.setValue = function(value) {
-        this._value = value;
-        this._clonable = typeof value !== 'undefined' && typeof value.clone === 'function';
-    };
-
-    ConstantProperty.prototype.sampleValue = function(start, stop, maximumStep, requiredTimes, resultTimes, resultValues) {
-        resultTimes[0] = start.clone();
-        resultTimes[1] = stop.clone();
-        resultTimes.length = 2;
+    ConstantProperty.prototype.sampleValue = function(start, stop, resultValues, resultTimes, requiredTimes, maximumStep) {
         resultValues[0] = this.getValue(start, resultValues[0]);
         resultValues[1] = this.getValue(stop, resultValues[1]);
         resultValues.length = 2;
+
+        if (typeof resultTimes !== 'undefined') {
+            resultTimes[0] = start.clone();
+            resultTimes[1] = stop.clone();
+            resultTimes.length = 2;
+        }
     };
 
     return ConstantProperty;

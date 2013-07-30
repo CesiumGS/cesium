@@ -19,20 +19,6 @@ define(['../Core/defineProperties',
         this._intervals = new TimeIntervalCollection();
     };
 
-    defineProperties(TimeIntervalCollectionProperty.prototype, {
-        /**
-         * Gets the interval collection.
-         * @memberof TimeIntervalCollectionProperty.prototype
-         *
-         * @type {TimeIntervalCollection}
-         */
-        interval : {
-            get : function() {
-                return this._intervals;
-            }
-        }
-    });
-
     /**
      * Returns a value indicating if this property varies with simulation time.
      * @memberof Property
@@ -78,7 +64,17 @@ define(['../Core/defineProperties',
      * @param {Object} [resultTimes] An array containing all of the sampled times which corresponds to the result at the same index in resultValues.
      * @param {Object} [resultValues] An array containing all of the samples values, which correspond to the times
      */
-    TimeIntervalCollectionProperty.prototype.sampleValue = function() {
+    TimeIntervalCollectionProperty.prototype.sampleValue = function(start, stop, resultValues, resultTimes, requiredTimes, maximumStep) {
+    };
+
+    /**
+     * Gets the interval collection.
+     * @memberof TimeIntervalCollectionProperty.prototype
+     *
+     * @type {TimeIntervalCollection}
+     */
+    TimeIntervalCollectionProperty.prototype.getIntervals = function() {
+        return this._intervals;
     };
 
     return TimeIntervalCollectionProperty;
