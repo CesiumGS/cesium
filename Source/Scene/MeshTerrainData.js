@@ -25,6 +25,14 @@ define([
         when) {
     "use strict";
 
+    var vertexStride = 6;
+    var xIndex = 0;
+    var yIndex = 1;
+    var zIndex = 2;
+    var hIndex = 3;
+    var uIndex = 4;
+    var vIndex = 5;
+
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
      * is a rectangular array of heights in row-major order from south to north and west to east.
@@ -177,6 +185,59 @@ define([
         return heightSample * structure.heightScale + structure.heightOffset;
     };
 
+    var vertexMappingScratch = {};
+
+    function addVertexAtEdge(vertices, parentVertices, vertexIndex1, vertexIndex2) {
+        var offset1 = vertexIndex1 * vertexStride;
+        var x1 = parentVertices[offset1 + xIndex];
+        var y1 = parentVertices[offset1 + yIndex];
+        var z1 = parentVertices[offset1 + zIndex];
+        var h1 = parentVertices[offset1 + hIndex];
+        var u1 = parentVertices[offset1 + uIndex];
+        var v1 = parentVertices[offset1 + vIndex];
+
+        var offset2 = vertexIndex2 * vertexStride;
+        var x2 = parentVertices[offset2 + xIndex];
+        var y2 = parentVertices[offset2 + yIndex];
+        var z2 = parentVertices[offset2 + zIndex];
+        var h2 = parentVertices[offset2 + hIndex];
+        var u2 = parentVertices[offset2 + uIndex];
+        var v2 = parentVertices[offset2 + vIndex];
+
+        var crossesU = u1 <= 0.5 && u2 >= 0.5 || u1 >= 0.5 && u2 <= 0.5;
+        var crossesV = v1 <= 0.5 && v2 >= 0.5 || v1 >= 0.5 && v2 <= 0.5;
+
+        // TODO: handle the case that it crosses both edges.
+
+        var index = vertices.length / vertexStride;
+
+        if (crossesU) {
+            var uRatio = (0.5 - u1) / (u2 - u1);
+            vertices.push(CesiumMath.lerp(x1, x2, uRatio));
+            vertices.push(CesiumMath.lerp(y1, y2, uRatio));
+            vertices.push(CesiumMath.lerp(z1, z2, uRatio));
+            vertices.push(CesiumMath.lerp(h1, h2, uRatio));
+            vertices.push(0.5);
+            vertices.push(CesiumMath.lerp(v1, v2, uRatio));
+        } else /*if (crossesV)*/ {
+            var vRatio = (0.5 - v1) / (v2 - v1);
+            vertices.push(CesiumMath.lerp(x1, x2, vRatio));
+            vertices.push(CesiumMath.lerp(y1, y2, vRatio));
+            vertices.push(CesiumMath.lerp(z1, z2, vRatio));
+            vertices.push(CesiumMath.lerp(h1, h2, vRatio));
+            vertices.push(CesiumMath.lerp(u1, u2, vRatio));
+            vertices.push(0.5);
+        }
+
+        return index;
+    }
+
+    function addTriangle(indices, vertexIndex1, vertexIndex2, vertexIndex3) {
+        indices.push(vertexIndex1);
+        indices.push(vertexIndex2);
+        indices.push(vertexIndex3);
+    }
+
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
      * height samples in this instance, interpolated if necessary.
@@ -223,10 +284,110 @@ define([
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
         }
 
-        return new HeightmapTerrainData({
-            buffer : new Uint8Array(17 * 17),
-            width : 17,
-            height : 17,
+        var isEastChild = thisX * 2 !== descendantX;
+        var isNorthChild = thisY * 2 === descendantY;
+
+        var minU = isEastChild ? 0.5 : 0.0;
+        var maxU = isEastChild ? 1.0 : 0.5;
+        var minV = isNorthChild ? 0.5 : 0.0;
+        var maxV = isNorthChild ? 1.0 : 0.5;
+
+        // Enable all parent vertices that are within the child tile's extent.
+        var parentVertices = this._vertexBuffer;
+        var vertices = [];
+        var vertexMapping = vertexMappingScratch;
+        vertexMapping.length = 0;
+        var vertexCount = 0;
+        var i;
+        for (i = 0; i < parentVertices.length; i += vertexStride) {
+            var u = parentVertices[i + uIndex];
+            var v = parentVertices[i + vIndex];
+            if (u >= minU && u <= maxU && v >= minV && v <= maxV) {
+                vertexMapping[i / 6] = vertexCount;
+                vertices.push(parentVertices[i + xIndex]);
+                vertices.push(parentVertices[i + yIndex]);
+                vertices.push(parentVertices[i + zIndex]);
+                vertices.push(parentVertices[i + hIndex]);
+                vertices.push(parentVertices[i + uIndex]);
+                vertices.push(parentVertices[i + vIndex]);
+                ++vertexCount;
+            }
+        }
+
+        var parentIndices = this._indexBuffer;
+        var indices = [];
+        for (i = 0; i < parentIndices.length; i += 3) {
+            var i1 = parentIndices[i];
+            var i2 = parentIndices[i + 1];
+            var i3 = parentIndices[i + 2];
+
+            var u1 = parentVertices[i1 * vertexStride + uIndex];
+            var v1 = parentVertices[i1 * vertexStride + vIndex];
+            var u2 = parentVertices[i2 * vertexStride + uIndex];
+            var v2 = parentVertices[i2 * vertexStride + vIndex];
+            var u3 = parentVertices[i3 * vertexStride + uIndex];
+            var v3 = parentVertices[i3 * vertexStride + vIndex];
+
+            // Which vertices are inside the descendant extent?
+            var isInside1 = u1 >= minU && u1 <= maxU && v1 >= minV && v1 <= maxV;
+            var isInside2 = u2 >= minU && u2 <= maxU && v2 >= minV && v2 <= maxV;
+            var isInside3 = u3 >= minU && u3 <= maxU && v3 >= minV && v3 <= maxV;
+
+            var e1, e2;
+
+            // TODO: what if two vertices are on the border, and the third is
+            // outside the extent.  We don't care about that triangle.
+
+
+            if (isInside1 && isInside2 && isInside3) {
+                addTriangle(indices, vertexMapping[i1], vertexMapping[i2], vertexMapping[i3]);
+            } else if (isInside1 && isInside2) {
+                // Interpolate along the edges connecting to vertex 3.
+                e1 = addVertexAtEdge(vertices, parentVertices, i1, i3);
+                e2 = addVertexAtEdge(vertices, parentVertices, i2, i3);
+                addTriangle(indices, vertexMapping[i1], vertexMapping[i2], e1);
+                addTriangle(indices, vertexMapping[i2], e2, e1);
+            } else if (isInside2 && isInside3) {
+                // Interpolate along the edges connecting to vertex 1.
+                e1 = addVertexAtEdge(vertices, parentVertices, i2, i1);
+                e2 = addVertexAtEdge(vertices, parentVertices, i3, i1);
+                addTriangle(indices, vertexMapping[i2], vertexMapping[i3], e1);
+                addTriangle(indices, vertexMapping[i3], e2, e1);
+            } else if (isInside1 && isInside3) {
+                // Interpolate along the edges connecting to vertex 2.
+                e1 = addVertexAtEdge(vertices, parentVertices, i3, i2);
+                e2 = addVertexAtEdge(vertices, parentVertices, i1, i2);
+                addTriangle(indices, vertexMapping[i3], vertexMapping[i1], e1);
+                addTriangle(indices, vertexMapping[i2], e2, e1);
+            } else if (isInside1) {
+                e1 = addVertexAtEdge(vertices, parentVertices, i1, i2);
+                e2 = addVertexAtEdge(vertices, parentVertices, i1, i3);
+                addTriangle(indices, vertexMapping[i1], e1, e2);
+            } else if (isInside2) {
+                e1 = addVertexAtEdge(vertices, parentVertices, i2, i3);
+                e2 = addVertexAtEdge(vertices, parentVertices, i2, i1);
+                addTriangle(indices, vertexMapping[i2], e1, e2);
+            } else if (isInside3) {
+                e1 = addVertexAtEdge(vertices, parentVertices, i3, i1);
+                e2 = addVertexAtEdge(vertices, parentVertices, i3, i2);
+                addTriangle(indices, vertexMapping[i3], e1, e2);
+            } else {
+
+            }
+        }
+
+        if (indices.length === 0) {
+            return new HeightmapTerrainData({
+                buffer : new Uint8Array(17 * 17),
+                width : 17,
+                height : 17
+            });
+        }
+
+        return new MeshTerrainData({
+            center : this._center,
+            vertexBuffer : new Float32Array(vertices),
+            indexBuffer : new Uint32Array(indices),
             createdByUpsampling : true
         });
     };

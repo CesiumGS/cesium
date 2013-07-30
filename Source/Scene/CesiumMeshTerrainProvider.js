@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Event',
+        './Credit',
         './GeographicTilingScheme',
         './MeshTerrainData',
         './TerrainProvider',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         DeveloperError,
         Event,
+        Credit,
         GeographicTilingScheme,
         MeshTerrainData,
         TerrainProvider,
@@ -57,12 +59,11 @@ define([
 
         this._errorEvent = new Event();
 
-        this._logo = undefined;
-        if (typeof description.credit !== 'undefined') {
-            this._logo = writeTextToCanvas(description.credit, {
-                font : '12px sans-serif'
-            });
+        var credit = description.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
         }
+        this._credit = credit;
     };
 
     /**
@@ -147,17 +148,15 @@ define([
     };
 
     /**
-     * Gets the logo to display when this terrain provider is active.  Typically this is used to credit
-     * the source of the terrain.  This function should not be called before {@link CesiumTerrainProvider#isReady} returns true.
+     * Gets the credit to display when this terrain provider is active.  Typically this is used to credit
+     * the source of the terrain.  This function should not be called before {@link CesiumMeshTerrainProvider#isReady} returns true.
      *
-     * @memberof CesiumTerrainProvider
+     * @memberof CesiumMeshTerrainProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the terrain provider is ready.
+     * @returns {Credit} The credit, or undefined if no credix exists
      */
-    CesiumMeshTerrainProvider.prototype.getLogo = function() {
-        return this._logo;
+    CesiumMeshTerrainProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
     /**
