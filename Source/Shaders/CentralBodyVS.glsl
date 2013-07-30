@@ -17,8 +17,8 @@ varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
 
 // These functions are generated at runtime.
-vec4 getPosition(vec3 position3DWC);
-float get2DYPositionFraction();
+//vec4 getPosition(vec3 position3DWC);
+//float get2DYPositionFraction();
 
 vec4 getPosition3DMode(vec3 position3DWC)
 {
@@ -88,7 +88,7 @@ void main()
 {
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
 
-    gl_Position = getPosition(position3DWC);
+    gl_Position = getPosition3DMode(position3DWC);
     
 #ifdef SHOW_REFLECTIVE_OCEAN
     v_positionEC = (czm_modelView3D * vec4(position3DWC, 1.0)).xyz;

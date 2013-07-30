@@ -63,13 +63,16 @@ define([
                 (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
                 dayTextureSamplers +
-                this.baseFragmentShaderString + '\n' +
+                this.baseFragmentShaderString + '\n';
+
+
+            var computeDayColor =
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';
 
             for (i = 0; i < textureCount; ++i) {
-                fs +=
+                computeDayColor +=
                     'vec4 sample' + i + ' = texture2D(u_dayTexture' + i + ', textureCoordinates * u_dayTextureTranslationAndScale[' + i + '].zw + u_dayTextureTranslationAndScale[' + i + '].xy);\n' +
                     'color = sampleAndBlend(\n' +
                     '   color,\n' +
@@ -85,9 +88,11 @@ define([
                     '   u_dayTextureOneOverGamma[' + i + ']);\n';
             }
 
-            fs +=
+            computeDayColor +=
                 '    return color;\n' +
                 '}';
+
+            fs = fs.replace('// !!!COMPUTEDAYCOLOR!!!', computeDayColor);
 
             shader = context.getShaderCache().getShaderProgram(
                 vs,
