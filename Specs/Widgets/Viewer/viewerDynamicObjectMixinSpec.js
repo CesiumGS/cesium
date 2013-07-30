@@ -64,6 +64,7 @@ defineSuite([
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.balloon = '<span>content</span>';
 
         viewer.balloonedObject = dynamicObject;
         expect(viewer.balloonedObject).toBe(dynamicObject);

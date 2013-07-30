@@ -281,7 +281,7 @@ define([
             }
         },
         /**
-         * Sets the object for which to display the balloon
+         * Sets the screen position for which to display the balloon
          * @memberof BalloonViewModel
          *
          * @type {Object}

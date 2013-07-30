@@ -82,8 +82,8 @@ define([
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
-            if (typeof balloonedObject !== 'undefined') {
-                var viewModel = viewer._balloon.viewModel;
+            var viewModel = viewer._balloon.viewModel;
+            if (typeof balloonedObject !== 'undefined' && viewModel.showBalloon) {
                 viewModel.position = computeBalloonPosition(viewModel.scene, balloonedObject);
                 viewModel.update();
             }
@@ -163,13 +163,17 @@ define([
                 },
                 set: function(value) {
                     var viewModel = viewer._balloon.viewModel;
-                    if ((balloonedObject !== value || !viewModel.showBalloon) && (typeof value !== 'undefined' && typeof value.balloon === 'string')) {
-                        balloonedObject = value;
-                        var scene = viewModel.scene;
-                        viewModel.position = computeBalloonPosition(scene, value);
-                        viewModel.content = balloonedObject.balloon;
-                        viewModel.showBalloon = true;
+                    if (balloonedObject !== value || !viewModel.showBalloon) {
+                        if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
+                            var scene = viewModel.scene;
+                            viewModel.position = computeBalloonPosition(scene, value);
+                            viewModel.content = value.balloon;
+                            viewModel.showBalloon = true;
+                        } else {
+                            viewModel.showBalloon = false;
+                        }
                     }
+                    balloonedObject = value;
                 }
             }
         });
