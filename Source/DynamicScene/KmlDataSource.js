@@ -145,45 +145,68 @@ define(['../Core/createGuid',
         return style;
     }
 
-    function getRemoteStyle(styleNode, styleCollection){
+    function getStylesFromXml(xml){
+        var stylesArray = xml.getElementsByTagName('Style');
+        var styleCollection = new DynamicObjectCollection();
+        for ( var i = 0, len = stylesArray.length; i < len; i++){
+            var styleNode = stylesArray.item(i);
+            styleNode.id = '#' + getId(styleNode);
+            var styleObject = styleCollection.getOrCreateObject(styleNode.id);
+
+            processStyle(styleNode, styleObject);
+        }
+        return styleCollection;
+    }
+
+    function getRemoteStyle(url){
+
+        if (typeof url === 'undefined') {
+            throw new DeveloperError('url is required.');
+        }
+
+        return loadXML(url).then(function(kml) {
+            getStylesFromXml(kml, url);
+        }, function(error) {
+            this._error.raiseEvent(this, error);
+        });
 
 //      if(typeof this.externalStyles[externalPath]  === 'undefined')
 //      {
 //      // load external doc and process styles
 //      this.externalStyles[externalPath] = styleCollection.
 //      }
-
-        var styleUrl = styleNode[0].textContent;
-        if(styleUrl[0] === '#'){
-            return styleCollection.getObject(styleUrl);
-        }
-        var externalPath = styleUrl;
-
-        if(typeof this.externalStyles[externalPath] === 'undefined'){
-            if(externalPath.substring(0,3 === 'http')){
-                var dname = externalPath;
-                //is there a better way?
-                var xhttp =  new XMLHttpRequest();
-                xhttp.open("GET",dname,false);
-                xhttp.send();
-                var parser = new DOMParser();
-                var xmlDoc = parser.parseFromString(xhttp.responseXML, "text/xml");
-
-                var stylesArray = xmlDoc.getElementsByTagName('Style');
-                var externalStyleCollection = new DynamicObjectCollection();
-                for (var i = 0, len = stylesArray.length; i < len; i++){
-                    var externalStyleNode = stylesArray.item(i);
-                    styleNode.id = '#' + getId(externalStyleNode);
-                    var externalStyleObject = externalStyleCollection.getOrCreateObject(externalStyleNode.id);
-                    processStyle(externalStyleNode, externalStyleObject);
-                    this.externalStyles[externalPath] = externalStyleCollection;
-                }
-            } else {
-                //TODO load local file
-            }
-        } else {
-            //TODO return the style object that was already processed
-        }
+//
+//        var styleUrl = styleNode[0].textContent;
+//        if(styleUrl[0] === '#'){
+//            return styleCollection.getObject(styleUrl);
+//        }
+//        var externalPath = styleUrl;
+//
+//        if(typeof this.externalStyles[externalPath] === 'undefined'){
+//            if(externalPath.substring(0,3 === 'http')){
+//                var dname = externalPath;
+//                //is there a better way?
+//                var xhttp =  new XMLHttpRequest();
+//                xhttp.open("GET",dname,false);
+//                xhttp.send();
+//                var parser = new DOMParser();
+//                var xmlDoc = parser.parseFromString(xhttp.responseXML, "text/xml");
+//
+//                var stylesArray = xmlDoc.getElementsByTagName('Style');
+//                var externalStyleCollection = new DynamicObjectCollection();
+//                for (var i = 0, len = stylesArray.length; i < len; i++){
+//                    var externalStyleNode = stylesArray.item(i);
+//                    styleNode.id = '#' + getId(externalStyleNode);
+//                    var externalStyleObject = externalStyleCollection.getOrCreateObject(externalStyleNode.id);
+//                    processStyle(externalStyleNode, externalStyleObject);
+//                    this.externalStyles[externalPath] = externalStyleCollection;
+//                }
+//            } else {
+//                //TODO load local file
+//            }
+//        } else {
+//            //TODO return the style object that was already processed
+//        }
     }
 
     function getColor(node, colorType){
@@ -201,11 +224,11 @@ define(['../Core/createGuid',
     }
 
     // KML processing functions
-    function processPlacemark(dataSource, placemark, dynamicObjectCollection, styleCollection) {
-        placemark.id = getId(placemark);
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
+    function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
         dynamicObject.name = getElementValue(placemark, 'name');
-
+        if(typeof dynamicObject.label !== 'undefined'){
+            dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
+        }
         // I want to iterate over every placemark
         for(var i = 0, len = placemark.childNodes.length; i < len; i++){
             var node = placemark.childNodes.item(i);
@@ -220,6 +243,7 @@ define(['../Core/createGuid',
                 geometryHandler(dataSource, placemark, node, dynamicObjectCollection, styleCollection);
             }
         }
+
     }
 
     function processPoint(dataSource, kml, node, dynamicObjectCollection, styleCollection) {
@@ -231,20 +255,6 @@ define(['../Core/createGuid',
 
         var cartesian3 = crsFunction(coordinates);
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
-
-        var embeddedStyle = getEmbeddedStyle(kml);
-        if(embeddedStyle.length > 0){
-            processStyle(embeddedStyle, dynamicObject);
-        } else {
-            var styleUrl = kml.getElementsByTagName('styleUrl');
-            if(styleUrl.length > 0){
-                var styleObj = getRemoteStyle(styleUrl, styleCollection);
-                if(typeof styleObj.label !== 'undefined'){ //TODO find a better way to set the text part of labels...
-                    styleObj.label.text = new ConstantProperty(dynamicObject.name);
-                }
-                dynamicObject.merge(styleObj);
-            }
-        }
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
@@ -256,16 +266,6 @@ define(['../Core/createGuid',
         }
 
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
-        var embeddedStyle = getEmbeddedStyle(kml);
-        if(embeddedStyle.length > 0){
-            processStyle(embeddedStyle, dynamicObject);
-        } else {
-            var styleUrl = kml.getElementsByTagName('styleUrl');
-            if(styleUrl.length > 0){
-                var styleObj = getRemoteStyle(styleUrl, styleCollection);
-                dynamicObject.merge(styleObj);
-            }
-        }
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
 
@@ -373,38 +373,39 @@ define(['../Core/createGuid',
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
-        var stylesArray = kml.getElementsByTagName('Style');
-        var styleCollection = new DynamicObjectCollection();
-        for ( var i = 0, len = stylesArray.length; i < len; i++){
-            var styleNode = stylesArray.item(i);
-            styleNode.id = '#' + getId(styleNode);
-            var styleObject = styleCollection.getOrCreateObject(styleNode.id);
-
-            processStyle(styleNode, styleObject);
-        }
+        var styleCollection = getStylesFromXml(kml);
 
         var array = kml.getElementsByTagName('Folder');
-        for (i = 0, len = array.length; i < len; i++){
+        for (var i = 0, len = array.length; i < len; i++){
             processFolder(dataSource, array[i], dynamicObjectCollection);
         }
 
         array = kml.getElementsByTagName('Placemark');
         for (i = 0, len = array.length; i < len; i++){
-            var placemarkDynamicObject = new DynamicObject();
             var embeddedStyleNode = getEmbeddedStyle(array[i]);
-
+            var placemark = array[i];
+            placemark.id = getId(placemark);
+            var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
+            //check for embedded styles
             if(embeddedStyleNode.length > 0){
                 processStyle(embeddedStyleNode, placemarkDynamicObject);
             } else {
                 var styleUrl = array[i].getElementsByTagName('styleUrl');
-                if(styleUrl.length > 0){
-                    var styleObj = getRemoteStyle(styleUrl, styleCollection);
-                    placemarkDynamicObject.merge(styleObj);
+                for(var j = 0, size = styleUrl.length; j < size; j++){
+                    var styleId = getElementValue(array[j], 'styleUrl');
+                    if(styleId[0] === '#'){ //then check for local file styles
+                        var styleObj = styleCollection.getObject(styleId);
+                        placemarkDynamicObject.merge(styleObj);
+                    }
+                    else{ // get remote styles lastly
+
+                    }
                 }
             }
-            processPlacemark(dataSource, array[i], dynamicObjectCollection, styleCollection);
+            processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
         }
     }
+
 
 
 
