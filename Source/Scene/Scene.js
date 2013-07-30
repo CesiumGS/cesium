@@ -507,7 +507,7 @@ define([
                 });
 
                 // Give the ellipsoid primitive an initial model matrix to prevent
-                // undefined values when projecting to positions to 2D. Save the inverse
+                // undefined values when projecting positions to 2D. Save the inverse
                 // of the initial model matrix for computing the model matrix of the
                 // bounding sphere for the current command.
                 var ellipsoid = Ellipsoid.WGS84;
