@@ -583,6 +583,8 @@ define([
                     command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
                     command.offset = offset;
+
+                    cloneBoundingSphere = true;
                 }
 
                 currentId = undefined;
