@@ -13,7 +13,6 @@ define([
         knockout) {
     "use strict";
 
-    var screenPosition = new Cartesian2();
     var pointMin = 0;
 
     function shiftPosition(viewModel, position){
@@ -48,7 +47,7 @@ define([
         if (bottom) {
             posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = 15;
-            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
+            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
             pointY = pointMin;
             viewModel._down = true;
             viewModel._up = false;
@@ -57,7 +56,7 @@ define([
         } else if (top) {
             posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
             posY = containerHeight - height - 14;
-            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX);
+            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
             pointY = pointMaxY;
             viewModel._down = false;
             viewModel._up = true;
@@ -67,7 +66,7 @@ define([
             posX = 15;
             posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
             pointX = pointMin;
-            pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
+            pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
             viewModel._down = false;
             viewModel._up = false;
             viewModel._left = true;
@@ -76,7 +75,7 @@ define([
             posX = containerWidth - width - 15;
             posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
             pointX = pointMaxX;
-            pointY = Math.min(Math.max((position.y - 15), pointMin), pointMaxY);
+            pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
             viewModel._down = false;
             viewModel._up = false;
             viewModel._left = false;
@@ -137,7 +136,7 @@ define([
         this._balloonElement = balloonElement;
         this._contentElement = contentElement;
         this._content = contentElement.innerHTML;
-        this._computeScreenPosition = undefined;
+        this._position = undefined;
 
         this._positionX = '0';
         this._positionY = '0';
@@ -167,31 +166,25 @@ define([
                     that._timerRunning = true;
                     setTimeout(function () {
                         that._contentElement.innerHTML = that._content;
-                        if (typeof that._computeScreenPosition === 'function') {
-                            var screenPos = that._computeScreenPosition();
-                            if (typeof screenPos !== 'undefined') {
-                                var pos = shiftPosition(that, screenPos);
-                                that._pointX = pos.point.x + 'px';
-                                that._pointY = pos.point.y + 'px';
+                        if (typeof that._position !== 'undefined') {
+                            var pos = shiftPosition(that, that._position);
+                            that._pointX = pos.point.x + 'px';
+                            that._pointY = pos.point.y + 'px';
 
-                                that._positionX = pos.screen.x + 'px';
-                                that._positionY = pos.screen.y + 'px';
-                            }
+                            that._positionX = pos.screen.x + 'px';
+                            that._positionY = pos.screen.y + 'px';
                         }
                         that.showBalloon = true;
                         that._timerRunning = false;
                     }, 100);
                     that._updateContent = false;
-                } else  if (typeof that._computeScreenPosition === 'function') {
-                    var screenPos = that._computeScreenPosition();
-                    if (typeof screenPos !== 'undefined') {
-                        var pos = shiftPosition(that, screenPos);
-                        that._pointX = pos.point.x + 'px';
-                        that._pointY = pos.point.y + 'px';
+                } else  if (typeof that._position !== 'undefined') {
+                    var pos = shiftPosition(that, that._position);
+                    that._pointX = pos.point.x + 'px';
+                    that._pointY = pos.point.y + 'px';
 
-                        that._positionX = pos.screen.x + 'px';
-                        that._positionY = pos.screen.y + 'px';
-                    }
+                    that._positionX = pos.screen.x + 'px';
+                    that._positionY = pos.screen.y + 'px';
                 }
             }
         };
@@ -250,6 +243,21 @@ define([
             }
         },
         /**
+         * Gets or sets the content of the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Element}
+         */
+        content: {
+            set : function(value) {
+                if (typeof value === 'undefined') {
+                    throw new DeveloperError('value must defined');
+                }
+                this._content = value;
+                this._updateContent = true;
+            }
+        },
+        /**
          * Updates the view of the balloon
          * @memberof BalloonViewModel.prototype
          *
@@ -278,23 +286,15 @@ define([
          *
          * @type {Object}
          */
-        pickObject: {
+        position: {
+            get: function() {
+                return this._position;
+            },
             set: function(value) {
-                var scene = this._scene;
-                if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
-                    if (typeof value.computeScreenSpacePosition === 'function') {
-                        this._computeScreenPosition = function() { return value.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()); };
-                    } else if (typeof value.getPosition === 'function') {
-                        var position = value.getPosition();
-                        this._computeScreenPosition = function() { return scene.computeScreenSpacePosition( position, screenPosition); };
-                    }
-                    this._content = value.balloon;
-                    this._updateContent = true;
-                    this.showBalloon = true;
+                if (typeof value !== 'undefined') {
+                    this._position = value;
                 }
-
             }
-
         }
     });
 
