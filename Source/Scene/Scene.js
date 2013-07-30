@@ -695,9 +695,9 @@ define([
     /**
      * Converts a cartesian position to a window position.
      *
-     * @param {Cartesian3} position The cartesian position
+     * @param {Cartesian3} position The cartesian position.
      *
-     * @returns {Cartesain2} The screen coordinates of the given position;
+     * @returns {Cartesian2} The screen coordinates of the given position.
      */
     Scene.prototype.computeScreenSpacePosition  = function(position, result) {
         if (typeof position === 'undefined') {

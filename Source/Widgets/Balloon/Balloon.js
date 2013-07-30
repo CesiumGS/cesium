@@ -80,10 +80,6 @@ define([
         this._point = point;
         this._contentWrapper = contentWrapper;
 
-        knockout.applyBindings(this._viewModel, this._contentWrapper);
-        knockout.applyBindings(this._viewModel, this._element);
-        knockout.applyBindings(this._viewModel, this._pointContainer);
-        knockout.applyBindings(this._viewModel, this._point);
         knockout.applyBindings(this._viewModel, this._container);
     };
 
@@ -130,6 +126,7 @@ define([
         var container = this._container;
         knockout.cleanNode(container);
         container.removeChild(this._element);
+        container.removeChild(this._pointContainer);
         return destroyObject(this);
     };
 

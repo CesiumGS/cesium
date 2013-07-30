@@ -145,7 +145,14 @@ define([
         this._updateContent = false;
         this._timerRunning = false;
 
+        /**
+         * Determines the visibility of the balloon
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
         this.showBalloon = false;
+
         this._down = true;
         this._up = false;
         this._left = false;
@@ -156,38 +163,41 @@ define([
 
         knockout.track(this, ['showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
                               '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight']);
+    };
 
-        var that = this;
+    /**
+     * Updates the view of the balloon to match the position and content properties of the view model
+     * @memberof BalloonViewModel
+     */
+    BalloonViewModel.prototype.update = function() {
+        if (!this._timerRunning) {
+            if (this._updateContent) {
+                this.showBalloon = false;
+                this._timerRunning = true;
+                var that = this;
+                setTimeout(function () {
+                    that._contentElement.innerHTML = that._content;
+                    if (typeof that._position !== 'undefined') {
+                        var pos = shiftPosition(that, that._position);
+                        that._pointX = pos.point.x + 'px';
+                        that._pointY = pos.point.y + 'px';
 
-        this._update = function() {
-            if (!that._timerRunning) {
-                if (that._updateContent) {
-                    that.showBalloon = false;
-                    that._timerRunning = true;
-                    setTimeout(function () {
-                        that._contentElement.innerHTML = that._content;
-                        if (typeof that._position !== 'undefined') {
-                            var pos = shiftPosition(that, that._position);
-                            that._pointX = pos.point.x + 'px';
-                            that._pointY = pos.point.y + 'px';
+                        that._positionX = pos.screen.x + 'px';
+                        that._positionY = pos.screen.y + 'px';
+                    }
+                    that.showBalloon = true;
+                    that._timerRunning = false;
+                }, 100);
+                this._updateContent = false;
+            } else  if (typeof this._position !== 'undefined') {
+                var pos = shiftPosition(this, this._position);
+                this._pointX = pos.point.x + 'px';
+                this._pointY = pos.point.y + 'px';
 
-                            that._positionX = pos.screen.x + 'px';
-                            that._positionY = pos.screen.y + 'px';
-                        }
-                        that.showBalloon = true;
-                        that._timerRunning = false;
-                    }, 100);
-                    that._updateContent = false;
-                } else  if (typeof that._position !== 'undefined') {
-                    var pos = shiftPosition(that, that._position);
-                    that._pointX = pos.point.x + 'px';
-                    that._pointY = pos.point.y + 'px';
-
-                    that._positionX = pos.screen.x + 'px';
-                    that._positionY = pos.screen.y + 'px';
-                }
+                this._positionX = pos.screen.x + 'px';
+                this._positionY = pos.screen.y + 'px';
             }
-        };
+        }
     };
 
     defineProperties(BalloonViewModel.prototype, {
@@ -257,18 +267,6 @@ define([
                 this._updateContent = true;
             }
         },
-        /**
-         * Updates the view of the balloon
-         * @memberof BalloonViewModel.prototype
-         *
-         * @type {Function}
-         */
-        update: {
-            get: function() {
-                return this._update;
-            }
-        },
-
         /**
          * Gets the scene to control.
          * @memberof BalloonViewModel.prototype
