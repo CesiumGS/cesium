@@ -49,6 +49,11 @@ define([
         var shader = this._shaders[key];
         if (typeof shader === 'undefined') {
             var vs = this.baseVertexShaderString;
+            var dayTextureSamplers = '';
+            var i;
+            for (i = 0; i < textureCount; ++i) {
+                dayTextureSamplers += 'uniform sampler2D u_dayTexture' + i + ';\n';
+            }
             var fs =
                 (applyBrightness ? '#define APPLY_BRIGHTNESS\n' : '') +
                 (applyContrast ? '#define APPLY_CONTRAST\n' : '') +
@@ -57,16 +62,18 @@ define([
                 (applyGamma ? '#define APPLY_GAMMA\n' : '') +
                 (applyAlpha ? '#define APPLY_ALPHA\n' : '') +
                 '#define TEXTURE_UNITS ' + textureCount + '\n' +
+                dayTextureSamplers +
                 this.baseFragmentShaderString + '\n' +
                 'vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates)\n' +
                 '{\n' +
                 '    vec3 color = initialColor;\n';
 
-            for (var i = 0; i < textureCount; ++i) {
+            for (i = 0; i < textureCount; ++i) {
                 fs +=
+                    'vec4 sample' + i + ' = texture2D(u_dayTexture' + i + ', textureCoordinates * u_dayTextureTranslationAndScale[' + i + '].zw + u_dayTextureTranslationAndScale[' + i + '].xy);\n' +
                     'color = sampleAndBlend(\n' +
                     '   color,\n' +
-                    '   u_dayTextures[' + i + '],\n' +
+                    '   sample' + i + ',\n' +
                     '   textureCoordinates,\n' +
                     '   u_dayTextureTexCoordsExtent[' + i + '],\n' +
                     '   u_dayTextureTranslationAndScale[' + i + '],\n' +

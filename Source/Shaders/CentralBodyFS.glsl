@@ -1,7 +1,6 @@
 //#define SHOW_TILE_BOUNDARIES
 
 #if TEXTURE_UNITS > 0
-uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
@@ -28,7 +27,7 @@ varying vec2 v_textureCoordinates;
 
 vec3 sampleAndBlend(
     vec3 previousColor,
-    sampler2D texture,
+    vec4 sampledColor,
     vec2 tileTextureCoordinates,
     vec4 textureCoordinateExtent,
     vec4 textureCoordinateTranslationAndScale,
@@ -52,12 +51,8 @@ vec3 sampleAndBlend(
     alphaMultiplier = step(vec2(0.0), textureCoordinateExtent.pq - tileTextureCoordinates);
     textureAlpha = textureAlpha * alphaMultiplier.x * alphaMultiplier.y;
     
-    vec2 translation = textureCoordinateTranslationAndScale.xy;
-    vec2 scale = textureCoordinateTranslationAndScale.zw;
-    vec2 textureCoordinates = tileTextureCoordinates * scale + translation;
-    vec4 sample = texture2D(texture, textureCoordinates);
-    vec3 color = sample.rgb;
-    float alpha = sample.a;
+    vec3 color = sampledColor.rgb;
+    float alpha = sampledColor.a;
     
 #ifdef APPLY_BRIGHTNESS
     color = mix(vec3(0.0), color, textureBrightness);
