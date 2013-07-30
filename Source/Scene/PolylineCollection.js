@@ -236,7 +236,7 @@ define([
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
-            this._polylines[polyline._index] = null; // Removed later
+            this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             if (typeof polyline._bucket !== 'undefined') {
@@ -453,14 +453,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -471,7 +471,7 @@ define([
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -503,6 +503,7 @@ define([
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
+                                command.owner = polylineCollection;
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -564,6 +565,7 @@ define([
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
+                        command.owner = polylineCollection;
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
@@ -948,7 +950,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (polyline) {
+                if (typeof polyline !== 'undefined') {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -961,10 +963,12 @@ define([
     function releaseShaders(collection) {
         var polylines = collection._polylines;
         var length = polylines.length;
-        for (var i = 0; i < length; ++i) {
-            var bucket = polylines[i]._bucket;
-            if (typeof bucket !== 'undefined') {
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+        for ( var i = 0; i < length; ++i) {
+            if (typeof polylines[i] !== 'undefined') {
+                var bucket = polylines[i]._bucket;
+                if (typeof bucket !== 'undefined') {
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                }
             }
         }
     }
@@ -987,7 +991,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (polylines[i]) {
+            if (typeof polylines[i] !== 'undefined') {
                 polylines[i]._destroy();
             }
         }
