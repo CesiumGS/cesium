@@ -14,6 +14,7 @@ define([
     "use strict";
 
     var pointMin = 0;
+    var screenSpacePos = new Cartesian2();
 
     function shiftPosition(viewModel, position){
         var pointX;
@@ -137,7 +138,7 @@ define([
         this._contentElement = contentElement;
         this._content = contentElement.innerHTML;
         this._position = undefined;
-
+        this._computeScreenSpacePosition = scene.computeScreenSpacePosition;
         this._positionX = '0';
         this._positionY = '0';
         this._pointX = '0';
@@ -178,7 +179,8 @@ define([
                 setTimeout(function () {
                     that._contentElement.innerHTML = that._content;
                     if (typeof that._position !== 'undefined') {
-                        var pos = shiftPosition(that, that._position);
+                        var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
+                        pos = shiftPosition(that, pos);
                         that._pointX = pos.point.x + 'px';
                         that._pointY = pos.point.y + 'px';
 
@@ -190,7 +192,8 @@ define([
                 }, 100);
                 this._updateContent = false;
             } else  if (typeof this._position !== 'undefined') {
-                var pos = shiftPosition(this, this._position);
+                var pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+                pos = shiftPosition(this, pos);
                 this._pointX = pos.point.x + 'px';
                 this._pointY = pos.point.y + 'px';
 
@@ -279,15 +282,35 @@ define([
             }
         },
         /**
-         * Sets the screen position for which to display the balloon
+         * Sets the function for converting the world position of the object to the screen space position.
+         * Expects the {Cartesian3} parameter for the position and the optional {Cartesian2} parameter for the result.
+         * Should return a {Cartesian2}.
+         *
+         * Defaults to scene.computeScreenSpacePosition.
+         *
+         * @example
+         * balloonViewModel.computeScreenSpacePosition = function(position, result) {
+         *     return Cartesian2.clone(position, result);
+         * };
+         *
          * @memberof BalloonViewModel
          *
-         * @type {Object}
+         * @type {Function}
+         */
+        computeScreenSpacePosition: {
+            set: function(value) {
+                if (typeof value === 'function') {
+                    this._computeScreenSpacePosition = value;
+                }
+            }
+        },
+        /**
+         * Sets the world position of the object for which to display the balloon.
+         * @memberof BalloonViewModel
+         *
+         * @type {Cartesian3}
          */
         position: {
-            get: function() {
-                return this._position;
-            },
             set: function(value) {
                 if (typeof value !== 'undefined') {
                     this._position = value;
