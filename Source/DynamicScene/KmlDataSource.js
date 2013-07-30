@@ -126,14 +126,14 @@ define(['../Core/createGuid',
         var element = node.getElementsByTagName(elementType)[0];
         if (elementType === 'hotSpot' && typeof element !== 'undefined'){
             var hotSpot = {
-              x: element.attributes.x.nodeValue,
-              y: element.attributes.y.nodeValue,
-              xunits: element.attributes.xunits.nodeValue,
-              yunits: element.attributes.yunits.nodeValue
+                    x: element.attributes.x.nodeValue,
+                    y: element.attributes.y.nodeValue,
+                    xunits: element.attributes.xunits.nodeValue,
+                    yunits: element.attributes.yunits.nodeValue
             };
             return hotSpot;
         }
-            return element && element.firstChild.data; //protecting from TypeError
+        return element && element.firstChild.data; //protecting from TypeError
     }
 
     function getEmbeddedStyle(node){
@@ -165,48 +165,10 @@ define(['../Core/createGuid',
         }
 
         return loadXML(url).then(function(kml) {
-            getStylesFromXml(kml, url);
+            return getStylesFromXml(kml, url);
         }, function(error) {
             this._error.raiseEvent(this, error);
         });
-
-//      if(typeof this.externalStyles[externalPath]  === 'undefined')
-//      {
-//      // load external doc and process styles
-//      this.externalStyles[externalPath] = styleCollection.
-//      }
-//
-//        var styleUrl = styleNode[0].textContent;
-//        if(styleUrl[0] === '#'){
-//            return styleCollection.getObject(styleUrl);
-//        }
-//        var externalPath = styleUrl;
-//
-//        if(typeof this.externalStyles[externalPath] === 'undefined'){
-//            if(externalPath.substring(0,3 === 'http')){
-//                var dname = externalPath;
-//                //is there a better way?
-//                var xhttp =  new XMLHttpRequest();
-//                xhttp.open("GET",dname,false);
-//                xhttp.send();
-//                var parser = new DOMParser();
-//                var xmlDoc = parser.parseFromString(xhttp.responseXML, "text/xml");
-//
-//                var stylesArray = xmlDoc.getElementsByTagName('Style');
-//                var externalStyleCollection = new DynamicObjectCollection();
-//                for (var i = 0, len = stylesArray.length; i < len; i++){
-//                    var externalStyleNode = stylesArray.item(i);
-//                    styleNode.id = '#' + getId(externalStyleNode);
-//                    var externalStyleObject = externalStyleCollection.getOrCreateObject(externalStyleNode.id);
-//                    processStyle(externalStyleNode, externalStyleObject);
-//                    this.externalStyles[externalPath] = externalStyleCollection;
-//                }
-//            } else {
-//                //TODO load local file
-//            }
-//        } else {
-//            //TODO return the style object that was already processed
-//        }
     }
 
     function getColor(node, colorType){
@@ -308,7 +270,7 @@ define(['../Core/createGuid',
             Model : processModel,
             gxTrack : processGxTrack,
             gxMultitrack : processGxMultiTrack
-        };
+    };
 
     function processStyle(styleNode, dynamicObject) {
         for(var i = 0, len = styleNode.childNodes.length; i < len; i++){
@@ -396,9 +358,31 @@ define(['../Core/createGuid',
                     if(styleId[0] === '#'){ //then check for local file styles
                         var styleObj = styleCollection.getObject(styleId);
                         placemarkDynamicObject.merge(styleObj);
-                    }
-                    else{ // get remote styles lastly
+                    } else { // get remote styles lastly
+                        var externalStyleCollection;
+                        var externalStyleObj;
 
+                        var externalArray = styleId.split('#');
+                        var externalPath = externalArray[0];
+                        var externalStyleId = '#' + externalArray[1];
+                        if(typeof this.externalStyles[externalPath] === 'undefined'){
+                            if(externalPath.substring(0,3 === 'http')){
+                                externalStyleCollection = getRemoteStyle(externalPath).then(function(styles){
+
+                                });
+
+                                this.externalStyles[externalPath] = externalStyleCollection;
+                                externalStyleObj = externalStyleCollection.getObject(externalStyleId);
+                                placemarkDynamicObject.merge(externalStyleObj);
+
+                            } else {
+                                //TODO Load an external file from a relative path
+                            }
+                        } else {
+                            externalStyleCollection = this.externalStyles[externalPath];
+                            externalStyleObj = externalStyleCollection.getObject(externalStyleId);
+                            placemarkDynamicObject.merge(externalStyleObj);
+                        }
                     }
                 }
             }
