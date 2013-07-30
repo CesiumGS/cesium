@@ -22,7 +22,7 @@ define(['../Core/DeveloperError'
      * @see PositionProperty
      * @see CompositePositionProperty
      */
-    var Property = throwInstantiationError();
+    var Property = throwInstantiationError;
 
     /**
      * If the property varies with simulation time, this function returns true.  If the property
@@ -31,7 +31,7 @@ define(['../Core/DeveloperError'
      * @memberof Property
      * @returns {Boolean} True if the property varies with simulation time, false otherwise.
      */
-    Property.prototype.getIsTimeVarying = throwInstantiationError();
+    Property.prototype.getIsTimeVarying = throwInstantiationError;
 
     /**
      * Returns the value of the property at the specified simulation time.
@@ -41,7 +41,7 @@ define(['../Core/DeveloperError'
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    Property.prototype.getValue = throwInstantiationError();
+    Property.prototype.getValue = throwInstantiationError;
 
     /**
      * Samples the value of the property over time using the specified options.
@@ -54,7 +54,7 @@ define(['../Core/DeveloperError'
      * @param {Array} [requiredTimes] An array of JulianDate instances, sorted by time, earliest first, that must be sampled in addition to any other steps taken by the sampling function.
      * @param {Number} [maximumStep] The suggested maximum step size to take between samples, specific implementations can ignore this value if it can produce an equivalent and optimal set of values.
      */
-    Property.prototype.sampleValue = throwInstantiationError();
+    Property.prototype.sampleValue = throwInstantiationError;
 
     return Property;
 });
