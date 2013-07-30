@@ -145,6 +145,47 @@ define(['../Core/createGuid',
         return style;
     }
 
+    function getRemoteStyle(styleNode, styleCollection){
+
+//      if(typeof this.externalStyles[externalPath]  === 'undefined')
+//      {
+//      // load external doc and process styles
+//      this.externalStyles[externalPath] = styleCollection.
+//      }
+
+        var styleUrl = styleNode[0].textContent;
+        if(styleUrl[0] === '#'){
+            return styleCollection.getObject(styleUrl);
+        }
+        var externalPath = styleUrl;
+
+        if(typeof this.externalStyles[externalPath] === 'undefined'){
+            if(externalPath.substring(0,3 === 'http')){
+                var dname = externalPath;
+                //is there a better way?
+                var xhttp =  new XMLHttpRequest();
+                xhttp.open("GET",dname,false);
+                xhttp.send();
+                var parser = new DOMParser();
+                var xmlDoc = parser.parseFromString(xhttp.responseXML, "text/xml");
+
+                var stylesArray = xmlDoc.getElementsByTagName('Style');
+                var externalStyleCollection = new DynamicObjectCollection();
+                for (var i = 0, len = stylesArray.length; i < len; i++){
+                    var externalStyleNode = stylesArray.item(i);
+                    styleNode.id = '#' + getId(externalStyleNode);
+                    var externalStyleObject = externalStyleCollection.getOrCreateObject(externalStyleNode.id);
+                    processStyle(externalStyleNode, externalStyleObject);
+                    this.externalStyles[externalPath] = externalStyleCollection;
+                }
+            } else {
+                //TODO load local file
+            }
+        } else {
+            //TODO return the style object that was already processed
+        }
+    }
+
     function getColor(node, colorType){
         var color;
         if(typeof colorType ===  'undefined'){
@@ -197,7 +238,7 @@ define(['../Core/createGuid',
         } else {
             var styleUrl = kml.getElementsByTagName('styleUrl');
             if(styleUrl.length > 0){
-                var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                var styleObj = getRemoteStyle(styleUrl, styleCollection);
                 if(typeof styleObj.label !== 'undefined'){ //TODO find a better way to set the text part of labels...
                     styleObj.label.text = new ConstantProperty(dynamicObject.name);
                 }
@@ -221,7 +262,7 @@ define(['../Core/createGuid',
         } else {
             var styleUrl = kml.getElementsByTagName('styleUrl');
             if(styleUrl.length > 0){
-                var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                var styleObj = getRemoteStyle(styleUrl, styleCollection);
                 dynamicObject.merge(styleObj);
             }
         }
@@ -335,7 +376,6 @@ define(['../Core/createGuid',
         var stylesArray = kml.getElementsByTagName('Style');
         var styleCollection = new DynamicObjectCollection();
         for ( var i = 0, len = stylesArray.length; i < len; i++){
-            //TODO check for external styles
             var styleNode = stylesArray.item(i);
             styleNode.id = '#' + getId(styleNode);
             var styleObject = styleCollection.getOrCreateObject(styleNode.id);
@@ -358,11 +398,11 @@ define(['../Core/createGuid',
             } else {
                 var styleUrl = array[i].getElementsByTagName('styleUrl');
                 if(styleUrl.length > 0){
-                    var styleObj = styleCollection.getObject(styleUrl[0].textContent);
+                    var styleObj = getRemoteStyle(styleUrl, styleCollection);
                     placemarkDynamicObject.merge(styleObj);
                 }
             }
-            processPlacemark(dataSource, array[i], dynamicObjectCollection, styleCollection); //placemarkDynamicObject?
+            processPlacemark(dataSource, array[i], dynamicObjectCollection, styleCollection);
         }
     }
 
