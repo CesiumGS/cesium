@@ -80,6 +80,7 @@ define([
         }
 
         this._command = new DrawCommand();
+        this._command.owner = this;
         this._cubeMap = undefined;
         this._sources = sources;
 
