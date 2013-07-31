@@ -54,9 +54,8 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
-    var textureRotationMatrixScratch = new Matrix2();
     var texCoordScratch = new Cartesian2();
-    var tangentRotationMatrixScratch = new Matrix3();
+    var textureMatrixScratch = new Matrix3();
     var quaternionScratch = new Quaternion();
 
     var scratchNormal = new Cartesian3();
@@ -122,13 +121,10 @@ define([
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
 
-        var textureRotation = Matrix2.fromRotation(stRotation, textureRotationMatrixScratch);
-        var tangentRotation = tangentRotationMatrixScratch;
-        if (vertexFormat.tangent || vertexFormat.binormal) {
-            var axis = Cartesian3.normalize(center, scratchCartesian1);
-            Quaternion.fromAxisAngle(axis, stRotation, quaternionScratch);
-            Matrix3.fromQuaternion(quaternionScratch, tangentRotation);
-        }
+        var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
+        ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
+        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
@@ -140,16 +136,12 @@ define([
             var extrudedPosition;
 
             if (vertexFormat.st) {
-                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
+                var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
+                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
-                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-
-                Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
-
-                texCoordScratch.x += 0.5;
-                texCoordScratch.y += 0.5;
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
 
                 if (extrude) {
                     textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
@@ -185,7 +177,7 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
-                    Matrix3.multiplyByVector(tangentRotation, tangent, tangent);
+                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                 }
                 if (vertexFormat.normal) {
                     normals[i] = normal.x;
@@ -543,7 +535,10 @@ define([
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
 
-        var textureRotation = Matrix2.fromRotation(stRotation, textureRotationMatrixScratch);
+        var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
+        ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
+        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
         var length = positions.length;
         var stOffset = length / 3 * 2;
@@ -554,16 +549,12 @@ define([
             var extrudedPosition;
 
             if (vertexFormat.st) {
-                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
+                var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
+                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
-                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis) - 0.5;
-
-                Matrix2.multiplyByVector(textureRotation, texCoordScratch, texCoordScratch);
-
-                texCoordScratch.x += 0.5;
-                texCoordScratch.y += 0.5;
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
 
                 textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
                 textureCoordinates[textureCoordIndex + 1 + stOffset] = texCoordScratch.y;
@@ -845,7 +836,7 @@ define([
             semiMinorAxis : semiMinorAxis,
             ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84),
             rotation : defaultValue(options.rotation, 0.0),
-            stRotation : -defaultValue(options.stRotation, 0.0),
+            stRotation : defaultValue(options.stRotation, 0.0),
             height : defaultValue(options.height, 0.0),
             granularity : defaultValue(options.granularity, 0.02),
             vertexFormat : defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
