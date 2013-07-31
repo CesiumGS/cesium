@@ -729,11 +729,13 @@ define([
                 // renderState, shaderProgram, and uniformMap for commands are set below.
 
                 colorCommand = new DrawCommand();
+                colorCommand.owner = this;
                 colorCommand.primitiveType = geometry.primitiveType;
                 colorCommand.vertexArray = this._va[i];
                 colorCommands.push(colorCommand);
 
                 pickCommand = new DrawCommand();
+                pickCommand.owner = this;
                 pickCommand.primitiveType = geometry.primitiveType;
                 pickCommand.vertexArray = this._va[i];
                 pickCommands.push(pickCommand);
@@ -785,7 +787,6 @@ define([
 
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
-
                 colorCommand = colorCommands[i];
                 colorCommand.renderState = this._rs;
                 colorCommand.shaderProgram = this._sp;
