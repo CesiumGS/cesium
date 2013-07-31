@@ -83,7 +83,6 @@ define(['../Core/createGuid',
         for (i = 0; i < el.childNodes.length; i++) {
             text = text + el.childNodes[i].nodeValue;
         }
-
         var coordsArray = text.split(/[\s\n]+/);
         var finalCoords = [];
         for(var j = 0; coordsArray[j]; j++){
@@ -159,11 +158,6 @@ define(['../Core/createGuid',
     }
 
     function getRemoteStyle(url){
-
-        if (typeof url === 'undefined') {
-            throw new DeveloperError('url is required.');
-        }
-
         return loadXML(url).then(function(kml) {
             return getStylesFromXml(kml, url);
         }, function(error) {
@@ -214,7 +208,6 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-
         var cartesian3 = crsFunction(coordinates);
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
@@ -226,7 +219,6 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
@@ -299,23 +291,10 @@ define(['../Core/createGuid',
 
     function loadKML(dataSource, kml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-
-        if (typeof kml === 'undefined') {
-            throw new DeveloperError('kml is required.');
-        }
-        if (typeof dynamicObjectCollection === 'undefined') {
-            throw new DeveloperError('dynamicObjectCollection is required.');
-        }
-
         var styleCollection = getStylesFromXml(kml);
 
-        var array = kml.getElementsByTagName('Folder');
+        var array = kml.getElementsByTagName('Placemark');
         for (var i = 0, len = array.length; i < len; i++){
-            processFolder(dataSource, array[i], dynamicObjectCollection);
-        }
-
-        array = kml.getElementsByTagName('Placemark');
-        for (i = 0, len = array.length; i < len; i++){
             var embeddedStyleNode = getEmbeddedStyle(array[i]);
             var placemark = array[i];
             placemark.id = getId(placemark);
@@ -448,7 +427,6 @@ define(['../Core/createGuid',
         this._changed.raiseEvent(this);
     };
 
-
     /**
      * Asynchronously loads the KML at the provided url, replacing any existing data.
      *
@@ -470,7 +448,5 @@ define(['../Core/createGuid',
             this._error.raiseEvent(this, error);
         });
     };
-
-
     return KmlDataSource;
 });
