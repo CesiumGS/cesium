@@ -206,7 +206,7 @@ define([
         this._blueBits = gl.getParameter(gl.BLUE_BITS);
         this._alphaBits = gl.getParameter(gl.ALPHA_BITS);
         this._depthBits = gl.getParameter(gl.DEPTH_BITS);
-        this._stencilBits = gl.getParameter(gl.STENCIL_BITS);
+        this._stencilBits = 0; //gl.getParameter(gl.STENCIL_BITS);
         this._maximumCombinedTextureImageUnits = gl.getParameter(gl.MAX_COMBINED_TEXTURE_IMAGE_UNITS); // min: 8
         this._maximumCubeMapSize = gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE); // min: 16
         this._maximumFragmentUniformVectors = gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS); // min: 16
@@ -236,7 +236,7 @@ define([
         var cc = gl.getParameter(gl.COLOR_CLEAR_VALUE);
         this._clearColor = new Color(cc[0], cc[1], cc[2], cc[3]);
         this._clearDepth = gl.getParameter(gl.DEPTH_CLEAR_VALUE);
-        this._clearStencil = gl.getParameter(gl.STENCIL_CLEAR_VALUE);
+        this._clearStencil = 0; //gl.getParameter(gl.STENCIL_CLEAR_VALUE);
 
         var us = new UniformState();
         var ps = new PassState(this);
@@ -1957,7 +1957,7 @@ define([
         if (typeof s !== 'undefined') {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
-                gl.clearStencil(s);
+                //gl.clearStencil(s);
             }
             bitmask |= gl.STENCIL_BUFFER_BIT;
         }

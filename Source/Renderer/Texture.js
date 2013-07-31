@@ -232,7 +232,7 @@ define([
         var gl = this._gl;
         var target = this._textureTarget;
 
-        gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
+        //gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
         gl.generateMipmap(target);

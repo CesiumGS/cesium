@@ -234,7 +234,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             toolbar.appendChild(baseLayerPickerContainer);
             var providerViewModels = defaultValue(options.imageryProviderViewModels, createDefaultBaseLayers());
             baseLayerPicker = new BaseLayerPicker(baseLayerPickerContainer, cesiumWidget.centralBody.getImageryLayers(), providerViewModels);
-            baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[0]);
+            baseLayerPicker.viewModel.selectedItem = defaultValue(options.selectedImageryProviderViewModel, providerViewModels[11]);
 
             //Grab the dropdown for resize code.
             var elements = baseLayerPickerContainer.getElementsByClassName('cesium-baseLayerPicker-dropDown');

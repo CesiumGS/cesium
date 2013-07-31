@@ -2601,13 +2601,13 @@ define([
         if (typeof attributeLocations !== 'undefined') {
             for ( var attribute in attributeLocations) {
                 if (attributeLocations.hasOwnProperty(attribute)) {
-                    gl.bindAttribLocation(program, attributeLocations[attribute], attribute);
+                    //gl.bindAttribLocation(program, attributeLocations[attribute], attribute);
                 }
             }
         }
 
         gl.linkProgram(program);
-        var linkLog = gl.getProgramInfoLog(program);
+        var linkLog; //gl.getProgramInfoLog(program);
 
         if (logShaderCompilation && linkLog && linkLog.length) {
             console.log('[GL] Shader program link log: ' + linkLog);
@@ -2656,7 +2656,7 @@ define([
                 if (activeUniform.name.indexOf('[') < 0) {
                     // Single uniform
                     var location = gl.getUniformLocation(program, uniformName);
-                    var uniformValue = gl.getUniform(program, location);
+                    var uniformValue = undefined; //gl.getUniform(program, location);
                     var uniform = new Uniform(gl, activeUniform, uniformName, location, uniformValue);
 
                     allUniforms[uniformName] = uniform;

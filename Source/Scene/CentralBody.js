@@ -640,9 +640,9 @@ define([
 
             this._surfaceShaderSet.baseVertexShaderString =
                  (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                 CentralBodyVS + '\n' +
-                 getPositionMode + '\n' +
-                 get2DYPositionFraction;
+                 CentralBodyVS; // + '\n' +
+                 //getPositionMode + '\n' +
+                 //get2DYPositionFraction;
 
             var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
 
