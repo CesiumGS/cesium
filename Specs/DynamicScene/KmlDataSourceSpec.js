@@ -199,11 +199,13 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var dataSource = new KmlDataSource();
         dataSource.load(xmlDoc);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].position.getValueCartesian()).toEqual(cartesianPosition);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.text._value).toEqual(name._value);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.scale._value).toEqual(scale._value);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].label.fillColor._value).toEqual(color._value);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
+        expect(objects[0].label.text._value).toEqual(name._value);
+        expect(objects[0].label.scale._value).toEqual(scale._value);
+        expect(objects[0].label.fillColor._value).toEqual(color._value);
     });
 
     it('handles Line Geometry with two sets of coordinates', function() {
@@ -229,9 +231,11 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var dataSource = new KmlDataSource();
         dataSource.load(xmlDoc);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
+        expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
     });
 
     it('Simple Test loading Kml', function() {
