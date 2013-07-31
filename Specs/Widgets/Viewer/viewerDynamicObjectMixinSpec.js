@@ -28,10 +28,11 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('adds trackedObject property', function() {
+    it('adds proeprties', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.trackedObject).toBeUndefined();
+        expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
+        expect(viewer.hasOwnProperty('balloonedObject')).toEqual(true);
         viewer.destroy();
     });
 
@@ -51,20 +52,13 @@ defineSuite([
         viewer.destroy();
     });
 
-    it('adds balloonedObject property', function() {
-        var viewer = new Viewer(container);
-        viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.balloonedObject).toBeUndefined();
-        viewer.destroy();
-    });
-
     it('can get and set balloonedObject', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
         dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
-        dynamicObject.balloon = '<span>content</span>';
+        dynamicObject.balloon = new MockProperty('<span>content</span>');
 
         viewer.balloonedObject = dynamicObject;
         expect(viewer.balloonedObject).toBe(dynamicObject);

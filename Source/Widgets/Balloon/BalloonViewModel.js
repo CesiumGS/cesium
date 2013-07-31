@@ -25,8 +25,8 @@ define([
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
-        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.25) + 'px';
-        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.25) + 'px';
+        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.95) + 'px';
+        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.50) + 'px';
 
         var pointMaxY = containerHeight - 15;
         var pointMaxX = containerWidth - 16;
@@ -138,7 +138,9 @@ define([
         this._contentElement = contentElement;
         this._content = contentElement.innerHTML;
         this._position = undefined;
-        this._computeScreenSpacePosition = scene.computeScreenSpacePosition;
+        this._computeScreenSpacePosition = function(position, result) {
+            return scene.computeScreenSpacePosition(position, result);
+        };
         this._positionX = '0';
         this._positionY = '0';
         this._pointX = '0';
@@ -159,8 +161,8 @@ define([
         this._left = false;
         this._right = false;
 
-        this._maxWidth = Math.floor(this._container.clientWidth*0.25) + 'px';
-        this._maxHeight = Math.floor(this._container.clientHeight*0.25) + 'px';
+        this._maxWidth = Math.floor(this._container.clientWidth*0.95) + 'px';
+        this._maxHeight = Math.floor(this._container.clientHeight*0.50) + 'px';
 
         knockout.track(this, ['showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
                               '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight']);

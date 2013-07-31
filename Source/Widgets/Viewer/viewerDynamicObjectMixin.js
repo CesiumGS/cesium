@@ -74,13 +74,11 @@ define([
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
             var viewModel = viewer._balloon.viewModel;
-            if (typeof balloonedObject !== 'undefined' && viewModel.showBalloon) {
-                if (typeof balloonedObject.dynamicObject !== 'undefined') {
-                    viewModel.position = balloonedObject.dynamicObject.position;
-                } else if (typeof balloonedObject.getPosition === 'function') {
-                    viewModel.position = balloonedObject.getPosition();
-                }
+            if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined' && viewModel.showBalloon) {
+                viewModel.position = balloonedObject.position.getValueCartesian(clock.currentTime);
                 viewModel.update();
+            } else {
+                viewModel.showBalloon = false;
             }
             if (typeof dynamicObjectView !== 'undefined') {
                 dynamicObjectView.update(clock.currentTime);
@@ -99,13 +97,14 @@ define([
 
         function showBalloon(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined') {
-                viewer.balloonedObject = pickedPrimitive;
+            if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
+                viewer.balloonedObject = pickedPrimitive.dynamicObject;
             }
         }
 
         function clearTrackedObject() {
             viewer.trackedObject = undefined;
+            viewer.balloonedObject = undefined;
         }
 
         //Subscribe to the home button click if it exists, so that we can
@@ -131,10 +130,11 @@ define([
                 set : function(value) {
                     if (trackedObject !== value) {
                         trackedObject = value;
-                        if (typeof balloonedObject !== 'undefined' && trackedObject !== balloonedObject.dynamicObject && typeof trackedObject !== 'undefined') {
+                        dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+
+                        if (balloonedObject !== trackedObject) {
                             viewer._balloon.viewModel.showBalloon = false;
                         }
-                        dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
                     var sceneMode = viewer.scene.getFrameState().mode;
 
@@ -147,40 +147,32 @@ define([
                     }
                 }
             },
+
             /**
              * Gets or sets the object instance for which to display a balloon
              * @memberof viewerDynamicObjectMixin.prototype
-             * @type {Object}
+             * @type {DynamicObject}
              */
-            balloonedObject: {
-                get: function() {
+            balloonedObject : {
+                get : function() {
                     return balloonedObject;
                 },
-                set: function(value) {
+                set : function(value) {
                     var viewModel = viewer._balloon.viewModel;
-                    if (balloonedObject !== value || !viewModel.showBalloon) {
-                        value.balloon = defaultValue(value.balloon, '<span>this is some awesome content</span>');
-                        if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
-                            var scene = viewModel.scene;
-                            if (typeof value.computeScreenSpacePosition === 'function') {
-                                viewModel.computeScreenSpacePosition = function(){
-                                    return value.computeScreenSpacePosition(scene.getContext(), scene.getFrameState());
-                                };
-                            } else if (typeof value.dynamicObject !== 'undefined') {
-                                viewModel.computeScreenSpacePosition = scene.computeScreenSpacePosition;
-                                viewModel.position = value.dynamicObject.position;
-                            } else if (typeof value.getPosition === 'function') {
-                                viewModel.computeScreenSpacePosition = scene.computeScreenSpacePosition;
-                                viewModel.position = value.getPosition();
-                            }
-
-                            viewModel.content = value.balloon;
-                            viewModel.showBalloon = true;
-                        } else {
-                            viewModel.showBalloon = false;
+                    var content;
+                    if (typeof value !== 'undefined') {
+                        if (typeof value.dynamicObject !== 'undefined' && typeof value.dynamicObject.position !== 'undefined') {
+                            viewModel.position = value.dynamicObject.position.getValue(viewer.clock.currentTime);
                         }
+                        if (typeof value.balloon !== 'undefined') {
+                            content = value.balloon.getValue(viewer.clock.currentTime);
+                        } else {
+                            content = value.id;
+                        }
+                        viewModel.content = content;
                     }
                     balloonedObject = value;
+                    viewModel.showBalloon = typeof content !== 'undefined';
                 }
             }
         });
@@ -188,7 +180,7 @@ define([
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
             eventHelper.removeAll();
-
+            balloon.destroy();
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.LEFT_CLICK);
             viewer.screenSpaceEventHandler.removeInputAction(ScreenSpaceEventType.RIGHT_CLICK);
         });
