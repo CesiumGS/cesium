@@ -129,8 +129,8 @@ defineSuite([
         expect(length).toEqual(2 * 24);
         expect(m.indices.length).toEqual(3 * 34);
 
-        expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON14);
-        expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON14);
+        expect(st[length - 2]).toEqualEpsilon(0.5, CesiumMath.EPSILON2);
+        expect(st[length - 1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
     });
 
     it('computes positions extruded', function() {
