@@ -46,7 +46,7 @@ define([
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
      * viewer.balloonedObject = object; //Balloon will now appear over object
      */
-    var screenPosition = new Cartesian2();
+
     var viewerDynamicObjectMixin = function(viewer) {
         if (typeof viewer === 'undefined') {
             throw new DeveloperError('viewer is required.');
@@ -71,20 +71,15 @@ define([
         var dynamicObjectView;
         var balloonedObject;
 
-        function computeBalloonPosition(scene, object) {
-            if (typeof object.computeScreenSpacePosition === 'function') {
-                return object.computeScreenSpacePosition(scene.getContext(), scene.getFrameState());
-            } else if (typeof object.getPosition === 'function') {
-                return scene.computeScreenSpacePosition(object.getPosition(), screenPosition);
-            }
-        }
-
-
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
             var viewModel = viewer._balloon.viewModel;
             if (typeof balloonedObject !== 'undefined' && viewModel.showBalloon) {
-                viewModel.position = computeBalloonPosition(viewModel.scene, balloonedObject);
+                if (typeof balloonedObject.dynamicObject !== 'undefined') {
+                    viewModel.position = balloonedObject.dynamicObject.position;
+                } else if (typeof balloonedObject.getPosition === 'function') {
+                    viewModel.position = balloonedObject.getPosition();
+                }
                 viewModel.update();
             }
             if (typeof dynamicObjectView !== 'undefined') {
@@ -164,9 +159,21 @@ define([
                 set: function(value) {
                     var viewModel = viewer._balloon.viewModel;
                     if (balloonedObject !== value || !viewModel.showBalloon) {
+                        value.balloon = defaultValue(value.balloon, '<span>this is some awesome content</span>');
                         if (typeof value !== 'undefined' && typeof value.balloon === 'string') {
                             var scene = viewModel.scene;
-                            viewModel.position = computeBalloonPosition(scene, value);
+                            if (typeof value.computeScreenSpacePosition === 'function') {
+                                viewModel.computeScreenSpacePosition = function(){
+                                    return value.computeScreenSpacePosition(scene.getContext(), scene.getFrameState());
+                                };
+                            } else if (typeof value.dynamicObject !== 'undefined') {
+                                viewModel.computeScreenSpacePosition = scene.computeScreenSpacePosition;
+                                viewModel.position = value.dynamicObject.position;
+                            } else if (typeof value.getPosition === 'function') {
+                                viewModel.computeScreenSpacePosition = scene.computeScreenSpacePosition;
+                                viewModel.position = value.getPosition();
+                            }
+
                             viewModel.content = value.balloon;
                             viewModel.showBalloon = true;
                         } else {

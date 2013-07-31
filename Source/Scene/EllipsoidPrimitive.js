@@ -170,7 +170,9 @@ define([
         this._pickId = undefined;
 
         this._colorCommand = new DrawCommand();
+        this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
+        this._pickCommand.owner = this;
         this._commandLists = new CommandLists();
 
         var that = this;
