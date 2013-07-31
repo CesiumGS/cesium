@@ -240,36 +240,12 @@ define(['../Core/createGuid',
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum, altitudeMode
     }
 
-    function processPolygon(dataSource, kml, node){
-
-    }
-
-    function processMultiGeometry(dataSource, kml, node){
-
-    }
-
-    function processModel(dataSource, kml, node){
-
-    }
-
-    function processGxTrack(dataSource, kml, node){
-
-    }
-
-    function processGxMultiTrack(dataSource, kml, node){
-
-    }
-
     //Object that holds all supported Geometry
     var geometryTypes = {
             Point : processPoint,
             LineString : processLineString,
-            LinearRing : processLinearRing,
-            Polygon : processPolygon,
-            MultiGeometry : processMultiGeometry,
-            Model : processModel,
-            gxTrack : processGxTrack,
-            gxMultitrack : processGxMultiTrack
+            LinearRing : processLinearRing
+            //TODO Polygon, MultiGeometry, Model, gxTrack, gxMultitrack
     };
 
     function processStyle(styleNode, dynamicObject) {
@@ -319,10 +295,6 @@ define(['../Core/createGuid',
                 //TODO Fill, Outline
             }
         }
-    }
-
-    function processFolder(){
-
     }
 
     function loadKML(dataSource, kml, sourceUri) {
@@ -389,9 +361,6 @@ define(['../Core/createGuid',
             processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
         }
     }
-
-
-
 
     /**
      * A {@link DataSource} which processes KML.
