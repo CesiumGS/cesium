@@ -113,8 +113,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.scale.getValue()).toEqual(2.0);
-        expect(objects[0].billboard.image.getValue()).toEqual('http://test.invalid');
+
+        var billboard = objects[0].billboard;
+        expect(billboard.scale.getValue()).toEqual(2.0);
+        expect(billboard.image.getValue()).toEqual('http://test.invalid');
     });
 
     it('handles Point Geometry', function() {
@@ -136,8 +138,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var dataSource = new KmlDataSource();
         dataSource.load(xmlDoc);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].position.getValueCartesian()).toEqual(cartesianPosition);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
     });
 
     it('handles Point Geometry without altitude', function() {
@@ -159,8 +163,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var dataSource = new KmlDataSource();
         dataSource.load(xmlDoc);
-        expect(dataSource.getDynamicObjectCollection().getObjects().length).toEqual(1);
-        expect(dataSource.getDynamicObjectCollection().getObjects()[0].position.getValueCartesian()).toEqual(cartesianPosition);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
     });
 
     it('handles Point Geometry with LabelStyle', function() {
