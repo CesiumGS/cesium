@@ -28,7 +28,7 @@ defineSuite([
         document.body.removeChild(container);
     });
 
-    it('adds proeprties', function() {
+    it('adds properties', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
         expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
