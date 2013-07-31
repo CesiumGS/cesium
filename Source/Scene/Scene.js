@@ -792,9 +792,13 @@ define([
             return undefined;
         }
 
-        var uniformState = this._context.getUniformState();
-        var modelViewProjectionMatrix = uniformState.getModelViewProjection();
-        var viewportTransformation = uniformState.getViewportTransformation();
+        var camera = this._camera;
+        var viewMatrix = camera.getViewMatrix();
+        var projectionMatrix = camera.frustum.getProjectionMatrix();
+        var modelViewProjectionMatrix = Matrix4.multiply(projectionMatrix, viewMatrix);
+        var canvas = this._canvas;
+        var viewportTransformation = Matrix4.computeViewportTransformation(
+            new BoundingRectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), 0.0, 1.0);
         var point = Transforms.pointToWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, position, result);
 
         return point;
