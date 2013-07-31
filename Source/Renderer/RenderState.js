@@ -317,8 +317,8 @@ define([
     }
 
     function applyColorMask(gl, renderState) {
-        //var colorMask = renderState.colorMask;
-        //gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
+        var colorMask = renderState.colorMask;
+        gl.colorMask(colorMask.red, colorMask.green, colorMask.blue, colorMask.alpha);
     }
 
     function applyDepthMask(gl, renderState) {
@@ -389,7 +389,7 @@ define([
         var sampleCoverage = renderState.sampleCoverage;
         var enabled = sampleCoverage.enabled;
 
-        //enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
+        enableOrDisable(gl, gl.SAMPLE_COVERAGE, enabled);
 
         if (enabled) {
             gl.sampleCoverage(sampleCoverage.value, sampleCoverage.invert);
@@ -397,7 +397,7 @@ define([
     }
 
     function applyDither(gl, renderState) {
-        //enableOrDisable(gl, gl.DITHER, renderState.dither);
+        enableOrDisable(gl, gl.DITHER, renderState.dither);
     }
 
     var scratchViewport = new BoundingRectangle();
