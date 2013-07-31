@@ -84,7 +84,7 @@ defineSuite([
         var child00 = child0.childNodes[0];
         expect(child00.className).toEqual(image);
         expect(child00.childNodes.length).toEqual(1);
-        expect(child00.childNodes[0].src.indexOf(imgSrc)).toNotEqual(-1);
+        expect(child00.childNodes[0].src).toContain(imgSrc);
     });
 
     it('credit display displays hyperlink credit', function() {
@@ -128,7 +128,7 @@ defineSuite([
         creditDisplay.beginFrame();
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toNotEqual(innerHTML);
+        expect(container.innerHTML).not.toEqual(innerHTML);
         innerHTML = container.innerHTML;
         expect(container.childNodes.length).toEqual(2);
         child0 = container.childNodes[0];
@@ -137,12 +137,12 @@ defineSuite([
         expect(child1.childNodes.length).toEqual(0);
         var child00 = child0.childNodes[0];
         expect(child00.childNodes.length).toEqual(1);
-        expect(child00.childNodes[0].src.indexOf(imgSrc)).toNotEqual(-1);
+        expect(child00.childNodes[0].src).toContain(imgSrc);
 
         creditDisplay.addCredit(credit1);
         creditDisplay.addCredit(credit2);
         creditDisplay.endFrame();
-        expect(container.innerHTML).toNotEqual(innerHTML);
+        expect(container.innerHTML).not.toEqual(innerHTML);
         innerHTML = container.innerHTML;
         expect(container.childNodes.length).toEqual(2);
         expect(container.childNodes[0].childNodes.length).toEqual(1);
@@ -150,7 +150,7 @@ defineSuite([
 
         creditDisplay.beginFrame();
         creditDisplay.endFrame();
-        expect(container.innerHTML).toNotEqual(innerHTML);
+        expect(container.innerHTML).not.toEqual(innerHTML);
         expect(container.childNodes.length).toEqual(2);
         expect(container.childNodes[0].childNodes.length).toEqual(0);
         expect(container.childNodes[1].childNodes.length).toEqual(0);
@@ -248,7 +248,7 @@ defineSuite([
         var child00 = child0.childNodes[0];
         expect(child00.className).toEqual(image);
         expect(child00.childNodes.length).toEqual(1);
-        expect(child00.childNodes[0].src.indexOf(imgSrc)).toNotEqual(-1);
+        expect(child00.childNodes[0].src).toContain(imgSrc);
         expect(child00.childNodes[0].alt).toEqual('credit text');
         expect(child00.childNodes[0].title).toEqual('credit text');
     });
@@ -267,9 +267,9 @@ defineSuite([
         expect(child00.className).toEqual(image);
         expect(child00.childNodes.length).toEqual(1);
         var child000 = child00.childNodes[0];
-        expect(child000.href.indexOf('link.com')).toNotEqual(-1);
+        expect(child000.href).toContain('link.com');
         expect(child000.childNodes.length).toEqual(1);
-        expect(child000.childNodes[0].src.indexOf(imgSrc)).toNotEqual(-1);
+        expect(child000.childNodes[0].src).toContain(imgSrc);
     });
 
     it('credit display displays default credit', function() {
@@ -403,7 +403,7 @@ defineSuite([
         var child00 = child0.childNodes[0];
         expect(child00.className).toEqual(image);
         expect(child00.childNodes.length).toEqual(1);
-        expect(child00.childNodes[0].src.indexOf(imgSrc)).toNotEqual(-1);
+        expect(child00.childNodes[0].src).toContain(imgSrc);
 
     });
 
