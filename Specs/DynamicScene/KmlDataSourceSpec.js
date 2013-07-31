@@ -35,6 +35,88 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(dataSource.getIsTimeVarying()).toEqual(true);
     });
 
+    it('loads shared styles', function() {
+        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+              <IconStyle>\
+                  <scale>3</scale>\
+              </IconStyle>\
+            </Style>\
+            <Placemark>\
+              <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(xmlDoc);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+    });
+
+    it('loads external styles', function() {
+        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <styleUrl>Data/KML/externalStyle.kml#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(xmlDoc);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+    });
+
+    it('inline styles take precedance over shared styles', function() {
+        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+              <IconStyle>\
+                  <scale>3</scale>\
+                  <Icon>\
+                    <href>http://test.invalid</href>\
+                  </Icon>\
+              </IconStyle>\
+            </Style>\
+            <Placemark>\
+              <styleUrl>#testStyle</styleUrl>\
+              <Style>\
+                <IconStyle>\
+                  <scale>2</scale>\
+                </IconStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(xmlDoc);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].billboard.scale.getValue()).toEqual(2.0);
+        expect(objects[0].billboard.image.getValue()).toEqual('http://test.invalid');
+    });
+
     it('handles Point Geometry', function() {
         var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 3);
         var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
