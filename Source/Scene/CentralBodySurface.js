@@ -12,7 +12,6 @@ define([
         '../Core/EllipsoidalOccluder',
         '../Core/Intersect',
         '../Core/Matrix4',
-        '../Core/GeometryPipeline',
         '../Core/PrimitiveType',
         '../Core/Queue',
         '../Core/WebMercatorProjection',
@@ -36,7 +35,6 @@ define([
         EllipsoidalOccluder,
         Intersect,
         Matrix4,
-        GeometryPipeline,
         PrimitiveType,
         Queue,
         WebMercatorProjection,
@@ -99,7 +97,6 @@ define([
         this._debug = {
             enableDebugOutput : false,
             boundingSphereTile : undefined,
-            boundingSphereVA : undefined,
 
             maxDepth : 0,
             tilesVisited : 0,
@@ -124,7 +121,6 @@ define([
         selectTilesForRendering(this, context, frameState);
         processTileLoadQueue(this, context, frameState);
         createRenderCommandsForSelectedTiles(this, context, frameState, shaderSet, projection, centralBodyUniformMap, colorCommandList, renderState);
-        debugCreateRenderCommandsForTileBoundingSphere(this, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList);
     };
 
     CentralBodySurface.prototype.getTerrainProvider = function() {
@@ -282,13 +278,6 @@ define([
         }
 
         this._imageryLayerCollection.destroy();
-
-        var debug = this._debug;
-        if (typeof debug !== 'undefined') {
-            if (typeof debug.boundingSphereVA !== 'undefined') {
-                debug.boundingSphereVA.destroy();
-            }
-        }
 
         return destroyObject(this);
     };
@@ -701,58 +690,7 @@ define([
         }
 
         this._debug.boundingSphereTile = result;
-        this._debug.boundingSphereVA = undefined;
     };
-
-    function debugCreateRenderCommandsForTileBoundingSphere(surface, context, frameState, centralBodyUniformMap, shaderSet, renderState, colorCommandList) {
-        if (typeof surface._debug !== 'undefined' && typeof surface._debug.boundingSphereTile !== 'undefined') {
-            if (!surface._debug.boundingSphereVA) {
-                var radius = surface._debug.boundingSphereTile.boundingSphere3D.radius;
-                var sphere = new EllipsoidGeometry({
-                    radii : new Cartesian3(radius, radius, radius),
-                    numberOfPartitions : 10
-                });
-                GeometryPipeline.toWireframe(sphere);
-                surface._debug.boundingSphereVA = context.createVertexArrayFromGeometry({
-                    geometry : sphere,
-                    attributeIndices : GeometryPipeline.createAttributeIndices(sphere)
-                });
-            }
-
-            var tile = surface._debug.boundingSphereTile;
-            if (typeof tile.vertexArray === 'undefined') {
-                return;
-            }
-
-            var rtc2 = tile.center;
-
-            var uniformMap2 = createTileUniformMap();
-            mergeUniformMap(uniformMap2, centralBodyUniformMap);
-
-            uniformMap2.waterMask = tile.waterMaskTexture;
-
-            uniformMap2.center3D = rtc2;
-
-            var viewMatrix = frameState.camera.getViewMatrix();
-
-            var centerEye2 = viewMatrix.multiplyByVector(new Cartesian4(rtc2.x, rtc2.y, rtc2.z, 1.0));
-            uniformMap2.modifiedModelView = viewMatrix.setColumn(3, centerEye2, uniformMap2.modifiedModelView);
-
-            uniformMap2.dayTextures[0] = context.getDefaultTexture();
-            uniformMap2.dayTextureTranslationAndScale[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-            uniformMap2.dayTextureTexCoordsExtent[0] = new Cartesian4(0.0, 0.0, 1.0, 1.0);
-            uniformMap2.dayTextureAlpha[0] = 1.0;
-
-            var boundingSphereCommand = new DrawCommand();
-            boundingSphereCommand.shaderProgram = shaderSet.getShaderProgram(context, 0);
-            boundingSphereCommand.renderState = renderState;
-            boundingSphereCommand.primitiveType = PrimitiveType.LINES;
-            boundingSphereCommand.vertexArray = surface._debug.boundingSphereVA;
-            boundingSphereCommand.uniformMap = uniformMap2;
-
-            colorCommandList.push(boundingSphereCommand);
-        }
-    }
 
     CentralBodySurface.prototype.debugToggleLodUpdate = function(frameState) {
         this._debug.suspendLodUpdate = !this._debug.suspendLodUpdate;
@@ -942,12 +880,16 @@ define([
                     var command = tileCommands[tileCommandIndex];
                     if (typeof command === 'undefined') {
                         command = new DrawCommand();
+                        command.owner = tile;
                         command.cull = false;
                         tileCommands[tileCommandIndex] = command;
                         tileCommandUniformMaps[tileCommandIndex] = createTileUniformMap();
                     }
-                    var uniformMap = tileCommandUniformMaps[tileCommandIndex];
+                    command.owner = tile;
 
+                    command.debugShowBoundingVolume = tile === surface._debug.boundingSphereTile;
+
+                    var uniformMap = tileCommandUniformMaps[tileCommandIndex];
                     mergeUniformMap(uniformMap, centralBodyUniformMap);
 
                     uniformMap.center3D = tile.center;

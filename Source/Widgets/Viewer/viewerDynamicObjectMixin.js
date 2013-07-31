@@ -7,6 +7,7 @@ define([
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/CameraFlightPath',
+        '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView'
     ], function(
         defaultValue,
@@ -16,6 +17,7 @@ define([
         ScreenSpaceEventType,
         wrapFunction,
         CameraFlightPath,
+        SceneMode,
         DynamicObjectView) {
     "use strict";
 
@@ -108,7 +110,15 @@ define([
                         trackedObject = value;
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
-                    viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    var sceneMode = viewer.scene.getFrameState().mode;
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
+                    }
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    }
                 }
             },
             flyToObject : {
