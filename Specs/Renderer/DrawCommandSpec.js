@@ -18,6 +18,8 @@ defineSuite([
         expect(c.shaderProgram).toBeUndefined();
         expect(c.uniformMap).toBeUndefined();
         expect(c.vertexArray).toBeUndefined();
+        expect(c.owner).toBeUndefined();
+        expect(c.debugShowBoundingVolume).toEqual(false);
     });
 
 });

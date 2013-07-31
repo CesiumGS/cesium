@@ -36,6 +36,7 @@ Beta Releases
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 * Added extrusion to `ExtentGeometry`.
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.

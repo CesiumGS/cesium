@@ -7,19 +7,15 @@
     <meta name="description" content="Create and style textual labels.">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body cass="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -27,11 +23,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button'
-], function(
-    Cesium, Button)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     function addLabel(scene, ellipsoid) {
@@ -101,42 +93,47 @@ require([
         var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
+        var toolbar = document.getElementById('toolbar');
+        
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addLabel(scene, ellipsoid);
+            Sandcastle.highlight(addLabel);
+        };
+        button.textContent = 'Add label';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'Add label',
-            onClick: function() {
-                primitives.removeAll();
-                addLabel(scene, ellipsoid);
-                Sandcastle.highlight(addLabel);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            setLabelFont(scene, ellipsoid);
+            Sandcastle.highlight(setLabelFont);
+        };
+        button.textContent = 'Set font';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'Set font',
-            onClick: function() {
-                primitives.removeAll();
-                setLabelFont(scene, ellipsoid);
-                Sandcastle.highlight(setLabelFont);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            setLabelProperties(scene, ellipsoid);
+            Sandcastle.highlight(setLabelProperties);
+        };
+        button.textContent = 'Set properties';
+        toolbar.appendChild(button);
 
-        new Button({
-            label: 'Set properties',
-            onClick: function() {
-                primitives.removeAll();
-                setLabelProperties(scene, ellipsoid);
-                Sandcastle.highlight(setLabelProperties);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label: 'Add labels in reference frame',
-            onClick: function() {
-                primitives.removeAll();
-                addLabelsInReferenceFrame(scene, ellipsoid);
-                Sandcastle.highlight(addLabelsInReferenceFrame);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addLabelsInReferenceFrame(scene, ellipsoid);
+            Sandcastle.highlight(addLabelsInReferenceFrame);
+        };
+        button.textContent = 'Add labels in reference frame';
+        toolbar.appendChild(button);
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');
