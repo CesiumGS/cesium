@@ -24,7 +24,7 @@ define([
     var diffScratch = new Cartesian3();
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cube centered at the origin.
+     * A {@link Geometry} that represents vertices and indices for the edges of a cube centered at the origin.
      *
      * @alias BoxGeometryOutline
      * @constructor
@@ -163,7 +163,7 @@ define([
     };
 
     /**
-     * Creates vertices and indices for a cube centered at the origin given its dimensions.
+     * Creates vertices and indices for the edges of a cube centered at the origin given its dimensions.
      * @memberof BoxGeometryOutline
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
