@@ -40,6 +40,10 @@ define([
         }
     });
 
+    GeoJsonDataSourcePanel.prototype.reset = function() {
+        this._input.value = '';
+    };
+
     GeoJsonDataSourcePanel.prototype.finish = function(dataSourceCollection) {
         var url = this._input.value;
         if (this._input.value === '') {

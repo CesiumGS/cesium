@@ -40,6 +40,10 @@ define([
         }
     });
 
+    CzmlDataSourcePanel.prototype.reset = function() {
+        this._input.value = '';
+    };
+
     CzmlDataSourcePanel.prototype.finish = function(dataSourceCollection) {
         var url = this._input.value;
         if (this._input.value === '') {

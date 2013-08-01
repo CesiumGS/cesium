@@ -131,6 +131,7 @@ text: error');
 
                 var newActivePanel = valueAccessor();
                 if (defined(newActivePanel)) {
+                    newActivePanel.reset();
                     element.appendChild(newActivePanel.element);
                 }
             }
