@@ -216,6 +216,7 @@ define(['../Core/createGuid',
     }
 
     function processPoint(dataSource, kml, node, dynamicObjectCollection, styleCollection) {
+        //TODO extrude, altitudeMode, gx:altitudeMode
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
@@ -227,6 +228,7 @@ define(['../Core/createGuid',
     }
 
     function processLineString(dataSource, kml, node, dynamicObjectCollection, styleCollection){
+        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
