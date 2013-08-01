@@ -890,8 +890,8 @@ define([
         if (!positionOnly) {
             var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
             Cartesian3.negate(direction, direction);
-            var right = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.cross(right, direction, camera.up);
+            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
 
         return result;
@@ -947,8 +947,10 @@ define([
             frustum.top = top;
             frustum.bottom = -top;
 
-            var cameraRight = Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
-            Cartesian3.cross(cameraRight, camera.direction, camera.up);
+            var direction = Cartesian3.clone(Cartesian3.UNIT_Z, camera.direction);
+            Cartesian3.negate(direction, direction);
+            Cartesian3.clone(Cartesian3.UNIT_X, camera.right);
+            Cartesian3.clone(Cartesian3.UNIT_Y, camera.up);
         }
 
         return result;

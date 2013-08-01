@@ -41,27 +41,7 @@ define([
         this.labelCollection = labelCollection;
         this.index = index;
         this.dimensions = dimensions;
-        this.referenceCount = 1;
-
-        ++labelCollection._textureCount;
     }
-
-    GlyphTextureInfo.prototype.addReference = function() {
-        if (this.referenceCount === 0) {
-            // was fully released, now has references, so no longer unused
-            --this.labelCollection._unusedTextureCount;
-        }
-
-        ++this.referenceCount;
-    };
-
-    GlyphTextureInfo.prototype.releaseReference = function() {
-        --this.referenceCount;
-
-        if (this.referenceCount === 0) {
-            ++this.labelCollection._unusedTextureCount;
-        }
-    };
 
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
@@ -87,10 +67,6 @@ define([
     }
 
     function unbindGlyph(labelCollection, glyph) {
-        if (typeof glyph.textureInfo !== 'undefined') {
-            glyph.textureInfo.releaseReference();
-        }
-
         glyph.textureInfo = undefined;
         glyph.dimensions = undefined;
 
@@ -140,11 +116,11 @@ define([
             var id = JSON.stringify([
                                      character,
                                      font,
-                                     fillColor.toString(),
-                                     outlineColor.toString(),
+                                     fillColor.toRgba(),
+                                     outlineColor.toRgba(),
                                      outlineWidth,
-                                     style.toString(),
-                                     verticalOrigin.toString()
+                                     +style,
+                                     +verticalOrigin
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
@@ -157,8 +133,6 @@ define([
 
                 glyphTextureInfo = new GlyphTextureInfo(labelCollection, index, canvas.dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
-            } else {
-                glyphTextureInfo.addReference();
             }
 
             glyph = glyphs[textIndex];
@@ -173,7 +147,6 @@ define([
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
                     if (typeof glyph.textureInfo !== 'undefined') {
-                        glyph.textureInfo.releaseReference();
                         glyph.textureInfo = undefined;
                     }
                 }
@@ -324,11 +297,8 @@ define([
 
         this._spareBillboards = [];
         this._glyphTextureCache = {};
-        this._textureCount = 0;
-        this._unusedTextureCount = 0;
         this._labels = [];
         this._labelsToUpdate = [];
-        this._frameCount = 0;
         this._totalGlyphCount = 0;
 
         /**
@@ -581,27 +551,6 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
 
-        var rebindAllGlyphsInAllLabels = false;
-        if (++this._frameCount % 100 === 0) {
-            this._frameCount = 0;
-            // clear and rebuild texture atlas to compact it when we have more than 25% unused textures
-            if (this._unusedTextureCount > 0.25 * this._textureCount) {
-                this._textureAtlas = this._textureAtlas.destroy();
-                this._glyphTextureCache = {};
-                this._textureCount = 0;
-                this._unusedTextureCount = 0;
-
-                // rebind and update all labels to repopulate the textures
-                rebindAllGlyphsInAllLabels = true;
-                this._labelsToUpdate = this._labels.slice(0);
-            }
-
-            // prune spare billboards to 10% of total glyph count
-            while (this._spareBillboards.length > this._totalGlyphCount * 0.1) {
-                billboardCollection.remove(this._spareBillboards.pop());
-            }
-        }
-
         if (typeof this._textureAtlas === 'undefined') {
             this._textureAtlas = context.createTextureAtlas();
             billboardCollection.setTextureAtlas(this._textureAtlas);
@@ -616,7 +565,7 @@ define([
 
             var preUpdateGlyphCount = label._glyphs.length;
 
-            if (rebindAllGlyphsInAllLabels || label._rebindAllGlyphs) {
+            if (label._rebindAllGlyphs) {
                 rebindAllGlyphs(this, label);
                 label._rebindAllGlyphs = false;
             }
@@ -670,9 +619,9 @@ define([
      * labels = labels && labels.destroy();
      */
     LabelCollection.prototype.destroy = function() {
-        // removeAll destroys the texture atlas
         this.removeAll();
-        this._billboardCollection.destroy();
+        this._billboardCollection = this._billboardCollection.destroy();
+        this._textureAtlas = this._textureAtlas && this._textureAtlas.destroy();
         return destroyObject(this);
     };
 

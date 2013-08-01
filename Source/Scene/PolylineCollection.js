@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
         '../Core/Matrix4',
+        '../Core/Math',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
@@ -32,6 +33,7 @@ define([
         Cartesian4,
         EncodedCartesian3,
         Matrix4,
+        CesiumMath,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
@@ -57,22 +59,21 @@ define([
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
-    var SIXTYFOURK = 64 * 1024;
 
     var attributeIndices = {
-        position3DHigh : 0,
-        position3DLow : 1,
-        position2DHigh : 2,
-        position2DLow : 3,
-        prevPosition3DHigh : 4,
-        prevPosition3DLow : 5,
-        prevPosition2DHigh : 6,
-        prevPosition2DLow : 7,
-        nextPosition3DHigh : 8,
-        nextPosition3DLow : 9,
-        nextPosition2DHigh : 10,
-        nextPosition2DLow : 11,
-        texCoordExpandWidthAndShow : 12,
+        texCoordExpandWidthAndShow : 0,
+        position3DHigh : 1,
+        position3DLow : 2,
+        position2DHigh : 3,
+        position2DLow : 4,
+        prevPosition3DHigh : 5,
+        prevPosition3DLow : 6,
+        prevPosition2DHigh : 7,
+        prevPosition2DLow : 8,
+        nextPosition3DHigh : 9,
+        nextPosition3DLow : 10,
+        nextPosition2DHigh : 11,
+        nextPosition2DLow : 12,
         pickColor : 13
     };
 
@@ -238,7 +239,7 @@ define([
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
-            this._polylines[polyline._index] = null; // Removed later
+            this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             if (typeof polyline._bucket !== 'undefined') {
@@ -471,14 +472,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -486,7 +487,7 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
+    function createCommandLists(polylineCollection, commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
@@ -517,6 +518,7 @@ define([
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
+                                command.owner = polylineCollection;
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -556,6 +558,7 @@ define([
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
+                        command.owner = polylineCollection;
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
@@ -744,14 +747,14 @@ define([
 
                     vbo += vertexBufferOffset[k];
 
-                    var positionHighOffset = 6 * (k * (positionSizeInBytes * SIXTYFOURK) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
+                    var positionHighOffset = 6 * (k * (positionSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
                     var positionLowOffset = positionSizeInBytes + positionHighOffset;
                     var prevPositionHighOffset =  positionSizeInBytes + positionLowOffset;
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * SIXTYFOURK) - vbo * pickColorSizeInBytes;
-                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * SIXTYFOURK) - vbo * texCoordExpandWidthAndShowSizeInBytes;
+                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * pickColorSizeInBytes;
+                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandWidthAndShowSizeInBytes;
 
                     var attributes = [{
                         index : attributeIndices.position3DHigh,
@@ -945,7 +948,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (polyline) {
+                if (typeof polyline !== 'undefined') {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -958,10 +961,12 @@ define([
     function releaseShaders(collection) {
         var polylines = collection._polylines;
         var length = polylines.length;
-        for (var i = 0; i < length; ++i) {
-            var bucket = polylines[i]._bucket;
-            if (typeof bucket !== 'undefined') {
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+        for ( var i = 0; i < length; ++i) {
+            if (typeof polylines[i] !== 'undefined') {
+                var bucket = polylines[i]._bucket;
+                if (typeof bucket !== 'undefined') {
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                }
             }
         }
     }
@@ -984,7 +989,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (polylines[i]) {
+            if (typeof polylines[i] !== 'undefined') {
                 polylines[i]._destroy();
             }
         }
@@ -1247,7 +1252,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1279,7 +1284,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

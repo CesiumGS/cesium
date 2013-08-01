@@ -83,3 +83,44 @@ body {
 #bottomToolbar {
     top: 50%;
 }
+
+.button {
+    -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
+    box-shadow:inset 0px 1px 0px 0px #ffffff;
+    
+    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #f9f9f9), color-stop(1, #dedede));
+    background:-moz-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
+    background:-webkit-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
+    background:-o-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
+    background:-ms-linear-gradient(top, #f9f9f9 5%, #dedede 100%);
+    background:linear-gradient(to bottom, #f9f9f9 5%, #dedede 100%);
+
+    border-radius:3px;
+    border:1px solid #dcdcdc;
+    display:inline-block;
+    padding:5px 10px;
+    margin:3px;
+    text-decoration:none;
+    text-shadow:0px 1px 0px #ffffff;   
+}
+
+.button:hover {
+    background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #dedede), color-stop(1, #f9f9f9));
+    background:-moz-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
+    background:-webkit-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
+    background:-o-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
+    background:-ms-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
+    background:linear-gradient(to bottom, #dedede 5%, #f9f9f9 100%);
+}
+
+.button:active {
+    position:relative;
+    top:1px;
+}
+
+.claro .dijitTitlePaneContentOuter {
+    background-color: rgba(255, 255, 255, 0.7);
+    color: black;
+    text-shadow: 0 0 5px #fff;
+}

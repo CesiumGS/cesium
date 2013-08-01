@@ -6,6 +6,7 @@ uniform bool u_showIntersection;
 uniform bool u_showThroughEllipsoid;
 
 uniform float u_sensorRadius;
+uniform float u_normalDirection;
 
 varying vec3 v_positionWC;
 varying vec3 v_positionEC;
@@ -23,49 +24,47 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     materialInput.positionToEyeEC = positionToEyeEC;
     
     vec3 normalEC = normalize(v_normalEC);
-    normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
-    materialInput.normalEC = normalEC;
+    materialInput.normalEC = u_normalDirection * normalEC;
     
     czm_material material = czm_getMaterial(materialInput);
-    return czm_phong(normalize(positionToEyeEC), material);
+    return mix(czm_phong(normalize(positionToEyeEC), material), vec4(material.diffuse, material.alpha), 0.4);
 }
 
-bool ellipsoidSensorIntersection(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
+bool isOnBoundary(float value, float epsilon)
 {
-    if (czm_isEmpty(ellipsoidInterval)) {
-        return false;
-    }
-
-    float t = pointInEllipsoid;
+    float width = getIntersectionWidth();
+    float tolerance = width * epsilon;
 
 #ifdef GL_OES_standard_derivatives
-    float epsilon = max(abs(dFdx(t)), abs(dFdy(t)));
+    float delta = max(abs(dFdx(value)), abs(dFdy(value)));
+    float pixels = width * delta;
+    float temp = abs(value);
+    // There are a couple things going on here.
+    // First we test the value at the current fragment to see if it is within the tolerance.
+    // We also want to check if the value of an adjacent pixel is within the tolerance,
+    // but we don't want to admit points that are obviously not on the surface.
+    // For example, if we are looking for "value" to be close to 0, but value is 1 and the adjacent value is 2,
+    // then the delta would be 1 and "temp - delta" would be "1 - 1" which is zero even though neither of
+    // the points is close to zero.
+    return temp < tolerance && temp < pixels || (delta < 10.0 * tolerance && temp - delta < tolerance && temp < pixels);
 #else
-    // TODO:  Don't hardcode this.
-    float epsilon = 1.0 / 500.0;
+    return abs(value) < tolerance;
 #endif
-
-    float width = 2.0;  // TODO: Expose as a uniform
-    epsilon *= width;           
-
-    return czm_equalsEpsilon(t, 1.0, epsilon);
 }
 
-vec4 shade(czm_raySegment ellipsoidInterval, float pointInEllipsoid)
+vec4 shade(bool isOnBoundary)
 {
-    if (u_showIntersection && ellipsoidSensorIntersection(ellipsoidInterval, pointInEllipsoid))
+    if (u_showIntersection && isOnBoundary)
     {
         return getIntersectionColor();
     }
     return getColor(u_sensorRadius, v_positionEC);
 }
 
-float czm_pointInEllipsoid(czm_ellipsoid ellipsoid, vec3 point)
+float ellipsoidSurfaceFunction(czm_ellipsoid ellipsoid, vec3 point)
 {
-    // TODO: Take into account ellipsoid's center; optimize with radii-squared; and move elsewhere
-    return (((point.x * point.x) / (ellipsoid.radii.x * ellipsoid.radii.x)) +
-            ((point.y * point.y) / (ellipsoid.radii.y * ellipsoid.radii.y)) +
-            ((point.z * point.z) / (ellipsoid.radii.z * ellipsoid.radii.z)));
+    vec3 scaled = ellipsoid.inverseRadii * point;
+    return dot(scaled, scaled) - 1.0;
 }
 
 void main()
@@ -74,14 +73,14 @@ void main()
     vec3 sensorVertexEC = czm_modelView[3].xyz;  // (0.0, 0.0, 0.0) in model coordinates
 
     czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
-    float pointInEllipsoid = czm_pointInEllipsoid(ellipsoid, v_positionWC);
+    float ellipsoidValue = ellipsoidSurfaceFunction(ellipsoid, v_positionWC);
 
     // Occluded by the ellipsoid?
 	if (!u_showThroughEllipsoid)
 	{
 	    // Discard if in the ellipsoid    
 	    // PERFORMANCE_IDEA: A coarse check for ellipsoid intersection could be done on the CPU first.
-	    if (pointInEllipsoid < 1.0)
+	    if (ellipsoidValue < 0.0)
 	    {
             discard;
 	    }
@@ -99,9 +98,8 @@ void main()
     {
         discard;
     }
-
-    czm_ray ray = czm_ray(vec3(0.0), normalize(v_positionEC));  // Ray from eye to fragment in eye coordinates
-    czm_raySegment ellipsoidInterval = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
-
-    gl_FragColor = shade(ellipsoidInterval, pointInEllipsoid);
+    
+    // Notes: Each surface functions should have an associated tolerance based on the floating point error.
+    bool isOnEllipsoid = isOnBoundary(ellipsoidValue, czm_epsilon3);
+    gl_FragColor = shade(isOnEllipsoid);
 }
