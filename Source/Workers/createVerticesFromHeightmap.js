@@ -27,20 +27,12 @@ define([
         }
 
         var vertices = new Float32Array(arrayWidth * arrayHeight * numberOfAttributes);
-        transferableObjects.push(vertices.buffer);
+        //transferableObjects.push(vertices.buffer);
 
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.extent = Extent.clone(parameters.extent);
 
         parameters.vertices = vertices;
-		
-		//var request = new XMLHttpRequest();
-		//request.open('GET', parameters.heightmap, false);
-		//request.send();
-		
-		//parameters.heightmap = request.response;
-		//var foo = new FileReaderSync();
-		//parameters.heightmap = new Uint8Array(foo.readAsArrayBuffer(parameters.heightmap));
 
         var statistics = HeightmapTessellator.computeVertices(parameters);
         var boundingSphere3D = BoundingSphere.fromVertices(vertices, parameters.relativeToCenter, numberOfAttributes);
@@ -50,7 +42,7 @@ define([
         var occludeePointInScaledSpace = occluder.computeHorizonCullingPointFromVertices(parameters.relativeToCenter, vertices, numberOfAttributes, parameters.relativeToCenter);
 
         return {
-            vertices : vertices,
+            vertices : vertices.buffer,
             numberOfAttributes : numberOfAttributes,
             minimumHeight : statistics.minimumHeight,
             maximumHeight : statistics.maximumHeight,
@@ -61,6 +53,6 @@ define([
         };
     }
 
-    //return createTaskProcessorWorker(createVerticesFromHeightmap);
-	return createVerticesFromHeightmap;
+    return createTaskProcessorWorker(createVerticesFromHeightmap);
+	//return createVerticesFromHeightmap;
 });

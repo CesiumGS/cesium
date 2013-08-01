@@ -161,8 +161,8 @@ define([
         var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
         var thisLevelMaxError = levelZeroMaxError / (1 << level);
 
- //       var verticesPromise = taskProcessor.scheduleTask({
- 		var verticesPromise = createVerticesFromHeightmap({
+        var verticesPromise = taskProcessor.scheduleTask({
+// 		var verticesPromise = createVerticesFromHeightmap({
            heightmap : this._buffer,
             structure : structure,
             width : this._width,
@@ -174,7 +174,7 @@ define([
             skirtHeight : Math.min(thisLevelMaxError * 4.0, 1000.0),
             isGeographic : tilingScheme instanceof GeographicTilingScheme
         }, []);
-		
+
         if (typeof verticesPromise === 'undefined') {
             // Postponed
             return undefined;
@@ -183,8 +183,8 @@ define([
         return when(verticesPromise, function(result) {
             return new TerrainMesh(
                     center,
-                    //new Float32Array(result.vertices),
-					result.vertices,
+                    new Float32Array(result.vertices),
+					//result.vertices,
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
                     result.minimumHeight,
                     result.maximumHeight,
