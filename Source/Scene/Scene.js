@@ -559,13 +559,6 @@ define([
 
         if (sunVisible) {
             passState.framebuffer = scene._sunPostProcess.update(context);
-        }
-
-        var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
-        clear.execute(context, passState);
-
-        if (sunVisible) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
         }
 
@@ -668,6 +661,11 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
+
+        var clear = this._clearColorCommand;
+        Color.clone(defaultValue(this.backgroundColor, Color.BLACK), clear.color);
+        clear.execute(context, passState);
+
         executeCommands(this, passState);
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
