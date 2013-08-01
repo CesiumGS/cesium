@@ -271,7 +271,7 @@ define([
         });
     }
 
-    function addPickColorAttribute(primitive, instances, context) {
+    function addPickColorAttribute(instances, pickIds) {
         var length = instances.length;
 
         for (var i = 0; i < length; ++i) {
@@ -288,10 +288,7 @@ define([
                 values : new Uint8Array(numberOfComponents)
             });
 
-            var pickId = context.createPickId(defaultValue(instance.id, primitive));
-            primitive._pickIds.push(pickId);
-
-            var pickColor = pickId.color;
+            var pickColor = pickIds[i].color;
             var red = Color.floatToByte(pickColor.red);
             var green = Color.floatToByte(pickColor.green);
             var blue = Color.floatToByte(pickColor.blue);
@@ -400,7 +397,7 @@ define([
     }
 
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
-    function geometryPipeline(primitive, instances, context, projection) {
+    function geometryPipeline(primitive, instances, pickIds, projection, elementIndexUintSupported) {
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
         for (var i = 1; i < length; ++i) {
@@ -420,7 +417,7 @@ define([
         }
 
         // Add pickColor attribute for picking individual instances
-        addPickColorAttribute(primitive, instances, context);
+        addPickColorAttribute(instances, pickIds);
 
         // add attributes to the geometry for each per-instance attribute
         var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
@@ -448,7 +445,7 @@ define([
             GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
 
-        if (!context.getElementIndexUint()) {
+        if (!elementIndexUintSupported) {
             // Break into multiple geometries to fit within unsigned short indices if needed
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
         }
@@ -694,7 +691,13 @@ define([
             for (i = 0; i < length; ++i) {
                 insts[i] = cloneInstance(instances[i]);
             }
-            var geometries = geometryPipeline(this, insts, context, projection);
+
+            for (i = 0; i < length; ++i) {
+                var pickId = context.createPickId(defaultValue(insts[i].id, this));
+                this._pickIds.push(pickId);
+            }
+
+            var geometries = geometryPipeline(this, insts, this._pickIds, projection, context.getElementIndexUint());
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
