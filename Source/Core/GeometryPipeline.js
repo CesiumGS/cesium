@@ -972,34 +972,30 @@ define([
         }
 
         // Create bounding sphere that includes all instances
-        var boundingSphere;
+        var center = new Cartesian3();
+        var radius = 0.0;
         var bs;
 
         for (i = 0; i < length; ++i) {
             bs = instances[i].geometry.boundingSphere;
             if (typeof bs === 'undefined') {
                 // If any geometries have an undefined bounding sphere, then so does the combined geometry
-                boundingSphere = undefined;
+                center = undefined;
                 break;
             }
 
-            if (typeof boundingSphere === 'undefined') {
-                boundingSphere = new BoundingSphere();
-                Cartesian3.clone(bs.center, boundingSphere.center);
-            } else {
-                Cartesian3.add(bs.center, boundingSphere.center, boundingSphere.center);
-            }
+            Cartesian3.add(bs.center, center, center);
         }
 
-        if (typeof boundingSphere !== 'undefined') {
-            Cartesian3.divideByScalar(boundingSphere.center, i, boundingSphere.center);
+        if (typeof center !== 'undefined') {
+            Cartesian3.divideByScalar(center, length, center);
 
             for (i = 0; i < length; ++i) {
                 bs = instances[i].geometry.boundingSphere;
-                var radius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, boundingSphere.center)) + bs.radius;
+                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center)) + bs.radius;
 
-                if (radius > boundingSphere.radius) {
-                    boundingSphere.radius = radius;
+                if (tempRadius > radius) {
+                    radius = tempRadius;
                 }
             }
         }
@@ -1008,7 +1004,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : (typeof center !== 'undefined') ? new BoundingSphere(center, radius) : undefined
         });
     };
 
