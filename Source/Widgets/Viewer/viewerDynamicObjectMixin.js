@@ -120,19 +120,25 @@ define([
                         viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
                     }
                 }
-            },
-            flyToObject : {
-                set : function(object) {
-                    if(object) {
-                        viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                            destination : object,
-                            onComplete: function() {
-                            }
-                        }));
-                    }
-                }
             }
         });
+
+        /**
+         * Moves the camera to the DynamicObject instance
+         * @memberof viewerDynamicObjectMixin.prototype
+         * 
+         * @param {DynamicObject} object The DynamicObject to move the camera to
+         */
+        viewer.flyToObject = function(object) {
+            if(object) {
+                viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
+                    destination : object,
+                    onComplete: function() {
+                    }
+                }));
+            }
+
+        };
 
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {
