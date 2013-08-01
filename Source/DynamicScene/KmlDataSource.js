@@ -19,7 +19,8 @@ define(['../Core/createGuid',
         './DynamicPolyline',
         './DynamicPolygon',
         './DynamicLabel',
-        './DynamicBillboard'
+        './DynamicBillboard',
+        '../ThirdParty/when'
         ], function(
                 createGuid,
                 Cartographic,
@@ -41,7 +42,8 @@ define(['../Core/createGuid',
                 DynamicPolyline,
                 DynamicPolygon,
                 DynamicLabel,
-                DynamicBillboard) {
+                DynamicBillboard,
+                when) {
     "use strict";
 
     //Copied from GeoJsonDataSource
@@ -447,10 +449,11 @@ define(['../Core/createGuid',
         }
 
         var dataSource = this;
-        return loadXML(url).then(function(kml) {
-            dataSource.load(kml, url);
+        return when(loadXML(url), function(kml) {
+            return dataSource.load(kml, url);
         }, function(error) {
-            this._error.raiseEvent(this, error);
+            dataSource._error.raiseEvent(dataSource, error);
+            return when.reject(error);
         });
     };
     return KmlDataSource;
