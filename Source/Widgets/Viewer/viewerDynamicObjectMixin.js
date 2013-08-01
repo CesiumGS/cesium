@@ -129,12 +129,13 @@ define([
          * 
          * @param {DynamicObject} object The DynamicObject to move the camera to
          */
-        viewer.flyToObject = function(object) {
+        viewer.flyToObject = function(object, options) {
+            options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
             if(object) {
                 viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
                     destination : object,
-                    onComplete: function() {
-                    }
+                    duration: options.duration
                 }));
             }
 
