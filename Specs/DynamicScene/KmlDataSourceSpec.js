@@ -259,7 +259,7 @@ defineSuite(['DynamicScene/KmlDataSource',
             <Document>\
             <Placemark>\
               <LineString>\
-                <coordinates>1,2,0 \
+                <coordinates>1 \
                              4,5,0 \
                 </coordinates>\
               </LineString>\
