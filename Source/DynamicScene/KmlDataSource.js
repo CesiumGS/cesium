@@ -142,13 +142,20 @@ define(['../Core/createGuid',
         return element && element.firstChild.data; //protecting from TypeError
     }
 
-    function getEmbeddedStyle(node){
-        //TODO find a more efficient solution
-        var style = node.getElementsByTagName('IconStyle');
-        style = node.getElementsByTagName('LabelStyle');
-        style = node.getElementsByTagName('LineStyle');
-        style = node.getElementsByTagName('PolyStyle');
-        return style;
+    function getInlineStyles(node){
+        var styleTypes = ['IconStyle', 'LabelStyle', 'LineStyle', 'PolyStyle'];
+        var styleCollection = new DynamicObjectCollection();
+
+        for(var i = 0; i < styleTypes.length; i++){
+            var stylesArray = node.getElementsByTagName(styleTypes[i]);
+            for ( var j = 0, len = stylesArray.length; j < len; j++){
+                var styleNode = stylesArray.item(j);
+                styleNode.id = '#' + getId(styleNode);
+                var styleObject = styleCollection.getOrCreateObject(styleNode.id);
+                processStyle(styleNode, styleObject);
+            }
+        }
+        return styleCollection;
     }
 
     function getStylesFromXml(xml){
@@ -158,7 +165,6 @@ define(['../Core/createGuid',
             var styleNode = stylesArray.item(i);
             styleNode.id = '#' + getId(styleNode);
             var styleObject = styleCollection.getOrCreateObject(styleNode.id);
-
             processStyle(styleNode, styleObject);
         }
         return styleCollection;
@@ -302,7 +308,7 @@ define(['../Core/createGuid',
 
         var array = kml.getElementsByTagName('Placemark');
         for (var i = 0, len = array.length; i < len; i++){
-            var embeddedStyleNode = getEmbeddedStyle(array[i]);
+            var embeddedStyleNode = getInlineStyles(array[i]);  //TODO getInlineStyles returns a collection of styles, changes are needed
             var placemark = array[i];
             placemark.id = getId(placemark);
             var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
