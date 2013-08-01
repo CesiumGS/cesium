@@ -94,6 +94,11 @@ define(['../Core/createGuid',
             finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
             finalCoords[j][2] = coords[j][2] && parseFloat(coords[j][2].substring(1), 10);
         }
+        for(var k = 0; k < finalCoords.length; k++){
+            if (isNaN(finalCoords[k][0]) || isNaN(finalCoords[k][1])) {
+                throw new RuntimeError('Longitude and latitude are required.');
+            }
+        }
         if(finalCoords.length === 1){
             return finalCoords[0]; //single tuple
         }
