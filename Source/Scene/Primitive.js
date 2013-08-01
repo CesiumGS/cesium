@@ -304,8 +304,8 @@ define([
         }
     }
 
-    function transformToWorldCoordinates(primitive, instances) {
-        var toWorld = !primitive._allow3DOnly;
+    function transformToWorldCoordinates(instances, primitiveModelMatrix, allow3DOnly) {
+        var toWorld = !allow3DOnly;
         var length = instances.length;
         var i;
 
@@ -326,7 +326,7 @@ define([
             }
         } else {
             // Leave geometry in local coordinate system; auto update model-matrix.
-            Matrix4.clone(instances[0].modelMatrix, primitive.modelMatrix);
+            Matrix4.clone(instances[0].modelMatrix, primitiveModelMatrix);
         }
     }
 
@@ -365,7 +365,7 @@ define([
         return attributesInAllInstances;
     }
 
-    function addPerInstanceAttributes(primitive, instances, names) {
+    function addPerInstanceAttributes(instances, names) {
         var length = instances.length;
         for (var i = 0; i < length; ++i) {
             var instance = instances[i];
@@ -397,7 +397,15 @@ define([
     }
 
     // PERFORMANCE_IDEA:  Move pipeline to a web-worker.
-    function geometryPipeline(primitive, instances, pickIds, projection, elementIndexUintSupported) {
+    function geometryPipeline(description) {
+        var instances = description.instances;
+        var pickIds = description.pickIds;
+        var projection = description.projection;
+        var uintIndexSupport = description.elementIndexUintSupported;
+        var allow3DOnly = description.allow3DOnly;
+        var vertexCacheOptimize = description.vertexCacheOptimize;
+        var modelMatrix = description.modelMatrix;
+
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
         for (var i = 1; i < length; ++i) {
@@ -407,10 +415,10 @@ define([
         }
 
         // Unify to world coordinates before combining.
-        transformToWorldCoordinates(primitive, instances);
+        transformToWorldCoordinates(instances, modelMatrix, allow3DOnly);
 
         // Clip to IDL
-        if (!primitive._allow3DOnly) {
+        if (!allow3DOnly) {
             for (i = 0; i < length; ++i) {
                 GeometryPipeline.wrapLongitude(instances[i].geometry);
             }
@@ -421,10 +429,10 @@ define([
 
         // add attributes to the geometry for each per-instance attribute
         var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
-        addPerInstanceAttributes(primitive, instances, perInstanceAttributeNames);
+        addPerInstanceAttributes(instances, perInstanceAttributeNames);
 
         // Optimize for vertex shader caches
-        if (primitive._vertexCacheOptimize) {
+        if (vertexCacheOptimize) {
             for (i = 0; i < length; ++i) {
                 GeometryPipeline.reorderForPostVertexCache(instances[i].geometry);
                 GeometryPipeline.reorderForPreVertexCache(instances[i].geometry);
@@ -435,7 +443,7 @@ define([
         var geometry = GeometryPipeline.combine(instances);
 
         // Split positions for GPU RTE
-        if (!primitive._allow3DOnly) {
+        if (!allow3DOnly) {
             // Compute 2D positions
             GeometryPipeline.projectTo2D(geometry, projection);
 
@@ -445,7 +453,7 @@ define([
             GeometryPipeline.encodeAttribute(geometry, 'position', 'position3DHigh', 'position3DLow');
         }
 
-        if (!elementIndexUintSupported) {
+        if (!uintIndexSupport) {
             // Break into multiple geometries to fit within unsigned short indices if needed
             return GeometryPipeline.fitToUnsignedShortIndices(geometry);
         }
@@ -697,7 +705,16 @@ define([
                 this._pickIds.push(pickId);
             }
 
-            var geometries = geometryPipeline(this, insts, this._pickIds, projection, context.getElementIndexUint());
+            var geometries = geometryPipeline({
+                primitive : this,
+                instances : insts,
+                pickIds : this._pickIds,
+                projection : projection,
+                elementIndexUintSupported : context.getElementIndexUint(),
+                allow3DOnly : this._allow3DOnly,
+                vertexCacheOptimize : this._vertexCacheOptimize,
+                modelMatrix : this.modelMatrix
+            });
 
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
