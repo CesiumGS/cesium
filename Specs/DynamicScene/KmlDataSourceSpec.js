@@ -169,6 +169,24 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
     });
 
+    it('Point throws error with invalid coordinates', function() {
+        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Point>\
+                <coordinates> </coordinates>\
+              </Point>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(pointKml);
+        }).toThrow();
+    });
+
     it('handles Point Geometry with LabelStyle', function() {
         var name = new ConstantProperty('LabelStyle.kml');
         var scale = new ConstantProperty('1.5');
@@ -235,6 +253,26 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
     });
 
+    it('LineString throws error with invalid coordinates', function() {
+        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <LineString>\
+                <coordinates>1,2,0 \
+                             4,5,0 \
+                </coordinates>\
+              </LineString>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(lineKml);
+        }).toThrow();
+    });
+
     it('Simple Test loading Kml', function() {
         var dataSource = new KmlDataSource();
         var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/simplePlacemark.kml';
@@ -269,7 +307,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.getErrorEvent().addEventListener(function() {
             thrown = true;
         });
-        dataSource.loadUrl('invalid.geojson');
+        dataSource.loadUrl('invalid.kml');
         waitsFor(function() {
             return thrown;
         });
