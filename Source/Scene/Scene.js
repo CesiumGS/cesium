@@ -251,6 +251,10 @@ define([
         var far = this._camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
         updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
+
+        // give frameState, camera, and screen space camera controller initial state before rendering
+        updateFrameState(this, 0.0, new JulianDate());
+        this.initializeFrame();
     };
 
     /**
