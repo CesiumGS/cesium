@@ -142,22 +142,6 @@ define(['../Core/createGuid',
         return element && element.firstChild.data; //protecting from TypeError
     }
 
-    function getInlineStyles(node){
-        var styleTypes = ['IconStyle', 'LabelStyle', 'LineStyle', 'PolyStyle'];
-        var styleCollection = new DynamicObjectCollection();
-
-        for(var i = 0; i < styleTypes.length; i++){
-            var stylesArray = node.getElementsByTagName(styleTypes[i]);
-            for ( var j = 0, len = stylesArray.length; j < len; j++){
-                var styleNode = stylesArray.item(j);
-                styleNode.id = '#' + getId(styleNode);
-                var styleObject = styleCollection.getOrCreateObject(styleNode.id);
-                processStyle(styleNode, styleObject);
-            }
-        }
-        return styleCollection;
-    }
-
     function getStylesFromXml(xml){
         var stylesArray = xml.getElementsByTagName('Style');
         var styleCollection = new DynamicObjectCollection();
@@ -310,13 +294,15 @@ define(['../Core/createGuid',
 
         var array = kml.getElementsByTagName('Placemark');
         for (var i = 0, len = array.length; i < len; i++){
-            var embeddedStyleNode = getInlineStyles(array[i]);  //TODO getInlineStyles returns a collection of styles, changes are needed
+            var inlineStyleCollection = getStylesFromXml(array[i]);
             var placemark = array[i];
             placemark.id = getId(placemark);
             var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
-            //check for embedded styles
-            if(embeddedStyleNode.length > 0){
-                processStyle(embeddedStyleNode, placemarkDynamicObject);
+            //check for inline styles
+            if(inlineStyleCollection._array.length > 0){
+                for(var k = 0; k < inlineStyleCollection._array.length; k++){
+                    placemarkDynamicObject.merge(inlineStyleCollection._array[k]);
+                }
             } else {
                 var styleUrl = array[i].getElementsByTagName('styleUrl');
                 for(var j = 0, size = styleUrl.length; j < size; j++){
