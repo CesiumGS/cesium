@@ -44,6 +44,8 @@ define([
     var carto1 = new Cartographic();
     var carto2 = new Cartographic();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
+    //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
+    //Result includes p1, but not include p2
     function generateCartesianArc(p1, p2, granularity, ellipsoid) {
         var separationAngle = Cartesian3.angleBetween(p1, p2);
         var numPoints = Math.ceil(separationAngle/granularity);

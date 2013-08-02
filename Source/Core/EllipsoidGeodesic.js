@@ -52,32 +52,30 @@ define([
         var distanceRatio =  a0 * sigma - a1 * Math.sin(2.0 * sigma) * u2Over4 / 2.0 - a2 * Math.sin(4.0 * sigma) * u4Over16 / 16.0 -
             a3 * Math.sin(6.0 * sigma) * u6Over64 / 48.0 - Math.sin(8.0 * sigma) * 5.0 * u8Over256 / 512;
 
-        var constants = {
-                a: a,
-                b: b,
-                f: f,
-                cosineHeading: cosineHeading,
-                sineHeading: sineHeading,
-                tanU: tanU,
-                cosineU: cosineU,
-                sineU: sineU,
-                sigma: sigma,
-                sineAlpha: sineAlpha,
-                sineSquaredAlpha: sineSquaredAlpha,
-                cosineSquaredAlpha: cosineSquaredAlpha,
-                cosineAlpha: cosineAlpha,
-                u2Over4: u2Over4,
-                u4Over16: u4Over16,
-                u6Over64: u6Over64,
-                u8Over256: u8Over256,
-                a0: a0,
-                a1: a1,
-                a2: a2,
-                a3: a3,
-                distanceRatio: distanceRatio
-        };
+        var constants = ellipsoidGeodesic._constants;
 
-        ellipsoidGeodesic.constants = constants;
+        constants.a = a;
+        constants.b = b;
+        constants.f = f;
+        constants.cosineHeading = cosineHeading;
+        constants.sineHeading = sineHeading;
+        constants.tanU = tanU;
+        constants.cosineU = cosineU;
+        constants.sineU = sineU;
+        constants.sigma = sigma;
+        constants.sineAlpha = sineAlpha;
+        constants.sineSquaredAlpha = sineSquaredAlpha;
+        constants.cosineSquaredAlpha = cosineSquaredAlpha;
+        constants.cosineAlpha = cosineAlpha;
+        constants.u2Over4 = u2Over4;
+        constants.u4Over16 = u4Over16;
+        constants.u6Over64 = u6Over64;
+        constants.u8Over256 = u8Over256;
+        constants.a0 = a0;
+        constants.a1 = a1;
+        constants.a2 = a2;
+        constants.a3 = a3;
+        constants.distanceRatio = distanceRatio;
     }
 
     function computeC(f, cosineSquaredAlpha) {
@@ -188,7 +186,7 @@ define([
         ellipsoidGeodesic._ellipsoid = ellipsoid;
         ellipsoidGeodesic._start = start.clone();
         ellipsoidGeodesic._end = end.clone();
-
+        ellipsoidGeodesic._constants = {};
         setConstants(ellipsoidGeodesic);
     }
 
@@ -320,7 +318,7 @@ define([
             throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
         }
 
-        var constants = this.constants;
+        var constants = this._constants;
 
         var s = constants.distanceRatio + distance / constants.b;
 
