@@ -19,7 +19,9 @@ define([
         './GeometryAttributes',
         './Math',
         './Matrix2',
+        './Matrix3',
         './PrimitiveType',
+        './Quaternion',
         './VertexFormat'
     ], function(
         clone,
@@ -41,7 +43,9 @@ define([
         GeometryAttributes,
         CesiumMath,
         Matrix2,
+        Matrix3,
         PrimitiveType,
+        Quaternion,
         VertexFormat) {
     "use strict";
 
@@ -62,6 +66,7 @@ define([
     var stExtent = new Extent();
     var textureMatrix = new Matrix2();
     var rotationMatrix = new Matrix2();
+    var tangentRotationMatrix = new Matrix3();
     var proj = new GeographicProjection();
     var position = new Cartesian3();
     var normal = new Cartesian3();
@@ -74,6 +79,7 @@ define([
     var v1Scratch = new Cartesian3();
     var v2Scratch = new Cartesian3();
     var textureCoordsScratch = new Cartesian2();
+    var quaternionScratch = new Quaternion();
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -170,7 +176,10 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 normal = ellipsoid.geodeticSurfaceNormal(p, normal);
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                    Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Matrix3.multiplyByVector(tangentRotationMatrix, tangent, tangent);
+                    Cartesian3.normalize(tangent, tangent);
+
                     if (vertexFormat.binormal) {
                         Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
                     }
@@ -201,9 +210,9 @@ define([
                         normals[attrIndex2 + bottomOffset] = -normal.z;
                     }
                     if (vertexFormat.tangent) {
-                        tangents[attrIndex + bottomOffset] = tangent.x;
-                        tangents[attrIndex1 + bottomOffset] = tangent.y;
-                        tangents[attrIndex2 + bottomOffset] = tangent.z;
+                        tangents[attrIndex + bottomOffset] = -tangent.x;
+                        tangents[attrIndex1 + bottomOffset] = -tangent.y;
+                        tangents[attrIndex2 + bottomOffset] = -tangent.z;
                     }
                     if (vertexFormat.binormal) {
                         binormals[attrIndex + bottomOffset] = binormal.x;
@@ -668,6 +677,7 @@ define([
 
         Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);
+        extent.getCenter(centerCartographic);
 
         var granYCos = granularityY;
         var granXCos = granularityX;
@@ -684,7 +694,6 @@ define([
             granXSin = granularityX * sinRotation;
 
             proj.project(nwCartographic, nw);
-            extent.getCenter(centerCartographic);
             proj.project(centerCartographic, center);
 
             nw.subtract(center, nw);
@@ -723,15 +732,21 @@ define([
         var lonScalar = 1.0 / (stExtent.east - stExtent.west);
         var latScalar = 1.0 / (stExtent.north - stExtent.south);
 
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var size = width * height;
+
         if (typeof stRotation !== 'undefined') {
             // negate angle for a counter-clockwise rotation
             Matrix2.fromRotation(-stRotation, textureMatrix);
+
+            var axis = ellipsoid.cartographicToCartesian(centerCartographic, v1Scratch);
+            Cartesian3.normalize(axis, axis);
+            Quaternion.fromAxisAngle(axis, -stRotation, quaternionScratch);
+            Matrix3.fromQuaternion(quaternionScratch, tangentRotationMatrix);
         } else {
             Matrix2.clone(Matrix2.IDENTITY, textureMatrix);
+            Matrix3.clone(Matrix3.IDENTITY, tangentRotationMatrix);
         }
-
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var size = width * height;
 
         var params = {
             granYCos : granYCos,
