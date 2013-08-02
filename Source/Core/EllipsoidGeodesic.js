@@ -17,62 +17,67 @@ define([
          Cartographic) {
     "use strict";
 
-    var a;
-    var b;
-    var f;
-    var cosineHeading1;
-    var sineHeading1;
-    var tanU1;
-    var cosineU1;
-    var sineU1;
-    var sigma1;
-    var sineAlpha;
-    var sineSquaredAlpha;
-    var cosineSquaredAlpha;
-    var cosineAlpha;
-    var u2Over4;
-    var u4Over16;
-    var u6Over64;
-    var u8Over256;
-    var a0;
-    var a1;
-    var a2;
-    var a3;
-    var distanceRatio;
     function setConstants(ellipsoidGeodesic) {
         var uSquared= ellipsoidGeodesic._uSquared;
-        a = ellipsoidGeodesic._ellipsoid.getMaximumRadius();
-        b = ellipsoidGeodesic._ellipsoid.getMinimumRadius();
-        f = (a - b) / a;
+        var a = ellipsoidGeodesic._ellipsoid.getMaximumRadius();
+        var b = ellipsoidGeodesic._ellipsoid.getMinimumRadius();
+        var f = (a - b) / a;
 
-        cosineHeading1 = Math.cos(ellipsoidGeodesic._startHeading);
-        sineHeading1 = Math.sin(ellipsoidGeodesic._startHeading);
+        var cosineHeading = Math.cos(ellipsoidGeodesic._startHeading);
+        var sineHeading = Math.sin(ellipsoidGeodesic._startHeading);
 
-        tanU1 = (1 - f) * Math.tan(ellipsoidGeodesic._start.latitude);
+        var tanU = (1 - f) * Math.tan(ellipsoidGeodesic._start.latitude);
 
-        cosineU1 = 1.0 / Math.sqrt(1.0 + tanU1 * tanU1);
-        sineU1 = cosineU1 * tanU1;
+        var cosineU = 1.0 / Math.sqrt(1.0 + tanU * tanU);
+        var sineU = cosineU * tanU;
 
-        sigma1 = Math.atan2(tanU1, cosineHeading1);
+        var sigma = Math.atan2(tanU, cosineHeading);
 
-        sineAlpha = cosineU1 * sineHeading1;
-        sineSquaredAlpha = sineAlpha * sineAlpha;
+        var sineAlpha = cosineU * sineHeading;
+        var sineSquaredAlpha = sineAlpha * sineAlpha;
 
-        cosineSquaredAlpha = 1.0 - sineSquaredAlpha;
-        cosineAlpha = Math.sqrt(cosineSquaredAlpha);
+        var cosineSquaredAlpha = 1.0 - sineSquaredAlpha;
+        var cosineAlpha = Math.sqrt(cosineSquaredAlpha);
 
-        u2Over4 = uSquared / 4.0;
-        u4Over16 = u2Over4 * u2Over4;
-        u6Over64 = u4Over16 * u2Over4;
-        u8Over256 = u4Over16 * u4Over16;
+        var u2Over4 = uSquared / 4.0;
+        var u4Over16 = u2Over4 * u2Over4;
+        var u6Over64 = u4Over16 * u2Over4;
+        var u8Over256 = u4Over16 * u4Over16;
 
-        a0 = (1.0 + u2Over4 - 3.0 * u4Over16 / 4.0 + 5.0 * u6Over64 / 4.0 - 175.0 * u8Over256 / 64.0);
-        a1 = (1.0 - u2Over4 + 15.0 * u4Over16 / 8.0 - 35.0 * u6Over64 / 8.0);
-        a2 = (1.0 - 3.0 * u2Over4 + 35.0 * u4Over16 / 4.0);
-        a3 = (1.0 - 5.0 * u2Over4);
+        var a0 = (1.0 + u2Over4 - 3.0 * u4Over16 / 4.0 + 5.0 * u6Over64 / 4.0 - 175.0 * u8Over256 / 64.0);
+        var a1 = (1.0 - u2Over4 + 15.0 * u4Over16 / 8.0 - 35.0 * u6Over64 / 8.0);
+        var a2 = (1.0 - 3.0 * u2Over4 + 35.0 * u4Over16 / 4.0);
+        var a3 = (1.0 - 5.0 * u2Over4);
 
-        distanceRatio =  a0 * sigma1 - a1 * Math.sin(2.0 * sigma1) * u2Over4 / 2.0 - a2 * Math.sin(4.0 * sigma1) * u4Over16 / 16.0 -
-            a3 * Math.sin(6.0 * sigma1) * u6Over64 / 48.0 - Math.sin(8.0 * sigma1) * 5.0 * u8Over256 / 512;
+        var distanceRatio =  a0 * sigma - a1 * Math.sin(2.0 * sigma) * u2Over4 / 2.0 - a2 * Math.sin(4.0 * sigma) * u4Over16 / 16.0 -
+            a3 * Math.sin(6.0 * sigma) * u6Over64 / 48.0 - Math.sin(8.0 * sigma) * 5.0 * u8Over256 / 512;
+
+        var constants = {
+                a: a,
+                b: b,
+                f: f,
+                cosineHeading: cosineHeading,
+                sineHeading: sineHeading,
+                tanU: tanU,
+                cosineU: cosineU,
+                sineU: sineU,
+                sigma: sigma,
+                sineAlpha: sineAlpha,
+                sineSquaredAlpha: sineSquaredAlpha,
+                cosineSquaredAlpha: cosineSquaredAlpha,
+                cosineAlpha: cosineAlpha,
+                u2Over4: u2Over4,
+                u4Over16: u4Over16,
+                u6Over64: u6Over64,
+                u8Over256: u8Over256,
+                a0: a0,
+                a1: a1,
+                a2: a2,
+                a3: a3,
+                distanceRatio: distanceRatio
+        };
+
+        ellipsoidGeodesic.constants = constants;
     }
 
     function computeC(f, cosineSquaredAlpha) {
@@ -86,7 +91,7 @@ define([
                 C * cosineSigma * (2.0 * cosineTwiceSigmaMidpoint * cosineTwiceSigmaMidpoint - 1.0)));
     }
 
-    function vincentyInverseFormula(major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
+    function vincentyInverseFormula(ellipsoidGeodesic, major, minor, firstLongitude, firstLatitude, secondLongitude, secondLatitude) {
         var eff = (major - minor) / major;
         var l = secondLongitude - firstLongitude;
 
@@ -161,12 +166,10 @@ define([
         var startHeading = Math.atan2(cosineU2 * sineLambda, cs - sc * cosineLambda);
         var endHeading = Math.atan2(cosineU1 * sineLambda, cs * cosineLambda - sc);
 
-        return {
-            distance: distance,
-            startHeading: startHeading,
-            endHeading: endHeading,
-            uSquared: uSquared
-        };
+        ellipsoidGeodesic._distance = distance;
+        ellipsoidGeodesic._startHeading = startHeading;
+        ellipsoidGeodesic._endHeading = endHeading;
+        ellipsoidGeodesic._uSquared = uSquared;
     }
 
     function computeProperties(ellipsoidGeodesic, start, end, ellipsoid) {
@@ -177,22 +180,17 @@ define([
             throw new DeveloperError('geodesic position is not unique');
         }
 
-        var r = vincentyInverseFormula(ellipsoid.getMaximumRadius(), ellipsoid.getMinimumRadius(),
+        vincentyInverseFormula(ellipsoidGeodesic, ellipsoid.getMaximumRadius(), ellipsoid.getMinimumRadius(),
                 start.longitude, start.latitude, end.longitude, end.latitude);
 
         start.height = 0;
         end.height = 0;
         ellipsoidGeodesic._ellipsoid = ellipsoid;
         ellipsoidGeodesic._start = start.clone();
-        ellipsoidGeodesic._startHeading = r.startHeading;
         ellipsoidGeodesic._end = end.clone();
-        ellipsoidGeodesic._endHeading = r.endHeading;
-        ellipsoidGeodesic._distance = r.distance;
-        ellipsoidGeodesic._uSquared = r.uSquared;
 
         setConstants(ellipsoidGeodesic);
     }
-
 
     var scratchCart1 = new Cartesian3();
     var scratchCart2 = new Cartesian3();
@@ -205,7 +203,7 @@ define([
      *
      * @param {Cartographic} [start=undefined] The initial planetodetic point on the path.
      * @param {Cartographic} [end=undefined] The final planetodetic point on the path.
-     * @param {Ellipsoid} [z=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the geodesic lies.
      */
     var EllipsoidGeodesic = function(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -227,6 +225,10 @@ define([
      * @return {Number} The surface distance between the start and end point
      */
     EllipsoidGeodesic.prototype.getSurfaceDistance = function() {
+        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+            throw new DeveloperError('start and end must be set before calling funciton getSurfaceDistance');
+        }
+
         return this._distance;
     };
 
@@ -272,6 +274,10 @@ define([
      * @return {Number} The heading at the initial point.
      */
     EllipsoidGeodesic.prototype.getStartHeading = function() {
+        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+            throw new DeveloperError('start and end must be set before calling funciton getStartHeading');
+        }
+
         return this._startHeading;
     };
 
@@ -280,6 +286,10 @@ define([
      * @return {Number} The heading at the final point.
      */
     EllipsoidGeodesic.prototype.getEndHeading = function() {
+        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+            throw new DeveloperError('start and end must be set before calling funciton getEndHeading');
+        }
+
         return this._endHeading;
     };
 
@@ -310,7 +320,9 @@ define([
             throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
         }
 
-        var s = distanceRatio + distance / b;
+        var constants = this.constants;
+
+        var s = constants.distanceRatio + distance / constants.b;
 
         var cosine2S = Math.cos(2.0 * s);
         var cosine4S = Math.cos(4.0 * s);
@@ -323,6 +335,10 @@ define([
         var s2 = s * s;
         var s3 = s * s2;
 
+        var u8Over256 = constants.u8Over256;
+        var u2Over4 = constants.u2Over4;
+        var u6Over64 = constants.u6Over64;
+        var u4Over16 = constants.u4Over16;
         var sigma = 2.0 * s3 * u8Over256 * cosine2S / 3.0 +
             s * (1.0 - u2Over4 + 7.0 * u4Over16 / 4.0 - 15.0 * u6Over64 / 4.0 + 579.0 * u8Over256 / 64.0 -
             (u4Over16 - 15.0 * u6Over64 / 4.0 + 187.0 * u8Over256 / 16.0) * cosine2S -
@@ -334,23 +350,23 @@ define([
             (29.0 * u6Over64 / 96.0 - 29.0 * u8Over256 / 16.0) * sine6S +
             539.0 * u8Over256 * sine8S / 1536.0;
 
-        var theta = Math.asin(Math.sin(sigma) * cosineAlpha);
-        var latitude = Math.atan(a / b * Math.tan(theta));
+        var theta = Math.asin(Math.sin(sigma) * constants.cosineAlpha);
+        var latitude = Math.atan(constants.a / constants.b * Math.tan(theta));
 
         // Redefine in terms of relative argument of latitude.
-        sigma = sigma - sigma1;
+        sigma = sigma - constants.sigma;
 
-        var cosineTwiceSigmaMidpoint = Math.cos(2.0 * sigma1 + sigma);
+        var cosineTwiceSigmaMidpoint = Math.cos(2.0 * constants.sigma + sigma);
 
         var sineSigma = Math.sin(sigma);
         var cosineSigma = Math.cos(sigma);
 
-        var cc = cosineU1 * cosineSigma;
-        var ss = sineU1 * sineSigma;
+        var cc = constants.cosineU * cosineSigma;
+        var ss = constants.sineU * sineSigma;
 
-        var lambda = Math.atan2(sineSigma * sineHeading1, cc - ss * cosineHeading1);
+        var lambda = Math.atan2(sineSigma * constants.sineHeading, cc - ss * constants.cosineHeading);
 
-        var l = lambda - computeDeltaLambda(f, sineAlpha, cosineSquaredAlpha,
+        var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha,
             sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
 
         return new Cartographic(this._start.longitude + l, latitude, 0.0);
