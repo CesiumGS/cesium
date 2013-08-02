@@ -19,6 +19,8 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/Transforms',
+        '../Core/Cartographic',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -56,6 +58,8 @@ define([
         GeometryInstance,
         GeometryPipeline,
         ColorGeometryInstanceAttribute,
+        Transforms,
+        Cartographic,
         Context,
         ClearCommand,
         PassState,
@@ -245,6 +249,7 @@ define([
         this.debugCommandFilter = undefined;
 
         this._debugSphere = undefined;
+        this._debugSphereInverseModelMatrix = undefined;
 
         // initial guess at frustums.
         var near = this._camera.frustum.near;
@@ -504,12 +509,22 @@ define([
                     numberOfPartitions : 20,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 });
+
+                // Give the ellipsoid primitive an initial model matrix to prevent
+                // undefined values when projecting positions to 2D. Save the inverse
+                // of the initial model matrix for computing the model matrix of the
+                // bounding sphere for the current command.
+                var ellipsoid = Ellipsoid.WGS84;
+                var debugSphereModelMatrix = Transforms.eastNorthUpToFixedFrame(ellipsoid.cartographicToCartesian(Cartographic.ZERO), ellipsoid);
+                scene._debugSphereInverseModelMatrix = debugSphereModelMatrix.inverseTransformation();
+
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : GeometryPipeline.toWireframe(geometry),
                         attributes : {
                             color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                        }
+                        },
+                        modelMatrix : debugSphereModelMatrix
                     }),
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
@@ -518,8 +533,18 @@ define([
                 });
             }
 
-            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
-            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(Cartesian3.fromArray(m, 12)), command.boundingVolume.radius);
+            var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
+            var transformedBV = command.boundingVolume.transform(modelMatrix);
+            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(transformedBV.center), command.boundingVolume.radius);
+
+            var debugSphereToWC;
+            if (scene._frameState.mode === SceneMode.SCENE3D) {
+                debugSphereToWC = scene._debugSphereInverseModelMatrix;
+            } else {
+                var center = scene._debugSphere._boundingSphere2D.center;
+                debugSphereToWC = Matrix4.fromTranslation(center.negate());
+            }
+            scene._debugSphere.modelMatrix = Matrix4.multiply(scene._debugSphere.modelMatrix, debugSphereToWC);
 
             var commandList = [];
             scene._debugSphere.update(context, scene._frameState, commandList);
