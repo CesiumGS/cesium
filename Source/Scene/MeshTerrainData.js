@@ -4,6 +4,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/DeveloperError',
         '../Core/HeightmapTessellator',
+        '../Core/Intersections2D',
         '../Core/Math',
         '../Core/TaskProcessor',
         './GeographicTilingScheme',
@@ -16,6 +17,7 @@ define([
         BoundingSphere,
         DeveloperError,
         HeightmapTessellator,
+        Intersections2D,
         CesiumMath,
         TaskProcessor,
         GeographicTilingScheme,
@@ -185,58 +187,166 @@ define([
         return heightSample * structure.heightScale + structure.heightOffset;
     };
 
-    var vertexMappingScratch = {};
 
-    function addVertexAtEdge(vertices, parentVertices, vertexIndex1, vertexIndex2) {
-        var offset1 = vertexIndex1 * vertexStride;
-        var x1 = parentVertices[offset1 + xIndex];
-        var y1 = parentVertices[offset1 + yIndex];
-        var z1 = parentVertices[offset1 + zIndex];
-        var h1 = parentVertices[offset1 + hIndex];
-        var u1 = parentVertices[offset1 + uIndex];
-        var v1 = parentVertices[offset1 + vIndex];
+    function Vertex() {
+        this.vertexBuffer = undefined;
+        this.index = undefined;
+        this.first = undefined;
+        this.second = undefined;
+        this.ratio = undefined;
+    }
 
-        var offset2 = vertexIndex2 * vertexStride;
-        var x2 = parentVertices[offset2 + xIndex];
-        var y2 = parentVertices[offset2 + yIndex];
-        var z2 = parentVertices[offset2 + zIndex];
-        var h2 = parentVertices[offset2 + hIndex];
-        var u2 = parentVertices[offset2 + uIndex];
-        var v2 = parentVertices[offset2 + vIndex];
-
-        var crossesU = u1 <= 0.5 && u2 >= 0.5 || u1 >= 0.5 && u2 <= 0.5;
-        var crossesV = v1 <= 0.5 && v2 >= 0.5 || v1 >= 0.5 && v2 <= 0.5;
-
-        // TODO: handle the case that it crosses both edges.
-
-        var index = vertices.length / vertexStride;
-
-        if (crossesU) {
-            var uRatio = (0.5 - u1) / (u2 - u1);
-            vertices.push(CesiumMath.lerp(x1, x2, uRatio));
-            vertices.push(CesiumMath.lerp(y1, y2, uRatio));
-            vertices.push(CesiumMath.lerp(z1, z2, uRatio));
-            vertices.push(CesiumMath.lerp(h1, h2, uRatio));
-            vertices.push(0.5);
-            vertices.push(CesiumMath.lerp(v1, v2, uRatio));
-        } else /*if (crossesV)*/ {
-            var vRatio = (0.5 - v1) / (v2 - v1);
-            vertices.push(CesiumMath.lerp(x1, x2, vRatio));
-            vertices.push(CesiumMath.lerp(y1, y2, vRatio));
-            vertices.push(CesiumMath.lerp(z1, z2, vRatio));
-            vertices.push(CesiumMath.lerp(h1, h2, vRatio));
-            vertices.push(CesiumMath.lerp(u1, u2, vRatio));
-            vertices.push(0.5);
+    Vertex.prototype.clone = function(result) {
+        if (typeof result === 'undefined') {
+            result = new Vertex();
         }
 
-        return index;
+        result.vertexBuffer = this.vertexBuffer;
+        result.index = this.index;
+        result.first = this.first;
+        result.second = this.second;
+        result.ratio = this.ratio;
+
+        return result;
+    };
+
+    Vertex.prototype.initializeIndexed = function(vertexBuffer, index) {
+        this.vertexBuffer = vertexBuffer;
+        this.index = index;
+        this.first = undefined;
+        this.second = undefined;
+        this.ratio = undefined;
+    };
+
+    Vertex.prototype.initializeInterpolated = function(first, second, ratio) {
+        this.vertexBuffer = undefined;
+        this.index = undefined;
+        this.first = first;
+        this.second = second;
+        this.ratio = ratio;
+    };
+
+    Vertex.prototype.initializeFromClipResult = function(clipResult, index, vertices) {
+        var nextIndex = index + 1;
+
+        if (clipResult[index] !== -1) {
+            vertices[clipResult[index]].clone(this);
+        } else {
+            this.vertexBuffer = undefined;
+            this.index = undefined;
+            this.first = vertices[clipResult[nextIndex]];
+            ++nextIndex;
+            this.second = vertices[clipResult[nextIndex]];
+            ++nextIndex;
+            this.ratio = clipResult[nextIndex];
+            ++nextIndex;
+        }
+
+        return nextIndex;
+    };
+
+    Vertex.prototype.isIndexed = function() {
+        return typeof this.index !== 'undefined';
+    };
+
+    Vertex.prototype.getX = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + xIndex];
+        }
+        return CesiumMath.lerp(this.first.getX(), this.second.getX(), this.ratio);
+    };
+
+    Vertex.prototype.getY = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + yIndex];
+        }
+        return CesiumMath.lerp(this.first.getY(), this.second.getY(), this.ratio);
+    };
+
+    Vertex.prototype.getZ = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + zIndex];
+        }
+        return CesiumMath.lerp(this.first.getZ(), this.second.getZ(), this.ratio);
+    };
+
+    Vertex.prototype.getH = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + hIndex];
+        }
+        return CesiumMath.lerp(this.first.getH(), this.second.getH(), this.ratio);
+    };
+
+    Vertex.prototype.getU = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + uIndex];
+        }
+        return CesiumMath.lerp(this.first.getU(), this.second.getU(), this.ratio);
+    };
+
+    Vertex.prototype.getV = function() {
+        if (typeof this.index !== 'undefined') {
+            return this.vertexBuffer[this.index * vertexStride + vIndex];
+        }
+        return CesiumMath.lerp(this.first.getV(), this.second.getV(), this.ratio);
+    };
+
+    var polygonVertices = [];
+    polygonVertices.push(new Vertex());
+    polygonVertices.push(new Vertex());
+    polygonVertices.push(new Vertex());
+    polygonVertices.push(new Vertex());
+
+    function addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices) {
+        if (clipped.length === 0) {
+            return;
+        }
+
+        var numVertices = 0;
+        var clippedIndex = 0;
+        while (clippedIndex < clipped.length) {
+            clippedIndex = polygonVertices[numVertices++].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+        }
+
+        for (var i = 0; i < numVertices; ++i) {
+            var polygonVertex = polygonVertices[i];
+            if (!polygonVertex.isIndexed()) {
+                var newIndex = vertices.length / vertexStride;
+                vertices.push(polygonVertex.getX());
+                vertices.push(polygonVertex.getY());
+                vertices.push(polygonVertex.getZ());
+                vertices.push(polygonVertex.getH());
+                vertices.push(polygonVertex.getU());
+                vertices.push(polygonVertex.getV());
+                polygonVertex.initializeIndexed(vertices, newIndex);
+            } else {
+                polygonVertex.index = vertexMap[polygonVertex.index];
+                polygonVertex.vertexBuffer = vertices;
+            }
+        }
+
+        if (numVertices === 3) {
+            // A triangle.
+            indices.push(polygonVertices[0].index);
+            indices.push(polygonVertices[1].index);
+            indices.push(polygonVertices[2].index);
+        } else {
+            // A quad - two triangles.
+            indices.push(polygonVertices[0].index);
+            indices.push(polygonVertices[1].index);
+            indices.push(polygonVertices[2].index);
+
+            indices.push(polygonVertices[0].index);
+            indices.push(polygonVertices[2].index);
+            indices.push(polygonVertices[3].index);
+        }
     }
 
-    function addTriangle(indices, vertexIndex1, vertexIndex2, vertexIndex3) {
-        indices.push(vertexIndex1);
-        indices.push(vertexIndex2);
-        indices.push(vertexIndex3);
-    }
+    var clipScratch = [];
+    var clipScratch2 = [];
+    var verticesScratch = [];
+    var indicesScratch = [];
+    var vertexMappingScratch = {};
 
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
@@ -292,18 +402,23 @@ define([
         var minV = isNorthChild ? 0.5 : 0.0;
         var maxV = isNorthChild ? 1.0 : 0.5;
 
-        // Enable all parent vertices that are within the child tile's extent.
+        var vertices = verticesScratch;
+        vertices.length = 0;
+        var indices = indicesScratch;
+        indices.length = 0;
+        var vertexMap = vertexMappingScratch;
+        vertexMap.length = 0;
+
         var parentVertices = this._vertexBuffer;
-        var vertices = [];
-        var vertexMapping = vertexMappingScratch;
-        vertexMapping.length = 0;
+        var parentIndices = this._indexBuffer;
+
         var vertexCount = 0;
         var i;
         for (i = 0; i < parentVertices.length; i += vertexStride) {
             var u = parentVertices[i + uIndex];
             var v = parentVertices[i + vIndex];
             if (u >= minU && u <= maxU && v >= minV && v <= maxV) {
-                vertexMapping[i / 6] = vertexCount;
+                vertexMap[i / 6] = vertexCount;
                 vertices.push(parentVertices[i + xIndex]);
                 vertices.push(parentVertices[i + yIndex]);
                 vertices.push(parentVertices[i + zIndex]);
@@ -314,81 +429,86 @@ define([
             }
         }
 
-        var parentIndices = this._indexBuffer;
-        var indices = [];
+        var triangleVertices = [];
+        triangleVertices.push(new Vertex());
+        triangleVertices.push(new Vertex());
+        triangleVertices.push(new Vertex());
+
+        var clippedTriangleVertices = [];
+        clippedTriangleVertices.push(new Vertex());
+        clippedTriangleVertices.push(new Vertex());
+        clippedTriangleVertices.push(new Vertex());
+
+        var clippedIndex;
+        var clipped2;
+
         for (i = 0; i < parentIndices.length; i += 3) {
-            var i1 = parentIndices[i];
-            var i2 = parentIndices[i + 1];
-            var i3 = parentIndices[i + 2];
+            var i0 = parentIndices[i];
+            var i1 = parentIndices[i + 1];
+            var i2 = parentIndices[i + 2];
 
+            var u0 = parentVertices[i0 * vertexStride + uIndex];
             var u1 = parentVertices[i1 * vertexStride + uIndex];
-            var v1 = parentVertices[i1 * vertexStride + vIndex];
             var u2 = parentVertices[i2 * vertexStride + uIndex];
-            var v2 = parentVertices[i2 * vertexStride + vIndex];
-            var u3 = parentVertices[i3 * vertexStride + uIndex];
-            var v3 = parentVertices[i3 * vertexStride + vIndex];
 
-            // Which vertices are inside the descendant extent?
-            var isInside1 = u1 >= minU && u1 <= maxU && v1 >= minV && v1 <= maxV;
-            var isInside2 = u2 >= minU && u2 <= maxU && v2 >= minV && v2 <= maxV;
-            var isInside3 = u3 >= minU && u3 <= maxU && v3 >= minV && v3 <= maxV;
+            triangleVertices[0].initializeIndexed(parentVertices, i0);
+            triangleVertices[1].initializeIndexed(parentVertices, i1);
+            triangleVertices[2].initializeIndexed(parentVertices, i2);
 
-            var e1, e2;
-
-            // TODO: what if two vertices are on the border, and the third is
-            // outside the extent.  We don't care about that triangle.
-
-
-            if (isInside1 && isInside2 && isInside3) {
-                addTriangle(indices, vertexMapping[i1], vertexMapping[i2], vertexMapping[i3]);
-            } else if (isInside1 && isInside2) {
-                // Interpolate along the edges connecting to vertex 3.
-                e1 = addVertexAtEdge(vertices, parentVertices, i1, i3);
-                e2 = addVertexAtEdge(vertices, parentVertices, i2, i3);
-                addTriangle(indices, vertexMapping[i1], vertexMapping[i2], e1);
-                addTriangle(indices, vertexMapping[i2], e2, e1);
-            } else if (isInside2 && isInside3) {
-                // Interpolate along the edges connecting to vertex 1.
-                e1 = addVertexAtEdge(vertices, parentVertices, i2, i1);
-                e2 = addVertexAtEdge(vertices, parentVertices, i3, i1);
-                addTriangle(indices, vertexMapping[i2], vertexMapping[i3], e1);
-                addTriangle(indices, vertexMapping[i3], e2, e1);
-            } else if (isInside1 && isInside3) {
-                // Interpolate along the edges connecting to vertex 2.
-                e1 = addVertexAtEdge(vertices, parentVertices, i3, i2);
-                e2 = addVertexAtEdge(vertices, parentVertices, i1, i2);
-                addTriangle(indices, vertexMapping[i3], vertexMapping[i1], e1);
-                addTriangle(indices, vertexMapping[i2], e2, e1);
-            } else if (isInside1) {
-                e1 = addVertexAtEdge(vertices, parentVertices, i1, i2);
-                e2 = addVertexAtEdge(vertices, parentVertices, i1, i3);
-                addTriangle(indices, vertexMapping[i1], e1, e2);
-            } else if (isInside2) {
-                e1 = addVertexAtEdge(vertices, parentVertices, i2, i3);
-                e2 = addVertexAtEdge(vertices, parentVertices, i2, i1);
-                addTriangle(indices, vertexMapping[i2], e1, e2);
-            } else if (isInside3) {
-                e1 = addVertexAtEdge(vertices, parentVertices, i3, i1);
-                e2 = addVertexAtEdge(vertices, parentVertices, i3, i2);
-                addTriangle(indices, vertexMapping[i3], e1, e2);
-            } else {
-
+            // Clip triangle on the east-west boundary.
+            var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isEastChild, u0, u1, u2, clipScratch);
+            if (clipped.length === 0) {
+                // Triangle does not overlap this child's extent.
+                continue;
             }
-        }
 
-        if (indices.length === 0) {
-            return new HeightmapTerrainData({
-                buffer : new Uint8Array(17 * 17),
-                width : 17,
-                height : 17
-            });
+            // Clip the resulting polygon on the north-south boundary.
+            if (clipped.length === 3) {
+                // Polygon is just the original triangle.
+                clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, triangleVertices[0].getV(), triangleVertices[1].getV(), triangleVertices[2].getV(), clipScratch);
+                if (clipped.length === 0) {
+                    continue;
+                } else if (clipped.length === 3) {
+                    // Triangle passed both clips, add it.
+                    indices.push(vertexMap[i0]);
+                    indices.push(vertexMap[i1]);
+                    indices.push(vertexMap[i2]);
+                } else {
+                    addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices);
+                }
+            } else if (clipped.length === 9) {
+                // The polygon is a triangle, but not the original one.
+                // Clip the new triangle against the north-south boundary.
+                clippedIndex = 0;
+                clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+                clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+                clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+
+                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+            } else if (clipped.length === 10) {
+                // The polygon is a quad.  Triangulate the quad and clip both triangles
+                // against the north-south boundary.
+                clippedIndex = 0;
+                clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+                clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+                clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+
+                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+
+                clippedTriangleVertices[2].clone(clippedTriangleVertices[1]);
+                clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+
+                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+            }
         }
 
         return new MeshTerrainData({
             center : this._center,
             vertexBuffer : new Float32Array(vertices),
-            indexBuffer : new Uint32Array(indices),
-            createdByUpsampling : true
+            indexBuffer : new Uint16Array(indices)
         });
     };
 
