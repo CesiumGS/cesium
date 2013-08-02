@@ -785,30 +785,6 @@ define([
     };
 
     /**
-     * Converts a cartesian position to a window position.
-     *
-     * @param {Cartesian3} position The cartesian position.
-     *
-     * @returns {Cartesian2} The screen coordinates of the given position.
-     */
-    Scene.prototype.computeScreenSpacePosition  = function(position, result) {
-        if (typeof position === 'undefined') {
-            return undefined;
-        }
-
-        var camera = this._camera;
-        var viewMatrix = camera.getViewMatrix();
-        var projectionMatrix = camera.frustum.getProjectionMatrix();
-        var modelViewProjectionMatrix = Matrix4.multiply(projectionMatrix, viewMatrix);
-        var canvas = this._canvas;
-        var viewportTransformation = Matrix4.computeViewportTransformation(
-            new BoundingRectangle(0.0, 0.0, canvas.clientWidth, canvas.clientHeight), 0.0, 1.0);
-        var point = Transforms.pointToWindowCoordinates(modelViewProjectionMatrix, viewportTransformation, position, result);
-
-        return point;
-    };
-
-    /**
      * DOC_TBA
      * @memberof Scene
      */

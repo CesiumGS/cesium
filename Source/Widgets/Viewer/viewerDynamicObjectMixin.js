@@ -73,15 +73,16 @@ define([
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
+            if (typeof dynamicObjectView !== 'undefined') {
+                dynamicObjectView.update(clock.currentTime);
+            }
             var viewModel = viewer._balloon.viewModel;
-            if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined' && viewModel.showBalloon) {
+            if (typeof trackedObject === 'undefined' && typeof balloonedObject !== 'undefined' &&
+                    typeof balloonedObject.position !== 'undefined' && viewModel.showBalloon) {
                 viewModel.position = balloonedObject.position.getValueCartesian(clock.currentTime);
                 viewModel.update();
             } else {
                 viewModel.showBalloon = false;
-            }
-            if (typeof dynamicObjectView !== 'undefined') {
-                dynamicObjectView.update(clock.currentTime);
             }
         }
         eventHelper.add(viewer.clock.onTick, updateView);
@@ -169,7 +170,10 @@ define([
                         } else {
                             content = value.id;
                         }
-                        viewModel.content = content;
+
+                        if (value !== balloonedObject) {
+                            viewModel.content = content;
+                        }
                     }
                     balloonedObject = value;
                     viewModel.showBalloon = typeof content !== 'undefined';

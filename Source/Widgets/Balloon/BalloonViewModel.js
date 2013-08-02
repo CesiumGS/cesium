@@ -4,12 +4,14 @@ define([
         '../../Core/defaultValue',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
+        '../../Scene/SceneTransforms',
         '../../ThirdParty/knockout'
     ], function(
         Cartesian2,
         defaultValue,
         defineProperties,
         DeveloperError,
+        SceneTransforms,
         knockout) {
     "use strict";
 
@@ -139,7 +141,7 @@ define([
         this._content = contentElement.innerHTML;
         this._position = undefined;
         this._computeScreenSpacePosition = function(position, result) {
-            return scene.computeScreenSpacePosition(position, result);
+            return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
         };
         this._positionX = '0';
         this._positionY = '0';
