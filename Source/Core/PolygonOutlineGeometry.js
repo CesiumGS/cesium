@@ -219,7 +219,7 @@ define([
      * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
      * by an array of Cartesian points, or a polygon hierarchy.
      *
-     * @alias PolygonGeometry
+     * @alias PolygonOutlineGeometry
      * @constructor
      *
      * @param {Object} options.polygonHierarchy A polygon hierarchy that can include holes.
@@ -236,7 +236,7 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var geometry = new PolygonGeometry({
+     * var geometry = new PolygonOutlineGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-72.0, 40.0),
@@ -249,7 +249,7 @@ define([
      * });
      *
      * // create a nested polygon with holes
-     * var geometryWithHole = new PolygonGeometry({
+     * var geometryWithHole = new PolygonOutlineGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-109.0, 30.0),
@@ -285,7 +285,7 @@ define([
      * });
      *
      * //create extruded polygon
-     * var geometry = new Cesium.PolygonGeometry({
+     * var geometry = new Cesium.PolygonOutlineGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
      *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
@@ -297,7 +297,7 @@ define([
      * });
      *
      */
-    var PolygonGeometry = function(options) {
+    var PolygonOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -435,7 +435,7 @@ define([
     /**
      * Creates a polygon from an array of positions.
      *
-     * @memberof PolygonGeometry
+     * @memberof PolygonOutlineGeometry
      *
      * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
      * @param {Number} [options.height=0.0] The height of the polygon.
@@ -451,7 +451,7 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var geometry = new PolygonGeometry({
+     * var geometry = new PolygonOutlineGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0),
@@ -461,7 +461,7 @@ define([
      *     ])
      * });
      */
-    PolygonGeometry.fromPositions = function(options) {
+    PolygonOutlineGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (typeof options.positions === 'undefined') {
@@ -477,8 +477,8 @@ define([
             ellipsoid : options.ellipsoid,
             granularity : options.granularity
         };
-        return new PolygonGeometry(newOptions);
+        return new PolygonOutlineGeometry(newOptions);
     };
 
-    return PolygonGeometry;
+    return PolygonOutlineGeometry;
 });

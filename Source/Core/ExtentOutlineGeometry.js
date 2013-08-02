@@ -244,7 +244,7 @@ define([
     /**
      * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
      *
-     * @alias ExtentGeometry
+     * @alias ExtentOutlineGeometry
      * @constructor
      *
      * @param {Extent} options.extent A cartographic extent with north, south, east and west properties in radians.
@@ -267,13 +267,13 @@ define([
      * @exception {DeveloperError} Rotated extent is invalid.
      *
      * @example
-     * var extent = new ExtentGeometry({
+     * var extent = new ExtentOutlineGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
      */
-    var ExtentGeometry = function(options) {
+    var ExtentOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
@@ -403,5 +403,5 @@ define([
         this.primitiveType = PrimitiveType.LINES;
     };
 
-    return ExtentGeometry;
+    return ExtentOutlineGeometry;
 });
