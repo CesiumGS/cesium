@@ -5,3 +5,14 @@
 /web.config
 .DS_Store
 Thumbs.db
+
+/Apps/Sandcastle/jsHintOptions.js
+/Apps/Sandcastle/gallery/gallery-index.js
+
+/Source/Cesium.js
+
+/Source/Shaders/*.js
+/Source/Shaders/*/*.js
+!/Source/Shaders/Shaders.profile.js
+
+/Specs/SpecList.js
