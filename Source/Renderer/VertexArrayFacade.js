@@ -315,7 +315,7 @@ define([
             var length = views.length;
             for ( var i = 0; i < length; ++i) {
                 var view = views[i];
-                view.view = view.componentDatatype.createArrayBufferView(arrayBuffer, view.offsetInBytes);
+                view.view = ComponentDatatype.createArrayBufferView(view.componentDatatype, arrayBuffer, view.offsetInBytes);
             }
 
             buffer.arrayBuffer = arrayBuffer;

@@ -73,13 +73,13 @@ define(['./Enumeration'], function(Enumeration) {
          * @returns {Boolean}
          */
         validate : function(primitiveType) {
-            return ((primitiveType === PrimitiveType.POINTS) ||
-                    (primitiveType === PrimitiveType.LINES) ||
-                    (primitiveType === PrimitiveType.LINE_LOOP) ||
-                    (primitiveType === PrimitiveType.LINE_STRIP) ||
-                    (primitiveType === PrimitiveType.TRIANGLES) ||
-                    (primitiveType === PrimitiveType.TRIANGLE_STRIP) ||
-                    (primitiveType === PrimitiveType.TRIANGLE_FAN));
+            return ((primitiveType.value === PrimitiveType.POINTS.value) ||
+                    (primitiveType.value === PrimitiveType.LINES.value) ||
+                    (primitiveType.value === PrimitiveType.LINE_LOOP.value) ||
+                    (primitiveType.value === PrimitiveType.LINE_STRIP.value) ||
+                    (primitiveType.value === PrimitiveType.TRIANGLES.value) ||
+                    (primitiveType.value === PrimitiveType.TRIANGLE_STRIP.value) ||
+                    (primitiveType.value === PrimitiveType.TRIANGLE_FAN.value));
         }
     };
 

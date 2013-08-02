@@ -373,7 +373,7 @@ define([
                     var elementsIn = attribute.values;
                     var intoElementsIn = 0;
                     var numComponents = attribute.componentsPerAttribute;
-                    var elementsOut = attribute.componentDatatype.createTypedArray(elementsIn.length);
+                    var elementsOut = ComponentDatatype.createTypedArray(attribute.componentDatatype, elementsIn.length);
                     while (intoElementsIn < numVertices) {
                         var temp = indexCrossReferenceOldToNew[intoElementsIn];
                         for (i = 0; i < numComponents; i++) {
@@ -682,7 +682,7 @@ define([
             throw new DeveloperError('geometry must have attribute matching the attributeName argument: ' + attributeName + '.');
         }
 
-        if (attribute.componentDatatype !== ComponentDatatype.DOUBLE) {
+        if (attribute.componentDatatype.value !== ComponentDatatype.DOUBLE.value) {
             throw new DeveloperError('The attribute componentDatatype must be ComponentDatatype.DOUBLE.');
         }
 
@@ -775,7 +775,7 @@ define([
 
         var modelMatrix = instance.modelMatrix;
 
-        if (modelMatrix.equals(Matrix4.IDENTITY)) {
+        if (Matrix4.equals(modelMatrix, Matrix4.IDENTITY)) {
             // Already in world coordinates
             return instance;
         }
@@ -848,7 +848,7 @@ define([
                         componentDatatype : attribute.componentDatatype,
                         componentsPerAttribute : attribute.componentsPerAttribute,
                         normalize : attribute.normalize,
-                        values : attribute.componentDatatype.createTypedArray(numberOfComponents)
+                        values : ComponentDatatype.createTypedArray(attribute.componentDatatype, numberOfComponents)
                     });
                 }
             }
@@ -983,7 +983,7 @@ define([
             }
 
             if (typeof boundingSphere === 'undefined') {
-                boundingSphere = bs.clone();
+                boundingSphere = BoundingSphere.clone(bs);
             } else {
                 BoundingSphere.union(boundingSphere, bs, boundingSphere);
             }
@@ -1448,18 +1448,18 @@ define([
     }
 
     function indexPrimitive(geometry) {
-        switch (geometry.primitiveType) {
-        case PrimitiveType.TRIANGLE_FAN:
+        switch (geometry.primitiveType.value) {
+        case PrimitiveType.TRIANGLE_FAN.value:
             return indexTriangleFan(geometry);
-        case PrimitiveType.TRIANGLE_STRIP:
+        case PrimitiveType.TRIANGLE_STRIP.value:
             return indexTriangleStrip(geometry);
-        case PrimitiveType.TRIANGLES:
+        case PrimitiveType.TRIANGLES.value:
             return indexTriangles(geometry);
-        case PrimitiveType.LINE_STRIP:
+        case PrimitiveType.LINE_STRIP.value:
             return indexLineStrip(geometry);
-        case PrimitiveType.LINE_LOOP:
+        case PrimitiveType.LINE_LOOP.value:
             return indexLineLoop(geometry);
-        case PrimitiveType.LINES:
+        case PrimitiveType.LINES.value:
             return indexLines(geometry);
         }
 
@@ -1754,19 +1754,19 @@ define([
         geometry.attributes.position.values = new Float64Array(newPositions);
 
         if (typeof newNormals !== 'undefined') {
-            attributes.normal.values = attributes.normal.componentDatatype.createTypedArray(newNormals);
+            attributes.normal.values = ComponentDatatype.createTypedArray(attributes.normal.componentDatatype, newNormals);
         }
 
         if (typeof newBinormals !== 'undefined') {
-            attributes.binormal.values = attributes.binormal.componentDatatype.createTypedArray(newBinormals);
+            attributes.binormal.values = ComponentDatatype.createTypedArray(attributes.binormal.componentDatatype, newBinormals);
         }
 
         if (typeof newTangents !== 'undefined') {
-            attributes.tangent.values = attributes.tangent.componentDatatype.createTypedArray(newTangents);
+            attributes.tangent.values = ComponentDatatype.createTypedArray(attributes.tangent.componentDatatype, newTangents);
         }
 
         if (typeof newTexCoords !== 'undefined') {
-            attributes.st.values = attributes.st.componentDatatype.createTypedArray(newTexCoords);
+            attributes.st.values = ComponentDatatype.createTypedArray(attributes.st.componentDatatype, newTexCoords);
         }
 
         var numberOfVertices = Geometry.computeNumberOfVertices(geometry);
@@ -1873,9 +1873,9 @@ define([
         }
 
         indexPrimitive(geometry);
-        if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+        if (geometry.primitiveType.value === PrimitiveType.TRIANGLES.value) {
             wrapLongitudeTriangles(geometry);
-        } else if (geometry.primitiveType === PrimitiveType.LINES) {
+        } else if (geometry.primitiveType.value === PrimitiveType.LINES.value) {
             wrapLongitudeLines(geometry);
         }
 

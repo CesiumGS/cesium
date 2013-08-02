@@ -2210,7 +2210,7 @@ define([
 
                 if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
                     attributes[name].componentDatatype = ComponentDatatype.FLOAT;
-                    attributes[name].values = ComponentDatatype.FLOAT.createTypedArray(attributes[name].values);
+                    attributes[name].values = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, attributes[name].values);
                 }
             }
         }
@@ -2274,7 +2274,7 @@ define([
                 var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
 
                 views[name] = {
-                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
+                    pointer : ComponentDatatype.createTypedArray(attributes[name].componentDatatype, buffer),
                     index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
                     strideInComponentType : vertexSizeInBytes / sizeInBytes
                 };
@@ -2432,7 +2432,7 @@ define([
 
                     vertexBuffer = undefined;
                     if (typeof attribute.values !== 'undefined') {
-                        vertexBuffer = this.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
+                        vertexBuffer = this.createVertexBuffer(ComponentDatatype.createTypedArray(componentDatatype, attribute.values), bufferUsage);
                     }
 
                     vaAttributes.push({
