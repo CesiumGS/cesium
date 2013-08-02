@@ -8,16 +8,14 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    var originalWorkerModulePrefix;
     var taskProcessor;
 
     beforeEach(function() {
-        originalWorkerModulePrefix = TaskProcessor._workerModulePrefix;
         TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
     });
 
     afterEach(function() {
-        TaskProcessor._workerModulePrefix = originalWorkerModulePrefix;
+        TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
 
         if (taskProcessor && !taskProcessor.isDestroyed()) {
             taskProcessor = taskProcessor.destroy();

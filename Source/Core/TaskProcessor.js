@@ -203,7 +203,8 @@ define([
     };
 
     // exposed for testing purposes
-    TaskProcessor._workerModulePrefix = 'Workers/';
+    TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
+    TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
 
     return TaskProcessor;
 });
