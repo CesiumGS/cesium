@@ -57,6 +57,10 @@ define([
         widget._renderLoopRunning = true;
 
         function render() {
+            if (widget.isDestroyed()) {
+                return;
+            }
+
             try {
                 if (widget._useDefaultRenderLoop) {
                     widget.resize();
