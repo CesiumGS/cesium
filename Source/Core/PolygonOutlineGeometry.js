@@ -1,11 +1,8 @@
 /*global define*/
 define([
         './defaultValue',
-        './BoundingRectangle',
         './BoundingSphere',
-        './Cartesian2',
         './Cartesian3',
-        './Cartesian4',
         './ComponentDatatype',
         './DeveloperError',
         './Ellipsoid',
@@ -16,22 +13,15 @@ define([
         './GeometryInstance',
         './GeometryPipeline',
         './IndexDatatype',
-        './Intersect',
         './Math',
-        './Matrix3',
         './PolygonPipeline',
         './PrimitiveType',
-        './Quaternion',
         './Queue',
-        './VertexFormat',
         './WindingOrder'
     ], function(
         defaultValue,
-        BoundingRectangle,
         BoundingSphere,
-        Cartesian2,
         Cartesian3,
-        Cartesian4,
         ComponentDatatype,
         DeveloperError,
         Ellipsoid,
@@ -42,14 +32,10 @@ define([
         GeometryInstance,
         GeometryPipeline,
         IndexDatatype,
-        Intersect,
         CesiumMath,
-        Matrix3,
         PolygonPipeline,
         PrimitiveType,
-        Quaternion,
         Queue,
-        VertexFormat,
         WindingOrder) {
     "use strict";
     var createGeometryFromPositionsPositions = [];

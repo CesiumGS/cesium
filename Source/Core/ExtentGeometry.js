@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        './clone',
         './defaultValue',
         './BoundingSphere',
         './Cartesian2',
@@ -24,7 +23,6 @@ define([
         './Quaternion',
         './VertexFormat'
     ], function(
-        clone,
         defaultValue,
         BoundingSphere,
         Cartesian2,
@@ -332,7 +330,7 @@ define([
         return wallPositions;
     }
 
-    function constructExtent(options, vertexFormat, params) {
+    function constructExtent(vertexFormat, params) {
         var ellipsoid = params.ellipsoid;
         var size = params.size;
         var height = params.height;
@@ -401,26 +399,24 @@ define([
         }
 
         return {
-            boundingSphere : BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+            boundingSphere : BoundingSphere.fromExtent3D(params.extent, ellipsoid, surfaceHeight),
             geometry : geo
         };
     }
 
-
-    function constructExtrudedExtent(options, vertexFormat, params) {
+    function constructExtrudedExtent(extrudedOptions, vertexFormat, params) {
         var surfaceHeight = params.surfaceHeight;
         var height = params.height;
         var width = params.width;
         var size = params.size;
         var ellipsoid = params.ellipsoid;
-        var extrudedOptions = options.extrudedOptions;
         if (typeof extrudedOptions.height !== 'number') {
-            return constructExtent(options, vertexFormat, params);
+            return constructExtent(vertexFormat, params);
         }
         var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
         var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(options, vertexFormat, params);
+            return constructExtent(vertexFormat, params);
         }
 
         var closeTop = defaultValue(extrudedOptions.closeTop, true);
@@ -608,8 +604,8 @@ define([
             ]);
         }
 
-        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var topBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, minHeight, bottomBoundingSphere);
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
@@ -766,9 +762,9 @@ define([
 
         var extentGeometry;
         if (typeof options.extrudedOptions !== 'undefined') {
-            extentGeometry = constructExtrudedExtent(options, vertexFormat, params);
+            extentGeometry = constructExtrudedExtent(options.extrudedOptions, vertexFormat, params);
         } else {
-            extentGeometry = constructExtent(options, vertexFormat, params);
+            extentGeometry = constructExtent(vertexFormat, params);
         }
         var geometry = extentGeometry.geometry;
 

@@ -7,8 +7,7 @@ define([
         './defaultValue',
         './BoundingSphere',
         './GeometryAttribute',
-        './GeometryAttributes',
-        './VertexFormat'
+        './GeometryAttributes'
     ], function(
         DeveloperError,
         Cartesian3,
@@ -17,8 +16,7 @@ define([
         defaultValue,
         BoundingSphere,
         GeometryAttribute,
-        GeometryAttributes,
-        VertexFormat) {
+        GeometryAttributes) {
     "use strict";
 
     var diffScratch = new Cartesian3();

@@ -10,8 +10,7 @@ define([
         './PrimitiveType',
         './BoundingSphere',
         './GeometryAttribute',
-        './GeometryAttributes',
-        './VertexFormat'
+        './GeometryAttributes'
     ], function(
         defaultValue,
         DeveloperError,
@@ -23,8 +22,7 @@ define([
         PrimitiveType,
         BoundingSphere,
         GeometryAttribute,
-        GeometryAttributes,
-        VertexFormat) {
+        GeometryAttributes) {
     "use strict";
 
     var radiusScratch = new Cartesian2();
