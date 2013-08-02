@@ -6,7 +6,7 @@ define([
     var Intersections2D = {};
 
     /**
-     * @param {Number} threshold The threshold coordinate value on which to clip the triangle.
+     * @param {Number} threshold The threshold coordinate value at which to clip the triangle.
      * @param {Boolean} keepAbove true to keep the portion of the triangle above the threshold, or false
      *                            to keep the portion below.
      * @param {Number} u0 The coordinate of the first vertex in the triangle, in counter-clockwise order.
@@ -100,8 +100,8 @@ define([
             }
         } else if (numBehind === 2) {
             if (!u0Behind) {
-                u10Ratio = (threshold - u0) / (u1 - u0);
-                u20Ratio = (threshold - u0) / (u2 - u0);
+                u10Ratio = (threshold - u1) / (u0 - u1);
+                u20Ratio = (threshold - u2) / (u0 - u2);
 
                 result.push(0);
 
@@ -115,8 +115,8 @@ define([
                 result.push(0);
                 result.push(u20Ratio);
             } else if (!u1Behind) {
-                u21Ratio = (threshold - u1) / (u2 - u1);
-                u01Ratio = (threshold - u1) / (u0 - u1);
+                u21Ratio = (threshold - u2) / (u1 - u2);
+                u01Ratio = (threshold - u0) / (u1 - u0);
 
                 result.push(1);
 
@@ -130,8 +130,8 @@ define([
                 result.push(1);
                 result.push(u01Ratio);
             } else if (!u2Behind) {
-                u02Ratio = (threshold - u2) / (u0 - u2);
-                u12Ratio = (threshold - u2) / (u1 - u2);
+                u02Ratio = (threshold - u0) / (u2 - u0);
+                u12Ratio = (threshold - u1) / (u2 - u1);
 
                 result.push(2);
 
