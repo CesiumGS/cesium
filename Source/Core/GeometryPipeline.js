@@ -972,20 +972,31 @@ define([
         }
 
         // Create bounding sphere that includes all instances
-        var boundingSphere;
+        var center = new Cartesian3();
+        var radius = 0.0;
+        var bs;
 
         for (i = 0; i < length; ++i) {
-            var bs = instances[i].geometry.boundingSphere;
+            bs = instances[i].geometry.boundingSphere;
             if (typeof bs === 'undefined') {
                 // If any geometries have an undefined bounding sphere, then so does the combined geometry
-                boundingSphere = undefined;
+                center = undefined;
                 break;
             }
 
-            if (typeof boundingSphere === 'undefined') {
-                boundingSphere = bs.clone();
-            } else {
-                BoundingSphere.union(boundingSphere, bs, boundingSphere);
+            Cartesian3.add(bs.center, center, center);
+        }
+
+        if (typeof center !== 'undefined') {
+            Cartesian3.divideByScalar(center, length, center);
+
+            for (i = 0; i < length; ++i) {
+                bs = instances[i].geometry.boundingSphere;
+                var tempRadius = Cartesian3.magnitude(Cartesian3.subtract(bs.center, center)) + bs.radius;
+
+                if (tempRadius > radius) {
+                    radius = tempRadius;
+                }
             }
         }
 
@@ -993,7 +1004,7 @@ define([
             attributes : attributes,
             indices : indices,
             primitiveType : primitiveType,
-            boundingSphere : boundingSphere
+            boundingSphere : (typeof center !== 'undefined') ? new BoundingSphere(center, radius) : undefined
         });
     };
 
