@@ -1582,6 +1582,40 @@ defineSuite([
         test2DBoundingSphere(SceneMode.SCENE2D);
     });
 
+    it('computes optimized bounding volumes per material', function() {
+        var one = polylines.add({
+            positions : [{
+                x : 1.0,
+                y : 2.0,
+                z : 3.0
+            },{
+                x : 2.0,
+                y : 3.0,
+                z : 4.0
+            }]
+        });
+        one.getMaterial().uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var two = polylines.add({
+            positions : [{
+                x : 4.0,
+                y : 5.0,
+                z : 6.0
+            },{
+                x : 2.0,
+                y : 3.0,
+                z : 4.0
+            }]
+        });
+        two.getMaterial().uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
+
+        var commandList = [];
+        polylines.update(context, frameState, commandList);
+
+        expect(commandList[0].colorList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(commandList[0].colorList[1].boundingVolume).toEqual(two._boundingVolume);
+    });
+
     it('isDestroyed', function() {
         expect(polylines.isDestroyed()).toEqual(false);
         polylines.destroy();
