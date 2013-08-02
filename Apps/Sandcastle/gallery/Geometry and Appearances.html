@@ -111,9 +111,7 @@ require(['Cesium'], function(Cesium) {
             vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
             height: 700000,
             rotation: Cesium.Math.toRadians(45.0),
-            extrudedOptions: {
-                height: 1000000
-            }
+            extrudedHeight: 1000000
         }),
         attributes: {
             color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
