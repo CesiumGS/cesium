@@ -282,38 +282,6 @@ define([
         });
     }
 
-    function createPerInstanceVAAttributes(context, geometry, attributeIndices, names) {
-        var vaAttributes = [];
-
-        var bufferUsage = BufferUsage.DYNAMIC_DRAW;
-        var attributes = geometry.attributes;
-
-        var length = names.length;
-        for (var i = 0; i < length; ++i) {
-            var name = names[i];
-            var attribute = attributes[name];
-
-            var componentDatatype = attribute.componentDatatype;
-            if (componentDatatype === ComponentDatatype.DOUBLE) {
-                componentDatatype = ComponentDatatype.FLOAT;
-            }
-
-            var typedArray = ComponentDatatype.createTypedArray(componentDatatype, attribute.values);
-            var vertexBuffer = context.createVertexBuffer(typedArray, bufferUsage);
-            vaAttributes.push({
-                index : attributeIndices[name],
-                vertexBuffer : vertexBuffer,
-                componentDatatype : componentDatatype,
-                componentsPerAttribute : attribute.componentsPerAttribute,
-                normalize : attribute.normalize
-            });
-
-            delete attributes[name];
-        }
-
-        return vaAttributes;
-    }
-
     // TODO: same function in combineGeometry.js
     function getCommonPerInstanceAttributeNames(instances) {
         var length = instances.length;
@@ -604,6 +572,8 @@ define([
             var that = this;
             when(promise, function(result) {
                 that._geometries = result.geometries;
+                that._attributeIndices = result.attributeIndices;
+                that._perInstanceAttributes = result.perInstanceAttributes;
                 Matrix4.clone(result.modelMatrix, that.modelMatrix);
                 that.state = PrimitiveState.COMBINED;
             }, function(result) {
@@ -613,27 +583,33 @@ define([
             this.state = PrimitiveState.COMBINING;
         } else if (this.state === PrimitiveState.COMBINED) {
             var geometries = this._geometries;
-
-            this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
+            var attributeIndices = this._attributeIndices;
+            var perInstanceAttributes = this._perInstanceAttributes;
 
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
             if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
-            //var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(insts);
-
             var va = [];
             length = geometries.length;
             for (i = 0; i < length; ++i) {
                 geometry = geometries[i];
-                //var vaAttributes = createPerInstanceVAAttributes(context, geometry, this._attributeIndices, perInstanceAttributeNames);
+
+                var vaAttributes = perInstanceAttributes[i];
+                var vaLength = vaAttributes.length;
+                for (var j = 0; j < vaLength; ++j) {
+                    var attribute = vaAttributes[j];
+                    attribute.vertexBuffer = context.createVertexBuffer(attribute.values, BufferUsage.DYNAMIC_DRAW);
+                    delete attribute.values;
+                }
+
                 va.push(context.createVertexArrayFromGeometry({
                     geometry : geometry,
-                    attributeIndices : this._attributeIndices,
+                    attributeIndices : attributeIndices,
                     bufferUsage : BufferUsage.STATIC_DRAW,
-                    vertexLayout : VertexLayout.INTERLEAVED//,
-                    //vertexArrayAttributes : vaAttributes
+                    vertexLayout : VertexLayout.INTERLEAVED,
+                    vertexArrayAttributes : vaAttributes
                 }));
             }
 

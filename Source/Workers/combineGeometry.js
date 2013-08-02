@@ -218,16 +218,58 @@ define([
         return [geometry];
     }
 
+    function createPerInstanceVAAttributes(geometry, attributeIndices, names) {
+        var vaAttributes = [];
+        var attributes = geometry.attributes;
+
+        var length = names.length;
+        for (var i = 0; i < length; ++i) {
+            var name = names[i];
+            var attribute = attributes[name];
+
+            var componentDatatype = attribute.componentDatatype;
+            if (componentDatatype === ComponentDatatype.DOUBLE) {
+                componentDatatype = ComponentDatatype.FLOAT;
+            }
+
+            var typedArray = ComponentDatatype.createTypedArray(componentDatatype, attribute.values);
+            vaAttributes.push({
+                index : attributeIndices[name],
+                componentDatatype : componentDatatype,
+                componentsPerAttribute : attribute.componentsPerAttribute,
+                normalize : attribute.normalize,
+                values : typedArray
+            });
+
+            delete attributes[name];
+        }
+
+        return vaAttributes;
+    }
+
     function combineGeometry(parameters, transferableObjects) {
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.projection = (parameters.isGeographic) ? new GeographicProjection(parameters.ellipsoid) : new WebMercatorProjection(parameters.ellipsoid);
         parameters.modelMatrix = Matrix4.clone(parameters.modelMatrix);
 
         var geometries = geometryPipeline(parameters);
+        var attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
+        var instances = parameters.instances;
+        var perInstanceAttributeNames = getCommonPerInstanceAttributeNames(instances);
+
+        var perInstanceAttributes = [];
         var length = geometries.length;
-        for (var i = 0; i < length; ++i) {
-            var geometry = geometries[i];
+        var i;
+        var geometry;
+
+        for (i = 0; i < length; ++i) {
+            geometry = geometries[i];
+            perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeIndices, perInstanceAttributeNames));
+        }
+
+        for (i = 0; i < length; ++i) {
+            geometry = geometries[i];
             var attributes = geometry.attributes;
             for (var name in attributes) {
                 if (attributes.hasOwnProperty(name) &&
@@ -243,9 +285,20 @@ define([
             }
         }
 
+        length = perInstanceAttributes.length;
+        for (i = 0; i < length; ++i) {
+            var vaAttributes = perInstanceAttributes[i];
+            var vaLength = vaAttributes.length;
+            for (var j = 0; j < vaLength; ++j) {
+                transferableObjects.push(vaAttributes[j].values.buffer);
+            }
+        }
+
         return {
             geometries : geometries,
-            modelMatrix : parameters.modelMatrix
+            modelMatrix : parameters.modelMatrix,
+            attributeIndices : attributeIndices,
+            perInstanceAttributes : perInstanceAttributes
         };
     }
 
