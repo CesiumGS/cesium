@@ -32,20 +32,25 @@
 
 define(['exports'], function(exports) {
 
-    var definePropertyWorks = (function() {
-        try {
-            return 'x' in Object.defineProperty({}, 'x', {});
-        } catch (e) {
-            return false;
-        }
-    })();
-    var forEach = Array.prototype.forEach ? Array.prototype.forEach : function(callback, thisArg) {
-        for (var i = 0, len = this.length; i < len; ++i) {
-            callback.call(thisArg, this[i], i, this);
-        }
-    };
-
 void function(global, undefined_, undefined){
+  if ('WeakMap' in global) {
+      exports.WeakMap = global.WeakMap;
+      return;
+  }
+
+  var definePropertyWorks = (function() {
+      try {
+          return 'x' in Object.defineProperty({}, 'x', {});
+      } catch (e) {
+          return false;
+      }
+  })();
+  var forEach = Array.prototype.forEach ? Array.prototype.forEach : function(callback, thisArg) {
+      for (var i = 0, len = this.length; i < len; ++i) {
+          callback.call(thisArg, this[i], i, this);
+      }
+  };
+
   var getProps = Object.getOwnPropertyNames,
       defProp  = definePropertyWorks ? Object.defineProperty : function(o) { return o; },
       toSource = Function.prototype.toString,
@@ -237,42 +242,42 @@ void function(global, undefined_, undefined){
     return WeakMap;
   }(new Data));
 
-  var defaultCreator = Object.create
-    ? function(){ return Object.create(null) }
-    : function(){ return {} };
+//  var defaultCreator = Object.create
+//    ? function(){ return Object.create(null) }
+//    : function(){ return {} };
+//
+//  function createStorage(creator){
+//    var weakmap = new WM;
+//    creator || (creator = defaultCreator);
+//
+//    function storage(object, value){
+//      if (value || arguments.length === 2) {
+//        weakmap.set(object, value);
+//      } else {
+//        value = weakmap.get(object);
+//        if (value === undefined) {
+//          value = creator(object);
+//          weakmap.set(object, value);
+//        }
+//      }
+//      return value;
+//    }
+//
+//    return storage;
+//  }
 
-  function createStorage(creator){
-    var weakmap = new WM;
-    creator || (creator = defaultCreator);
 
-    function storage(object, value){
-      if (value || arguments.length === 2) {
-        weakmap.set(object, value);
-      } else {
-        value = weakmap.get(object);
-        if (value === undefined) {
-          value = creator(object);
-          weakmap.set(object, value);
-        }
-      }
-      return value;
-    }
-
-    return storage;
-  }
-
-
-  if (typeof module !== 'undefined') {
-    module.exports = WM;
-  } else if (typeof exports !== 'undefined') {
+//  if (typeof module !== 'undefined') {
+//    module.exports = WM;
+//  } else if (typeof exports !== 'undefined') {
     exports.WeakMap = WM;
-  } else if (!('WeakMap' in global)) {
-    global.WeakMap = WM;
-  }
+//  } else if (!('WeakMap' in global)) {
+//    global.WeakMap = WM;
+//  }
 
-  WM.createStorage = createStorage;
-  if (global.WeakMap)
-    global.WeakMap.createStorage = createStorage;
+//  WM.createStorage = createStorage;
+//  if (global.WeakMap)
+//    global.WeakMap.createStorage = createStorage;
 }((0, eval)('this'));
 
 });

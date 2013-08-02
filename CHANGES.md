@@ -26,19 +26,20 @@ Beta Releases
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
    * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
-* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
 * Added `ExtentPrimitive`.
-* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
-* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Added extrusion to `ExtentGeometry`.
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
+* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
 ### b18 - 2013-07-01
 

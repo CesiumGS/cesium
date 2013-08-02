@@ -126,16 +126,20 @@ define([
         var clearDepthCommand = new ClearCommand();
         clearDepthCommand.depth = 1.0;
         clearDepthCommand.stencil = 0;
+        clearDepthCommand.owner = this;
         this._clearDepthCommand = clearDepthCommand;
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.owner = this;
 
         this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._northPoleCommand.owner = this;
         this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand.owner = this;
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;

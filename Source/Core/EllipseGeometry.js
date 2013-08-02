@@ -1,8 +1,8 @@
 /*global define*/
 define([
-        './clone',
         './defaultValue',
         './BoundingSphere',
+        './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
@@ -16,14 +16,15 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './Math',
+        './Matrix2',
         './Matrix3',
         './PrimitiveType',
         './Quaternion',
         './VertexFormat'
     ], function(
-        clone,
         defaultValue,
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -37,6 +38,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         CesiumMath,
+        Matrix2,
         Matrix3,
         PrimitiveType,
         Quaternion,
@@ -52,6 +54,9 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
+    var texCoordScratch = new Cartesian2();
+    var textureMatrixScratch = new Matrix3();
+    var quaternionScratch = new Quaternion();
 
     var scratchNormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
@@ -66,7 +71,7 @@ define([
     function pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
         var azimuth = theta + rotation;
 
-        Cartesian3.multiplyByScalar(eastVec,  Math.cos(azimuth), rotAxis);
+        Cartesian3.multiplyByScalar(eastVec, Math.cos(azimuth), rotAxis);
         Cartesian3.multiplyByScalar(northVec, Math.sin(azimuth), tempVec);
         Cartesian3.add(rotAxis, tempVec, rotAxis);
 
@@ -93,11 +98,11 @@ define([
         var vertexFormat = options.vertexFormat;
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
         var ellipsoid = options.ellipsoid;
         var height = options.height;
         var extrudedHeight = options.extrudedHeight;
-        var size = (extrude) ? positions.length/3*2 : positions.length/3;
+        var stRotation = options.stRotation;
+        var size = (extrude) ? positions.length / 3 * 2 : positions.length / 3;
 
         var finalPositions = new Float64Array(size * 3);
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
@@ -116,26 +121,35 @@ define([
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
 
+        var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
+        ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
+        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
         var length = positions.length;
         var bottomOffset = (extrude) ? length : 0;
         var stOffset = bottomOffset / 3 * 2;
-        for (var i = 0; i < length; i += 3) {
+        for ( var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
             var extrudedPosition;
 
             if (vertexFormat.st) {
-                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
+                var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
+                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
+
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
+
                 if (extrude) {
-                    textureCoordinates[textureCoordIndex + stOffset] = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                    textureCoordinates[textureCoordIndex + 1 + stOffset] = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                    textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
+                    textureCoordinates[textureCoordIndex + 1 + stOffset] = texCoordScratch.y;
                 }
 
-                textureCoordinates[textureCoordIndex++] = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                textureCoordinates[textureCoordIndex++] = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                textureCoordinates[textureCoordIndex++] = texCoordScratch.x;
+                textureCoordinates[textureCoordIndex++] = texCoordScratch.y;
             }
 
             position = ellipsoid.scaleToGeodeticSurface(position, position);
@@ -149,7 +163,7 @@ define([
                 extrudedPosition = Cartesian3.add(extrudedPosition, scaledNormal, extrudedPosition);
             }
 
-            if (vertexFormat.position){
+            if (vertexFormat.position) {
                 if (extrude) {
                     finalPositions[i + bottomOffset] = extrudedPosition.x;
                     finalPositions[i1 + bottomOffset] = extrudedPosition.y;
@@ -163,6 +177,7 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                    Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                 }
                 if (vertexFormat.normal) {
                     normals[i] = normal.x;
@@ -251,146 +266,144 @@ define([
         var center = options.center;
         var granularity = options.granularity;
 
-         var MAX_ANOMALY_LIMIT = 2.31;
+        var MAX_ANOMALY_LIMIT = 2.31;
 
-         var aSqr = semiMinorAxis * semiMinorAxis;
-         var bSqr = semiMajorAxis * semiMajorAxis;
-         var ab = semiMajorAxis * semiMinorAxis;
+        var aSqr = semiMinorAxis * semiMinorAxis;
+        var bSqr = semiMajorAxis * semiMajorAxis;
+        var ab = semiMajorAxis * semiMinorAxis;
 
-         var mag = center.magnitude();
+        var mag = center.magnitude();
 
-         var unitPos = Cartesian3.normalize(center, unitPosScratch);
-         var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);
-         eastVec = Cartesian3.normalize(eastVec, eastVec);
-         var northVec = Cartesian3.cross(unitPos, eastVec, northVecScratch);
+        var unitPos = Cartesian3.normalize(center, unitPosScratch);
+        var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);
+        eastVec = Cartesian3.normalize(eastVec, eastVec);
+        var northVec = Cartesian3.cross(unitPos, eastVec, northVecScratch);
 
-         // The number of points in the first quadrant
-         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
-         var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
+        // The number of points in the first quadrant
+        var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
+        var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
 
-         // If the number of points were three, the ellipse
-         // would be tessellated like below:
-         //
-         //         *---*
-         //       / | \ | \
-         //     *---*---*---*
-         //   / | \ | \ | \ | \
-         // *---*---*---*---*---*
-         // | \ | \ | \ | \ | \ |
-         // *---*---*---*---*---*
-         //   \ | \ | \ | \ | /
-         //     *---*---*---*
-         //       \ | \ | /
-         //         *---*
-         // Notice each vertical column contains an even number of positions.
-         // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
-         // for the whole ellipse. Note: this is just an estimate and may actually be less depending
-         // on the number of iterations before the angle reaches pi/2.
-         var size = 2 * numPts * (numPts + 1);
-         var positions = new Array(size * 3);
-         var positionIndex = 0;
-         var position = scratchCartesian1;
-         var reflectedPosition = scratchCartesian2;
+        // If the number of points were three, the ellipse
+        // would be tessellated like below:
+        //
+        //         *---*
+        //       / | \ | \
+        //     *---*---*---*
+        //   / | \ | \ | \ | \
+        // *---*---*---*---*---*
+        // | \ | \ | \ | \ | \ |
+        // *---*---*---*---*---*
+        //   \ | \ | \ | \ | /
+        //     *---*---*---*
+        //       \ | \ | /
+        //         *---*
+        // Notice each vertical column contains an even number of positions.
+        // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
+        // for the whole ellipse. Note: this is just an estimate and may actually be less depending
+        // on the number of iterations before the angle reaches pi/2.
+        var size = 2 * numPts * (numPts + 1);
+        var positions = new Array(size * 3);
+        var positionIndex = 0;
+        var position = scratchCartesian1;
+        var reflectedPosition = scratchCartesian2;
 
-         var outerLeft;
-         var outerRight;
-         if (doPerimeter) {
-             outerLeft = [];
-             outerRight = [];
-         }
+        var outerLeft;
+        var outerRight;
+        if (doPerimeter) {
+            outerLeft = [];
+            outerRight = [];
+        }
 
-         var i;
-         var j;
-         var numInterior;
-         var t;
-         var interiorPosition;
+        var i;
+        var j;
+        var numInterior;
+        var t;
+        var interiorPosition;
 
+        // Compute points in the 'northern' half of the ellipse
+        var theta = CesiumMath.PI_OVER_TWO;
+        for (i = 0; i < numPts && theta > 0; ++i) {
+            position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
 
-         // Compute points in the 'northern' half of the ellipse
-         var theta = CesiumMath.PI_OVER_TWO;
-         for (i = 0; i < numPts && theta > 0; ++i) {
-             position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-             reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            numInterior = 2 * i + 2;
+            for (j = 1; j < numInterior - 1; ++j) {
+                t = j / (numInterior - 1);
+                interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
+                positions[positionIndex++] = interiorPosition.x;
+                positions[positionIndex++] = interiorPosition.y;
+                positions[positionIndex++] = interiorPosition.z;
+            }
 
-             positions[positionIndex++] = position.x;
-             positions[positionIndex++] = position.y;
-             positions[positionIndex++] = position.z;
+            positions[positionIndex++] = reflectedPosition.x;
+            positions[positionIndex++] = reflectedPosition.y;
+            positions[positionIndex++] = reflectedPosition.z;
 
-             numInterior = 2 * i + 2;
-             for (j = 1; j < numInterior - 1; ++j) {
-                 t = j / (numInterior - 1);
-                 interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
-                 positions[positionIndex++] = interiorPosition.x;
-                 positions[positionIndex++] = interiorPosition.y;
-                 positions[positionIndex++] = interiorPosition.z;
-             }
+            if (doPerimeter) {
+                outerRight.unshift(position.x, position.y, position.z);
+                if (i !== 0) {
+                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                }
+            }
 
-             positions[positionIndex++] = reflectedPosition.x;
-             positions[positionIndex++] = reflectedPosition.y;
-             positions[positionIndex++] = reflectedPosition.z;
+            theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
+        }
 
-             if (doPerimeter) {
-                 outerRight.unshift(position.x, position.y, position.z);
-                 if (i !== 0) {
-                     outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
-                 }
-             }
+        // Set numPts if theta reached zero
+        numPts = i;
 
-             theta = CesiumMath.PI_OVER_TWO - (i + 1) * deltaTheta;
-         }
+        // Compute points in the 'southern' half of the ellipse
+        for (i = numPts; i > 0; --i) {
+            theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
-         // Set numPts if theta reached zero
-         numPts = i;
+            position = pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            reflectedPosition = pointOnEllipsoid(theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
-         // Compute points in the 'southern' half of the ellipse
-         for (i = numPts; i > 0; --i) {
-             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
+            positions[positionIndex++] = position.x;
+            positions[positionIndex++] = position.y;
+            positions[positionIndex++] = position.z;
 
-             position = pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-             reflectedPosition = pointOnEllipsoid( theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            numInterior = 2 * (i - 1) + 2;
+            for (j = 1; j < numInterior - 1; ++j) {
+                t = j / (numInterior - 1);
+                interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
+                positions[positionIndex++] = interiorPosition.x;
+                positions[positionIndex++] = interiorPosition.y;
+                positions[positionIndex++] = interiorPosition.z;
+            }
 
-             positions[positionIndex++] = position.x;
-             positions[positionIndex++] = position.y;
-             positions[positionIndex++] = position.z;
+            positions[positionIndex++] = reflectedPosition.x;
+            positions[positionIndex++] = reflectedPosition.y;
+            positions[positionIndex++] = reflectedPosition.z;
 
-             numInterior = 2 * (i - 1) + 2;
-             for (j = 1; j < numInterior - 1; ++j) {
-                 t = j / (numInterior - 1);
-                 interiorPosition = Cartesian3.lerp(position, reflectedPosition, t, scratchCartesian3);
-                 positions[positionIndex++] = interiorPosition.x;
-                 positions[positionIndex++] = interiorPosition.y;
-                 positions[positionIndex++] = interiorPosition.z;
-             }
+            if (doPerimeter) {
+                outerRight.unshift(position.x, position.y, position.z);
+                if (i !== 1) {
+                    outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
+                }
+            }
+        }
 
-             positions[positionIndex++] = reflectedPosition.x;
-             positions[positionIndex++] = reflectedPosition.y;
-             positions[positionIndex++] = reflectedPosition.z;
+        // The original length may have been an over-estimate
+        if (positions.length !== positionIndex) {
+            size = positionIndex / 3;
+            positions.length = positionIndex;
+        }
 
-             if (doPerimeter) {
-                 outerRight.unshift(position.x, position.y, position.z);
-                 if (i !== 1) {
-                     outerLeft.push(reflectedPosition.x, reflectedPosition.y, reflectedPosition.z);
-                 }
-             }
-         }
+        var r = {
+            positions : positions,
+            numPts : numPts
+        };
 
-         // The original length may have been an over-estimate
-         if (positions.length !== positionIndex) {
-             size = positionIndex / 3;
-             positions.length = positionIndex;
-         }
+        if (doPerimeter) {
+            r.outerPositions = outerRight.concat(outerLeft);
+        }
 
-         var r = {
-                 positions: positions,
-                 numPts: numPts
-         };
-
-         if (doPerimeter) {
-             r.outerPositions = outerRight.concat(outerLeft);
-         }
-
-         return r;
+        return r;
     }
 
     function topIndices(numPts) {
@@ -489,9 +502,9 @@ define([
         var indices = topIndices(numPts);
         indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
         return {
-            boundingSphere: boundingSphere,
-            attributes: attributes,
-            indices: indices
+            boundingSphere : boundingSphere,
+            attributes : attributes,
+            indices : indices
         };
     }
 
@@ -499,11 +512,11 @@ define([
         var vertexFormat = options.vertexFormat;
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
         var ellipsoid = options.ellipsoid;
         var height = options.height;
         var extrudedHeight = options.extrudedHeight;
-        var size = positions.length/3*2;
+        var stRotation = options.stRotation;
+        var size = positions.length / 3 * 2;
 
         var finalPositions = new Float64Array(size * 3);
         var textureCoordinates = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
@@ -522,22 +535,32 @@ define([
         var projection = new GeographicProjection(ellipsoid);
         var projectedCenter = projection.project(ellipsoid.cartesianToCartographic(center, scratchCartographic), projectedCenterScratch);
 
+        var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
+        ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
+        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
+
         var length = positions.length;
         var stOffset = length / 3 * 2;
-        for (var i = 0; i < length; i += 3) {
+        for ( var i = 0; i < length; i += 3) {
             var i1 = i + 1;
             var i2 = i + 2;
             var position = Cartesian3.fromArray(positions, i, scratchCartesian1);
             var extrudedPosition;
 
             if (vertexFormat.st) {
-                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(position, scratchCartographic), scratchCartesian3);
+                var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
+                var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
                 projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
-                textureCoordinates[textureCoordIndex + stOffset] = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                textureCoordinates[textureCoordIndex + 1 + stOffset] = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
 
-                textureCoordinates[textureCoordIndex++] = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
-                textureCoordinates[textureCoordIndex++] = (projectedPoint.y + semiMinorAxis) / (2.0 * semiMinorAxis);
+                texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
+                texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
+
+                textureCoordinates[textureCoordIndex + stOffset] = texCoordScratch.x;
+                textureCoordinates[textureCoordIndex + 1 + stOffset] = texCoordScratch.y;
+
+                textureCoordinates[textureCoordIndex++] = texCoordScratch.x;
+                textureCoordinates[textureCoordIndex++] = texCoordScratch.y;
             }
 
             position = ellipsoid.scaleToGeodeticSurface(position, position);
@@ -561,7 +584,7 @@ define([
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
 
                 binormal = normal.clone(binormal);
-                var next = Cartesian3.fromArray(positions, (i + 3)%length, scratchCartesian4);
+                var next = Cartesian3.fromArray(positions, (i + 3) % length, scratchCartesian4);
                 next = next.subtract(position, next);
                 var bottom = extrudedPosition.subtract(position, scratchCartesian3);
 
@@ -649,10 +672,10 @@ define([
         var UR;
         var LL;
         var LR;
-        var length = positions.length/3;
+        var length = positions.length / 3;
         var indices = IndexDatatype.createTypedArray(length, length * 6);
         var index = 0;
-        for (var i = 0; i < length - 1; i++) {
+        for ( var i = 0; i < length - 1; i++) {
             UL = i;
             LL = i + length;
             UR = UL + 1;
@@ -702,8 +725,8 @@ define([
         var indices = topIndices(numPts);
         var length = indices.length;
         indices.length = length * 2;
-        var posLength = positions.length/3;
-        for (var i = 0; i < length; i+=3) {
+        var posLength = positions.length / 3;
+        for ( var i = 0; i < length; i += 3) {
             indices[i + length] = indices[i + 2] + posLength;
             indices[i + 1 + length] = indices[i + 1] + posLength;
             indices[i + 2 + length] = indices[i] + posLength;
@@ -712,9 +735,9 @@ define([
         var topBottomIndices = IndexDatatype.createTypedArray(posLength * 2 / 3, indices);
 
         var topBottomGeo = new Geometry({
-            attributes: topBottomAttributes,
-            indices: topBottomIndices,
-            primitiveType: PrimitiveType.TRIANGLES
+            attributes : topBottomAttributes,
+            indices : topBottomIndices,
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         var wallAttributes = computeWallAttributes(outerPositions, options);
@@ -722,22 +745,24 @@ define([
         var wallIndices = IndexDatatype.createTypedArray(outerPositions.length * 2 / 3, indices);
 
         var wallGeo = new Geometry({
-            attributes: wallAttributes,
-            indices: wallIndices,
-            primitiveType: PrimitiveType.TRIANGLES
+            attributes : wallAttributes,
+            indices : wallIndices,
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         var geo = GeometryPipeline.combine([
-                new GeometryInstance({
-                    geometry: topBottomGeo
-                }),
-                new GeometryInstance({
-                    geometry: wallGeo
-                })]);
+            new GeometryInstance({
+                geometry : topBottomGeo
+            }),
+            new GeometryInstance({
+                geometry : wallGeo
+            })
+        ]);
+
         return {
-            boundingSphere: boundingSphere,
-            attributes: geo.attributes,
-            indices: geo.indices
+            boundingSphere : boundingSphere,
+            attributes : geo.attributes,
+            indices : geo.indices
         };
     }
 
@@ -755,6 +780,7 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
@@ -778,32 +804,44 @@ define([
      */
     var EllipseGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        if (typeof options.center === 'undefined') {
+
+        var center = options.center;
+        var semiMajorAxis = options.semiMajorAxis;
+        var semiMinorAxis = options.semiMinorAxis;
+
+        if (typeof center === 'undefined') {
             throw new DeveloperError('center is required.');
         }
 
-        if (typeof options.semiMajorAxis === 'undefined') {
+        if (typeof semiMajorAxis === 'undefined') {
             throw new DeveloperError('semiMajorAxis is required.');
         }
 
-        if (typeof options.semiMinorAxis === 'undefined') {
+        if (typeof semiMinorAxis === 'undefined') {
             throw new DeveloperError('semiMinorAxis is required.');
         }
 
-        if (options.semiMajorAxis <= 0.0 || options.semiMinorAxis <= 0.0) {
+        if (semiMajorAxis <= 0.0 || semiMinorAxis <= 0.0) {
             throw new DeveloperError('Semi-major and semi-minor axes must be greater than zero.');
         }
 
-        if (options.semiMajorAxis < options.semiMinorAxis) {
+        if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
-        var newOptions = clone(options);
-        newOptions.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        newOptions.rotation = defaultValue(options.rotation, 0.0);
-        newOptions.height = defaultValue(options.height, 0.0);
-        newOptions.granularity = defaultValue(options.granularity, 0.02);
-        newOptions.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+
+        var newOptions = {
+            center : center,
+            semiMajorAxis : semiMajorAxis,
+            semiMinorAxis : semiMinorAxis,
+            ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+            rotation : defaultValue(options.rotation, 0.0),
+            stRotation : defaultValue(options.stRotation, 0.0),
+            height : defaultValue(options.height, 0.0),
+            granularity : defaultValue(options.granularity, 0.02),
+            vertexFormat : defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
+            extrudedHeight : options.extrudedHeight
+        };
 
         if (newOptions.granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
@@ -811,15 +849,15 @@ define([
 
         var extrude = (typeof newOptions.extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
 
-        var o;
+        var ellipseGeometry;
         if (extrude) {
             var h = newOptions.extrudedHeight;
             var height = newOptions.height;
             newOptions.extrudedHeight = Math.min(h, height);
             newOptions.height = Math.max(h, height);
-            o = computeExtrudedEllipse(newOptions);
+            ellipseGeometry = computeExtrudedEllipse(newOptions);
         } else {
-            o = computeEllipse(newOptions);
+            ellipseGeometry = computeEllipse(newOptions);
         }
 
 
@@ -831,14 +869,14 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = o.attributes;
+        this.attributes = ellipseGeometry.attributes;
 
         /**
          * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indices = o.indices;
+        this.indices = ellipseGeometry.indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
@@ -852,7 +890,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = o.boundingSphere;
+        this.boundingSphere = ellipseGeometry.boundingSphere;
     };
 
     return EllipseGeometry;

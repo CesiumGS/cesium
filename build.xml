@@ -92,6 +92,7 @@
 			<fileset dir="${instrumentedDirectory}" defaultexcludes="false" />
 			<fileset dir="${shadersDirectory}" includes="**/*.js" excludes="*.profile.js" />
 			<fileset dir="${specsDirectory}" includes="SpecList.js" />
+			<fileset dir="${sandcastleDirectory}" includes="jsHintOptions.js" />
 			<fileset dir="${galleryDirectory}" includes="gallery-index.js" />
 			<fileset dir="." includes="Cesium-*.zip" />
 		</delete>
@@ -107,7 +108,7 @@
 
 	<!-- Inputs -->
 	<!-- this version should be set to the upcoming version, so it can be tagged without requiring a bump first -->
-	<property name="version" value="b18" />
+	<property name="version" value="b19" />
 	<property name="sourceDirectory" location="Source" />
 	<property name="shadersDirectory" location="${sourceDirectory}/Shaders" />
 	<property name="examplesDirectory" location="Examples" />

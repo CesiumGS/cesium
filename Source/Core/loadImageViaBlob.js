@@ -66,8 +66,8 @@ define([
     var xhrBlobSupported = (function() {
         try {
             var xhr = new XMLHttpRequest();
-            //xhr.open("GET", "download?name=" + name, true);
-            xhr.responseType = "blob";
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
             return xhr.responseType === 'blob';
         } catch (e) {
             return false;
