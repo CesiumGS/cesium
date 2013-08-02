@@ -734,7 +734,6 @@ define([
         */
 
         var boundingSphere;
-        /*
         if (frameState.mode === SceneMode.SCENE3D) {
             boundingSphere = this._boundingSphere;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
@@ -745,7 +744,6 @@ define([
         } else if (typeof this._boundingSphere !== 'undefined' && typeof this._boundingSphere2D !== 'undefined') {
             boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
         }
-        */
 
         // modelMatrix can change from frame to frame
         length = colorCommands.length;
