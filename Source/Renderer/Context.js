@@ -2120,9 +2120,9 @@ define([
             va._bind();
 
             if (hasIndexBuffer) {
-                this._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+                this._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
-                this._gl.drawArrays(primitiveType, offset, count);
+                this._gl.drawArrays(primitiveType.value, offset, count);
             }
 
             va._unBind();
