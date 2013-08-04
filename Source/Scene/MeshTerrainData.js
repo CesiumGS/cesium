@@ -245,6 +245,17 @@ define([
         return nextIndex;
     };
 
+    Vertex.prototype.getKey = function() {
+        if (this.isIndexed()) {
+            return this.index;
+        }
+        return JSON.stringify({
+            first : this.first.getKey(),
+            second : this.second.getKey(),
+            ratio : this.ratio
+        });
+    };
+
     Vertex.prototype.isIndexed = function() {
         return typeof this.index !== 'undefined';
     };
@@ -311,14 +322,20 @@ define([
         for (var i = 0; i < numVertices; ++i) {
             var polygonVertex = polygonVertices[i];
             if (!polygonVertex.isIndexed()) {
-                var newIndex = vertices.length / vertexStride;
-                vertices.push(polygonVertex.getX());
-                vertices.push(polygonVertex.getY());
-                vertices.push(polygonVertex.getZ());
-                vertices.push(polygonVertex.getH());
-                vertices.push(polygonVertex.getU());
-                vertices.push(polygonVertex.getV());
-                polygonVertex.initializeIndexed(vertices, newIndex);
+                var key = polygonVertex.getKey();
+                if (typeof vertexMap[key] !== 'undefined') {
+                    polygonVertex.initializeIndexed(vertices, vertexMap[key]);
+                } else {
+                    var newIndex = vertices.length / vertexStride;
+                    vertices.push(polygonVertex.getX());
+                    vertices.push(polygonVertex.getY());
+                    vertices.push(polygonVertex.getZ());
+                    vertices.push(polygonVertex.getH());
+                    vertices.push(polygonVertex.getU());
+                    vertices.push(polygonVertex.getV());
+                    polygonVertex.initializeIndexed(vertices, newIndex);
+                    vertexMap[key] = newIndex;
+                }
             } else {
                 polygonVertex.index = vertexMap[polygonVertex.index];
                 polygonVertex.vertexBuffer = vertices;

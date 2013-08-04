@@ -54,15 +54,19 @@ define([
 
                 result.push(2);
 
-                result.push(-1);
-                result.push(0);
-                result.push(2);
-                result.push(u02Ratio);
+                if (u02Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(0);
+                    result.push(2);
+                    result.push(u02Ratio);
+                }
 
-                result.push(-1);
-                result.push(0);
-                result.push(1);
-                result.push(u01Ratio);
+                if (u01Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(0);
+                    result.push(1);
+                    result.push(u01Ratio);
+                }
             } else if (u1Behind) {
                 u12Ratio = (threshold - u1) / (u2 - u1);
                 u10Ratio = (threshold - u1) / (u0 - u1);
@@ -71,15 +75,19 @@ define([
 
                 result.push(0);
 
-                result.push(-1);
-                result.push(1);
-                result.push(0);
-                result.push(u10Ratio);
+                if (u10Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(1);
+                    result.push(0);
+                    result.push(u10Ratio);
+                }
 
-                result.push(-1);
-                result.push(1);
-                result.push(2);
-                result.push(u12Ratio);
+                if (u12Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(1);
+                    result.push(2);
+                    result.push(u12Ratio);
+                }
             } else if (u2Behind) {
                 u20Ratio = (threshold - u2) / (u0 - u2);
                 u21Ratio = (threshold - u2) / (u1 - u2);
@@ -88,18 +96,22 @@ define([
 
                 result.push(1);
 
-                result.push(-1);
-                result.push(2);
-                result.push(1);
-                result.push(u21Ratio);
+                if (u21Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(2);
+                    result.push(1);
+                    result.push(u21Ratio);
+                }
 
-                result.push(-1);
-                result.push(2);
-                result.push(0);
-                result.push(u20Ratio);
+                if (u20Ratio !== 1.0) {
+                    result.push(-1);
+                    result.push(2);
+                    result.push(0);
+                    result.push(u20Ratio);
+                }
             }
         } else if (numBehind === 2) {
-            if (!u0Behind) {
+            if (!u0Behind && u0 !== threshold) {
                 u10Ratio = (threshold - u1) / (u0 - u1);
                 u20Ratio = (threshold - u2) / (u0 - u2);
 
@@ -114,7 +126,7 @@ define([
                 result.push(2);
                 result.push(0);
                 result.push(u20Ratio);
-            } else if (!u1Behind) {
+            } else if (!u1Behind && u1 !== threshold) {
                 u21Ratio = (threshold - u2) / (u1 - u2);
                 u01Ratio = (threshold - u0) / (u1 - u0);
 
@@ -129,7 +141,7 @@ define([
                 result.push(0);
                 result.push(1);
                 result.push(u01Ratio);
-            } else if (!u2Behind) {
+            } else if (!u2Behind && u2 !== threshold) {
                 u02Ratio = (threshold - u0) / (u2 - u0);
                 u12Ratio = (threshold - u1) / (u2 - u1);
 
