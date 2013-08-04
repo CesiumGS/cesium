@@ -505,6 +505,14 @@ define([
             }
         }
 
+        var uOffset = isEastChild ? -1.0 : 0.0;
+        var vOffset = isNorthChild ? -1.0 : 0.0;
+
+        for (i = 0; i < vertices.length; i += vertexStride) {
+            vertices[i + uIndex] = vertices[i + uIndex] * 2.0 + uOffset;
+            vertices[i + vIndex] = vertices[i + vIndex] * 2.0 + vOffset;
+        }
+
         return new MeshTerrainData({
             center : this._center,
             vertexBuffer : new Float32Array(vertices),
