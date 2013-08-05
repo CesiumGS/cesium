@@ -139,11 +139,8 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
-        this._rs = undefined;
 
-        this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingVolumeScratch = new BoundingSphere();
+        this._rs = undefined;
 
         this._commandLists = new CommandLists();
         this._colorCommands = [];
@@ -431,25 +428,9 @@ define([
             properties[k] = 0;
         }
 
-        var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
-
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolume2D;
-        } else if (frameState.mode === SceneMode.SCENE2D) {
-            if (typeof this._boundingVolume2D !== 'undefined') {
-                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, this._boundingVolumeScratch);
-                boundingVolume.center.x = 0.0;
-            }
-        } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, this._boundingVolumeScratch);
-        }
-
-        if (typeof boundingVolume === 'undefined') {
-            return;
         }
 
         var pass = frameState.passes;
@@ -472,14 +453,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(this, colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(this, pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -487,11 +468,15 @@ define([
         }
     };
 
-    function createCommandLists(polylineCollection, commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
+    var boundingSphereScratch = new BoundingSphere();
+    var boundingSphereScratch2 = new BoundingSphere();
+
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
         var commandIndex = 0;
+        var cloneBoundingSphere = true;
 
         for ( var m = 0; m < length; ++m) {
             var va = vertexArrays[m];
@@ -526,7 +511,7 @@ define([
 
                             ++commandIndex;
 
-                            command.boundingVolume = boundingVolume;
+                            command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
                             command.primitiveType = PrimitiveType.TRIANGLES;
                             command.shaderProgram = sp;
@@ -539,6 +524,7 @@ define([
 
                             offset += count;
                             count = 0;
+                            cloneBoundingSphere = true;
                         }
 
                         currentMaterial = polyline._material;
@@ -553,6 +539,27 @@ define([
                             count += locator.count;
                         }
                     }
+
+                    var boundingVolume;
+                    if (frameState.mode === SceneMode.SCENE3D) {
+                        boundingVolume = polyline._boundingVolume;
+                    } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                        boundingVolume = polyline._boundingVolume2D;
+                    } else if (frameState.mode === SceneMode.SCENE2D) {
+                        if (typeof polyline._boundingVolume2D !== 'undefined') {
+                            boundingVolume = BoundingSphere.clone(polyline._boundingVolume2D, boundingSphereScratch2);
+                            boundingVolume.center.x = 0.0;
+                        }
+                    } else if (typeof polyline._boundingVolume !== 'undefined' && typeof polyline._boundingVolume2D !== 'undefined') {
+                        boundingVolume = BoundingSphere.union(polyline._boundingVolume, polyline._boundingVolume2D, boundingSphereScratch2);
+                    }
+
+                    if (cloneBoundingSphere) {
+                        cloneBoundingSphere = false;
+                        BoundingSphere.clone(boundingVolume, boundingSphereScratch);
+                    } else {
+                        BoundingSphere.union(boundingVolume, boundingSphereScratch, boundingSphereScratch);
+                    }
                 }
 
                 if (typeof currentId !== 'undefined' && count > 0) {
@@ -566,7 +573,7 @@ define([
 
                     ++commandIndex;
 
-                    command.boundingVolume = boundingVolume;
+                    command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
                     command.primitiveType = PrimitiveType.TRIANGLES;
                     command.shaderProgram = sp;
@@ -576,6 +583,8 @@ define([
                     command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
                     command.offset = offset;
+
+                    cloneBoundingSphere = true;
                 }
 
                 currentId = undefined;
@@ -1325,14 +1334,6 @@ define([
     PolylineBucket.prototype.getSegments = function(polyline) {
         var positions = polyline.getPositions();
 
-        if (positions.length > 0) {
-            if (typeof polyline._polylineCollection._boundingVolume === 'undefined') {
-                polyline._polylineCollection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
-            } else {
-                polyline._polylineCollection._boundingVolume = polyline._polylineCollection._boundingVolume.union(polyline._boundingVolume, polyline._polylineCollection._boundingVolume);
-            }
-        }
-
         if (this.mode === SceneMode.SCENE3D) {
             scratchLengths[0] = positions.length;
             scratchSegments.positions = positions;
@@ -1362,11 +1363,6 @@ define([
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             var center2D = polyline._boundingVolume2D.center;
             polyline._boundingVolume2D.center = new Cartesian3(center2D.z, center2D.x, center2D.y);
-            if (typeof polyline._polylineCollection._boundingVolume2D === 'undefined') {
-                polyline._polylineCollection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
-            } else {
-                polyline._polylineCollection._boundingVolume2D = polyline._polylineCollection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._polylineCollection._boundingVolume2D);
-            }
         }
 
         scratchSegments.positions = newPositions;
