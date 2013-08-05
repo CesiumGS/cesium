@@ -53,11 +53,6 @@ define([
             if (objectChanged || modeChanged) {
                 camera.controller.setPositionCartographic(cartographic);
 
-                //Set rotation to match offset.
-                Cartesian3.normalize(offset, camera.up);
-                Cartesian3.negate(camera.up, camera.up);
-                Cartesian3.cross(camera.direction, camera.up, camera.right);
-
                 //z is always zero in 2D for up and right
                 camera.up.z = 0;
                 Cartesian3.normalize(camera.up, camera.up);

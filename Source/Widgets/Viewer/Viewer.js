@@ -57,6 +57,10 @@ define([
         viewer._renderLoopRunning = true;
 
         function render() {
+            if (viewer.isDestroyed()) {
+                return;
+            }
+
             try {
                 if (viewer._useDefaultRenderLoop) {
                     viewer.resize();
@@ -116,34 +120,27 @@ define([
      *
      * @example
      * //Initialize the viewer widget with several custom options and mixins.
-     * var viewer = new Viewer('cesiumContainer', {
+     * var viewer = new Cesium.Viewer('cesiumContainer', {
      *     //Start in Columbus Viewer
-     *     sceneMode : SceneMode.COLUMBUS_VIEW,
+     *     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
      *     //Use standard Cesium terrain
-     *     terrainProvider : new CesiumTerrainProvider({
+     *     terrainProvider : new Cesium.CesiumTerrainProvider({
      *         url : 'http://cesium.agi.com/smallterrain',
      *         credit : 'Terrain data courtesy Analytical Graphics, Inc.'
      *     }),
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     selectedImageryProviderViewModel : new ImageryProviderViewModel({
-     *         name : 'Open\u00adStreet\u00adMap',
-     *         iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
-     *         tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map',
-     *         creationFunction : function() {
-     *             return new OpenStreetMapImageryProvider({
-     *                 url : 'http://tile.openstreetmap.org/'
-     *             });
-     *         }
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
+     *         url : 'http://tile.openstreetmap.org/'
      *     })
      * });
      *
      * //Add basic drag and drop functionality
-     * viewer.extend(viewerDragDropMixin);
+     * viewer.extend(Cesium.viewerDragDropMixin);
      *
      * //Allow users to zoom and follow objects loaded from CZML by clicking on it.
-     * viewer.extend(viewerDynamicObjectMixin);
+     * viewer.extend(Cesium.viewerDynamicObjectMixin);
      *
      * //Show a pop-up alert if we encounter an error when processing a dropped file
      * viewer.onDropError.addEventListener(function(dropHandler, name, error) {
@@ -614,22 +611,17 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         if (resizeWidgets) {
             var logoBottom = 0;
-            var logoLeft = animationWidth;
+            var logoLeft = animationWidth + 5;
 
             if (timelineExists) {
-                logoBottom = this._timeline.container.clientHeight + 1;
+                logoBottom = this._timeline.container.clientHeight + 3;
                 this._timeline.container.style.left = animationWidth + 'px';
             }
 
             if (timelineExists || animationExists) {
-                var logo = cesiumWidget.cesiumLogo;
-                var logoStyle = logo.style;
-                logoStyle.bottom = logoBottom + 'px';
-                logoStyle.left = logoLeft + 'px';
-
-                var logoOffset = cesiumWidget.centralBody.logoOffset;
-                logoOffset.x = logoLeft + logo.clientWidth + 5;
-                logoOffset.y = logoBottom;
+                var creditContainer = cesiumWidget.creditContainer;
+                creditContainer.style.bottom = logoBottom + 'px';
+                creditContainer.style.left = logoLeft + 'px';
             }
         }
 

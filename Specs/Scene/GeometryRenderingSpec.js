@@ -2,6 +2,7 @@
 defineSuite([
          'Core/BoxGeometry',
          'Core/CircleGeometry',
+         'Core/CylinderGeometry',
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
          'Core/SphereGeometry',
@@ -42,6 +43,7 @@ defineSuite([
      ], 'Scene/GeometryRendering', function(
          BoxGeometry,
          CircleGeometry,
+         CylinderGeometry,
          EllipseGeometry,
          EllipsoidGeometry,
          SphereGeometry,
@@ -338,6 +340,42 @@ defineSuite([
         });
     }, 'WebGL');
 
+    describe('CylinderGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new CylinderGeometry({
+                    length: 5,
+                    topRadius: 3,
+                    bottomRadius: 5,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+            }),
+            id: 'cylinder',
+            modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
+            attributes : {
+                color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+            }
+        });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+    }, 'WebGL');
+
     describe('EllipseGeometry', function() {
         var instance;
         beforeAll(function() {
@@ -406,6 +444,69 @@ defineSuite([
                 }
             });
             render3D(atHeight);
+        });
+    }, 'WebGL');
+
+    describe('Extruded ExtentGeometry', function() {
+        var instance;
+        var extrudedHeight;
+        var geometryHeight;
+        beforeAll(function() {
+            extrudedHeight = 200000.0;
+            geometryHeight = 100000.0;
+            instance = new GeometryInstance({
+                geometry : new EllipseGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100, 20)),
+                    semiMinorAxis : 1000000.0,
+                    semiMajorAxis : 1000000.0,
+                    height : geometryHeight,
+                    extrudedHeight : extrudedHeight
+                }),
+                id : 'ellipse',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('renders bottom', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
         });
     }, 'WebGL');
 
@@ -750,6 +851,112 @@ defineSuite([
             render3D(hierarchy);
         });
     }, 'WebGL');
+
+
+    describe('Extruded PolygonGeometry', function() {
+        var instance;
+        var extrudedHeight;
+        var geometryHeight;
+
+        beforeAll(function() {
+            extrudedHeight = 200000.0;
+            geometryHeight = 100000.0;
+
+            instance = new GeometryInstance({
+                geometry : PolygonGeometry.fromPositions({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 45.0),
+                        Cartographic.fromDegrees(10.0, 55.0),
+                        Cartographic.fromDegrees(0.0, 55.0)
+                    ]),
+                    height: geometryHeight,
+                    extrudedHeight: extrudedHeight
+                }),
+                id : 'extrudedPolygon',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('renders bottom', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 1', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(CesiumMath.PI, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 2', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 3', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateLeft(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders wall 4', function() {
+            var afterView = function(frameState) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+    }, 'WebGL');
+
 
     describe('WallGeometry', function() {
         var instance;

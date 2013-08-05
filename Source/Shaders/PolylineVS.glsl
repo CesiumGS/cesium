@@ -1,15 +1,15 @@
-attribute vec3 positionHigh;
-attribute vec3 positionLow;
-attribute vec3 positionMorphHigh;
-attribute vec3 positionMorphLow;
-attribute vec3 prevPositionHigh;
-attribute vec3 prevPositionLow;
-attribute vec3 prevPositionMorphHigh;
-attribute vec3 prevPositionMorphLow;
-attribute vec3 nextPositionHigh;
-attribute vec3 nextPositionLow;
-attribute vec3 nextPositionMorphHigh;
-attribute vec3 nextPositionMorphLow;
+attribute vec3 position3DHigh;
+attribute vec3 position3DLow;
+attribute vec3 position2DHigh;
+attribute vec3 position2DLow;
+attribute vec3 prevPosition3DHigh;
+attribute vec3 prevPosition3DLow;
+attribute vec3 prevPosition2DHigh;
+attribute vec3 prevPosition2DLow;
+attribute vec3 nextPosition3DHigh;
+attribute vec3 nextPosition3DLow;
+attribute vec3 nextPosition2DHigh;
+attribute vec3 nextPosition2DLow;
 attribute vec4 texCoordExpandWidthAndShow;
 attribute vec4 pickColor;
 
@@ -68,29 +68,29 @@ void main()
     vec4 p, prev, next;
     if (czm_morphTime == 1.0)
     {
-        p = czm_translateRelativeToEye(positionHigh.xyz, positionLow.xyz);
-        prev = czm_translateRelativeToEye(prevPositionHigh.xyz, prevPositionLow.xyz);
-        next = czm_translateRelativeToEye(nextPositionHigh.xyz, nextPositionLow.xyz);
+        p = czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz);
+        prev = czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz);
+        next = czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz);
     }
     else if (czm_morphTime == 0.0)
     {
-        p = czm_translateRelativeToEye(positionHigh.zxy, positionLow.zxy);
-        prev = czm_translateRelativeToEye(prevPositionHigh.zxy, prevPositionLow.zxy);
-        next = czm_translateRelativeToEye(nextPositionHigh.zxy, nextPositionLow.zxy);
+        p = czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy);
+        prev = czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy);
+        next = czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy);
     }
     else
     {
         p = czm_columbusViewMorph(
-                czm_translateRelativeToEye(positionHigh.zxy, positionLow.zxy),
-                czm_translateRelativeToEye(positionMorphHigh.xyz, positionMorphLow.xyz),
+                czm_translateRelativeToEye(position2DHigh.zxy, position2DLow.zxy),
+                czm_translateRelativeToEye(position3DHigh.xyz, position3DLow.xyz),
                 czm_morphTime);
         prev = czm_columbusViewMorph(
-                czm_translateRelativeToEye(prevPositionHigh.zxy, prevPositionLow.zxy),
-                czm_translateRelativeToEye(prevPositionMorphHigh.xyz, prevPositionMorphLow.xyz),
+                czm_translateRelativeToEye(prevPosition2DHigh.zxy, prevPosition2DLow.zxy),
+                czm_translateRelativeToEye(prevPosition3DHigh.xyz, prevPosition3DLow.xyz),
                 czm_morphTime);
         next = czm_columbusViewMorph(
-                czm_translateRelativeToEye(nextPositionHigh.zxy, nextPositionLow.zxy),
-                czm_translateRelativeToEye(nextPositionMorphHigh.xyz, nextPositionMorphLow.xyz),
+                czm_translateRelativeToEye(nextPosition2DHigh.zxy, nextPosition2DLow.zxy),
+                czm_translateRelativeToEye(nextPosition3DHigh.xyz, nextPosition3DLow.xyz),
                 czm_morphTime);
     }
     
@@ -117,31 +117,31 @@ void main()
     float expandWidth = width * 0.5;
     vec2 direction;
 
-	if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
-	{
-	    direction = vec2(-nextWC.y, nextWC.x);
+    if (czm_equalsEpsilon(normalize(prev.xyz - p.xyz), vec3(0.0), czm_epsilon1) || czm_equalsEpsilon(prevWC, -nextWC, czm_epsilon1))
+    {
+        direction = vec2(-nextWC.y, nextWC.x);
     }
-	else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1) || clipped)
-	{
+    else if (czm_equalsEpsilon(normalize(next.xyz - p.xyz), vec3(0.0), czm_epsilon1) || clipped)
+    {
         direction = vec2(prevWC.y, -prevWC.x);
     }
     else
     {
-	    vec2 normal = vec2(-nextWC.y, nextWC.x);
-	    direction = normalize((nextWC + prevWC) * 0.5);
-	    if (dot(direction, normal) < 0.0)
-	    {
-	        direction = -direction;
-	    }
-	    
-	    // The sine of the angle between the two vectors is given by the formula
-	    //         |a x b| = |a||b|sin(theta)
-	    // which is
-	    //     float sinAngle = length(cross(vec3(direction, 0.0), vec3(nextWC, 0.0)));
-	    // Because the z components of both vectors are zero, the x and y coordinate will be zero.
-	    // Therefore, the sine of the angle is just the z component of the cross product.
-	    float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
-	    expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
+        vec2 normal = vec2(-nextWC.y, nextWC.x);
+        direction = normalize((nextWC + prevWC) * 0.5);
+        if (dot(direction, normal) < 0.0)
+        {
+            direction = -direction;
+        }
+
+        // The sine of the angle between the two vectors is given by the formula
+        //         |a x b| = |a||b|sin(theta)
+        // which is
+        //     float sinAngle = length(cross(vec3(direction, 0.0), vec3(nextWC, 0.0)));
+        // Because the z components of both vectors are zero, the x and y coordinate will be zero.
+        // Therefore, the sine of the angle is just the z component of the cross product.
+        float sinAngle = abs(direction.x * nextWC.y - direction.y * nextWC.x);
+        expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
     vec2 offset = direction * expandDir * expandWidth * czm_highResolutionSnapScale;
