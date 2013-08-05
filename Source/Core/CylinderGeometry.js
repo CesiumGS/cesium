@@ -218,7 +218,7 @@ define([
             }
         }
 
-        var numIndices = 18 * slices - 24;
+        var numIndices = 12 * slices - 12;
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices);
         index = 0;
         var j = 0;
