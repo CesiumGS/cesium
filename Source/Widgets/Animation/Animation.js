@@ -324,10 +324,10 @@ define([
      * // In HTML head, include a link to Animation.css stylesheet,
      * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
      *
-     * var clock = new Clock();
-     * var clockViewModel = new ClockViewModel(clock);
-     * var viewModel = new AnimationViewModel(clockViewModel);
-     * var widget = new Animation('animationContainer', viewModel);
+     * var clock = new Cesium.Clock();
+     * var clockViewModel = new Cesium.ClockViewModel(clock);
+     * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
+     * var widget = new Cesium.Animation('animationContainer', viewModel);
      *
      * function tick() {
      *     clock.tick();
