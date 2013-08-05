@@ -113,6 +113,7 @@ template : { if: activeDataSourcePanel,\
         dataSourcePanelContainer.appendChild(dataSourcePanelFooter);
 
         var finishAddDataSourceButton = document.createElement('button');
+        finishAddDataSourceButton.type = 'button';
         finishAddDataSourceButton.textContent = 'Finish';
         finishAddDataSourceButton.setAttribute('data-bind', '\
 click: finishCommand,\
