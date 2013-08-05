@@ -570,7 +570,8 @@ define([
         return new MeshTerrainData({
             center : this._center,
             vertexBuffer : new Float32Array(vertices),
-            indexBuffer : new Uint16Array(indices)
+            indexBuffer : new Uint16Array(indices),
+            createdByUpsampling : true
         });
     };
 
