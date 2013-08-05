@@ -242,42 +242,45 @@ void function(global, undefined_, undefined){
     return WeakMap;
   }(new Data));
 
-//  var defaultCreator = Object.create
-//    ? function(){ return Object.create(null) }
-//    : function(){ return {} };
-//
-//  function createStorage(creator){
-//    var weakmap = new WM;
-//    creator || (creator = defaultCreator);
-//
-//    function storage(object, value){
-//      if (value || arguments.length === 2) {
-//        weakmap.set(object, value);
-//      } else {
-//        value = weakmap.get(object);
-//        if (value === undefined) {
-//          value = creator(object);
-//          weakmap.set(object, value);
-//        }
-//      }
-//      return value;
-//    }
-//
-//    return storage;
-//  }
+/*
+  var defaultCreator = Object.create
+    ? function(){ return Object.create(null) }
+    : function(){ return {} };
+
+  function createStorage(creator){
+    var weakmap = new WM;
+    creator || (creator = defaultCreator);
+
+    function storage(object, value){
+      if (value || arguments.length === 2) {
+        weakmap.set(object, value);
+      } else {
+        value = weakmap.get(object);
+        if (value === undefined) {
+          value = creator(object);
+          weakmap.set(object, value);
+        }
+      }
+      return value;
+    }
+
+    return storage;
+  }
 
 
-//  if (typeof module !== 'undefined') {
-//    module.exports = WM;
-//  } else if (typeof exports !== 'undefined') {
+  if (typeof module !== 'undefined') {
+    module.exports = WM;
+  } else if (typeof exports !== 'undefined') {
     exports.WeakMap = WM;
-//  } else if (!('WeakMap' in global)) {
-//    global.WeakMap = WM;
-//  }
+  } else if (!('WeakMap' in global)) {
+    global.WeakMap = WM;
+  }
 
-//  WM.createStorage = createStorage;
-//  if (global.WeakMap)
-//    global.WeakMap.createStorage = createStorage;
+  WM.createStorage = createStorage;
+  if (global.WeakMap)
+    global.WeakMap.createStorage = createStorage;
+*/
+  exports.WeakMap = WM;
 }((0, eval)('this'));
 
 });
