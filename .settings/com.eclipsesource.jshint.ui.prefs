@@ -1,5 +1,4 @@
 eclipse.preferences.version=1
 excluded=Apps/Sandcastle/ThirdParty//*\:Source/ThirdParty//*\:Source/Workers/cesiumWorkerBootstrapper.js\:ThirdParty//*\:Tools/build.js
 included=//*.js
-options=bitwise \: false,\r\ncamelcase \: false,\r\ncurly \: true,\r\neqeqeq \: true,\r\nes3 \: true,\r\nforin \: true,\r\nimmed \: true,\r\nlatedef \: true,\r\nnewcap \: true,\r\nnoarg \: true,\r\nnoempty \: false,\r\nnonew \: true,\r\nplusplus \: false,\r\nquotmark \: false,\r\nregexp \: false,\r\nundef \: true,\r\nunused \: false,\r\nstrict \: true,\r\ntrailing \: true,\r\nasi \: false,\r\nboss \: false,\r\ndebug \: false,\r\neqnull \: false,\r\nesnext \: false,\r\nevil \: false,\r\nexpr \: false,\r\nfuncscope \: false,\r\nglobalstrict \: false,\r\niterator \: false,\r\nlastsemic \: false,\r\nlaxbreak \: false,\r\nlaxcomma \: false,\r\nloopfunc \: false,\r\nmoz \: false,\r\nmultistr \: true,\r\nproto \: false,\r\nregexdash \: false,\r\nscripturl \: false,\r\nsmarttabs \: false,\r\nshadow \: false,\r\nsub \: false,\r\nsupernew \: false,\r\nbrowser \: true
 projectSpecificOptions=true
