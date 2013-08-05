@@ -167,21 +167,21 @@ define([
      *          incorrect for positions far outside the extent.
      */
     MeshTerrainData.prototype.interpolateHeight = function(extent, longitude, latitude) {
-        var width = this._width;
-        var height = this._height;
+        //var width = this._width;
+        //var height = this._height;
 
-        var heightSample;
+        var heightSample = 0.0;
 
         var structure = this._structure;
         var stride = structure.stride;
         if (stride > 1) {
-            var elementsPerHeight = structure.elementsPerHeight;
-            var elementMultiplier = structure.elementMultiplier;
-            var isBigEndian = structure.isBigEndian;
+            //var elementsPerHeight = structure.elementsPerHeight;
+            //var elementMultiplier = structure.elementMultiplier;
+            //var isBigEndian = structure.isBigEndian;
 
-            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
+//            heightSample = interpolateHeightWithStride(this._buffer, elementsPerHeight, elementMultiplier, stride, isBigEndian, extent, width, height, longitude, latitude);
         } else {
-            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
+//            heightSample = interpolateHeight(this._buffer, extent, width, height, longitude, latitude);
         }
 
         return heightSample * structure.heightScale + structure.heightOffset;
@@ -535,37 +535,6 @@ define([
 
             vertices[i + vIndex] = v;
         }
-
-        for (var q = 0; q < indices.length; ++q) {
-            if (indices[q] < 0 || indices[q] * 6 >= vertices.length) {
-                console.log('bad');
-            }
-        }
-
-        if (vertices.length === 0 || indices.length === 0) {
-            console.log('real bad');
-            return this.upsample(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
-        }
-
-        function findVertexWithCoordinates(vb, u, v) {
-            for (var i = 0; i < vb.length; i += 6) {
-                if (Math.abs(vb[i + 4] - u) < 1e-6 && Math.abs(vb[i + 5] - v) < 1e-6) {
-                    return i / 6;
-                }
-            }
-            return -1;
-        }
-
-        if (findVertexWithCoordinates(vertices, 0.0, 0.0) === -1 ||
-            findVertexWithCoordinates(vertices, 1.0, 0.0) === -1 ||
-            findVertexWithCoordinates(vertices, 0.0, 1.0) === -1 ||
-            findVertexWithCoordinates(vertices, 1.0, 1.0) === -1) {
-
-            console.log('missing a corner');
-            return this.upsample(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
-        }
-
-
 
         return new MeshTerrainData({
             center : this._center,
