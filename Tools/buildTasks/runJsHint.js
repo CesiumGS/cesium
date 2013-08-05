@@ -3,24 +3,16 @@ importClass(Packages.org.mozilla.javascript.tools.shell.Main); /*global Main*/
 Main.exec(['-e', '{}']);
 var load = Main.global.load;
 
-load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,File,FileReader,FileWriter,FileUtils*/
+load(project.getProperty('tasksDirectory') + '/shared.js'); /*global forEachFile,readFileContents,writeFileContents,loadJsHintOptionsFile,File,FileReader,FileWriter,FileUtils*/
 
 /*global window:true*/
 var window = window || {};
 
-var jsHintPath = attributes.get('jshintpath');
-load(jsHintPath); /*global JSHINT*/
+load(attributes.get('jshintpath')); /*global JSHINT*/
 
-function loadJsHintOptions() {
-    "use strict";
-    /*jshint evil:true*/
-    return eval('({' + attributes.get('jshintoptions') + '})');
-}
+var jsHintOptions = loadJsHintOptionsFile(attributes.get('jshintoptionspath'));
 
-var jsHintOptions = loadJsHintOptions();
-
-var sandcastleJsHintOptionsPath = attributes.get('sandcastlejshintoptionspath');
-load(sandcastleJsHintOptionsPath);/*global sandcastleJsHintOptions*/
+load(attributes.get('sandcastlejshintoptionspath')); /*global sandcastleJsHintOptions*/
 
 var errors = [];
 
