@@ -183,10 +183,9 @@ define([
 
         start.height = 0;
         end.height = 0;
-        ellipsoidGeodesic._ellipsoid = ellipsoid;
-        ellipsoidGeodesic._start = start.clone();
-        ellipsoidGeodesic._end = end.clone();
-        ellipsoidGeodesic._constants = {};
+        ellipsoidGeodesic._start = Cartographic.clone(start, ellipsoidGeodesic._start);
+        ellipsoidGeodesic._end = Cartographic.clone(end, ellipsoidGeodesic._end);
+
         setConstants(ellipsoidGeodesic);
     }
 
@@ -205,25 +204,30 @@ define([
      */
     var EllipsoidGeodesic = function(start, end, ellipsoid) {
         var e = defaultValue(ellipsoid, Ellipsoid.WGS84);
+        this._ellipsoid = e;
+        this._start = new Cartographic();
+        this._end = new Cartographic();
+
+        this._constants = {};
+        this._startHeading = undefined;
+        this._endHeading = undefined;
+        this._distance = undefined;
+        this._uSquared = undefined;
+
         if (typeof start !== 'undefined' && typeof end !== 'undefined') {
             computeProperties(this, start, end, e);
-        } else {
-            this._ellipsoid = e;
-            this._start = start;
-            this._startHeading = undefined;
-            this._end = end;
-            this._endHeading = undefined;
-            this._distance = undefined;
-            this._uSquared = undefined;
         }
     };
 
     /**
      * @memberof EllipsoidGeodesic
+     *
      * @return {Number} The surface distance between the start and end point
+     *
+     * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getSurfaceDistance = function() {
-        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+        if (typeof this._distance === 'undefined') {
             throw new DeveloperError('start and end must be set before calling funciton getSurfaceDistance');
         }
 
@@ -269,10 +273,13 @@ define([
 
     /**
      * @memberof EllipsoidGeodesic
+     *
      * @return {Number} The heading at the initial point.
+     *
+     * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getStartHeading = function() {
-        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+        if (typeof this._distance === 'undefined') {
             throw new DeveloperError('start and end must be set before calling funciton getStartHeading');
         }
 
@@ -281,10 +288,13 @@ define([
 
     /**
      * @memberof EllipsoidGeodesic
+     *
      * @return {Number} The heading at the final point.
+     *
+     * @exception {DeveloperError} start and end must be set before calling funciton getEndHeading
      */
     EllipsoidGeodesic.prototype.getEndHeading = function() {
-        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+        if (typeof this._distance === 'undefined') {
             throw new DeveloperError('start and end must be set before calling funciton getEndHeading');
         }
 
@@ -299,8 +309,8 @@ define([
      *
      * @returns {Cartographic} The location of the point along the geodesic.
      */
-    EllipsoidGeodesic.prototype.interpolateUsingFraction = function(fraction) {
-        return this.interpolateUsingSurfaceDistance(this._distance * fraction);
+    EllipsoidGeodesic.prototype.interpolateUsingFraction = function(fraction, result) {
+        return this.interpolateUsingSurfaceDistance(this._distance * fraction, result);
     };
 
     /**
@@ -313,8 +323,8 @@ define([
      *
      * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance
      */
-    EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance) {
-        if (typeof this._start === 'undefined' || typeof this._end === 'undefined') {
+    EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
+        if (typeof this._distance === 'undefined') {
             throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
         }
 
@@ -366,6 +376,13 @@ define([
 
         var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha,
             sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
+
+        if (typeof result !== 'undefined') {
+            result.longitude = this._start.longitude + l;
+            result.latitude = latitude;
+            result.height = 0.0;
+            return result;
+        }
 
         return new Cartographic(this._start.longitude + l, latitude, 0.0);
     };
