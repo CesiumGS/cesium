@@ -429,11 +429,13 @@ define([
         var parentIndices = this._indexBuffer;
 
         var vertexCount = 0;
-        var i;
+        var i, u, v;
         for (i = 0; i < parentVertices.length; i += vertexStride) {
-            var u = parentVertices[i + uIndex];
-            var v = parentVertices[i + vIndex];
-            if (u >= minU && u <= maxU && v >= minV && v <= maxV) {
+            u = parentVertices[i + uIndex];
+            v = parentVertices[i + vIndex];
+            if ((isEastChild && u >= 0.5 || !isEastChild && u <= 0.5) &&
+                (isNorthChild && v >= 0.5 || !isNorthChild && v <= 0.5)) {
+
                 vertexMap[i / 6] = vertexCount;
                 vertices.push(parentVertices[i + xIndex]);
                 vertices.push(parentVertices[i + yIndex]);
@@ -511,8 +513,27 @@ define([
         var vOffset = isNorthChild ? -1.0 : 0.0;
 
         for (i = 0; i < vertices.length; i += vertexStride) {
-            vertices[i + uIndex] = vertices[i + uIndex] * 2.0 + uOffset;
-            vertices[i + vIndex] = vertices[i + vIndex] * 2.0 + vOffset;
+            u = vertices[i + uIndex];
+            if (u === minU) {
+                u = 0.0;
+            } else if (u === maxU) {
+                u = 1.0;
+            } else {
+                u = u * 2.0 + uOffset;
+            }
+
+            vertices[i + uIndex] = u;
+
+            v = vertices[i + vIndex];
+            if (v === minV) {
+                v = 0.0;
+            } else if (v === maxV) {
+                v = 1.0;
+            } else {
+                v = v * 2.0 + vOffset;
+            }
+
+            vertices[i + vIndex] = v;
         }
 
         for (var q = 0; q < indices.length; ++q) {
@@ -520,6 +541,31 @@ define([
                 console.log('bad');
             }
         }
+
+        if (vertices.length === 0 || indices.length === 0) {
+            console.log('real bad');
+            return this.upsample(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
+        }
+
+        function findVertexWithCoordinates(vb, u, v) {
+            for (var i = 0; i < vb.length; i += 6) {
+                if (Math.abs(vb[i + 4] - u) < 1e-6 && Math.abs(vb[i + 5] - v) < 1e-6) {
+                    return i / 6;
+                }
+            }
+            return -1;
+        }
+
+        if (findVertexWithCoordinates(vertices, 0.0, 0.0) === -1 ||
+            findVertexWithCoordinates(vertices, 1.0, 0.0) === -1 ||
+            findVertexWithCoordinates(vertices, 0.0, 1.0) === -1 ||
+            findVertexWithCoordinates(vertices, 1.0, 1.0) === -1) {
+
+            console.log('missing a corner');
+            return this.upsample(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel);
+        }
+
+
 
         return new MeshTerrainData({
             center : this._center,
