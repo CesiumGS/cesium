@@ -180,6 +180,7 @@ define([
                 this.showBalloon = false;
                 this._timerRunning = true;
                 var that = this;
+                //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
                 setTimeout(function () {
                     that._contentElement.innerHTML = that._content;
                     if (typeof that._position !== 'undefined') {
@@ -290,7 +291,7 @@ define([
          * Expects the {Cartesian3} parameter for the position and the optional {Cartesian2} parameter for the result.
          * Should return a {Cartesian2}.
          *
-         * Defaults to scene.computeScreenSpacePosition.
+         * Defaults to SceneTransforms.wgs84ToWindowCoordinates
          *
          * @example
          * balloonViewModel.computeScreenSpacePosition = function(position, result) {
