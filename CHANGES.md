@@ -4,6 +4,12 @@ Change Log
 Beta Releases
 -------------
 
+### b20 - 2013-09-01
+
+* Breaking changes:
+    * ...
+* Optimized polyline bounding spheres.
+
 ### b19 - 2013-08-01
 
 * Breaking changes:
