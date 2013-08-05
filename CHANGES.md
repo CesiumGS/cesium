@@ -9,6 +9,7 @@ Beta Releases
 * Breaking changes:
     * ...
 * Optimized polyline bounding spheres.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
 
 ### b19 - 2013-08-01
 
