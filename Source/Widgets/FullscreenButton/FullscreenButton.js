@@ -40,8 +40,13 @@ define([
         this._viewModel = new FullscreenButtonViewModel(fullscreenElement);
 
         this._element = document.createElement('button');
+        this._element.type = 'button';
         this._element.className = 'cesium-fullscreenButton';
-        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": isFullscreen }, click: command, enable: isFullscreenEnabled');
+        this._element.setAttribute('data-bind', '\
+attr: { title: tooltip },\
+css: { "cesium-fullscreenButton-exit": isFullscreen },\
+click: command,\
+enable: isFullscreenEnabled');
         container.appendChild(this._element);
 
         knockout.applyBindings(this._viewModel, this._element);
