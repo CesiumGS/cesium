@@ -10,6 +10,7 @@ define([
         './ImageryProvider',
         './TileProviderError',
         './WebMercatorTilingScheme',
+        './Credit',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -22,6 +23,7 @@ define([
         ImageryProvider,
         TileProviderError,
         WebMercatorTilingScheme,
+        Credit,
         when) {
     "use strict";
 
@@ -78,6 +80,7 @@ define([
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
+        this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -372,35 +375,17 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link BingMapsImageryProvider#isReady} returns true.
      *
      * @memberof BingMapsImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    BingMapsImageryProvider.prototype.getLogo = function() {
-        if (!this._ready) {
-            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
-        }
-        if (typeof BingMapsImageryProvider._logo === 'undefined') {
-            var image = new Image();
-            image.loaded = false;
-            image.onload = function() {
-                BingMapsImageryProvider._logo.loaded = true;
-            };
-            image.src = BingMapsImageryProvider._logoData;
-            BingMapsImageryProvider._logo = image;
-        }
-
-        var logo = BingMapsImageryProvider._logo;
-        return (logo && logo.loaded) ? logo : undefined;
+    BingMapsImageryProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
-    BingMapsImageryProvider._logo = undefined;
-    BingMapsImageryProvider._logoLoaded = false;
     BingMapsImageryProvider._logoData = 'data:image/png;base64,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';
 
     /**

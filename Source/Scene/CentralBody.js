@@ -14,6 +14,8 @@ define([
         '../Core/Ellipsoid',
         '../Core/Extent',
         '../Core/GeographicProjection',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
@@ -27,6 +29,7 @@ define([
         '../Renderer/DrawCommand',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
+        './CreditDisplay',
         './EllipsoidTerrainProvider',
         './ImageryLayerCollection',
         './Material',
@@ -55,6 +58,8 @@ define([
         Ellipsoid,
         Extent,
         GeographicProjection,
+        Geometry,
+        GeometryAttribute,
         Intersect,
         CesiumMath,
         Matrix4,
@@ -68,6 +73,7 @@ define([
         DrawCommand,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
+        CreditDisplay,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         Material,
@@ -120,16 +126,20 @@ define([
         var clearDepthCommand = new ClearCommand();
         clearDepthCommand.depth = 1.0;
         clearDepthCommand.stencil = 0;
+        clearDepthCommand.owner = this;
         this._clearDepthCommand = clearDepthCommand;
 
         this._depthCommand = new DrawCommand();
         this._depthCommand.primitiveType = PrimitiveType.TRIANGLES;
         this._depthCommand.boundingVolume = new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMaximumRadius());
+        this._depthCommand.owner = this;
 
         this._northPoleCommand = new DrawCommand();
         this._northPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._northPoleCommand.owner = this;
         this._southPoleCommand = new DrawCommand();
         this._southPoleCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+        this._southPoleCommand.owner = this;
 
         this._drawNorthPole = false;
         this._drawSouthPole = false;
@@ -153,17 +163,6 @@ define([
          * @default Cartesian3(1.0, 1.0, 1.0)
          */
         this.southPoleColor = new Cartesian3(1.0, 1.0, 1.0);
-
-        /**
-         * The offset, relative to the bottom left corner of the viewport,
-         * where the logo for terrain and imagery providers will be drawn.
-         *
-         * @type {Cartesian2}
-         * @default {@link Cartesian2.ZERO}
-         */
-        this.logoOffset = Cartesian2.ZERO.clone();
-        this._logos = [];
-        this._logoQuad = undefined;
 
         /**
          * Determines if the central body will be shown.
@@ -337,7 +336,7 @@ define([
         var occludeePoint;
         var occluded;
         var datatype;
-        var mesh;
+        var geometry;
         var rect;
         var positions;
         var occluder = centralBody._occluder;
@@ -367,17 +366,17 @@ define([
 
                 if (typeof centralBody._northPoleCommand.vertexArray === 'undefined') {
                     centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                    mesh = {
+                    geometry = new Geometry({
                         attributes : {
-                            position : {
+                            position : new GeometryAttribute({
                                 componentDatatype : ComponentDatatype.FLOAT,
                                 componentsPerAttribute : 2,
                                 values : positions
-                            }
+                            })
                         }
-                    };
-                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                        mesh : mesh,
+                    });
+                    centralBody._northPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                        geometry : geometry,
                         attributeIndices : {
                             position : 0
                         },
@@ -385,7 +384,7 @@ define([
                     });
                 } else {
                     datatype = ComponentDatatype.FLOAT;
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                 }
             }
         }
@@ -415,17 +414,17 @@ define([
 
                  if (typeof centralBody._southPoleCommand.vertexArray === 'undefined') {
                      centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
-                     mesh = {
+                     geometry = new Geometry({
                          attributes : {
-                             position : {
+                             position : new GeometryAttribute({
                                  componentDatatype : ComponentDatatype.FLOAT,
                                  componentsPerAttribute : 2,
                                  values : positions
-                             }
+                             })
                          }
-                     };
-                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromMesh({
-                         mesh : mesh,
+                     });
+                     centralBody._southPoleCommand.vertexArray = context.createVertexArrayFromGeometry({
+                         geometry : geometry,
                          attributeIndices : {
                              position : 0
                          },
@@ -433,7 +432,7 @@ define([
                      });
                  } else {
                      datatype = ComponentDatatype.FLOAT;
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(positions));
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
                  }
             }
         }
@@ -491,7 +490,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
+            if (mode === SceneMode.SCENE3D || (mode === SceneMode.COLUMBUS_VIEW && !(this.terrainProvider instanceof EllipsoidTerrainProvider))) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true
@@ -547,21 +546,19 @@ define([
 
         // depth plane
         if (!this._depthCommand.vertexArray) {
-            var mesh = {
+            var geometry = new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 3,
                         values : depthQuad
-                    }
+                    })
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : [0, 1, 2, 2, 1, 3]
-                }]
-            };
-            this._depthCommand.vertexArray = context.createVertexArrayFromMesh({
-                mesh : mesh,
+                indices : [0, 1, 2, 2, 1, 3],
+                primitiveType : PrimitiveType.TRIANGLES
+            });
+            this._depthCommand.vertexArray = context.createVertexArrayFromGeometry({
+                geometry : geometry,
                 attributeIndices : {
                     position : 0
                 },
@@ -569,7 +566,7 @@ define([
             });
         } else {
             var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.toTypedArray(depthQuad));
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
         }
 
         var shaderCache = context.getShaderCache();
@@ -714,7 +711,7 @@ define([
                     this._rsColor,
                     this._projection);
 
-            updateLogos(this, context, frameState, commandList);
+            displayCredits(this, frameState);
 
             // render depth plane
             if (mode === SceneMode.SCENE3D) {
@@ -790,112 +787,22 @@ define([
         return destroyObject(this);
     };
 
-    var logoData = {
-        logos : undefined,
-        logoIndex : 0,
-        rebuildLogo : false,
-        totalLogoWidth : 0,
-        totalLogoHeight : 0
-    };
-
-    function updateLogos(centralBody, context, frameState, commandList) {
-        logoData.logos = centralBody._logos;
-        logoData.logoIndex = 0;
-        logoData.rebuildLogo = false;
-        logoData.totalLogoWidth = 0;
-        logoData.totalLogoHeight = 0;
-
-        checkLogo(logoData, centralBody._surface._terrainProvider);
+    function displayCredits(centralBody, frameState) {
+        var creditDisplay = frameState.creditDisplay;
+        var credit = centralBody._surface._terrainProvider.getCredit();
+        if (typeof credit !== 'undefined') {
+            creditDisplay.addCredit(credit);
+        }
 
         var imageryLayerCollection = centralBody._imageryLayerCollection;
         for ( var i = 0, len = imageryLayerCollection.getLength(); i < len; ++i) {
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
-                checkLogo(logoData, layer.getImageryProvider());
-            }
-        }
-
-        if (logoData.logos.length !== logoData.logoIndex) {
-            logoData.rebuildLogo = true;
-            logoData.logos.length = logoData.logoIndex;
-        }
-
-        var totalLogoWidth = logoData.totalLogoWidth;
-        var totalLogoHeight = logoData.totalLogoHeight;
-
-        var logoQuad = centralBody._logoQuad;
-        if (totalLogoWidth === 0 || totalLogoHeight === 0) {
-            if (typeof logoQuad !== 'undefined') {
-                logoQuad.material = logoQuad.material && logoQuad.material.destroy();
-                logoQuad.destroy();
-                centralBody._logoQuad = undefined;
-            }
-            return;
-        }
-
-        if (typeof logoQuad === 'undefined') {
-            logoQuad = new ViewportQuad();
-            logoQuad.material.destroy();
-            logoQuad.material = Material.fromType(context, Material.ImageType);
-            logoQuad.material.uniforms.image = undefined;
-
-            centralBody._logoQuad = logoQuad;
-        }
-
-        var logoOffset = centralBody.logoOffset;
-        var rectangle = logoQuad.rectangle;
-        rectangle.x = logoOffset.x;
-        rectangle.y = logoOffset.y;
-        rectangle.width = totalLogoWidth;
-        rectangle.height = totalLogoHeight;
-
-        if (logoData.rebuildLogo) {
-            var texture = logoQuad.material.uniforms.image;
-
-            // always delete and recreate the texture to get rid of leftover pixels
-            texture = texture && texture.destroy();
-            texture = context.createTexture2D({
-                width : totalLogoWidth,
-                height : totalLogoHeight
-            });
-            logoQuad.material.uniforms.image = texture;
-
-            var yOffset = 0;
-            for (i = 0, len = logoData.logos.length; i < len; i++) {
-                var logo = logoData.logos[i];
-                if (typeof logo !== 'undefined') {
-                    texture.copyFrom(logo, 0, yOffset);
-                    yOffset += logo.height + 2;
+                credit = layer.getImageryProvider().getCredit();
+                if (typeof credit !== 'undefined') {
+                    creditDisplay.addCredit(credit);
                 }
             }
-        }
-
-        if (typeof logoQuad !== 'undefined') {
-            logoQuad.update(context, frameState, commandList);
-        }
-    }
-
-    function checkLogo(logoData, logoSource) {
-        if (typeof logoSource.isReady === 'function' && !logoSource.isReady()) {
-            return;
-        }
-
-        var logo;
-        if (typeof logoSource.getLogo === 'function') {
-            logo = logoSource.getLogo();
-        } else {
-            logo = undefined;
-        }
-
-        if (logoData.logos[logoData.logoIndex] !== logo) {
-            logoData.rebuildLogo = true;
-            logoData.logos[logoData.logoIndex] = logo;
-        }
-        logoData.logoIndex++;
-
-        if (typeof logo !== 'undefined') {
-            logoData.totalLogoWidth = Math.max(logoData.totalLogoWidth, logo.width);
-            logoData.totalLogoHeight += logo.height + 2;
         }
     }
 

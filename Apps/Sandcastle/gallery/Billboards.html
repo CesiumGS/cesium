@@ -8,19 +8,15 @@
     <meta name="cesium-sandcastle-labels" content="Beginner">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
-    var dojoConfig = {
+    require.config({
         baseUrl : '../../../Source',
-        packages: [
-            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
-        ]
-    };
+        waitSeconds : 60
+    });
     </script>
-    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
-    <link rel="stylesheet" href="../../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
 </head>
-<body class="claro sandcastle-loading" data-sandcastle-bucket="bucket-dojo.html" data-sandcastle-title="Cesium + Dojo">
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html" data-sandcastle-title="Cesium">
 <style>
     @import url(../templates/bucket.css);
 </style>
@@ -28,11 +24,7 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-require([
-    'Cesium', 'dijit/form/Button'
-], function(
-    Cesium, Button)
-{
+require(['Cesium'], function(Cesium) {
     "use strict";
 
     function addBillboard(scene, ellipsoid) {
@@ -337,69 +329,77 @@ require([
         var ellipsoid = widget.centralBody.getEllipsoid();
         var scene = widget.scene;
         var primitives = scene.getPrimitives();
+        var toolbar = document.getElementById('toolbar');
+        
+        var button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addBillboard(scene, ellipsoid);
+            Sandcastle.highlight(addBillboard);
+        };
+        button.textContent = 'Add billboard';
+        toolbar.appendChild(button);
 
-        new Button({
-            label : 'Add billboard',
-            onClick : function() {
-                primitives.removeAll();
-                addBillboard(scene, ellipsoid);
-                Sandcastle.highlight(addBillboard);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            setBillboardPropertiesAtCreation(scene, ellipsoid);
+            Sandcastle.highlight(setBillboardPropertiesAtCreation);
+        };
+        button.textContent = 'Set billboard properties at creation';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            setBillboardProperties(scene, ellipsoid);
+            Sandcastle.highlight(setBillboardProperties);
+        };
+        button.textContent = 'Change billboard properties';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addMultipleBillboards(scene, ellipsoid);
+            Sandcastle.highlight(addMultipleBillboards);
+        };
+        button.textContent = 'Add multiple billboards';
+        toolbar.appendChild(button);
 
-        new Button({
-            label : 'Set billboard properties at creation',
-            onClick : function() {
-                primitives.removeAll();
-                setBillboardPropertiesAtCreation(scene, ellipsoid);
-                Sandcastle.highlight(setBillboardPropertiesAtCreation);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addPointBillboards(scene, ellipsoid);
+            Sandcastle.highlight(addPointBillboards);
+        };
+        button.textContent = 'Add point billboards';
+        toolbar.appendChild(button);
 
-        new Button({
-            label : 'Change billboard properties',
-            onClick : function() {
-                primitives.removeAll();
-                setBillboardProperties(scene, ellipsoid);
-                Sandcastle.highlight(setBillboardProperties);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : 'Add multiple billboards',
-            onClick : function() {
-                primitives.removeAll();
-                addMultipleBillboards(scene, ellipsoid);
-                Sandcastle.highlight(addMultipleBillboards);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : 'Add point billboards',
-            onClick : function() {
-                primitives.removeAll();
-                addPointBillboards(scene, ellipsoid);
-                Sandcastle.highlight(addPointBillboards);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : 'Add marker billboards',
-            onClick : function() {
-                primitives.removeAll();
-                addMarkerBillboards(scene, ellipsoid);
-                Sandcastle.highlight(addMarkerBillboards);
-            }
-        }).placeAt('toolbar');
-
-        new Button({
-            label : 'Add billboards in reference frame',
-            onClick : function() {
-                primitives.removeAll();
-                addBillboardsInReferenceframe(scene, ellipsoid);
-                Sandcastle.highlight(addBillboardsInReferenceframe);
-            }
-        }).placeAt('toolbar');
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addMarkerBillboards(scene, ellipsoid);
+            Sandcastle.highlight(addMarkerBillboards);
+        };
+        button.textContent = 'Add marker billboards';
+        toolbar.appendChild(button);
+        
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            addBillboardsInReferenceframe(scene, ellipsoid);
+            Sandcastle.highlight(addBillboardsInReferenceframe);
+        };
+        button.textContent = 'Add billboards in reference frame';
+        toolbar.appendChild(button);
     }
 
     var widget = new Cesium.CesiumWidget('cesiumContainer');

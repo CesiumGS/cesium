@@ -164,9 +164,15 @@ define([
      * Radius of the sun in meters: 6.995e8
      * @type {Number}
      * @constant
-     * @default
      */
     CesiumMath.SOLAR_RADIUS = 6.995e8;
+
+    /**
+     * 64 * 1024
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
 
     /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is

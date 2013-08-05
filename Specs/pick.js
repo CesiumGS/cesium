@@ -1,9 +1,11 @@
 /*global define*/
 define([
         'Core/BoundingRectangle',
+        'Scene/CreditDisplay',
         'Scene/FrameState'
     ], function(
         BoundingRectangle,
+        CreditDisplay,
         FrameState) {
     "use strict";
 
@@ -13,7 +15,7 @@ define([
         var passState = pickFramebuffer.begin(rectangle);
 
         var oldPasses = frameState.passes;
-        frameState.passes = (new FrameState()).passes;
+        frameState.passes = (new FrameState(new CreditDisplay(document.createElement('div')))).passes;
         frameState.passes.pick = true;
 
         var commandLists = [];

@@ -71,7 +71,7 @@ define([
             if (!this.isFullscreenEnabled) {
                 return 'Full screen unavailable';
             }
-            return tmpIsFullscreen ? 'Exit full screen' : 'Full screen';
+            return tmpIsFullscreen() ? 'Exit full screen' : 'Full screen';
         });
 
         this._command = createCommand(function() {

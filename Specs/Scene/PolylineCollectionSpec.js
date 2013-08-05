@@ -56,6 +56,9 @@ defineSuite([
     });
 
     afterEach(function() {
+        if (!polylines.isDestroyed()) {
+            polylines.destroy();
+        }
         us = null;
     });
 
@@ -430,7 +433,7 @@ defineSuite([
 
     it('renders 64K vertices of same polyline', function() {
         var positions = [];
-        for ( var i = 0; i < (64 * 1024) / 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -455,7 +458,7 @@ defineSuite([
 
     it('creates two vertex arrays and renders', function() {
         var positions = [];
-        for ( var i = 0; i < (64 * 1024) / 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES / 2; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -498,7 +501,7 @@ defineSuite([
 
     it('renders more than 64K vertices of same polyline', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
                 x : 0,
                 y : -1,
@@ -757,7 +760,7 @@ defineSuite([
 
     it('renders more than 64K vertices of different polylines', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
                 x : -1,
                 y : -1,
@@ -797,7 +800,7 @@ defineSuite([
 
     it('renders more than 64K vertices of different polylines of different widths', function() {
         var positions = [];
-        for ( var i = 0; i < 64 * 1024 - 2; ++i) {
+        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES - 2; ++i) {
             positions.push({
                 x : -1,
                 y : -1,
@@ -1577,6 +1580,40 @@ defineSuite([
 
     it('computes bounding sphere in 2D', function() {
         test2DBoundingSphere(SceneMode.SCENE2D);
+    });
+
+    it('computes optimized bounding volumes per material', function() {
+        var one = polylines.add({
+            positions : [{
+                x : 1.0,
+                y : 2.0,
+                z : 3.0
+            },{
+                x : 2.0,
+                y : 3.0,
+                z : 4.0
+            }]
+        });
+        one.getMaterial().uniforms.color = new Color(1.0, 0.0, 0.0, 1.0);
+
+        var two = polylines.add({
+            positions : [{
+                x : 4.0,
+                y : 5.0,
+                z : 6.0
+            },{
+                x : 2.0,
+                y : 3.0,
+                z : 4.0
+            }]
+        });
+        two.getMaterial().uniforms.color = new Color(0.0, 1.0, 0.0, 1.0);
+
+        var commandList = [];
+        polylines.update(context, frameState, commandList);
+
+        expect(commandList[0].colorList[0].boundingVolume).toEqual(one._boundingVolume);
+        expect(commandList[0].colorList[1].boundingVolume).toEqual(two._boundingVolume);
     });
 
     it('isDestroyed', function() {

@@ -1,7 +1,8 @@
 /*global define*/
 define([
-        '../Core/BoxTessellator',
+        '../Core/BoxGeometry',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/combine',
         '../Core/DeveloperError',
         '../Core/destroyObject',
@@ -19,8 +20,9 @@ define([
         '../Shaders/EllipsoidVS',
         '../Shaders/EllipsoidFS'
     ], function(
-        BoxTessellator,
+        BoxGeometry,
         Cartesian3,
+        Cartesian4,
         combine,
         DeveloperError,
         destroyObject,
@@ -113,12 +115,11 @@ define([
          * Local reference frames can be used by providing a different transformation matrix, like that returned
          * by {@link Transforms.eastNorthUpToFixedFrame}.  This matrix is available to GLSL vertex and fragment
          * shaders via {@link czm_model} and derived uniforms.
-         * <p>
-         * The default is {@link Matrix4.IDENTITY}.
-         * </p>
          *
          * @type {Matrix4}
          * @default {@link Matrix4.IDENTITY}
+         *
+         * @default Matrix4.IDENTITY
          *
          * @example
          * var origin = ellipsoid.cartographicToCartesian(
@@ -133,9 +134,6 @@ define([
 
         /**
          * Determines if the ellipsoid primitive will be shown.
-         * <p>
-         * The default is <code>true</code>.
-         * </p>
          *
          * @type {Boolean}
          * @default true
@@ -172,7 +170,9 @@ define([
         this._pickId = undefined;
 
         this._colorCommand = new DrawCommand();
+        this._colorCommand.owner = this;
         this._pickCommand = new DrawCommand();
+        this._pickCommand.owner = this;
         this._commandLists = new CommandLists();
 
         var that = this;
@@ -199,12 +199,12 @@ define([
             return vertexArray;
         }
 
-        var mesh = BoxTessellator.compute({
+        var geometry = BoxGeometry.fromDimensions({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
         });
 
-        vertexArray = context.createVertexArrayFromMesh({
-            mesh: mesh,
+        vertexArray = context.createVertexArrayFromGeometry({
+            geometry: geometry,
             attributeIndices: attributeIndices,
             bufferUsage: BufferUsage.STATIC_DRAW
         });

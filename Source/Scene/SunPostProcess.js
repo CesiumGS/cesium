@@ -7,6 +7,8 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/destroyObject',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/PrimitiveType',
@@ -31,6 +33,8 @@ define([
         ComponentDatatype,
         defaultValue,
         destroyObject,
+        Geometry,
+        GeometryAttribute,
         CesiumMath,
         Matrix4,
         PrimitiveType,
@@ -113,9 +117,9 @@ define([
             return vertexArray;
         }
 
-        var mesh = {
+        var geometry = new Geometry({
             attributes : {
-                position : {
+                position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -124,9 +128,9 @@ define([
                         1.0,  1.0,
                        -1.0,  1.0
                     ]
-                },
+                }),
 
-                textureCoordinates : {
+                textureCoordinates : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
                     componentsPerAttribute : 2,
                     values : [
@@ -135,12 +139,13 @@ define([
                         1.0, 1.0,
                         0.0, 1.0
                     ]
-                }
-            }
-        };
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
 
-        vertexArray = context.createVertexArrayFromMesh({
-            mesh : mesh,
+        vertexArray = context.createVertexArrayFromGeometry({
+            geometry : geometry,
             attributeIndices : attributeIndices,
             bufferUsage : BufferUsage.STATIC_DRAW
         });
@@ -181,6 +186,7 @@ define([
             var vertexArray = getVertexArray(context);
 
             var downSampleCommand = this._downSampleCommand = new DrawCommand();
+            downSampleCommand.owner = this;
             downSampleCommand.primitiveType = primitiveType;
             downSampleCommand.vertexArray = vertexArray;
             downSampleCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
@@ -188,6 +194,7 @@ define([
             downSampleCommand.framebuffer = this._downSampleFBO1;
 
             var brightPassCommand = this._brightPassCommand = new DrawCommand();
+            brightPassCommand.owner = this;
             brightPassCommand.primitiveType = primitiveType;
             brightPassCommand.vertexArray = vertexArray;
             brightPassCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, BrightPass, attributeIndices);
@@ -209,6 +216,7 @@ define([
             var sigma = 2.0;
 
             var blurXCommand = this._blurXCommand = new DrawCommand();
+            blurXCommand.owner = this;
             blurXCommand.primitiveType = primitiveType;
             blurXCommand.vertexArray = vertexArray;
             blurXCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
@@ -226,6 +234,7 @@ define([
             blurXCommand.framebuffer = this._downSampleFBO1;
 
             var blurYCommand = this._blurYCommand = new DrawCommand();
+            blurYCommand.owner = this;
             blurYCommand.primitiveType = primitiveType;
             blurYCommand.vertexArray = vertexArray;
             blurYCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, GaussianBlur1D, attributeIndices);
@@ -243,6 +252,7 @@ define([
             blurYCommand.framebuffer = this._downSampleFBO2;
 
             var additiveBlendCommand = this._blendCommand = new DrawCommand();
+            additiveBlendCommand.owner = this;
             additiveBlendCommand.primitiveType = primitiveType;
             additiveBlendCommand.vertexArray = vertexArray;
             additiveBlendCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, AdditiveBlend, attributeIndices);
@@ -256,6 +266,7 @@ define([
             };
 
             var fullScreenCommand = this._fullScreenCommand = new DrawCommand();
+            fullScreenCommand.owner = this;
             fullScreenCommand.primitiveType = primitiveType;
             fullScreenCommand.vertexArray = vertexArray;
             fullScreenCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, PassThrough, attributeIndices);
@@ -362,7 +373,7 @@ define([
 
         sunPositionEC.x += CesiumMath.SOLAR_RADIUS;
         var limbWC = Transforms.pointToWindowCoordinates(projectionMatrix, viewportTransformation, sunPositionEC, sunPositionEC);
-        var sunSize = Cartesian2.subtract(limbWC, sunPositionWC, limbWC).magnitude() * 30.0 * 2.0;
+        var sunSize = Cartesian2.magnitude(Cartesian2.subtract(limbWC, sunPositionWC, limbWC)) * 30.0 * 2.0;
 
         var size = sizeScratch;
         size.x = sunSize;

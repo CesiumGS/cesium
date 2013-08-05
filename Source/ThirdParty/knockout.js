@@ -1,6 +1,6 @@
 /*global define*/
 define([
-        './knockout-2.2.1',
+        './knockout-2.3.0',
         './knockout-es5'
     ], function(
         knockout,

@@ -11,6 +11,7 @@ define([
         './ImageryProvider',
         './TileProviderError',
         './WebMercatorTilingScheme',
+        './Credit',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -24,6 +25,7 @@ define([
         ImageryProvider,
         TileProviderError,
         WebMercatorTilingScheme,
+        Credit,
         when) {
     "use strict";
 
@@ -83,7 +85,7 @@ define([
         this._tileHeight = undefined;
         this._maximumLevel = undefined;
         this._tilingScheme = undefined;
-        this._logo = undefined;
+        this._credit = undefined;
         this._useTiles = defaultValue(description.usePreCachedTilesIfAvailable, true);
 
         this._errorEvent = new Event();
@@ -129,9 +131,7 @@ define([
             }
 
             if (typeof data.copyrightText !== 'undefined' && data.copyrightText.length > 0) {
-                that._logo = writeTextToCanvas(data.copyrightText, {
-                    font : '12px sans-serif'
-                });
+                that._credit = new Credit(data.copyrightText);
             }
 
             that._ready = true;
@@ -392,20 +392,15 @@ define([
     };
 
     /**
-     * Gets the logo to display when this imagery provider is active.  Typically this is used to credit
+     * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery.  This function should not be called before {@link ArcGisMapServerImageryProvider#isReady} returns true.
      *
      * @memberof ArcGisMapServerImageryProvider
      *
-     * @returns {Image|Canvas} A canvas or image containing the log to display, or undefined if there is no logo.
-     *
-     * @exception {DeveloperError} <code>getLogo</code> must not be called before the imagery provider is ready.
+     * @returns {Credit} The credit, or undefined if no credit exists
      */
-    ArcGisMapServerImageryProvider.prototype.getLogo = function() {
-        if (!this._ready) {
-            throw new DeveloperError('getLogo must not be called before the imagery provider is ready.');
-        }
-        return this._logo;
+    ArcGisMapServerImageryProvider.prototype.getCredit = function() {
+        return this._credit;
     };
 
     return ArcGisMapServerImageryProvider;

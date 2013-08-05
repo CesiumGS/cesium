@@ -1,26 +1,30 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
-        '../Core/DeveloperError',
-        '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defaultValue',
+        '../Core/destroyObject',
+        '../Core/DeveloperError',
+        '../Core/Quaternion',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
         '../Scene/Material'
-       ], function(
-         defaultValue,
-         DeveloperError,
-         destroyObject,
-         Color,
-         CesiumMath,
-         Matrix3,
-         Matrix4,
-         Spherical,
-         CustomSensorVolume,
-         Material) {
+    ], function(
+        Cartesian3,
+        Color,
+        defaultValue,
+        destroyObject,
+        DeveloperError,
+        Quaternion,
+        CesiumMath,
+        Matrix3,
+        Matrix4,
+        Spherical,
+        CustomSensorVolume,
+        Material) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -225,9 +229,8 @@ define([
         return destroyObject(this);
     };
 
-    var position;
-    var orientation;
-    var intersectionColor;
+    var cachedPosition = new Cartesian3();
+    var cachedOrientation = new Quaternion();
     function updateObject(dynamicConeVisualizerUsingCustomSensor, time, dynamicObject) {
         var context = dynamicConeVisualizerUsingCustomSensor._scene.getContext();
         var dynamicCone = dynamicObject.cone;
@@ -279,7 +282,8 @@ define([
 
             // CZML_TODO Determine official defaults
             cone.material = Material.fromType(context, Material.ColorType);
-            cone.intersectionColor = Color.YELLOW;
+            cone.intersectionColor = Color.YELLOW.clone();
+            cone.intersectionWidth = 5.0;
             cone.radius = Number.POSITIVE_INFINITY;
             cone.showIntersection = true;
         } else {
@@ -344,16 +348,16 @@ define([
             }
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), cone._visualizerPosition);
-        orientation = defaultValue(orientationProperty.getValue(time, orientation), cone._visualizerOrientation);
+        var position = positionProperty.getValueCartesian(time, cachedPosition);
+        var orientation = orientationProperty.getValue(time, cachedOrientation);
 
         if (typeof position !== 'undefined' &&
             typeof orientation !== 'undefined' &&
             (!position.equals(cone._visualizerPosition) ||
              !orientation.equals(cone._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, cone.modelMatrix);
-            position.clone(cone._visualizerPosition);
-            orientation.clone(cone._visualizerOrientation);
+            cone._visualizerPosition = position.clone(cone._visualizerPosition);
+            cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
         }
 
         var material = dynamicCone.outerMaterial;
@@ -363,9 +367,14 @@ define([
 
         property = dynamicCone.intersectionColor;
         if (typeof property !== 'undefined') {
-            intersectionColor = property.getValue(time, intersectionColor);
-            if (typeof intersectionColor !== 'undefined') {
-                cone.intersectionColor = intersectionColor;
+            property.getValue(time, cone.intersectionColor);
+        }
+
+        property = dynamicCone.intersectionWidth;
+        if (typeof property !== 'undefined') {
+            var intersectionWidth = property.getValue(time);
+            if (typeof intersectionWidth !== 'undefined') {
+                cone.intersectionWidth = intersectionWidth;
             }
         }
     }

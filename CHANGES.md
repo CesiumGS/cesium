@@ -4,6 +4,50 @@ Change Log
 Beta Releases
 -------------
 
+### b20 - 2013-09-01
+
+* Breaking changes:
+    * ...
+* Optimized polyline bounding spheres.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
+
+### b19 - 2013-08-01
+
+* Breaking changes:
+   * Replaced tessellators and meshes with geometry.  In particular:
+      * Replaced `CubeMapEllipsoidTessellator` with `EllipsoidGeometry`.
+      * Replaced `BoxTessellator` with `BoxGeometry`.
+      * Replaced `ExtentTessletaor` with `ExtentGeometry`.
+      * Removed `PlaneTessellator`.  It was incomplete and not used.
+      * Renamed `MeshFilters` to `GeometryPipeline`.
+      * Renamed `MeshFilters.toWireframeInPlace` to `GeometryPipeline.toWireframe`.
+      * Removed `MeshFilters.mapAttributeIndices`.  It was not used.
+      * Renamed `Context.createVertexArrayFromMesh` to `Context.createVertexArrayFromGeometry`.  Likewise, renamed `mesh` constructor property to `geometry`.
+   * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
+   * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
+   * Removed `Polygon.bufferUsage`.  It is no longer needed.
+   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
+   * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
+   * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
+   * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
+   * Added `surfaceHeight` parameter to `Extent.subsample`.
+   * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
+   * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
+* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
+* Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
+* Added `ExtentPrimitive`.
+* Added `PolylinePipeline.removeDuplicates`.
+* Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
+* Added `BoundingSphere.fromEllipsoid`.
+* Added `BoundingSphere.projectTo2D`.
+* Added `Extent.fromDegrees`.
+* Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
+* Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
+* Added extrusion to `ExtentGeometry`.
+* Added `Credit` and `CreditDisplay` for displaying credits on the screen.
+* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+
 ### b18 - 2013-07-01
 
 * Breaking changes:

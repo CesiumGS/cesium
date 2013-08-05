@@ -8,10 +8,13 @@ defineSuite([
          'Core/loadImage',
          'Core/loadWithXhr',
          'Scene/BingMapsImageryProvider',
+         'Scene/EllipsoidTerrainProvider',
          'Scene/Imagery',
+         'Scene/ImageryLayerCollection',
          'Scene/ImageryState',
          'Scene/NeverTileDiscardPolicy',
          'Scene/SingleTileImageryProvider',
+         'Scene/TileMapServiceImageryProvider',
          'Scene/WebMapServiceImageryProvider'
      ], function(
          ImageryLayer,
@@ -22,10 +25,13 @@ defineSuite([
          loadImage,
          loadWithXhr,
          BingMapsImageryProvider,
+         EllipsoidTerrainProvider,
          Imagery,
+         ImageryLayerCollection,
          ImageryState,
          NeverTileDiscardPolicy,
          SingleTileImageryProvider,
+         TileMapServiceImageryProvider,
          WebMapServiceImageryProvider) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -194,5 +200,91 @@ defineSuite([
         expect(layer.isDestroyed()).toEqual(false);
         layer.destroy();
         expect(layer.isDestroyed()).toEqual(true);
+    });
+
+    it('createTileImagerySkeletons handles a base layer that does not cover the entire globe', function() {
+        var provider = new TileMapServiceImageryProvider({
+            url : 'Data/TMS/SmallArea'
+        });
+
+        var layers = new ImageryLayerCollection();
+        var layer = layers.addImageryProvider(provider);
+        var terrainProvider = new EllipsoidTerrainProvider();
+
+        waitsFor(function() {
+            return provider.isReady() && terrainProvider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            layer._createTileImagerySkeletons(tiles[0], terrainProvider);
+            layer._createTileImagerySkeletons(tiles[1], terrainProvider);
+
+            // Both tiles should have imagery from this layer completely covering them.
+            expect(tiles[0].imagery.length).toBe(4);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.x).toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.w).toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.x).toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.y).toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.z).toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.w).toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.y).toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.z).toBe(1.0);
+
+            expect(tiles[1].imagery.length).toBe(2);
+            expect(tiles[1].imagery[0].textureCoordinateExtent.x).toBe(0.0);
+            expect(tiles[1].imagery[0].textureCoordinateExtent.w).toBe(1.0);
+            expect(tiles[1].imagery[0].textureCoordinateExtent.z).toBe(1.0);
+            expect(tiles[1].imagery[1].textureCoordinateExtent.x).toBe(0.0);
+            expect(tiles[1].imagery[1].textureCoordinateExtent.y).toBe(0.0);
+            expect(tiles[1].imagery[1].textureCoordinateExtent.z).toBe(1.0);
+        });
+    });
+
+    it('createTileImagerySkeletons handles a non-base layer that does not cover the entire globe', function() {
+        var baseProvider = new SingleTileImageryProvider({
+            url : 'Data/Images/Green4x4.png'
+        });
+
+        var provider = new TileMapServiceImageryProvider({
+            url : 'Data/TMS/SmallArea'
+        });
+
+        var layers = new ImageryLayerCollection();
+        layers.addImageryProvider(baseProvider);
+        var layer = layers.addImageryProvider(provider);
+        var terrainProvider = new EllipsoidTerrainProvider();
+
+        waitsFor(function() {
+            return provider.isReady() && terrainProvider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            var tiles = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            layer._createTileImagerySkeletons(tiles[0], terrainProvider);
+            layer._createTileImagerySkeletons(tiles[1], terrainProvider);
+
+            // Only the western tile should have imagery from this layer.
+            // And the imagery should not cover it completely.
+            expect(tiles[0].imagery.length).toBe(4);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.x).not.toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.y).not.toBe(0.0);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.z).not.toBe(1.0);
+            expect(tiles[0].imagery[0].textureCoordinateExtent.w).not.toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.x).not.toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.y).not.toBe(0.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.z).not.toBe(1.0);
+            expect(tiles[0].imagery[1].textureCoordinateExtent.w).not.toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.x).not.toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.y).not.toBe(0.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.z).not.toBe(1.0);
+            expect(tiles[0].imagery[2].textureCoordinateExtent.w).not.toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.x).not.toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.y).not.toBe(0.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.z).not.toBe(1.0);
+            expect(tiles[0].imagery[3].textureCoordinateExtent.w).not.toBe(1.0);
+
+            expect(tiles[1].imagery.length).toBe(0);
+        });
     });
 }, 'WebGL');

@@ -10,6 +10,8 @@ define([
         '../Core/Extent',
         '../Core/Math',
         '../Core/PrimitiveType',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
         '../Renderer/BufferUsage',
         '../Renderer/MipmapHint',
         '../Renderer/TextureMagnificationFilter',
@@ -37,6 +39,8 @@ define([
         Extent,
         CesiumMath,
         PrimitiveType,
+        Geometry,
+        GeometryAttribute,
         BufferUsage,
         MipmapHint,
         TextureMagnificationFilter,
@@ -449,23 +453,20 @@ define([
         var veryCloseY = (tile.extent.east - tile.extent.west) / 512.0;
 
         var northwestTileExtent = imageryTilingScheme.tileXYToExtent(northwestTileCoordinates.x, northwestTileCoordinates.y, imageryLevel);
-        if (Math.abs(northwestTileExtent.south - extent.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
+        if (Math.abs(northwestTileExtent.south - tile.extent.north) < veryCloseY && northwestTileCoordinates.y < southeastTileCoordinates.y) {
             ++northwestTileCoordinates.y;
         }
-        if (Math.abs(northwestTileExtent.east - extent.west) < veryCloseX && northwestTileCoordinates.x < southeastTileCoordinates.x) {
+        if (Math.abs(northwestTileExtent.east - tile.extent.west) < veryCloseX && northwestTileCoordinates.x < southeastTileCoordinates.x) {
             ++northwestTileCoordinates.x;
         }
 
         var southeastTileExtent = imageryTilingScheme.tileXYToExtent(southeastTileCoordinates.x, southeastTileCoordinates.y, imageryLevel);
-        if (Math.abs(southeastTileExtent.north - extent.south) < veryCloseY && southeastTileCoordinates.y > northwestTileCoordinates.y) {
+        if (Math.abs(southeastTileExtent.north - tile.extent.south) < veryCloseY && southeastTileCoordinates.y > northwestTileCoordinates.y) {
             --southeastTileCoordinates.y;
         }
-        if (Math.abs(southeastTileExtent.west - extent.east) < veryCloseX && southeastTileCoordinates.x > northwestTileCoordinates.x) {
+        if (Math.abs(southeastTileExtent.west - tile.extent.east) < veryCloseX && southeastTileCoordinates.x > northwestTileCoordinates.x) {
             --southeastTileCoordinates.x;
         }
-
-        var imageryMaxX = imageryTilingScheme.getNumberOfXTilesAtLevel(imageryLevel);
-        var imageryMaxY = imageryTilingScheme.getNumberOfYTilesAtLevel(imageryLevel);
 
         // Create TileImagery instances for each imagery tile overlapping this terrain tile.
         // We need to do all texture coordinate computations in the imagery tile's tiling scheme.
@@ -482,11 +483,11 @@ define([
         // If this is the northern-most or western-most tile in the imagery tiling scheme,
         // it may not start at the northern or western edge of the terrain tile.
         // Calculate where it does start.
-        if (!this.isBaseLayer() && northwestTileCoordinates.x === 0) {
+        if (!this.isBaseLayer() && Math.abs(imageryExtent.west - tile.extent.west) >= veryCloseX) {
             maxU = Math.min(1.0, (imageryExtent.west - terrainExtent.west) / (terrainExtent.east - terrainExtent.west));
         }
 
-        if (!this.isBaseLayer() && northwestTileCoordinates.y === 0) {
+        if (!this.isBaseLayer() && Math.abs(imageryExtent.north - tile.extent.north) >= veryCloseY) {
             minV = Math.max(0.0, (imageryExtent.north - terrainExtent.south) / (terrainExtent.north - terrainExtent.south));
         }
 
@@ -502,7 +503,7 @@ define([
             // and there are more imagery tiles to the east of this one, the maxU
             // should be 1.0 to make sure rounding errors don't make the last
             // image fall shy of the edge of the terrain tile.
-            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || i < imageryMaxX - 1)) {
+            if (i === southeastTileCoordinates.x && (this.isBaseLayer() || Math.abs(imageryExtent.east - tile.extent.east) < veryCloseX)) {
                 maxU = 1.0;
             }
 
@@ -518,7 +519,7 @@ define([
                 // and there are more imagery tiles to the south of this one, the minV
                 // should be 0.0 to make sure rounding errors don't make the last
                 // image fall shy of the edge of the terrain tile.
-                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || j < imageryMaxY - 1)) {
+                if (j === southeastTileCoordinates.y && (this.isBaseLayer() || Math.abs(imageryExtent.south - tile.extent.south) < veryCloseY)) {
                     minV = 0.0;
                 }
 
@@ -814,26 +815,24 @@ define([
                 }
             }
 
-            var reprojectMesh = {
+            var reprojectGeometry = new Geometry({
                 attributes : {
-                    position : {
+                    position : new GeometryAttribute({
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
                         values : positions
-                    }
+                    })
                 },
-                indexLists : [{
-                    primitiveType : PrimitiveType.TRIANGLES,
-                    values : TerrainProvider.getRegularGridIndices(256, 256)
-                }]
-            };
+                indices : TerrainProvider.getRegularGridIndices(256, 256),
+                primitiveType : PrimitiveType.TRIANGLES
+            });
 
             var reprojectAttribInds = {
                 position : 0
             };
 
-            reproject.vertexArray = context.createVertexArrayFromMesh({
-                mesh : reprojectMesh,
+            reproject.vertexArray = context.createVertexArrayFromGeometry({
+                geometry : reprojectGeometry,
                 attributeIndices : reprojectAttribInds,
                 bufferUsage : BufferUsage.STATIC_DRAW
             });

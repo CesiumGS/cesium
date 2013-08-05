@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/DeveloperError',
         '../Core/Cartesian2',
         './SceneMode'
     ], function(
+        DeveloperError,
         Cartesian2,
         SceneMode) {
     "use strict";
@@ -11,10 +13,16 @@ define([
      * State information about the current frame.  An instance of this class
      * is provided to update functions.
      *
+     * @param {CreditDisplay} creditDisplay Handles adding and removing credits from an HTML element
+     *
      * @alias FrameState
      * @constructor
      */
-    var FrameState = function() {
+    var FrameState = function(creditDisplay) {
+        if (typeof creditDisplay === 'undefined') {
+            throw new DeveloperError('credit display is required');
+        }
+
         /**
          * The current mode of the scene.
          * @type {SceneMode}
@@ -103,6 +111,12 @@ define([
              */
             overlay : false
         };
+
+        /**
+        * The credit display.
+        * @type {CreditDisplay}
+        */
+        this.creditDisplay = creditDisplay;
     };
 
     return FrameState;

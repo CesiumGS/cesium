@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian4',
         '../Core/EncodedCartesian3',
         '../Core/Matrix4',
+        '../Core/Math',
         '../Core/ComponentDatatype',
         '../Core/IndexDatatype',
         '../Core/PrimitiveType',
@@ -32,6 +33,7 @@ define([
         Cartesian4,
         EncodedCartesian3,
         Matrix4,
+        CesiumMath,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
@@ -57,22 +59,21 @@ define([
     //When it does, we need to recreate the indicesBuffer.
     var POSITION_SIZE_INDEX = Polyline.POSITION_SIZE_INDEX;
     var NUMBER_OF_PROPERTIES = Polyline.NUMBER_OF_PROPERTIES;
-    var SIXTYFOURK = 64 * 1024;
 
     var attributeIndices = {
-        position3DHigh : 0,
-        position3DLow : 1,
-        position2DHigh : 2,
-        position2DLow : 3,
-        prevPosition3DHigh : 4,
-        prevPosition3DLow : 5,
-        prevPosition2DHigh : 6,
-        prevPosition2DLow : 7,
-        nextPosition3DHigh : 8,
-        nextPosition3DLow : 9,
-        nextPosition2DHigh : 10,
-        nextPosition2DLow : 11,
-        texCoordExpandWidthAndShow : 12,
+        texCoordExpandWidthAndShow : 0,
+        position3DHigh : 1,
+        position3DLow : 2,
+        position2DHigh : 3,
+        position2DLow : 4,
+        prevPosition3DHigh : 5,
+        prevPosition3DLow : 6,
+        prevPosition2DHigh : 7,
+        prevPosition2DLow : 8,
+        nextPosition3DHigh : 9,
+        nextPosition3DLow : 10,
+        nextPosition2DHigh : 11,
+        nextPosition2DLow : 12,
         pickColor : 13
     };
 
@@ -138,11 +139,8 @@ define([
          */
         this.modelMatrix = Matrix4.IDENTITY.clone();
         this._modelMatrix = Matrix4.IDENTITY.clone();
-        this._rs = undefined;
 
-        this._boundingVolume = undefined;
-        this._boundingVolume2D = undefined;
-        this._boundingVolumeScratch = new BoundingSphere();
+        this._rs = undefined;
 
         this._commandLists = new CommandLists();
         this._colorCommands = [];
@@ -238,7 +236,7 @@ define([
      */
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
-            this._polylines[polyline._index] = null; // Removed later
+            this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             if (typeof polyline._bucket !== 'undefined') {
@@ -430,25 +428,9 @@ define([
             properties[k] = 0;
         }
 
-        var boundingVolume;
         var modelMatrix = Matrix4.IDENTITY;
-
         if (frameState.mode === SceneMode.SCENE3D) {
-            boundingVolume = this._boundingVolume;
             modelMatrix = this.modelMatrix;
-        } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
-            boundingVolume = this._boundingVolume2D;
-        } else if (frameState.mode === SceneMode.SCENE2D) {
-            if (typeof this._boundingVolume2D !== 'undefined') {
-                boundingVolume = BoundingSphere.clone(this._boundingVolume2D, this._boundingVolumeScratch);
-                boundingVolume.center.x = 0.0;
-            }
-        } else if (typeof this._boundingVolume !== 'undefined' && typeof this._boundingVolume2D !== 'undefined') {
-            boundingVolume = BoundingSphere.union(this._boundingVolume, this._boundingVolume2D, this._boundingVolumeScratch);
-        }
-
-        if (typeof boundingVolume === 'undefined') {
-            return;
         }
 
         var pass = frameState.passes;
@@ -471,14 +453,14 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            createCommandLists(colorList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, true);
+            createCommandLists(this, frameState, colorList, modelMatrix, this._vertexArrays, this._rs, true);
         }
 
         if (pass.pick) {
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            createCommandLists(pickList, boundingVolume, modelMatrix, this._vertexArrays, this._rs, false);
+            createCommandLists(this, frameState, pickList, modelMatrix, this._vertexArrays, this._rs, false);
         }
 
         if (!this._commandLists.empty()) {
@@ -486,11 +468,15 @@ define([
         }
     };
 
-    function createCommandLists(commands, boundingVolume, modelMatrix, vertexArrays, renderState, colorPass) {
+    var boundingSphereScratch = new BoundingSphere();
+    var boundingSphereScratch2 = new BoundingSphere();
+
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, vertexArrays, renderState, colorPass) {
         var length = vertexArrays.length;
 
         var commandsLength = commands.length;
         var commandIndex = 0;
+        var cloneBoundingSphere = true;
 
         for ( var m = 0; m < length; ++m) {
             var va = vertexArrays[m];
@@ -517,6 +503,7 @@ define([
                         if (typeof currentId !== 'undefined') {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
+                                command.owner = polylineCollection;
                                 commands.push(command);
                             } else {
                                 command = commands[commandIndex];
@@ -524,7 +511,7 @@ define([
 
                             ++commandIndex;
 
-                            command.boundingVolume = boundingVolume;
+                            command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
                             command.primitiveType = PrimitiveType.TRIANGLES;
                             command.shaderProgram = sp;
@@ -537,6 +524,7 @@ define([
 
                             offset += count;
                             count = 0;
+                            cloneBoundingSphere = true;
                         }
 
                         currentMaterial = polyline._material;
@@ -551,11 +539,33 @@ define([
                             count += locator.count;
                         }
                     }
+
+                    var boundingVolume;
+                    if (frameState.mode === SceneMode.SCENE3D) {
+                        boundingVolume = polyline._boundingVolume;
+                    } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
+                        boundingVolume = polyline._boundingVolume2D;
+                    } else if (frameState.mode === SceneMode.SCENE2D) {
+                        if (typeof polyline._boundingVolume2D !== 'undefined') {
+                            boundingVolume = BoundingSphere.clone(polyline._boundingVolume2D, boundingSphereScratch2);
+                            boundingVolume.center.x = 0.0;
+                        }
+                    } else if (typeof polyline._boundingVolume !== 'undefined' && typeof polyline._boundingVolume2D !== 'undefined') {
+                        boundingVolume = BoundingSphere.union(polyline._boundingVolume, polyline._boundingVolume2D, boundingSphereScratch2);
+                    }
+
+                    if (cloneBoundingSphere) {
+                        cloneBoundingSphere = false;
+                        BoundingSphere.clone(boundingVolume, boundingSphereScratch);
+                    } else {
+                        BoundingSphere.union(boundingVolume, boundingSphereScratch, boundingSphereScratch);
+                    }
                 }
 
                 if (typeof currentId !== 'undefined' && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
+                        command.owner = polylineCollection;
                         commands.push(command);
                     } else {
                         command = commands[commandIndex];
@@ -563,7 +573,7 @@ define([
 
                     ++commandIndex;
 
-                    command.boundingVolume = boundingVolume;
+                    command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
                     command.primitiveType = PrimitiveType.TRIANGLES;
                     command.shaderProgram = sp;
@@ -573,6 +583,8 @@ define([
                     command.uniformMap = currentMaterial._uniforms;
                     command.count = count;
                     command.offset = offset;
+
+                    cloneBoundingSphere = true;
                 }
 
                 currentId = undefined;
@@ -744,14 +756,14 @@ define([
 
                     vbo += vertexBufferOffset[k];
 
-                    var positionHighOffset = 6 * (k * (positionSizeInBytes * SIXTYFOURK) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
+                    var positionHighOffset = 6 * (k * (positionSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * positionSizeInBytes);//componentsPerAttribute(3) * componentDatatype(4)
                     var positionLowOffset = positionSizeInBytes + positionHighOffset;
                     var prevPositionHighOffset =  positionSizeInBytes + positionLowOffset;
                     var prevPositionLowOffset = positionSizeInBytes + prevPositionHighOffset;
                     var nextPositionHighOffset = positionSizeInBytes + prevPositionLowOffset;
                     var nextPositionLowOffset = positionSizeInBytes + nextPositionHighOffset;
-                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * SIXTYFOURK) - vbo * pickColorSizeInBytes;
-                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * SIXTYFOURK) - vbo * texCoordExpandWidthAndShowSizeInBytes;
+                    var vertexPickColorBufferOffset = k * (pickColorSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * pickColorSizeInBytes;
+                    var vertexTexCoordExpandWidthAndShowBufferOffset = k * (texCoordExpandWidthAndShowSizeInBytes * CesiumMath.SIXTY_FOUR_KILOBYTES) - vbo * texCoordExpandWidthAndShowSizeInBytes;
 
                     var attributes = [{
                         index : attributeIndices.position3DHigh,
@@ -945,7 +957,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (polyline) {
+                if (typeof polyline !== 'undefined') {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -958,10 +970,12 @@ define([
     function releaseShaders(collection) {
         var polylines = collection._polylines;
         var length = polylines.length;
-        for (var i = 0; i < length; ++i) {
-            var bucket = polylines[i]._bucket;
-            if (typeof bucket !== 'undefined') {
-                bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+        for ( var i = 0; i < length; ++i) {
+            if (typeof polylines[i] !== 'undefined') {
+                var bucket = polylines[i]._bucket;
+                if (typeof bucket !== 'undefined') {
+                    bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
+                }
             }
         }
     }
@@ -984,7 +998,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (polylines[i]) {
+            if (typeof polylines[i] !== 'undefined') {
                 polylines[i]._destroy();
             }
         }
@@ -1247,7 +1261,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1279,7 +1293,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= SIXTYFOURK - 1) {
+                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 1) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);
@@ -1320,14 +1334,6 @@ define([
     PolylineBucket.prototype.getSegments = function(polyline) {
         var positions = polyline.getPositions();
 
-        if (positions.length > 0) {
-            if (typeof polyline._polylineCollection._boundingVolume === 'undefined') {
-                polyline._polylineCollection._boundingVolume = BoundingSphere.clone(polyline._boundingVolume);
-            } else {
-                polyline._polylineCollection._boundingVolume = polyline._polylineCollection._boundingVolume.union(polyline._boundingVolume, polyline._polylineCollection._boundingVolume);
-            }
-        }
-
         if (this.mode === SceneMode.SCENE3D) {
             scratchLengths[0] = positions.length;
             scratchSegments.positions = positions;
@@ -1357,11 +1363,6 @@ define([
             polyline._boundingVolume2D = BoundingSphere.fromPoints(newPositions, polyline._boundingVolume2D);
             var center2D = polyline._boundingVolume2D.center;
             polyline._boundingVolume2D.center = new Cartesian3(center2D.z, center2D.x, center2D.y);
-            if (typeof polyline._polylineCollection._boundingVolume2D === 'undefined') {
-                polyline._polylineCollection._boundingVolume2D = BoundingSphere.clone(polyline._boundingVolume2D);
-            } else {
-                polyline._polylineCollection._boundingVolume2D = polyline._polylineCollection._boundingVolume2D.union(polyline._boundingVolume2D, polyline._polylineCollection._boundingVolume2D);
-            }
         }
 
         scratchSegments.positions = newPositions;
