@@ -221,6 +221,7 @@ define([
     Vertex.prototype.initializeInterpolated = function(first, second, ratio) {
         this.vertexBuffer = undefined;
         this.index = undefined;
+        this.newIndex = undefined;
         this.first = first;
         this.second = second;
         this.ratio = ratio;
@@ -324,7 +325,7 @@ define([
             if (!polygonVertex.isIndexed()) {
                 var key = polygonVertex.getKey();
                 if (typeof vertexMap[key] !== 'undefined') {
-                    polygonVertex.initializeIndexed(vertices, vertexMap[key]);
+                    polygonVertex.newIndex = vertexMap[key];
                 } else {
                     var newIndex = vertices.length / vertexStride;
                     vertices.push(polygonVertex.getX());
@@ -333,29 +334,29 @@ define([
                     vertices.push(polygonVertex.getH());
                     vertices.push(polygonVertex.getU());
                     vertices.push(polygonVertex.getV());
-                    polygonVertex.initializeIndexed(vertices, newIndex);
+                    polygonVertex.newIndex = newIndex;
                     vertexMap[key] = newIndex;
                 }
             } else {
-                polygonVertex.index = vertexMap[polygonVertex.index];
+                polygonVertex.newIndex = vertexMap[polygonVertex.index];
                 polygonVertex.vertexBuffer = vertices;
             }
         }
 
         if (numVertices === 3) {
             // A triangle.
-            indices.push(polygonVertices[0].index);
-            indices.push(polygonVertices[1].index);
-            indices.push(polygonVertices[2].index);
+            indices.push(polygonVertices[0].newIndex);
+            indices.push(polygonVertices[1].newIndex);
+            indices.push(polygonVertices[2].newIndex);
         } else {
             // A quad - two triangles.
-            indices.push(polygonVertices[0].index);
-            indices.push(polygonVertices[1].index);
-            indices.push(polygonVertices[2].index);
+            indices.push(polygonVertices[0].newIndex);
+            indices.push(polygonVertices[1].newIndex);
+            indices.push(polygonVertices[2].newIndex);
 
-            indices.push(polygonVertices[0].index);
-            indices.push(polygonVertices[2].index);
-            indices.push(polygonVertices[3].index);
+            indices.push(polygonVertices[0].newIndex);
+            indices.push(polygonVertices[2].newIndex);
+            indices.push(polygonVertices[3].newIndex);
         }
     }
 
@@ -363,7 +364,6 @@ define([
     var clipScratch2 = [];
     var verticesScratch = [];
     var indicesScratch = [];
-    var vertexMappingScratch = {};
 
     /**
      * Upsamples this terrain data for use by a descendant tile.  The resulting instance will contain a subset of the
@@ -423,8 +423,7 @@ define([
         vertices.length = 0;
         var indices = indicesScratch;
         indices.length = 0;
-        var vertexMap = vertexMappingScratch;
-        vertexMap.length = 0;
+        var vertexMap = {};
 
         var parentVertices = this._vertexBuffer;
         var parentIndices = this._indexBuffer;
