@@ -227,10 +227,8 @@ define([
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
     function computeExtrudedEllipse(options) {
-        var numLengthLines = defaultValue(options.numLengthLines, 10);
-        if (numLengthLines < 0) {
-            throw new DeveloperError('options.numLengthLines cannot be less than zero');
-        }
+        var countSideLines = defaultValue(options.countSideLines, 10);
+        countSideLines = Math.max(countSideLines, 0);
 
         var center = options.center;
         var ellipsoid = options.ellipsoid;
@@ -259,12 +257,12 @@ define([
         indices.push(length + length - 1, length);
 
         var numSide;
-        if (numLengthLines > 0) {
-            var numSideLines = Math.min(numLengthLines, length);
+        if (countSideLines > 0) {
+            var numSideLines = Math.min(countSideLines, length);
             numSide = Math.round(length/numSideLines);
         }
         var maxI = Math.min(numSide*10, length);
-        if (numLengthLines > 0) {
+        if (countSideLines > 0) {
             for (i = 0; i < maxI; i+= numSide){
                 indices.push(i, i + length);
             }
@@ -293,7 +291,7 @@ define([
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
-     * @param {Boolean} [options.numLengthLines = 10] Number of edges to draw along the length of the ellipse
+     * @param {Boolean} [options.sideLinesCount = 10] Number of lines to draw between the top and bottom surface of an extruded ellipse.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} semiMajorAxis is required.
@@ -340,12 +338,6 @@ define([
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
-        var numLengthLines = defaultValue(options.numLengthLines, 10);
-        if (numLengthLines < 0) {
-            throw new DeveloperError('options.numLengthLines cannot be less than zero');
-        }
-
-
         var newOptions = {
             center : center,
             semiMajorAxis : semiMajorAxis,
@@ -355,7 +347,7 @@ define([
             height : defaultValue(options.height, 0.0),
             granularity : defaultValue(options.granularity, 0.02),
             extrudedHeight : options.extrudedHeight,
-            numLengthLines : numLengthLines
+            countSideLines : Math.max(defaultValue(options.countSideLines, 10), 0)
         };
 
         if (newOptions.granularity <= 0.0) {

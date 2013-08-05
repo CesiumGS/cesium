@@ -1,14 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Core/EllipseGeometry',
-         'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
          'Core/Math',
          'Core/VertexFormat'
      ], function(
          EllipseGeometry,
-         Cartesian3,
          Cartographic,
          Ellipsoid,
          CesiumMath,

@@ -1,11 +1,9 @@
 /*global define*/
 define([
-        './clone',
         './defaultValue',
         './DeveloperError',
         './EllipseGeometry'
     ], function(
-        clone,
         defaultValue,
         DeveloperError,
         EllipseGeometry) {

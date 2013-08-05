@@ -37,7 +37,7 @@ define([
      * @param {Number} options.topRadius The radius of the top of the cylinder
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
      * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder
-     * @param {Boolean} [options.numLengthLines = 10] Number of edges to draw along the length of the cylinder
+     * @param {Boolean} [options.countSideLines = 10] Number of lines to draw between the top and bottom surfaces of the cylinder
      *
      * @exception {DeveloperError} options.length must be greater than 0
      * @exception {DeveloperError} options.topRadius must be greater than 0
@@ -78,10 +78,7 @@ define([
             throw new DeveloperError('options.slices must be greater that 3');
         }
 
-        var numLengthLines = defaultValue(options.numLengthLines, 10);
-        if (numLengthLines < 0) {
-            throw new DeveloperError('options.numLengthLines cannot be less than zero');
-        }
+        var countSideLines = Math.max(defaultValue(options.countSideLines, 10), 0);
 
         var topZ = length * 0.5;
         var bottomZ = -topZ;
@@ -112,8 +109,8 @@ define([
         }
         var numIndices = slices * 2;
         var numSide;
-        if (numLengthLines > 0) {
-            var numSideLines = Math.min(numLengthLines, slices);
+        if (countSideLines > 0) {
+            var numSideLines = Math.min(countSideLines, slices);
             numSide = Math.round(slices/numSideLines);
             numIndices += numSideLines;
         }
@@ -132,7 +129,7 @@ define([
         indices[index++] = slices + slices - 1;
         indices[index++] = slices;
 
-        if (numLengthLines > 0) {
+        if (countSideLines > 0) {
             for (i = 0; i < slices; i+= numSide){
                 indices[index++] = i;
                 indices[index++] = i + slices;

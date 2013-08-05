@@ -2,13 +2,11 @@
 defineSuite([
          'Core/SphereGeometry',
          'Core/Cartesian3',
-         'Core/Ellipsoid',
          'Core/Math',
          'Core/VertexFormat'
      ], function(
          SphereGeometry,
          Cartesian3,
-         Ellipsoid,
          CesiumMath,
          VertexFormat) {
     "use strict";

@@ -1,15 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'Core/CylinderGeometry',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Math',
          'Core/VertexFormat'
      ], function(
          CylinderGeometry,
-         Cartesian3,
-         Ellipsoid,
-         CesiumMath,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/

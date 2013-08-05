@@ -149,9 +149,6 @@ define([
 
     function constructExtrudedExtent(params, extrudedHeight) {
         var surfaceHeight = params.surfaceHeight;
-        if (typeof extrudedHeight !== 'number') {
-            return constructExtent(params);
-        }
         var minHeight = Math.min(extrudedHeight, surfaceHeight);
         var maxHeight = Math.max(extrudedHeight, surfaceHeight);
         if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
