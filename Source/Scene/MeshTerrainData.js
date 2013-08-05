@@ -348,7 +348,7 @@ define([
             indices.push(polygonVertices[0].newIndex);
             indices.push(polygonVertices[1].newIndex);
             indices.push(polygonVertices[2].newIndex);
-        } else {
+        } else if (numVertices === 4){
             // A quad - two triangles.
             indices.push(polygonVertices[0].newIndex);
             indices.push(polygonVertices[1].newIndex);
@@ -473,46 +473,32 @@ define([
 
             // Clip triangle on the east-west boundary.
             var clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isEastChild, u0, u1, u2, clipScratch);
-            if (clipped.length === 0) {
-                // Triangle does not overlap this child's extent.
+
+            // Get the first clipped triangle, if any.
+            clippedIndex = 0;
+
+            if (clippedIndex >= clipped.length) {
                 continue;
             }
+            clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
-            // Clip the resulting polygon on the north-south boundary.
-            if (clipped.length === 3) {
-                // Polygon is just the original triangle.
-                clipped = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, triangleVertices[0].getV(), triangleVertices[1].getV(), triangleVertices[2].getV(), clipScratch);
-                if (clipped.length === 0) {
-                    continue;
-                } else if (clipped.length === 3) {
-                    // Triangle passed both clips, add it.
-                    indices.push(vertexMap[i0]);
-                    indices.push(vertexMap[i1]);
-                    indices.push(vertexMap[i2]);
-                } else {
-                    addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices);
-                }
-            } else if (clipped.length === 9) {
-                // The polygon is a triangle, but not the original one.
-                // Clip the new triangle against the north-south boundary.
-                clippedIndex = 0;
-                clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-                clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-                clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+            if (clippedIndex >= clipped.length) {
+                continue;
+            }
+            clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
-                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
-            } else if (clipped.length === 10) {
-                // The polygon is a quad.  Triangulate the quad and clip both triangles
-                // against the north-south boundary.
-                clippedIndex = 0;
-                clippedIndex = clippedTriangleVertices[0].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-                clippedIndex = clippedTriangleVertices[1].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
-                clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
+            if (clippedIndex >= clipped.length) {
+                continue;
+            }
+            clippedIndex = clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
-                clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+            // Clip the triangle against the North-south boundary.
+            clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
+            addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
 
+            // If there's another vertex in the original clipped result,
+            // it forms a second triangle.  Clip it as well.
+            if (clippedIndex < clipped.length) {
                 clippedTriangleVertices[2].clone(clippedTriangleVertices[1]);
                 clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
@@ -527,6 +513,12 @@ define([
         for (i = 0; i < vertices.length; i += vertexStride) {
             vertices[i + uIndex] = vertices[i + uIndex] * 2.0 + uOffset;
             vertices[i + vIndex] = vertices[i + vIndex] * 2.0 + vOffset;
+        }
+
+        for (var q = 0; q < indices.length; ++q) {
+            if (indices[q] < 0 || indices[q] * 6 >= vertices.length) {
+                console.log('bad');
+            }
         }
 
         return new MeshTerrainData({

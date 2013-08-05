@@ -78,7 +78,7 @@ defineSuite([
                      var vb = upsampled._vertexBuffer;
                      var ib = upsampled._indexBuffer;
 
-                     expect(vb.length).toBe(6 * 4);
+                     expect(vb.length).toBe(4 * 6);
                      expect(ib.length).toBe(6);
 
                      var sw = findVertexWithCoordinates(vb, 0.0, 0.0);
@@ -121,7 +121,7 @@ defineSuite([
              var vb = upsampled._vertexBuffer;
              var ib = upsampled._indexBuffer;
 
-             expect(vb.length).toBe(6 * 9);
+             expect(vb.length).toBe(9 * 6);
              expect(ib.length).toBe(8 * 3);
 
              var sw = findVertexWithCoordinates(vb, 0.0, 0.0);
@@ -151,6 +151,37 @@ defineSuite([
              expect(hasTriangle(ib, v42, se, v43)).toBe(true);
              expect(hasTriangle(ib, nw, v43, ne)).toBe(true);
              expect(hasTriangle(ib, nw, extra, v43)).toBe(true);
+         });
+
+         it('works when a triangle has two vertices on the boundary and a third outside', function() {
+             var data = new MeshTerrainData({
+                 center : new Cartesian3(0.0, 0.0, 0.0),
+                 vertexBuffer : new Float32Array([
+                                                  0.0, 0.0, 0.0, 1.0, 0.0, 0.0, // sw
+                                                  0.0, 1.0, 0.0, 2.0, 0.0, 1.0, // nw
+                                                  1.0, 0.0, 0.0, 3.0, 1.0, 0.0, // se
+                                                  1.0, 1.0, 0.0, 4.0, 1.0, 1.0,  // ne
+                                                  0.6, 0.875, 0.0, 5.0, 0.5, 0.875, // extra vertex on boundary
+                                                  0.6, 0.75, 0.0, 6.0, 0.5, 0.75 // extra vertex on boundary
+                                                  ]),
+                 indexBuffer : new Uint32Array([
+                                                5, 2, 4,
+                                                0, 5, 1,
+                                                0, 2, 5,
+                                                1, 5, 4,
+                                                1, 4, 3,
+                                                4, 2, 3
+                                                ])
+             });
+
+             var tilingScheme = new GeographicTilingScheme();
+
+             var upsampled = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
+             var vb = upsampled._vertexBuffer;
+             var ib = upsampled._indexBuffer;
+
+             expect(vb.length).toBe(7 * 6);
+             expect(ib.length).toBe(5 * 3);
          });
      });
 });
