@@ -42,8 +42,8 @@ define([
      *
      * @example
      * // Add basic drag and drop support and pop up an alert window on error.
-     * var viewer = new Viewer('cesiumContainer');
-     * viewer.extend(viewerDragDropMixin);
+     * var viewer = new Cesium.Viewer('cesiumContainer');
+     * viewer.extend(Cesium.viewerDragDropMixin);
      * viewer.onDropError.addEventListener(function(viewerArg, source, error) {
      *     window.alert('Error processing ' + source + ':' + error);
      * });
