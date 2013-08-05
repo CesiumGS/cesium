@@ -3,6 +3,7 @@ define([
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
+        '../../Core/destroyObject',
         '../createCommand',
         './CzmlDataSourcePanel',
         './GeoJsonDataSourcePanel',
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        destroyObject,
         createCommand,
         CzmlDataSourcePanel,
         GeoJsonDataSourcePanel,
@@ -56,16 +58,22 @@ define([
             when(that.activeDataSourcePanel.finish(that._dataSourceBrowserViewModel.dataSources), function(result) {
                 finishing(false);
                 if (result) {
-                    that.activeDataSourcePanel.activeDataSourcePanel = undefined;
+                    that.activeDataSourcePanel = undefined;
                     that.visible = false;
                 }
-            }, function (err) {
+            }, function(err) {
                 that.error = err;
                 finishing(false);
             });
         }, knockout.computed(function() {
             return !finishing() && defined(that.activeDataSourcePanel);
         }));
+
+        this._activeDataSourcePanelSubscription = knockout.getObservable(this, 'activeDataSourcePanel').subscribe(function(value) {
+            if (defined(value)) {
+                value.viewModel.reset();
+            }
+        });
     };
 
     defineProperties(DataSourcePanelViewModel.prototype, {
@@ -81,6 +89,24 @@ define([
             }
         }
     });
+
+    /**
+     * @memberof DataSourcePanelViewModel
+     * @returns {Boolean} true if the object has been destroyed, false otherwise.
+     */
+    DataSourcePanelViewModel.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    /**
+     * Destroys the view model.  Should be called to
+     * properly clean up the view model when it is no longer needed.
+     * @memberof DataSourcePanelViewModel
+     */
+    DataSourcePanelViewModel.prototype.destroy = function() {
+        this._activeDataSourcePanelSubscription.dispose();
+        destroyObject(this);
+    };
 
     /**
      *

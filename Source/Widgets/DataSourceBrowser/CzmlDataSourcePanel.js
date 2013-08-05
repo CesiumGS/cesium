@@ -1,52 +1,82 @@
 /*global define*/
 define([
+        '../../Core/createGuid',
         '../../Core/defineProperties',
         '../../DynamicScene/CzmlDataSource',
+        '../../ThirdParty/knockout',
         '../../ThirdParty/when'
     ], function(
+        createGuid,
         defineProperties,
         CzmlDataSource,
+        knockout,
         when) {
     "use strict";
 
+    var CzmlDataSourcePanelViewModel = function() {
+        this.url = '';
+
+        knockout.track(this, ['url']);
+    };
+
+    CzmlDataSourcePanelViewModel.prototype.reset = function() {
+        this.url = '';
+    };
+
     var CzmlDataSourcePanel = function() {
-        this.description = 'CZML file';
+        this._viewModel = new CzmlDataSourcePanelViewModel();
 
-        var element = document.createElement('div');
-        this._element = element;
-
-        var span = document.createElement('span');
-        span.textContent = 'URL:';
-        element.appendChild(span);
-
-        var input = document.createElement('input');
-        input.type = 'text';
-        element.appendChild(input);
-
-        this._input = input;
+        this._templateID = 'cesium-dataSourceBrowser-czmlDataSourcePanel-template-' + createGuid();
+        var templateElement = document.createElement('script');
+        templateElement.type = 'text/html';
+        templateElement.id = this._templateID;
+        templateElement.textContent = '<div>\
+<span>CZML URL:</span>\
+<input type="text" data-bind="value: url">\
+</div>';
+        document.body.appendChild(templateElement);
     };
 
     defineProperties(CzmlDataSourcePanel.prototype, {
         /**
-         * Gets the element that contains this panel.
+         * Gets the description for this panel.
          * @memberof CzmlDataSourcePanel.prototype
          *
-         * @type {Element}
+         * @type {String}
          */
-        element : {
+        description : {
+            value : 'CZML file',
+            writable : false
+        },
+
+        /**
+         * Gets the ID of this panel's template.
+         * @memberof CzmlDataSourcePanel.prototype
+         *
+         * @type {String}
+         */
+        templateID : {
             get : function() {
-                return this._element;
+                return this._templateID;
+            }
+        },
+
+        /**
+         * Gets the view model for this panel.
+         * @memberof CzmlDataSourcePanel.prototype
+         *
+         * @type {Object}
+         */
+        viewModel : {
+            get : function() {
+                return this._viewModel;
             }
         }
     });
 
-    CzmlDataSourcePanel.prototype.reset = function() {
-        this._input.value = '';
-    };
-
     CzmlDataSourcePanel.prototype.finish = function(dataSourceCollection) {
-        var url = this._input.value;
-        if (this._input.value === '') {
+        var url = this._viewModel.url;
+        if (url === '') {
             return false;
         }
 

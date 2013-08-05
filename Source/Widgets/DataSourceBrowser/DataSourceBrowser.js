@@ -97,13 +97,15 @@ foreach: dataSourcePanels');
         var dataSourceOption = document.createElement('div');
         dataSourceOption.setAttribute('data-bind', '\
 text : description,\
-css: {"cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel},\
+css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
 click: function($data) { $parent.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
 
         var activeDataSourcePanelContainer = document.createElement('div');
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
-dataSourceBrowserActivePanel : activeDataSourcePanel');
+template : { if: activeDataSourcePanel,\
+             name: activeDataSourcePanel && activeDataSourcePanel.templateID,\
+             data: activeDataSourcePanel && activeDataSourcePanel.viewModel }');
         dataSourcePanelContainer.appendChild(activeDataSourcePanelContainer);
 
         var dataSourcePanelFooter = document.createElement('div');
@@ -122,20 +124,6 @@ enable: finishCommand.canExecute');
 visible: error !== "",\
 text: error');
         dataSourcePanelFooter.appendChild(finishAddDataSourceError);
-
-        knockout.bindingHandlers.dataSourceBrowserActivePanel = {
-            update : function(element, valueAccessor, allBindingsAccessor, viewModel, bindingContext) {
-                while (element.hasChildNodes()) {
-                    element.removeChild(element.lastChild);
-                }
-
-                var newActivePanel = valueAccessor();
-                if (defined(newActivePanel)) {
-                    newActivePanel.reset();
-                    element.appendChild(newActivePanel.element);
-                }
-            }
-        };
 
         container.appendChild(element);
         this._element = element;
