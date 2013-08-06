@@ -38,38 +38,12 @@ define([
                 vertexFormat: options.vertexFormat
         };
 
-        var ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        this.ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        this.workerName = 'createSphereGeometry';
+    };
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipsoidGeometry.attributes;
-
-        /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipsoidGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = ellipsoidGeometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipsoidGeometry.boundingSphere;
+    SphereGeometry.createGeometry = function(sphereGeometry) {
+        return EllipsoidGeometry.createGeometry(sphereGeometry.ellipsoidGeometry);
     };
 
     return SphereGeometry;

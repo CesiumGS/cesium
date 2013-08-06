@@ -6,6 +6,7 @@ define([
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes'
     ], function(
@@ -15,6 +16,7 @@ define([
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes) {
     "use strict";
@@ -48,6 +50,13 @@ define([
             throw new DeveloperError('At least two positions are required.');
         }
 
+        this.positions = positions;
+        this.workerName = 'createSimplePolylineGeometry';
+    };
+
+    SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
+        var positions = simplePolylineGeometry.positions;
+
         var i;
         var j = 0;
         var numberOfPositions = positions.length;
@@ -78,36 +87,12 @@ define([
             indices[j++] = i + 1;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromPoints(positions);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : BoundingSphere.fromPoints(positions)
+        });
     };
 
     return SimplePolylineGeometry;

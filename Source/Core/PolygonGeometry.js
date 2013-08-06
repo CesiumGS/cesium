@@ -343,9 +343,9 @@ define([
 
     var distanceScratch = new Cartesian3();
     function getPointAtDistance(p0, p1, distance, length) {
-        distanceScratch = p1.subtract(p0, distanceScratch);
-        distanceScratch = distanceScratch.multiplyByScalar(distance/length, distanceScratch);
-        distanceScratch = p0.add(distanceScratch, distanceScratch);
+        Cartesian3.subtract(p1, p0, distanceScratch);
+        Cartesian3.multiplyByScalar(distanceScratch, distance / length, distanceScratch);
+        Cartesian3.add(p0, distanceScratch, distanceScratch);
         return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
     }
 
@@ -598,6 +598,77 @@ define([
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
 
+        this.vertexFormat = vertexFormat;
+        this.ellipsoid = ellipsoid;
+        this.granularity = granularity;
+        this.stRotation = stRotation;
+        this.height = height;
+        this.extrudedHeight = extrudedHeight;
+        this.extrude = extrude;
+        this.polygonHierarchy = polygonHierarchy;
+        this.workerName = 'createPolygonGeometry';
+    };
+
+    /**
+     * Creates a polygon from an array of positions.
+     *
+     * @memberof PolygonGeometry
+     *
+     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} options.positions is required.
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @example
+     * // create a polygon from points
+     * var geometry = new PolygonGeometry({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
+     */
+    PolygonGeometry.fromPositions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (typeof options.positions === 'undefined') {
+            throw new DeveloperError('options.positions is required.');
+        }
+
+        var newOptions = {
+            polygonHierarchy : {
+                positions : options.positions
+            },
+            height : options.height,
+            extrudedHeight : options.extrudedHeight,
+            vertexFormat : options.vertexFormat,
+            stRotation : options.stRotation,
+            ellipsoid : options.ellipsoid,
+            granularity : options.granularity
+        };
+        return new PolygonGeometry(newOptions);
+    };
+
+    PolygonGeometry.createGeometry = function(polygonGeometry) {
+        var vertexFormat = polygonGeometry.vertexFormat;
+        var ellipsoid = polygonGeometry.ellipsoid;
+        var granularity = polygonGeometry.granularity;
+        var stRotation = polygonGeometry.stRotation;
+        var height = polygonGeometry.height;
+        var extrudedHeight = polygonGeometry.extrudedHeight;
+        var extrude = polygonGeometry.extrude;
+        var polygonHierarchy = polygonGeometry.polygonHierarchy;
+
         var boundingSphere;
         var walls;
         var topAndBottom;
@@ -714,86 +785,12 @@ define([
             delete attributes.position;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = geometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = geometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = boundingSphere;
-    };
-
-    /**
-     * Creates a polygon from an array of positions.
-     *
-     * @memberof PolygonGeometry
-     *
-     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
-     * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     *
-     * @exception {DeveloperError} options.positions is required.
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
-     *
-     * @example
-     * // create a polygon from points
-     * var geometry = new PolygonGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
-     * });
-     */
-    PolygonGeometry.fromPositions = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        if (typeof options.positions === 'undefined') {
-            throw new DeveloperError('options.positions is required.');
-        }
-
-        var newOptions = {
-            polygonHierarchy : {
-                positions : options.positions
-            },
-            height : options.height,
-            extrudedHeight : options.extrudedHeight,
-            vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation,
-            ellipsoid : options.ellipsoid,
-            granularity : options.granularity
-        };
-        return new PolygonGeometry(newOptions);
+        return new Geometry({
+            attributes : attributes,
+            indices : geometry.indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : boundingSphere
+        });
     };
 
     return PolygonGeometry;
