@@ -27,9 +27,8 @@ define([
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
-        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth * 0.50) + 'px';
-        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight * 0.50) + 'px';
-
+        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.50) + 'px';
+        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.50) + 'px';
         var pointMaxY = containerHeight - 15;
         var pointMaxX = containerWidth - 16;
         var pointXOffset = position.x - 15;
@@ -47,51 +46,70 @@ define([
         var left = position.x < 0;
         var right = position.x > containerWidth;
 
-        if (bottom) {
-            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
-            posY = 15;
-            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
-            pointY = pointMin;
-            viewModel._down = true;
-            viewModel._up = false;
-            viewModel._left = false;
-            viewModel._right = false;
-        } else if (top) {
-            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
-            posY = containerHeight - height - 14;
-            pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
-            pointY = pointMaxY;
-            viewModel._down = false;
-            viewModel._up = true;
-            viewModel._left = false;
-            viewModel._right = false;
-        } else if (left) {
-            posX = 15;
-            posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
-            pointX = pointMin;
-            pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
-            viewModel._down = false;
-            viewModel._up = false;
-            viewModel._left = true;
-            viewModel._right = false;
-        } else if (right) {
-            posX = containerWidth - width - 15;
-            posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
-            pointX = pointMaxX;
-            pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
-            viewModel._down = false;
-            viewModel._up = false;
-            viewModel._left = false;
-            viewModel._right = true;
+        if (viewModel.showPoint) {
+            if (bottom) {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = 15;
+                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
+                pointY = pointMin;
+                viewModel._down = true;
+                viewModel._up = false;
+                viewModel._left = false;
+                viewModel._right = false;
+            } else if (top) {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = containerHeight - height - 14;
+                pointX = Math.min(Math.max(pointXOffset, pointMin), pointMaxX - 15);
+                pointY = pointMaxY;
+                viewModel._down = false;
+                viewModel._up = true;
+                viewModel._left = false;
+                viewModel._right = false;
+            } else if (left) {
+                posX = 15;
+                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                pointX = pointMin;
+                pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
+                viewModel._down = false;
+                viewModel._up = false;
+                viewModel._left = true;
+                viewModel._right = false;
+            } else if (right) {
+                posX = containerWidth - width - 15;
+                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+                pointX = pointMaxX;
+                pointY = Math.min(Math.max((position.y - 16), pointMin), pointMaxY - 15);
+                viewModel._down = false;
+                viewModel._up = false;
+                viewModel._left = false;
+                viewModel._right = true;
+            } else {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
+                pointX = pointXOffset;
+                pointY = Math.min(position.y + 10, posMaxY - 15);
+                viewModel._down = true;
+                viewModel._up = false;
+                viewModel._left = false;
+                viewModel._right = false;
+            }
         } else {
-            posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
-            posY = Math.min(Math.max((position.y + 25), posMin), posMaxY);
-            pointX = pointXOffset;
-            pointY = Math.min(position.y + 10, posMaxY - 15);
-            viewModel._down = true;
-            viewModel._up = false;
-            viewModel._left = false;
-            viewModel._right = false;
+            if (bottom) {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = 0;
+            } else if (top) {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = containerHeight - height;
+            } else if (left) {
+                posX = 0;
+                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+            } else if (right) {
+                posX = containerWidth - width;
+                posY = Math.min(Math.max((position.y - height/2), posMin), posMaxY);
+            } else {
+                posX = Math.min(Math.max(posXOffset, posMin), posMaxX);
+                posY = Math.min(Math.max(position.y, posMin), posMaxY);
+            }
         }
 
         return {
@@ -149,6 +167,7 @@ define([
         this._pointY = '0';
         this._updateContent = false;
         this._timerRunning = false;
+        this._defaultPosition = {x: this._container.clientWidth, y: this._container.clientHeight/2};
 
         /**
          * Determines the visibility of the balloon
@@ -158,6 +177,14 @@ define([
          */
         this.showBalloon = false;
 
+        /**
+         * Determines the visibility of the balloon point if the balloon is visible
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
+        this.showPoint = true;
+
         this._down = true;
         this._up = false;
         this._left = false;
@@ -166,7 +193,7 @@ define([
         this._maxWidth = Math.floor(this._container.clientWidth*0.95) + 'px';
         this._maxHeight = Math.floor(this._container.clientHeight*0.50) + 'px';
 
-        knockout.track(this, ['showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
+        knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
                               '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight']);
     };
 
@@ -196,8 +223,16 @@ define([
                     that._timerRunning = false;
                 }, 100);
                 this._updateContent = false;
-            } else  if (typeof this._position !== 'undefined') {
-                var pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+            } else  if (this.showBalloon) {
+                var pos;
+                if (typeof this._position !== 'undefined'){
+                    pos = this._computeScreenSpacePosition(this._position, screenSpacePos);
+                    this.showPoint = true;
+                }  else {
+                    pos = this._defaultPosition;
+                    this.showPoint = false;
+                }
+
                 pos = shiftPosition(this, pos);
                 this._pointX = pos.point.x + 'px';
                 this._pointY = pos.point.y + 'px';
@@ -269,9 +304,10 @@ define([
         content: {
             set : function(value) {
                 if (typeof value === 'undefined') {
-                    throw new DeveloperError('value must defined');
+                    this._content = '';
+                } else {
+                    this._content = value;
                 }
-                this._content = value;
                 this._updateContent = true;
             }
         },
@@ -284,6 +320,20 @@ define([
         scene : {
             get : function() {
                 return this._scene;
+            }
+        },
+        /**
+         * Sets the default position of the balloon.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Cartesain2}
+         */
+        defaultPosition : {
+            set : function(value) {
+                if (typeof value !== 'undefined') {
+                    this._defaultPosition.x = value.x;
+                    this._defaultPosition.y = value.y;
+                }
             }
         },
         /**
@@ -304,9 +354,7 @@ define([
          */
         computeScreenSpacePosition: {
             set: function(value) {
-                if (typeof value === 'function') {
-                    this._computeScreenSpacePosition = value;
-                }
+                this._computeScreenSpacePosition = value;
             }
         },
         /**
@@ -317,9 +365,7 @@ define([
          */
         position: {
             set: function(value) {
-                if (typeof value !== 'undefined') {
-                    this._position = value;
-                }
+                this._position = value;
             }
         }
     });
