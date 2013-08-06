@@ -64,9 +64,11 @@ defineSuite([
         expect(function() {
             viewer.flyToObject(undefined);
         }).toThrow();
+
+        viewer.destroy();
     });
 
-    it('can set flyToObject', function() {
+    it('can run flyToObject', function() {
         var viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
@@ -75,7 +77,7 @@ defineSuite([
         
         viewer.scene.getFrameState().scene2D.projection = new GeographicProjection(Ellipsoid.WGS84);
 
-        viewer.flyToObject = dynamicObject;
+        viewer.flyToObject(dynamicObject);
 
         viewer.destroy();
     });
