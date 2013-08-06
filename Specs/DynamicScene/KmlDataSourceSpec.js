@@ -189,7 +189,7 @@ defineSuite(['DynamicScene/KmlDataSource',
 
     it('handles Point Geometry with LabelStyle', function() {
         var name = new ConstantProperty('LabelStyle.kml');
-        var scale = new ConstantProperty('1.5');
+        var scale = new ConstantProperty(1.5);
         var color = new ConstantProperty(Color.fromRgba(parseInt('ff0000cc', 16)));
         var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\

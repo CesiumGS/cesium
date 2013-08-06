@@ -133,6 +133,24 @@ define(['../Core/createGuid',
         return id;
     }
 
+    function getNumericValue(node, tagName){
+        var element = node.getElementsByTagName(tagName)[0];
+        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        return parseFloat(value, 10);
+    }
+
+    function getStringValue(node, tagName){
+        var element = node.getElementsByTagName(tagName)[0];
+        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        return value;
+    }
+
+    function getColorValue(node, tagName){
+        var element = node.getElementsByTagName(tagName)[0];
+        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        return parseInt(value,16); //hexadecimal notation
+    }
+
     function getElementValue(node, elementType){
         var element = node.getElementsByTagName(elementType)[0];
         var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
@@ -175,7 +193,7 @@ define(['../Core/createGuid',
 
     // KML processing functions
     function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
-        dynamicObject.name = getElementValue(placemark, 'name');
+        dynamicObject.name = getStringValue(placemark, 'name');
         if(typeof dynamicObject.label !== 'undefined'){
             dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
         }
@@ -242,8 +260,8 @@ define(['../Core/createGuid',
                 dynamicObject.billboard = new DynamicBillboard();
                 //Map style to billboard properties
                 //TODO heading, hotSpot and ColorMode
-                var scale = getElementValue(node, 'scale');
-                var icon = getElementValue(node,'href');
+                var scale = getNumericValue(node, 'scale');
+                var icon = getStringValue(node,'href');
                 var color = getColor(node);
 
                 dynamicObject.billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
@@ -254,7 +272,7 @@ define(['../Core/createGuid',
                 dynamicObject.label = new DynamicLabel();
                 //Map style to label properties
                 //TODO ColorMode
-                var labelScale = getElementValue(node, 'scale');
+                var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColor(node);
 
                 dynamicObject.label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
@@ -266,9 +284,9 @@ define(['../Core/createGuid',
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility, ColorMode
                 var lineColor = getColor(node);
-                var lineWidth = getElementValue(node,'width');
+                var lineWidth = getNumericValue(node,'width');
                 var lineOuterColor = getColor(node,'gx:outerColor');
-                var lineOuterWidth = getElementValue(node,'gx:outerWidth');
+                var lineOuterWidth = getNumericValue(node,'gx:outerWidth');
 
                 dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(lineColor)) : undefined;
                 dynamicObject.polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
@@ -303,7 +321,7 @@ define(['../Core/createGuid',
             } else {
                 var styleUrl = array[i].getElementsByTagName('styleUrl');
                 for(var j = 0, size = styleUrl.length; j < size; j++){
-                    var styleId = getElementValue(array[j], 'styleUrl');
+                    var styleId = getStringValue(array[j], 'styleUrl');
                     if(styleId[0] === '#'){ //then check for local file styles
                         var styleObj = styleCollection.getObject(styleId);
                         placemarkDynamicObject.merge(styleObj);
