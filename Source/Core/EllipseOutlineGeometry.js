@@ -142,24 +142,6 @@ define([
         var numPts = 1 + Math.ceil(CesiumMath.PI_OVER_TWO / granularity);
         var deltaTheta = MAX_ANOMALY_LIMIT / (numPts - 1);
 
-        // If the number of points were three, the ellipse
-        // would be tessellated like below:
-        //
-        //         *---*
-        //       / | \ | \
-        //     *---*---*---*
-        //   / | \ | \ | \ | \
-        // *---*---*---*---*---*
-        // | \ | \ | \ | \ | \ |
-        // *---*---*---*---*---*
-        //   \ | \ | \ | \ | /
-        //     *---*---*---*
-        //       \ | \ | /
-        //         *---*
-        // Notice each vertical column contains an even number of positions.
-        // The sum of the first n even numbers is n * (n + 1). Double it for the number of points
-        // for the whole ellipse. Note: this is just an estimate and may actually be less depending
-        // on the number of iterations before the angle reaches pi/2.
         var position = scratchCartesian1;
         var reflectedPosition = scratchCartesian2;
 
@@ -210,13 +192,15 @@ define([
         var positions = computeEllipsePositions(options);
         var attributes = raisePositionsToHeight(positions, options, false);
 
-        var indices = [];
+        var indices = IndexDatatype.createTypedArray(positions.length / 3, positions.length/3*2);
+        var index = 0;
         for (var i = 0; i < positions.length/3 - 1; i++) {
-            indices.push(i, i+1);
+            indices[index++] = i;
+            indices[index++] = i+1;
         }
-        indices.push(positions.length/3 - 1, 0);
+        indices[index++] = positions.length/3 - 1;
+        indices[index++] = 0;
 
-        indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
         return {
             boundingSphere : boundingSphere,
             attributes : attributes,
@@ -243,18 +227,23 @@ define([
 
         var positions = computeEllipsePositions(options);
         var attributes = raisePositionsToHeight(positions, options, true);
-
+        positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
+        var length = positions.length/3;
+        var indices = IndexDatatype.createTypedArray(length, length * 2 + countSideLines * 2);
 
-        var indices = [];
-
-        var length = attributes.position.values.length/6;
+        length /= 2;
+        var index = 0;
         for (var i = 0; i < length - 1; i++) {
-            indices.push(i, i + 1);
-            indices.push(i + length, i + length + 1);
+            indices[index++] = i;
+            indices[index++] = i + 1;
+            indices[index++] = i + length;
+            indices[index++] = i + length + 1;
         }
-        indices.push(length - 1, 0);
-        indices.push(length + length - 1, length);
+        indices[index++] = length - 1;
+        indices[index++] = 0;
+        indices[index++] = length + length - 1;
+        indices[index++] = length;
 
         var numSide;
         if (countSideLines > 0) {
@@ -264,11 +253,11 @@ define([
         var maxI = Math.min(numSide*10, length);
         if (countSideLines > 0) {
             for (i = 0; i < maxI; i+= numSide){
-                indices.push(i, i + length);
+                indices[index++] = i;
+                indices[index++] = i + length;
             }
         }
 
-        indices = IndexDatatype.createTypedArray(positions.length / 3, indices);
         return {
             boundingSphere : boundingSphere,
             attributes : attributes,
@@ -369,8 +358,7 @@ define([
 
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *
@@ -386,7 +374,7 @@ define([
         this.indices = ellipseGeometry.indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */

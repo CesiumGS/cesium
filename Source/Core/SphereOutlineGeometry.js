@@ -46,8 +46,7 @@ define([
         var ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type Object
          *
@@ -63,7 +62,7 @@ define([
         this.indices = ellipsoidGeometry.indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */

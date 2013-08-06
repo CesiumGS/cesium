@@ -491,8 +491,8 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
-     * by an array of Cartesian points, or a polygon hierarchy.
+     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is defined
+     * by a polygon hierarchy.
      *
      * @alias PolygonGeometry
      * @constructor

@@ -70,8 +70,10 @@ define([
             throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
         }
 
-        var positions = [];
-        var indices = [];
+        var positionSize = (stackPartitions - 1)*subdivisions + (subdivisions - 1)*slicePartitions + 2;
+        var positions = new Float64Array(positionSize * 3);
+        var indicesSize = (stackPartitions - 1) * subdivisions + slicePartitions * subdivisions;
+        var indices = IndexDatatype.createTypedArray(length, indicesSize * 2);
 
         var i;
         var j;
@@ -81,6 +83,7 @@ define([
         var theta;
         var cosTheta;
         var sinTheta;
+        var index = 0;
         for (i = 1; i < stackPartitions; i++) {
             phi = Math.PI * i / stackPartitions;
             cosPhi = Math.cos(phi);
@@ -91,13 +94,15 @@ define([
                 cosTheta = Math.cos(theta);
                 sinTheta = Math.sin(theta);
 
-                positions.push(radii.x * cosTheta * sinPhi,
-                        radii.y * sinTheta * sinPhi,
-                        radii.z * cosPhi);
+                positions[index++] = radii.x * cosTheta * sinPhi;
+                positions[index++] = radii.y * sinTheta * sinPhi;
+                positions[index++] = radii.z * cosPhi;
             }
         }
 
-        positions.push(0, 0, radii.z);
+        positions[index++] = 0;
+        positions[index++] = 0;
+        positions[index++] = radii.z;
         for (i = 1; i < subdivisions; i++) {
             phi = Math.PI * i / subdivisions;
             cosPhi = Math.cos(phi);
@@ -108,24 +113,30 @@ define([
                 cosTheta = Math.cos(theta);
                 sinTheta = Math.sin(theta);
 
-                positions.push(radii.x * cosTheta * sinPhi,
-                        radii.y * sinTheta * sinPhi,
-                        radii.z * cosPhi);
+                positions[index++] = radii.x * cosTheta * sinPhi;
+                positions[index++] = radii.y * sinTheta * sinPhi;
+                positions[index++] = radii.z * cosPhi;
             }
         }
-        positions.push(0, 0, -radii.z);
+        positions[index++] = 0;
+        positions[index++] = 0;
+        positions[index++] = -radii.z;
 
+        index = 0;
         for (i = 0; i < stackPartitions - 1; ++i) {
             var topRowOffset = (i * subdivisions);
             for (j = 0; j < subdivisions - 1; ++j) {
-                indices.push(topRowOffset + j, topRowOffset + j + 1);
+                indices[index++] = topRowOffset + j;
+                indices[index++] = topRowOffset + j + 1;
             }
-            indices.push(topRowOffset + subdivisions - 1, topRowOffset);
+            indices[index++] = topRowOffset + subdivisions - 1;
+            indices[index++] = topRowOffset;
         }
 
         var sliceOffset = subdivisions * (stackPartitions - 1);
         for (j = 1; j < slicePartitions + 1; ++j) {
-            indices.push(sliceOffset, sliceOffset + j);
+            indices[index++] = sliceOffset;
+            indices[index++] = sliceOffset + j;
         }
 
         for (i = 0; i < subdivisions - 2; ++i) {
@@ -133,19 +144,21 @@ define([
             var bottomOffset = ((i + 1) * slicePartitions) + 1 + sliceOffset;
 
             for (j = 0; j < slicePartitions - 1; ++j) {
-                indices.push(bottomOffset + j, topOffset + j);
+                indices[index++] = bottomOffset + j;
+                indices[index++] = topOffset + j;
             }
-            indices.push(bottomOffset + slicePartitions - 1, topOffset + slicePartitions - 1);
+            indices[index++] = bottomOffset + slicePartitions - 1;
+            indices[index++] = topOffset + slicePartitions - 1;
         }
 
         var lastPosition = positions.length/3 - 1;
-        for (j = lastPosition - 1; j > lastPosition - slicePartitions-1; --j) {
-            indices.push(lastPosition, j);
+        for (j = lastPosition - 1; j > lastPosition - slicePartitions - 1; --j) {
+            indices[index++] = lastPosition;
+            indices[index++] = j;
         }
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type Object
          *
@@ -155,7 +168,7 @@ define([
             position: new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
-                values : new Float64Array(positions)
+                values : positions
             })
         });
 
@@ -164,7 +177,7 @@ define([
          *
          * @type Array
          */
-        this.indices = IndexDatatype.createTypedArray(length, indices);
+        this.indices = indices;
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.

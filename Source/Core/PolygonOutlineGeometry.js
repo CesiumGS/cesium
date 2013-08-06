@@ -98,11 +98,15 @@ define([
         subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
         length = subdividedPositions.length/3;
-        var indices = [];
+        var indicesSize = length*2;
+        var indices = IndexDatatype.createTypedArray(subdividedPositions.length/3, indicesSize);
+        var index = 0;
         for (i = 0; i < length-1; i++) {
-            indices.push(i, i+1);
+            indices[index++] = i;
+            indices[index++] = i+1;
         }
-        indices.push(length-1, 0);
+        indices[index++] = length-1;
+        indices[index++] = 0;
 
         return new GeometryInstance({
             geometry : new Geometry({
@@ -110,7 +114,7 @@ define([
                     position: new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : subdividedPositions
+                        values : new Float64Array(subdividedPositions)
                     })
                 }),
                 indices: indices,
@@ -185,17 +189,24 @@ define([
         subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
         length = subdividedPositions.length/3;
-        var indices = [];
+        var indicesSize = ((length * 2) + corners.length)*2;
+        var indices = IndexDatatype.createTypedArray(subdividedPositions.length/3, indicesSize);
+        var index = 0;
         for (i = 0; i < length-1; i++) {
-            indices.push(i, i+1);
-            indices.push(i + length, i+1 + length);
+            indices[index++] = i;
+            indices[index++] = i+1;
+            indices[index++] = i + length;
+            indices[index++] = i+1 + length;
         }
-        indices.push(length-1, 0);
-        indices.push(length + length-1, length);
+        indices[index++] = length-1;
+        indices[index++] = 0;
+        indices[index++] = length + length-1;
+        indices[index++] = length;
 
         for (i = 0; i < corners.length; i++) {
             var corner = corners[i];
-            indices.push(corner, corner + length);
+            indices[index++] = corner;
+            indices[index++] = corner + length;
         }
 
         subdividedPositions = subdividedPositions.concat(subdividedPositions);
@@ -206,7 +217,7 @@ define([
                     position: new GeometryAttribute({
                         componentDatatype : ComponentDatatype.DOUBLE,
                         componentsPerAttribute : 3,
-                        values : subdividedPositions
+                        values : new Float64Array(subdividedPositions)
                     })
                 }),
                 indices: indices,
@@ -216,8 +227,8 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
-     * by an array of Cartesian points, or a polygon hierarchy.
+     * A {@link Geometry} that represents vertices and indices for the outline of a polygon on the ellipsoid. The polygon is defined
+     * by a polygon hierarchy.
      *
      * @alias PolygonOutlineGeometry
      * @constructor
@@ -395,14 +406,10 @@ define([
             boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
         }
 
-        geometry.attributes.position.values = new Float64Array(geometry.attributes.position.values);
-        geometry.indices = IndexDatatype.createTypedArray(geometry.attributes.position.values.length / 3, geometry.indices);
-
         var attributes = geometry.attributes;
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *
@@ -418,7 +425,7 @@ define([
         this.indices = geometry.indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */
@@ -433,7 +440,7 @@ define([
     };
 
     /**
-     * Creates a polygon from an array of positions.
+     * Creates a polygon outline from an array of positions.
      *
      * @memberof PolygonOutlineGeometry
      *

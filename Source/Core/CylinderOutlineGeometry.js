@@ -28,22 +28,22 @@ define([
     var radiusScratch = new Cartesian2();
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the edges of cylinder.
+     * A {@link Geometry} that represents vertices and indices for the outline of a cylinder.
      *
      * @alias CylinderGeometryOutline
      * @constructor
      *
-     * @param {Number} options.length The length of the cylinder
-     * @param {Number} options.topRadius The radius of the top of the cylinder
-     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
-     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder
-     * @param {Boolean} [options.countSideLines = 10] Number of lines to draw between the top and bottom surfaces of the cylinder
+     * @param {Number} options.length The length of the cylinder.
+     * @param {Number} options.topRadius The radius of the top of the cylinder.
+     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
+     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder.
+     * @param {Boolean} [options.countSideLines = 10] Number of lines to draw between the top and bottom surfaces of the cylinder.
      *
-     * @exception {DeveloperError} options.length must be greater than 0
-     * @exception {DeveloperError} options.topRadius must be greater than 0
-     * @exception {DeveloperError} options.bottomRadius must be greater than 0
-     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0
-     * @exception {DeveloperError} options.slices must be greater that 3
+     * @exception {DeveloperError} options.length must be greater than 0.
+     * @exception {DeveloperError} options.topRadius must be greater than 0.
+     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
+     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
+     * @exception {DeveloperError} options.slices must be greater that 3.
      *
      * @example
      * // create cylinder geometry
@@ -59,23 +59,23 @@ define([
 
         var length = options.length;
         if (typeof length === 'undefined' || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0');
+            throw new DeveloperError('options.length must be greater than 0.');
         }
         var topRadius = options.topRadius;
         if (typeof topRadius === 'undefined' || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0');
+            throw new DeveloperError('options.topRadius must be greater than 0.');
         }
         var bottomRadius = options.bottomRadius;
         if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0');
+            throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
         if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
+            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
 
         var slices = defaultValue(options.slices, 100);
         if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3');
+            throw new DeveloperError('options.slices must be greater that 3.');
         }
 
         var countSideLines = Math.max(defaultValue(options.countSideLines, 10), 0);
@@ -140,7 +140,7 @@ define([
         attributes.position = new GeometryAttribute({
             componentDatatype: ComponentDatatype.DOUBLE,
             componentsPerAttribute: 3,
-            values: new Float64Array(positions)
+            values: positions
         });
 
         radiusScratch.x = length * 0.5;
@@ -149,8 +149,7 @@ define([
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, radiusScratch.magnitude());
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type Object
          *

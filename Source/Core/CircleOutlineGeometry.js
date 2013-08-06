@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a circle on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for the outline of a circle on the ellipsoid.
      *
      * @alias CircleOutlineGeometry
      * @constructor
@@ -80,7 +80,7 @@ define([
         this.indices = ellipseGeometry.indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */

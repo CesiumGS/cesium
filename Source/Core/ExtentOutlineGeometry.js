@@ -5,6 +5,7 @@ define([
         './Cartesian3',
         './Cartographic',
         './ComponentDatatype',
+        './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         Cartographic,
         ComponentDatatype,
+        IndexDatatype,
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
@@ -134,11 +136,16 @@ define([
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
         }
-        var indices = [];
+        var indicesSize = positions.length/3 * 2;
+        var indices = IndexDatatype.createTypedArray(positions.length/3, indicesSize);
+
+        var index = 0;
         for(var i = 0; i < (positions.length/3)-1; i++) {
-            indices.push(i, i+1);
+            indices[index++] = i;
+            indices[index++] = i+1;
         }
-        indices.push((positions.length/3)-1, 0);
+        indices[index++] = (positions.length/3)-1;
+        indices[index++] = 0;
 
         return {
             boundingSphere : BoundingSphere.fromExtent3D(extent, ellipsoid, surfaceHeight),
@@ -212,19 +219,29 @@ define([
             positions[posIndex++] = position.z;
         }
 
-        var indices = [];
+        var indicesSize = positions.length/3 * 2 + 8;
+        var indices = IndexDatatype.createTypedArray(positions.length/3, indicesSize);
         var length = positions.length/6;
+        var index = 0;
         for (var i = 0; i < length - 1; i++) {
-            indices.push(i, i+1);
-            indices.push(i + length, i + length + 1);
+            indices[index++] = i;
+            indices[index++] =i+1;
+            indices[index++] = i + length;
+            indices[index++] = i + length + 1;
         }
-        indices.push(length - 1, 0);
-        indices.push(length + length - 1, length);
+        indices[index++] = length - 1;
+        indices[index++] = 0;
+        indices[index++] = length + length - 1;
+        indices[index++] = length;
 
-        indices.push(0, length);
-        indices.push(width-1, length + width-1);
-        indices.push(width + height - 2, width + height - 2 + length);
-        indices.push(2*width + height - 3, 2*width + height - 3 + length);
+        indices[index++] = 0;
+        indices[index++] = length;
+        indices[index++] = width-1;
+        indices[index++] = length + width-1;
+        indices[index++] = width + height - 2;
+        indices[index++] = width + height - 2 + length;
+        indices[index++] =  2*width + height - 3;
+        indices[index++] = 2*width + height - 3 + length;
 
 
         var topBS = BoundingSphere.fromExtent3D(extent, ellipsoid, maxHeight, topBoundingSphere);
@@ -364,8 +381,7 @@ define([
         }
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *
@@ -384,7 +400,7 @@ define([
          *
          * @type Array
          */
-        this.indices = new Uint32Array(extentGeometry.indices);
+        this.indices = extentGeometry.indices;
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
          *
