@@ -273,20 +273,6 @@ defineSuite(['DynamicScene/KmlDataSource',
         }).toThrow();
     });
 
-    it('Simple Test loading Kml', function() {
-        var dataSource = new KmlDataSource();
-        var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/simplePlacemark.kml';
-
-        dataSource.loadUrl(url);
-    });
-
-    it('Test loading Kml', function() {
-        var dataSource = new KmlDataSource();
-        var url = 'http://localhost:8080/Apps/CesiumViewer/Gallery/KML_Samples.kml';
-
-        dataSource.loadUrl(url);
-    });
-
     it('load throws with undefined KML', function() {
         var dataSource = new KmlDataSource();
         expect(function() {
