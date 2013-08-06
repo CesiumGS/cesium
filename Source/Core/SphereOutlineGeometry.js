@@ -2,43 +2,48 @@
 define([
         './defaultValue',
         './Cartesian3',
-        './EllipsoidGeometry'
+        './EllipsoidOutlineGeometry'
     ], function(
         defaultValue,
         Cartesian3,
-        EllipsoidGeometry) {
+        EllipsoidOutlineGeometry) {
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a sphere on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for the outline of a sphere on the ellipsoid.
      *
      * Creates vertices and indices for an sphere centered at the origin.
      *
-     * @alias SphereGeometry
+     * @alias SphereOutlineGeometry
      * @constructor
      *
      * @param {Number} [options.radius=1.0] The radius of the sphere.
-     * @param {Number} [options.numberOfPartitions=32] The number of times to partition the sphere in a plane formed by two radii in a single quadrant.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
+     * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
+     * @param {Number} [options.subdivisions=200] The number of points per line, determining the granularity of the curvature .
      *
-     * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
+     * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
+     * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
+     * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
      *
      * @example
-     * var sphere = new SphereGeometry({
+     * var sphere = new SphereOutlineGeometry({
      *   radius : 100.0,
-     *   vertexFormat : VertexFormat.POSITION_ONLY
+     *   stackPartitions : 6,
+     *   slicePartitions: 5
      * });
      */
-    var SphereGeometry = function(options) {
+    var SphereOutlineGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
                 radii: radii,
-                numberOfPartitions: options.numberOfPartitions,
-                vertexFormat: options.vertexFormat
+                stackPartitions: options.stackPartitions,
+                slicePartitions: options.slicePartitions,
+                subdivision: options.subdivisions
         };
 
-        var ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        var ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -72,5 +77,5 @@ define([
         this.boundingSphere = ellipsoidGeometry.boundingSphere;
     };
 
-    return SphereGeometry;
+    return SphereOutlineGeometry;
 });
