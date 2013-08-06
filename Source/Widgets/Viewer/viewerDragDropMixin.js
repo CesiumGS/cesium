@@ -149,6 +149,14 @@ define([
 
             if (clearOnDrop) {
                 viewer.dataSources.removeAll();
+
+                if (viewer.hasOwnProperty('balloonedObject')) {
+                    viewer.balloonedObject = undefined;
+                }
+
+                if (viewer.hasOwnProperty('trackedObject')) {
+                    viewer.trackedObject = undefined;
+                }
             }
 
             var files = event.dataTransfer.files;

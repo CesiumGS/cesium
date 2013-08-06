@@ -1,0 +1,7 @@
+.geoJsonDataSourceTable tr:nth-child(even) {
+    background: #EEEEEE;
+}
+
+.geoJsonDataSourceTable tr:nth-child(odd) {
+    background: #CCCCCC;
+}
