@@ -114,10 +114,30 @@ define([
             var triangleCount = view.getInt32(triangleStart, true);
             var indexBuffer = new Uint32Array(buffer, triangleStart + 4, triangleCount * 3);
 
+            var westStart = triangleStart + 4 + triangleCount * 3 * 4;
+            var westVertexCount = view.getInt32(westStart, true);
+            var westVertices = new Uint32Array(buffer, westStart + 4, westVertexCount);
+
+            var southStart = westStart + 4 + westVertexCount * 4;
+            var southVertexCount = view.getInt32(southStart, true);
+            var southVertices = new Uint32Array(buffer, southStart + 4, southVertexCount);
+
+            var eastStart = southStart + 4 + southVertexCount * 4;
+            var eastVertexCount = view.getInt32(eastStart, true);
+            var eastVertices = new Uint32Array(buffer, eastStart + 4, eastVertexCount);
+
+            var northStart = eastStart + 4 + eastVertexCount * 4;
+            var northVertexCount = view.getInt32(northStart, true);
+            var northVertices = new Uint32Array(buffer, northStart + 4, northVertexCount);
+
             return new MeshTerrainData({
                 center : center,
                 vertexBuffer : vertexBuffer,
-                indexBuffer : indexBuffer
+                indexBuffer : indexBuffer,
+                westVertices : westVertices,
+                southVertices : southVertices,
+                eastVertices : eastVertices,
+                northVertices : northVertices
             });
         });
     };

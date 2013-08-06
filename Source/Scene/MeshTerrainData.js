@@ -2,6 +2,8 @@
 define([
         '../Core/defaultValue',
         '../Core/BoundingSphere',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
@@ -15,6 +17,8 @@ define([
     ], function(
         defaultValue,
         BoundingSphere,
+        Cartesian3,
+        Cartographic,
         DeveloperError,
         HeightmapTessellator,
         Intersections2D,
@@ -111,17 +115,28 @@ define([
 
         this._center = description.center;
         this._vertexBuffer = description.vertexBuffer;
-        this._indexBuffer = new Uint16Array(description.indexBuffer.length);
-
-        for (var i = 0; i < description.indexBuffer.length; ++i) {
-            this._indexBuffer[i] = description.indexBuffer[i];
-        }
+        this._indexBuffer = description.indexBuffer;
+        this._westVertices = toArray(description.westVertices);
+        this._southVertices = toArray(description.southVertices);
+        this._eastVertices = toArray(description.eastVertices);
+        this._northVertices = toArray(description.northVertices);
 
         this._childTileMask = defaultValue(description.childTileMask, 15);
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
     };
+
+    function toArray(typedArray) {
+        var result = new Array(typedArray.length);
+        for (var i = 0, len = typedArray.length; i < len; ++i) {
+            result[i] = typedArray[i];
+        }
+        return result;
+    }
+
+    var cartesian3Scratch = new Cartesian3();
+    var cartographicScratch = new Cartographic();
 
     /**
      * Creates a {@link TerrainMesh} from this terrain data.
@@ -151,8 +166,114 @@ define([
         }
 
         var boundingSphere = BoundingSphere.fromVertices(this._vertexBuffer, this._center, 6);
-        return new TerrainMesh(this._center, this._vertexBuffer, this._indexBuffer, -1000.0, 10000.0, boundingSphere, undefined);
+
+        var edgeVertices = this._westVertices.length + this._eastVertices.length +
+                           this._southVertices.length + this._northVertices.length;
+        var vertexBuffer = new Float32Array(this._vertexBuffer.length + edgeVertices * vertexStride);
+        vertexBuffer.set(this._vertexBuffer, 0);
+
+        var edgeTriangles = (edgeVertices - 4) * 2;
+        var indexBuffer = new Uint16Array(this._indexBuffer.length + edgeTriangles * 3);
+        indexBuffer.set(this._indexBuffer, 0);
+
+        var ellipsoid = tilingScheme.getEllipsoid();
+        var extent = tilingScheme.tileXYToExtent(x, y, level);
+
+        // TODO: for a heightmap?
+        var approximateTileWidth = 65;
+        var position1Cartographic = new Cartographic(0.0, 0.0, -11500.0);
+        var position2Cartographic = new Cartographic(0.5 * Math.PI / (approximateTileWidth - 1), 0.0, 9000.0);
+        var position1 = ellipsoid.cartographicToCartesian(position1Cartographic);
+        var position2 = ellipsoid.cartographicToCartesian(position2Cartographic);
+
+        var levelZeroMaxError = position1.subtract(position2).magnitude();
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+
+        thisLevelMaxError *= 2.0;
+
+        this._westVertices.sort(function(a, b) {
+            return vertexBuffer[a * vertexStride + vIndex] - vertexBuffer[b * vertexStride + vIndex];
+        });
+
+        this._southVertices.sort(function(a, b) {
+            return vertexBuffer[a * vertexStride + uIndex] - vertexBuffer[b * vertexStride + uIndex];
+        });
+
+        this._eastVertices.sort(function(a, b) {
+            return vertexBuffer[a * vertexStride + vIndex] - vertexBuffer[b * vertexStride + vIndex];
+        });
+
+        this._northVertices.sort(function(a, b) {
+            return vertexBuffer[a * vertexStride + uIndex] - vertexBuffer[b * vertexStride + uIndex];
+        });
+
+        var vertexBufferIndex = this._vertexBuffer.length;
+        var indexBufferIndex = this._indexBuffer.length;
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._westVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
+        vertexBufferIndex += this._westVertices.length * 6;
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._southVertices, this._center, ellipsoid, extent, thisLevelMaxError, false);
+        vertexBufferIndex += this._southVertices.length * 6;
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._eastVertices, this._center, ellipsoid, extent, thisLevelMaxError, false);
+        vertexBufferIndex += this._eastVertices.length * 6;
+        indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._northVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
+        vertexBufferIndex += this._northVertices.length * 6;
+
+        return new TerrainMesh(this._center, vertexBuffer, indexBuffer, -1000.0, 10000.0, boundingSphere, undefined);
     };
+
+    function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, extent, skirtLength, isWestOrNorthEdge) {
+        var start, end, increment;
+        if (isWestOrNorthEdge) {
+            start = edgeVertices.length - 1;
+            end = -1;
+            increment = -1;
+        } else {
+            start = 0;
+            end = edgeVertices.length;
+            increment = 1;
+        }
+
+        var previousIndex = -1;
+
+        var vertexIndex = vertexBufferIndex / vertexStride;
+
+        for (var i = start; i !== end; i += increment) {
+            var index = edgeVertices[i];
+            var offset = index * vertexStride;
+            var u = vertexBuffer[offset + uIndex];
+            var v = vertexBuffer[offset + vIndex];
+            var h = vertexBuffer[offset + hIndex];
+
+            cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
+            cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
+            cartographicScratch.height = h - skirtLength;
+
+            var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+            position.subtract(center, position);
+
+            vertexBuffer[vertexBufferIndex++] = position.x;
+            vertexBuffer[vertexBufferIndex++] = position.y;
+            vertexBuffer[vertexBufferIndex++] = position.z;
+            vertexBuffer[vertexBufferIndex++] = cartographicScratch.height;
+            vertexBuffer[vertexBufferIndex++] = u;
+            vertexBuffer[vertexBufferIndex++] = v;
+
+            if (previousIndex !== -1) {
+                indexBuffer[indexBufferIndex++] = previousIndex;
+                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
+                indexBuffer[indexBufferIndex++] = index;
+
+                indexBuffer[indexBufferIndex++] = vertexIndex - 1;
+                indexBuffer[indexBufferIndex++] = vertexIndex;
+                indexBuffer[indexBufferIndex++] = index;
+            }
+
+            previousIndex = index;
+            ++vertexIndex;
+        }
+
+        return indexBufferIndex;
+    }
 
     /**
      * Computes the terrain height at a specified longitude and latitude.
@@ -261,27 +382,6 @@ define([
         return typeof this.index !== 'undefined';
     };
 
-    Vertex.prototype.getX = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + xIndex];
-        }
-        return CesiumMath.lerp(this.first.getX(), this.second.getX(), this.ratio);
-    };
-
-    Vertex.prototype.getY = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + yIndex];
-        }
-        return CesiumMath.lerp(this.first.getY(), this.second.getY(), this.ratio);
-    };
-
-    Vertex.prototype.getZ = function() {
-        if (typeof this.index !== 'undefined') {
-            return this.vertexBuffer[this.index * vertexStride + zIndex];
-        }
-        return CesiumMath.lerp(this.first.getZ(), this.second.getZ(), this.ratio);
-    };
-
     Vertex.prototype.getH = function() {
         if (typeof this.index !== 'undefined') {
             return this.vertexBuffer[this.index * vertexStride + hIndex];
@@ -309,7 +409,7 @@ define([
     polygonVertices.push(new Vertex());
     polygonVertices.push(new Vertex());
 
-    function addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices) {
+    function addClippedPolygon(vertices, indices, vertexMap, clipped, triangleVertices, ellipsoid, extent, center) {
         if (clipped.length === 0) {
             return;
         }
@@ -328,9 +428,9 @@ define([
                     polygonVertex.newIndex = vertexMap[key];
                 } else {
                     var newIndex = vertices.length / vertexStride;
-                    vertices.push(polygonVertex.getX());
-                    vertices.push(polygonVertex.getY());
-                    vertices.push(polygonVertex.getZ());
+                    vertices.push(undefined);
+                    vertices.push(undefined);
+                    vertices.push(undefined);
                     vertices.push(polygonVertex.getH());
                     vertices.push(polygonVertex.getU());
                     vertices.push(polygonVertex.getV());
@@ -410,6 +510,9 @@ define([
         if (levelDifference > 1) {
             throw new DeveloperError('Upsampling through more than one level at a time is not currently supported.');
         }
+
+        var ellipsoid = tilingScheme.getEllipsoid();
+        var extent = tilingScheme.tileXYToExtent(descendantX, descendantY, descendantLevel);
 
         var isEastChild = thisX * 2 !== descendantX;
         var isNorthChild = thisY * 2 === descendantY;
@@ -496,7 +599,7 @@ define([
 
             // Clip the triangle against the North-south boundary.
             clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-            addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+            addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices, ellipsoid, extent, this._center);
 
             // If there's another vertex in the original clipped result,
             // it forms a second triangle.  Clip it as well.
@@ -505,18 +608,27 @@ define([
                 clippedTriangleVertices[2].initializeFromClipResult(clipped, clippedIndex, triangleVertices);
 
                 clipped2 = Intersections2D.clipTriangleAtAxisAlignedThreshold(0.5, isNorthChild, clippedTriangleVertices[0].getV(), clippedTriangleVertices[1].getV(), clippedTriangleVertices[2].getV(), clipScratch2);
-                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices);
+                addClippedPolygon(vertices, indices, vertexMap, clipped2, clippedTriangleVertices, ellipsoid, extent, this._center);
             }
         }
 
         var uOffset = isEastChild ? -1.0 : 0.0;
         var vOffset = isNorthChild ? -1.0 : 0.0;
 
+        var center = this._center; // TODO: use a better center?
+
+        var westVertices = [];
+        var southVertices = [];
+        var eastVertices = [];
+        var northVertices = [];
+
         for (i = 0; i < vertices.length; i += vertexStride) {
             u = vertices[i + uIndex];
-            if (u === minU) {
+            if (u <= minU) {
+                westVertices.push(i / vertexStride);
                 u = 0.0;
-            } else if (u === maxU) {
+            } else if (u >= maxU) {
+                eastVertices.push(i / vertexStride);
                 u = 1.0;
             } else {
                 u = u * 2.0 + uOffset;
@@ -525,22 +637,41 @@ define([
             vertices[i + uIndex] = u;
 
             v = vertices[i + vIndex];
-            if (v === minV) {
+            if (v <= minV) {
+                southVertices.push(i / vertexStride);
                 v = 0.0;
-            } else if (v === maxV) {
+            } else if (v >= maxV) {
+                northVertices.push(i / vertexStride);
                 v = 1.0;
             } else {
                 v = v * 2.0 + vOffset;
             }
 
             vertices[i + vIndex] = v;
+
+            if (typeof vertices[i + xIndex] === 'undefined') {
+                cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
+                cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
+                cartographicScratch.height = vertices[i + hIndex];
+
+                var position = ellipsoid.cartographicToCartesian(cartographicScratch, cartesian3Scratch);
+                position.subtract(center, position);
+
+                vertices[i + xIndex] = position.x;
+                vertices[i + yIndex] = position.y;
+                vertices[i + zIndex] = position.z;
+            }
         }
 
         return new MeshTerrainData({
             center : this._center,
             vertexBuffer : new Float32Array(vertices),
             indexBuffer : new Uint16Array(indices),
-            createdByUpsampling : true
+            createdByUpsampling : true,
+            westVertices : westVertices,
+            southVertices : southVertices,
+            eastVertices : eastVertices,
+            northVertices : northVertices
         });
     };
 
