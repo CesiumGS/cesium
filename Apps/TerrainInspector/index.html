@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1">  <!-- Use Chrome Frame in IE -->
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <title>Terrain Inspector</title>
+    <script type="text/javascript">
+    var dojoConfig = {
+        baseUrl : '../../Source',
+        packages: [
+            { name: 'dojo', location: '../../ThirdParty/dojo-release-1.9.1/dojo' },
+            { name: 'dijit', location: '../../ThirdParty/dojo-release-1.9.1/dijit' }
+        ]
+    };
+	</script>
+    <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
+    <link rel="stylesheet" href="../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
+</head>
+<body class="claro">
+
+<style>
+    @import url(TerrainInspector.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="toolbar">
+<div id="terrainMenu"></div>
+<div id="zoomButtons"></div>
+<div id="sampleButtons"></div>
+</div>
+<script id="cesium_sandcastle_script">
+require([
+	'Cesium',
+    'dojo/dom-construct',
+	'dijit/TitlePane',
+	'dijit/form/CheckBox'
+], function(
+	Cesium,
+	domConstruct,
+	TitlePane,
+	CheckBox) {
+    "use strict";
+
+    var viewer = new Cesium.Viewer('cesiumContainer');
+
+    var scene = viewer.scene;
+    var centralBody = scene.getPrimitives().getCentralBody();
+    centralBody.depthTestAgainstTerrain = true;
+    
+    /*var mesh = new Cesium.CesiumMeshTerrainProvider({
+        url : 'http://172.16.37.34/mesh'
+    });
+
+    centralBody.terrainProvider = mesh;*/
+	
+	var tp = new TitlePane({
+		title: 'Terrain Debugging',
+		id:'title-pane',
+		content: '<table id="debuggingTable"></table>',
+		open: true
+	});
+	document.getElementById("toolbar").appendChild(tp.domNode);
+	
+	domConstruct.place('<tr><td id="wireFrameToggle"></td><td>Wireframe</td></tr>\
+						<tr><td id="updateLodToggle"></td><td>Suspend LOD update</td></tr>\
+						<tr><td id="showTileCoordinatesToggle"></td><td>Show tile coordinates</td></tr>', 'debuggingTable');
+	
+	new CheckBox({
+		checked: centralBody._surface.wireframe,
+		onChange: function(b) {
+			centralBody._surface._debug.wireframe = !centralBody._surface._debug.wireframe;
+			
+		}
+	}).placeAt('wireFrameToggle');
+
+	new CheckBox({
+		checked: centralBody._surface._debug.suspendLodUpdate,
+		onChange: function(b) {
+			centralBody._surface._debug.suspendLodUpdate = !centralBody._surface._debug.suspendLodUpdate;
+			
+		}
+	}).placeAt('updateLodToggle');
+	
+	var tileBoundariesLayer;
+	
+	new CheckBox({
+		checked: typeof tileBoundariesLayer !== 'undefined',
+		onChange: function(b) {
+			if (typeof tileBoundariesLayer === 'undefined') {
+				tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
+				}));
+			} else {
+				centralBody.getImageryLayers().remove(tileBoundariesLayer);
+				tileBoundariesLayer = undefined;
+			}
+			
+		}
+	}).placeAt('showTileCoordinatesToggle');
+});
+</script>
+</body>
+</html>
