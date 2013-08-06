@@ -164,19 +164,19 @@ define([
         var extent = params.extent;
         var height = params.height;
         var width = params.width;
-        var size = params.size;
+        var size = params.size * 3;
         var ellipsoid = params.ellipsoid;
 
         var posIndex = 0;
         var row = 0;
         var col;
-        var positions = new Float64Array(size * 2 * 3);
+        var positions = new Float64Array(size * 2);
         for (col = 0; col < width; col++) {
             computePosition(params, row, col, maxHeight, minHeight);
 
-            positions[posIndex + size*3] = extrudedPosition.x;
-            positions[posIndex + size*3 + 1] = extrudedPosition.y;
-            positions[posIndex + size*3 + 2] = extrudedPosition.z;
+            positions[posIndex + size] = extrudedPosition.x;
+            positions[posIndex + size + 1] = extrudedPosition.y;
+            positions[posIndex + size + 2] = extrudedPosition.z;
 
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
@@ -186,9 +186,9 @@ define([
         for (row = 1; row < height; row++) {
             computePosition(params, row, col, maxHeight, minHeight);
 
-            positions[posIndex + size*3] = extrudedPosition.x;
-            positions[posIndex + size*3 + 1] = extrudedPosition.y;
-            positions[posIndex + size*3 + 2] = extrudedPosition.z;
+            positions[posIndex + size] = extrudedPosition.x;
+            positions[posIndex + size + 1] = extrudedPosition.y;
+            positions[posIndex + size + 2] = extrudedPosition.z;
 
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
@@ -198,9 +198,9 @@ define([
         for (col = width-2; col >=0; col--){
             computePosition(params, row, col, maxHeight, minHeight);
 
-            positions[posIndex + size*3] = extrudedPosition.x;
-            positions[posIndex + size*3 + 1] = extrudedPosition.y;
-            positions[posIndex + size*3 + 2] = extrudedPosition.z;
+            positions[posIndex + size] = extrudedPosition.x;
+            positions[posIndex + size + 1] = extrudedPosition.y;
+            positions[posIndex + size + 2] = extrudedPosition.z;
 
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
@@ -210,9 +210,9 @@ define([
         for (row = height - 2; row > 0; row--) {
             computePosition(params, row, col, maxHeight, minHeight);
 
-            positions[posIndex + size*3] = extrudedPosition.x;
-            positions[posIndex + size*3 + 1] = extrudedPosition.y;
-            positions[posIndex + size*3 + 2] = extrudedPosition.z;
+            positions[posIndex + size] = extrudedPosition.x;
+            positions[posIndex + size + 1] = extrudedPosition.y;
+            positions[posIndex + size + 2] = extrudedPosition.z;
 
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
@@ -256,7 +256,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A {@link Geometry} that represents geometry for the outline of a a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentOutlineGeometry
      * @constructor
@@ -409,7 +409,7 @@ define([
         this.boundingSphere = extentGeometry.boundingSphere;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */

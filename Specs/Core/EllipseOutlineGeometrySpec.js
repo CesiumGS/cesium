@@ -107,7 +107,7 @@ defineSuite([
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
-            countSideLines : 0
+            lateralSurfaceLines : 0
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);

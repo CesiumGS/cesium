@@ -21,7 +21,7 @@ define([
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
-     * @param {Boolean} [options.sideLinesCount = 10] Number of lines to draw between the top and bottom of an extruded circle.
+     * @param {Number} [options.lateralSurfaceLines = 10] Number of lines to draw between the top and bottom of an extruded circle.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} radius is required.
@@ -57,14 +57,13 @@ define([
             height : options.height,
             extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
-            countSideLines : options.countSideLines
+            lateralSurfaceLines : options.lateralSurfaceLines
 
         };
         var ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *

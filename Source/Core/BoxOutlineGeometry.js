@@ -72,6 +72,7 @@ define([
         positions[9] = min.x;
         positions[10] = max.y;
         positions[11] = min.z;
+
         positions[12] = min.x;
         positions[13] = min.y;
         positions[14] = max.z;
@@ -129,8 +130,7 @@ define([
         var radius = diff.magnitude() * 0.5;
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *

@@ -1,14 +1,8 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/EllipsoidOutlineGeometry',
-         'Core/Cartesian3',
-         'Core/Math',
-         'Core/VertexFormat'
+         'Core/EllipsoidOutlineGeometry'
      ], function(
-         EllipsoidOutlineGeometry,
-         Cartesian3,
-         CesiumMath,
-         VertexFormat) {
+         EllipsoidOutlineGeometry) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -38,13 +32,13 @@ defineSuite([
 
     it('computes positions', function() {
         var m = new EllipsoidOutlineGeometry({
-            stackPartitions : 2,
-            slicePartitions: 2,
-            subdivisions: 2
+            stackPartitions : 3,
+            slicePartitions: 3,
+            subdivisions: 3
         });
 
-        expect(m.attributes.position.values.length).toEqual(6 * 3);
-        expect(m.indices.length).toEqual(6 * 2);
+        expect(m.attributes.position.values.length).toEqual(14 * 3);
+        expect(m.indices.length).toEqual(15 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
 });

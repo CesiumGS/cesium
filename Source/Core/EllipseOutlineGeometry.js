@@ -192,13 +192,14 @@ define([
         var positions = computeEllipsePositions(options);
         var attributes = raisePositionsToHeight(positions, options, false);
 
-        var indices = IndexDatatype.createTypedArray(positions.length / 3, positions.length/3*2);
+        var length = positions.length / 3;
+        var indices = IndexDatatype.createTypedArray(length, length*2);
         var index = 0;
-        for (var i = 0; i < positions.length/3 - 1; i++) {
+        for (var i = 0; i < length - 1; i++) {
             indices[index++] = i;
             indices[index++] = i+1;
         }
-        indices[index++] = positions.length/3 - 1;
+        indices[index++] = length - 1;
         indices[index++] = 0;
 
         return {
@@ -211,8 +212,8 @@ define([
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
     function computeExtrudedEllipse(options) {
-        var countSideLines = defaultValue(options.countSideLines, 10);
-        countSideLines = Math.max(countSideLines, 0);
+        var lateralSurfaceLines = defaultValue(options.lateralSurfaceLines, 10);
+        lateralSurfaceLines = Math.max(lateralSurfaceLines, 0);
 
         var center = options.center;
         var ellipsoid = options.ellipsoid;
@@ -230,7 +231,7 @@ define([
         positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
-        var indices = IndexDatatype.createTypedArray(length, length * 2 + countSideLines * 2);
+        var indices = IndexDatatype.createTypedArray(length, length * 2 + lateralSurfaceLines * 2);
 
         length /= 2;
         var index = 0;
@@ -246,12 +247,12 @@ define([
         indices[index++] = length;
 
         var numSide;
-        if (countSideLines > 0) {
-            var numSideLines = Math.min(countSideLines, length);
+        if (lateralSurfaceLines > 0) {
+            var numSideLines = Math.min(lateralSurfaceLines, length);
             numSide = Math.round(length/numSideLines);
         }
         var maxI = Math.min(numSide*10, length);
-        if (countSideLines > 0) {
+        if (lateralSurfaceLines > 0) {
             for (i = 0; i < maxI; i+= numSide){
                 indices[index++] = i;
                 indices[index++] = i + length;
@@ -267,7 +268,7 @@ define([
 
     /**
      *
-     * A {@link Geometry} that represents geometry for an ellipse on an ellipsoid
+     * A {@link Geometry} that represents geometry for the outline of an ellipse on an ellipsoid
      *
      * @alias EllipseOutlineGeometry
      * @constructor
@@ -280,7 +281,7 @@ define([
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
-     * @param {Boolean} [options.sideLinesCount = 10] Number of lines to draw between the top and bottom surface of an extruded ellipse.
+     * @param {Number} [options.lateralSurfaceLines = 10] Number of lines to draw between the top and bottom surface of an extruded ellipse.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} semiMajorAxis is required.
@@ -336,7 +337,7 @@ define([
             height : defaultValue(options.height, 0.0),
             granularity : defaultValue(options.granularity, 0.02),
             extrudedHeight : options.extrudedHeight,
-            countSideLines : Math.max(defaultValue(options.countSideLines, 10), 0)
+            lateralSurfaceLines : Math.max(defaultValue(options.lateralSurfaceLines, 10), 0)
         };
 
         if (newOptions.granularity <= 0.0) {

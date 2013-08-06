@@ -10,7 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the outline of a sphere on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for the outline of a sphere.
      *
      * Creates vertices and indices for an sphere centered at the origin.
      *
@@ -18,8 +18,8 @@ define([
      * @constructor
      *
      * @param {Number} [options.radius=1.0] The radius of the sphere.
-     * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
-     * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
+     * @param {Number} [options.stackPartitions=10] The count of stacks for the sphere (1 greater than the number of parallel lines).
+     * @param {Number} [options.slicePartitions=8] The count of slices for the sphere (Equal to the number of radial lines).
      * @param {Number} [options.subdivisions=200] The number of points per line, determining the granularity of the curvature .
      *
      * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.

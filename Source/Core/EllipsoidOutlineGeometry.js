@@ -10,8 +10,7 @@ define([
         './PrimitiveType',
         './BoundingSphere',
         './GeometryAttribute',
-        './GeometryAttributes',
-        './VertexFormat'
+        './GeometryAttributes'
     ], function(
         defaultValue,
         DeveloperError,
@@ -23,8 +22,7 @@ define([
         PrimitiveType,
         BoundingSphere,
         GeometryAttribute,
-        GeometryAttributes,
-        VertexFormat) {
+        GeometryAttributes) {
     "use strict";
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
@@ -70,9 +68,9 @@ define([
             throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
         }
 
-        var positionSize = (stackPartitions - 1)*subdivisions + (subdivisions - 1)*slicePartitions + 2;
+        var indicesSize = subdivisions * (stackPartitions + slicePartitions - 1);
+        var positionSize = indicesSize - slicePartitions + 2;
         var positions = new Float64Array(positionSize * 3);
-        var indicesSize = (stackPartitions - 1) * subdivisions + slicePartitions * subdivisions;
         var indices = IndexDatatype.createTypedArray(length, indicesSize * 2);
 
         var i;

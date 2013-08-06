@@ -1,16 +1,12 @@
 /*global defineSuite*/
 defineSuite([
          'Core/CircleOutlineGeometry',
-         'Core/Cartesian3',
          'Core/Cartographic',
-         'Core/Ellipsoid',
-         'Core/VertexFormat'
+         'Core/Ellipsoid'
      ], function(
          CircleOutlineGeometry,
-         Cartesian3,
          Cartographic,
-         Ellipsoid,
-         VertexFormat) {
+         Ellipsoid) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -86,7 +82,7 @@ defineSuite([
             granularity : 0.75,
             radius : 1.0,
             extrudedHeight : 10000,
-            countSideLines : 0
+            lateralSurfaceLines : 0
         });
 
         expect(m.attributes.position.values.length).toEqual(2 * 10 * 3);
