@@ -58,11 +58,12 @@ define([
 
         this._content = document.createElement('div');
         contentWrapper.appendChild(this._content);
+        this._content.setAttribute('data-bind', 'html: _contentHTML');
         var pointContainer = document.createElement('div');
         pointContainer.className = 'cesium-balloon-point-container';
         pointContainer.setAttribute('data-bind',
                 'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right,\
-                "cesium-balloon-point-show" : showBalloon && showPoint, "cesium-balloon-point-hide" : !showBalloon || !showPoint},\
+                "cesium-balloon-point-show" : showPoint, "cesium-balloon-point-hide" : !showPoint},\
                 style: { "bottom" : _pointY, "left" : _pointX}');
         var point = document.createElement('div');
         point.className = 'cesium-balloon-point';
@@ -74,7 +75,7 @@ define([
         pointContainer.appendChild(point);
         container.appendChild(pointContainer);
 
-        var viewModel = new BalloonViewModel(scene, this._content, this._element, this._container);
+        var viewModel = new BalloonViewModel(scene, this._element, this._container);
         this._viewModel = viewModel;
 
         this._pointContainer = pointContainer;

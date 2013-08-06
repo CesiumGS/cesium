@@ -130,22 +130,16 @@ define([
      * @constructor
      *
      * @param {Scene} scene The scene instance to use.
-     * @param {Element} contentElement The element in which to display balloon content.
      * @param {Element} balloonElement The element containing all elements that make up the balloon.
      * @param {Element} [container = document.body] The element containing the balloon.
      *
      * @exception {DeveloperError} scene is required.
-     * @exception {DeveloperError} contentElement is required.
      * @exception {DeveloperError} balloonElement is required.
      *
      */
-    var BalloonViewModel = function(scene, contentElement, balloonElement, container) {
+    var BalloonViewModel = function(scene, balloonElement, container) {
         if (typeof scene === 'undefined') {
             throw new DeveloperError('scene is required.');
-        }
-
-        if (typeof contentElement === 'undefined') {
-            throw new DeveloperError('contentElement is required.');
         }
 
         if (typeof balloonElement === 'undefined') {
@@ -155,8 +149,8 @@ define([
         this._scene = scene;
         this._container = defaultValue(container, document.body);
         this._balloonElement = balloonElement;
-        this._contentElement = contentElement;
-        this._content = contentElement.innerHTML;
+        this._content = '';
+        this._contentHTML = '';
         this._position = undefined;
         this._computeScreenSpacePosition = function(position, result) {
             return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
@@ -194,7 +188,7 @@ define([
         this._maxHeight = Math.floor(this._container.clientHeight*0.50) + 'px';
 
         knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
-                              '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight']);
+                              '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
     };
 
     /**
@@ -209,7 +203,7 @@ define([
                 var that = this;
                 //timeout needed so that re-positioning occurs after showBalloon=false transition is complete
                 setTimeout(function () {
-                    that._contentElement.innerHTML = that._content;
+                    that._contentHTML = that._content;
                     if (typeof that._position !== 'undefined') {
                         var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
                         pos = shiftPosition(that, pos);
@@ -276,23 +270,6 @@ define([
                     throw new DeveloperError('value must be a valid Element.');
                 }
                 this._balloonElement = value;
-            }
-        },
-        /**
-         * Gets or sets the HTML element that displays the content of the balloon
-         * @memberof BalloonViewModel.prototype
-         *
-         * @type {Element}
-         */
-        contentElement : {
-            get : function() {
-                return this._contentElement;
-            },
-            set : function(value) {
-                if (!(value instanceof Element)) {
-                    throw new DeveloperError('value must be a valid Element.');
-                }
-                this._contentElement = value;
             }
         },
         /**
