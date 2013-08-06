@@ -63,38 +63,12 @@ define([
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation
         };
-        var ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        this.ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        this.workerName = 'createCircleGeometry';
+    };
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipseGeometry.attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipseGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = ellipseGeometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipseGeometry.boundingSphere;
+    CircleGeometry.createGeometry = function(circleGeometry) {
+        return EllipseGeometry.createGeometry(circleGeometry.ellipseGeometry);
     };
 
     return CircleGeometry;

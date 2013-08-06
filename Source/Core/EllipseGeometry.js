@@ -808,6 +808,10 @@ define([
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
+        var granularity = defaultValue(options.granularity, 0.02);
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (typeof extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
 
         if (typeof center === 'undefined') {
             throw new DeveloperError('center is required.');
@@ -829,68 +833,42 @@ define([
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
-
-        var newOptions = {
-            center : center,
-            semiMajorAxis : semiMajorAxis,
-            semiMinorAxis : semiMinorAxis,
-            ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84),
-            rotation : defaultValue(options.rotation, 0.0),
-            stRotation : defaultValue(options.stRotation, 0.0),
-            height : defaultValue(options.height, 0.0),
-            granularity : defaultValue(options.granularity, 0.02),
-            vertexFormat : defaultValue(options.vertexFormat, VertexFormat.DEFAULT),
-            extrudedHeight : options.extrudedHeight
-        };
-
-        if (newOptions.granularity <= 0.0) {
+        if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
         }
 
-        var extrude = (typeof newOptions.extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
+        this.center = Cartesian3.clone(center);
+        this.semiMajorAxis = semiMajorAxis;
+        this.semiMinorAxis = semiMinorAxis;
+        this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this.rotation = defaultValue(options.rotation, 0.0);
+        this.stRotation = defaultValue(options.rotation, 0.0);
+        this.height = height;
+        this.granularity = granularity;
+        this.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this.extrudedHeight = extrudedHeight;
+        this.extrude = extrude;
+        this.workerName = 'createEllipseGeometry';
+    };
 
-        var ellipseGeometry;
-        if (extrude) {
-            var h = newOptions.extrudedHeight;
-            var height = newOptions.height;
-            newOptions.extrudedHeight = Math.min(h, height);
-            newOptions.height = Math.max(h, height);
-            ellipseGeometry = computeExtrudedEllipse(newOptions);
+    EllipseGeometry.createGeometry = function(ellipseGeometry) {
+        var geometry;
+        if (ellipseGeometry.extrude) {
+            var h = ellipseGeometry.extrudedHeight;
+            var height = ellipseGeometry.height;
+            ellipseGeometry.extrudedHeight = Math.min(h, height);
+            ellipseGeometry.height = Math.max(h, height);
+            geometry = computeExtrudedEllipse(ellipseGeometry);
         } else {
-            ellipseGeometry = computeEllipse(newOptions);
+            geometry = computeEllipse(ellipseGeometry);
         }
 
-
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipseGeometry.attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipseGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipseGeometry.boundingSphere;
+        return new Geometry({
+            attributes : geometry.attributes,
+            indices : geometry.indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : geometry.boundingSphere
+        });
     };
 
     return EllipseGeometry;
