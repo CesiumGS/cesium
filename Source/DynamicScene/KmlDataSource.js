@@ -94,7 +94,9 @@ define(['../Core/createGuid',
             finalCoords.push([]); //new inner array
             finalCoords[j][0] = parseFloat(coords[j][0], 10);
             finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
-            finalCoords[j][2] = coords[j][2] && parseFloat(coords[j][2].substring(1), 10);
+            if(typeof coords[j][2] !== 'undefined'){ // altitude given?
+                finalCoords[j][2] = parseFloat(coords[j][2].substring(1), 10);
+            }
         }
         for(var k = 0; k < finalCoords.length; k++){
             if (isNaN(finalCoords[k][0]) || isNaN(finalCoords[k][1])) {
@@ -121,8 +123,11 @@ define(['../Core/createGuid',
     }
 
     function getId(node){
-        var id = node.attributes.id && node.attributes.id.nodeValue;
-        if (typeof id === 'undefined') {
+        var id;
+        var idNode = node.attributes.id;
+        if(typeof idNode !== 'undefined') {
+            id = idNode.value;
+        } else {
             id = createGuid();
         }
         return id;
@@ -130,16 +135,8 @@ define(['../Core/createGuid',
 
     function getElementValue(node, elementType){
         var element = node.getElementsByTagName(elementType)[0];
-        if (elementType === 'hotSpot' && typeof element !== 'undefined'){
-            var hotSpot = {
-                    x: element.attributes.x.nodeValue,
-                    y: element.attributes.y.nodeValue,
-                    xunits: element.attributes.xunits.nodeValue,
-                    yunits: element.attributes.yunits.nodeValue
-            };
-            return hotSpot;
-        }
-        return element && element.firstChild.data; //protecting from TypeError
+        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        return value;
     }
 
     function getStylesFromXml(xml){
@@ -249,9 +246,9 @@ define(['../Core/createGuid',
                 var icon = getElementValue(node,'href');
                 var color = getColor(node);
 
-                dynamicObject.billboard.image = icon && new ConstantProperty(icon);
-                dynamicObject.billboard.scale = scale && new ConstantProperty(scale);
-                dynamicObject.billboard.color = color && new ConstantProperty(Color.fromRgba(color));
+                dynamicObject.billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
+                dynamicObject.billboard.scale = typeof scale !== 'undefined' ? new ConstantProperty(scale) : undefined;
+                dynamicObject.billboard.color = typeof color !== 'undefined' ? new ConstantProperty(Color.fromRgba(color)) : undefined;
             }
             else if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
@@ -260,9 +257,9 @@ define(['../Core/createGuid',
                 var labelScale = getElementValue(node, 'scale');
                 var labelColor = getColor(node);
 
-                dynamicObject.label.scale = labelScale && new ConstantProperty(labelScale);
-                dynamicObject.label.fillColor = labelColor && new ConstantProperty(Color.fromRgba(labelColor)); //not sure how to set font color
-                dynamicObject.label.text = dynamicObject.name && new ConstantProperty(dynamicObject.name);
+                dynamicObject.label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
+                dynamicObject.label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(labelColor)) : undefined;
+                dynamicObject.label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
             }
             else if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
@@ -273,10 +270,10 @@ define(['../Core/createGuid',
                 var lineOuterColor = getColor(node,'gx:outerColor');
                 var lineOuterWidth = getElementValue(node,'gx:outerWidth');
 
-                dynamicObject.polyline.color = lineColor && new ConstantProperty(Color.fromRgba(lineColor));
-                dynamicObject.polyline.width = lineWidth && new ConstantProperty(lineWidth);
-                dynamicObject.polyline.outlineColor = lineOuterColor && new ConstantProperty(Color.fromRgba(lineOuterColor));
-                dynamicObject.polyline.outlineWidth = lineOuterWidth && new ConstantProperty(lineOuterWidth);
+                dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(lineColor)) : undefined;
+                dynamicObject.polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
+                dynamicObject.polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(lineOuterColor)) : undefined;
+                dynamicObject.polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
             }
             else if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = new DynamicPolygon();
@@ -294,8 +291,8 @@ define(['../Core/createGuid',
         for (var i = 0, len = array.length; i < len; i++){
             var inlineStyleCollection = getStylesFromXml(array[i]);
             var placemark = array[i];
-            placemark.id = getId(placemark);
-            var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
+            var placemarkId = typeof placemark.id !== 'undefined' ? placemark.id : createGuid();
+            var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
             //check for inline styles
             var styleObjects = inlineStyleCollection.getObjects();
             var styleObjectsLength = styleObjects.length;
