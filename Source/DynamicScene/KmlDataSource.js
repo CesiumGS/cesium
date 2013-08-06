@@ -148,13 +148,11 @@ define(['../Core/createGuid',
     function getColorValue(node, tagName){
         var element = node.getElementsByTagName(tagName)[0];
         var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
-        return parseInt(value,16); //hexadecimal notation
-    }
-
-    function getElementValue(node, elementType){
-        var element = node.getElementsByTagName(elementType)[0];
-        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
-        return value;
+        value = parseInt(value, 16); //hexadecimal notation
+        if(isNaN(value)){
+            return undefined;
+        }
+        return Color.fromRgba(value);
     }
 
     function getStylesFromXml(xml){
@@ -175,20 +173,6 @@ define(['../Core/createGuid',
         }, function(error) {
             this._error.raiseEvent(this, error);
         });
-    }
-
-    function getColor(node, colorType){
-        var color;
-        if(typeof colorType ===  'undefined'){
-            color = getElementValue(node,'color');
-        } else {
-            color = getElementValue(node, colorType);
-        }
-        color = parseInt(color,16);
-        if(isNaN(color)){
-            return undefined;
-        }
-        return color;
     }
 
     // KML processing functions
@@ -262,35 +246,35 @@ define(['../Core/createGuid',
                 //TODO heading, hotSpot and ColorMode
                 var scale = getNumericValue(node, 'scale');
                 var icon = getStringValue(node,'href');
-                var color = getColor(node);
+                var color = getColorValue(node, 'color');
 
                 dynamicObject.billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
                 dynamicObject.billboard.scale = typeof scale !== 'undefined' ? new ConstantProperty(scale) : undefined;
-                dynamicObject.billboard.color = typeof color !== 'undefined' ? new ConstantProperty(Color.fromRgba(color)) : undefined;
+                dynamicObject.billboard.color = typeof color !== 'undefined' ? new ConstantProperty(color) : undefined;
             }
             else if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
                 //Map style to label properties
                 //TODO ColorMode
                 var labelScale = getNumericValue(node, 'scale');
-                var labelColor = getColor(node);
+                var labelColor = getColorValue(node, 'color');
 
                 dynamicObject.label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
-                dynamicObject.label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(labelColor)) : undefined;
+                dynamicObject.label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(labelColor) : undefined;
                 dynamicObject.label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
             }
             else if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility, ColorMode
-                var lineColor = getColor(node);
+                var lineColor = getColorValue(node, 'color');
                 var lineWidth = getNumericValue(node,'width');
-                var lineOuterColor = getColor(node,'gx:outerColor');
+                var lineOuterColor = getColorValue(node,'gx:outerColor');
                 var lineOuterWidth = getNumericValue(node,'gx:outerWidth');
 
-                dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(lineColor)) : undefined;
+                dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(lineColor) : undefined;
                 dynamicObject.polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
-                dynamicObject.polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(Color.fromRgba(lineOuterColor)) : undefined;
+                dynamicObject.polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(lineOuterColor) : undefined;
                 dynamicObject.polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
             }
             else if(node.nodeName === "PolyStyle")   {

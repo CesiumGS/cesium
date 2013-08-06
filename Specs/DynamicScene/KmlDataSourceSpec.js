@@ -144,31 +144,6 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
     });
 
-    it('handles Point Geometry without altitude', function() {
-        var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
-        var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
-        var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
-            <kml xmlns="http://www.opengis.net/kml/2.2">\
-            <Document>\
-            <Placemark>\
-              <Point>\
-                <coordinates>1,2</coordinates>\
-              </Point>\
-            </Placemark>\
-            </Document>\
-            </kml>';
-
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(pointKml, "text/xml");
-
-        var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
-
-        var objects = dataSource.getDynamicObjectCollection().getObjects();
-        expect(objects.length).toEqual(1);
-        expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
-    });
-
     it('Point throws error with invalid coordinates', function() {
         var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
@@ -271,6 +246,34 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(function() {
             dataSource.load(lineKml);
         }).toThrow();
+    });
+
+    it('handles Color in normal mode', function() {
+        var color = new ConstantProperty(Color.fromRgba(parseInt('ff0000cc', 16)));
+        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+            <IconStyle>\
+                <color>ff0000cc</color>\
+                <colorMode>normal</colorMode>\
+            </IconStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var parser = new DOMParser();
+        var xmlDoc = parser.parseFromString(colorKml, "text/xml");
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(xmlDoc);
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].billboard.color).toEqual(color);
     });
 
     it('load throws with undefined KML', function() {
