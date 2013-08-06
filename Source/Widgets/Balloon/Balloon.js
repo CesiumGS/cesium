@@ -61,7 +61,8 @@ define([
         var pointContainer = document.createElement('div');
         pointContainer.className = 'cesium-balloon-point-container';
         pointContainer.setAttribute('data-bind',
-                'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right},\
+                'css: { "cesium-balloon-point-container-downup" : _down || _up, "cesium-balloon-point-container-leftright" : _left || _right,\
+                "cesium-balloon-point-show" : showBalloon && showPoint, "cesium-balloon-point-hide" : !showBalloon || !showPoint},\
                 style: { "bottom" : _pointY, "left" : _pointX}');
         var point = document.createElement('div');
         point.className = 'cesium-balloon-point';

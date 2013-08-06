@@ -79,6 +79,14 @@
     -moz-transition: visibility 0s 0.2s, opacity 0.2s linear;
 }
 
+.cesium-balloon-point-show{
+    visibility: visible;
+}
+
+.cesium-balloon-point-hide{
+    visibility: hidden;
+}
+
 .cesium-balloon-close {
     position: absolute;
     top: 5px;
