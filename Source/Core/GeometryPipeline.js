@@ -832,7 +832,7 @@ define([
                     var otherAttribute = instances[i].geometry.attributes[name];
 
                     if ((typeof otherAttribute === 'undefined') ||
-                        (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
+                        (attribute.componentDatatype.value !== otherAttribute.componentDatatype.value) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
 
@@ -911,7 +911,7 @@ define([
                 throw new DeveloperError('All instance geometries must have an indices or not have one.');
             }
 
-            if (instances[i].geometry.primitiveType !== primitiveType) {
+            if (instances[i].geometry.primitiveType.value !== primitiveType.value) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }

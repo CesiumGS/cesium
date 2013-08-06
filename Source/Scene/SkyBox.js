@@ -149,10 +149,10 @@ define([
                 }
             };
 
-            var geometry = BoxGeometry.fromDimensions({
+            var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
-            });
+            }));
             var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;

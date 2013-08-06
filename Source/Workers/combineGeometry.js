@@ -165,7 +165,7 @@ define([
         var length = instances.length;
         var primitiveType = instances[0].geometry.primitiveType;
         for (i = 1; i < length; ++i) {
-            if (instances[i].geometry.primitiveType !== primitiveType) {
+            if (instances[i].geometry.primitiveType.value !== primitiveType.value) {
                 throw new DeveloperError('All instance geometries must have the same primitiveType.');
             }
         }

@@ -11,7 +11,8 @@ define([
         './BoundingSphere',
         './GeometryAttribute',
         './GeometryAttributes',
-        './VertexFormat'
+        './VertexFormat',
+        './Geometry'
     ], function(
         defaultValue,
         DeveloperError,
@@ -24,7 +25,8 @@ define([
         BoundingSphere,
         GeometryAttribute,
         GeometryAttributes,
-        VertexFormat) {
+        VertexFormat,
+        Geometry) {
     "use strict";
 
     var scratchDirection = new Cartesian3();
@@ -138,14 +140,23 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var numberOfPartitions = defaultValue(options.numberOfPartitions, 32);
-
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         if (numberOfPartitions <= 0) {
             throw new DeveloperError('options.numberOfPartitions must be greater than zero.');
         }
+
+        this.radii = Cartesian3.clone(radii);
+        this.numberOfPartitions = numberOfPartitions;
+        this.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this.workerName = 'createEllipsoidGeometry';
+    };
+
+    EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
+        var radii = ellipsoidGeometry.radii;
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        var numberOfPartitions = ellipsoidGeometry.numberOfPartitions;
+        var vertexFormat = ellipsoidGeometry.vertexFormat;
 
         var positions = [];
         var indices = [];
@@ -308,36 +319,12 @@ define([
             }
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = IndexDatatype.createTypedArray(length, indices);
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
+        return new Geometry({
+            attributes : attributes,
+            indices : IndexDatatype.createTypedArray(length, indices),
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
+        });
     };
 
     return EllipsoidGeometry;
