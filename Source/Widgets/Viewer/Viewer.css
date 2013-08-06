@@ -6,6 +6,7 @@
 @import url(../HomeButton/HomeButton.css);
 @import url(../SceneModePicker/SceneModePicker.css);
 @import url(../Timeline/Timeline.css);
+@import url(../../DynamicScene/GeoJsonDataSource.css);
 
 .cesium-viewer {
     font-family: sans-serif;

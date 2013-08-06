@@ -61,8 +61,9 @@ define([
         var balloonContainer = document.createElement('div');
         balloonContainer.className = 'cesium-viewer-balloonContainer';
         viewer._viewerContainer.appendChild(balloonContainer);
-        var balloon = new Balloon(balloonContainer, viewer.scene);
 
+        var balloon = new Balloon(balloonContainer, viewer.scene);
+        var balloonViewModel = balloon.viewModel;
         viewer._balloon = balloon;
 
         var eventHelper = new EventHelper();
@@ -71,50 +72,44 @@ define([
         var balloonedObject;
 
         //Subscribe to onTick so that we can update the view each update.
-        function updateView(clock) {
+        function onTick(clock) {
             if (typeof dynamicObjectView !== 'undefined') {
                 dynamicObjectView.update(clock.currentTime);
             }
-            var viewModel = viewer._balloon.viewModel;
-            if (typeof trackedObject === 'undefined' && typeof balloonedObject !== 'undefined' &&
-                    typeof balloonedObject.position !== 'undefined' && viewModel.showBalloon) {
-                viewModel.position = balloonedObject.position.getValueCartesian(clock.currentTime);
-                viewModel.update();
-            } else {
-                viewModel.showBalloon = false;
+            if (typeof balloonedObject !== 'undefined' && typeof balloonedObject.position !== 'undefined') {
+                balloonViewModel.position = balloonedObject.position.getValueCartesian(clock.currentTime);
+                balloonViewModel.update();
             }
         }
-        eventHelper.add(viewer.clock.onTick, updateView);
+        eventHelper.add(viewer.clock.onTick, onTick);
 
         function pickAndTrackObject(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined' &&
-                typeof pickedPrimitive.dynamicObject !== 'undefined' &&
-                typeof pickedPrimitive.dynamicObject.position !== 'undefined') {
+            if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined' && typeof pickedPrimitive.dynamicObject.position !== 'undefined') {
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
             }
         }
 
-        function showBalloon(e) {
+        function pickAndShowBalloon(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
             if (typeof pickedPrimitive !== 'undefined' && typeof pickedPrimitive.dynamicObject !== 'undefined') {
                 viewer.balloonedObject = pickedPrimitive.dynamicObject;
             }
         }
 
-        function clearTrackedObject() {
+        function onHomeButtonClicked() {
             viewer.trackedObject = undefined;
             viewer.balloonedObject = undefined;
         }
 
-        //Subscribe to the home button click if it exists, so that we can
-        //clear the trackedObject when it is clicked.
+        //Subscribe to the home button beforeExecute event if it exists,
+        // so that we can clear the trackedObject and balloon.
         if (typeof viewer.homeButton !== 'undefined') {
-            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
+            eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, onHomeButtonClicked);
         }
 
         //Subscribe to left clicks and zoom to the picked object.
-        viewer.screenSpaceEventHandler.setInputAction(showBalloon, ScreenSpaceEventType.LEFT_CLICK);
+        viewer.screenSpaceEventHandler.setInputAction(pickAndShowBalloon, ScreenSpaceEventType.LEFT_CLICK);
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.RIGHT_CLICK);
 
         defineProperties(viewer, {
@@ -131,13 +126,11 @@ define([
                     if (trackedObject !== value) {
                         trackedObject = value;
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
-
-                        if (balloonedObject !== trackedObject) {
-                            viewer._balloon.viewModel.showBalloon = false;
-                        }
+                        //Hide the balloon if it's not the object we are following.
+                        balloonViewModel.showBalloon = balloonedObject === trackedObject;
                     }
-                    var sceneMode = viewer.scene.getFrameState().mode;
 
+                    var sceneMode = viewer.scene.getFrameState().mode;
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
                         viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
                     }
@@ -158,24 +151,25 @@ define([
                     return balloonedObject;
                 },
                 set : function(value) {
-                    var viewModel = viewer._balloon.viewModel;
                     var content;
+                    var position;
                     if (typeof value !== 'undefined') {
-                        if (typeof value.dynamicObject !== 'undefined' && typeof value.dynamicObject.position !== 'undefined') {
-                            viewModel.position = value.dynamicObject.position.getValue(viewer.clock.currentTime);
-                        }
-                        if (typeof value.balloon !== 'undefined') {
-                            content = value.balloon.getValue(viewer.clock.currentTime);
-                        } else {
-                            content = value.id;
+                        if (typeof value.position !== 'undefined') {
+                            position = value.position.getValueCartesian(viewer.clock.currentTime);
                         }
 
-                        if (value !== balloonedObject) {
-                            viewModel.content = content;
+                        if (typeof value.balloon !== 'undefined') {
+                            content = value.balloon.getValue(viewer.clock.currentTime);
                         }
+
+                        if (typeof content === 'undefined') {
+                            content = value.id;
+                        }
+                        balloonViewModel.content = content;
                     }
                     balloonedObject = value;
-                    viewModel.showBalloon = typeof content !== 'undefined';
+                    balloonViewModel.position = position;
+                    balloonViewModel.showBalloon = typeof content !== 'undefined';
                 }
             }
         });

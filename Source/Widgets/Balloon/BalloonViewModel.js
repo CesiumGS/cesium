@@ -27,7 +27,7 @@ define([
         var containerWidth = viewModel._container.clientWidth;
         var containerHeight = viewModel._container.clientHeight;
 
-        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.95) + 'px';
+        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.50) + 'px';
         viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.50) + 'px';
         var pointMaxY = containerHeight - 15;
         var pointMaxX = containerWidth - 16;
