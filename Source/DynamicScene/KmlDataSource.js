@@ -317,13 +317,10 @@ define(['../Core/createGuid',
                         var externalArray = styleId.split('#');
                         var externalPath = externalArray[0];
                         var externalStyleId = '#' + externalArray[1];
-                        if(typeof this.externalStyles[externalPath] === 'undefined'){
+                        if(typeof dataSource.externalStyles[externalPath] === 'undefined'){
                             if(externalPath.substring(0,3 === 'http')){
-                                externalStyleCollection = getRemoteStyle(externalPath).then(function(styles){
-
-                                });
-
-                                this.externalStyles[externalPath] = externalStyleCollection;
+                                //externalStyleCollection = getRemoteStyle(externalPath).then(function(styles){ });
+                                dataSource.externalStyles[externalPath] = externalStyleCollection;
                                 externalStyleObj = externalStyleCollection.getObject(externalStyleId);
                                 placemarkDynamicObject.merge(externalStyleObj);
 
@@ -331,7 +328,7 @@ define(['../Core/createGuid',
                                 //TODO Load an external file from a relative path
                             }
                         } else {
-                            externalStyleCollection = this.externalStyles[externalPath];
+                            externalStyleCollection = dataSource.externalStyles[externalPath];
                             externalStyleObj = externalStyleCollection.getObject(externalStyleId);
                             placemarkDynamicObject.merge(externalStyleObj);
                         }
