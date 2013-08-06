@@ -127,19 +127,19 @@ define([
          * Moves the camera to the DynamicObject instance
          * @memberof viewerDynamicObjectMixin.prototype
          * 
-         * @param {DynamicObject} object The DynamicObject to move the camera to
+         * @param {DynamicObject} dynamicObject The DynamicObject to move the camera to
          * @param {Number} [option.duration] The duration of the animation in milliseconds
          *
-         * @exception {DeveloperError} viewer is required.
+         * @exception {DeveloperError} dynamicObject is required.
          */
-        viewer.flyToObject = function(object, options) {
-            if (typeof object === 'undefined') {
-                throw new DeveloperError('object is required.');
+        viewer.flyToObject = function(dynamicObject, options) {
+            if (typeof dynamicObject === 'undefined') {
+                throw new DeveloperError('dynamicObject is required.');
             }
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
             viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                destination : object,
+                destination : dynamicObject,
                 duration: options.duration
             }));
         };
