@@ -6,6 +6,7 @@ uniform bool u_showIntersection;
 uniform bool u_showThroughEllipsoid;
 
 uniform float u_sensorRadius;
+uniform float u_normalDirection;
 
 varying vec3 v_positionWC;
 varying vec3 v_positionEC;
@@ -23,11 +24,10 @@ vec4 getColor(float sensorRadius, vec3 pointEC)
     materialInput.positionToEyeEC = positionToEyeEC;
     
     vec3 normalEC = normalize(v_normalEC);
-    normalEC = mix(normalEC, -normalEC, step(normalEC.z, 0.0));  // Normal facing viewer
-    materialInput.normalEC = normalEC;
+    materialInput.normalEC = u_normalDirection * normalEC;
     
     czm_material material = czm_getMaterial(materialInput);
-    return czm_phong(normalize(positionToEyeEC), material);
+    return mix(czm_phong(normalize(positionToEyeEC), material), vec4(material.diffuse, material.alpha), 0.4);
 }
 
 bool isOnBoundary(float value, float epsilon)

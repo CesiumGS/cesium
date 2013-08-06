@@ -49,3 +49,9 @@ function writeFileContents(filename, contents, writeIfUnchanged) {
         writer.close();
     }
 }
+
+function loadJsHintOptionsFile(path) {
+    "use strict";
+    /*jshint evil:true*/
+    return eval('(' + readFileContents(path) + ')');
+}
