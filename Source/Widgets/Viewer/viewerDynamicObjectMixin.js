@@ -129,17 +129,19 @@ define([
          * 
          * @param {DynamicObject} object The DynamicObject to move the camera to
          * @param {Number} [option.duration] The duration of the animation in milliseconds
+         *
+         * @exception {DeveloperError} viewer is required.
          */
         viewer.flyToObject = function(object, options) {
+            if (typeof object === 'undefined') {
+                throw new DeveloperError('object is required.');
+            }
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-            if(object) {
-                viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                    destination : object,
-                    duration: options.duration
-                }));
-            }
-
+            viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
+                destination : object,
+                duration: options.duration
+            }));
         };
 
         //Wrap destroy to clean up event subscriptions.
