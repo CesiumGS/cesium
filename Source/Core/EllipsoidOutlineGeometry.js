@@ -124,10 +124,9 @@ define([
         }
 
         var sliceOffset = subdivisions * (stackPartitions - 1);
-        for (j = 1; j < slicePartitions; ++j) {
+        for (j = 1; j < slicePartitions + 1; ++j) {
             indices.push(sliceOffset, sliceOffset + j);
         }
-        indices.push(sliceOffset, sliceOffset + slicePartitions);
 
         for (i = 0; i < subdivisions - 2; ++i) {
             var topOffset = (i * slicePartitions) + 1 + sliceOffset;
@@ -143,7 +142,6 @@ define([
         for (j = lastPosition - 1; j > lastPosition - slicePartitions-1; --j) {
             indices.push(lastPosition, j);
         }
-        indices.push(lastPosition, lastPosition - slicePartitions);
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the

@@ -89,7 +89,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('compute all vertex attributes', function() {
@@ -106,7 +106,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.tangent.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.binormal.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with topRadius equals 0', function() {
@@ -119,7 +119,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with bottomRadius equals 0', function() {
@@ -132,6 +132,6 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 });

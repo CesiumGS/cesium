@@ -40,7 +40,7 @@ define([
                 radii: radii,
                 stackPartitions: options.stackPartitions,
                 slicePartitions: options.slicePartitions,
-                subdivision: options.subdivisions
+                subdivisions: options.subdivisions
         };
 
         var ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
