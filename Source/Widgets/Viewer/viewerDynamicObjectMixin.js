@@ -4,6 +4,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/EventHelper',
+        '../../Core/JulianDate',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
         '../../Scene/CameraFlightPath',
@@ -14,6 +15,7 @@ define([
         DeveloperError,
         defineProperties,
         EventHelper,
+        JulianDate,
         ScreenSpaceEventType,
         wrapFunction,
         CameraFlightPath,
@@ -128,7 +130,7 @@ define([
          * @memberof viewerDynamicObjectMixin.prototype
          * 
          * @param {DynamicObject} dynamicObject The DynamicObject to move the camera to
-         * @param {Number} [option.duration] The duration of the animation in milliseconds
+         * @param {Number} [option.duration] The duration of the animation in seconds
          *
          * @exception {DeveloperError} dynamicObject is required.
          */
@@ -138,9 +140,16 @@ define([
             }
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+            var duration = defaultValue(options.duration, 3);
+
+            // Calculate time at the end of the animation
+            var destinationTime = viewer.clock.currentTime.addMinutes(duration);
+            // Position of object at the end of the animation
+            var destination = dynamicObject.position.getValueCartographic(destinationTime);
+
             viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
-                destination : dynamicObject,
-                duration: options.duration
+                destination : destination,
+                duration : duration
             }));
         };
 

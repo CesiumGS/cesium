@@ -87,7 +87,7 @@ defineSuite([
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.position = new MockProperty(new Cartesian3(123456, 120000, 500));
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
