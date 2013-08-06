@@ -255,7 +255,7 @@ define(['../Core/createGuid',
                 dynamicObject.billboard.scale = scale && new ConstantProperty(scale);
                 dynamicObject.billboard.color = color && new ConstantProperty(Color.fromRgba(color));
             }
-            if(node.nodeName ===  "LabelStyle")   {
+            else if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
                 //Map style to label properties
                 //TODO ColorMode
@@ -266,7 +266,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.fillColor = labelColor && new ConstantProperty(Color.fromRgba(labelColor)); //not sure how to set font color
                 dynamicObject.label.text = dynamicObject.name && new ConstantProperty(dynamicObject.name);
             }
-            if(node.nodeName ===  "LineStyle")   {
+            else if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility, ColorMode
@@ -280,7 +280,7 @@ define(['../Core/createGuid',
                 dynamicObject.polyline.outlineColor = lineOuterColor && new ConstantProperty(Color.fromRgba(lineOuterColor));
                 dynamicObject.polyline.outlineWidth = lineOuterWidth && new ConstantProperty(lineOuterWidth);
             }
-            if(node.nodeName === "PolyStyle")   {
+            else if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
