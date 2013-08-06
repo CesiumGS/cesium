@@ -193,13 +193,13 @@ define(['../Core/createGuid',
                 if (typeof geometryHandler === 'undefined') {
                     throw new RuntimeError('Unknown geometry type: ' + geometryType);
                 }
-                geometryHandler(dataSource, placemark, node, dynamicObjectCollection, styleCollection);
+                geometryHandler(dataSource, dynamicObject, placemark, node);
             }
         }
 
     }
 
-    function processPoint(dataSource, kml, node, dynamicObjectCollection, styleCollection) {
+    function processPoint(dataSource, dynamicObject, kml, node) {
         //TODO extrude, altitudeMode, gx:altitudeMode
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
@@ -207,22 +207,20 @@ define(['../Core/createGuid',
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
         var cartesian3 = crsFunction(coordinates);
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
-    function processLineString(dataSource, kml, node, dynamicObjectCollection, styleCollection){
+    function processLineString(dataSource, dynamicObject, kml, node){
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(kml.id);
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
 
-    function processLinearRing(dataSource, kml, node){
+    function processLinearRing(dataSource, dynamicObject, kml, node){
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
@@ -299,9 +297,11 @@ define(['../Core/createGuid',
             placemark.id = getId(placemark);
             var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemark.id);
             //check for inline styles
-            if(inlineStyleCollection._array.length > 0){
-                for(var k = 0; k < inlineStyleCollection._array.length; k++){
-                    placemarkDynamicObject.merge(inlineStyleCollection._array[k]);
+            var styleObjects = inlineStyleCollection.getObjects();
+            var styleObjectsLength = styleObjects.length;
+            if(styleObjectsLength > 0){
+                for(var k = 0; k < styleObjectsLength; k++){
+                    placemarkDynamicObject.merge(styleObjects[k]);
                 }
             } else {
                 var styleUrl = array[i].getElementsByTagName('styleUrl');
