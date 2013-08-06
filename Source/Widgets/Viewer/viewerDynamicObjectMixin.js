@@ -128,6 +128,7 @@ define([
          * @memberof viewerDynamicObjectMixin.prototype
          * 
          * @param {DynamicObject} object The DynamicObject to move the camera to
+         * @param {Number} [option.duration] The duration of the animation in milliseconds
          */
         viewer.flyToObject = function(object, options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
