@@ -8,6 +8,7 @@ Beta Releases
 
 * Breaking changes:
     * ...
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 
