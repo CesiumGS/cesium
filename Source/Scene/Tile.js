@@ -310,11 +310,27 @@ define([
     };
 
     Tile.prototype.freeVertexArray = function() {
+        var indexBuffer;
+
         if (typeof this.vertexArray !== 'undefined') {
-            var indexBuffer = this.vertexArray.getIndexBuffer();
+            indexBuffer = this.vertexArray.getIndexBuffer();
 
             this.vertexArray.destroy();
             this.vertexArray = undefined;
+
+            if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
+                --indexBuffer.referenceCount;
+                if (indexBuffer.referenceCount === 0) {
+                    indexBuffer.destroy();
+                }
+            }
+        }
+
+        if (typeof this.wireframeVertexArray !== 'undefined') {
+            indexBuffer = this.wireframeVertexArray.getIndexBuffer();
+
+            this.wireframeVertexArray.destroy();
+            this.wireframeVertexArray = undefined;
 
             if (!indexBuffer.isDestroyed() && typeof indexBuffer.referenceCount !== 'undefined') {
                 --indexBuffer.referenceCount;
