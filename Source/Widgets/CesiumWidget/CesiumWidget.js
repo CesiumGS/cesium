@@ -10,6 +10,7 @@ define([
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
+        '../../Core/Event',
         '../../Core/FeatureDetection',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventHandler',
@@ -34,6 +35,7 @@ define([
         destroyObject,
         DeveloperError,
         Ellipsoid,
+        Event,
         FeatureDetection,
         requestAnimationFrame,
         ScreenSpaceEventHandler,
@@ -199,6 +201,8 @@ define([
         this._renderLoopRunning = false;
         this._creditContainer = creditContainer;
         this._canRender = false;
+        this._onRenderLoopError = new Event();
+
         if (options.sceneMode) {
             if (options.sceneMode === SceneMode.SCENE2D) {
                 this._transitioner.to2D();
