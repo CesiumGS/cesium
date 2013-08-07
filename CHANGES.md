@@ -7,7 +7,10 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
-    * ...
+    * Replaced `ExtentGeometry` parameters for extruded extent to make it consistent with other Geometries.
+      * options.extrudedOptions.height -> options.extrudedHeight
+      * options.extrudedOptions.closeTop -> options.closeBottom
+      * options.extrudedOptions.closeBottom -> options.closeTop
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
@@ -15,6 +18,7 @@ Beta Releases
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
+* Added outline geometry [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021)
 
 ### b19 - 2013-08-01
 
