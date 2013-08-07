@@ -656,24 +656,46 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var surfaceHeight = defaultValue(options.height, 0.0);
+        var rotation = options.rotation;
+        var stRotation = options.stRotation;
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var extrudedOptions = options.extrudedOptions;
+
         if (typeof extent === 'undefined') {
             throw new DeveloperError('extent is required.');
         }
 
         extent.validate();
 
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this.extent = extent;
+        this.granularity = granularity;
+        this.ellipsoid = ellipsoid;
+        this.surfaceHeight = surfaceHeight;
+        this.rotation = rotation;
+        this.stRotation = stRotation;
+        this.vertexFormat = vertexFormat;
+        this.extrudedOptions = extrudedOptions;
+        this.workerName = 'createExtentGeometry';
+    };
+
+    ExtentGeometry.createGeometry = function(extentGeometry) {
+        var extent = extentGeometry.extent;
+        var granularity = extentGeometry.granularity;
+        var ellipsoid = extentGeometry.ellipsoid;
+        var surfaceHeight = extentGeometry.surfaceHeight;
+        var rotation = extentGeometry.rotation;
+        var stRotation = extentGeometry.stRotation;
+        var vertexFormat = extentGeometry.vertexFormat;
+
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var radiiSquared = ellipsoid.getRadiiSquared();
-
-        var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
-        var stRotation = options.stRotation;
 
         Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);
@@ -732,7 +754,6 @@ define([
         var lonScalar = 1.0 / (stExtent.east - stExtent.west);
         var latScalar = 1.0 / (stExtent.north - stExtent.south);
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var size = width * height;
 
         if (typeof stRotation !== 'undefined') {
@@ -764,43 +785,22 @@ define([
             size : size
         };
 
-        var extentGeometry;
-        if (typeof options.extrudedOptions !== 'undefined') {
-            extentGeometry = constructExtrudedExtent(options, vertexFormat, params);
+        var geometry;
+        if (typeof extentGeometry.extrudedOptions !== 'undefined') {
+            geometry = constructExtrudedExtent(extentGeometry, vertexFormat, params);
         } else {
-            extentGeometry = constructExtent(options, vertexFormat, params);
+            geometry = constructExtent(extentGeometry, vertexFormat, params);
         }
-        var geometry = extentGeometry.geometry;
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = new GeometryAttributes(geometry.attributes);
+        var boundingSphere = geometry.boundingSphere;
+        geometry = geometry.geometry;
 
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = geometry.indices;
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = extentGeometry.boundingSphere;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = geometry.primitiveType;
+        return new Geometry({
+            attributes : new GeometryAttributes(geometry.attributes),
+            indices : geometry.indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : boundingSphere
+        });
     };
 
     return ExtentGeometry;
