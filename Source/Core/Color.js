@@ -153,6 +153,30 @@ define([
         return new Color(red, green, blue, alpha);
     };
 
+    /**
+     * Creates a random Color instance from red, green, blue and alpha string parameters, using
+     * the semantics defined in the KML reference
+     * @memberof Color
+     *
+     */
+    Color.fromRandom = function(red, green, blue, alpha){
+        red = parseInt(red, 16);
+        green = parseInt(green, 16);
+        blue = parseInt(blue, 16);
+        alpha = parseInt(alpha, 16);
+        if (red > 0)
+            red = Math.floor(Math.random() * red);
+        if (green > 0)
+            green = Math.floor(Math.random() * green);
+        if (blue > 0)
+            blue = Math.floor(Math.random() * blue);
+        if (alpha > 0)
+            alpha = Math.floor(Math.random() * alpha);
+
+        var randomColor = Color.fromBytes(red, green, blue, alpha);
+        return randomColor;
+    };
+
     //#rgb
     var rgbMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
     //#rrggbb
