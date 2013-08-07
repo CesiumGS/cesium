@@ -4,6 +4,14 @@ Change Log
 Beta Releases
 -------------
 
+### b20 - 2013-09-01
+
+* Breaking changes:
+    * ...
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
+* Optimized polyline bounding spheres.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
+
 ### b19 - 2013-08-01
 
 * Breaking changes:

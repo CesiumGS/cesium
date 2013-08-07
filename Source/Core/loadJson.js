@@ -44,7 +44,7 @@ define([
             throw new DeveloperError('url is required.');
         }
 
-        // make a copy of headers to allow us to change values before passing to computeVertices
+        // make a copy of headers to allow us to change values before passing to loadText
         headers = clone(defaultValue(headers, defaultValue.EMPTY_OBJECT));
         headers.Accept = 'application/json';
 
