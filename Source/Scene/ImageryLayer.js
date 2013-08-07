@@ -676,12 +676,12 @@ define([
         // the pixels are more than 1e-5 radians apart.  The pixel spacing cutoff
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
-        if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
+        /*if (!(this._imageryProvider.getTilingScheme() instanceof GeographicTilingScheme) &&
             (extent.east - extent.west) / texture.getWidth() > 1e-5) {
                 var reprojectedTexture = reprojectToGeographic(this, context, texture, imagery.extent);
                 texture.destroy();
                 imagery.texture = texture = reprojectedTexture;
-        }
+        }*/
 
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {

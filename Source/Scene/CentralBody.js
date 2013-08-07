@@ -720,7 +720,7 @@ define([
                 if (!this.depthTestAgainstTerrain) {
                     colorCommandList.push(this._clearDepthCommand);
                     if (mode === SceneMode.SCENE3D) {
-                        colorCommandList.push(this._depthCommand);
+                        //colorCommandList.push(this._depthCommand);
                     }
                 }
             }
