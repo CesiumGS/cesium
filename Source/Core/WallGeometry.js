@@ -43,6 +43,7 @@ define([
     var scratchCartesian3Position2 = new Cartesian3();
     var scratchCartesian3Position3 = new Cartesian3();
     var scratchCartesian3Position4 = new Cartesian3();
+    var scratchCartesian3Position5 = new Cartesian3();
     var scratchBinormal = new Cartesian3();
     var scratchTangent = new Cartesian3();
     var scratchNormal = new Cartesian3();
@@ -189,7 +190,7 @@ define([
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
 
-        if (wallPositions < 2) {
+        if (wallPositions.length < 2) {
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
 
@@ -279,13 +280,15 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
+                var nextTop;
                 var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
                 if (i + 1 < length) {
                     nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
+                    nextTop = Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5);
                 }
 
                 if (recomputeNormal) {
-                    var scalednextPosition = nextPosition.subtract(topPosition, scratchCartesian3Position4);
+                    var scalednextPosition = nextTop.subtract(topPosition, scratchCartesian3Position4);
                     var scaledGroundPosition = groundPosition.subtract(topPosition, scratchCartesian3Position1);
                     normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
                     recomputeNormal = false;
@@ -532,4 +535,3 @@ define([
 
     return WallGeometry;
 });
-
