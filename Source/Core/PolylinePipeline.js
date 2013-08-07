@@ -292,7 +292,7 @@ define([
             var p = scaleP;
             var newPositions = new Array(positions.length);
             if (Array.isArray(height)) {
-                if (height.length !== length) {
+                if (height.length !== length/3) {
                     throw new DeveloperError('height.length must be equal to positions.length');
                 }
                 for (i = 0; i < length; i += 3) {
