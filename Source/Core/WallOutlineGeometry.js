@@ -15,7 +15,6 @@ define([
         './PolylinePipeline',
         './PolygonPipeline',
         './PrimitiveType',
-        './VertexFormat',
         './WindingOrder'
     ], function(
         defaultValue,
@@ -33,7 +32,6 @@ define([
         PolylinePipeline,
         PolygonPipeline,
         PrimitiveType,
-        VertexFormat,
         WindingOrder) {
     "use strict";
 
@@ -41,11 +39,6 @@ define([
     var scratchCartographic2 = new Cartographic();
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
-    var scratchCartesian3Position3 = new Cartesian3();
-    var scratchCartesian3Position4 = new Cartesian3();
-    var scratchBinormal = new Cartesian3();
-    var scratchTangent = new Cartesian3();
-    var scratchNormal = new Cartesian3();
 
     function subdivideHeights(p0, p1, h0, h1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
@@ -179,7 +172,6 @@ define([
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
@@ -234,17 +226,9 @@ define([
         length = newWallPositions.length;
         var size = length * 2;
 
-        var positions = vertexFormat.position ? new Float64Array(size) : undefined;
-        var normals = vertexFormat.normal ? new Float32Array(size) : undefined;
-        var tangents = vertexFormat.tangent ? new Float32Array(size) : undefined;
-        var binormals = vertexFormat.binormal ? new Float32Array(size) : undefined;
-        var textureCoordinates = vertexFormat.st ? new Float32Array(size / 3 * 2) : undefined;
+        var positions = new Float64Array(size);
 
         var positionIndex = 0;
-        var normalIndex = 0;
-        var binormalIndex = 0;
-        var tangentIndex = 0;
-        var stIndex = 0;
 
         var bottomPositions;
         var topPositions;
@@ -253,155 +237,35 @@ define([
         bottomPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, minH, ellipsoid);
         topPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, newMaxHeights, ellipsoid);
 
-
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
-        var normal = scratchNormal;
-        var tangent = scratchTangent;
-        var binormal = scratchBinormal;
-        var recomputeNormal = true;
         length /= 3;
         for (i = 0; i < length; ++i) {
             var i3 = i * 3;
             var topPosition = Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position1);
             var bottomPosition = Cartesian3.fromArray(bottomPositions, i3, scratchCartesian3Position2);
-            if (vertexFormat.position) {
-                // insert the lower point
-                positions[positionIndex++] = bottomPosition.x;
-                positions[positionIndex++] = bottomPosition.y;
-                positions[positionIndex++] = bottomPosition.z;
 
-                // insert the upper point
-                positions[positionIndex++] = topPosition.x;
-                positions[positionIndex++] = topPosition.y;
-                positions[positionIndex++] = topPosition.z;
-            }
+            // insert the lower point
+            positions[positionIndex++] = bottomPosition.x;
+            positions[positionIndex++] = bottomPosition.y;
+            positions[positionIndex++] = bottomPosition.z;
 
-            if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
-                var nextPosition;
-                var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
-                if (i + 1 < length) {
-                    nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
-                }
-
-                if (recomputeNormal) {
-                    var scalednextPosition = nextPosition.subtract(topPosition, scratchCartesian3Position4);
-                    var scaledGroundPosition = groundPosition.subtract(topPosition, scratchCartesian3Position1);
-                    normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
-                    recomputeNormal = false;
-                }
-
-                if (nextPosition.equalsEpsilon(groundPosition, CesiumMath.EPSILON6)) {
-                    recomputeNormal = true;
-                } else {
-                    if (vertexFormat.tangent) {
-                        tangent = nextPosition.subtract(groundPosition, tangent).normalize(tangent);
-                    }
-                    if (vertexFormat.binormal) {
-                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                    }
-                }
-
-                if (vertexFormat.normal) {
-                    normals[normalIndex++] = normal.x;
-                    normals[normalIndex++] = normal.y;
-                    normals[normalIndex++] = normal.z;
-
-                    normals[normalIndex++] = normal.x;
-                    normals[normalIndex++] = normal.y;
-                    normals[normalIndex++] = normal.z;
-                }
-
-                if (vertexFormat.tangent) {
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                }
-
-                if (vertexFormat.binormal) {
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                }
-            }
-
-            if (vertexFormat.st) {
-                var s = i / (length - 1);
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 0.0;
-
-                textureCoordinates[stIndex++] = s;
-                textureCoordinates[stIndex++] = 1.0;
-            }
+            // insert the upper point
+            positions[positionIndex++] = topPosition.x;
+            positions[positionIndex++] = topPosition.y;
+            positions[positionIndex++] = topPosition.z;
         }
 
-        var attributes = new GeometryAttributes();
-
-        if (vertexFormat.position) {
-            attributes.position = new GeometryAttribute({
+        var attributes = new GeometryAttributes({
+            position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
-            });
-        }
-
-        if (vertexFormat.normal) {
-            attributes.normal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : normals
-            });
-        }
-
-        if (vertexFormat.tangent) {
-            attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : tangents
-            });
-        }
-
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : binormals
-            });
-        }
-
-        if (vertexFormat.st) {
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : textureCoordinates
-            });
-        }
-
-        // prepare the side walls, two triangles for each wall
-        //
-        //    A (i+1)  B (i+3) E
-        //    +--------+-------+
-        //    |      / |      /|    triangles:  A C B
-        //    |     /  |     / |                B C D
-        //    |    /   |    /  |
-        //    |   /    |   /   |
-        //    |  /     |  /    |
-        //    | /      | /     |
-        //    +--------+-------+
-        //    C (i)    D (i+2) F
-        //
+            })
+        });
 
         var numVertices = size / 3;
-        size -= 6;
+        size = 6*numVertices-10;
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;
@@ -418,11 +282,14 @@ define([
 
             indices[edgeIndex++] = UL;
             indices[edgeIndex++] = LL;
-            indices[edgeIndex++] = UR;
+            indices[edgeIndex++] = UL;
             indices[edgeIndex++] = UR;
             indices[edgeIndex++] = LL;
             indices[edgeIndex++] = LR;
         }
+
+        indices[edgeIndex++] = numVertices - 2;
+        indices[edgeIndex++] = numVertices - 1;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -446,7 +313,7 @@ define([
          *
          * @type PrimitiveType
          */
-        this.primitiveType = PrimitiveType.TRIANGLES;
+        this.primitiveType = PrimitiveType.LINES;
 
         /**
          * A tight-fitting bounding sphere that encloses the vertices of the geometry.
@@ -468,7 +335,6 @@ define([
      * @param {Number} [minimumHeight] A constant that defines the minimum height of the
      *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} positions is required.
      *
@@ -524,8 +390,7 @@ define([
             positions : positions,
             maximumHeights : maxHeights,
             minimumHeights : minHeights,
-            ellipsoid : options.ellipsoid,
-            vertexFormat : options.vertexFormat
+            ellipsoid : options.ellipsoid
         };
         return new WallGeometry(newOptions);
     };
