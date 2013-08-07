@@ -232,7 +232,7 @@ define([
         }
 
         length = newWallPositions.length;
-        var size = length * 2 * 3;
+        var size = length * 2;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
         var normals = vertexFormat.normal ? new Float32Array(size) : undefined;
@@ -242,9 +242,17 @@ define([
 
         var positionIndex = 0;
         var normalIndex = 0;
-        var tangentIndex = 0;
         var binormalIndex = 0;
-        var textureCoordIndex = 0;
+        var tangentIndex = 0;
+        var stIndex = 0;
+
+        var bottomPositions;
+        var topPositions;
+
+        var minH = defaultValue(newMinHeights, 0);
+        bottomPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, minH, ellipsoid);
+        topPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, newMaxHeights, ellipsoid);
+
 
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
@@ -252,23 +260,11 @@ define([
         var tangent = scratchTangent;
         var binormal = scratchBinormal;
         var recomputeNormal = true;
+        length /= 3;
         for (i = 0; i < length; ++i) {
-            var pos = newWallPositions[i];
-            var c = ellipsoid.cartesianToCartographic(pos, scratchCartographic1);
-
-            c.height = newMaxHeights[i];
-
-            var topPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position1);
-
-            c.height = 0.0;
-            if (typeof newMinHeights !== 'undefined') {
-                c.height += newMinHeights[i];
-            } else {
-                c.height = 0.0;
-            }
-
-            var bottomPosition = ellipsoid.cartographicToCartesian(c, scratchCartesian3Position2);
-
+            var i3 = i * 3;
+            var topPosition = Cartesian3.fromArray(topPositions, i3, scratchCartesian3Position1);
+            var bottomPosition = Cartesian3.fromArray(bottomPositions, i3, scratchCartesian3Position2);
             if (vertexFormat.position) {
                 // insert the lower point
                 positions[positionIndex++] = bottomPosition.x;
@@ -283,22 +279,23 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
+                var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
                 if (i + 1 < length) {
-                    nextPosition = Cartesian3.clone(newWallPositions[i + 1], scratchCartesian3Position3);
+                    nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
                 }
 
                 if (recomputeNormal) {
                     var scalednextPosition = nextPosition.subtract(topPosition, scratchCartesian3Position4);
-                    bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
-                    normal = Cartesian3.cross(bottomPosition, scalednextPosition, normal).normalize(normal);
+                    var scaledGroundPosition = groundPosition.subtract(topPosition, scratchCartesian3Position1);
+                    normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
                     recomputeNormal = false;
                 }
 
-                if (nextPosition.equalsEpsilon(pos, CesiumMath.EPSILON6)) {
+                if (nextPosition.equalsEpsilon(groundPosition, CesiumMath.EPSILON6)) {
                     recomputeNormal = true;
                 } else {
                     if (vertexFormat.tangent) {
-                        tangent = nextPosition.subtract(pos, tangent).normalize(tangent);//scalednextPosition.normalize(tangent);
+                        tangent = nextPosition.subtract(groundPosition, tangent).normalize(tangent);
                     }
                     if (vertexFormat.binormal) {
                         binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
@@ -339,11 +336,11 @@ define([
             if (vertexFormat.st) {
                 var s = i / (length - 1);
 
-                textureCoordinates[textureCoordIndex++] = s;
-                textureCoordinates[textureCoordIndex++] = 0.0;
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 0.0;
 
-                textureCoordinates[textureCoordIndex++] = s;
-                textureCoordinates[textureCoordIndex++] = 1.0;
+                textureCoordinates[stIndex++] = s;
+                textureCoordinates[stIndex++] = 1.0;
             }
         }
 
