@@ -18,23 +18,24 @@ define([
     var pointMin = 0;
     var screenSpacePos = new Cartesian2();
 
-    function shiftPosition(viewModel, position){
+    function shiftPosition(viewModel, position, point, screen){
         var pointX;
         var pointY;
         var posX;
         var posY;
+        var container = viewModel._container;
+        var containerWidth = container.clientWidth;
+        var containerHeight = container.clientHeight;
 
-        var containerWidth = viewModel._container.clientWidth;
-        var containerHeight = viewModel._container.clientHeight;
-
-        viewModel._maxWidth = Math.floor(viewModel._container.clientWidth*0.50) + 'px';
-        viewModel._maxHeight = Math.floor(viewModel._container.clientHeight*0.50) + 'px';
+        viewModel._maxWidth = containerWidth*0.50 + 'px';
+        viewModel._maxHeight = containerHeight*0.50 + 'px';
         var pointMaxY = containerHeight - 15;
         var pointMaxX = containerWidth - 16;
         var pointXOffset = position.x - 15;
 
-        var width = viewModel._balloonElement.offsetWidth;
-        var height = viewModel._balloonElement.offsetHeight;
+        var balloonElement = viewModel._balloonElement;
+        var width = balloonElement.offsetWidth;
+        var height = balloonElement.offsetHeight;
 
         var posMaxY = containerHeight - height;
         var posMaxX = containerWidth - width - 2;
@@ -112,16 +113,12 @@ define([
             }
         }
 
-        return {
-            point: {
-                x: Math.floor(pointX),
-                y: Math.floor(pointY)
-            },
-            screen: {
-                x: Math.floor(posX),
-                y: Math.floor(posY)
-            }
-        };
+
+        viewModel._pointX = pointX + 'px';
+        viewModel._pointY = pointY + 'px';
+
+        viewModel._positionX = posX + 'px';
+        viewModel._positionY = posY + 'px';
     }
 
     /**
@@ -150,18 +147,52 @@ define([
         this._container = defaultValue(container, document.body);
         this._balloonElement = balloonElement;
         this._content = '';
-        this._contentHTML = '';
         this._position = undefined;
-        this._computeScreenSpacePosition = function(position, result) {
-            return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
-        };
-        this._positionX = '0';
-        this._positionY = '0';
-        this._pointX = '0';
-        this._pointY = '0';
         this._updateContent = false;
         this._timerRunning = false;
         this._defaultPosition = {x: this._container.clientWidth, y: this._container.clientHeight/2};
+        this._computeScreenSpacePosition = function(position, result) {
+            return SceneTransforms.wgs84ToWindowCoordinates(scene, position, result);
+        };
+        /**
+         * Stores the HTML content of the balloon as a string.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {String}
+         */
+        this._contentHTML = '';
+
+        /**
+         * The x screen position of the balloon.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this._positionX = '0';
+
+        /**
+         * The y screen position of the balloon.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this._positionY = '0';
+
+        /**
+         * The x screen position of the balloon point.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this._pointX = '0';
+
+        /**
+         * The y screen position of the balloon point
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
+        this._pointY = '0';
 
         /**
          * Determines the visibility of the balloon
@@ -172,20 +203,60 @@ define([
         this.showBalloon = false;
 
         /**
-         * Determines the visibility of the balloon point if the balloon is visible
+         * Determines the visibility of the balloon point
          * @memberof BalloonViewModel.prototype
          *
          * @type {Boolean}
          */
         this.showPoint = true;
 
+        /**
+         * True of the balloon point should be pointing down.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
         this._down = true;
+
+        /**
+         * True of the balloon point should be pointing up.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
         this._up = false;
+
+        /**
+         * True of the balloon point should be pointing left.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
         this._left = false;
+
+        /**
+         * True if the balloon point should be pointing right.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Boolean}
+         */
         this._right = false;
 
-        this._maxWidth = Math.floor(this._container.clientWidth*0.95) + 'px';
-        this._maxHeight = Math.floor(this._container.clientHeight*0.50) + 'px';
+        /**
+         * The maximum width of the balloon element.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this._maxWidth = this._container.clientWidth*0.95 + 'px';
+
+        /**
+         * The maximum height of the balloon element.
+         * @memberof BalloonViewModel.prototype
+         *
+         * @type {Number}
+         */
+        this._maxHeight = this._container.clientHeight*0.50 + 'px';
 
         knockout.track(this, ['showPoint', 'showBalloon', '_positionX', '_positionY', '_pointX', '_pointY',
                               '_down', '_up', '_left', '_right', '_maxWidth', '_maxHeight', '_contentHTML']);
@@ -207,11 +278,6 @@ define([
                     if (typeof that._position !== 'undefined') {
                         var pos = that._computeScreenSpacePosition(that._position, screenSpacePos);
                         pos = shiftPosition(that, pos);
-                        that._pointX = pos.point.x + 'px';
-                        that._pointY = pos.point.y + 'px';
-
-                        that._positionX = pos.screen.x + 'px';
-                        that._positionY = pos.screen.y + 'px';
                     }
                     that.showBalloon = true;
                     that._timerRunning = false;
@@ -228,11 +294,6 @@ define([
                 }
 
                 pos = shiftPosition(this, pos);
-                this._pointX = pos.point.x + 'px';
-                this._pointY = pos.point.y + 'px';
-
-                this._positionX = pos.screen.x + 'px';
-                this._positionY = pos.screen.y + 'px';
             }
         }
     };
