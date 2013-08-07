@@ -11,6 +11,10 @@ Beta Releases
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Added `EllipsoidGeodesic`
+* Improved `WallGeometry` to follow the curvature of the earth.
+* Added `PolylinePipeline.scaleToSurface`.
+* Added `PolylinePipeline.scaleToGeodeticHeight`.
 
 ### b19 - 2013-08-01
 
