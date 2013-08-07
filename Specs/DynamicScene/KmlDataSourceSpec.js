@@ -165,7 +165,7 @@ defineSuite(['DynamicScene/KmlDataSource',
     it('handles Point Geometry with LabelStyle', function() {
         var name = new ConstantProperty('LabelStyle.kml');
         var scale = new ConstantProperty(1.5);
-        var color = new ConstantProperty(Color.fromRgba(parseInt('ff0000cc', 16)));
+        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
         var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -173,7 +173,7 @@ defineSuite(['DynamicScene/KmlDataSource',
             <name>LabelStyle.kml</name>\
                 <Style id="randomLabelColor">\
                     <LabelStyle>\
-                        <color>ff0000cc</color>\
+                        <color>000000ff</color>\
                         <colorMode>normal</colorMode>\
                         <scale>1.5</scale>\
                     </LabelStyle>\
@@ -193,9 +193,12 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
-        expect(objects[0].label.text._value).toEqual(name._value);
-        expect(objects[0].label.scale._value).toEqual(scale._value);
-        expect(objects[0].label.fillColor._value).toEqual(color._value);
+        expect(objects[0].label.text.getValue()).toEqual(name.getValue());
+        expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
+        expect(objects[0].label.fillColor.red).toEqual(color.red);
+        expect(objects[0].label.fillColor.green).toEqual(color.green);
+        expect(objects[0].label.fillColor.blue).toEqual(color.blue);
+        expect(objects[0].label.fillColor.alpha).toEqual(color.alpha);
     });
 
     it('handles Line Geometry with two sets of coordinates', function() {
@@ -249,13 +252,13 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles Color in normal mode', function() {
-        var color = new ConstantProperty(Color.fromRgba(parseInt('ff0000cc', 16)));
+        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
         var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
             <IconStyle>\
-                <color>ff0000cc</color>\
+                <color>000000ff</color>\
                 <colorMode>normal</colorMode>\
             </IconStyle>\
             </Style>\
@@ -273,7 +276,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.color).toEqual(color);
+        expect(objects[0].billboard.color.red).toEqual(color.red);
+        expect(objects[0].billboard.color.green).toEqual(color.green);
+        expect(objects[0].billboard.color.blue).toEqual(color.blue);
+        expect(objects[0].billboard.color.alpha).toEqual(color.alpha);
     });
 
     it('load throws with undefined KML', function() {

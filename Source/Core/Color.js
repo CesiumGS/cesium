@@ -164,15 +164,18 @@ define([
         green = parseInt(green, 16);
         blue = parseInt(blue, 16);
         alpha = parseInt(alpha, 16);
-        if (red > 0)
+        if (red > 0){
             red = Math.floor(Math.random() * red);
-        if (green > 0)
+        }
+        if (green > 0){
             green = Math.floor(Math.random() * green);
-        if (blue > 0)
+        }
+        if (blue > 0){
             blue = Math.floor(Math.random() * blue);
-        if (alpha > 0)
+        }
+        if (alpha > 0){
             alpha = Math.floor(Math.random() * alpha);
-
+        }
         var randomColor = Color.fromBytes(red, green, blue, alpha);
         return randomColor;
     };

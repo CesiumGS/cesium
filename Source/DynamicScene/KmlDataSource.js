@@ -146,13 +146,26 @@ define(['../Core/createGuid',
     }
 
     function getColorValue(node, tagName){
+        var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
+        var colorMode = node.getElementsByTagName('colorMode')[0];
         var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
-        value = parseInt(value, 16); //hexadecimal notation
-        if(isNaN(value)){
-            return undefined;
+        if (typeof value === 'undefined'){
+            return new Color(1.0, 1.0, 1.0, 1.0); //white as default?
         }
-        return Color.fromRgba(value);
+        if(colorMode === 'random'){
+            alpha = value.substring(0,1);
+            blue = value.substring(2,3);
+            green = value.substring(4,5);
+            red = value.substring(6,7);
+            return Color.fromRandom(red, green, blue, alpha);
+        }
+            //normal mode as default
+            alpha = value.substring(0,1);
+            blue = value.substring(2,3);
+            green = value.substring(4,5);
+            red = value.substring(6,7);
+            return Color.fromBytes(red, green, blue, alpha);
     }
 
     function getStylesFromXml(xml){
