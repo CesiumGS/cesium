@@ -42,7 +42,7 @@ define([
 
     function subdivideHeights(p0, p1, h0, h1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var numPoints = Math.ceil(angleBetween/granularity) + 1;
+        var numPoints = Math.ceil(angleBetween/granularity);
         var heights = new Array(numPoints);
         var i;
         if (h0 === h1) {
@@ -53,16 +53,14 @@ define([
         }
 
         var dHeight = h1 - h0;
-        var heightPerVertex = dHeight / (numPoints - 1);
+        var heightPerVertex = dHeight / (numPoints);
 
-        for (i = 1; i < numPoints - 1; i++) {
+        for (i = 1; i < numPoints; i++) {
             var h = h0 + i*heightPerVertex;
             heights[i] = h;
         }
 
         heights[0] = h0;
-        heights[numPoints - 1] = h1;
-
         return heights;
     }
 
@@ -181,7 +179,7 @@ define([
         maximumHeights = o.topHeights;
         minimumHeights = o.bottomHeights;
 
-        if (wallPositions < 2) {
+        if (wallPositions.length < 2) {
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
 
@@ -219,9 +217,13 @@ define([
                 h2 = minimumHeights[i + 1];
                 newMinHeights = newMinHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
             }
-
-            newWallPositions = newWallPositions.concat(PolylinePipeline.scaleToSurface([p1, p2], granularity, ellipsoid));
         }
+        newMaxHeights.push(maximumHeights[length-1]);
+        if (typeof minimumHeights !== 'undefined') {
+            newMinHeights.push(minimumHeights[length-1]);
+        }
+
+        newWallPositions = PolylinePipeline.scaleToSurface(wallPositions, granularity, ellipsoid);
 
         length = newWallPositions.length;
         var size = length * 2;
@@ -265,7 +267,7 @@ define([
         });
 
         var numVertices = size / 3;
-        size = 6*numVertices-10;
+        size = 2*numVertices - 4 + numVertices;
         var indices = IndexDatatype.createTypedArray(numVertices, size);
 
         var edgeIndex = 0;
