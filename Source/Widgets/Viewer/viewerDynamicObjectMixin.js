@@ -4,8 +4,10 @@ define([
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/EventHelper',
+        '../../Core/JulianDate',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../Scene/CameraFlightPath',
         '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView'
     ], function(
@@ -13,8 +15,10 @@ define([
         DeveloperError,
         defineProperties,
         EventHelper,
+        JulianDate,
         ScreenSpaceEventType,
         wrapFunction,
+        CameraFlightPath,
         SceneMode,
         DynamicObjectView) {
     "use strict";
@@ -23,6 +27,7 @@ define([
      * A mixin which adds behavior to the Viewer widget for dealing with DynamicObject instances.
      * This allows for DynamicObjects to be tracked with the camera, either by the viewer clicking
      * on them, or by setting the trackedObject property.
+     * This also allows for the camera to fly to a DynamicObject, but not track the DynamicObject
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDynamicObjectMixin
@@ -31,6 +36,7 @@ define([
      *
      * @exception {DeveloperError} viewer is required.
      * @exception {DeveloperError} trackedObject is already defined by another mixin.
+     * @exception {DeveloperError} flyToObject is already defined by another mixin.
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
@@ -38,6 +44,13 @@ define([
      * var viewer = new Cesium.Viewer('cesiumContainer');
      * viewer.extend(Cesium.viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
+     *
+     * @example
+     * // Add support for working with DynamicObject instances to the Viewer.
+     * var dynamicObject = ... //A DynamicObject instance
+     * var viewer = new Viewer('cesiumContainer');
+     * viewer.extend(viewerDynamicObjectMixin);
+     * viewer.flyToObject = dynamicObject; //Camera will now fly to, but not track, the dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
         if (typeof viewer === 'undefined') {
@@ -45,6 +58,9 @@ define([
         }
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
+        }
+        if (viewer.hasOwnProperty('flyToObject')) {
+            throw new DeveloperError('flyToObject is already defined by another mixin.');
         }
 
         var eventHelper = new EventHelper();
@@ -108,6 +124,34 @@ define([
                 }
             }
         });
+
+        /**
+         * Moves the camera to the DynamicObject instance
+         * @memberof viewerDynamicObjectMixin.prototype
+         * 
+         * @param {DynamicObject} dynamicObject The DynamicObject to move the camera to
+         * @param {Number} [option.duration] The duration of the animation in seconds
+         *
+         * @exception {DeveloperError} dynamicObject is required.
+         */
+        viewer.flyToObject = function(dynamicObject, options) {
+            if (typeof dynamicObject === 'undefined') {
+                throw new DeveloperError('dynamicObject is required.');
+            }
+            options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+            var duration = defaultValue(options.duration, 3);
+
+            // Calculate time at the end of the animation
+            var destinationTime = viewer.clock.currentTime.addMinutes(duration);
+            // Position of object at the end of the animation
+            var destination = dynamicObject.position.getValueCartographic(destinationTime);
+
+            viewer.scene.getAnimations().add(CameraFlightPath.createAnimationCartographic(viewer.scene.getFrameState(), {
+                destination : destination,
+                duration : duration
+            }));
+        };
 
         //Wrap destroy to clean up event subscriptions.
         viewer.destroy = wrapFunction(viewer, viewer.destroy, function() {

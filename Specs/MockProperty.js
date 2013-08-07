@@ -20,6 +20,13 @@ define(['Core/ReferenceFrame'], function(ReferenceFrame) {
         return this.value;
     };
 
+    MockProperty.prototype.getValueCartographic = function(time, result) {
+        if (typeof this.value !== 'undefined' && typeof this.value.clone === 'function') {
+            return this.value.clone(result);
+        }
+        return this.value;
+    };
+
     MockProperty.prototype.getValueSpherical = function(time, result) {
         if (typeof this.value !== 'undefined' && typeof this.value.clone === 'function') {
             return this.value.clone(result);
