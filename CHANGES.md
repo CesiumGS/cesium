@@ -8,7 +8,11 @@ Beta Releases
 
 * Breaking changes:
     * ...
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Added `EllipsoidGeodesic`
+* Improved `WallGeometry` to follow the curvature of the earth.
 
 ### b19 - 2013-08-01
 
@@ -36,6 +40,7 @@ Beta Releases
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
 * Added `ExtentPrimitive`.
 * Added `PolylinePipeline.removeDuplicates`.
+* Added `PolylinePipeline.scaleToSurface`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `BoundingSphere.projectTo2D`.

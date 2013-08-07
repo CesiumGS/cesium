@@ -2,17 +2,25 @@
 define([
         './defaultValue',
         './DeveloperError',
+        './Cartographic',
         './Cartesian3',
         './Cartesian4',
+        './Ellipsoid',
+        './EllipsoidGeodesic',
         './IntersectionTests',
+        './Math',
         './Matrix4',
         './Plane'
     ], function(
         defaultValue,
         DeveloperError,
+        Cartographic,
         Cartesian3,
         Cartesian4,
+        Ellipsoid,
+        EllipsoidGeodesic,
         IntersectionTests,
+        CesiumMath,
         Matrix4,
         Plane) {
     "use strict";
@@ -32,6 +40,52 @@ define([
     var wrapLongitudeYZPlane = new Plane(Cartesian3.ZERO, 0.0);
     var wrapLongitudeIntersection = new Cartesian3();
     var wrapLongitudeOffset = new Cartesian3();
+
+    var carto1 = new Cartographic();
+    var carto2 = new Cartographic();
+    var cartesian = new Cartesian3();
+    var ellipsoidGeodesic = new EllipsoidGeodesic();
+    //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
+    //Result includes p1, but not include p2
+    function generateCartesianArc(p1, p2, granularity, ellipsoid) {
+        var separationAngle = Cartesian3.angleBetween(p1, p2);
+        var numPoints = Math.ceil(separationAngle/granularity);
+        var result = new Array(numPoints*3);
+        var start = ellipsoid.cartesianToCartographic(p1, carto1);
+        var end = ellipsoid.cartesianToCartographic(p2, carto2);
+
+        ellipsoidGeodesic.setEndPoints(start, end);
+        var surfaceDistanceBetweenPoints = ellipsoidGeodesic.getSurfaceDistance() / (numPoints);
+
+        var index = 0;
+        start.height = 0;
+        var cart = ellipsoid.cartographicToCartesian(start, cartesian);
+        result[index++] = cart.x;
+        result[index++] = cart.y;
+        result[index++] = cart.z;
+
+        for (var i = 1; i < numPoints; i++) {
+            var carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
+            cart = ellipsoid.cartographicToCartesian(carto, cartesian);
+            result[index++] = cart.x;
+            result[index++] = cart.y;
+            result[index++] = cart.z;
+        }
+
+        return result;
+    }
+
+    var scaleN = new Cartesian3();
+    var scaleP = new Cartesian3();
+    function computeHeight(p, h, ellipsoid) {
+        var n = scaleN;
+
+        ellipsoid.geodeticSurfaceNormal(p, n);
+        Cartesian3.multiplyByScalar(n, h, n);
+        Cartesian3.add(p, n, p);
+
+        return p;
+    }
 
     /**
      * Breaks a {@link Polyline} into segments such that it does not cross the &plusmn;180 degree meridian of an ellipsoid.
@@ -156,6 +210,112 @@ define([
         }
 
         return cleanedPositions;
+    };
+
+    /**
+     * Subdivides polyline and raises all points to the ellipsoid surface
+     *
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Number} [granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     *
+     * @returns {Array} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+     *
+     * @exception {DeveloperError} positions is required
+     *
+     * @example
+     * var positions = ellipsoid.cartographicArrayToCartesianArray([
+     *      Cartographic.fromDegrees(-105.0, 40.0),
+     *      Cartographic.fromDegrees(-100.0, 38.0),
+     *      Cartographic.fromDegrees(-105.0, 35.0),
+     *      Cartographic.fromDegrees(-100.0, 32.0)
+     * ]));
+     * var surfacePositions = PolylinePipeline.scaleToSurface(positions);
+     */
+    PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
+        if (typeof positions === 'undefined') {
+            throw new DeveloperError('positions is required');
+        }
+        granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var length = positions.length;
+        var newPositions = [];
+        for (var i = 0; i < length - 1; i++) {
+            var p0 = positions[i];
+            var p1 = positions[i+1];
+            newPositions = newPositions.concat(generateCartesianArc(p0, p1, granularity, ellipsoid));
+        }
+
+        var lastPoint = positions[length-1];
+        var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
+        carto.height = 0;
+        var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
+        newPositions.push(cart.x, cart.y, cart.z);
+
+        return newPositions;
+    };
+
+    /**
+     * Raises the positions to the given height.  Assumes all points are at height 0.
+     *
+     * @memberof PolylinePipeline
+     *
+     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Number|Array} height A number or array of numbers representing the heights of each position.
+     * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     *
+     * @returns {Array} The array of positions scaled to height.
+     *
+     * @exception {DeveloperError} height.length must be equal to positions.length
+     *
+     * @example
+     * var positions = ellipsoid.cartographicArrayToCartesianArray([
+     *      Cartographic.fromDegrees(-105.0, 40.0),
+     *      Cartographic.fromDegrees(-100.0, 38.0),
+     *      Cartographic.fromDegrees(-105.0, 35.0),
+     *      Cartographic.fromDegrees(-100.0, 32.0)
+     * ]));
+     *
+     * var heights = [1000, 1000, 2000, 2000];
+     * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
+     */
+     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
+        if (typeof positions !== 'undefined' && typeof height !== 'undefined') {
+            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+            var h;
+            var length = positions.length;
+            var i;
+            var p = scaleP;
+            var newPositions = new Array(positions.length);
+            if (Array.isArray(height)) {
+                if (height.length !== length/3) {
+                    throw new DeveloperError('height.length must be equal to positions.length');
+                }
+                for (i = 0; i < length; i += 3) {
+                    h = height[i/3];
+                    p = Cartesian3.fromArray(positions, i, p);
+                    p = computeHeight(p, h, ellipsoid);
+                    newPositions[i] = p.x;
+                    newPositions[i + 1] = p.y;
+                    newPositions[i + 2] = p.z;
+                }
+            } else {
+                h = height;
+                for (i = 0; i < length; i += 3) {
+                    p = Cartesian3.fromArray(positions, i, p);
+                    p = computeHeight(p, h, ellipsoid);
+                    newPositions[i] = p.x;
+                    newPositions[i + 1] = p.y;
+                    newPositions[i + 2] = p.z;
+                }
+            }
+
+            return newPositions;
+        }
     };
 
     return PolylinePipeline;
