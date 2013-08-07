@@ -49,15 +49,13 @@ require([
     var centralBody = scene.getPrimitives().getCentralBody();
     centralBody.depthTestAgainstTerrain = true;
     
-    /*var mesh = new Cesium.CesiumMeshTerrainProvider({
+    centralBody.terrainProvider = new Cesium.CesiumMeshTerrainProvider({
         url : 'http://172.16.37.34/mesh'
     });
 
-    centralBody.terrainProvider = mesh;*/
-
-    centralBody.terrainProvider = new Cesium.CesiumTerrainProvider({
+    /*centralBody.terrainProvider = new Cesium.CesiumTerrainProvider({
         url : 'http://cesium.agi.com/smallterrain'
-    });
+    });*/
 	
 	var tp = new TitlePane({
 		title: 'Terrain Debugging',
