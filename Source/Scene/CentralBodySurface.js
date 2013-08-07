@@ -1039,8 +1039,8 @@ define([
         when(tile.meshForWireframePromise, function(mesh) {
             if (tile.vertexArray === vertexArray) {
                 tile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, tile.vertexArray, mesh);
-                tile.meshForWireframePromise = undefined;
             }
+            tile.meshForWireframePromise = undefined;
         });
     }
 
