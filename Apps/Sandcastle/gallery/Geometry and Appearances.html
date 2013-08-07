@@ -103,7 +103,7 @@ require(['Cesium'], function(Cesium) {
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
     }));
-        
+    
     // Create extruded extent
     var extrudedExtent = new Cesium.GeometryInstance({
         geometry: new Cesium.ExtentGeometry({
@@ -158,19 +158,19 @@ require(['Cesium'], function(Cesium) {
 
     // cylinder
     var cylinderInstance = new Cesium.GeometryInstance({
-                geometry : new Cesium.CylinderGeometry({
-                    length: 200000,
-                    topRadius: 150000,
-                    bottomRadius: 300000,
-                    vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
-            }),
-            id: 'cylinder',
-            modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
-                    ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0)),
-            attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
-            }
-        });
+        geometry : new Cesium.CylinderGeometry({
+            length: 200000,
+            topRadius: 150000,
+            bottomRadius: 300000,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        id: 'cylinder',
+        modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
+            ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0)),
+        attributes : {
+            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+        }
+    });
     
     primitives.add(new Cesium.Primitive({
         geometryInstances: [extrudedPolygon, extrudedEllipse, extrudedExtent, cylinderInstance],

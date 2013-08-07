@@ -9,6 +9,7 @@ define([
         './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './VertexFormat'
@@ -22,6 +23,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         VertexFormat) {
@@ -65,27 +67,47 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
+        var topRadius = options.topRadius;
+        var bottomRadius = options.bottomRadius;
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        var slices = defaultValue(options.slices, 100);
+
         if (typeof length === 'undefined' || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0');
         }
-        var topRadius = options.topRadius;
+
         if (typeof topRadius === 'undefined' || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0');
         }
-        var bottomRadius = options.bottomRadius;
+
         if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0');
         }
+
         if (bottomRadius === 0 && topRadius === 0) {
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
         }
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
-        var slices = defaultValue(options.slices, 100);
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3');
         }
+
+
+        this.length = length;
+        this.topRadius = topRadius;
+        this.bottomRadius = bottomRadius;
+        this.vertexFormat = vertexFormat;
+        this.slices = slices;
+        this.workerName = 'createCylinderGeometry';
+    };
+
+    CylinderGeometry.createGeometry = function(cylinderGeometry) {
+        var length = cylinderGeometry.length;
+        var topRadius = cylinderGeometry.topRadius;
+        var bottomRadius = cylinderGeometry.bottomRadius;
+        var vertexFormat = cylinderGeometry.vertexFormat;
+        var slices = cylinderGeometry.slices;
+
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;
 
@@ -309,36 +331,12 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, radiusScratch.magnitude());
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = boundingSphere;
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : boundingSphere
+        });
     };
 
     return CylinderGeometry;
