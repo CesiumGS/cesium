@@ -390,6 +390,7 @@ define([
         var length;
         var i;
         var j;
+        var index;
         var promise;
         var instances;
         var geometries;
@@ -411,7 +412,7 @@ define([
                 }
             }
 
-            var workerSucceeded = creationFinishedFunction(this);
+            var workerSucceeded = creationFinishedFunction(this, length);
             var workerFailed = workerFailedFunction(this);
 
             while (queue.length > 0) {
@@ -423,14 +424,7 @@ define([
                     return;
                 }
 
-                //when(promise, workerSucceeded, workerFailed);
-                var that = this;
-                when(promise, function(result) {
-                    that._geometries.push(result);
-                    if (length === ++that._completed) {
-                        that.state = PrimitiveState.CREATED;
-                    }
-                });
+                when(promise, workerSucceeded, workerFailed);
             }
 
             if (queue.length === 0) {
@@ -444,7 +438,7 @@ define([
             length = geometries.length;
             for (i = 0; i < length; ++i) {
                 geometry = geometries[i];
-                var index = geometry.index;
+                index = geometry.index;
                 insts[index] = cloneInstance(instances[index], geometry.geometry);
             }
 
@@ -490,16 +484,7 @@ define([
                 return;
             }
 
-            //when(promise, combineFinishedFunction(this), workerFailedFunction(this));
-            var that = this;
-            when(promise, function(result) {
-                that._geometries = result.geometries;
-                that._attributeIndices = result.attributeIndices;
-                that._vaAttributes = result.vaAttributes;
-                that._perInstanceAttributes = result.vaAttributeIndices;
-                Matrix4.clone(result.modelMatrix, that.modelMatrix);
-                that.state = PrimitiveState.COMBINED;
-            });
+            when(promise, combineFinishedFunction(this), workerFailedFunction(this));
             this.state = PrimitiveState.COMBINING;
         } else if (this.state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
@@ -628,7 +613,7 @@ define([
                 var indices = attribute.indices;
                 var indicesLength = indices.length;
                 for (j = 0; j < indicesLength; ++j) {
-                    var index = indices[j];
+                    index = indices[j];
                     var offset = index.offset;
                     var count = index.count;
 
