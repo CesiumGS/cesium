@@ -9,6 +9,8 @@ Beta Releases
 * Breaking changes:
     * ...
 * Optimized polyline bounding spheres.
+* Added `EllipsoidGeodesic`
+* Improved `WallGeometry` to follow the curvature of the earth.
 
 ### b19 - 2013-08-01
 
@@ -47,7 +49,6 @@ Beta Releases
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
 * Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
-* Added `EllipsoidGeodesic`
 
 ### b18 - 2013-07-01
 

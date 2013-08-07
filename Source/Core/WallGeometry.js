@@ -89,8 +89,8 @@ define([
             return positions.slice(0);
         }
 
-        cleanedPositions.push(positions[0]);
         var v0 = positions[0];
+        cleanedPositions.push(v0);
         var c0 = ellipsoid.cartesianToCartographic(v0, scratchCartographic1);
         if (hasTopHeights) {
             c0.height = topHeights[0];
@@ -115,7 +115,6 @@ define([
                 cleanedTopHeights[i-1] = c1.height;
             }
 
-            v0 = positions[i];
             c0 = c1.clone(c0);
         }
 
