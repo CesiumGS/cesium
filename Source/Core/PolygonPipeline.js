@@ -730,9 +730,7 @@ define([
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
-                    p.x = positions[i];
-                    p.y = positions[i + 1];
-                    p.z = positions[i + 2];
+                    p = Cartesian3.fromArray(positions, i, p);
 
                     ellipsoid.scaleToGeodeticSurface(p, p);
                     ellipsoid.geodeticSurfaceNormal(p, n);

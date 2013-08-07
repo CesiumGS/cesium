@@ -490,7 +490,7 @@ define([
 
         if (this._mode !== mode || typeof this._rsColor === 'undefined') {
             modeChanged = true;
-            if (mode === SceneMode.SCENE3D || (mode === SceneMode.COLUMBUS_VIEW && !(this.terrainProvider instanceof EllipsoidTerrainProvider))) {
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 this._rsColor = context.createRenderState({ // Write color and depth
                     cull : {
                         enabled : true
@@ -714,10 +714,12 @@ define([
             displayCredits(this, frameState);
 
             // render depth plane
-            if (mode === SceneMode.SCENE3D) {
+            if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 if (!this.depthTestAgainstTerrain) {
                     colorCommandList.push(this._clearDepthCommand);
-                    colorCommandList.push(this._depthCommand);
+                    if (mode === SceneMode.SCENE3D) {
+                        colorCommandList.push(this._depthCommand);
+                    }
                 }
             }
         }
