@@ -46,7 +46,8 @@ define([
     var cartesian = new Cartesian3();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
-    //Result includes p1, but not include p2
+    //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
+    //and this prevents duplication of end point.
     function generateCartesianArc(p1, p2, granularity, ellipsoid) {
         var separationAngle = Cartesian3.angleBetween(p1, p2);
         var numPoints = Math.ceil(separationAngle/granularity);
@@ -263,59 +264,62 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of positions of type {Cartesian3}.
+     * @param {Array} positions The array of type {Number} representing positions.
      * @param {Number|Array} height A number or array of numbers representing the heights of each position.
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
      *
      * @returns {Array} The array of positions scaled to height.
-     *
+
+     * @exception {DeveloperError} positions must be defined.
+     * @exception {DeveloperError} height must be defined.
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
-     * var positions = ellipsoid.cartographicArrayToCartesianArray([
-     *      Cartographic.fromDegrees(-105.0, 40.0),
-     *      Cartographic.fromDegrees(-100.0, 38.0),
-     *      Cartographic.fromDegrees(-105.0, 35.0),
-     *      Cartographic.fromDegrees(-100.0, 32.0)
-     * ]));
-     *
+     * var p1 = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-105.0, 40.0));
+     * var p2 = ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-100.0, 38.0));
+     * var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
      * var heights = [1000, 1000, 2000, 2000];
+     *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
      PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
-        if (typeof positions !== 'undefined' && typeof height !== 'undefined') {
-            ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-            var h;
-            var length = positions.length;
-            var i;
-            var p = scaleP;
-            var newPositions = new Array(positions.length);
-            if (Array.isArray(height)) {
-                if (height.length !== length/3) {
-                    throw new DeveloperError('height.length must be equal to positions.length');
-                }
-                for (i = 0; i < length; i += 3) {
-                    h = height[i/3];
-                    p = Cartesian3.fromArray(positions, i, p);
-                    p = computeHeight(p, h, ellipsoid);
-                    newPositions[i] = p.x;
-                    newPositions[i + 1] = p.y;
-                    newPositions[i + 2] = p.z;
-                }
-            } else {
-                h = height;
-                for (i = 0; i < length; i += 3) {
-                    p = Cartesian3.fromArray(positions, i, p);
-                    p = computeHeight(p, h, ellipsoid);
-                    newPositions[i] = p.x;
-                    newPositions[i + 1] = p.y;
-                    newPositions[i + 2] = p.z;
-                }
-            }
-
-            return newPositions;
+        if (typeof positions === 'undefined') {
+            throw new DeveloperError('positions must be defined.');
         }
+        if (typeof height === 'undefined') {
+            throw new DeveloperError('height must be defined.');
+        }
+        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
+
+        var h;
+        var length = positions.length;
+        var i;
+        var p = scaleP;
+        var newPositions = new Array(positions.length);
+        if (Array.isArray(height)) {
+            if (height.length !== length/3) {
+                throw new DeveloperError('height.length must be equal to positions.length');
+            }
+            for (i = 0; i < length; i += 3) {
+                h = height[i/3];
+                p = Cartesian3.fromArray(positions, i, p);
+                p = computeHeight(p, h, ellipsoid);
+                newPositions[i] = p.x;
+                newPositions[i + 1] = p.y;
+                newPositions[i + 2] = p.z;
+            }
+        } else {
+            h = height;
+            for (i = 0; i < length; i += 3) {
+                p = Cartesian3.fromArray(positions, i, p);
+                p = computeHeight(p, h, ellipsoid);
+                newPositions[i] = p.x;
+                newPositions[i + 1] = p.y;
+                newPositions[i + 2] = p.z;
+            }
+        }
+
+        return newPositions;
     };
 
     return PolylinePipeline;

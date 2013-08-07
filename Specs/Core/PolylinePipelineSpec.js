@@ -107,6 +107,18 @@ defineSuite([
         expect(p3.equalsEpsilon(p3n, CesiumMath.EPSILON4)).toEqual(true);
     });
 
+    it('scaleToGeodeticHeight throws if positions is undefined', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight();
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight throws if height is undefined', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()]);
+        }).toThrow();
+    });
+
     it('scaleToGeodeticHeight throws if positions.lenth is not equal to height.lenght', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], []);
