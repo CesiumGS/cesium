@@ -842,7 +842,7 @@ define([
         this.semiMinorAxis = semiMinorAxis;
         this.ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this.rotation = defaultValue(options.rotation, 0.0);
-        this.stRotation = defaultValue(options.rotation, 0.0);
+        this.stRotation = defaultValue(options.stRotation, 0.0);
         this.height = height;
         this.granularity = granularity;
         this.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);

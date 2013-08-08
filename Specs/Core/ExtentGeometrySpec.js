@@ -22,11 +22,11 @@ defineSuite([
 
     it('computes positions', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -40,11 +40,11 @@ defineSuite([
     });
 
     it('computes all attributes', function() {
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.ALL,
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0
-        });
+        }));
         expect(m.attributes.position.values.length).toEqual(9 * 3);
         expect(m.attributes.st.values.length).toEqual(9 * 2);
         expect(m.attributes.normal.values.length).toEqual(9 * 3);
@@ -56,12 +56,12 @@ defineSuite([
     it('compute positions with rotation', function() {
         var extent = new Extent(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITIONS_ONLY,
             extent : extent,
             rotation : angle,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -80,11 +80,11 @@ defineSuite([
 
     it('compute vertices with PI rotation', function() {
         var extent = new Extent(-1, -1, 1, 1);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             extent : extent,
             rotation : CesiumMath.PI,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -104,12 +104,12 @@ defineSuite([
     it('compute texture coordinates with rotation', function() {
         var extent = new Extent(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             extent : extent,
             stRotation : angle,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
         var st = m.attributes.st.values;
         var length = st.length;
@@ -130,23 +130,23 @@ defineSuite([
 
     it('throws if rotated extent is invalid', function() {
         expect(function() {
-            return new ExtentGeometry({
+            return ExtentGeometry.createGeometry(new ExtentGeometry({
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
-            });
+            }));
         }).toThrow();
     });
 
     it('computes positions extruded', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
             extrudedOptions : {
                 height : 2
             }
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((9 + 8 + 4) * 3 * 2);
@@ -154,14 +154,14 @@ defineSuite([
     });
 
     it('computes all attributes extruded', function() {
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.ALL,
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
             extrudedOptions : {
                 height : 2
             }
-        });
+        }));
         expect(m.attributes.position.values.length).toEqual((9 + 8 + 4) * 3 * 2);
         expect(m.attributes.st.values.length).toEqual((9 + 8 + 4) * 2 * 2);
         expect(m.attributes.normal.values.length).toEqual((9 + 8 + 4) * 3 * 2);
@@ -173,7 +173,7 @@ defineSuite([
     it('compute positions with rotation extruded', function() {
         var extent = new Extent(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITIONS_ONLY,
             extent : extent,
             rotation : angle,
@@ -181,7 +181,7 @@ defineSuite([
             extrudedOptions : {
                 height : 2
             }
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -200,7 +200,7 @@ defineSuite([
 
     it('computes extruded top open', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
@@ -208,7 +208,7 @@ defineSuite([
                 height : 2,
                 closeTop : false
             }
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((((8 + 4) * 2) + 9) * 3);
@@ -217,7 +217,7 @@ defineSuite([
 
     it('computes extruded bottom open', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
@@ -225,7 +225,7 @@ defineSuite([
                 height : 2,
                 closeBottom : false
             }
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((((8 + 4) * 2) + 9) * 3);
@@ -234,7 +234,7 @@ defineSuite([
 
     it('computes extruded top and bottom open', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
@@ -243,7 +243,7 @@ defineSuite([
                 closeTop : false,
                 closeBottom : false
             }
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((8 + 4) * 2 * 3);
@@ -252,12 +252,12 @@ defineSuite([
 
     it('computes non-extruded extent if height is not specified', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
             extrudedOptions : {}
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(9 * 3);
@@ -266,14 +266,14 @@ defineSuite([
 
     it('computes non-extruded extent if height is small', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
+        var m = ExtentGeometry.createGeometry(new ExtentGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
             extrudedOptions : {
                 height : 0.1
             }
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(9 * 3);

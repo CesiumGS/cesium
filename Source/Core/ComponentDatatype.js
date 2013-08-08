@@ -119,11 +119,29 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a typed array corresponding to component data type.
+     * @memberof ComponentDatatype
+     *
+     * @param {ComponentDatatype} componentDatatype The component data type.
+     * @param {Number|Array} valuesOrLength The length of the array to create or an array.
+     *
+     * @return {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
+     *
+     * @exception {DeveloperError} componentDatatype is required.
+     * @exception {DeveloperError} valuesOrLength is required.
+     * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
+     *
+     * @example
+     * // creates a Float32Array with length of 100
+     * var typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, 100);
      */
     ComponentDatatype.createTypedArray = function(componentDatatype, valuesOrLength) {
         if (typeof componentDatatype === 'undefined') {
             throw new DeveloperError('componentDatatype is required.');
+        }
+
+        if (typeof valuesOrLength === 'undefined') {
+            throw new DeveloperError('valuesOrLength is required.');
         }
 
         switch (componentDatatype.value) {
@@ -145,11 +163,27 @@ define([
     };
 
     /**
-     * DOC_TBA
+     * Creates a typed view of an array of bytes.
+     * @memberof ComponentDatatype
+     *
+     * @param {ComponentDatatype} componentDatatype The type of the view to create.
+     * @param {ArrayBuffer} buffer The buffer storage to use for the view.
+     * @param {Number} [byteOffset] The offset, in bytes, to the first element in the view.
+     * @param {Number} [length] The number of elements in the view.
+     *
+     * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array view of the buffer.
+     *
+     * @exception {DeveloperError} componentDatatype is required.
+     * @exception {DeveloperError} buffer is required.
+     * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
      */
-    ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset) {
+    ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset, length) {
         if (typeof componentDatatype === 'undefined') {
             throw new DeveloperError('componentDatatype is required.');
+        }
+
+        if (typeof buffer === 'undefined') {
+            throw new DeveloperError('buffer is required.');
         }
 
         switch (componentDatatype.value) {

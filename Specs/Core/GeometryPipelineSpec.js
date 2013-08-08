@@ -316,7 +316,7 @@ defineSuite([
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
-        var geometry = new EllipsoidGeometry();
+        var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
         var acmrBefore = Tipsify.calculateACMR({
             indices : geometry.indices,
             cacheSize : 24
@@ -1439,22 +1439,22 @@ defineSuite([
 
     it ('computeBinormalAndTangent computes tangent and binormal for an EllipsoidGeometry', function() {
         var numberOfPartitions = 10;
-        var geometry = new EllipsoidGeometry({
+        var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
                 st : true
             }),
             numberOfPartitions : numberOfPartitions
-        });
+        }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
-        var expectedGeometry = new EllipsoidGeometry({
+        var expectedGeometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
             vertexFormat: VertexFormat.ALL,
             numberOfPartitions : numberOfPartitions
-        });
+        }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
 
