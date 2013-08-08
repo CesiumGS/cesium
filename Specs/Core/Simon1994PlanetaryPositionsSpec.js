@@ -25,7 +25,7 @@ defineSuite([
         var X = 26500268539.790234;
         var Y = -132756447253.27325;
         var Z = -57556483362.533806;
-        expect(X).toEqualEpsilon(sun.x, CesiumMath.EPSILON4); //TODO
+        expect(X).toEqualEpsilon(sun.x, CesiumMath.EPSILON4);
         expect(Y).toEqualEpsilon(sun.y, CesiumMath.EPSILON4);
         expect(Z).toEqualEpsilon(sun.z, CesiumMath.EPSILON4);
 
