@@ -193,9 +193,8 @@ define([
         this.state = PrimitiveState.READY;
         this._createdGeometries = [];
         this._geometries = [];
-        this._completed = 0;
-        this._queue = new Queue();
         this._vaAttributes = undefined;
+        this._error = undefined;
 
         this._vertexCacheOptimize = defaultValue(options.vertexCacheOptimize, true);
         this._releaseGeometryInstances = defaultValue(options.releaseGeometryInstances, true);
@@ -488,32 +487,7 @@ define([
 
     }
 
-    var taskProcessor = new TaskProcessor('taskDispatcher');
-
-    function creationFinishedFunction(primitive, length) {
-        return function(result) {
-            primitive._geometries.push(result);
-            if (length === ++primitive._completed) {
-                primitive.state = PrimitiveState.CREATED;
-            }
-        };
-    }
-
-    function combineFinishedFunction(primitive) {
-        return function(result) {
-            primitive._geometries = result.geometries;
-            primitive._attributeIndices = result.attributeIndices;
-            primitive._vaAttributes = result.vaAttributes;
-            Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
-            primitive.state = PrimitiveState.COMBINED;
-        };
-    }
-
-    function workerFailedFunction(primitive) {
-        return function(result) {
-            primitive.state = PrimitiveState.FAILED;
-        };
-    }
+    var taskProcessor = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
 
     /**
      * @private
@@ -543,53 +517,43 @@ define([
         var instances;
         var geometries;
 
-        if (this.state === PrimitiveState.READY) {
-            var queue = this._queue;
+        var that = this;
+
+        if (this.state === PrimitiveState.FAILED) {
+            throw this._error;
+        } else if (this.state === PrimitiveState.READY) {
             instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
 
             length = instances.length;
 
-            if (this._geometries.length === 0 && queue.length === 0) {
-                for (i = 0; i < length; ++i) {
-                    geometry = instances[i].geometry;
+            var promises = [];
 
-                    if (typeof geometry.attributes !== 'undefined' && typeof geometry.primitiveType !== 'undefined') {
-                        this._createdGeometries.push({
-                            geometry : cloneGeometry(geometry),
-                            index : i
-                        });
-                    } else {
-                        queue.enqueue({
-                            task : geometry.workerName,
-                            geometry : geometry,
-                            index : i
-                        });
-                    }
+            for (i = 0; i < length; ++i) {
+                geometry = instances[i].geometry;
+
+                if (typeof geometry.attributes !== 'undefined' && typeof geometry.primitiveType !== 'undefined') {
+                    this._createdGeometries.push({
+                        geometry : cloneGeometry(geometry),
+                        index : i
+                    });
+                } else {
+                    promises.push(taskProcessor.scheduleTask({
+                        task : geometry.workerName,
+                        geometry : geometry,
+                        index : i
+                    }));
                 }
             }
 
-            var workerSucceeded = creationFinishedFunction(this, length);
-            var workerFailed = workerFailedFunction(this);
+            this.state = PrimitiveState.CREATING;
 
-            while (queue.length > 0) {
-                var task = queue.dequeue();
-                promise = taskProcessor.scheduleTask(task);
-
-                if (typeof promise === 'undefined') {
-                    queue.enqueue(task);
-                    return;
-                }
-
-                when(promise, workerSucceeded, workerFailed);
-            }
-
-            if (queue.length === 0) {
-                this.state = PrimitiveState.CREATING;
-            }
-
-            if (this._createdGeometries.length === length) {
-                this.state = PrimitiveState.CREATED;
-            }
+            when.all(promises, function(results) {
+                that._geometries = results;
+                that.state = PrimitiveState.CREATED;
+            }, function(error) {
+                that._error = error;
+                that.state = PrimitiveState.FAILED;
+            });
         } else if (this.state === PrimitiveState.CREATED) {
             instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
             var insts = new Array(instances.length);
@@ -623,7 +587,7 @@ define([
 
             var pickColors = [];
             for (i = 0; i < length; ++i) {
-                var pickId = context.createPickId(defaultValue(insts[i].id, this));
+                var pickId = context.createPickId(defaultValue(instances[i].id, this));
                 this._pickIds.push(pickId);
                 pickColors.push(pickId.color);
             }
@@ -640,11 +604,16 @@ define([
                 modelMatrix : this.modelMatrix
             }, transferableObjects);
 
-            if (typeof promise === 'undefined') {
-                return;
-            }
-
-            when(promise, combineFinishedFunction(this), workerFailedFunction(this));
+            when(promise, function(result) {
+                that._geometries = result.geometries;
+                that._attributeIndices = result.attributeIndices;
+                that._vaAttributes = result.vaAttributes;
+                Matrix4.clone(result.modelMatrix, that.modelMatrix);
+                that.state = PrimitiveState.COMBINED;
+            }, function(error) {
+                that._error = error;
+                that.state = PrimitiveState.FAILED;
+            });
             this.state = PrimitiveState.COMBINING;
         } else if (this.state === PrimitiveState.COMBINED) {
             geometries = this._geometries;

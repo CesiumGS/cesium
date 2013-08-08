@@ -8,6 +8,7 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
+         'Specs/waitsForException',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -24,6 +25,7 @@ defineSuite([
          frameState,
          pick,
          render,
+         waitsForException,
          BoundingSphere,
          Cartesian3,
          Cartographic,
@@ -164,9 +166,10 @@ defineSuite([
                 ])
         };
         polygon.configureFromPolygonHierarchy(hierarchy);
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrow();
+
+        waitsForException(function() {
+            return render(context, frameState, polygon) > 0;
+        });
     });
 
     it('gets the default color', function() {
@@ -188,19 +191,27 @@ defineSuite([
 
     it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        polygon = createPolygon();
-        polygon.material.uniforms.color = {
-            red : 1.0,
-            green : 0.0,
-            blue : 0.0,
-            alpha : 1.0
-        };
+        runs(function() {
+            polygon = createPolygon();
+            polygon.material.uniforms.color = {
+                red : 1.0,
+                green : 0.0,
+                blue : 0.0,
+                alpha : 1.0
+            };
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        });
 
-        render(context, frameState, polygon);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, polygon) > 0;
+        });
+
+        runs(function() {
+            render(context, frameState, polygon);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
     it('does not render when show is false', function() {
@@ -234,9 +245,9 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
         ]);
 
-        expect(function() {
-            render(context, frameState, polygon);
-        }).toThrow();
+        waitsForException(function() {
+            return render(context, frameState, polygon) > 0;
+        });
     });
 
     it('throws without hierarchy positions due to duplicates', function() {
@@ -260,16 +271,22 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.configureFromPolygonHierarchy(hierarchy);
 
-        expect(function () {
-            render(context, frameState, polygon);
-        }).toThrow();
+        waitsForException(function() {
+            return render(context, frameState, polygon) > 0;
+        });
     });
 
     it('is picked', function() {
         polygon = createPolygon();
 
-        var pickedObject = pick(context, frameState, polygon, 0, 0);
-        expect(pickedObject).toEqual(polygon);
+        waitsFor(function() {
+            return render(context, frameState, polygon) > 0;
+        });
+
+        runs(function() {
+            var pickedObject = pick(context, frameState, polygon, 0, 0);
+            expect(pickedObject).toEqual(polygon);
+        });
     });
 
     it('is not picked (show === false)', function() {
@@ -290,10 +307,23 @@ defineSuite([
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
+
+        var boundingVolume;
+
+        waitsFor(function() {
+            var commandList = [];
+            polygon.update(context, frameState, commandList);
+
+            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+                boundingVolume = commandList[0].colorList[0].boundingVolume;
+                return true;
+            }
+            return false;
+        });
+
+        runs(function() {
+            expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
+        });
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
@@ -313,15 +343,26 @@ defineSuite([
 
         var mode = frameState.mode;
         frameState.mode = testMode;
-        var commandList = [];
-        polygon.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        frameState.mode = mode;
+        var boundingVolume;
 
-        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
-        sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
-        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
-        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
+        waitsFor(function() {
+            var commandList = [];
+            polygon.update(context, frameState, commandList);
+
+            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+                boundingVolume = commandList[0].colorList[0].boundingVolume;
+                frameState.mode = mode;
+                return true;
+            }
+            return false;
+        });
+
+        runs(function() {
+            var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
+            sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
+            expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
+            expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
+        });
     }
 
     it('test Columbus view bounding sphere from positions', function() {
