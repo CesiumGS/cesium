@@ -247,6 +247,80 @@ define([
         return vaAttributes;
     }
 
+    function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
+        var indices = [];
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = instances.length;
+        var offsets = {};
+        var vaIndices = {};
+
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var index = attributeIndices[name];
+
+                var tempVertexCount = numberOfVertices;
+                while (tempVertexCount > 0) {
+                    var vaIndex = defaultValue(vaIndices[name], 0);
+                    var va = vertexArrays[vaIndex];
+                    var vaLength = va.length;
+
+                    var attribute;
+                    for (var k = 0; k < vaLength; ++k) {
+                        attribute = va[k];
+                        if (attribute.index === index) {
+                            break;
+                        }
+                    }
+
+                    if (typeof indices[i] === 'undefined') {
+                        indices[i] = {};
+                    }
+
+                    if (typeof indices[i][name] === 'undefined') {
+                        indices[i][name] = {
+                            dirty : false,
+                            value : instance.attributes[name].value,
+                            indices : []
+                        };
+                    }
+
+                    var size = attribute.values.length / attribute.componentsPerAttribute;
+                    var offset = defaultValue(offsets[name], 0);
+
+                    var count;
+                    if (offset + tempVertexCount < size) {
+                        count = tempVertexCount;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = offset + tempVertexCount;
+                    } else {
+                        count = size - offset;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = 0;
+                        vaIndices[name] = vaIndex + 1;
+                    }
+
+                    tempVertexCount -= count;
+                }
+            }
+        }
+
+        return indices;
+    }
+
     function combineGeometry(parameters, transferableObjects) {
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.projection = (parameters.isGeographic) ? new GeographicProjection(parameters.ellipsoid) : new WebMercatorProjection(parameters.ellipsoid);
@@ -267,6 +341,8 @@ define([
             geometry = geometries[i];
             perInstanceAttributes.push(createPerInstanceVAAttributes(geometry, attributeIndices, perInstanceAttributeNames));
         }
+
+        var indices = computePerInstanceAttributeIndices(instances, perInstanceAttributes, attributeIndices);
 
         for (i = 0; i < length; ++i) {
             geometry = geometries[i];
@@ -298,7 +374,8 @@ define([
             geometries : geometries,
             modelMatrix : parameters.modelMatrix,
             attributeIndices : attributeIndices,
-            vaAttributes : perInstanceAttributes
+            vaAttributes : perInstanceAttributes,
+            vaAttributeIndices : indices
         };
     }
 
