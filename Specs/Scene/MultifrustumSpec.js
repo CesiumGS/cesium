@@ -222,10 +222,10 @@ defineSuite([
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
                 var maximumCorner = dimensions.multiplyByScalar(0.5);
                 var minimumCorner = maximumCorner.negate();
-                var geometry = new BoxGeometry({
+                var geometry = BoxGeometry.createGeometry(new BoxGeometry({
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner
-                });
+                }));
                 var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
                 this._va = context.createVertexArrayFromGeometry({
                     geometry: geometry,

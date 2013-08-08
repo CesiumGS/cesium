@@ -56,6 +56,7 @@ defineSuite([
     });
 
     afterEach(function() {
+        frameState.mode = SceneMode.SCENE3D;
         polygon = polygon && polygon.destroy();
         us = undefined;
     });
@@ -309,7 +310,6 @@ defineSuite([
         polygon = createPolygon();
 
         var boundingVolume;
-
         waitsFor(function() {
             var commandList = [];
             polygon.update(context, frameState, commandList);
@@ -341,17 +341,14 @@ defineSuite([
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
 
-        var mode = frameState.mode;
-        frameState.mode = testMode;
         var boundingVolume;
-
         waitsFor(function() {
+            frameState.mode = testMode;
             var commandList = [];
             polygon.update(context, frameState, commandList);
 
             if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
                 boundingVolume = commandList[0].colorList[0].boundingVolume;
-                frameState.mode = mode;
                 return true;
             }
             return false;

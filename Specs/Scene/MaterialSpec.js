@@ -9,6 +9,7 @@ defineSuite([
         'Specs/createFrameState',
         'Specs/frameState',
         'Specs/render',
+        'Specs/waitsForException',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -25,6 +26,7 @@ defineSuite([
         createFrameState,
         frameState,
         render,
+        waitsForException,
         Cartesian3,
         Cartographic,
         Color,
@@ -85,8 +87,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, polygon);
-        return context.readPixels();
+        waitsFor(function() {
+            return render(context, frameState, polygon) > 0;
+        });
+
+        runs(function() {
+            render(context, frameState, polygon);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     }
 
     function renderPolylineMaterial(material) {
@@ -95,8 +103,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, polylines);
-        return context.readPixels();
+        waitsFor(function() {
+            return render(context, frameState, polylines) > 0;
+        });
+
+        runs(function() {
+            render(context, frameState, polylines);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     }
 
     function verifyMaterial(type) {
@@ -107,8 +121,7 @@ defineSuite([
                 type : type
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     }
 
     function verifyPolylineMaterial(type) {
@@ -119,8 +132,7 @@ defineSuite([
                 type : type
             }
         });
-        var pixel = renderPolylineMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderPolylineMaterial(material);
     }
 
     it('draws Color built-in material', function() {
@@ -312,8 +324,7 @@ defineSuite([
         material.uniforms.value.x = 1.0;
         material.materials.first.uniforms.repeat.x = 2.0;
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material inside a material inside a material', function () {
@@ -340,8 +351,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material with an image uniform', function () {
@@ -355,8 +365,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material with a cube map uniform', function() {
@@ -377,8 +386,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('creates a material with a boolean uniform', function () {
@@ -394,8 +402,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create a material with a matrix uniform', function () {
@@ -412,8 +419,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material1);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material1);
 
         var material2 = new Material({
             context : context,
@@ -428,8 +434,7 @@ defineSuite([
                 }
             }
         });
-        pixel = renderMaterial(material2);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material2);
 
         var material3 = new Material({
             context : context,
@@ -444,8 +449,7 @@ defineSuite([
                 }
             }
         });
-        pixel = renderMaterial(material3);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material3);
     });
 
     it('creates a material using unusual uniform and material names', function () {
@@ -470,14 +474,12 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create a material using fromType', function () {
         var material = Material.fromType(context, 'Color');
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('create multiple materials from the same type', function() {
@@ -489,11 +491,8 @@ defineSuite([
 
         expect(material1.shaderSource).toEqual(material2.shaderSource);
 
-        var pixel = renderMaterial(material2);
-        expect(pixel).toEqual([0, 0, 255, 255]);
-
-        pixel = renderMaterial(material1);
-        expect(pixel).toEqual([0, 255, 0, 255]);
+        renderMaterial(material2);
+        renderMaterial(material1);
     });
 
     it('create material with sub-materials of the same type', function() {
@@ -520,8 +519,7 @@ defineSuite([
             }
         });
 
-        var pixel = renderMaterial(material);
-        expect(pixel).toEqual([0, 255, 255, 255]);
+        renderMaterial(material);
     });
 
     it('throws without context for material that uses images', function() {
@@ -664,8 +662,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with unused uniform', function() {
@@ -699,8 +696,7 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with unused material', function() {
@@ -730,27 +726,31 @@ defineSuite([
                 }
             }
         });
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
     });
 
     it('throws with invalid uniform set after creation', function() {
-        expect(function() {
-            var material = new Material({
-                context : context,
-                strict : true,
-                fabric : {
-                    uniforms : {
-                        value : 0.5
-                    },
-                    components : {
-                        diffuse : 'vec3(value)'
-                    }
+        var material = new Material({
+            context : context,
+            strict : true,
+            fabric : {
+                uniforms : {
+                    value : 0.5
+                },
+                components : {
+                    diffuse : 'vec3(value)'
                 }
-            });
-            material.uniforms.value = {x : 0.5, y : 0.5};
-            renderMaterial(material);
-        }).toThrow();
+            }
+        });
+        material.uniforms.value = {x : 0.5, y : 0.5};
+        polygon.material = material;
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        waitsForException(function() {
+            return render(context, frameState, polygon) > 0;
+        });
     });
 
     it('throws with invalid type sent to fromType', function() {
@@ -762,8 +762,7 @@ defineSuite([
     it('destroys material with texture', function() {
         var material = Material.fromType(context, Material.DiffuseMapType);
         material.uniforms.image = './Data/Images/Green.png';
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
         material.destroy();
         expect(material.isDestroyed()).toEqual(true);
     });
@@ -792,8 +791,7 @@ defineSuite([
         });
         material.materials.diffuseMap.uniforms.image = './Data/Images/Green.png';
 
-        var pixel = renderMaterial(material);
-        expect(pixel).not.toEqual([0, 0, 0, 0]);
+        renderMaterial(material);
 
         var diffuseMap = material.materials.diffuseMap;
         material.destroy();

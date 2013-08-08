@@ -56,6 +56,7 @@ defineSuite([
     });
 
     afterEach(function() {
+        frameState.mode = SceneMode.SCENE3D;
         extent = extent && extent.destroy();
         us = undefined;
     });
@@ -105,8 +106,14 @@ defineSuite([
         ClearCommand.ALL.execute(context);
         expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, extent);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, extent) > 0;
+        });
+
+        runs(function() {
+            render(context, frameState, extent);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
     it('does not render when show is false', function() {
@@ -132,8 +139,14 @@ defineSuite([
     it('is picked', function() {
         extent = createExtent();
 
-        var pickedObject = pick(context, frameState, extent, 0, 0);
-        expect(pickedObject).toEqual(extent);
+        waitsFor(function() {
+            return render(context, frameState, extent) > 0;
+        });
+
+        runs(function() {
+            var pickedObject = pick(context, frameState, extent, 0, 0);
+            expect(pickedObject).toEqual(extent);
+        });
     });
 
     it('is not picked (show === false)', function() {
@@ -154,40 +167,68 @@ defineSuite([
 
     it('test 3D bounding sphere', function() {
         extent = createExtent();
-        var commandList = [];
-        extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
+
+        var boundingVolume;
+        waitsFor(function() {
+            var commandList = [];
+            extent.update(context, frameState, commandList);
+
+            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+                boundingVolume = commandList[0].colorList[0].boundingVolume;
+                return true;
+            }
+            return false;
+        });
+
+        runs(function() {
+            expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
+        });
     });
 
     it('test Columbus view bounding sphere', function() {
         extent = createExtent();
 
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        var commandList = [];
-        extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        frameState.mode = mode;
+        var boundingVolume;
+        waitsFor(function() {
+            frameState.mode = SceneMode.COLUMBUS_VIEW;
+            var commandList = [];
+            extent.update(context, frameState, commandList);
 
-        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
-        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
+            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+                boundingVolume = commandList[0].colorList[0].boundingVolume;
+                return true;
+            }
+            return false;
+        });
+
+        runs(function() {
+            var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+            expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
+        });
     });
 
     it('test 2D bounding sphere', function() {
         extent = createExtent();
 
-        var mode = frameState.mode;
-        frameState.mode = SceneMode.SCENE2D;
-        var commandList = [];
-        extent.update(context, frameState, commandList);
-        var boundingVolume = commandList[0].colorList[0].boundingVolume;
-        frameState.mode = mode;
+        var boundingVolume;
+        waitsFor(function() {
+            frameState.mode = SceneMode.SCENE2D;
+            var commandList = [];
+            extent.update(context, frameState, commandList);
 
-        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
-        var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
-        b2D.center.x = 0.0;
-        expect(boundingVolume).toEqual(b2D);
+            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+                boundingVolume = commandList[0].colorList[0].boundingVolume;
+                return true;
+            }
+            return false;
+        });
+
+        runs(function() {
+            var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+            var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
+            b2D.center.x = 0.0;
+            expect(boundingVolume).toEqual(b2D);
+        });
     });
 
     it('isDestroyed', function() {
