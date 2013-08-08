@@ -17,6 +17,7 @@ defineSuite([
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var container;
+    var viewer;
     beforeEach(function() {
         container = document.createElement('span');
         container.id = 'container';
@@ -24,19 +25,22 @@ defineSuite([
         document.body.appendChild(container);
     });
 
-    afterEach(function(){
+    afterEach(function() {
+        if (viewer && !viewer.isDestroyed()) {
+            viewer = viewer.destroy();
+        }
+
         document.body.removeChild(container);
     });
 
     it('adds trackedObject property', function() {
-        var viewer = new Viewer(container);
+        viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
-        expect(viewer.trackedObject).toBeUndefined();
-        viewer.destroy();
+        expect(viewer.hasOwnProperty('trackedObject')).toEqual(true);
     });
 
     it('can get and set trackedObject', function() {
-        var viewer = new Viewer(container);
+        viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
@@ -47,12 +51,10 @@ defineSuite([
 
         viewer.trackedObject = undefined;
         expect(viewer.trackedObject).toBeUndefined();
-
-        viewer.destroy();
     });
 
     it('home button resets tracked object', function() {
-        var viewer = new Viewer(container);
+        viewer = new Viewer(container);
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
@@ -68,8 +70,6 @@ defineSuite([
 
         viewer.homeButton.viewModel.command();
         expect(viewer.trackedObject).toBeUndefined();
-
-        viewer.destroy();
     });
 
     it('throws with undefined viewer', function() {
@@ -79,11 +79,10 @@ defineSuite([
     });
 
     it('throws if dropTarget property already added by another mixin.', function() {
-        var viewer = new Viewer(container);
+        viewer = new Viewer(container);
         viewer.trackedObject = true;
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
         }).toThrow();
-        viewer.destroy();
     });
 });
