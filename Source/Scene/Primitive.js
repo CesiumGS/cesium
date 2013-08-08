@@ -273,9 +273,125 @@ define([
         return new GeometryInstance({
             geometry : geometry,
             modelMatrix : Matrix4.clone(instance.modelMatrix),
-            id : instance.id, // Shallow copy
             attributes : newAttributes
         });
+    }
+
+    function getCommonPerInstanceAttributeNames(instances) {
+        var length = instances.length;
+
+        var attributesInAllInstances = [];
+        var attributes0 = instances[0].attributes;
+        var name;
+
+        for (name in attributes0) {
+            if (attributes0.hasOwnProperty(name)) {
+                var attribute = attributes0[name];
+                var inAllInstances = true;
+
+                // Does this same attribute exist in all instances?
+                for (var i = 1; i < length; ++i) {
+                    var otherAttribute = instances[i].attributes[name];
+
+                    if ((typeof otherAttribute === 'undefined') ||
+                        (attribute.componentDatatype.value !== otherAttribute.componentDatatype.value) ||
+                        (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
+                        (attribute.normalize !== otherAttribute.normalize)) {
+
+                        inAllInstances = false;
+                        break;
+                    }
+                }
+
+                if (inAllInstances) {
+                    attributesInAllInstances.push(name);
+                }
+            }
+        }
+
+        return attributesInAllInstances;
+    }
+
+    function computePerInstanceAttributeIndices(instances, vertexArrays, attributeIndices) {
+        var ids = [];
+        var indices = [];
+
+        var names = getCommonPerInstanceAttributeNames(instances);
+        var length = instances.length;
+        var offsets = {};
+        var vaIndices = {};
+
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            var numberOfVertices = Geometry.computeNumberOfVertices(instance.geometry);
+
+            var namesLength = names.length;
+            for (var j = 0; j < namesLength; ++j) {
+                var name = names[j];
+                var index = attributeIndices[name];
+
+                var tempVertexCount = numberOfVertices;
+                while (tempVertexCount > 0) {
+                    var vaIndex = defaultValue(vaIndices[name], 0);
+                    var va = vertexArrays[vaIndex];
+                    var vaLength = va.length;
+
+                    var attribute;
+                    for (var k = 0; k < vaLength; ++k) {
+                        attribute = va[k];
+                        if (attribute.index === index) {
+                            break;
+                        }
+                    }
+
+                    if (typeof ids[i] === 'undefined') {
+                        ids[i] = instance.id;
+                    }
+
+                    if (typeof indices[i] === 'undefined') {
+                        indices[i] = {};
+                    }
+
+                    if (typeof indices[i][name] === 'undefined') {
+                        indices[i][name] = {
+                            dirty : false,
+                            value : instance.attributes[name].value,
+                            indices : []
+                        };
+                    }
+
+                    var size = attribute.values.length / attribute.componentsPerAttribute;
+                    var offset = defaultValue(offsets[name], 0);
+
+                    var count;
+                    if (offset + tempVertexCount < size) {
+                        count = tempVertexCount;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = offset + tempVertexCount;
+                    } else {
+                        count = size - offset;
+                        indices[i][name].indices.push({
+                            attribute : attribute,
+                            offset : offset,
+                            count : count
+                        });
+                        offsets[name] = 0;
+                        vaIndices[name] = vaIndex + 1;
+                    }
+
+                    tempVertexCount -= count;
+                }
+            }
+        }
+
+        return {
+            ids : ids,
+            indices : indices
+        };
     }
 
     function createColumbusViewShader(primitive, vertexShaderSource) {
@@ -388,7 +504,6 @@ define([
             primitive._geometries = result.geometries;
             primitive._attributeIndices = result.attributeIndices;
             primitive._vaAttributes = result.vaAttributes;
-            primitive._perInstanceAttributes = result.vaAttributeIndices;
             Matrix4.clone(result.modelMatrix, primitive.modelMatrix);
             primitive.state = PrimitiveState.COMBINED;
         };
@@ -535,6 +650,9 @@ define([
             geometries = this._geometries;
             var attributeIndices = this._attributeIndices;
             var vaAttributes = this._vaAttributes;
+
+            instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
+            this._perInstanceAttributes = computePerInstanceAttributeIndices(instances, vaAttributes, attributeIndices);
 
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
             if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
