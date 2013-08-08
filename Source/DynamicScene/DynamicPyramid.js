@@ -5,7 +5,7 @@ define([
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
-        './DynamicProperty',
+        './processPacketData',
         './DynamicDirectionsProperty',
         './DynamicMaterialProperty'
     ], function(
@@ -14,7 +14,7 @@ define([
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
-        DynamicProperty,
+        processPacketData,
         DynamicDirectionsProperty,
         DynamicMaterialProperty) {
     "use strict";
@@ -96,17 +96,10 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
+    DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
         if (typeof pyramidData === 'undefined') {
             return false;
-        }
-
-        var pyramidUpdated = false;
-        var pyramid = dynamicObject.pyramid;
-        pyramidUpdated = typeof pyramid === 'undefined';
-        if (pyramidUpdated) {
-            dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }
 
         var interval = pyramidData.interval;
@@ -114,50 +107,17 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pyramidData.show !== 'undefined') {
-            var show = pyramid.show;
-            if (typeof show === 'undefined') {
-                pyramid.show = show = new DynamicProperty(CzmlBoolean);
-                pyramidUpdated = true;
-            }
-            show.processCzmlIntervals(pyramidData.show, interval);
+        var pyramid = dynamicObject.pyramid;
+        var pyramidUpdated = typeof pyramid === 'undefined';
+        if (pyramidUpdated) {
+            dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }
 
-        if (typeof pyramidData.radius !== 'undefined') {
-            var radius = pyramid.radius;
-            if (typeof radius === 'undefined') {
-                pyramid.radius = radius = new DynamicProperty(CzmlNumber);
-                pyramidUpdated = true;
-            }
-            radius.processCzmlIntervals(pyramidData.radius, interval);
-        }
-
-        if (typeof pyramidData.showIntersection !== 'undefined') {
-            var showIntersection = pyramid.showIntersection;
-            if (typeof showIntersection === 'undefined') {
-                pyramid.showIntersection = showIntersection = new DynamicProperty(CzmlBoolean);
-                pyramidUpdated = true;
-            }
-            showIntersection.processCzmlIntervals(pyramidData.showIntersection, interval);
-        }
-
-        if (typeof pyramidData.intersectionColor !== 'undefined') {
-            var intersectionColor = pyramid.intersectionColor;
-            if (typeof intersectionColor === 'undefined') {
-                pyramid.intersectionColor = intersectionColor = new DynamicProperty(CzmlColor);
-                pyramidUpdated = true;
-            }
-            intersectionColor.processCzmlIntervals(pyramidData.intersectionColor, interval);
-        }
-
-        if (typeof pyramidData.intersectionWidth !== 'undefined') {
-            var intersectionWidth = pyramid.intersectionWidth;
-            if (typeof intersectionWidth === 'undefined') {
-                pyramid.intersectionWidth = intersectionWidth = new DynamicProperty(CzmlNumber);
-                pyramidUpdated = true;
-            }
-            intersectionWidth.processCzmlIntervals(pyramidData.intersectionWidth, interval);
-        }
+        pyramidUpdated = processPacketData(CzmlBoolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(CzmlNumber, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(CzmlBoolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(CzmlColor, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(CzmlNumber, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
 
         if (typeof pyramidData.material !== 'undefined') {
             var material = pyramid.material;
@@ -176,6 +136,7 @@ define([
             }
             directions.processCzmlIntervals(pyramidData.directions, interval);
         }
+
         return pyramidUpdated;
     };
 

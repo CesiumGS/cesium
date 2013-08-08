@@ -1,12 +1,12 @@
 /*global define*/
 define([
-        './DynamicProperty',
         './CzmlColor',
+        './processPacketData',
         '../Scene/Material'
     ], function(
-         DynamicProperty,
-         CzmlColor,
-         Material) {
+        CzmlColor,
+        processPacketData,
+        Material) {
     "use strict";
 
     /**
@@ -49,13 +49,7 @@ define([
     DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.solidColor;
         if (typeof materialData !== 'undefined') {
-            if (typeof materialData.color !== 'undefined') {
-                var color = this.color;
-                if (typeof color === 'undefined') {
-                    this.color = color = new DynamicProperty(CzmlColor);
-                }
-                color.processCzmlIntervals(materialData.color);
-            }
+            processPacketData(CzmlColor, this, 'color', materialData.color);
         }
     };
 

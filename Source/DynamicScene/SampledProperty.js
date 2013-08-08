@@ -259,7 +259,7 @@ define([
         } else if (type === Color) {
             typeHandler = SampledColor;
         } else if (type === Quaternion) {
-            typeHandler = Quaternion;
+            typeHandler = SampledQuaternion;
         } else {
             throw new DeveloperError('unknown type');
         }

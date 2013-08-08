@@ -6,7 +6,7 @@ define([
         './CzmlDirection',
         './CzmlNumber',
         './CzmlColor',
-        './DynamicProperty'],
+        './processPacketData'],
 function(
         TimeInterval,
         defaultValue,
@@ -14,7 +14,7 @@ function(
         CzmlDirection,
         CzmlNumber,
         CzmlColor,
-        DynamicProperty) {
+        processPacketData) {
     "use strict";
 
     /**
@@ -79,17 +79,10 @@ function(
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicVector.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicVector.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vectorData = packet.vector;
         if (typeof vectorData === 'undefined') {
             return false;
-        }
-
-        var vectorUpdated = false;
-        var vector = dynamicObject.vector;
-        vectorUpdated = typeof vector === 'undefined';
-        if (vectorUpdated) {
-            dynamicObject.vector = vector = new DynamicVector();
         }
 
         var interval = vectorData.interval;
@@ -97,50 +90,18 @@ function(
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof vectorData.color !== 'undefined') {
-            var color = vector.color;
-            if (typeof color === 'undefined') {
-                vector.color = color = new DynamicProperty(CzmlColor);
-                vectorUpdated = true;
-            }
-            color.processCzmlIntervals(vectorData.color, interval);
+        var vector = dynamicObject.vector;
+        var vectorUpdated = typeof vector === 'undefined';
+        if (vectorUpdated) {
+            dynamicObject.vector = vector = new DynamicVector();
         }
 
-        if (typeof vectorData.width !== 'undefined') {
-            var width = vector.width;
-            if (typeof width === 'undefined') {
-                vector.width = width = new DynamicProperty(CzmlNumber);
-                vectorUpdated = true;
-            }
-            width.processCzmlIntervals(vectorData.width, interval);
-        }
+        vectorUpdated = processPacketData(CzmlColor, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(CzmlBoolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(CzmlNumber, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(CzmlDirection, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(CzmlNumber, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
 
-        if (typeof vectorData.direction !== 'undefined') {
-            var direction = vector.direction;
-            if (typeof direction === 'undefined') {
-                vector.direction = direction = new DynamicProperty(CzmlDirection);
-                vectorUpdated = true;
-            }
-            direction.processCzmlIntervals(vectorData.direction, interval);
-        }
-
-        if (typeof vectorData.length !== 'undefined') {
-            var length = vector.length;
-            if (typeof length === 'undefined') {
-                vector.length = length = new DynamicProperty(CzmlNumber);
-                vectorUpdated = true;
-            }
-            length.processCzmlIntervals(vectorData.length, interval);
-        }
-
-        if (typeof vectorData.show !== 'undefined') {
-            var show = vector.show;
-            if (typeof show === 'undefined') {
-                vector.show = show = new DynamicProperty(CzmlBoolean);
-                vectorUpdated = true;
-            }
-            show.processCzmlIntervals(vectorData.show, interval);
-        }
         return vectorUpdated;
     };
 

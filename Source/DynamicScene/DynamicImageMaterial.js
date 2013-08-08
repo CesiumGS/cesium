@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './DynamicProperty',
+        './processPacketData',
         './CzmlImage',
         './CzmlNumber',
         '../Scene/Material'
     ], function(
-         DynamicProperty,
+         processPacketData,
          CzmlImage,
          CzmlNumber,
          Material) {
@@ -68,29 +68,9 @@ define([
             return;
         }
 
-        if (typeof materialData.image !== 'undefined') {
-            var image = this.image;
-            if (typeof image === 'undefined') {
-                this.image = image = new DynamicProperty(CzmlImage);
-            }
-            image.processCzmlIntervals(materialData.image, undefined, sourceUri);
-        }
-
-        if (typeof materialData.verticalRepeat !== 'undefined') {
-            var verticalRepeat = this.verticalRepeat;
-            if (typeof verticalRepeat === 'undefined') {
-                this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
-            }
-            verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
-        }
-
-        if (typeof materialData.horizontalRepeat !== 'undefined') {
-            var horizontalRepeat = this.horizontalRepeat;
-            if (typeof horizontalRepeat === 'undefined') {
-                this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
-            }
-            horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
-        }
+        processPacketData(CzmlImage, this, 'image', materialData.image, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
     };
 
     /**

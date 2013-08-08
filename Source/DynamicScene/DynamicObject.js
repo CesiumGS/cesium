@@ -5,7 +5,7 @@ define([
         '../Core/DeveloperError',
         '../Core/JulianDate',
         '../Core/TimeInterval',
-        './DynamicProperty',
+        './processPacketData',
         './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
         './CzmlUnitQuaternion',
@@ -16,7 +16,7 @@ define([
         DeveloperError,
         JulianDate,
         TimeInterval,
-        DynamicProperty,
+        processPacketData,
         DynamicPositionProperty,
         DynamicVertexPositionsProperty,
         CzmlUnitQuaternion,
@@ -266,19 +266,12 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet) {
+    DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var viewFromData = packet.viewFrom;
         if (typeof viewFromData === 'undefined') {
             return false;
         }
-
-        var viewFrom = dynamicObject.viewFrom;
-        var propertyCreated = typeof viewFrom === 'undefined';
-        if (propertyCreated) {
-            dynamicObject.viewFrom = viewFrom = new DynamicProperty(CzmlCartesian3);
-        }
-        viewFrom.processCzmlIntervals(viewFromData);
-        return propertyCreated;
+        return processPacketData(CzmlCartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
     };
 
     /**
@@ -294,19 +287,13 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
+    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var orientationData = packet.orientation;
         if (typeof orientationData === 'undefined') {
             return false;
         }
 
-        var orientation = dynamicObject.orientation;
-        var propertyCreated = typeof orientation === 'undefined';
-        if (propertyCreated) {
-            dynamicObject.orientation = orientation = new DynamicProperty(CzmlUnitQuaternion);
-        }
-        orientation.processCzmlIntervals(orientationData);
-        return propertyCreated;
+        return processPacketData(CzmlUnitQuaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
     };
 
     /**

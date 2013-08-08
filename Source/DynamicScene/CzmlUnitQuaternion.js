@@ -36,6 +36,8 @@ define([
      * @see CzmlVerticalOrigin
      */
     var CzmlUnitQuaternion = {
+        type : Quaternion,
+
         /**
          * The number of doubles per packed Quaternion value.
          */

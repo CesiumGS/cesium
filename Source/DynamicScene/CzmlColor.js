@@ -29,6 +29,7 @@ define([
      * @see CzmlVerticalOrigin
      */
     var CzmlColor = {
+        type : Color,
         /**
          * The number of doubles per packed Color value.
          */

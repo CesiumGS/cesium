@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './DynamicProperty',
+        './processPacketData',
         './CzmlColor',
         './CzmlNumber',
         '../Scene/Material'
     ], function(
-         DynamicProperty,
+         processPacketData,
          CzmlColor,
          CzmlNumber,
          Material) {
@@ -90,53 +90,12 @@ define([
             return;
         }
 
-        if (typeof materialData.color !== 'undefined') {
-            var color = this.color;
-            if (typeof color === 'undefined') {
-                this.color = color = new DynamicProperty(CzmlColor);
-            }
-            color.processCzmlIntervals(materialData.color, undefined, sourceUri);
-        }
-
-        if (typeof materialData.cellAlpha !== 'undefined') {
-            var cellAlpha = this.cellAlpha;
-            if (typeof cellAlpha === 'undefined') {
-                this.cellAlpha = cellAlpha = new DynamicProperty(CzmlNumber);
-            }
-            cellAlpha.processCzmlIntervals(materialData.cellAlpha, undefined, sourceUri);
-        }
-
-        if (typeof materialData.rowCount !== 'undefined') {
-            var rowCount = this.rowCount;
-            if (typeof rowCount === 'undefined') {
-                this.rowCount = rowCount = new DynamicProperty(CzmlNumber);
-            }
-            rowCount.processCzmlIntervals(materialData.rowCount, undefined, sourceUri);
-        }
-
-        if (typeof materialData.columnCount !== 'undefined') {
-            var columnCount = this.columnCount;
-            if (typeof columnCount === 'undefined') {
-                this.columnCount = columnCount = new DynamicProperty(CzmlNumber);
-            }
-            columnCount.processCzmlIntervals(materialData.columnCount, undefined, sourceUri);
-        }
-
-        if (typeof materialData.rowThickness !== 'undefined') {
-            var rowThickness = this.rowThickness;
-            if (typeof rowThickness === 'undefined') {
-                this.rowThickness = rowThickness = new DynamicProperty(CzmlNumber);
-            }
-            rowThickness.processCzmlIntervals(materialData.rowThickness, undefined, sourceUri);
-        }
-
-        if (typeof materialData.columnThickness !== 'undefined') {
-            var columnThickness = this.columnThickness;
-            if (typeof columnThickness === 'undefined') {
-                this.columnThickness = columnThickness = new DynamicProperty(CzmlNumber);
-            }
-            columnThickness.processCzmlIntervals(materialData.columnThickness, undefined, sourceUri);
-        }
+        processPacketData(CzmlColor, this, 'color', materialData.color, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'rowCount', materialData.rowCount, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'columnCount', materialData.columnCount, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
+        processPacketData(CzmlNumber, this, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
     };
 
     /**

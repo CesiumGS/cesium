@@ -5,7 +5,7 @@ define(['../Core/TimeInterval',
         '../Core/Ellipsoid',
         '../Core/Shapes',
         './CzmlNumber',
-        './DynamicProperty'
+        './processPacketData'
         ], function (
             TimeInterval,
             defaultValue,
@@ -13,7 +13,7 @@ define(['../Core/TimeInterval',
             Ellipsoid,
             Shapes,
             CzmlNumber,
-            DynamicProperty) {
+            processPacketData) {
     "use strict";
 
     /**
@@ -75,17 +75,10 @@ define(['../Core/TimeInterval',
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
+    DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipseData = packet.ellipse;
         if (typeof ellipseData === 'undefined') {
             return false;
-        }
-
-        var ellipseUpdated = false;
-        var ellipse = dynamicObject.ellipse;
-        ellipseUpdated = typeof ellipse === 'undefined';
-        if (ellipseUpdated) {
-            dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
         var interval = ellipseData.interval;
@@ -93,32 +86,15 @@ define(['../Core/TimeInterval',
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof ellipseData.bearing !== 'undefined') {
-            var bearing = ellipse.bearing;
-            if (typeof bearing === 'undefined') {
-                ellipse.bearing = bearing = new DynamicProperty(CzmlNumber);
-                ellipseUpdated = true;
-            }
-            bearing.processCzmlIntervals(ellipseData.bearing, interval);
+        var ellipse = dynamicObject.ellipse;
+        var ellipseUpdated = typeof ellipse === 'undefined';
+        if (ellipseUpdated) {
+            dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
-        if (typeof ellipseData.semiMajorAxis !== 'undefined') {
-            var semiMajorAxis = ellipse.semiMajorAxis;
-            if (typeof semiMajorAxis === 'undefined') {
-                ellipse.semiMajorAxis = semiMajorAxis = new DynamicProperty(CzmlNumber);
-                ellipseUpdated = true;
-            }
-            semiMajorAxis.processCzmlIntervals(ellipseData.semiMajorAxis, interval);
-        }
-
-        if (typeof ellipseData.semiMinorAxis !== 'undefined') {
-            var semiMinorAxis = ellipse.semiMinorAxis;
-            if (typeof semiMinorAxis === 'undefined') {
-                ellipse.semiMinorAxis = semiMinorAxis = new DynamicProperty(CzmlNumber);
-                ellipseUpdated = true;
-            }
-            semiMinorAxis.processCzmlIntervals(ellipseData.semiMinorAxis, interval);
-        }
+        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
 
         return ellipseUpdated;
     };

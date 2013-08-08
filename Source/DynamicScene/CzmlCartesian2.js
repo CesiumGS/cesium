@@ -28,6 +28,7 @@ define([
      * @see CzmlVerticalOrigin
      */
     var CzmlCartesian2 = {
+        type : Cartesian2,
         /**
          * The number of doubles per packed Cartesian2 value.
          */

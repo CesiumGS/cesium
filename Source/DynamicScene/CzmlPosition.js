@@ -37,6 +37,7 @@ define([
      * @see CzmlVerticalOrigin
      */
     var CzmlPosition = {
+        type : Cartesian3,
          /**
          * The number of doubles per packed Cartesian3 value.
          */

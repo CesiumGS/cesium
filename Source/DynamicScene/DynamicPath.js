@@ -5,14 +5,14 @@ define([
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
-        './DynamicProperty'],
+        './processPacketData'],
 function(
         TimeInterval,
         defaultValue,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
-        DynamicProperty) {
+        processPacketData) {
     "use strict";
 
     /**
@@ -96,17 +96,10 @@ function(
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicPath.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicPath.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (typeof pathData === 'undefined') {
             return false;
-        }
-
-        var pathUpdated = false;
-        var path = dynamicObject.path;
-        pathUpdated = typeof path === 'undefined';
-        if (pathUpdated) {
-            dynamicObject.path = path = new DynamicPath();
         }
 
         var interval = pathData.interval;
@@ -114,78 +107,20 @@ function(
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pathData.color !== 'undefined') {
-            var color = path.color;
-            if (typeof color === 'undefined') {
-                path.color = color = new DynamicProperty(CzmlColor);
-                pathUpdated = true;
-            }
-            color.processCzmlIntervals(pathData.color, interval);
+        var path = dynamicObject.path;
+        var pathUpdated = typeof path === 'undefined';
+        if (pathUpdated) {
+            dynamicObject.path = path = new DynamicPath();
         }
 
-        if (typeof pathData.width !== 'undefined') {
-            var width = path.width;
-            if (typeof width === 'undefined') {
-                path.width = width = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            width.processCzmlIntervals(pathData.width, interval);
-        }
-
-        if (typeof pathData.resolution !== 'undefined') {
-            var resolution = path.resolution;
-            if (typeof resolution === 'undefined') {
-                path.resolution = resolution = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            resolution.processCzmlIntervals(pathData.resolution, interval);
-        }
-
-        if (typeof pathData.outlineColor !== 'undefined') {
-            var outlineColor = path.outlineColor;
-            if (typeof outlineColor === 'undefined') {
-                path.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
-                pathUpdated = true;
-            }
-            outlineColor.processCzmlIntervals(pathData.outlineColor, interval);
-        }
-
-        if (typeof pathData.outlineWidth !== 'undefined') {
-            var outlineWidth = path.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
-                path.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            outlineWidth.processCzmlIntervals(pathData.outlineWidth, interval);
-        }
-
-        if (typeof pathData.show !== 'undefined') {
-            var show = path.show;
-            if (typeof show === 'undefined') {
-                path.show = show = new DynamicProperty(CzmlBoolean);
-                pathUpdated = true;
-            }
-            show.processCzmlIntervals(pathData.show, interval);
-        }
-
-        if (typeof pathData.leadTime !== 'undefined') {
-            var leadTime = path.leadTime;
-            if (typeof leadTime === 'undefined') {
-                path.leadTime = leadTime = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            leadTime.processCzmlIntervals(pathData.leadTime, interval);
-        }
-
-        if (typeof pathData.trailTime !== 'undefined') {
-            var trailTime = path.trailTime;
-            if (typeof trailTime === 'undefined') {
-                path.trailTime = trailTime = new DynamicProperty(CzmlNumber);
-                pathUpdated = true;
-            }
-            trailTime.processCzmlIntervals(pathData.trailTime, interval);
-        }
-
+        pathUpdated = processPacketData(CzmlColor, path, 'color', pathData.color, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlNumber, path, 'width', pathData.width, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlColor, path, 'outlineColor', pathData.outlineColor, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlNumber, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlBoolean, path, 'show', pathData.show, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlNumber, path, 'resolution', pathData.resolution, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlNumber, path, 'leadTime', pathData.leadTime, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(CzmlNumber, path, 'trailTime', pathData.trailTime, interval, sourceUri) || pathUpdated;
         return pathUpdated;
     };
 

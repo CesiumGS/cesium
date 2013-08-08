@@ -4,14 +4,14 @@ define([
         '../Core/defaultValue',
         './CzmlBoolean',
         './CzmlCartesian3',
-        './DynamicProperty',
+        './processPacketData',
         './DynamicMaterialProperty'
     ], function(
         TimeInterval,
         defaultValue,
         CzmlBoolean,
         CzmlCartesian3,
-        DynamicProperty,
+        processPacketData,
         DynamicMaterialProperty) {
     "use strict";
 
@@ -68,17 +68,10 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicEllipsoid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
+    DynamicEllipsoid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipsoidData = packet.ellipsoid;
         if (typeof ellipsoidData === 'undefined') {
             return false;
-        }
-
-        var ellipsoidUpdated = false;
-        var ellipsoid = dynamicObject.ellipsoid;
-        ellipsoidUpdated = typeof ellipsoid === 'undefined';
-        if (ellipsoidUpdated) {
-            dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }
 
         var interval = ellipsoidData.interval;
@@ -86,23 +79,14 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof ellipsoidData.show !== 'undefined') {
-            var show = ellipsoid.show;
-            if (typeof show === 'undefined') {
-                ellipsoid.show = show = new DynamicProperty(CzmlBoolean);
-                ellipsoidUpdated = true;
-            }
-            show.processCzmlIntervals(ellipsoidData.show, interval);
+        var ellipsoid = dynamicObject.ellipsoid;
+        var ellipsoidUpdated = typeof ellipsoid === 'undefined';
+        if (ellipsoidUpdated) {
+            dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }
 
-        if (typeof ellipsoidData.radii !== 'undefined') {
-            var radii = ellipsoid.radii;
-            if (typeof radii === 'undefined') {
-                ellipsoid.radii = radii = new DynamicProperty(CzmlCartesian3);
-                ellipsoidUpdated = true;
-            }
-            radii.processCzmlIntervals(ellipsoidData.radii, interval);
-        }
+        ellipsoidUpdated = processPacketData(CzmlBoolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
+        ellipsoidUpdated = processPacketData(CzmlCartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
 
         if (typeof ellipsoidData.material !== 'undefined') {
             var material = ellipsoid.material;

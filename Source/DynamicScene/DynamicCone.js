@@ -5,7 +5,7 @@ define([
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
-        './DynamicProperty',
+        './processPacketData',
         './DynamicMaterialProperty'
        ], function(
          TimeInterval,
@@ -13,7 +13,7 @@ define([
          CzmlBoolean,
          CzmlNumber,
          CzmlColor,
-         DynamicProperty,
+         processPacketData,
          DynamicMaterialProperty) {
     "use strict";
 
@@ -128,17 +128,10 @@ define([
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicCone.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicCone.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var coneData = packet.cone;
         if (typeof coneData === 'undefined') {
             return false;
-        }
-
-        var coneUpdated = false;
-        var cone = dynamicObject.cone;
-        coneUpdated = typeof cone === 'undefined';
-        if (coneUpdated) {
-            dynamicObject.cone = cone = new DynamicCone();
         }
 
         var interval = coneData.interval;
@@ -146,86 +139,21 @@ define([
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof coneData.show !== 'undefined') {
-            var show = cone.show;
-            if (typeof show === 'undefined') {
-                cone.show = show = new DynamicProperty(CzmlBoolean);
-                coneUpdated = true;
-            }
-            show.processCzmlIntervals(coneData.show, interval);
+        var cone = dynamicObject.cone;
+        var coneUpdated = typeof cone === 'undefined';
+        if (coneUpdated) {
+            dynamicObject.cone = cone = new DynamicCone();
         }
 
-        if (typeof coneData.innerHalfAngle !== 'undefined') {
-            var innerHalfAngle = cone.innerHalfAngle;
-            if (typeof innerHalfAngle === 'undefined') {
-                cone.innerHalfAngle = innerHalfAngle = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            innerHalfAngle.processCzmlIntervals(coneData.innerHalfAngle, interval);
-        }
-
-        if (typeof coneData.outerHalfAngle !== 'undefined') {
-            var outerHalfAngle = cone.outerHalfAngle;
-            if (typeof outerHalfAngle === 'undefined') {
-                cone.outerHalfAngle = outerHalfAngle = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            outerHalfAngle.processCzmlIntervals(coneData.outerHalfAngle, interval);
-        }
-
-        if (typeof coneData.minimumClockAngle !== 'undefined') {
-            var minimumClockAngle = cone.minimumClockAngle;
-            if (typeof minimumClockAngle === 'undefined') {
-                cone.minimumClockAngle = minimumClockAngle = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            minimumClockAngle.processCzmlIntervals(coneData.minimumClockAngle, interval);
-        }
-
-        if (typeof coneData.maximumClockAngle !== 'undefined') {
-            var maximumClockAngle = cone.maximumClockAngle;
-            if (typeof maximumClockAngle === 'undefined') {
-                cone.maximumClockAngle = maximumClockAngle = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            maximumClockAngle.processCzmlIntervals(coneData.maximumClockAngle, interval);
-        }
-
-        if (typeof coneData.radius !== 'undefined') {
-            var radius = cone.radius;
-            if (typeof radius === 'undefined') {
-                cone.radius = radius = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            radius.processCzmlIntervals(coneData.radius, interval);
-        }
-
-        if (typeof coneData.showIntersection !== 'undefined') {
-            var showIntersection = cone.showIntersection;
-            if (typeof showIntersection === 'undefined') {
-                cone.showIntersection = showIntersection = new DynamicProperty(CzmlBoolean);
-                coneUpdated = true;
-            }
-            showIntersection.processCzmlIntervals(coneData.showIntersection, interval);
-        }
-
-        if (typeof coneData.intersectionColor !== 'undefined') {
-            var intersectionColor = cone.intersectionColor;
-            if (typeof intersectionColor === 'undefined') {
-                cone.intersectionColor = intersectionColor = new DynamicProperty(CzmlColor);
-                coneUpdated = true;
-            }
-            intersectionColor.processCzmlIntervals(coneData.intersectionColor, interval);
-        }
-
-        if (typeof coneData.intersectionWidth !== 'undefined') {
-            var intersectionWidth = cone.intersectionWidth;
-            if (typeof intersectionWidth === 'undefined') {
-                cone.intersectionWidth = intersectionWidth = new DynamicProperty(CzmlNumber);
-                coneUpdated = true;
-            }
-            intersectionWidth.processCzmlIntervals(coneData.intersectionWidth, interval);
-        }
+        coneUpdated = processPacketData(CzmlBoolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlBoolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlColor, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(CzmlNumber, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
 
         if (typeof coneData.capMaterial !== 'undefined') {
             var capMaterial = cone.capMaterial;
