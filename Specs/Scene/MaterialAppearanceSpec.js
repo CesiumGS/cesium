@@ -82,17 +82,15 @@ defineSuite([
     });
 
     it('renders basic', function() {
-        runs(function() {
-            primitive.appearance = new MaterialAppearance({
-                materialSupport : MaterialAppearance.MaterialSupport.BASIC,
-                translucent : false,
-                closed : true,
-                material : Material.fromType(context, Material.DotType)
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.BASIC,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.DotType)
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -105,17 +103,15 @@ defineSuite([
     });
 
     it('renders textured', function() {
-        runs(function() {
-            primitive.appearance = new MaterialAppearance({
-                materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
-                translucent : false,
-                closed : true,
-                material : Material.fromType(context, Material.ImageType)
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.ImageType)
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -128,17 +124,15 @@ defineSuite([
     });
 
     it('renders all', function() {
-        runs(function() {
-            primitive.appearance = new MaterialAppearance({
-                materialSupport : MaterialAppearance.MaterialSupport.ALL,
-                translucent : false,
-                closed : true,
-                material : Material.fromType(context, Material.NormalMapType)
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        primitive.appearance = new MaterialAppearance({
+            materialSupport : MaterialAppearance.MaterialSupport.ALL,
+            translucent : false,
+            closed : true,
+            material : Material.fromType(context, Material.NormalMapType)
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;

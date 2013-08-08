@@ -170,19 +170,15 @@ defineSuite([
     });
 
     it('renders normal', function() {
-        var primitive;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'normal'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'normal'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -196,19 +192,15 @@ defineSuite([
     });
 
     it('renders binormal', function() {
-        var primitive;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'binormal'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'binormal'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -222,19 +214,15 @@ defineSuite([
     });
 
     it('renders tangent', function() {
-        var primitive;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'tangent'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'tangent'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -248,19 +236,15 @@ defineSuite([
     });
 
     it('renders st', function() {
-        var primitive;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'st'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'st'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -274,27 +258,23 @@ defineSuite([
     });
 
     it('renders float', function() {
-        var primitive;
-
-        runs(function() {
-            extentInstance.attributes = {
-                debug : new GeometryInstanceAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 1,
-                    value : [1.0]
-                })
-            };
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'debug',
-                    glslDatatype : 'float'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 1,
+                value : [1.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'float'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -308,27 +288,23 @@ defineSuite([
     });
 
     it('renders vec2', function() {
-        var primitive;
-
-        runs(function() {
-            extentInstance.attributes = {
-                debug : new GeometryInstanceAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 2,
-                    value : [1.0, 2.0]
-                })
-            };
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'debug',
-                    glslDatatype : 'vec2'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                value : [1.0, 2.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec2'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -342,27 +318,23 @@ defineSuite([
     });
 
     it('renders vec3', function() {
-        var primitive;
-
-        runs(function() {
-            extentInstance.attributes = {
-                debug : new GeometryInstanceAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    value : [1.0, 2.0, 3.0]
-                })
-            };
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'debug',
-                    glslDatatype : 'vec3'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                value : [1.0, 2.0, 3.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec3'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -376,27 +348,23 @@ defineSuite([
     });
 
     it('renders vec4', function() {
-        var primitive;
-
-        runs(function() {
-            extentInstance.attributes = {
-                debug : new GeometryInstanceAttribute({
-                    componentDatatype : ComponentDatatype.FLOAT,
-                    componentsPerAttribute : 3,
-                    value : [1.0, 2.0, 3.0, 4.0]
-                })
-            };
-            primitive = new Primitive({
-                geometryInstances : extentInstance,
-                appearance : new DebugAppearance({
-                    attributeName : 'debug',
-                    glslDatatype : 'vec4'
-                })
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        extentInstance.attributes = {
+            debug : new GeometryInstanceAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                value : [1.0, 2.0, 3.0, 4.0]
+            })
+        };
+        var primitive = new Primitive({
+            geometryInstances : extentInstance,
+            appearance : new DebugAppearance({
+                attributeName : 'debug',
+                glslDatatype : 'vec4'
+            })
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;

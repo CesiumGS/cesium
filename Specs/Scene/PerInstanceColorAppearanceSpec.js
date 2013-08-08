@@ -80,12 +80,10 @@ defineSuite([
     });
 
     it('renders', function() {
-        runs(function() {
-            primitive.appearance = new PerInstanceColorAppearance();
+        primitive.appearance = new PerInstanceColorAppearance();
 
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        });
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -98,16 +96,14 @@ defineSuite([
     });
 
     it('renders flat', function() {
-        runs(function() {
-            primitive.appearance = new PerInstanceColorAppearance({
-                flat : true,
-                translucent : false,
-                closed : true
-            });
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        primitive.appearance = new PerInstanceColorAppearance({
+            flat : true,
+            translucent : false,
+            closed : true
         });
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;

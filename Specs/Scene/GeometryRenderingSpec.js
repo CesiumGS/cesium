@@ -114,27 +114,22 @@ defineSuite([
     }
 
     function render3D(instance, afterView, appearance) {
-        var primitive;
-        var frameState;
-
-        runs(function() {
-            if (typeof appearance === 'undefined') {
-                appearance = new PerInstanceColorAppearance({
-                    flat : true
-                });
-            }
-
-            primitive = new Primitive({
-                geometryInstances : instance,
-                appearance : appearance
+        if (typeof appearance === 'undefined') {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
             });
+        }
 
-            frameState = createFrameState();
-            context.getUniformState().update(frameState);
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : appearance
         });
+
+        var frameState = createFrameState();
+        context.getUniformState().update(frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -173,30 +168,25 @@ defineSuite([
     }
 
     function renderCV(instance, afterView) {
-        var primitive;
-        var frameState;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : instance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true
-                })
-            });
-
-            frameState = createFrameState();
-            frameState.mode = SceneMode.COLUMBUS_VIEW;
-            frameState.morphTime = frameState.mode.morphTime;
-            frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                      1.0, 0.0, 0.0, 0.0,
-                                                      0.0, 1.0, 0.0, 0.0,
-                                                      0.0, 0.0, 0.0, 1.0);
-            frameState.camera.controller.update(frameState.mode, frameState.scene2D);
-            context.getUniformState().update(frameState);
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
+
+        var frameState = createFrameState();
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        frameState.morphTime = frameState.mode.morphTime;
+        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                                  1.0, 0.0, 0.0, 0.0,
+                                                  0.0, 1.0, 0.0, 0.0,
+                                                  0.0, 0.0, 0.0, 1.0);
+        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        context.getUniformState().update(frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -241,37 +231,32 @@ defineSuite([
     }
 
     function render2D(instance) {
-        var primitive;
-        var frameState;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : instance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true
-                })
-            });
-
-            frameState = createFrameState();
-            frameState.mode = SceneMode.SCENE2D;
-            frameState.morphTime = frameState.mode.morphTime;
-            frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                      1.0, 0.0, 0.0, 0.0,
-                                                      0.0, 1.0, 0.0, 0.0,
-                                                      0.0, 0.0, 0.0, 1.0);
-            var frustum = new OrthographicFrustum();
-            frustum.right = ellipsoid.getMaximumRadius() * Math.PI;
-            frustum.left = -frustum.right;
-            frustum.top = frustum.right;
-            frustum.bottom = -frustum.top;
-            frameState.camera.frustum = frustum;
-            frameState.camera.controller.update(frameState.mode, frameState.scene2D);
-
-            context.getUniformState().update(frameState);
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
+
+        var frameState = createFrameState();
+        frameState.mode = SceneMode.SCENE2D;
+        frameState.morphTime = frameState.mode.morphTime;
+        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                                  1.0, 0.0, 0.0, 0.0,
+                                                  0.0, 1.0, 0.0, 0.0,
+                                                  0.0, 0.0, 0.0, 1.0);
+        var frustum = new OrthographicFrustum();
+        frustum.right = ellipsoid.getMaximumRadius() * Math.PI;
+        frustum.left = -frustum.right;
+        frustum.top = frustum.right;
+        frustum.bottom = -frustum.top;
+        frameState.camera.frustum = frustum;
+        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+
+        context.getUniformState().update(frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
@@ -289,23 +274,18 @@ defineSuite([
     }
 
     function pickGeometry(instance, afterView) {
-        var primitive;
-        var frameState;
-
-        runs(function() {
-            primitive = new Primitive({
-                geometryInstances : instance,
-                appearance : new PerInstanceColorAppearance({
-                    flat : true
-                })
-            });
-
-            frameState = createFrameState();
-            context.getUniformState().update(frameState);
-
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
         });
+
+        var frameState = createFrameState();
+        context.getUniformState().update(frameState);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;

@@ -80,12 +80,10 @@ defineSuite([
     });
 
     it('renders', function() {
-        runs(function() {
-            primitive.appearance = new EllipsoidSurfaceAppearance();
+        primitive.appearance = new EllipsoidSurfaceAppearance();
 
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        });
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
         waitsFor(function() {
             return render(context, frameState, primitive) > 0;
