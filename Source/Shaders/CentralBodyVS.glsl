@@ -30,6 +30,8 @@ void main()
     vec3 position3DWC = position3DAndHeight.xyz + u_center3D;
 
     gl_Position = getPosition3DMode(position3DWC);
+    gl_Position.z += gl_Position.w;
+    gl_Position.z *= 0.5;
     
     v_textureCoordinates = textureCoordinates;
 }
