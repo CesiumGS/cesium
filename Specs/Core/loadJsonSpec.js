@@ -49,7 +49,7 @@ defineSuite([
 
         expect(fakeXHR.open).toHaveBeenCalledWith('GET', "test", true);
         expect(fakeXHR.setRequestHeader.callCount).toEqual(2);
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json');
+        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json,*/*;q=0.01');
         expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
         expect(fakeXHR.send).toHaveBeenCalled();
     });
