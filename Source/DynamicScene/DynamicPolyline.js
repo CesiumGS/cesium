@@ -5,14 +5,14 @@ define([
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
-        './DynamicProperty'],
+        './processPacketData'],
 function(
         TimeInterval,
         defaultValue,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
-        DynamicProperty) {
+        processPacketData) {
     "use strict";
 
     /**
@@ -78,17 +78,10 @@ function(
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet) {
+    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (typeof polylineData === 'undefined') {
             return false;
-        }
-
-        var polylineUpdated = false;
-        var polyline = dynamicObject.polyline;
-        polylineUpdated = typeof polyline === 'undefined';
-        if (polylineUpdated) {
-            dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
         var interval = polylineData.interval;
@@ -96,50 +89,17 @@ function(
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof polylineData.color !== 'undefined') {
-            var color = polyline.color;
-            if (typeof color === 'undefined') {
-                polyline.color = color = new DynamicProperty(CzmlColor);
-                polylineUpdated = true;
-            }
-            color.processCzmlIntervals(polylineData.color, interval);
+        var polyline = dynamicObject.polyline;
+        var polylineUpdated = typeof polyline === 'undefined';
+        if (polylineUpdated) {
+            dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        if (typeof polylineData.width !== 'undefined') {
-            var width = polyline.width;
-            if (typeof width === 'undefined') {
-                polyline.width = width = new DynamicProperty(CzmlNumber);
-                polylineUpdated = true;
-            }
-            width.processCzmlIntervals(polylineData.width, interval);
-        }
-
-        if (typeof polylineData.outlineColor !== 'undefined') {
-            var outlineColor = polyline.outlineColor;
-            if (typeof outlineColor === 'undefined') {
-                polyline.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
-                polylineUpdated = true;
-            }
-            outlineColor.processCzmlIntervals(polylineData.outlineColor, interval);
-        }
-
-        if (typeof polylineData.outlineWidth !== 'undefined') {
-            var outlineWidth = polyline.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
-                polyline.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
-                polylineUpdated = true;
-            }
-            outlineWidth.processCzmlIntervals(polylineData.outlineWidth, interval);
-        }
-
-        if (typeof polylineData.show !== 'undefined') {
-            var show = polyline.show;
-            if (typeof show === 'undefined') {
-                polyline.show = show = new DynamicProperty(CzmlBoolean);
-                polylineUpdated = true;
-            }
-            show.processCzmlIntervals(polylineData.show, interval);
-        }
+        polylineUpdated = processPacketData(CzmlColor, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(CzmlNumber, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(CzmlColor, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(CzmlNumber, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(CzmlBoolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
         return polylineUpdated;
     };
 

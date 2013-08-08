@@ -191,7 +191,7 @@ defineSuite([
         var czml4 = {
             'id' : 'testBillboard',
             'billboard' : {
-                'horizontalOrigin' : 'TOP',
+                'horizontalOrigin' : 'LEFT',
                 'scale' : 3.0
             }
         };
@@ -206,6 +206,6 @@ defineSuite([
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
         expect(object.billboard.scale.getValue(new JulianDate())).toEqual(3.0);
-        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.TOP);
+        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.LEFT);
     });
 });

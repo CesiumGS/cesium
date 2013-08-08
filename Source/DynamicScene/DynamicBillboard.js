@@ -10,7 +10,7 @@ define([
         './CzmlHorizontalOrigin',
         './CzmlVerticalOrigin',
         './CzmlColor',
-        './DynamicProperty'
+        './processPacketData'
     ], function(
         TimeInterval,
         defaultValue,
@@ -22,7 +22,7 @@ define([
         CzmlHorizontalOrigin,
         CzmlVerticalOrigin,
         CzmlColor,
-        DynamicProperty) {
+        processPacketData) {
     "use strict";
 
     /**
@@ -128,107 +128,27 @@ define([
             return false;
         }
 
-        var billboardUpdated = false;
-        var billboard = dynamicObject.billboard;
-        billboardUpdated = typeof billboard === 'undefined';
-        if (billboardUpdated) {
-            dynamicObject.billboard = billboard = new DynamicBillboard();
-        }
-
         var interval = billboardData.interval;
         if (typeof interval !== 'undefined') {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof billboardData.color !== 'undefined') {
-            var color = billboard.color;
-            if (typeof color === 'undefined') {
-                billboard.color = color = new DynamicProperty(CzmlColor);
-                billboardUpdated = true;
-            }
-            color.processCzmlIntervals(billboardData.color, interval);
+        var billboard = dynamicObject.billboard;
+        var billboardUpdated = typeof billboard === 'undefined';
+        if (billboardUpdated) {
+            dynamicObject.billboard = billboard = new DynamicBillboard();
         }
 
-        if (typeof billboardData.eyeOffset !== 'undefined') {
-            var eyeOffset = billboard.eyeOffset;
-            if (typeof eyeOffset === 'undefined') {
-                billboard.eyeOffset = eyeOffset = new DynamicProperty(CzmlCartesian3);
-                billboardUpdated = true;
-            }
-            eyeOffset.processCzmlIntervals(billboardData.eyeOffset, interval);
-        }
-
-        if (typeof billboardData.horizontalOrigin !== 'undefined') {
-            var horizontalOrigin = billboard.horizontalOrigin;
-            if (typeof horizontalOrigin === 'undefined') {
-                billboard.horizontalOrigin = horizontalOrigin = new DynamicProperty(CzmlHorizontalOrigin);
-                billboardUpdated = true;
-            }
-            horizontalOrigin.processCzmlIntervals(billboardData.horizontalOrigin, interval);
-        }
-
-        if (typeof billboardData.image !== 'undefined') {
-            var image = billboard.image;
-            if (typeof image === 'undefined') {
-                billboard.image = image = new DynamicProperty(CzmlImage);
-                billboardUpdated = true;
-            }
-            image.processCzmlIntervals(billboardData.image, interval, sourceUri);
-        }
-
-        if (typeof billboardData.pixelOffset !== 'undefined') {
-            var pixelOffset = billboard.pixelOffset;
-            if (typeof pixelOffset === 'undefined') {
-                billboard.pixelOffset = pixelOffset = new DynamicProperty(CzmlCartesian2);
-                billboardUpdated = true;
-            }
-            pixelOffset.processCzmlIntervals(billboardData.pixelOffset, interval);
-        }
-
-        if (typeof billboardData.scale !== 'undefined') {
-            var scale = billboard.scale;
-            if (typeof scale === 'undefined') {
-                billboard.scale = scale = new DynamicProperty(CzmlNumber);
-                billboardUpdated = true;
-            }
-            scale.processCzmlIntervals(billboardData.scale, interval);
-        }
-
-        if (typeof billboardData.rotation !== 'undefined') {
-            var rotation = billboard.rotation;
-            if (typeof rotation === 'undefined') {
-                billboard.rotation = rotation = new DynamicProperty(CzmlNumber);
-                billboardUpdated = true;
-            }
-            rotation.processCzmlIntervals(billboardData.rotation, interval);
-        }
-
-        if (typeof billboardData.alignedAxis !== 'undefined') {
-            var alignedAxis = billboard.alignedAxis;
-            if (typeof alignedAxis === 'undefined') {
-                billboard.alignedAxis = alignedAxis = new DynamicProperty(CzmlCartesian3);
-                billboardUpdated = true;
-            }
-            alignedAxis.processCzmlIntervals(billboardData.alignedAxis, interval);
-        }
-
-        if (typeof billboardData.show !== 'undefined') {
-            var show = billboard.show;
-            if (typeof show === 'undefined') {
-                billboard.show = show = new DynamicProperty(CzmlBoolean);
-                billboardUpdated = true;
-            }
-            show.processCzmlIntervals(billboardData.show, interval);
-        }
-
-        if (typeof billboardData.verticalOrigin !== 'undefined') {
-            var verticalOrigin = billboard.verticalOrigin;
-            if (typeof verticalOrigin === 'undefined') {
-                billboard.verticalOrigin = verticalOrigin = new DynamicProperty(CzmlVerticalOrigin);
-                billboardUpdated = true;
-            }
-            verticalOrigin.processCzmlIntervals(billboardData.verticalOrigin, interval);
-        }
+        billboardUpdated = processPacketData(CzmlColor, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlCartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlHorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlImage, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlCartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlNumber, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlNumber, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlCartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlBoolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(CzmlVerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
 
         return billboardUpdated;
     };
