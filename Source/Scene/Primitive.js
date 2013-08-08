@@ -191,6 +191,7 @@ define([
         this.show = true;
 
         this.state = PrimitiveState.READY;
+        this._createdGeometries = [];
         this._geometries = [];
         this._completed = 0;
         this._queue = new Queue();
@@ -218,6 +219,38 @@ define([
 
         this._commandLists = new CommandLists();
     };
+
+    function cloneAttribute(attribute) {
+        return new GeometryAttribute({
+            componentDatatype : attribute.componentDatatype,
+            componentsPerAttribute : attribute.componentsPerAttribute,
+            normalize : attribute.normalize,
+            values : new attribute.values.constructor(attribute.values)
+        });
+    }
+
+    function cloneGeometry(geometry) {
+        var attributes = geometry.attributes;
+        var newAttributes = new GeometryAttributes();
+        for (var property in attributes) {
+            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
+                newAttributes[property] = cloneAttribute(attributes[property]);
+            }
+        }
+
+        var indices;
+        if (typeof geometry.indices !== 'undefined') {
+            var sourceValues = geometry.indices;
+            indices = new sourceValues.constructor(sourceValues);
+        }
+
+        return new Geometry({
+            attributes : newAttributes,
+            indices : indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : BoundingSphere.clone(geometry.boundingSphere)
+        });
+    }
 
     function cloneGeometryInstanceAttribute(attribute) {
         return new GeometryInstanceAttribute({
@@ -404,11 +437,19 @@ define([
             if (this._geometries.length === 0 && queue.length === 0) {
                 for (i = 0; i < length; ++i) {
                     geometry = instances[i].geometry;
-                    queue.enqueue({
-                        task : geometry.workerName,
-                        geometry : geometry,
-                        index : i
-                    });
+
+                    if (typeof geometry.attributes !== 'undefined' && typeof geometry.primitiveType !== 'undefined') {
+                        this._createdGeometries.push({
+                            geometry : cloneGeometry(geometry),
+                            index : i
+                        });
+                    } else {
+                        queue.enqueue({
+                            task : geometry.workerName,
+                            geometry : geometry,
+                            index : i
+                        });
+                    }
                 }
             }
 
@@ -430,11 +471,15 @@ define([
             if (queue.length === 0) {
                 this.state = PrimitiveState.CREATING;
             }
+
+            if (this._createdGeometries.length === length) {
+                this.state = PrimitiveState.CREATED;
+            }
         } else if (this.state === PrimitiveState.CREATED) {
             instances = (Array.isArray(this.geometryInstances)) ? this.geometryInstances : [this.geometryInstances];
             var insts = new Array(instances.length);
 
-            geometries = this._geometries;
+            geometries = this._geometries.concat(this._createdGeometries);
             length = geometries.length;
             for (i = 0; i < length; ++i) {
                 geometry = geometries[i];
@@ -543,6 +588,7 @@ define([
             }
 
             this._geomtries = undefined;
+            this._createdGeometries = undefined;
             this.state = PrimitiveState.COMPLETE;
         }
 
