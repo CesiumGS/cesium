@@ -82,48 +82,72 @@ defineSuite([
     });
 
     it('renders basic', function() {
-        primitive.appearance = new MaterialAppearance({
-            materialSupport : MaterialAppearance.MaterialSupport.BASIC,
-            translucent : false,
-            closed : true,
-            material : Material.fromType(context, Material.DotType)
+        runs(function() {
+            primitive.appearance = new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.BASIC,
+                translucent : false,
+                closed : true,
+                material : Material.fromType(context, Material.DotType)
+            });
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        runs(function() {
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
     it('renders textured', function() {
-        primitive.appearance = new MaterialAppearance({
-            materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
-            translucent : false,
-            closed : true,
-            material : Material.fromType(context, Material.ImageType)
+        runs(function() {
+            primitive.appearance = new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.TEXTURED,
+                translucent : false,
+                closed : true,
+                material : Material.fromType(context, Material.ImageType)
+            });
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        runs(function() {
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
     it('renders all', function() {
-        primitive.appearance = new MaterialAppearance({
-            materialSupport : MaterialAppearance.MaterialSupport.ALL,
-            translucent : false,
-            closed : true,
-            material : Material.fromType(context, Material.NormalMapType)
+        runs(function() {
+            primitive.appearance = new MaterialAppearance({
+                materialSupport : MaterialAppearance.MaterialSupport.ALL,
+                translucent : false,
+                closed : true,
+                material : Material.fromType(context, Material.NormalMapType)
+            });
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        runs(function() {
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
 });

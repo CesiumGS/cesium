@@ -80,13 +80,21 @@ defineSuite([
     });
 
     it('renders', function() {
-        primitive.appearance = new EllipsoidSurfaceAppearance();
+        runs(function() {
+            primitive.appearance = new EllipsoidSurfaceAppearance();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        });
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
+
+        runs(function() {
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+        });
     });
 
 });

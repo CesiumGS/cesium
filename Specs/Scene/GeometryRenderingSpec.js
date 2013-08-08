@@ -114,33 +114,46 @@ defineSuite([
     }
 
     function render3D(instance, afterView, appearance) {
-        if (typeof appearance === 'undefined') {
-            appearance = new PerInstanceColorAppearance({
-                flat : true
-            });
-        }
+        var primitive;
+        var frameState;
 
-        var primitive = new Primitive({
-            geometryInstances : instance,
-            appearance : appearance
+        runs(function() {
+            if (typeof appearance === 'undefined') {
+                appearance = new PerInstanceColorAppearance({
+                    flat : true
+                });
+            }
+
+            primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : appearance
+            });
+
+            frameState = createFrameState();
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        var frameState = createFrameState();
-        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        if (typeof afterView === 'function') {
-            afterView(frameState);
-        }
+        runs(function() {
+            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
-        context.getUniformState().update(frameState);
+            if (typeof afterView === 'function') {
+                afterView(frameState, primitive);
+            }
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            context.getUniformState().update(frameState);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        primitive = primitive && primitive.destroy();
+            primitive = primitive && primitive.destroy();
+        });
     }
 
     function viewSphereCV(camera, sphere, modelMatrix) {
@@ -160,37 +173,49 @@ defineSuite([
     }
 
     function renderCV(instance, afterView) {
-        var primitive = new Primitive({
-            geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+        var primitive;
+        var frameState;
+
+        runs(function() {
+            primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true
+                })
+            });
+
+            frameState = createFrameState();
+            frameState.mode = SceneMode.COLUMBUS_VIEW;
+            frameState.morphTime = frameState.mode.morphTime;
+            frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                                      1.0, 0.0, 0.0, 0.0,
+                                                      0.0, 1.0, 0.0, 0.0,
+                                                      0.0, 0.0, 0.0, 1.0);
+            frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        var frameState = createFrameState();
-        frameState.mode = SceneMode.COLUMBUS_VIEW;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        viewSphereCV(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
+        runs(function() {
+            viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
-        if (typeof afterView === 'function') {
-            afterView(frameState);
-        }
+            if (typeof afterView === 'function') {
+                afterView(frameState, primitive);
+            }
 
-        context.getUniformState().update(frameState);
+            context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+            primitive = primitive && primitive.destroy();
+        });
     }
 
     function viewSphere2D(camera, sphere, modelMatrix) {
@@ -216,60 +241,89 @@ defineSuite([
     }
 
     function render2D(instance) {
-        var primitive = new Primitive({
-            geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+        var primitive;
+        var frameState;
+
+        runs(function() {
+            primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true
+                })
+            });
+
+            frameState = createFrameState();
+            frameState.mode = SceneMode.SCENE2D;
+            frameState.morphTime = frameState.mode.morphTime;
+            frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
+                                                      1.0, 0.0, 0.0, 0.0,
+                                                      0.0, 1.0, 0.0, 0.0,
+                                                      0.0, 0.0, 0.0, 1.0);
+            var frustum = new OrthographicFrustum();
+            frustum.right = ellipsoid.getMaximumRadius() * Math.PI;
+            frustum.left = -frustum.right;
+            frustum.top = frustum.right;
+            frustum.bottom = -frustum.top;
+            frameState.camera.frustum = frustum;
+            frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        var frameState = createFrameState();
-        frameState.mode = SceneMode.SCENE2D;
-        frameState.morphTime = frameState.mode.morphTime;
-        frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
-                                                  1.0, 0.0, 0.0, 0.0,
-                                                  0.0, 1.0, 0.0, 0.0,
-                                                  0.0, 0.0, 0.0, 1.0);
-        var frustum = new OrthographicFrustum();
-        frustum.right = ellipsoid.getMaximumRadius() * Math.PI;
-        frustum.left = -frustum.right;
-        frustum.top = frustum.right;
-        frustum.bottom = -frustum.top;
-        frameState.camera.frustum = frustum;
-        frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        viewSphere2D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
-        context.getUniformState().update(frameState);
+        runs(function() {
+            viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+            context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-        render(context, frameState, primitive);
-        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-        primitive = primitive && primitive.destroy();
+            primitive = primitive && primitive.destroy();
+        });
     }
 
     function pickGeometry(instance, afterView) {
-        var primitive = new Primitive({
-            geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+        var primitive;
+        var frameState;
+
+        runs(function() {
+            primitive = new Primitive({
+                geometryInstances : instance,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true
+                })
+            });
+
+            frameState = createFrameState();
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
         });
 
-        var frameState = createFrameState();
-        viewSphere3D(frameState.camera, instance.geometry.boundingSphere, instance.modelMatrix);
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
 
-        if (typeof afterView === 'function') {
-            afterView(frameState);
-        }
+        runs(function() {
+            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
-        context.getUniformState().update(frameState);
+            if (typeof afterView === 'function') {
+                afterView(frameState, primitive);
+            }
 
-        expect(pick(context, frameState, primitive)).toEqual(instance.id);
+            context.getUniformState().update(frameState);
 
-        primitive = primitive && primitive.destroy();
+            expect(pick(context, frameState, primitive)).toEqual(instance.id);
+
+            primitive = primitive && primitive.destroy();
+        });
     }
 
     describe('BoxGeometry', function() {
@@ -447,7 +501,7 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('Extruded ExtentGeometry', function() {
+    describe('Extruded EllipseGeometry', function() {
         var instance;
         var extrudedHeight;
         var geometryHeight;
@@ -488,10 +542,10 @@ defineSuite([
         });
 
         it('renders bottom', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
             };
@@ -499,10 +553,10 @@ defineSuite([
         });
 
         it('renders wall', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
@@ -701,10 +755,10 @@ defineSuite([
         });
 
         it('renders bottom', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
             };
@@ -712,10 +766,10 @@ defineSuite([
         });
 
         it('renders north wall', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
@@ -723,10 +777,10 @@ defineSuite([
         });
 
         it('renders south wall', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
@@ -734,10 +788,10 @@ defineSuite([
         });
 
         it('renders west wall', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
@@ -745,10 +799,10 @@ defineSuite([
         });
 
         it('renders east wall', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
@@ -899,10 +953,10 @@ defineSuite([
         });
 
         it('renders bottom', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
             };
@@ -910,10 +964,10 @@ defineSuite([
         });
 
         it('renders wall 1', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateRight(CesiumMath.PI, transform);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
@@ -922,10 +976,10 @@ defineSuite([
         });
 
         it('renders wall 2', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
@@ -933,10 +987,10 @@ defineSuite([
         });
 
         it('renders wall 3', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateLeft(CesiumMath.PI_OVER_TWO, transform);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
@@ -945,10 +999,10 @@ defineSuite([
         });
 
         it('renders wall 4', function() {
-            var afterView = function(frameState) {
+            var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
                 var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center),
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
@@ -980,18 +1034,18 @@ defineSuite([
                 }
             });
 
-            afterView3D = function(frameState) {
-                var transform = Transforms.eastNorthUpToFixedFrame(instance.geometry.boundingSphere.center);
+            afterView3D = function(frameState, primitive) {
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.zoomIn(instance.geometry.boundingSphere.radius * 0.99);
+                frameState.camera.controller.zoomIn(primitive._boundingSphere.radius * 0.99);
             };
 
-            afterViewCV = function(frameState) {
+            afterViewCV = function(frameState, primitive) {
                 var translation = frameState.camera.position.clone();
                 translation.z = 0.0;
                 var transform = Matrix4.fromTranslation(translation);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.zoomIn(instance.geometry.boundingSphere.radius * 1.85);
+                frameState.camera.controller.zoomIn(primitive._boundingSphere.radius * 1.85);
             };
         });
 
