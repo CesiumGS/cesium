@@ -160,12 +160,12 @@ define(['../Core/createGuid',
             red = value.substring(6,7);
             return Color.fromRandom(red, green, blue, alpha);
         }
-            //normal mode as default
-            alpha = value.substring(0,1);
-            blue = value.substring(2,3);
-            green = value.substring(4,5);
-            red = value.substring(6,7);
-            return Color.fromBytes(red, green, blue, alpha);
+        //normal mode as default
+        alpha = value.substring(0,1);
+        blue = value.substring(2,3);
+        green = value.substring(4,5);
+        red = value.substring(6,7);
+        return Color.fromBytes(red, green, blue, alpha);
     }
 
     function getStylesFromXml(xml){
