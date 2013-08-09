@@ -326,7 +326,7 @@ define([
     }
 
     function applyStencilMask(gl, renderState) {
-        //gl.stencilMask(renderState.stencilMask);
+        gl.stencilMask(renderState.stencilMask);
     }
 
     function applyBlending(gl, renderState, passState) {
@@ -354,7 +354,7 @@ define([
         var stencilTest = renderState.stencilTest;
         var enabled = stencilTest.enabled;
 
-        //enableOrDisable(gl, gl.STENCIL_TEST, enabled);
+        enableOrDisable(gl, gl.STENCIL_TEST, enabled);
 
         if (enabled) {
             var frontFunction = stencilTest.frontFunction;
