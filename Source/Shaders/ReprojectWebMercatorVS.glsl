@@ -33,6 +33,4 @@ void main()
     v_textureCoordinates = vec2(position.x, fraction);
 //    v_textureCoordinates = vec2(position.x, position.y);
     gl_Position = czm_viewportOrthographic * (position * vec4(u_textureDimensions, 1.0, 1.0));
-    gl_Position.z += gl_Position.w;
-    gl_Position.z *= 0.5;
 }
