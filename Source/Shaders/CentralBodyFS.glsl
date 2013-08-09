@@ -47,10 +47,7 @@ vec3 sampleAndBlend(
     return mix(previousColor, sampledColor.rgb, sampledColor.a * textureAlpha);
 }
 
-// !!!COMPUTEDAYCOLOR!!!
-
-//vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
-//vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat3 enuToEye, vec3 imageryColor, float specularMapValue);
+vec3 computeDayColor(vec3 initialColor, vec2 textureCoordinates);
 
 void main()
 {
