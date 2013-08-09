@@ -252,6 +252,7 @@ defineSuite([
             camera.direction = camera.position.negate().normalize();
             camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
             camera.up = camera.right.cross(camera.direction);
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, bv.radius * 2.0), camera.position);
             frameState.occluder = occluder;
@@ -264,6 +265,7 @@ defineSuite([
             camera.direction = camera.position.negate().normalize();
             camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
             camera.up = camera.right.cross(camera.direction);
+            frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
             occluder.setCameraPosition(camera.position);
 
@@ -280,9 +282,7 @@ defineSuite([
 
         camera.position = new Cartesian3(2414237.2401024024, -8854079.165742973, 7501568.895960614);
         camera.direction = camera.position.negate().normalize();
-
-        var savedCamera = frameState.camera;
-        frameState.camera = camera;
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, Ellipsoid.WGS84.minimumRadius), camera.position);
         frameState.occluder = occluder;
@@ -292,15 +292,13 @@ defineSuite([
 
         camera.position = camera.position.negate();
         camera.direction = camera.direction.negate();
+        frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
         frameState.occluder = occluder;
 
         numRendered = verifyNoDraw();
         expect(numRendered).toEqual(0);
-
-        frameState.camera = savedCamera;
-        frameState.occluder = undefined;
     }
 
     function createPolygon(degree, ellipsoid) {
@@ -428,15 +426,18 @@ defineSuite([
 
     it('billboard occlusion', function() {
         var billboards = createBillboard();
+        billboards.get(0).setScale(10.0);
         testBillboardOcclusion(billboards);
     });
 
     function createPolylines() {
         var polylines = new PolylineCollection();
-        polylines.add({positions:Ellipsoid.WGS84.cartographicArrayToCartesianArray([
-            new Cartographic.fromDegrees(-75.10, 39.57),
-            new Cartographic.fromDegrees(-80.12, 25.46)
-        ])});
+        polylines.add({
+            positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
+                new Cartographic.fromDegrees(-75.10, 39.57),
+                new Cartographic.fromDegrees(-80.12, 25.46)
+            ])
+        });
         return polylines;
     }
 
