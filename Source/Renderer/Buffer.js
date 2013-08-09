@@ -50,11 +50,7 @@ define([
         var gl = this._gl;
         var target = this._bufferTarget;
         gl.bindBuffer(target, this._buffer);
-        if (offsetInBytes === 0) {
-            gl.bufferData(target, arrayView, gl.STATIC_DRAW);
-        } else {
-            gl.bufferSubData(target, offsetInBytes, arrayView);
-        }
+        gl.bufferSubData(target, offsetInBytes, arrayView);
         gl.bindBuffer(target, null);
     };
 
