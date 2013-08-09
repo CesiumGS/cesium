@@ -401,7 +401,7 @@ define([
         }
 
         return {
-            boundingSphere : BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+            boundingSphere : BoundingSphere.fromExtent3D(options._extent, ellipsoid, surfaceHeight),
             geometry : geo
         };
     }
@@ -413,7 +413,7 @@ define([
         var width = params.width;
         var size = params.size;
         var ellipsoid = params.ellipsoid;
-        var extrudedOptions = options.extrudedOptions;
+        var extrudedOptions = options._extrudedOptions;
         if (typeof extrudedOptions.height !== 'number') {
             return constructExtent(options, vertexFormat, params);
         }
@@ -608,8 +608,8 @@ define([
             ]);
         }
 
-        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var topBS = BoundingSphere.fromExtent3D(options._extent, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(options._extent, ellipsoid, minHeight, bottomBoundingSphere);
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
@@ -619,7 +619,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A description of a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor
@@ -643,7 +643,8 @@ define([
      * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} Rotated extent is invalid.
+     *
+     * @see ExtentGeometry#createGeometry
      *
      * @example
      * var extent = new ExtentGeometry({
@@ -651,6 +652,7 @@ define([
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
+     * var geometry = ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -670,25 +672,33 @@ define([
 
         extent.validate();
 
-        this.extent = extent;
-        this.granularity = granularity;
-        this.ellipsoid = ellipsoid;
-        this.surfaceHeight = surfaceHeight;
-        this.rotation = rotation;
-        this.stRotation = stRotation;
-        this.vertexFormat = vertexFormat;
-        this.extrudedOptions = extrudedOptions;
-        this.workerName = 'createExtentGeometry';
+        this._extent = extent;
+        this._granularity = granularity;
+        this._ellipsoid = ellipsoid;
+        this._surfaceHeight = surfaceHeight;
+        this._rotation = rotation;
+        this._stRotation = stRotation;
+        this._vertexFormat = vertexFormat;
+        this._extrudedOptions = extrudedOptions;
+        this._workerName = 'createExtentGeometry';
     };
 
+    /**
+     * Computes vertices and indices of an extent.
+     *
+     * @param {ExtentGeometry} extentGeometry A description of the extent.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} Rotated extent is invalid.
+     */
     ExtentGeometry.createGeometry = function(extentGeometry) {
-        var extent = extentGeometry.extent;
-        var granularity = extentGeometry.granularity;
-        var ellipsoid = extentGeometry.ellipsoid;
-        var surfaceHeight = extentGeometry.surfaceHeight;
-        var rotation = extentGeometry.rotation;
-        var stRotation = extentGeometry.stRotation;
-        var vertexFormat = extentGeometry.vertexFormat;
+        var extent = extentGeometry._extent;
+        var granularity = extentGeometry._granularity;
+        var ellipsoid = extentGeometry._ellipsoid;
+        var surfaceHeight = extentGeometry._surfaceHeight;
+        var rotation = extentGeometry._rotation;
+        var stRotation = extentGeometry._stRotation;
+        var vertexFormat = extentGeometry._vertexFormat;
 
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
@@ -786,7 +796,7 @@ define([
         };
 
         var geometry;
-        if (typeof extentGeometry.extrudedOptions !== 'undefined') {
+        if (typeof extentGeometry._extrudedOptions !== 'undefined') {
             geometry = constructExtrudedExtent(extentGeometry, vertexFormat, params);
         } else {
             geometry = constructExtent(extentGeometry, vertexFormat, params);

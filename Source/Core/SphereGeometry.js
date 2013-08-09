@@ -10,9 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for an ellipse on the ellipsoid.
-     *
-     * Creates vertices and indices for an sphere centered at the origin.
+     * A description of a sphere centered at the origin.
      *
      * @alias SphereGeometry
      * @constructor
@@ -23,11 +21,14 @@ define([
      *
      * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
      *
+     * @see SphereGeometry#createGeometry
+     *
      * @example
      * var sphere = new SphereGeometry({
      *   radius : 100.0,
      *   vertexFormat : VertexFormat.POSITION_ONLY
      * });
+     * var geometry = SphereGeometry.createGeometry(sphere);
      */
     var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
@@ -38,12 +39,18 @@ define([
                 vertexFormat: options.vertexFormat
         };
 
-        this.ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
-        this.workerName = 'createSphereGeometry';
+        this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        this._workerName = 'createSphereGeometry';
     };
 
+    /**
+     * Computes vertices and indices of a sphere.
+     *
+     * @param {SphereGeometry} sphereGeometry A description of the sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     SphereGeometry.createGeometry = function(sphereGeometry) {
-        return EllipsoidGeometry.createGeometry(sphereGeometry.ellipsoidGeometry);
+        return EllipsoidGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
     };
 
     return SphereGeometry;

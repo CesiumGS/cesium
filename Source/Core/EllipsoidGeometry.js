@@ -119,7 +119,7 @@ define([
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
     /**
-     * A {@link Geometry} that represents vertices and indices for an ellipsoid centered at the origin.
+     * A description of an ellipsoid centered at the origin.
      *
      * @alias EllipsoidGeometry
      * @constructor
@@ -130,11 +130,14 @@ define([
      *
      * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
      *
+     * @see EllipsoidGeometry#createGeometry
+     *
      * @example
      * var ellipsoid = new EllipsoidGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
      *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0)
      * });
+     * var geometry = EllipsoidGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -146,17 +149,23 @@ define([
             throw new DeveloperError('options.numberOfPartitions must be greater than zero.');
         }
 
-        this.radii = Cartesian3.clone(radii);
-        this.numberOfPartitions = numberOfPartitions;
-        this.vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        this.workerName = 'createEllipsoidGeometry';
+        this._radii = Cartesian3.clone(radii);
+        this._numberOfPartitions = numberOfPartitions;
+        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        this._workerName = 'createEllipsoidGeometry';
     };
 
+    /**
+     * Computes vertices and indices of an ellipsoid.
+     *
+     * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
-        var radii = ellipsoidGeometry.radii;
+        var radii = ellipsoidGeometry._radii;
         var ellipsoid = Ellipsoid.fromCartesian3(radii);
-        var numberOfPartitions = ellipsoidGeometry.numberOfPartitions;
-        var vertexFormat = ellipsoidGeometry.vertexFormat;
+        var numberOfPartitions = ellipsoidGeometry._numberOfPartitions;
+        var vertexFormat = ellipsoidGeometry._vertexFormat;
 
         var positions = [];
         var indices = [];

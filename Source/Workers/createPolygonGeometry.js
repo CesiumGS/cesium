@@ -13,7 +13,7 @@ define([
 
     function createPolygonGeometry(parameters, transferableObjects) {
         var polygonGeometry = parameters.geometry;
-        polygonGeometry.ellipsoid = Ellipsoid.clone(polygonGeometry.ellipsoid);
+        polygonGeometry._ellipsoid = Ellipsoid.clone(polygonGeometry._ellipsoid);
 
         var geometry = PolygonGeometry.createGeometry(polygonGeometry);
         transferGeometry(geometry, transferableObjects);

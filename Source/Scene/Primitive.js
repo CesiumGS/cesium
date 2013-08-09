@@ -62,6 +62,11 @@ define([
      * Instances can be individually picked; {@link Context#pick} returns their {@link GeometryInstance#id}.  Using
      * per-instance appearances like {@link PerInstanceColorAppearance}, each instance can also have a unique color.
      * </p>
+     * <p>
+     * {@link Geometry} can either be created and batched on a web worker or the main thread. The first two examples
+     * show geometry that will be created on a web worker by using the descriptions of the geometry. The third example
+     * shows how to create the geometry on the main thread by explicitly calling the <code>createGeometry</code> method.
+     * </p>
      *
      * @alias Primitive
      * @constructor
@@ -122,6 +127,24 @@ define([
      * });
      * var primitive = new Primitive({
      *   geometryInstances : [extentInstance, ellipsoidInstance],
+     *   appearance : new PerInstanceColorAppearance()
+     * });
+     * scene.getPrimitives().add(primitive);
+     *
+     * // 3. Create the geometry on the main thread.
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *       geometry : EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+     *         vertexFormat : VertexFormat.POSITION_AND_NORMAL,
+     *         radii : new Cartesian3(500000.0, 500000.0, 1000000.0)
+     *       })),
+     *       modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+     *         ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-95.59777, 40.03883))), new Cartesian3(0.0, 0.0, 500000.0)),
+     *       id : 'ellipsoid',
+     *       attribute : {
+     *         color : ColorGeometryInstanceAttribute.fromColor(Color.AQUA)
+     *       }
+     *   }),
      *   appearance : new PerInstanceColorAppearance()
      * });
      * scene.getPrimitives().add(primitive);
@@ -422,7 +445,7 @@ define([
                     });
                 } else {
                     promises.push(taskProcessor.scheduleTask({
-                        task : geometry.workerName,
+                        task : geometry._workerName,
                         geometry : geometry,
                         index : i
                     }));
@@ -488,6 +511,8 @@ define([
                 modelMatrix : this.modelMatrix
             }, transferableObjects);
 
+            this.state = PrimitiveState.COMBINING;
+
             when(promise, function(result) {
                 that._geometries = result.geometries;
                 that._attributeIndices = result.attributeIndices;
@@ -499,7 +524,6 @@ define([
                 that._error = error;
                 that.state = PrimitiveState.FAILED;
             });
-            this.state = PrimitiveState.COMBINING;
         } else if (this.state === PrimitiveState.COMBINED) {
             geometries = this._geometries;
             var attributeIndices = this._attributeIndices;

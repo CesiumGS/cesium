@@ -22,7 +22,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents a polyline modeled as a line strip; the first two positions define a line segment,
+     * A description of a polyline modeled as a line strip; the first two positions define a line segment,
      * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry
@@ -32,15 +32,18 @@ define([
      *
      * @exception {DeveloperError} At least two positions are required.
      *
+     * @see SimplePolylineGeometry.createGeometry
+     *
      * @example
      * // A polyline with two connected line segments
-     * var geometry = new SimplePolylineGeometry({
+     * var polyline = new SimplePolylineGeometry({
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
      *     Cartographic.fromDegrees(0.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 5.0)
      *   ])
      * });
+     * var geometry = SimplePolylineGeometry.createGeometry(polyline);
      */
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -50,12 +53,18 @@ define([
             throw new DeveloperError('At least two positions are required.');
         }
 
-        this.positions = positions;
-        this.workerName = 'createSimplePolylineGeometry';
+        this._positions = positions;
+        this._workerName = 'createSimplePolylineGeometry';
     };
 
+    /**
+     * Computes vertices and indices of a simple polyline.
+     *
+     * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
-        var positions = simplePolylineGeometry.positions;
+        var positions = simplePolylineGeometry._positions;
 
         var i;
         var j = 0;

@@ -26,7 +26,7 @@ define([
     var diffScratch = new Cartesian3();
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cube centered at the origin.
+     * Describes a cube centered at the origin.
      *
      * @alias BoxGeometry
      * @constructor
@@ -38,12 +38,16 @@ define([
      * @exception {DeveloperError} options.minimumCorner is required.
      * @exception {DeveloperError} options.maximumCorner is required.
      *
+     * @see BoxGeometry#fromDimensions
+     * @see BoxGeometry#createGeometry
+     *
      * @example
      * var box = new BoxGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
      *   maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
      *   minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
+     * var geometry = BoxGeometry.createGeometry(box);
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -61,14 +65,14 @@ define([
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
-        this.minimumCorner = Cartesian3.clone(min);
-        this.maximumCorner = Cartesian3.clone(max);
-        this.vertexFormat = vertexFormat;
-        this.workerName = 'createBoxGeometry';
+        this._minimumCorner = Cartesian3.clone(min);
+        this._maximumCorner = Cartesian3.clone(max);
+        this._vertexFormat = vertexFormat;
+        this._workerName = 'createBoxGeometry';
     };
 
     /**
-     * Creates vertices and indices for a cube centered at the origin given its dimensions.
+     * Describes a cube centered at the origin given its dimensions.
      * @memberof BoxGeometry
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
@@ -77,11 +81,14 @@ define([
      * @exception {DeveloperError} options.dimensions is required.
      * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
      *
+     * @see BoxGeometry#createGeometry
+     *
      * @example
      * var box = BoxGeometry.fromDimensions({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
      *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
      * });
+     * var geometry = BoxGeometry.createGeometry(box);
      */
     BoxGeometry.fromDimensions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -107,16 +114,23 @@ define([
         return new BoxGeometry(newOptions);
     };
 
+    /**
+     * Computes vertices and indices of a box.
+     *
+     * @param {BoxGeometry} boxGeometry A description of the box.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     BoxGeometry.createGeometry = function(boxGeometry) {
-        var min = boxGeometry.minimumCorner;
-        var max = boxGeometry.maximumCorner;
-        var vertexFormat = boxGeometry.vertexFormat;
+        var min = boxGeometry._minimumCorner;
+        var max = boxGeometry._maximumCorner;
+        var vertexFormat = boxGeometry._vertexFormat;
 
         var attributes = new GeometryAttributes();
         var indices;
         var positions;
 
-        if (vertexFormat !== VertexFormat.POSITION_ONLY) {
+        if (vertexFormat.position &&
+                (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {
             if (vertexFormat.position) {
                 // 8 corner points.  Duplicated 3 times each for each incident edge/face.
                 positions = new Float64Array(6 * 4 * 3);

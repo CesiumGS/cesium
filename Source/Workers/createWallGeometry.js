@@ -13,7 +13,7 @@ define([
 
     function createWallGeometry(parameters, transferableObjects) {
         var wallGeometry = parameters.geometry;
-        wallGeometry.ellipsoid = Ellipsoid.clone(wallGeometry.ellipsoid);
+        wallGeometry._ellipsoid = Ellipsoid.clone(wallGeometry._ellipsoid);
 
         var geometry = WallGeometry.createGeometry(wallGeometry);
         transferGeometry(geometry, transferableObjects);

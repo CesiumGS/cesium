@@ -15,8 +15,8 @@ define([
 
     function createCircleGeometry(parameters, transferableObjects) {
         var circleGeometry = parameters.geometry;
-        circleGeometry.ellipseGeometry.center = Cartesian3.clone(circleGeometry.ellipseGeometry.center);
-        circleGeometry.ellipseGeometry.ellipsoid = Ellipsoid.clone(circleGeometry.ellipseGeometry.ellipsoid);
+        circleGeometry._ellipseGeometry._center = Cartesian3.clone(circleGeometry._ellipseGeometry._center);
+        circleGeometry._ellipseGeometry._ellipsoid = Ellipsoid.clone(circleGeometry._ellipseGeometry._ellipsoid);
 
         var geometry = CircleGeometry.createGeometry(circleGeometry);
         transferGeometry(geometry, transferableObjects);

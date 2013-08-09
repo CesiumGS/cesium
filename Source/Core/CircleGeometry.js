@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a circle on the ellipsoid.
+     * A description of a circle on the ellipsoid.
      *
      * @alias CircleGeometry
      * @constructor
@@ -31,6 +31,8 @@ define([
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
+     * @see CircleGeometry#createGeometry
+     *
      * @example
      * // Create a circle.
      * var ellipsoid = Ellipsoid.WGS84;
@@ -39,6 +41,7 @@ define([
      *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   radius : 100000.0
      * });
+     * var geometry = CircleGeometry.createGeometry(circle);
      */
     var CircleGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -63,12 +66,18 @@ define([
             vertexFormat : options.vertexFormat,
             stRotation : options.stRotation
         };
-        this.ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
-        this.workerName = 'createCircleGeometry';
+        this._ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        this._workerName = 'createCircleGeometry';
     };
 
+    /**
+     * Computes vertices and indices of a circle on an ellipsoid.
+     *
+     * @param {CircleGeometry} circleGeometry A description of the circle.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     CircleGeometry.createGeometry = function(circleGeometry) {
-        return EllipseGeometry.createGeometry(circleGeometry.ellipseGeometry);
+        return EllipseGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
     return CircleGeometry;

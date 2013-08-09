@@ -15,8 +15,8 @@ define([
 
     function createExtentGeometry(parameters, transferableObjects) {
         var extentGeometry = parameters.geometry;
-        extentGeometry.ellipsoid = Ellipsoid.clone(extentGeometry.ellipsoid);
-        extentGeometry.extent = Extent.clone(extentGeometry.extent);
+        extentGeometry._ellipsoid = Ellipsoid.clone(extentGeometry._ellipsoid);
+        extentGeometry._extent = Extent.clone(extentGeometry._extent);
 
         var geometry = ExtentGeometry.createGeometry(extentGeometry);
         transferGeometry(geometry, transferableObjects);

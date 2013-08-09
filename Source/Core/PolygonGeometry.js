@@ -495,7 +495,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a polygon on the ellipsoid. The polygon is either defined
+     * A description of a polygon on the ellipsoid. The polygon is either defined
      * by an array of Cartesian points, or a polygon hierarchy.
      *
      * @alias PolygonGeometry
@@ -510,12 +510,13 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      *
      * @exception {DeveloperError} polygonHierarchy is required.
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @see PolygonGeometry#createGeometry
+     * @see PolygonGeometry#fromPositions
      *
      * @example
      * // create a polygon from points
-     * var geometry = new PolygonGeometry({
+     * var polygon = new PolygonGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-72.0, 40.0),
@@ -526,9 +527,10 @@ define([
      *         ])
      *     }
      * });
+     * var geometry = PolygonGeometry.createGeometry(polygon);
      *
      * // create a nested polygon with holes
-     * var geometryWithHole = new PolygonGeometry({
+     * var polygonWithHole = new PolygonGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-109.0, 30.0),
@@ -562,9 +564,10 @@ define([
      *         }]
      *     }
      * });
+     * var geometryWithHole = PolygonGeometry.createGeometry(polygonWithHole);
      *
      * //create extruded polygon
-     * var geometry = new Cesium.PolygonGeometry({
+     * var extrudedPolygon = new Cesium.PolygonGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
      *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
@@ -574,6 +577,7 @@ define([
      *     ]),
      *     extrudedHeight: 300000
      * });
+     * var extrudedGeometry = PolygonGeometry.createGeometry(extrudedPolygon);
      *
      */
     var PolygonGeometry = function(options) {
@@ -598,19 +602,19 @@ define([
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
 
-        this.vertexFormat = vertexFormat;
-        this.ellipsoid = ellipsoid;
-        this.granularity = granularity;
-        this.stRotation = stRotation;
-        this.height = height;
-        this.extrudedHeight = extrudedHeight;
-        this.extrude = extrude;
-        this.polygonHierarchy = polygonHierarchy;
-        this.workerName = 'createPolygonGeometry';
+        this._vertexFormat = vertexFormat;
+        this._ellipsoid = ellipsoid;
+        this._granularity = granularity;
+        this._stRotation = stRotation;
+        this._height = height;
+        this._extrudedHeight = extrudedHeight;
+        this._extrude = extrude;
+        this._polygonHierarchy = polygonHierarchy;
+        this._workerName = 'createPolygonGeometry';
     };
 
     /**
-     * Creates a polygon from an array of positions.
+     * A description of a polygon from an array of positions.
      *
      * @memberof PolygonGeometry
      *
@@ -623,12 +627,12 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      *
      * @exception {DeveloperError} options.positions is required.
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @see PolygonGeometry#createGeometry
      *
      * @example
      * // create a polygon from points
-     * var geometry = new PolygonGeometry({
+     * var polygon = new PolygonGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0),
@@ -637,6 +641,7 @@ define([
      *         Cartographic.fromDegrees(-68.0, 40.0)
      *     ])
      * });
+     * var geometry = PolygonGeometry.createGeometry(polygon);
      */
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -659,15 +664,24 @@ define([
         return new PolygonGeometry(newOptions);
     };
 
+    /**
+     * Computes vertices and indices of a polygon.
+     *
+     * @param {PolygonGeometry} polygonGeometry A description of the polygon.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     */
     PolygonGeometry.createGeometry = function(polygonGeometry) {
-        var vertexFormat = polygonGeometry.vertexFormat;
-        var ellipsoid = polygonGeometry.ellipsoid;
-        var granularity = polygonGeometry.granularity;
-        var stRotation = polygonGeometry.stRotation;
-        var height = polygonGeometry.height;
-        var extrudedHeight = polygonGeometry.extrudedHeight;
-        var extrude = polygonGeometry.extrude;
-        var polygonHierarchy = polygonGeometry.polygonHierarchy;
+        var vertexFormat = polygonGeometry._vertexFormat;
+        var ellipsoid = polygonGeometry._ellipsoid;
+        var granularity = polygonGeometry._granularity;
+        var stRotation = polygonGeometry._stRotation;
+        var height = polygonGeometry._height;
+        var extrudedHeight = polygonGeometry._extrudedHeight;
+        var extrude = polygonGeometry._extrude;
+        var polygonHierarchy = polygonGeometry._polygonHierarchy;
 
         var boundingSphere;
         var walls;

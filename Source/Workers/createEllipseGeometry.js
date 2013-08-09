@@ -15,8 +15,8 @@ define([
 
     function createEllipseGeometry(parameters, transferableObjects) {
         var ellipseGeometry = parameters.geometry;
-        ellipseGeometry.center = Cartesian3.clone(ellipseGeometry.center);
-        ellipseGeometry.ellipsoid = Ellipsoid.clone(ellipseGeometry.ellipsoid);
+        ellipseGeometry._center = Cartesian3.clone(ellipseGeometry._center);
+        ellipseGeometry._ellipsoid = Ellipsoid.clone(ellipseGeometry._ellipsoid);
 
         var geometry = EllipseGeometry.createGeometry(ellipseGeometry);
         transferGeometry(geometry, transferableObjects);

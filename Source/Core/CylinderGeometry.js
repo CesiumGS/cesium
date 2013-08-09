@@ -37,22 +37,24 @@ define([
 
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cylinder.
+     * A description of a cylinder.
      *
      * @alias CylinderGeometry
      * @constructor
      *
-     * @param {Number} options.length The length of the cylinder
-     * @param {Number} options.topRadius The radius of the top of the cylinder
-     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
-     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder
+     * @param {Number} options.length The length of the cylinder.
+     * @param {Number} options.topRadius The radius of the top of the cylinder.
+     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
+     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} options.length must be greater than 0
-     * @exception {DeveloperError} options.topRadius must be greater than 0
-     * @exception {DeveloperError} options.bottomRadius must be greater than 0
-     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0
-     * @exception {DeveloperError} options.slices must be greater that 3
+     * @exception {DeveloperError} options.length must be greater than 0.
+     * @exception {DeveloperError} options.topRadius must be greater than 0.
+     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
+     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
+     * @exception {DeveloperError} options.slices must be greater that 3.
+     *
+     * @see CylinderGeometry#createGeometry
      *
      * @example
      * // create cylinder geometry
@@ -61,7 +63,7 @@ define([
      *     topRadius: 80000,
      *     bottomRadius: 200000,
      * });
-     *
+     * var geometry = CylinderGeometry.createGeometry(cylinder);
      */
     var CylinderGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -93,20 +95,26 @@ define([
         }
 
 
-        this.length = length;
-        this.topRadius = topRadius;
-        this.bottomRadius = bottomRadius;
-        this.vertexFormat = vertexFormat;
-        this.slices = slices;
-        this.workerName = 'createCylinderGeometry';
+        this._length = length;
+        this._topRadius = topRadius;
+        this._bottomRadius = bottomRadius;
+        this._vertexFormat = vertexFormat;
+        this._slices = slices;
+        this._workerName = 'createCylinderGeometry';
     };
 
+    /**
+     * Computes vertices and indices of a cylinder.
+     *
+     * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     CylinderGeometry.createGeometry = function(cylinderGeometry) {
-        var length = cylinderGeometry.length;
-        var topRadius = cylinderGeometry.topRadius;
-        var bottomRadius = cylinderGeometry.bottomRadius;
-        var vertexFormat = cylinderGeometry.vertexFormat;
-        var slices = cylinderGeometry.slices;
+        var length = cylinderGeometry._length;
+        var topRadius = cylinderGeometry._topRadius;
+        var bottomRadius = cylinderGeometry._bottomRadius;
+        var vertexFormat = cylinderGeometry._vertexFormat;
+        var slices = cylinderGeometry._slices;
 
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;

@@ -673,4 +673,17 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(true);
     });
 
+    it('destroy before pipeline is complete', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            allow3DOnly : true
+        });
+
+        primitive.update(context, frameState, []);
+
+        primitive.destroy();
+        expect(primitive.isDestroyed()).toEqual(true);
+    });
+
 });

@@ -129,7 +129,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
      * @alias WallGeometry
@@ -149,6 +149,8 @@ define([
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
      * @exception {DeveloperError} unique positions must be greater than or equal to 2.
      *
+     * @see WallGeometry.createGeometry
+     *
      * @example
      * var positions = [
      *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
@@ -162,6 +164,7 @@ define([
      * var wall = new WallGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
+     * var geometry = WallGeometry.createGeometry(wall);
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -196,17 +199,17 @@ define([
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
 
-        this.positions = wallPositions;
-        this.minimumHeights = minimumHeights;
-        this.maximumHeights = maximumHeights;
-        this.vertexFormat = vertexFormat;
-        this.granularity = granularity;
-        this.ellipsoid = ellipsoid;
-        this.workerName = 'createWallGeometry';
+        this._positions = wallPositions;
+        this._minimumHeights = minimumHeights;
+        this._maximumHeights = maximumHeights;
+        this._vertexFormat = vertexFormat;
+        this._granularity = granularity;
+        this._ellipsoid = ellipsoid;
+        this._workerName = 'createWallGeometry';
     };
 
     /**
-     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
      * @memberof WallGeometry
@@ -220,6 +223,9 @@ define([
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} positions is required.
+     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     *
+     * @see WallGeometry.createGeometry
      *
      * @example
      * var positions = [
@@ -236,6 +242,7 @@ define([
      *     minimumHeight : 20000.0,
      *     maximumHeight : 10000.0
      * });
+     * var geometry = WallGeometry.createGeometry(wall);
      */
     WallGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -279,13 +286,19 @@ define([
         return new WallGeometry(newOptions);
     };
 
+    /**
+     * Computes vertices and indices of a wall.
+     *
+     * @param {WallGeometry} wallGeometry A description of the wall.
+     * @returns {Geometry} The computed vertices and indices.
+     */
     WallGeometry.createGeometry = function(wallGeometry) {
-        var wallPositions = wallGeometry.positions;
-        var minimumHeights = wallGeometry.minimumHeights;
-        var maximumHeights = wallGeometry.maximumHeights;
-        var vertexFormat = wallGeometry.vertexFormat;
-        var granularity = wallGeometry.granularity;
-        var ellipsoid = wallGeometry.ellipsoid;
+        var wallPositions = wallGeometry._positions;
+        var minimumHeights = wallGeometry._minimumHeights;
+        var maximumHeights = wallGeometry._maximumHeights;
+        var vertexFormat = wallGeometry._vertexFormat;
+        var granularity = wallGeometry._granularity;
+        var ellipsoid = wallGeometry._ellipsoid;
 
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise
