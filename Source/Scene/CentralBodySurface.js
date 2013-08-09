@@ -711,53 +711,8 @@ define([
             u_modifiedModelView : function() {
                 return this.modifiedModelView;
             },
-            u_dayTexture0 : function() {
-                return this.dayTextures[0];
-            },
-            u_dayTexture1 : function() {
-                return this.dayTextures[1];
-            },
-            u_dayTexture2 : function() {
-                return this.dayTextures[2];
-            },
-            u_dayTexture3 : function() {
-                return this.dayTextures[3];
-            },
-            u_dayTexture4 : function() {
-                return this.dayTextures[4];
-            },
-            u_dayTexture5 : function() {
-                return this.dayTextures[5];
-            },
-            u_dayTexture6 : function() {
-                return this.dayTextures[6];
-            },
-            u_dayTexture7 : function() {
-                return this.dayTextures[7];
-            },
-            u_dayTexture8 : function() {
-                return this.dayTextures[8];
-            },
-            u_dayTexture9 : function() {
-                return this.dayTextures[9];
-            },
-            u_dayTexture10 : function() {
-                return this.dayTextures[10];
-            },
-            u_dayTexture11 : function() {
-                return this.dayTextures[11];
-            },
-            u_dayTexture12 : function() {
-                return this.dayTextures[12];
-            },
-            u_dayTexture13 : function() {
-                return this.dayTextures[13];
-            },
-            u_dayTexture14 : function() {
-                return this.dayTextures[14];
-            },
-            u_dayTexture15 : function() {
-                return this.dayTextures[15];
+            u_dayTextures : function() {
+                return this.dayTextures;
             },
             u_dayTextureTranslationAndScale : function() {
                 return this.dayTextureTranslationAndScale;

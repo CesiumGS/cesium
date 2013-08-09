@@ -1,6 +1,7 @@
 //#define SHOW_TILE_BOUNDARIES
 
 #if TEXTURE_UNITS > 0
+uniform sampler2D u_dayTextures[TEXTURE_UNITS];
 uniform vec4 u_dayTextureTranslationAndScale[TEXTURE_UNITS];
 uniform float u_dayTextureAlpha[TEXTURE_UNITS];
 uniform float u_dayTextureBrightness[TEXTURE_UNITS];
