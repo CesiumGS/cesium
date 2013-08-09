@@ -20,30 +20,32 @@ define(['../Core/createGuid',
         './DynamicPolygon',
         './DynamicLabel',
         './DynamicBillboard',
-        '../ThirdParty/when'
-        ], function(
-                createGuid,
-                Cartographic,
-                Color,
-                ClockRange,
-                ClockStep,
-                DeveloperError,
-                RuntimeError,
-                Ellipsoid,
-                Event,
-                Iso8601,
-                loadXML,
-                ConstantProperty,
-                DynamicProperty,
-                DynamicClock,
-                DynamicObject,
-                DynamicObjectCollection,
-                DynamicPoint,
-                DynamicPolyline,
-                DynamicPolygon,
-                DynamicLabel,
-                DynamicBillboard,
-                when) {
+        '../ThirdParty/when',
+        '../ThirdParty/Uri'
+    ], function(
+        createGuid,
+        Cartographic,
+        Color,
+        ClockRange,
+        ClockStep,
+        DeveloperError,
+        RuntimeError,
+        Ellipsoid,
+        Event,
+        Iso8601,
+        loadXML,
+        ConstantProperty,
+        DynamicProperty,
+        DynamicClock,
+        DynamicObject,
+        DynamicObjectCollection,
+        DynamicPoint,
+        DynamicPolyline,
+        DynamicPolygon,
+        DynamicLabel,
+        DynamicBillboard,
+        when,
+        Uri) {
     "use strict";
 
     //Copied from GeoJsonDataSource
@@ -168,26 +170,6 @@ define(['../Core/createGuid',
         return Color.fromBytes(red, green, blue, alpha);
     }
 
-    function getStylesFromXml(xml){
-        var stylesArray = xml.getElementsByTagName('Style');
-        var styleCollection = new DynamicObjectCollection();
-        for ( var i = 0, len = stylesArray.length; i < len; i++){
-            var styleNode = stylesArray.item(i);
-            styleNode.id = '#' + getId(styleNode);
-            var styleObject = styleCollection.getOrCreateObject(styleNode.id);
-            processStyle(styleNode, styleObject);
-        }
-        return styleCollection;
-    }
-
-    function getRemoteStyle(url){
-        return loadXML(url).then(function(kml) {
-            return getStylesFromXml(kml, url);
-        }, function(error) {
-            this._error.raiseEvent(this, error);
-        });
-    }
-
     // KML processing functions
     function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
         dynamicObject.name = getStringValue(placemark, 'name');
@@ -298,57 +280,107 @@ define(['../Core/createGuid',
         }
     }
 
-    function loadKML(dataSource, kml, sourceUri) {
-        var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        var styleCollection = getStylesFromXml(kml);
+    //Processes and merges any inline styles for the provided node into the provided dynamic object.
+    function processInlineStyles(dynamicObject, node, styleCollection) {
+        //KML_TODO Validate the behavior for multiple/conflicting styles.
+        var inlineStyles = node.getElementsByTagName('Style');
+        var inlineStylesLength = inlineStyles.length;
+        if (inlineStylesLength > 0) {
+            //Google earth seems to always use the last inline style only.
+            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject);
+        }
 
-        var array = kml.getElementsByTagName('Placemark');
-        for (var i = 0, len = array.length; i < len; i++){
-            var inlineStyleCollection = getStylesFromXml(array[i]);
-            var placemark = array[i];
-            var placemarkId = typeof placemark.id !== 'undefined' ? placemark.id : createGuid();
-            var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
-            //check for inline styles
-            var styleObjects = inlineStyleCollection.getObjects();
-            var styleObjectsLength = styleObjects.length;
-            if(styleObjectsLength > 0){
-                for(var k = 0; k < styleObjectsLength; k++){
-                    placemarkDynamicObject.merge(styleObjects[k]);
+        var externalStyles = node.getElementsByTagName('styleUrl');
+        if (externalStyles.length > 0) {
+            var styleObject = styleCollection.getObject(externalStyles.item(0).textContent);
+            if (typeof styleObject !== 'undefined') {
+                //Google earth seems to always use the first external style only.
+                DynamicBillboard.mergeProperties(dynamicObject, styleObject);
+                DynamicLabel.mergeProperties(dynamicObject, styleObject);
+                DynamicPoint.mergeProperties(dynamicObject, styleObject);
+                DynamicPolygon.mergeProperties(dynamicObject, styleObject);
+                DynamicPolyline.mergeProperties(dynamicObject, styleObject);
+                DynamicObject.mergeProperties(dynamicObject, styleObject);
+            }
+        }
+    }
+
+    //Asynchronously processes an external style file.
+    function processExternalStyles(uri, styleCollection) {
+        return when(loadXML(uri), function(styleKml) {
+            return processStyles(styleKml, styleCollection, uri);
+        });
+    }
+
+    //Processes all shared and external styles and stores
+    //their id into the rovided styleCollection.
+    //Returns an array of promises that will resolve when
+    //each style is loaded.
+    function processStyles(kml, styleCollection, sourceUri) {
+        var i;
+
+        var styleNodes = kml.getElementsByTagName('Style');
+        var styleNodesLength = styleNodes.length;
+        for (i = styleNodesLength - 1; i >= 0; i--) {
+            var node = styleNodes.item(i);
+            var attributes = node.attributes;
+            var id = typeof attributes.id !== 'undefined' ? attributes.id.textContent : undefined;
+            if (typeof id !== 'undefined') {
+                id = '#' + id;
+                if (typeof sourceUri !== 'undefined') {
+                    id = sourceUri + id;
                 }
-            } else {
-                var styleUrl = array[i].getElementsByTagName('styleUrl');
-                for(var j = 0, size = styleUrl.length; j < size; j++){
-                    var styleId = getStringValue(array[j], 'styleUrl');
-                    if(styleId[0] === '#'){ //then check for local file styles
-                        var styleObj = styleCollection.getObject(styleId);
-                        placemarkDynamicObject.merge(styleObj);
-                    } else { // get remote styles lastly
-                        var externalStyleCollection;
-                        var externalStyleObj;
-
-                        var externalArray = styleId.split('#');
-                        var externalPath = externalArray[0];
-                        var externalStyleId = '#' + externalArray[1];
-                        if(typeof dataSource.externalStyles[externalPath] === 'undefined'){
-                            if(externalPath.substring(0,3 === 'http')){
-                                //externalStyleCollection = getRemoteStyle(externalPath).then(function(styles){ });
-                                dataSource.externalStyles[externalPath] = externalStyleCollection;
-                                externalStyleObj = externalStyleCollection.getObject(externalStyleId);
-                                placemarkDynamicObject.merge(externalStyleObj);
-
-                            } else {
-                                //TODO Load an external file from a relative path
-                            }
-                        } else {
-                            externalStyleCollection = dataSource.externalStyles[externalPath];
-                            externalStyleObj = externalStyleCollection.getObject(externalStyleId);
-                            placemarkDynamicObject.merge(externalStyleObj);
-                        }
-                    }
+                if (typeof styleCollection.getObject(id) === 'undefined') {
+                    var styleObject = styleCollection.getOrCreateObject(id);
+                    processStyle(node, styleObject);
                 }
             }
-            processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
         }
+
+        var externalStyleHash = {};
+        var promises = [];
+        var styleUrlNodes = kml.getElementsByTagName('styleUrl');
+        var styleUrlNodesLength = styleUrlNodes.length;
+        for (i = 0; i < styleUrlNodesLength; i++) {
+            var styleReference = styleUrlNodes[i].textContent;
+            if (styleReference[0] !== '#') {
+                var tokens = styleReference.split('#');
+                if (tokens.length !== 2) {
+                    throw new RuntimeError();
+                }
+                var uri = tokens[0];
+                if (typeof externalStyleHash[uri] === 'undefined') {
+                    if (typeof sourceUri !== 'undefined') {
+                        var baseUri = new Uri(document.location.href);
+                        sourceUri = new Uri(sourceUri);
+                        uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
+                    }
+                    promises.push(processExternalStyles(uri, styleCollection));
+                }
+            }
+        }
+
+        return promises;
+    }
+
+    function loadKML(dataSource, kml, sourceUri) {
+        var dynamicObjectCollection = dataSource._dynamicObjectCollection;
+        var styleCollection = new DynamicObjectCollection();
+
+        //Since KML external styles can be asynchonous, we start off
+        //my loading all styles first, before doing anything else.
+        //The rest of the loading code is synchronous
+        return when.all(processStyles(kml, styleCollection), function() {
+            var array = kml.getElementsByTagName('Placemark');
+            for ( var i = 0, len = array.length; i < len; i++) {
+                var placemark = array[i];
+                var placemarkId = typeof placemark.id !== 'undefined' ? placemark.id : createGuid();
+                var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
+                processInlineStyles(placemarkDynamicObject, array[i], styleCollection);
+                processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
+            }
+            dataSource._changed.raiseEvent(this);
+        });
     }
 
     /**
@@ -356,13 +388,12 @@ define(['../Core/createGuid',
      * @alias KmlDataSource
      * @constructor
      */
-    var KmlDataSource = function(){
+    var KmlDataSource = function() {
         this._changed = new Event();
         this._error = new Event();
         this._clock = undefined;
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
-        this.externalStyles = {}; //cache to hold external styles
     };
 
     /**
@@ -433,8 +464,7 @@ define(['../Core/createGuid',
         }
 
         this._dynamicObjectCollection.clear();
-        loadKML(this, kml, source);
-        this._changed.raiseEvent(this);
+        return loadKML(this, kml, source);
     };
 
     /**
