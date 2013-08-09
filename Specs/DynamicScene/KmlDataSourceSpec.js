@@ -10,20 +10,22 @@ defineSuite(['DynamicScene/KmlDataSource',
              'Core/Ellipsoid',
              'Core/Event',
              'Core/Math'
-            ], function(
-                    KmlDataSource,
-                    ConstantProperty,
-                    DynamicObjectCollection,
-                    DynamicBillboard,
-                    DynamicPolyline,
-                    loadXML,
-                    Cartographic,
-                    Color,
-                    Ellipsoid,
-                    Event,
-                    CesiumMath) {
+         ], function(
+            KmlDataSource,
+            ConstantProperty,
+            DynamicObjectCollection,
+            DynamicBillboard,
+            DynamicPolyline,
+            loadXML,
+            Cartographic,
+            Color,
+            Ellipsoid,
+            Event,
+            CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var parser = new DOMParser();
 
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
@@ -36,7 +38,7 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('loads shared styles', function() {
-        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
@@ -50,11 +52,8 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
@@ -62,7 +61,7 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('loads external styles', function() {
-        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Placemark>\
@@ -71,19 +70,21 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
-        expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+        waitsFor(function() {
+            return objects.length === 1;
+        });
+
+        runs(function() {
+            expect(objects[0].billboard.scale.getValue()).toEqual(3.0);
+        });
     });
 
     it('inline styles take precedance over shared styles', function() {
-        var externalKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
@@ -105,11 +106,8 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(externalKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
@@ -133,11 +131,8 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(pointKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
@@ -185,11 +180,8 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(pointKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(pointKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
@@ -219,11 +211,8 @@ defineSuite(['DynamicScene/KmlDataSource',
     </Document>\
     </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(lineKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
@@ -268,11 +257,8 @@ defineSuite(['DynamicScene/KmlDataSource',
             </Document>\
             </kml>';
 
-        var parser = new DOMParser();
-        var xmlDoc = parser.parseFromString(colorKml, "text/xml");
-
         var dataSource = new KmlDataSource();
-        dataSource.load(xmlDoc);
+        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
