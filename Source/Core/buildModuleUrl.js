@@ -1,12 +1,27 @@
 /*global define*/
 define([
         'require',
-        './DeveloperError'
+        './DeveloperError',
+        '../ThirdParty/Uri'
     ], function(
         require,
-        DeveloperError) {
+        DeveloperError,
+        Uri) {
     "use strict";
     /*global CESIUM_BASE_URL*/
+
+    var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
+    function getBaseUrlFromCesiumScript() {
+        var scripts = document.getElementsByTagName('script');
+        for ( var i = 0, len = scripts.length; i < len; ++i) {
+            var src = scripts[i].getAttribute('src');
+            var result = cesiumScriptRegex.exec(src);
+            if (result !== null) {
+                return result[1];
+            }
+        }
+        return undefined;
+    }
 
     var baseUrl;
     function getCesiumBaseUrl() {
@@ -14,28 +29,18 @@ define([
             return baseUrl;
         }
 
+        var baseUrlString;
         if (typeof CESIUM_BASE_URL !== 'undefined') {
-            baseUrl = CESIUM_BASE_URL;
+            baseUrlString = CESIUM_BASE_URL;
         } else {
-            var cesiumScriptRegex = /(.*?)Cesium\w*\.js(?:\W|$)/i;
-            var scripts = document.getElementsByTagName('script');
-            for ( var i = 0, len = scripts.length; i < len; ++i) {
-                var src = scripts[i].getAttribute('src');
-                var result = cesiumScriptRegex.exec(src);
-                if (result !== null) {
-                    baseUrl = result[1];
-                    break;
-                }
-            }
+            baseUrlString = getBaseUrlFromCesiumScript();
         }
 
-        if (typeof baseUrl === 'undefined') {
+        if (typeof baseUrlString === 'undefined') {
             throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
         }
 
-        if (!/\/$/.test(baseUrl)) {
-            baseUrl += '/';
-        }
+        baseUrl = new Uri(baseUrlString).resolve(new Uri(document.location.href));
 
         return baseUrl;
     }
@@ -46,7 +51,7 @@ define([
     }
 
     function buildModuleUrlFromBaseUrl(moduleID) {
-        return getCesiumBaseUrl() + moduleID;
+        return new Uri(moduleID).resolve(getCesiumBaseUrl()).toString();
     }
 
     var implementation;
@@ -80,6 +85,9 @@ define([
 
         return a.href;
     };
+
+    // exposed for testing
+    buildModuleUrl._cesiumScriptRegex = cesiumScriptRegex;
 
     return buildModuleUrl;
 });
