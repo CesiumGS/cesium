@@ -14,6 +14,7 @@ define([
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
+        './PolygonGeometryLibrary',
         './PolygonPipeline',
         './PrimitiveType',
         './Queue',
@@ -33,47 +34,13 @@ define([
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
+        PolygonGeometryLibrary,
         PolygonPipeline,
         PrimitiveType,
         Queue,
         WindingOrder) {
     "use strict";
     var createGeometryFromPositionsPositions = [];
-
-    var distanceScratch = new Cartesian3();
-    function getPointAtDistance(p0, p1, distance, length) {
-        distanceScratch = p1.subtract(p0, distanceScratch);
-        distanceScratch = distanceScratch.multiplyByScalar(distance/length, distanceScratch);
-        distanceScratch = p0.add(distanceScratch, distanceScratch);
-        return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
-    }
-
-    function subdivideLine(p0, p1, granularity) {
-        var length = Cartesian3.distance(p0, p1);
-        var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var n = angleBetween/granularity;
-        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
-        if (countDivide < 1) {
-            countDivide = 0;
-        }
-        var numVertices = Math.pow(2, countDivide);
-
-        var distanceBetweenVertices = length / numVertices;
-
-        var positions = new Array(numVertices * 3);
-        var index = 0;
-        positions[index++] = p0.x;
-        positions[index++] = p0.y;
-        positions[index++] = p0.z;
-        for (var i = 1; i < numVertices; i++) {
-            var p = getPointAtDistance(p0, p1, i*distanceBetweenVertices, length);
-            positions[index++] = p[0];
-            positions[index++] = p[1];
-            positions[index++] = p[2];
-        }
-
-        return positions;
-    }
 
     function createGeometryFromPositions(ellipsoid, positions, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
@@ -93,9 +60,9 @@ define([
         var length = cleanedPositions.length;
         var i;
         for (i = 0; i < length-1; i++) {
-            subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
+            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
         }
-        subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
+        subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
         length = subdividedPositions.length/3;
         var indicesSize = length*2;
@@ -127,42 +94,6 @@ define([
     var scratchNormal = new Cartesian3();
     var scratchBoundingSphere = new BoundingSphere();
 
-    var scaleToGeodeticHeightN1 = new Cartesian3();
-    var scaleToGeodeticHeightN2 = new Cartesian3();
-    var scaleToGeodeticHeightP = new Cartesian3();
-    function scaleToGeodeticHeightExtruded(geometry, maxHeight, minHeight, ellipsoid) {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        var n1 = scaleToGeodeticHeightN1;
-        var n2 = scaleToGeodeticHeightN2;
-        var p = scaleToGeodeticHeightP;
-
-        if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
-            var positions = geometry.attributes.position.values;
-            var length = positions.length / 2;
-
-            for ( var i = 0; i < length; i += 3) {
-                Cartesian3.fromArray(positions, i, p);
-
-                ellipsoid.scaleToGeodeticSurface(p, p);
-                ellipsoid.geodeticSurfaceNormal(p, n1);
-
-                Cartesian3.multiplyByScalar(n1, maxHeight, n2);
-                Cartesian3.add(p, n2, n2);
-                positions[i] = n2.x;
-                positions[i + 1] = n2.y;
-                positions[i + 2] = n2.z;
-
-                Cartesian3.multiplyByScalar(n1, minHeight, n2);
-                Cartesian3.add(p, n2, n2);
-                positions[i + length] = n2.x;
-                positions[i + 1 + length] = n2.y;
-                positions[i + 2 + length] = n2.z;
-            }
-        }
-        return geometry;
-    }
-
     function createGeometryFromPositionsExtruded(ellipsoid, positions, granularity) {
         var cleanedPositions = PolygonPipeline.removeDuplicates(positions);
         if (cleanedPositions.length < 3) {
@@ -183,10 +114,10 @@ define([
         var corners = new Array(subdividedPositions.length);
         corners[0] = 0;
         for (i = 0; i < length-1; i++) {
-            subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
+            subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));
             corners[i+1] = subdividedPositions.length/3;
         }
-        subdividedPositions = subdividedPositions.concat(subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
+        subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[length-1], cleanedPositions[0], granularity));
 
         length = subdividedPositions.length/3;
         var indicesSize = ((length * 2) + corners.length)*2;
@@ -377,7 +308,7 @@ define([
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity);
                 if (typeof geometry !== 'undefined') {
-                    geometry.geometry = scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid);
+                    geometry.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometry.geometry, height, extrudedHeight, ellipsoid);
                     geometries.push(geometry);
                 }
             }

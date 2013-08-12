@@ -17,6 +17,7 @@ define([
         './IndexDatatype',
         './Math',
         './Matrix3',
+        './PolygonGeometryLibrary',
         './PolygonPipeline',
         './PrimitiveType',
         './Quaternion',
@@ -41,6 +42,7 @@ define([
         IndexDatatype,
         CesiumMath,
         Matrix3,
+        PolygonGeometryLibrary,
         PolygonPipeline,
         PrimitiveType,
         Quaternion,
@@ -114,8 +116,8 @@ define([
     var scratchTangent = new Cartesian3();
     var scratchBinormal = new Cartesian3();
     var scratchBoundingSphere = new BoundingSphere();
-    var p1 = new Cartesian3();
-    var p2 = new Cartesian3();
+    var p1Scratch = new Cartesian3();
+    var p2Scratch = new Cartesian3();
 
     var appendTextureCoordinatesOrigin = new Cartesian2();
     var appendTextureCoordinatesCartesian2 = new Cartesian2();
@@ -186,10 +188,10 @@ define([
 
                     if (wall) {
                         if (i+3 < length) {
-                            p1 = Cartesian3.fromArray(flatPositions, i + 3, p1);
+                            var p1 = Cartesian3.fromArray(flatPositions, i + 3, p1Scratch);
 
                             if (recomputeNormal) {
-                                p2 = Cartesian3.fromArray(flatPositions, i + length, p2);
+                                var p2 = Cartesian3.fromArray(flatPositions, i + length, p2Scratch);
                                 p1.subtract(position, p1);
                                 p2.subtract(position, p2);
                                 normal = Cartesian3.cross(p2, p1, normal).normalize(normal);
@@ -301,80 +303,6 @@ define([
         return geometry;
     }
 
-    var scaleToGeodeticHeightN1 = new Cartesian3();
-    var scaleToGeodeticHeightN2 = new Cartesian3();
-    var scaleToGeodeticHeightP = new Cartesian3();
-    function scaleToGeodeticHeightExtruded(geometry, maxHeight, minHeight, ellipsoid) {
-        ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
-
-        var n1 = scaleToGeodeticHeightN1;
-        var n2 = scaleToGeodeticHeightN2;
-        var p = scaleToGeodeticHeightP;
-
-        if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
-            var positions = geometry.attributes.position.values;
-            var length = positions.length / 2;
-
-            for ( var i = 0; i < length; i += 3) {
-                Cartesian3.fromArray(positions, i, p);
-
-                ellipsoid.scaleToGeodeticSurface(p, p);
-                ellipsoid.geodeticSurfaceNormal(p, n1);
-
-                Cartesian3.multiplyByScalar(n1, maxHeight, n2);
-                Cartesian3.add(p, n2, n2);
-                positions[i] = n2.x;
-                positions[i + 1] = n2.y;
-                positions[i + 2] = n2.z;
-
-                Cartesian3.multiplyByScalar(n1, minHeight, n2);
-                Cartesian3.add(p, n2, n2);
-                positions[i + length] = n2.x;
-                positions[i + 1 + length] = n2.y;
-                positions[i + 2 + length] = n2.z;
-            }
-        }
-        return geometry;
-    }
-
-    var distanceScratch = new Cartesian3();
-    function getPointAtDistance(p0, p1, distance, length) {
-        distanceScratch = p1.subtract(p0, distanceScratch);
-        distanceScratch = distanceScratch.multiplyByScalar(distance/length, distanceScratch);
-        distanceScratch = p0.add(distanceScratch, distanceScratch);
-        return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
-    }
-
-    function subdivideLine(p0, p1, granularity) {
-        var length = Cartesian3.distance(p0, p1);
-        var angleBetween = Cartesian3.angleBetween(p0, p1);
-        var n = angleBetween/granularity;
-        var countDivide = Math.ceil(Math.log(n)/Math.log(2));
-        if (countDivide < 1) {
-            countDivide = 0;
-        }
-        var numVertices = Math.pow(2, countDivide);
-
-        var distanceBetweenVertices = length / numVertices;
-
-        var positions = new Array(numVertices * 3);
-        var index = 0;
-        positions[index++] = p0.x;
-        positions[index++] = p0.y;
-        positions[index++] = p0.z;
-        for (var i = 1; i < numVertices; i++) {
-            var p = getPointAtDistance(p0, p1, i*distanceBetweenVertices, length);
-            positions[index++] = p[0];
-            positions[index++] = p[1];
-            positions[index++] = p[2];
-        }
-        positions[index++] = p1.x;
-        positions[index++] = p1.y;
-        positions[index++] = p1.z;
-
-        return positions;
-    }
-
     function computeWallIndices(positions, granularity){
         var edgePositions = [];
         var subdividedEdge;
@@ -383,8 +311,13 @@ define([
         var i;
 
         var length = positions.length;
+        var p1;
+        var p2;
         for (i = 0; i < length; i++) {
-            subdividedEdge = subdivideLine(positions[i], positions[(i+1)%length], granularity);
+            p1 = positions[i];
+            p2 = positions[(i+1)%length];
+            subdividedEdge = PolygonGeometryLibrary.subdivideLine(p1, p2, granularity);
+            subdividedEdge.push(p2.x, p2.y, p2.z);
             edgePositions = edgePositions.concat(subdividedEdge);
         }
 
@@ -661,14 +594,14 @@ define([
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i]);
                 if (typeof geometry !== 'undefined') {
                     topAndBottom = geometry.topAndBottom;
-                    topAndBottom.geometry = scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
+                    topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
                     topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
                     geometries.push(topAndBottom);
 
                     walls = geometry.walls;
                     for (var k = 0; k < walls.length; k++) {
                         var wall = walls[k];
-                        wall.geometry = scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
+                        wall.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid);
                         wall.geometry = computeAttributes(vertexFormat, wall.geometry, outerPositions, ellipsoid, stRotation, true, true);
                         geometries.push(wall);
                     }

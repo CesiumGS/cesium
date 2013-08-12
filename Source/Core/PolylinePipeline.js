@@ -260,7 +260,7 @@ define([
     };
 
     /**
-     * Raises the positions to the given height.  Assumes all points are at height 0.
+     * Raises the positions to the given height.
      *
      * @memberof PolylinePipeline
      *
@@ -271,7 +271,6 @@ define([
      * @returns {Array} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
-     * @exception {DeveloperError} height must be defined.
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
@@ -282,20 +281,28 @@ define([
      *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
+     PolylinePipeline.scaleToGeodeticHeight = function(positions, ellipsoid, height) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions must be defined.');
         }
-        if (typeof height === 'undefined') {
-            throw new DeveloperError('height must be defined.');
-        }
+        height = defaultValue(height, 0);
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
-        var h;
         var length = positions.length;
         var i;
         var p = scaleP;
         var newPositions = new Array(positions.length);
+        if (height === 0) {
+            for(i = 0; i < length; i+=3) {
+                p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
+                newPositions[i] = p.x;
+                newPositions[i + 1] = p.y;
+                newPositions[i + 2] = p.z;
+            }
+            return newPositions;
+        }
+
+        var h;
         if (Array.isArray(height)) {
             if (height.length !== length/3) {
                 throw new DeveloperError('height.length must be equal to positions.length');
