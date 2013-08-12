@@ -170,7 +170,7 @@ defineSuite([
 
     it('process loads data on top of existing', function() {
         waitsFor(function() {
-            return defined(simple !== 'undefined' && typeof vehicle);
+            return defined(simple) && defined(vehicle);
         });
 
         runs(function() {
@@ -185,7 +185,7 @@ defineSuite([
 
     it('load replaces data', function() {
         waitsFor(function() {
-            return defined(simple !== 'undefined' && typeof vehicle);
+            return defined(simple) && defined(vehicle);
         });
 
         runs(function() {

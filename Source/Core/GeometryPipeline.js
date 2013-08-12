@@ -1614,7 +1614,7 @@ define([
     }
 
     function computeTriangleAttributes(i0, i1, i2, dividedTriangle, normals, binormals, tangents, texCoords) {
-        if (!defined(normals) && !defined(binormals) && !defined(tangents) && typeof !defined(texCoords)) {
+        if (!defined(normals) && !defined(binormals) && !defined(tangents) && !defined(texCoords)) {
             return;
         }
 

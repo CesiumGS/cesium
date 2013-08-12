@@ -146,7 +146,7 @@ define([
             mouseEvents = this._mouseEvents;
         }
 
-        if (defined(type) && typeof defined(type.name) && defined(mouseEvents)) {
+        if (defined(type) && defined(type.name) && defined(mouseEvents)) {
             return mouseEvents[type.name];
         }
 

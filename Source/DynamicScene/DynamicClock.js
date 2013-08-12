@@ -125,7 +125,7 @@ define([
                 if (defined(clockPacket.currentTime)) {
                     clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
                 }
-                if (defined(typeof clockPacket.range)) {
+                if (defined(clockPacket.range)) {
                     clock.clockRange = ClockRange[clockPacket.range];
                 }
                 if (defined(clockPacket.step)) {
