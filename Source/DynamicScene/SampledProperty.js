@@ -277,7 +277,7 @@ define([
 
     /**
      * @memberof SampledProperty
-     * @returns {Boolean} Always returns false, since this property never varies with simulation time.
+     * @returns {Boolean} Always returns true, since this property always varies with simulation time.
      */
     SampledProperty.prototype.getIsTimeVarying = function() {
         return true;
@@ -290,6 +290,8 @@ define([
      * @param {JulianDate} time The time for which to retrieve the value.  This parameter is unused.
      * @param {Object} [result] The object to store the value into if the value is clonable.  If the result is omitted or the value does not implement clone, the actual value is returned.
      * @returns The modified result parameter or the actual value instance if the value is not clonable.
+     *
+     * @exception {DeveloperError} time is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
         var typeHandler = this._typeHandler;
@@ -373,9 +375,6 @@ define([
             return typeHandler.inflateInterpolationResult(interpolationScratch, result, values, firstIndex, lastIndex);
         }
         return typeHandler.inflate(this._values, index * doublesPerValue, result);
-    };
-
-    SampledProperty.prototype.sampleValue = function(start, stop, resultValues, resultTimes, requiredTimes, maximumStep) {
     };
 
     SampledProperty.prototype.addSample = function(time, value) {

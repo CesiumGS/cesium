@@ -8,11 +8,24 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('works with non-clonable objects', function() {
-        var expected = {};
+    it('works with basic types', function() {
+        var expected = 5;
         var property = new ConstantProperty(expected);
         expect(property.getIsTimeVarying()).toEqual(false);
         expect(property.getValue()).toBe(expected);
+    });
+
+    it('works with clone function', function() {
+        var expected = {};
+        var cloneCalled = false;
+        var cloneFunction = function() {
+            cloneCalled = true;
+            return expected;
+        };
+        var property = new ConstantProperty(expected, cloneFunction);
+        expect(property.getIsTimeVarying()).toEqual(false);
+        expect(property.getValue()).toBe(expected);
+        expect(cloneCalled).toEqual(true);
     });
 
     it('works with clonable objects', function() {
@@ -38,7 +51,14 @@ defineSuite([
 
     it('constructor throws with undefined value', function() {
         expect(function() {
-            return new ConstantProperty(undefined);
+            return new ConstantProperty(undefined, function() {
+            });
+        }).toThrow();
+    });
+
+    it('constructor throws with undefined clone function on non-basic type', function() {
+        expect(function() {
+            return new ConstantProperty({}, undefined);
         }).toThrow();
     });
 });

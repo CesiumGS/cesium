@@ -1,6 +1,21 @@
 /*global define*/
-define(['../Core/DeveloperError'], function(DeveloperError) {
+define([
+        '../Core/defaultValue',
+        '../Core/DeveloperError',
+        '../Core/Enumeration'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        Enumeration) {
     "use strict";
+
+    function prototypeClone(value, result) {
+        return value.clone(result);
+    }
+
+    function noClone(value, result) {
+        return value;
+    }
 
     /**
      * A {@link Property} whose value never changes.
@@ -8,14 +23,28 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
      * @alias ConstantProperty
      * @constructor
      *
+     * @param {Object|Number|String} value The property value.
+     * @param {Function} [clone=value.clone] A function which takes the value and result parameter and clones it.
+     * This parameter is only required if the value is not a number or string and does not have a clone function.
+     *
      * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} clone is a required function.
      */
-    var ConstantProperty = function(value) {
+    var ConstantProperty = function(value, clone) {
         if (typeof value === 'undefined') {
             throw new DeveloperError('value is required.');
         }
+
+        if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && !(value instanceof Enumeration) && !Array.isArray(value)) {
+            if (typeof value.clone !== 'function' && typeof clone !== 'function') {
+                throw new DeveloperError('clone is a required function.');
+            }
+
+            clone = defaultValue(clone, prototypeClone);
+        }
+
         this._value = value;
-        this._clonable = typeof value !== 'undefined' && typeof value.clone === 'function';
+        this._clone = defaultValue(clone, noClone);
     };
 
     /**
@@ -27,31 +56,15 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
     };
 
     /**
-     * Gets the value of the property, optionally cloning it.
+     * Returns the value of the property at the specified simulation time.
      * @memberof ConstantProperty
      *
-     * @param {JulianDate} time The time for which to retrieve the value.  This parameter is unused.
-     * @param {Object} [result] The object to store the value into if the value is clonable.  If the result is omitted or the value does not implement clone, the actual value is returned.
-     * @returns The modified result parameter or the actual value instance if the value is not clonable.
+     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantProperty.prototype.getValue = function(time, result) {
-        var value = this._value;
-        if (this._clonable) {
-            return value.clone(result);
-        }
-        return value;
-    };
-
-    ConstantProperty.prototype.sampleValue = function(start, stop, resultValues, resultTimes, requiredTimes, maximumStep) {
-        resultValues[0] = this.getValue(start, resultValues[0]);
-        resultValues[1] = this.getValue(stop, resultValues[1]);
-        resultValues.length = 2;
-
-        if (typeof resultTimes !== 'undefined') {
-            resultTimes[0] = start.clone();
-            resultTimes[1] = stop.clone();
-            resultTimes.length = 2;
-        }
+        return this._clone(this._value, result);
     };
 
     return ConstantProperty;

@@ -126,8 +126,5 @@ define([
         return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
-    ReferenceProperty.prototype.sampleValue = function() {
-    };
-
     return ReferenceProperty;
 });
