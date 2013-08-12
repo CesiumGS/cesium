@@ -1,20 +1,22 @@
 /*global define*/
 define([
         'require',
+        './defined',
         './DeveloperError'
     ], function(
         require,
+        defined,
         DeveloperError) {
     "use strict";
     /*global CESIUM_BASE_URL*/
 
     var baseUrl;
     function getCesiumBaseUrl() {
-        if (typeof baseUrl !== 'undefined') {
+        if (defined(baseUrl)) {
             return baseUrl;
         }
 
-        if (typeof CESIUM_BASE_URL !== 'undefined') {
+        if (defined(CESIUM_BASE_URL)) {
             baseUrl = CESIUM_BASE_URL;
         } else {
             var cesiumScriptRegex = /(.*?)Cesium\w*\.js(?:\W|$)/i;
@@ -29,7 +31,7 @@ define([
             }
         }
 
-        if (typeof baseUrl === 'undefined') {
+        if (!defined(baseUrl)) {
             throw new DeveloperError('Unable to determine Cesium base URL automatically, try defining a global variable called CESIUM_BASE_URL.');
         }
 
@@ -60,16 +62,16 @@ define([
      * @private
      */
     var buildModuleUrl = function(moduleID) {
-        if (typeof implementation === 'undefined') {
+        if (!defined(implementation)) {
             //select implementation
-            if (typeof require.toUrl !== 'undefined') {
+            if (defined(require.toUrl)) {
                 implementation = buildModuleUrlFromRequireToUrl;
             } else {
                 implementation = buildModuleUrlFromBaseUrl;
             }
         }
 
-        if (typeof a === 'undefined') {
+        if (!defined(a)) {
             a = document.createElement('a');
         }
 

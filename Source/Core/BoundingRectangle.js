@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartographic',
         './GeographicProjection',
         './Intersect'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartographic,
         GeographicProjection,
@@ -65,11 +67,11 @@ define([
      * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.fromPoints = function(positions, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingRectangle();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.x = 0;
             result.y = 0;
             result.width = 0;
@@ -116,11 +118,11 @@ define([
      * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided.
      */
     BoundingRectangle.fromExtent = function(extent, projection, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingRectangle();
         }
 
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             result.x = 0;
             result.y = 0;
             result.width = 0;
@@ -151,11 +153,11 @@ define([
      * @return {BoundingRectangle} The modified result parameter or a new BoundingRectangle instance if one was not provided. (Returns undefined if rectangle is undefined)
      */
     BoundingRectangle.clone = function(rectangle, result) {
-        if (typeof rectangle === 'undefined') {
+        if (!defined(rectangle)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new BoundingRectangle(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         }
 
@@ -179,15 +181,15 @@ define([
      * @exception {DeveloperError} right is required.
      */
     BoundingRectangle.union = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
 
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingRectangle();
         }
 
@@ -216,11 +218,11 @@ define([
      * @exception {DeveloperError} point is required.
      */
     BoundingRectangle.expand = function(rectangle, point, result) {
-        if (typeof rectangle === 'undefined') {
+        if (!defined(rectangle)) {
             throw new DeveloperError('rectangle is required.');
         }
 
-        if (typeof point === 'undefined') {
+        if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
 
@@ -258,11 +260,11 @@ define([
      * @exception {DeveloperError} right is required.
      */
     BoundingRectangle.intersect = function(left, right) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
 
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
 
@@ -291,8 +293,8 @@ define([
      */
     BoundingRectangle.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.x === right.x) &&
                 (left.y === right.y) &&
                 (left.width === right.width) &&

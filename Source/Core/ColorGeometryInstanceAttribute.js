@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './Color',
         './ComponentDatatype',
         './DeveloperError'
     ], function(
         defaultValue,
+        defined,
         Color,
         ComponentDatatype,
         DeveloperError) {
@@ -113,7 +115,7 @@ define([
      * });
      */
     ColorGeometryInstanceAttribute.fromColor = function(color) {
-        if (typeof color === 'undefined') {
+        if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
 
@@ -134,7 +136,7 @@ define([
      * attributes.color = ColorGeometryInstanceAttribute.toValue(Color.AQUA);
      */
     ColorGeometryInstanceAttribute.toValue = function(color) {
-        if (typeof color === 'undefined') {
+        if (!defined(color)) {
             throw new DeveloperError('color is required.');
         }
 

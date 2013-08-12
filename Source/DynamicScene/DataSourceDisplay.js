@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EventHelper',
@@ -17,6 +18,7 @@ define([
         './VisualizerCollection'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         EventHelper,
@@ -54,7 +56,7 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var DataSourceDisplay = function(scene, visualizerTypes) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
@@ -153,7 +155,7 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DataSourceDisplay.prototype.update = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 

@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../ThirdParty/Uri'
     ], function(
         defaultValue,
+        defined,
         Uri) {
     "use strict";
 
@@ -35,7 +37,7 @@ define([
          */
         unwrapInterval : function(czmlInterval, sourceUri) {
             var result = defaultValue(czmlInterval.image, czmlInterval);
-            if (typeof sourceUri !== 'undefined') {
+            if (defined(sourceUri)) {
                 var baseUri = new Uri(document.location.href);
                 sourceUri = new Uri(sourceUri);
                 result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();

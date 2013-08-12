@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defined',
         './Fullscreen'
     ], function(
+        defined,
         Fullscreen) {
     "use strict";
 
@@ -15,7 +17,7 @@ define([
     var isChromeResult;
     var chromeVersionResult;
     function isChrome() {
-        if (typeof isChromeResult === 'undefined') {
+        if (!defined(isChromeResult)) {
             var fields = (/ Chrome\/([\.0-9]+)/).exec(navigator.userAgent);
             if (fields === null) {
                 isChromeResult = false;
@@ -35,7 +37,7 @@ define([
     var isSafariResult;
     var safariVersionResult;
     function isSafari() {
-        if (typeof isSafariResult === 'undefined') {
+        if (!defined(isSafariResult)) {
             // Chrome contains Safari in the user agent too
             if (isChrome() || !(/ Safari\/[\.0-9]+/).test(navigator.userAgent)) {
                 isSafariResult = false;
@@ -60,7 +62,7 @@ define([
     var isWebkitResult;
     var webkitVersionResult;
     function isWebkit() {
-        if (typeof isWebkitResult === 'undefined') {
+        if (!defined(isWebkitResult)) {
             var fields = (/ AppleWebKit\/([\.0-9]+)(\+?)/).exec(navigator.userAgent);
             if (fields === null) {
                 isWebkitResult = false;
@@ -81,7 +83,7 @@ define([
     var isInternetExplorerResult;
     var internetExplorerVersionResult;
     function isInternetExplorer() {
-        if (typeof isInternetExplorerResult === 'undefined') {
+        if (!defined(isInternetExplorerResult)) {
             var fields = (/ MSIE ([\.0-9]+)/).exec(navigator.userAgent);
             if (fields === null) {
                 isInternetExplorerResult = false;
@@ -125,7 +127,7 @@ define([
      * @see <a href='http://www.w3.org/TR/cors/'>Cross-Origin Resource Sharing</a>
      */
     FeatureDetection.supportsCrossOriginImagery = function() {
-        if (typeof supportsCrossOriginImagery === 'undefined') {
+        if (!defined(supportsCrossOriginImagery)) {
             if (isSafari() && webkitVersion()[0] < 536) {
                 // versions of Safari below this incorrectly throw a DOM error when calling
                 // readPixels on a canvas containing a cross-origin image.

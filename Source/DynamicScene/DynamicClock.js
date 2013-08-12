@@ -4,12 +4,14 @@ define([
         '../Core/Iso8601',
         '../Core/ClockRange',
         '../Core/ClockStep',
+        '../Core/defined',
         '../Core/JulianDate'
     ], function(
         TimeInterval,
         Iso8601,
         ClockRange,
         ClockStep,
+        defined,
         JulianDate) {
     "use strict";
 
@@ -74,7 +76,7 @@ define([
      * @return {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
      */
     DynamicClock.prototype.clone = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new DynamicClock();
         }
         result.startTime = this.startTime;
@@ -104,32 +106,32 @@ define([
     DynamicClock.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var clockUpdated = false;
         var clockPacket = packet.clock;
-        if (typeof clockPacket !== 'undefined') {
+        if (defined(clockPacket)) {
             if (dynamicObject.id === 'document') {
                 var clock = dynamicObject.clock;
-                if (typeof clock === 'undefined') {
+                if (!defined(clock)) {
                     clock = new DynamicClock();
                     dynamicObject.clock = clock;
                     clockUpdated = true;
                 }
 
-                if (typeof clockPacket.interval !== 'undefined') {
+                if (defined(clockPacket.interval)) {
                     var interval = TimeInterval.fromIso8601(clockPacket.interval);
-                    if (typeof interval !== 'undefined') {
+                    if (defined(interval)) {
                         clock.startTime = interval.start;
                         clock.stopTime = interval.stop;
                     }
                 }
-                if (typeof clockPacket.currentTime !== 'undefined') {
+                if (defined(clockPacket.currentTime)) {
                     clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
                 }
-                if (typeof typeof clockPacket.range !== 'undefined') {
+                if (defined(typeof clockPacket.range)) {
                     clock.clockRange = ClockRange[clockPacket.range];
                 }
-                if (typeof clockPacket.step !== 'undefined') {
+                if (defined(clockPacket.step)) {
                     clock.clockStep = ClockStep[clockPacket.step];
                 }
-                if (typeof clockPacket.multiplier !== 'undefined') {
+                if (defined(clockPacket.multiplier)) {
                     clock.multiplier = clockPacket.multiplier;
                 }
             }
@@ -150,10 +152,10 @@ define([
      */
     DynamicClock.mergeProperties = function(targetObject, objectToMerge) {
         var clockToMerge = objectToMerge.clock;
-        if (typeof clockToMerge !== 'undefined') {
+        if (defined(clockToMerge)) {
 
             var targetClock = targetObject.clock;
-            if (typeof targetClock === 'undefined') {
+            if (!defined(targetClock)) {
                 targetClock = new DynamicClock();
                 targetObject.clock = targetClock;
             }

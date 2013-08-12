@@ -1,5 +1,7 @@
 /*global define*/
-define(function() {
+define(['../Core/defined'
+    ],function(
+        defined) {
     "use strict";
 
     /**
@@ -12,7 +14,7 @@ define(function() {
      */
     var ConstantProperty = function(value) {
         this._value = value;
-        this._clonable = typeof value !== 'undefined' && typeof value.clone === 'function';
+        this._clonable = defined(value) && typeof value.clone === 'function';
     };
 
     /**

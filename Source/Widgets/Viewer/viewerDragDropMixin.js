@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/Event',
@@ -11,6 +12,7 @@ define([
         '../getElement'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         defineProperties,
         Event,
@@ -49,7 +51,7 @@ define([
      * });
      */
     var viewerDragDropMixin = function(viewer, options) {
-        if (typeof viewer === 'undefined') {
+        if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
         if (viewer.hasOwnProperty('dropTarget')) {
@@ -88,7 +90,7 @@ define([
                     return dropTarget;
                 },
                 set : function(value) {
-                    if (typeof value === 'undefined') {
+                    if (!defined(value)) {
                         throw new DeveloperError('value is required.');
                     }
                     unsubscribe(dropTarget, handleDrop);
@@ -181,7 +183,7 @@ define([
 
     function unsubscribe(dropTarget, handleDrop) {
         var currentTarget = dropTarget;
-        if (typeof currentTarget !== 'undefined') {
+        if (defined(currentTarget)) {
             currentTarget.removeEventListener('drop', handleDrop, false);
             currentTarget.removeEventListener('dragenter', stop, false);
             currentTarget.removeEventListener('dragover', stop, false);
@@ -222,9 +224,9 @@ define([
                     viewer.dataSources.add(dataSource);
                     if (firstTime) {
                         var dataClock = dataSource.getClock();
-                        if (typeof dataClock !== 'undefined') {
+                        if (defined(dataClock)) {
                             dataClock.clone(viewer.clock);
-                            if (typeof viewer.timeline !== 'undefined') {
+                            if (defined(viewer.timeline)) {
                                 viewer.timeline.updateFromClock();
                                 viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
                             }

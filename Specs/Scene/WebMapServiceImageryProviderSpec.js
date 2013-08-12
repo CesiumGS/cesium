@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/WebMapServiceImageryProvider',
+         'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
          'Core/DefaultProxy',
@@ -14,6 +15,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          WebMapServiceImageryProvider,
+         defined,
          jsonp,
          loadImage,
          DefaultProxy,
@@ -210,7 +212,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -290,7 +292,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {

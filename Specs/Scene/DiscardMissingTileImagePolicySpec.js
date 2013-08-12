@@ -2,12 +2,14 @@
 defineSuite([
          'Scene/DiscardMissingTileImagePolicy',
          'Core/Cartesian2',
+         'Core/defined',
          'Core/loadImage',
          'Core/loadWithXhr',
          'ThirdParty/when'
      ], function(
          DiscardMissingTileImagePolicy,
          Cartesian2,
+         defined,
          loadImage,
          loadWithXhr,
          when) {
@@ -107,11 +109,11 @@ defineSuite([
             }, 'policy to become ready');
 
             waitsFor(function() {
-                return typeof redImage !== 'undefined';
+                return defined(redImage);
             });
 
             waitsFor(function() {
-                return typeof greenImage !== 'undefined';
+                return defined(greenImage);
             });
 
             runs(function() {
@@ -150,7 +152,7 @@ defineSuite([
             }, 'policy to become ready');
 
             waitsFor(function() {
-                return typeof transparentImage !== 'undefined';
+                return defined(transparentImage);
             });
 
             runs(function() {
@@ -182,7 +184,7 @@ defineSuite([
             }, 'policy to become ready');
 
             waitsFor(function() {
-                return typeof transparentImage !== 'undefined';
+                return defined(transparentImage);
             });
 
             runs(function() {

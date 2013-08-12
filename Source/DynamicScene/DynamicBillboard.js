@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -14,6 +15,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -124,106 +126,106 @@ define([
      */
     DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
-        if (typeof billboardData === 'undefined') {
+        if (!defined(billboardData)) {
             return false;
         }
 
         var billboardUpdated = false;
         var billboard = dynamicObject.billboard;
-        billboardUpdated = typeof billboard === 'undefined';
+        billboardUpdated = !defined(billboard);
         if (billboardUpdated) {
             dynamicObject.billboard = billboard = new DynamicBillboard();
         }
 
         var interval = billboardData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof billboardData.color !== 'undefined') {
+        if (defined(billboardData.color)) {
             var color = billboard.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 billboard.color = color = new DynamicProperty(CzmlColor);
                 billboardUpdated = true;
             }
             color.processCzmlIntervals(billboardData.color, interval);
         }
 
-        if (typeof billboardData.eyeOffset !== 'undefined') {
+        if (defined(billboardData.eyeOffset)) {
             var eyeOffset = billboard.eyeOffset;
-            if (typeof eyeOffset === 'undefined') {
+            if (!defined(eyeOffset)) {
                 billboard.eyeOffset = eyeOffset = new DynamicProperty(CzmlCartesian3);
                 billboardUpdated = true;
             }
             eyeOffset.processCzmlIntervals(billboardData.eyeOffset, interval);
         }
 
-        if (typeof billboardData.horizontalOrigin !== 'undefined') {
+        if (defined(billboardData.horizontalOrigin)) {
             var horizontalOrigin = billboard.horizontalOrigin;
-            if (typeof horizontalOrigin === 'undefined') {
+            if (!defined(horizontalOrigin)) {
                 billboard.horizontalOrigin = horizontalOrigin = new DynamicProperty(CzmlHorizontalOrigin);
                 billboardUpdated = true;
             }
             horizontalOrigin.processCzmlIntervals(billboardData.horizontalOrigin, interval);
         }
 
-        if (typeof billboardData.image !== 'undefined') {
+        if (defined(billboardData.image)) {
             var image = billboard.image;
-            if (typeof image === 'undefined') {
+            if (!defined(image)) {
                 billboard.image = image = new DynamicProperty(CzmlImage);
                 billboardUpdated = true;
             }
             image.processCzmlIntervals(billboardData.image, interval, sourceUri);
         }
 
-        if (typeof billboardData.pixelOffset !== 'undefined') {
+        if (defined(billboardData.pixelOffset)) {
             var pixelOffset = billboard.pixelOffset;
-            if (typeof pixelOffset === 'undefined') {
+            if (!defined(pixelOffset)) {
                 billboard.pixelOffset = pixelOffset = new DynamicProperty(CzmlCartesian2);
                 billboardUpdated = true;
             }
             pixelOffset.processCzmlIntervals(billboardData.pixelOffset, interval);
         }
 
-        if (typeof billboardData.scale !== 'undefined') {
+        if (defined(billboardData.scale)) {
             var scale = billboard.scale;
-            if (typeof scale === 'undefined') {
+            if (!defined(scale)) {
                 billboard.scale = scale = new DynamicProperty(CzmlNumber);
                 billboardUpdated = true;
             }
             scale.processCzmlIntervals(billboardData.scale, interval);
         }
 
-        if (typeof billboardData.rotation !== 'undefined') {
+        if (defined(billboardData.rotation)) {
             var rotation = billboard.rotation;
-            if (typeof rotation === 'undefined') {
+            if (!defined(rotation)) {
                 billboard.rotation = rotation = new DynamicProperty(CzmlNumber);
                 billboardUpdated = true;
             }
             rotation.processCzmlIntervals(billboardData.rotation, interval);
         }
 
-        if (typeof billboardData.alignedAxis !== 'undefined') {
+        if (defined(billboardData.alignedAxis)) {
             var alignedAxis = billboard.alignedAxis;
-            if (typeof alignedAxis === 'undefined') {
+            if (!defined(alignedAxis)) {
                 billboard.alignedAxis = alignedAxis = new DynamicProperty(CzmlCartesian3);
                 billboardUpdated = true;
             }
             alignedAxis.processCzmlIntervals(billboardData.alignedAxis, interval);
         }
 
-        if (typeof billboardData.show !== 'undefined') {
+        if (defined(billboardData.show)) {
             var show = billboard.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 billboard.show = show = new DynamicProperty(CzmlBoolean);
                 billboardUpdated = true;
             }
             show.processCzmlIntervals(billboardData.show, interval);
         }
 
-        if (typeof billboardData.verticalOrigin !== 'undefined') {
+        if (defined(billboardData.verticalOrigin)) {
             var verticalOrigin = billboard.verticalOrigin;
-            if (typeof verticalOrigin === 'undefined') {
+            if (!defined(verticalOrigin)) {
                 billboard.verticalOrigin = verticalOrigin = new DynamicProperty(CzmlVerticalOrigin);
                 billboardUpdated = true;
             }
@@ -247,10 +249,10 @@ define([
      */
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
-        if (typeof billboardToMerge !== 'undefined') {
+        if (defined(billboardToMerge)) {
 
             var targetBillboard = targetObject.billboard;
-            if (typeof targetBillboard === 'undefined') {
+            if (!defined(targetBillboard)) {
                 targetObject.billboard = targetBillboard = new DynamicBillboard();
             }
 

@@ -2,6 +2,7 @@
 define([
         './freezeObject',
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './Math',
@@ -10,6 +11,7 @@ define([
        ], function(
          freezeObject,
          defaultValue,
+         defined,
          DeveloperError,
          Ellipsoid,
          CesiumMath,
@@ -214,7 +216,7 @@ define([
         this._distance = undefined;
         this._uSquared = undefined;
 
-        if (typeof start !== 'undefined' && typeof end !== 'undefined') {
+        if (defined(start) && defined(end)) {
             computeProperties(this, start, end, e);
         }
     };
@@ -227,7 +229,7 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getSurfaceDistance = function() {
-        if (typeof this._distance === 'undefined') {
+        if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getSurfaceDistance');
         }
 
@@ -245,10 +247,10 @@ define([
      * @exception {DeveloperError} end cartographic position is required
      */
     EllipsoidGeodesic.prototype.setEndPoints = function(start, end) {
-        if (typeof start === 'undefined') {
+        if (!defined(start)) {
             throw new DeveloperError('start cartographic position is required');
         }
-        if (typeof end === 'undefined') {
+        if (!defined(end)) {
             throw new DeveloperError('end cartgraphic position is required');
         }
 
@@ -279,7 +281,7 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
     EllipsoidGeodesic.prototype.getStartHeading = function() {
-        if (typeof this._distance === 'undefined') {
+        if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getStartHeading');
         }
 
@@ -294,7 +296,7 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton getEndHeading
      */
     EllipsoidGeodesic.prototype.getEndHeading = function() {
-        if (typeof this._distance === 'undefined') {
+        if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton getEndHeading');
         }
 
@@ -324,7 +326,7 @@ define([
      * @exception {DeveloperError} start and end must be set before calling funciton interpolateUsingSurfaceDistance
      */
     EllipsoidGeodesic.prototype.interpolateUsingSurfaceDistance = function(distance, result) {
-        if (typeof this._distance === 'undefined') {
+        if (!defined(this._distance)) {
             throw new DeveloperError('start and end must be set before calling funciton interpolateUsingSurfaceDistance');
         }
 
@@ -377,7 +379,7 @@ define([
         var l = lambda - computeDeltaLambda(constants.f, constants.sineAlpha, constants.cosineSquaredAlpha,
             sigma, sineSigma, cosineSigma, cosineTwiceSigmaMidpoint);
 
-        if (typeof result !== 'undefined') {
+        if (defined(result)) {
             result.longitude = this._start.longitude + l;
             result.latitude = latitude;
             result.height = 0.0;

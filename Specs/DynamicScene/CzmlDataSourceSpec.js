@@ -4,6 +4,7 @@ defineSuite([
         'DynamicScene/DynamicObjectCollection',
         'Core/ClockRange',
         'Core/ClockStep',
+        'Core/defined',
         'Core/Event',
         'Core/loadJson',
         'Core/JulianDate',
@@ -14,6 +15,7 @@ defineSuite([
         DynamicObjectCollection,
         ClockRange,
         ClockStep,
+        defined,
         Event,
         loadJson,
         JulianDate,
@@ -156,7 +158,7 @@ defineSuite([
 
     it('process loads expected data', function() {
         waitsFor(function() {
-            return typeof simple !== 'undefined';
+            return defined(simple);
         });
 
         runs(function() {
@@ -168,7 +170,7 @@ defineSuite([
 
     it('process loads data on top of existing', function() {
         waitsFor(function() {
-            return typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
+            return defined(simple !== 'undefined' && typeof vehicle);
         });
 
         runs(function() {
@@ -183,7 +185,7 @@ defineSuite([
 
     it('load replaces data', function() {
         waitsFor(function() {
-            return typeof simple !== 'undefined' && typeof vehicle !== 'undefined';
+            return defined(simple !== 'undefined' && typeof vehicle);
         });
 
         runs(function() {

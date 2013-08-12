@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/GeometryInstance',
@@ -10,6 +11,7 @@ define([
         './PerInstanceColorAppearance'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
@@ -49,7 +51,7 @@ define([
         var instances = [];
 
         var geometry = options.geometry;
-        if (typeof geometry === 'undefined') {
+        if (!defined(geometry)) {
             throw new DeveloperError('options.geometry is required.');
         }
 
@@ -57,7 +59,7 @@ define([
         var modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         var length = defaultValue(options.length, 10000.0);
 
-        if (typeof attributes.normal !== 'undefined') {
+        if (defined(attributes.normal)) {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'normal', length),
               attributes : {
@@ -67,7 +69,7 @@ define([
             }));
         }
 
-        if (typeof attributes.binormal !== 'undefined') {
+        if (defined(attributes.binormal)) {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'binormal', length),
               attributes : {
@@ -77,7 +79,7 @@ define([
             }));
         }
 
-        if (typeof attributes.tangent !== 'undefined') {
+        if (defined(attributes.tangent)) {
             instances.push(new GeometryInstance({
               geometry : GeometryPipeline.createLineSegmentsForVectors(geometry, 'tangent', length),
               attributes : {
