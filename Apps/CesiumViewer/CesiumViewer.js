@@ -99,13 +99,6 @@ define([
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
 
-                    var dataClock = source.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        viewer.timeline.updateFromClock();
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                    }
-
                     if (typeof endUserOptions.lookAt !== 'undefined') {
                         var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
                         if (typeof dynamicObject !== 'undefined') {
