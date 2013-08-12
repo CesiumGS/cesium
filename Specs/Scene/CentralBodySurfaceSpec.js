@@ -399,7 +399,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (!defined(uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha)) {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 
@@ -458,7 +458,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (!defined(uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha)) {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 
@@ -501,7 +501,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (!defined(uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha)) {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 

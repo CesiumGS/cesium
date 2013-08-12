@@ -16,7 +16,7 @@ define([
             return baseUrl;
         }
 
-        if (defined(CESIUM_BASE_URL)) {
+        if (typeof CESIUM_BASE_URL !== 'undefined') {
             baseUrl = CESIUM_BASE_URL;
         } else {
             var cesiumScriptRegex = /(.*?)Cesium\w*\.js(?:\W|$)/i;

@@ -449,7 +449,7 @@ define([
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
-                    if (!defined(description.direction) && defined(description.up)){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = position.negate(dirScratch).normalize(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
                     } else {
@@ -458,7 +458,7 @@ define([
                     }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
-                    if (!defined(description.direction) && defined(description.up)){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
                     } else {
