@@ -36,8 +36,8 @@ define([
      * @param {Number} options.length The length of the cylinder.
      * @param {Number} options.topRadius The radius of the top of the cylinder.
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
-     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder.
-     * @param {Number} [options.lateralSurfaceLines = 10] Number of lines to draw between the top and bottom surfaces of the cylinder.
+     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
+     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom surfaces of the cylinder.
      *
      * @exception {DeveloperError} options.length must be greater than 0.
      * @exception {DeveloperError} options.topRadius must be greater than 0.
@@ -73,12 +73,12 @@ define([
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
 
-        var slices = defaultValue(options.slices, 100);
+        var slices = defaultValue(options.slices, 128);
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
         }
 
-        var lateralSurfaceLines = Math.max(defaultValue(options.lateralSurfaceLines, 10), 0);
+        var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
         var topZ = length * 0.5;
         var bottomZ = -topZ;
@@ -109,8 +109,8 @@ define([
         }
         var numIndices = slices * 2;
         var numSide;
-        if (lateralSurfaceLines > 0) {
-            var numSideLines = Math.min(lateralSurfaceLines, slices);
+        if (numberOfVerticalLines > 0) {
+            var numSideLines = Math.min(numberOfVerticalLines, slices);
             numSide = Math.round(slices/numSideLines);
             numIndices += numSideLines;
         }
@@ -129,7 +129,7 @@ define([
         indices[index++] = slices + slices - 1;
         indices[index++] = slices;
 
-        if (lateralSurfaceLines > 0) {
+        if (numberOfVerticalLines > 0) {
             for (i = 0; i < slices; i+= numSide){
                 indices[index++] = i;
                 indices[index++] = i + slices;

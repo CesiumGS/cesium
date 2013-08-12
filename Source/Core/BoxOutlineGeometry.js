@@ -54,11 +54,8 @@ define([
         }
 
         var attributes = new GeometryAttributes();
-        var indices;
-        var positions;
-
-        // Positions only - no need to duplicate corner points
-        positions = new Float64Array(8 * 3);
+        var indices = new Uint16Array(12 * 2);
+        var positions = new Float64Array(8 * 3);
 
         positions[0] = min.x;
         positions[1] = min.y;
@@ -91,8 +88,6 @@ define([
             componentsPerAttribute : 3,
             values : positions
         });
-
-        indices = new Uint16Array(12 * 2);
 
         // top
         indices[0] = 4;

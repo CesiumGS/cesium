@@ -95,7 +95,7 @@ defineSuite([
             topRadius: 1,
             bottomRadius: 1,
             slices: 3,
-            lateralSurfaceLines: 0
+            numberOfVerticalLines: 0
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 2);

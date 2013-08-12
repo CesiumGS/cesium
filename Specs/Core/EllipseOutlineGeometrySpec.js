@@ -95,7 +95,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);
-        expect(m.indices.length).toEqual(2 * 10 * 2 + (10 *2));
+        expect(m.indices.length).toEqual(2 * 10 * 2 + (16 *2));
     });
 
     it('computes positions extruded, no lines drawn between top and bottom', function() {
@@ -107,7 +107,7 @@ defineSuite([
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
-            lateralSurfaceLines : 0
+            numberOfVerticalLines : 0
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);

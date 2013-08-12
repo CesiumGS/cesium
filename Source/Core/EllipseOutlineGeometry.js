@@ -212,8 +212,8 @@ define([
     var topBoundingSphere = new BoundingSphere();
     var bottomBoundingSphere = new BoundingSphere();
     function computeExtrudedEllipse(options) {
-        var lateralSurfaceLines = defaultValue(options.lateralSurfaceLines, 10);
-        lateralSurfaceLines = Math.max(lateralSurfaceLines, 0);
+        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+        numberOfVerticalLines = Math.max(numberOfVerticalLines, 0);
 
         var center = options.center;
         var ellipsoid = options.ellipsoid;
@@ -231,7 +231,7 @@ define([
         positions = attributes.position.values;
         var boundingSphere = BoundingSphere.union(topBoundingSphere, bottomBoundingSphere);
         var length = positions.length/3;
-        var indices = IndexDatatype.createTypedArray(length, length * 2 + lateralSurfaceLines * 2);
+        var indices = IndexDatatype.createTypedArray(length, length * 2 + numberOfVerticalLines * 2);
 
         length /= 2;
         var index = 0;
@@ -247,12 +247,12 @@ define([
         indices[index++] = length;
 
         var numSide;
-        if (lateralSurfaceLines > 0) {
-            var numSideLines = Math.min(lateralSurfaceLines, length);
+        if (numberOfVerticalLines > 0) {
+            var numSideLines = Math.min(numberOfVerticalLines, length);
             numSide = Math.round(length/numSideLines);
         }
         var maxI = Math.min(numSide*10, length);
-        if (lateralSurfaceLines > 0) {
+        if (numberOfVerticalLines > 0) {
             for (i = 0; i < maxI; i+= numSide){
                 indices[index++] = i;
                 indices[index++] = i + length;
@@ -281,7 +281,7 @@ define([
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
-     * @param {Number} [options.lateralSurfaceLines = 10] Number of lines to draw between the top and bottom surface of an extruded ellipse.
+     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom surface of an extruded ellipse.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} semiMajorAxis is required.
@@ -337,7 +337,7 @@ define([
             height : defaultValue(options.height, 0.0),
             granularity : defaultValue(options.granularity, 0.02),
             extrudedHeight : options.extrudedHeight,
-            lateralSurfaceLines : Math.max(defaultValue(options.lateralSurfaceLines, 10), 0)
+            numberOfVerticalLines : Math.max(defaultValue(options.numberOfVerticalLines, 16), 0)
         };
 
         if (newOptions.granularity <= 0.0) {
@@ -356,7 +356,6 @@ define([
         } else {
             ellipseGeometry = computeEllipse(newOptions);
         }
-
 
         /**
          * An object containing {@link GeometryAttribute} position property.
