@@ -111,7 +111,7 @@ define([
         var subdividedPositions = [];
         var length = cleanedPositions.length;
         var i;
-        var corners = new Array(subdividedPositions.length);
+        var corners = new Array(length);
         corners[0] = 0;
         for (i = 0; i < length-1; i++) {
             subdividedPositions = subdividedPositions.concat(PolygonGeometryLibrary.subdivideLine(cleanedPositions[i], cleanedPositions[i+1], granularity));

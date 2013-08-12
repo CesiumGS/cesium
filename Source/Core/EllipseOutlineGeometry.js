@@ -115,7 +115,7 @@ define([
             var numSideLines = Math.min(numberOfVerticalLines, length);
             numSide = Math.round(length/numSideLines);
         }
-        var maxI = Math.min(numSide*10, length);
+        var maxI = Math.min(numSide*numberOfVerticalLines, length);
         if (numberOfVerticalLines > 0) {
             for (i = 0; i < maxI; i+= numSide){
                 indices[index++] = i;
