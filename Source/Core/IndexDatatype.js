@@ -9,6 +9,12 @@ define([
         CesiumMath) {
     "use strict";
 
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (typeof Int8Array === 'undefined') {
+        return {};
+    }
+
     /**
      * Enumerations for WebGL index datatypes.  These corresponds to the
      * <code>type</code> parameter of <a href="http://www.khronos.org/opengles/sdk/docs/man/xhtml/glDrawElements.xml">drawElements</a>.
@@ -25,7 +31,9 @@ define([
          * @constant
          * @default 0x1401
          */
-        UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE'),
+        UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE', {
+            sizeInBytes : Uint8Array.BYTES_PER_ELEMENT
+        }),
 
         /**
          * 16-bit unsigned short enumeration corresponding to <code>UNSIGNED_SHORT</code> and the type
@@ -35,7 +43,9 @@ define([
          * @constant
          * @default 0x1403
          */
-        UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT'),
+        UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT', {
+            sizeInBytes : Uint16Array.BYTES_PER_ELEMENT
+        }),
 
         /**
          * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
@@ -46,12 +56,10 @@ define([
          * @constant
          * @type {Enumeration}
          */
-        UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT')
+        UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
+            sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
+        })
     };
-
-    IndexDatatype.UNSIGNED_BYTE.sizeInBytes = Uint8Array.BYTES_PER_ELEMENT;
-    IndexDatatype.UNSIGNED_SHORT.sizeInBytes = Uint16Array.BYTES_PER_ELEMENT;
-    IndexDatatype.UNSIGNED_INT.sizeInBytes = Uint32Array.BYTES_PER_ELEMENT;
 
     /**
      * Validates that the provided index datatype is a valid {@link IndexDatatype}
@@ -66,9 +74,9 @@ define([
      * }
      */
     IndexDatatype.validate = function(indexDatatype) {
-        return ((indexDatatype === IndexDatatype.UNSIGNED_BYTE) ||
-                (indexDatatype === IndexDatatype.UNSIGNED_SHORT) ||
-                (indexDatatype === IndexDatatype.UNSIGNED_INT));
+        return indexDatatype === IndexDatatype.UNSIGNED_BYTE ||
+               indexDatatype === IndexDatatype.UNSIGNED_SHORT ||
+               indexDatatype === IndexDatatype.UNSIGNED_INT;
     };
 
     /**

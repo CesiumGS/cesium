@@ -16,6 +16,10 @@ define([
         '../Core/Matrix4',
         '../Core/JulianDate',
         '../Core/RuntimeError',
+        '../Core/EllipsoidGeometry',
+        '../Core/GeometryInstance',
+        '../Core/GeometryPipeline',
+        '../Core/ColorGeometryInstanceAttribute',
         '../Renderer/Context',
         '../Renderer/ClearCommand',
         '../Renderer/PassState',
@@ -29,6 +33,8 @@ define([
         './OrthographicFrustum',
         './PerspectiveOffCenterFrustum',
         './FrustumCommands',
+        './Primitive',
+        './PerInstanceColorAppearance',
         './SunPostProcess',
         './CreditDisplay'
     ], function(
@@ -48,6 +54,10 @@ define([
         Matrix4,
         JulianDate,
         RuntimeError,
+        EllipsoidGeometry,
+        GeometryInstance,
+        GeometryPipeline,
+        ColorGeometryInstanceAttribute,
         Context,
         ClearCommand,
         PassState,
@@ -61,6 +71,8 @@ define([
         OrthographicFrustum,
         PerspectiveOffCenterFrustum,
         FrustumCommands,
+        Primitive,
+        PerInstanceColorAppearance,
         SunPostProcess,
         CreditDisplay) {
     "use strict";
@@ -126,10 +138,12 @@ define([
 
         this._clearColorCommand = new ClearCommand();
         this._clearColorCommand.color = new Color();
+        this._clearColorCommand.owner = true;
 
         var clearDepthStencilCommand = new ClearCommand();
         clearDepthStencilCommand.depth = 1.0;
         clearDepthStencilCommand.stencil = 1.0;
+        clearDepthStencilCommand.owner = this;
         this._clearDepthStencilCommand = clearDepthStencilCommand;
 
         /**
@@ -200,11 +214,49 @@ define([
          */
         this.farToNearRatio = 1000.0;
 
+        /**
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * A function that determines what commands are executed.  As shown in the examples below,
+         * the function receives the command's <code>owner</code> as an argument, and returns a boolean indicating if the
+         * command should be executed.
+         * </p>
+         * <p>
+         * The default is <code>undefined</code>, indicating that all commands are executed.
+         * </p>
+         *
+         * @type Function
+         *
+         * @default undefined
+         *
+         * @example
+         * // Do not execute any commands.
+         * scene.debugCommandFilter = function(command) {
+         *     return false;
+         * };
+         *
+         * // Execute only the billboard's commands.  That is, only draw the billboard.
+         * var billboards = new BillboardCollection();
+         * scene.debugCommandFilter = function(command) {
+         *     return command.owner === billboards;
+         * };
+         *
+         * @see DrawCommand
+         * @see ClearCommand
+         */
+        this.debugCommandFilter = undefined;
+
+        this._debugSphere = undefined;
+
         // initial guess at frustums.
         var near = this._camera.frustum.near;
         var far = this._camera.frustum.far;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
         updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList);
+
+        // give frameState, camera, and screen space camera controller initial state before rendering
+        updateFrameState(this, 0.0, new JulianDate());
+        this.initializeFrame();
     };
 
     /**
@@ -312,7 +364,11 @@ define([
         for (var m = 0; m < numFrustums; ++m) {
             var curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
             var curFar = Math.min(far, farToNearRatio * curNear);
-            curNear *= 0.99;
+
+            if (m !== 0) {
+                // Avoid tearing artifacts between adjacent frustums
+                curNear *= 0.99;
+            }
 
             var frustumCommands = frustumCommandsList[m];
             if (typeof frustumCommands === 'undefined') {
@@ -332,15 +388,28 @@ define([
             var curNear = frustumCommands.near;
             var curFar = frustumCommands.far;
 
-            if (typeof distance !== 'undefined') {
-                if (distance.start > curFar) {
-                    continue;
-                }
-
-                if (distance.stop < curNear) {
-                    break;
-                }
+            if (distance.start > curFar) {
+                continue;
             }
+
+            if (distance.stop < curNear) {
+                break;
+            }
+
+            // PERFORMANCE_IDEA: sort bins
+            frustumCommands.commands[frustumCommands.index++] = command;
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
+        }
+    }
+
+    function insertIntoAllBins(scene, command) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+        for (var i = 0; i < length; ++i) {
+            var frustumCommands = frustumCommandsList[i];
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands[frustumCommands.index++] = command;
@@ -410,7 +479,7 @@ define([
                     // If another command has no bounding volume, though, we need to use the camera's
                     // worst-case near and far planes to avoid clipping something important.
                     undefBV = !(command instanceof ClearCommand);
-                    insertIntoBin(scene, command);
+                    insertIntoAllBins(scene, command);
                 }
             }
         }
@@ -434,6 +503,46 @@ define([
                 (near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
+        }
+    }
+
+    function executeCommand(command, scene, context, passState) {
+        if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
+            return;
+        }
+
+        command.execute(context, passState);
+
+        if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
+            // Debug code to draw bounding volume for command.  Not optimized!
+            // Assumes bounding volume is a bounding sphere.
+
+            if (typeof scene._debugSphere === 'undefined') {
+                var geometry = new EllipsoidGeometry({
+                    ellipsoid : Ellipsoid.UNIT_SPHERE,
+                    numberOfPartitions : 20,
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                });
+                scene._debugSphere = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : GeometryPipeline.toWireframe(geometry),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    })
+                });
+            }
+
+            var m = Matrix4.multiplyByTranslation(defaultValue(command.modelMatrix, Matrix4.IDENTITY), command.boundingVolume.center);
+            scene._debugSphere.modelMatrix = Matrix4.multiplyByUniformScale(Matrix4.fromTranslation(Cartesian3.fromArray(m, 12)), command.boundingVolume.radius);
+
+            var commandList = [];
+            scene._debugSphere.update(context, scene._frameState, commandList);
+            commandList[0].colorList[0].execute(context, passState);
         }
     }
 
@@ -486,11 +595,11 @@ define([
         us.updateFrustum(frustum);
 
         if (typeof skyBoxCommand !== 'undefined') {
-            skyBoxCommand.execute(context, passState);
+            executeCommand(skyBoxCommand, scene, context, passState);
         }
 
         if (typeof skyAtmosphereCommand !== 'undefined') {
-            skyAtmosphereCommand.execute(context, passState);
+            executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
         if (typeof sunCommand !== 'undefined' && sunVisible) {
@@ -516,7 +625,7 @@ define([
             var commands = frustumCommands.commands;
             var length = frustumCommands.index;
             for (var j = 0; j < length; ++j) {
-                commands[j].execute(context, passState);
+                executeCommand(commands[j], scene, context, passState);
             }
         }
     }
@@ -769,6 +878,7 @@ define([
         this._primitives = this._primitives && this._primitives.destroy();
         this.skyBox = this.skyBox && this.skyBox.destroy();
         this.skyAtmosphere = this.skyAtmosphere && this.skyAtmosphere.destroy();
+        this._debugSphere = this._debugSphere && this._debugSphere.destroy();
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._context = this._context && this._context.destroy();

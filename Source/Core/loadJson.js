@@ -1,29 +1,31 @@
 /*global define*/
 define([
         './clone',
-        './defaultValue',
+        './defined',
         './loadText',
         './DeveloperError'
     ], function(
         clone,
-        defaultValue,
+        defined,
         loadText,
         DeveloperError) {
     "use strict";
 
+    // note: &#42;&#47;&#42; below is */* but that ends the comment block early
     /**
      * Asynchronously loads the given URL as JSON.  Returns a promise that will resolve to
      * a JSON object once loaded, or reject if the URL failed to load.  The data is loaded
      * using XMLHttpRequest, which means that in order to make requests to another origin,
      * the server must have Cross-Origin Resource Sharing (CORS) headers enabled. This function
-     * always adds 'Accept: application/json' to the request headers.
+     * adds 'Accept: application/json,&#42;&#47;&#42;;q=0.01' to the request headers, if not
+     * already specified.
      *
      * @exports loadJson
      *
      * @param {String|Promise} url The URL to request, or a promise for the URL.
      * @param {Object} [headers] HTTP headers to send with the request.
-     * 'Accept: application/json' is added to the request headers automatically
-     * and does not need to be specified.
+     * 'Accept: application/json,&#42;&#47;&#42;;q=0.01' is added to the request headers automatically
+     * if not specified.
      * @returns {Promise} a promise that will resolve to the requested data when loaded.
      *
      * @exception {DeveloperError} url is required.
@@ -40,13 +42,15 @@ define([
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
      */
     var loadJson = function loadJson(url, headers) {
-        if (typeof url === 'undefined') {
+        if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 
-        // make a copy of headers to allow us to change values before passing to computeVertices
-        headers = clone(defaultValue(headers, defaultValue.EMPTY_OBJECT));
-        headers.Accept = 'application/json';
+        if (defined(headers) && !defined(headers.Accept)) {
+            // clone before adding the Accept header
+            headers = clone(headers);
+            headers.Accept = 'application/json,*/*;q=0.01';
+        }
 
         return loadText(url, headers).then(function(value) {
             return JSON.parse(value);

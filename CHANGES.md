@@ -4,6 +4,19 @@ Change Log
 Beta Releases
 -------------
 
+### b20 - 2013-09-01
+
+* Breaking changes:
+    * ...
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
+* Optimized polyline bounding spheres.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Added `EllipsoidGeodesic`
+* Improved `WallGeometry` to follow the curvature of the earth.
+* Added `PolylinePipeline.scaleToSurface`.
+* Added `PolylinePipeline.scaleToGeodeticHeight`.
+* Added `Scene.drillPick` to return list of all primitives at a screen space position.
+
 ### b19 - 2013-08-01
 
 * Breaking changes:
@@ -26,20 +39,20 @@ Beta Releases
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
    * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
-* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
 * Added `ExtentPrimitive`.
-* Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added `PolylinePipeline.removeDuplicates`.
 * Added `barycentricCoordinates` to compute the barycentric coordinates of a point in a triangle.
 * Added `BoundingSphere.fromEllipsoid`.
 * Added `BoundingSphere.projectTo2D`.
 * Added `Extent.fromDegrees`.
 * Added `czm_tangentToEyeSpaceMatrix` built-in GLSL function.
-* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Added debugging aids for low-level rendering: `DrawCommand.debugShowBoundingVolume` and `Scene.debugCommandFilter`.
 * Added extrusion to `ExtentGeometry`.
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
-* Added `Scene.drillPick` to return list of all primitives at a screen space position.
+* Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
+* Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
 
 ### b18 - 2013-07-01
 

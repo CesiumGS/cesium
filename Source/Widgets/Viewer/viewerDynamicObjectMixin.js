@@ -6,6 +6,7 @@ define([
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
+        '../../Scene/SceneMode',
         '../../DynamicScene/DynamicObjectView'
     ], function(
         defaultValue,
@@ -14,6 +15,7 @@ define([
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
+        SceneMode,
         DynamicObjectView) {
     "use strict";
 
@@ -32,9 +34,9 @@ define([
      *
      * @example
      * // Add support for working with DynamicObject instances to the Viewer.
-     * var dynamicObject = ... //A DynamicObject instance
-     * var viewer = new Viewer('cesiumContainer');
-     * viewer.extend(viewerDynamicObjectMixin);
+     * var dynamicObject = ... //A Cesium.DynamicObject instance
+     * var viewer = new Cesium.Viewer('cesiumContainer');
+     * viewer.extend(Cesium.viewerDynamicObjectMixin);
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
@@ -94,7 +96,15 @@ define([
                         trackedObject = value;
                         dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
-                    viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    var sceneMode = viewer.scene.getFrameState().mode;
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
+                    }
+
+                    if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
+                        viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                    }
                 }
             }
         });
