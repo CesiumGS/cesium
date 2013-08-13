@@ -3,6 +3,7 @@ define([
         '../Core/clone',
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -14,6 +15,7 @@ define([
         clone,
         Color,
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -147,7 +149,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = typeof options.material !== 'undefined' ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * The color of the polyline where the sensor outline intersects the central body.  The default is {@link Color.WHITE}.

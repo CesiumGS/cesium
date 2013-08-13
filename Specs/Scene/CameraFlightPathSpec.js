@@ -573,7 +573,7 @@ defineSuite([
 
         expect(flight.duration).toEqual(duration);
         expect(flight.onComplete).not.toEqual(onComplete);
-        expect(typeof flight.onUpdate).toEqual('undefined');
+        expect(flight.onUpdate).toBeUndefined();
         expect(frameState.camera.position).not.toEqual(destination);
         flight.onComplete();
         expect(frameState.camera.position).toEqual(destination);

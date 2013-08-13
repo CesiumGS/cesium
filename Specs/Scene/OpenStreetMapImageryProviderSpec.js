@@ -2,6 +2,7 @@
 defineSuite([
          'Scene/OpenStreetMapImageryProvider',
          'Core/jsonp',
+         'Core/defined',
          'Core/loadImage',
          'Core/DefaultProxy',
          'Core/Extent',
@@ -14,6 +15,7 @@ defineSuite([
      ], function(
          OpenStreetMapImageryProvider,
          jsonp,
+         defined,
          loadImage,
          DefaultProxy,
          Extent,
@@ -123,7 +125,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -174,7 +176,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {

@@ -1,9 +1,11 @@
 /*global define*/
 define([
-        '../../Core/Color'
+        '../../Core/Color',
+        '../../Core/defined'
        ],
         function(
-         Color) {
+         Color,
+         defined) {
     "use strict";
 
     function TimelineTrack(interval, pixelHeight, color, backgroundColor) {
@@ -30,9 +32,9 @@ define([
             var start, stop;
             for (x = 0; x < renderState.timeBarWidth; ++x) {
                 var currentTime = renderState.startJulian.addSeconds((x / renderState.timeBarWidth) * renderState.duration);
-                if (typeof start === 'undefined' && currentTime.greaterThanOrEquals(startInterval)) {
+                if (!defined(start) && currentTime.greaterThanOrEquals(startInterval)) {
                     start = x;
-                } else if (typeof stop === 'undefined' && currentTime.greaterThanOrEquals(stopInterval)) {
+                } else if (!defined(stop) && currentTime.greaterThanOrEquals(stopInterval)) {
                     stop = x;
                 }
             }
@@ -40,8 +42,8 @@ define([
             context.fillStyle = this.backgroundColor.toCssColorString();
             context.fillRect(0, renderState.y, renderState.timeBarWidth, this.height);
 
-            if (typeof start !== 'undefined') {
-                if (typeof stop === 'undefined') {
+            if (defined(start)) {
+                if (!defined(stop)) {
                     stop = renderState.timeBarWidth;
                 }
                 context.fillStyle = this.color.toCssColorString();

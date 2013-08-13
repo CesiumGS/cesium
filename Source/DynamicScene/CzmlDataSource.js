@@ -2,6 +2,7 @@
 define([
         '../Core/ClockRange',
         '../Core/ClockStep',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/Iso8601',
@@ -13,6 +14,7 @@ define([
     ], function(
         ClockRange,
         ClockStep,
+        defined,
         DeveloperError,
         Event,
         Iso8601,
@@ -30,7 +32,7 @@ define([
 
         var clock;
         var documentObject = dynamicObjectCollection.getObject('document');
-        if (typeof documentObject !== 'undefined' && typeof documentObject.clock !== 'undefined') {
+        if (defined(documentObject) && defined(documentObject.clock)) {
             clock = new DynamicClock();
             clock.startTime = documentObject.clock.startTime;
             clock.stopTime = documentObject.clock.stopTime;
@@ -128,7 +130,7 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.process = function(czml, source) {
-        if (typeof czml === 'undefined') {
+        if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
 
@@ -144,7 +146,7 @@ define([
      * @exception {DeveloperError} czml is required.
      */
     CzmlDataSource.prototype.load = function(czml, source) {
-        if (typeof czml === 'undefined') {
+        if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
 
@@ -162,7 +164,7 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.processUrl = function(url) {
-        if (typeof url === 'undefined') {
+        if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 
@@ -185,7 +187,7 @@ define([
      * @exception {DeveloperError} url is required.
      */
     CzmlDataSource.prototype.loadUrl = function(url) {
-        if (typeof url === 'undefined') {
+        if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 

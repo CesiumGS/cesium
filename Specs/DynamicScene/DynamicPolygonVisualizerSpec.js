@@ -124,7 +124,7 @@ defineSuite([
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var primitive = scene.getPrimitives().get(0);
-        expect(typeof primitive.getPositions()).toEqual('undefined');
+        expect(primitive.getPositions()).toBeUndefined();
     });
 
     it('DynamicPolygon with ellipse and position creates a primitive and updates it.', function() {

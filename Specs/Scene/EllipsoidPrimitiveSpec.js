@@ -8,6 +8,7 @@ defineSuite([
          'Specs/pick',
          'Specs/render',
          'Core/Cartesian3',
+         'Core/defined',
          'Core/Matrix4',
          'Renderer/ClearCommand',
          'Scene/Material'
@@ -20,6 +21,7 @@ defineSuite([
          pick,
          render,
          Cartesian3,
+         defined,
          Matrix4,
          ClearCommand,
          Material) {
@@ -48,7 +50,7 @@ defineSuite([
 
     afterEach(function() {
         us = undefined;
-        if (typeof ellipsoid !== 'undefined' && !ellipsoid.isDestroyed()) {
+        if (defined(ellipsoid) && !ellipsoid.isDestroyed()) {
             ellipsoid = ellipsoid.destroy();
         }
     });

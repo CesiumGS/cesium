@@ -3,6 +3,7 @@ define([
         '../../Core/binarySearch',
         '../../Core/ClockStep',
         '../../Core/ClockRange',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../createCommand',
@@ -13,6 +14,7 @@ define([
         binarySearch,
         ClockStep,
         ClockRange,
+        defined,
         defineProperties,
         DeveloperError,
         createCommand,
@@ -106,7 +108,7 @@ define([
      * @see Animation
      */
     var AnimationViewModel = function(clockViewModel) {
-        if (typeof clockViewModel === 'undefined') {
+        if (!defined(clockViewModel)) {
             throw new DeveloperError('clockViewModel is required.');
         }
 
@@ -429,7 +431,7 @@ define([
      * @exception {DeveloperError} positiveTicks is required.
      */
     AnimationViewModel.prototype.setShuttleRingTicks = function(positiveTicks) {
-        if (typeof positiveTicks === 'undefined') {
+        if (!defined(positiveTicks)) {
             throw new DeveloperError('positiveTicks is required.');
         }
 

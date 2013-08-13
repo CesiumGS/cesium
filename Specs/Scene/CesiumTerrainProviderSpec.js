@@ -2,6 +2,7 @@
 defineSuite([
          'Scene/CesiumTerrainProvider',
          'Core/loadWithXhr',
+         'Core/defined',
          'Core/DefaultProxy',
          'Core/Ellipsoid',
          'Core/Math',
@@ -12,6 +13,7 @@ defineSuite([
      ], function(
          CesiumTerrainProvider,
          loadWithXhr,
+         defined,
          DefaultProxy,
          Ellipsoid,
          CesiumMath,
@@ -145,7 +147,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return typeof loadedData !== 'undefined';
+                return defined(loadedData);
             }, 'request to complete');
 
             runs(function() {

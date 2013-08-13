@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError'
     ], function(
+        defined,
         DeveloperError) {
     "use strict";
 
@@ -34,7 +36,7 @@ define([
      * var leapSecond = new LeapSecond(date, 25.0);
      */
     var LeapSecond = function(date, offset) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
 

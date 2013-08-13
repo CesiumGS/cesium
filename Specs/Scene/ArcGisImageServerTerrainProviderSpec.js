@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/ArcGisImageServerTerrainProvider',
+         'Core/defined',
          'Core/loadImage',
          'Core/DefaultProxy',
          'Core/Ellipsoid',
@@ -11,6 +12,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          ArcGisImageServerTerrainProvider,
+         defined,
          loadImage,
          DefaultProxy,
          Ellipsoid,
@@ -217,7 +219,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return typeof loadedData !== 'undefined';
+                return defined(loadedData);
             }, 'request to complete');
 
             runs(function() {

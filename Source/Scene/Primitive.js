@@ -2,6 +2,7 @@
 define([
         '../Core/clone',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -25,6 +26,7 @@ define([
     ], function(
         clone,
         defaultValue,
+        defined,
         DeveloperError,
         destroyObject,
         Matrix4,
@@ -226,13 +228,13 @@ define([
         var attributes = geometry.attributes;
         var newAttributes = new GeometryAttributes();
         for (var property in attributes) {
-            if (attributes.hasOwnProperty(property) && typeof attributes[property] !== 'undefined') {
+            if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                 newAttributes[property] = cloneAttribute(attributes[property]);
             }
         }
 
         var indices;
-        if (typeof geometry.indices !== 'undefined') {
+        if (defined(geometry.indices)) {
             var sourceValues = geometry.indices;
             indices = new sourceValues.constructor(sourceValues);
         }
@@ -349,7 +351,7 @@ define([
                 for (var i = 1; i < length; ++i) {
                     var otherAttribute = instances[i].attributes[name];
 
-                    if ((typeof otherAttribute === 'undefined') ||
+                    if ((!defined(otherAttribute)) ||
                         (attribute.componentDatatype !== otherAttribute.componentDatatype) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
@@ -520,15 +522,15 @@ define([
                         }
                     }
 
-                    if (typeof ids[i] === 'undefined') {
+                    if (!defined(ids[i])) {
                         ids[i] = instance.id;
                     }
 
-                    if (typeof indices[i] === 'undefined') {
+                    if (!defined(indices[i])) {
                         indices[i] = {};
                     }
 
-                    if (typeof indices[i][name] === 'undefined') {
+                    if (!defined(indices[i][name])) {
                         indices[i][name] = {
                             dirty : false,
                             value : instance.attributes[name].value,
@@ -626,7 +628,7 @@ define([
     }
 
     function appendShow(primitive, vertexShaderSource) {
-        if (typeof primitive._attributeIndices.show === 'undefined') {
+        if (!defined(primitive._attributeIndices.show)) {
             return vertexShaderSource;
         }
 
@@ -656,7 +658,7 @@ define([
 
         for (var name in shaderAttributes) {
             if (shaderAttributes.hasOwnProperty(name)) {
-                if (typeof attributeIndices[name] === 'undefined') {
+                if (!defined(attributeIndices[name])) {
                     throw new DeveloperError('Appearance/Geometry mismatch.  The appearance requires vertex shader attribute input \'' + name +
                         '\', which was not computed as part of the Geometry.  Use the appearance\'s vertexFormat property when constructing the geometry.');
                 }
@@ -670,8 +672,8 @@ define([
      */
     Primitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
-            ((typeof this.geometryInstances === 'undefined') && (this._va.length === 0)) ||
-            (typeof this.appearance === 'undefined') ||
+            ((!defined(this.geometryInstances)) && (this._va.length === 0)) ||
+            (!defined(this.appearance)) ||
             (frameState.mode !== SceneMode.SCENE3D && this._allow3DOnly) ||
             (!frameState.passes.color && !frameState.passes.pick)) {
             return;
@@ -699,7 +701,7 @@ define([
             this._attributeIndices = GeometryPipeline.createAttributeIndices(geometries[0]);
 
             this._boundingSphere = geometries[0].boundingSphere;
-            if (!this._allow3DOnly && typeof this._boundingSphere !== 'undefined') {
+            if (!this._allow3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
@@ -783,7 +785,7 @@ define([
         }
 
         if (createRS || createSP) {
-            var uniforms = (typeof material !== 'undefined') ? material._uniforms : undefined;
+            var uniforms = (defined(material)) ? material._uniforms : undefined;
 
             length = colorCommands.length;
             for (i = 0; i < length; ++i) {
@@ -836,10 +838,10 @@ define([
             boundingSphere = this._boundingSphere;
         } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
             boundingSphere = this._boundingSphere2D;
-        } else if (frameState.mode === SceneMode.SCENE2D && typeof this._boundingSphere2D !== 'undefined') {
+        } else if (frameState.mode === SceneMode.SCENE2D && defined(this._boundingSphere2D)) {
             boundingSphere = BoundingSphere.clone(this._boundingSphere2D);
             boundingSphere.center.x = 0.0;
-        } else if (typeof this._boundingSphere !== 'undefined' && typeof this._boundingSphere2D !== 'undefined') {
+        } else if (defined(this._boundingSphere) && defined(this._boundingSphere2D)) {
             boundingSphere = BoundingSphere.union(this._boundingSphere, this._boundingSphere2D);
         }
 
@@ -864,7 +866,7 @@ define([
 
     function createSetFunction(name, perInstanceAttributes, dirtyList) {
         return function (value) {
-            if (typeof value === 'undefined' || typeof value.length === 'undefined' || value.length < 1 || value.length > 4) {
+            if (!defined(value) || !defined(value.length) || value.length < 1 || value.length > 4) {
                 throw new DeveloperError('value must be and array with length between 1 and 4.');
             }
 
@@ -893,11 +895,11 @@ define([
      * attributes.show = ShowGeometryInstanceAttribute.toValue(true);
      */
     Primitive.prototype.getGeometryInstanceAttributes = function(id) {
-        if (typeof id === 'undefined') {
+        if (!defined(id)) {
             throw new DeveloperError('id is required');
         }
 
-        if (typeof this._perInstanceAttributes === 'undefined') {
+        if (!defined(this._perInstanceAttributes)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
 

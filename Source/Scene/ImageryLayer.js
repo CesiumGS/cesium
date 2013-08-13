@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
@@ -8,6 +9,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PrimitiveType',
         '../Core/Geometry',
@@ -30,6 +32,7 @@ define([
         '../Shaders/ReprojectWebMercatorVS'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         BoundingRectangle,
         ComponentDatatype,
@@ -37,6 +40,7 @@ define([
         Cartesian4,
         Color,
         Extent,
+        FeatureDetection,
         CesiumMath,
         PrimitiveType,
         Geometry,
@@ -367,7 +371,7 @@ define([
     ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
         var imageryProvider = this._imageryProvider;
 
-        if (typeof insertionPoint === 'undefined') {
+        if (!defined(insertionPoint)) {
             insertionPoint = tile.imagery.length;
         }
 
@@ -431,7 +435,7 @@ define([
             imageryLevel = maximumLevel;
         }
 
-        if (typeof imageryProvider.getMinimumLevel !== 'undefined') {
+        if (defined(imageryProvider.getMinimumLevel)) {
             var minimumLevel = imageryProvider.getMinimumLevel();
             if (imageryLevel < minimumLevel) {
                 imageryLevel = minimumLevel;
@@ -575,7 +579,7 @@ define([
         var that = this;
 
         function success(image) {
-            if (typeof image === 'undefined') {
+            if (!defined(image)) {
                 return failure();
             }
 
@@ -604,7 +608,7 @@ define([
             imagery.state = ImageryState.TRANSITIONING;
             var imagePromise = imageryProvider.requestImage(imagery.x, imagery.y, imagery.level);
 
-            if (typeof imagePromise === 'undefined') {
+            if (!defined(imagePromise)) {
                 // Too many parallel requests, so postpone loading tile.
                 imagery.state = ImageryState.UNLOADED;
                 return;
@@ -630,9 +634,9 @@ define([
 
         // If this imagery provider has a discard policy, use it to check if this
         // image should be discarded.
-        if (typeof imageryProvider.getTileDiscardPolicy !== 'undefined') {
+        if (defined(imageryProvider.getTileDiscardPolicy)) {
             var discardPolicy = imageryProvider.getTileDiscardPolicy();
-            if (typeof discardPolicy !== 'undefined') {
+            if (defined(discardPolicy)) {
                 // If the discard policy is not ready yet, transition back to the
                 // RECEIVED state and we'll try again next time.
                 if (!discardPolicy.isReady()) {
@@ -686,7 +690,7 @@ define([
         // Use mipmaps if this texture has power-of-two dimensions.
         if (CesiumMath.isPowerOfTwo(texture.getWidth()) && CesiumMath.isPowerOfTwo(texture.getHeight())) {
             var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
-            if (typeof mipmapSampler === 'undefined') {
+            if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP,
@@ -700,7 +704,7 @@ define([
             texture.setSampler(mipmapSampler);
         } else {
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
-            if (typeof nonMipmapSampler === 'undefined') {
+            if (!defined(nonMipmapSampler)) {
                 nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = context.createSampler({
                     wrapS : TextureWrap.CLAMP,
                     wrapT : TextureWrap.CLAMP,
@@ -718,7 +722,7 @@ define([
         var cacheKey = getImageryCacheKey(x, y, level);
         var imagery = this._imageryCache[cacheKey];
 
-        if (typeof imagery === 'undefined') {
+        if (!defined(imagery)) {
             imagery = new Imagery(this, x, y, level, imageryExtent);
             this._imageryCache[cacheKey] = imagery;
         }
@@ -768,12 +772,12 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         var reproject = context.cache.imageryLayer_reproject;
 
-        if (typeof reproject === 'undefined') {
+        if (!defined(reproject)) {
             reproject = context.cache.imageryLayer_reproject = {
                 framebuffer : undefined,
                 vertexArray : undefined,
@@ -781,13 +785,13 @@ define([
                 renderState : undefined,
                 sampler : undefined,
                 destroy : function() {
-                    if (typeof this.framebuffer !== 'undefined') {
+                    if (defined(this.framebuffer)) {
                         this.framebuffer.destroy();
                     }
-                    if (typeof this.vertexArray !== 'undefined') {
+                    if (defined(this.vertexArray)) {
                         this.vertexArray.destroy();
                     }
-                    if (typeof this.shaderProgram !== 'undefined') {
+                    if (defined(this.shaderProgram)) {
                         this.shaderProgram.release();
                     }
                 }
@@ -896,7 +900,7 @@ define([
         command.framebuffer = reproject.framebuffer;
         command.execute(context);
 
-        if ((typeof reproject.renderState === 'undefined') ||
+        if ((!defined(reproject.renderState)) ||
                 (reproject.renderState.viewport.width !== width) ||
                 (reproject.renderState.viewport.height !== height)) {
 

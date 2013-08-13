@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype',
         '../Renderer/BufferUsage',
         '../Core/IndexDatatype'
     ], function(
+        defined,
         DeveloperError,
         ComponentDatatype,
         BufferUsage,
@@ -41,12 +43,12 @@ define([
 
     TerrainProvider.getRegularGridIndices = function(width, height) {
         var byWidth = regularGridIndexArrays[width];
-        if (typeof byWidth === 'undefined') {
+        if (!defined(byWidth)) {
             regularGridIndexArrays[width] = byWidth = [];
         }
 
         var indices = byWidth[height];
-        if (typeof indices === 'undefined') {
+        if (!defined(indices)) {
             indices = byWidth[height] = new Uint16Array((width - 1) * (height - 1) * 6);
 
             var index = 0;
@@ -128,7 +130,7 @@ define([
 
         var indexBuffers = buffers.indices.indexBuffers || {};
         var indexBuffer = indexBuffers[context.getId()];
-        if (typeof indexBuffer === 'undefined' || indexBuffer.isDestroyed()) {
+        if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
             indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             indexBuffer.setVertexArrayDestroyable(false);

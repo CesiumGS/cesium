@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/BoundingSphere',
         '../Core/Color',
@@ -9,6 +10,7 @@ define([
         './Material'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         BoundingSphere,
         Color,
@@ -34,20 +36,20 @@ define([
         this._width = defaultValue(description.width, 1.0);
 
         this._material = description.material;
-        if (typeof this._material === 'undefined') {
+        if (!defined(this._material)) {
             this._material = Material.fromType(undefined, Material.ColorType);
             this._material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         }
 
         var positions = description.positions;
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             positions = [];
         }
 
         this._positions = positions;
 
         var modelMatrix;
-        if (typeof this._polylineCollection !== 'undefined') {
+        if (defined(this._polylineCollection)) {
             modelMatrix = Matrix4.clone(this._polylineCollection.modelMatrix);
         }
 
@@ -75,7 +77,7 @@ define([
     function makeDirty(polyline, propertyChanged) {
         ++polyline._propertiesChanged[propertyChanged];
         var polylineCollection = polyline._polylineCollection;
-        if (typeof polylineCollection !== 'undefined') {
+        if (defined(polylineCollection)) {
             polylineCollection._updatePolyline(polyline, propertyChanged);
             polyline._dirty = true;
         }
@@ -108,7 +110,7 @@ define([
      * @see Polyline#getShow
      */
     Polyline.prototype.setShow = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -152,7 +154,7 @@ define([
      * );
      */
     Polyline.prototype.setPositions = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -172,7 +174,7 @@ define([
      */
     Polyline.prototype.update = function() {
         var modelMatrix = Matrix4.IDENTITY;
-        if (typeof this._polylineCollection !== 'undefined') {
+        if (defined(this._polylineCollection)) {
             modelMatrix = this._polylineCollection.modelMatrix;
         }
 
@@ -226,7 +228,7 @@ define([
      * @see Polyline#getMaterial
      */
     Polyline.prototype.setMaterial = function(material) {
-        if (typeof material === 'undefined') {
+        if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
 
@@ -267,7 +269,7 @@ define([
      * var width = polyline.getWidth(); // 5.0
      */
     Polyline.prototype.setWidth = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -279,7 +281,7 @@ define([
     };
 
     Polyline.prototype.getPickId = function(context) {
-        if (typeof this._pickId === 'undefined') {
+        if (!defined(this._pickId)) {
             this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
         }
         return this._pickId;

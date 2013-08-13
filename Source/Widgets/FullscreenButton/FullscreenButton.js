@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
@@ -7,6 +8,7 @@ define([
         './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         DeveloperError,
         destroyObject,
@@ -30,7 +32,7 @@ define([
      * @see Fullscreen
      */
     var FullscreenButton = function(container, fullscreenElement) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
