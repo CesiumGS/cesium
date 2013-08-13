@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian3',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Ellipsoid',
@@ -18,6 +19,7 @@ define([
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         Ellipsoid,
@@ -63,7 +65,7 @@ define([
         }
 
         var canvas = scene.getCanvas();
-        if (typeof transitioner !== 'undefined' && mode === SceneMode.MORPHING) {
+        if (defined(transitioner) && mode === SceneMode.MORPHING) {
             transitioner.completeMorph();
         }
         var flight;
@@ -135,7 +137,7 @@ define([
      * @exception {DeveloperError} scene is required.
      */
     var HomeButtonViewModel = function(scene, transitioner, ellipsoid, flightDuration) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 

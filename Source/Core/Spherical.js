@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './DeveloperError',
-        './defaultValue'
+        './defaultValue',
+        './defined'
     ], function(
         DeveloperError,
-        defaultValue) {
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -35,7 +37,7 @@ define([
      * @exception {DeveloperError} cartesian3 is required.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
-        if (typeof cartesian3 === 'undefined') {
+        if (!defined(cartesian3)) {
             throw new DeveloperError('cartesian3 is required');
         }
 
@@ -44,7 +46,7 @@ define([
         var z = cartesian3.z;
         var radialSquared = x * x + y * y;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Spherical();
         }
 
@@ -64,11 +66,11 @@ define([
      * @return The modified result parameter or a new instance if result was undefined. (Returns undefined if spherical is undefined)
      */
     Spherical.clone = function(spherical, result) {
-        if (typeof spherical === 'undefined') {
+        if (!defined(spherical)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Spherical(spherical.clock, spherical.cone, spherical.magnitude);
         }
 
@@ -90,11 +92,11 @@ define([
      * @exception {DeveloperError} spherical is required.
      */
     Spherical.normalize = function(spherical, result) {
-        if (typeof spherical === 'undefined') {
+        if (!defined(spherical)) {
             throw new DeveloperError('spherical is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Spherical(spherical.clock, spherical.cone, 1.0);
         }
 
@@ -115,8 +117,8 @@ define([
      */
     Spherical.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.clock === right.clock) &&
                 (left.cone === right.cone) &&
                 (left.magnitude === right.magnitude));
@@ -135,8 +137,8 @@ define([
     Spherical.equalsEpsilon = function(left, right, epsilon) {
         epsilon = defaultValue(epsilon, 0.0);
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (Math.abs(left.clock - right.clock) <= epsilon) &&
                 (Math.abs(left.cone - right.cone) <= epsilon) &&
                 (Math.abs(left.magnitude - right.magnitude) <= epsilon));

@@ -1,7 +1,7 @@
 /*global define*/
-define(function() {
+define(['Core/defined'], function(defined) {
     "use strict";
-    /*global Uint8ClampedArray,CanvasPixelArray*/
+    /*global CanvasPixelArray*/
 
     var typedArrayTypes = [];
 

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Cartesian3',
@@ -8,6 +9,7 @@ define([
         '../Core/Ellipsoid',
         './ReferenceProperty'
     ], function(
+        defined,
         TimeInterval,
         TimeIntervalCollection,
         Cartesian3,
@@ -23,21 +25,21 @@ define([
         var i, len, values = [], tmp;
 
         tmp = czmlInterval.cartesian;
-        if (typeof tmp !== 'undefined') {
+        if (defined(tmp)) {
             for (i = 0, len = tmp.length; i < len; i += 3) {
                 values.push(new Cartesian3(tmp[i], tmp[i + 1], tmp[i + 2]));
             }
             this.cartesian = values;
         } else {
             tmp = czmlInterval.cartographicRadians;
-            if (typeof tmp !== 'undefined') {
+            if (defined(tmp)) {
                 for (i = 0, len = tmp.length; i < len; i += 3) {
                     values.push(new Cartographic(tmp[i], tmp[i + 1], tmp[i + 2]));
                 }
                 this.cartographic = values;
             } else {
                 tmp = czmlInterval.cartographicDegrees;
-                if (typeof tmp !== 'undefined') {
+                if (defined(tmp)) {
                     for (i = 0, len = tmp.length; i < len; i += 3) {
                         values.push(Cartographic.fromDegrees(tmp[i], tmp[i + 1], tmp[i + 2]));
                     }
@@ -48,14 +50,14 @@ define([
     }
 
     ValueHolder.prototype.getValueCartographic = function() {
-        if (typeof this.cartographic === 'undefined') {
+        if (!defined(this.cartographic)) {
             this.cartographic = wgs84.cartesianArrayToCartographicArray(this.cartesian);
         }
         return this.cartographic;
     };
 
     ValueHolder.prototype.getValueCartesian = function() {
-        if (typeof this.cartesian === 'undefined') {
+        if (!defined(this.cartesian)) {
             this.cartesian = wgs84.cartographicArrayToCartesianArray(this.cartographic);
         }
         return this.cartesian;
@@ -111,7 +113,7 @@ define([
      */
     DynamicVertexPositionsProperty.prototype.getValueCartographic = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             return undefined;
         }
         var interval_data = interval.data;
@@ -119,7 +121,7 @@ define([
             var result = [];
             for ( var i = 0, len = interval_data.length; i < len; i++) {
                 var value = interval_data[i].getValueCartographic(time);
-                if (typeof value !== 'undefined') {
+                if (defined(value)) {
                     result.push(value);
                 }
             }
@@ -139,7 +141,7 @@ define([
      */
     DynamicVertexPositionsProperty.prototype.getValueCartesian = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             return undefined;
         }
         var interval_data = interval.data;
@@ -147,7 +149,7 @@ define([
             var result = [];
             for ( var i = 0, len = interval_data.length; i < len; i++) {
                 var value = interval_data[i].getValueCartesian(time);
-                if (typeof value !== 'undefined') {
+                if (defined(value)) {
                     result.push(value);
                 }
             }
@@ -159,13 +161,13 @@ define([
 
     DynamicVertexPositionsProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, dynamicObjectCollection) {
         var iso8601Interval = czmlInterval.interval;
-        if (typeof iso8601Interval === 'undefined') {
+        if (!defined(iso8601Interval)) {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
-        if (typeof constrainedInterval !== 'undefined') {
+        if (defined(constrainedInterval)) {
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
@@ -174,13 +176,13 @@ define([
         var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
         //If not, create it.
-        if (typeof existingInterval === 'undefined') {
+        if (!defined(existingInterval)) {
             existingInterval = iso8601Interval;
             thisIntervals.addInterval(existingInterval);
         }
 
         var references = czmlInterval.references;
-        if (typeof references === 'undefined') {
+        if (!defined(references)) {
             existingInterval.data = new ValueHolder(czmlInterval);
         } else {
             var properties = [];

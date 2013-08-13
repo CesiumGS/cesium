@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlDirection',
         './CzmlNumber',
@@ -10,6 +11,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlDirection,
         CzmlNumber,
@@ -81,61 +83,61 @@ function(
      */
     DynamicVector.processCzmlPacket = function(dynamicObject, packet) {
         var vectorData = packet.vector;
-        if (typeof vectorData === 'undefined') {
+        if (!defined(vectorData)) {
             return false;
         }
 
         var vectorUpdated = false;
         var vector = dynamicObject.vector;
-        vectorUpdated = typeof vector === 'undefined';
+        vectorUpdated = !defined(vector);
         if (vectorUpdated) {
             dynamicObject.vector = vector = new DynamicVector();
         }
 
         var interval = vectorData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof vectorData.color !== 'undefined') {
+        if (defined(vectorData.color)) {
             var color = vector.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 vector.color = color = new DynamicProperty(CzmlColor);
                 vectorUpdated = true;
             }
             color.processCzmlIntervals(vectorData.color, interval);
         }
 
-        if (typeof vectorData.width !== 'undefined') {
+        if (defined(vectorData.width)) {
             var width = vector.width;
-            if (typeof width === 'undefined') {
+            if (!defined(width)) {
                 vector.width = width = new DynamicProperty(CzmlNumber);
                 vectorUpdated = true;
             }
             width.processCzmlIntervals(vectorData.width, interval);
         }
 
-        if (typeof vectorData.direction !== 'undefined') {
+        if (defined(vectorData.direction)) {
             var direction = vector.direction;
-            if (typeof direction === 'undefined') {
+            if (!defined(direction)) {
                 vector.direction = direction = new DynamicProperty(CzmlDirection);
                 vectorUpdated = true;
             }
             direction.processCzmlIntervals(vectorData.direction, interval);
         }
 
-        if (typeof vectorData.length !== 'undefined') {
+        if (defined(vectorData.length)) {
             var length = vector.length;
-            if (typeof length === 'undefined') {
+            if (!defined(length)) {
                 vector.length = length = new DynamicProperty(CzmlNumber);
                 vectorUpdated = true;
             }
             length.processCzmlIntervals(vectorData.length, interval);
         }
 
-        if (typeof vectorData.show !== 'undefined') {
+        if (defined(vectorData.show)) {
             var show = vector.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 vector.show = show = new DynamicProperty(CzmlBoolean);
                 vectorUpdated = true;
             }
@@ -157,10 +159,10 @@ function(
      */
     DynamicVector.mergeProperties = function(targetObject, objectToMerge) {
         var vectorToMerge = objectToMerge.vector;
-        if (typeof vectorToMerge !== 'undefined') {
+        if (defined(vectorToMerge)) {
 
             var targetVector = targetObject.vector;
-            if (typeof targetVector === 'undefined') {
+            if (!defined(targetVector)) {
                 targetObject.vector = targetVector = new DynamicVector();
             }
 

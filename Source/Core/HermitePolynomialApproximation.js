@@ -1,6 +1,9 @@
 /*global define*/
-define(['./Math'
-       ], function(
+define([
+        './defined',
+        './Math'
+    ], function(
+        defined,
         CesiumMath) {
     "use strict";
 
@@ -98,7 +101,7 @@ define(['./Math'
      * @memberof HermitePolynomialApproximation
      */
     HermitePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(yStride);
         }
 

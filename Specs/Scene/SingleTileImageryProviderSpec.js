@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/SingleTileImageryProvider',
+         'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
          'Core/DefaultProxy',
@@ -13,6 +14,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          SingleTileImageryProvider,
+         defined,
          jsonp,
          loadImage,
          DefaultProxy,
@@ -98,7 +100,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         });
 
         runs(function() {

@@ -140,7 +140,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof AxisAlignedBoundingBox.clone()).toEqual('undefined');
+        expect(AxisAlignedBoundingBox.clone()).toBeUndefined();
     });
 
     it('static intersect throws without a box', function() {

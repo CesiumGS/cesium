@@ -3,12 +3,14 @@ defineSuite([
          'Scene/TileReplacementQueue',
          'Scene/ImageryState',
          'Scene/TerrainState',
-         'Scene/TileState'
+         'Scene/TileState',
+         'Core/defined'
      ], function(
          TileReplacementQueue,
          ImageryState,
          TerrainState,
-         TileState) {
+         TileState,
+         defined) {
     "use strict";
     /*global document,describe,it,expect,beforeEach*/
 
@@ -16,12 +18,12 @@ defineSuite([
         this._num = num;
         this.state = TileState.LOADING;
         this.imagery = [];
-        if (typeof loadedState !== 'undefined') {
+        if (defined(loadedState)) {
             this.loadedTerrain = {
                 state : loadedState
             };
         }
-        if (typeof upsampledState !== 'undefined') {
+        if (defined(upsampledState)) {
             this.upsampledTerrain = {
                 state : upsampledState
             };
