@@ -88,24 +88,33 @@ define(['../Core/createGuid',
             text = text + el.childNodes[i].nodeValue;
         }
         var coordsArray = text.split(/[\s\n]+/);
+        var len = coordsArray.length;
+
+        for (i = 0; i < len; i++){
+            var string = coordsArray.shift();
+            if (string.length > 0){ //empty string?
+                coordsArray.push(string);
+            }
+        }
+
         var finalCoords = [];
-        for(var j = 0; coordsArray[j]; j++){
+        for (var j = 0; coordsArray[j]; j++){
             var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
             coords[j] = regExp.exec(coordsArray[j]);
             coords[j].shift(); //the first element is not needed, remove it
             finalCoords.push([]); //new inner array
             finalCoords[j][0] = parseFloat(coords[j][0], 10);
             finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
-            if(typeof coords[j][2] !== 'undefined'){ // altitude given?
+            if (typeof coords[j][2] !== 'undefined'){ // altitude given?
                 finalCoords[j][2] = parseFloat(coords[j][2].substring(1), 10);
             }
         }
-        for(var k = 0; k < finalCoords.length; k++){
+        for (var k = 0; k < finalCoords.length; k++){
             if (isNaN(finalCoords[k][0]) || isNaN(finalCoords[k][1])) {
                 throw new RuntimeError('Longitude and latitude are required.');
             }
         }
-        if(finalCoords.length === 1){
+        if (finalCoords.length === 1){
             return finalCoords[0]; //single tuple
         }
         return finalCoords;
@@ -215,12 +224,14 @@ define(['../Core/createGuid',
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node){
+      //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum, altitudeMode
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-        //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum, altitudeMode
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
+
     }
 
     //Object that holds all supported Geometry
