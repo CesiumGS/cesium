@@ -26,7 +26,8 @@ defineSuite([
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState',
-         'Specs/waitsForException'
+         'Specs/waitsForException',
+         'Specs/waitsForRender'
      ], function(
          Primitive,
          ExtentGeometry,
@@ -54,7 +55,8 @@ defineSuite([
          createContext,
          destroyContext,
          createFrameState,
-         waitsForException) {
+         waitsForException,
+         waitsForRender) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -265,14 +267,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -314,14 +312,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -349,14 +343,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -386,14 +376,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -425,11 +411,7 @@ defineSuite([
             allow3DOnly : true
         });
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitive, function() {
             var attributes = primitive.getGeometryInstanceAttributes('extent1');
             expect(attributes.color).toBeDefined();
             expect(attributes.show).toBeDefined();
@@ -453,14 +435,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             var pixels = context.readPixels();
             expect(pixels).not.toEqual([0, 0, 0, 0]);
@@ -491,14 +469,10 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
@@ -526,11 +500,7 @@ defineSuite([
         frameState.camera.controller.viewExtent(extent1);
         us.update(frameState);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitive, function() {
             expect(pick(context, frameState, primitive)).toEqual('extent1');
 
             frameState.camera.controller.viewExtent(extent2);
@@ -599,11 +569,7 @@ defineSuite([
             allow3DOnly : true
         });
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitive, function() {
             var attributes = primitive.getGeometryInstanceAttributes('extent1');
 
             expect(function() {
@@ -621,11 +587,7 @@ defineSuite([
             allow3DOnly : true
         });
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitive, function() {
             expect(function() {
                 primitive.getGeometryInstanceAttributes();
             }).toThrow();
@@ -655,11 +617,7 @@ defineSuite([
             allow3DOnly : true
         });
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitive, function() {
             expect(primitive.getGeometryInstanceAttributes('unknown')).not.toBeDefined();
 
             primitive = primitive && primitive.destroy();

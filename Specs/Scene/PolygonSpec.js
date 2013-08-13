@@ -9,6 +9,7 @@ defineSuite([
          'Specs/pick',
          'Specs/render',
          'Specs/waitsForException',
+         'Specs/waitsForRender',
          'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian3',
@@ -27,6 +28,7 @@ defineSuite([
          pick,
          render,
          waitsForException,
+         waitsForRender,
          defined,
          BoundingSphere,
          Cartesian3,
@@ -194,24 +196,18 @@ defineSuite([
 
     it('renders', function() {
         // This test fails in Chrome if a breakpoint is set inside this function.  Strange.
-        runs(function() {
-            polygon = createPolygon();
-            polygon.material.uniforms.color = {
-                red : 1.0,
-                green : 0.0,
-                blue : 0.0,
-                alpha : 1.0
-            };
+        polygon = createPolygon();
+        polygon.material.uniforms.color = {
+            red : 1.0,
+            green : 0.0,
+            blue : 0.0,
+            alpha : 1.0
+        };
 
+        waitsForRender(context, frameState, polygon, function() {
             ClearCommand.ALL.execute(context);
             expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-        });
 
-        waitsFor(function() {
-            return render(context, frameState, polygon) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, polygon);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
@@ -282,11 +278,7 @@ defineSuite([
     it('is picked', function() {
         polygon = createPolygon();
 
-        waitsFor(function() {
-            return render(context, frameState, polygon) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, polygon, function() {
             var pickedObject = pick(context, frameState, polygon, 0, 0);
             expect(pickedObject).toEqual(polygon);
         });

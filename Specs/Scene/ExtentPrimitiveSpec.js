@@ -8,6 +8,7 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
+         'Specs/waitsForRender',
          'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian3',
@@ -26,6 +27,7 @@ defineSuite([
          frameState,
          pick,
          render,
+         waitsForRender,
          defined,
          BoundingSphere,
          Cartesian3,
@@ -105,14 +107,10 @@ defineSuite([
             alpha : 1.0
         };
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, extent, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, extent) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, extent);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
@@ -141,11 +139,7 @@ defineSuite([
     it('is picked', function() {
         extent = createExtent();
 
-        waitsFor(function() {
-            return render(context, frameState, extent) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, extent, function() {
             var pickedObject = pick(context, frameState, extent, 0, 0);
             expect(pickedObject).toEqual(extent);
         });

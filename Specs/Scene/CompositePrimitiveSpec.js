@@ -9,6 +9,7 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
+         'Specs/waitsForRender',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/defaultValue',
@@ -30,6 +31,7 @@ defineSuite([
          frameState,
          pick,
          render,
+         waitsForRender,
          Cartesian3,
          Cartographic,
          defaultValue,
@@ -346,11 +348,7 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p1);
         });
@@ -363,11 +361,7 @@ defineSuite([
         primitives.add(p1);
         primitives.add(p0);
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p0);
         });
@@ -381,11 +375,7 @@ defineSuite([
         primitives.add(p1);
         primitives.raise(p1); // Already on top
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p1);
         });
@@ -399,13 +389,10 @@ defineSuite([
         primitives.add(p1);
         primitives.raise(p0); // Moved to top
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p0);
+            expect(pickedObject).not.toEqual(p1);
         });
     });
 
@@ -417,11 +404,7 @@ defineSuite([
         primitives.add(p1);
         primitives.raiseToTop(p1); // Already on top
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p1);
         });
@@ -435,11 +418,7 @@ defineSuite([
         primitives.add(p1);
         primitives.raiseToTop(p0); // Moved to top
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p0);
         });
@@ -453,11 +432,7 @@ defineSuite([
         primitives.add(p1);
         primitives.lower(p1); // Moved back
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p0);
         });
@@ -471,11 +446,7 @@ defineSuite([
         primitives.add(p1);
         primitives.lower(p0); // Already on bottom
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p1);
         });
@@ -489,11 +460,7 @@ defineSuite([
         primitives.add(p1);
         primitives.lowerToBottom(p1); // Moved back
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p0);
         });
@@ -507,11 +474,7 @@ defineSuite([
         primitives.add(p1);
         primitives.lowerToBottom(p0); // Already on bottom
 
-        waitsFor(function() {
-            return render(context, frameState, primitives) > 0;
-        });
-
-        runs(function() {
+        waitsForRender(context, frameState, primitives, function() {
             var pickedObject = pick(context, frameState, primitives, 0, 0);
             expect(pickedObject).toEqual(p1);
         });

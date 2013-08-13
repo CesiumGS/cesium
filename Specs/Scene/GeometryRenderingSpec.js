@@ -40,7 +40,8 @@ defineSuite([
          'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState'
+         'Specs/createFrameState',
+         'Specs/waitsForRender'
      ], 'Scene/GeometryRendering', function(
          BoxGeometry,
          CircleGeometry,
@@ -82,7 +83,8 @@ defineSuite([
          destroyCanvas,
          createContext,
          destroyContext,
-         createFrameState) {
+         createFrameState,
+         waitsForRender) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -130,14 +132,10 @@ defineSuite([
         var frameState = createFrameState();
         context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
             if (typeof afterView === 'function') {
@@ -187,14 +185,10 @@ defineSuite([
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
         context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
             if (typeof afterView === 'function') {
@@ -257,14 +251,10 @@ defineSuite([
 
         context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
             context.getUniformState().update(frameState);
 
@@ -286,14 +276,10 @@ defineSuite([
         var frameState = createFrameState();
         context.getUniformState().update(frameState);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
 
             if (typeof afterView === 'function') {

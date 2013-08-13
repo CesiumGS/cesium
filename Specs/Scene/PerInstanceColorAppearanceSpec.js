@@ -14,7 +14,8 @@ defineSuite([
          'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState'
+         'Specs/createFrameState',
+         'Specs/waitsForRender'
      ], function(
          PerInstanceColorAppearance,
          Appearance,
@@ -30,7 +31,8 @@ defineSuite([
          destroyCanvas,
          createContext,
          destroyContext,
-         createFrameState) {
+         createFrameState,
+         waitsForRender) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -82,14 +84,10 @@ defineSuite([
     it('renders', function() {
         primitive.appearance = new PerInstanceColorAppearance();
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
@@ -102,14 +100,10 @@ defineSuite([
             closed : true
         });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, primitive, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, primitive) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, primitive);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });

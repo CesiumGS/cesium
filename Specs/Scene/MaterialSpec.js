@@ -10,6 +10,7 @@ defineSuite([
         'Specs/frameState',
         'Specs/render',
         'Specs/waitsForException',
+        'Specs/waitsForRender',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -27,6 +28,7 @@ defineSuite([
         frameState,
         render,
         waitsForException,
+        waitsForRender,
         Cartesian3,
         Cartographic,
         Color,
@@ -84,14 +86,10 @@ defineSuite([
     function renderMaterial(material) {
         polygon.material = material;
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, polygon, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, polygon) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, polygon);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
@@ -100,14 +98,10 @@ defineSuite([
     function renderPolylineMaterial(material) {
         polyline.setMaterial(material);
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        waitsForRender(context, frameState, polylines, function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-        waitsFor(function() {
-            return render(context, frameState, polylines) > 0;
-        });
-
-        runs(function() {
             render(context, frameState, polylines);
             expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
         });
