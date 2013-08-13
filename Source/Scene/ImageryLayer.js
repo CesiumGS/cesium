@@ -9,6 +9,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Color',
         '../Core/Extent',
+        '../Core/FeatureDetection',
         '../Core/Math',
         '../Core/PrimitiveType',
         '../Core/Geometry',
@@ -39,6 +40,7 @@ define([
         Cartesian4,
         Color,
         Extent,
+        FeatureDetection,
         CesiumMath,
         PrimitiveType,
         Geometry,
@@ -770,7 +772,7 @@ define([
         oneOverMercatorHeight : 0
     };
 
-    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
 
     function reprojectToGeographic(imageryLayer, context, texture, extent) {
         var reproject = context.cache.imageryLayer_reproject;
