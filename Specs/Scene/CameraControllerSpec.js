@@ -776,7 +776,7 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = controller.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
-        expect(!defined(p)).toEqual(true);
+        expect(p).toBeUndefined();
     });
 
     it('pick map in 2D', function() {
@@ -806,7 +806,7 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = controller.pickEllipsoid(Cartesian2.ZERO);
-        expect(!defined(p)).toEqual(true);
+        expect(p).toBeUndefined();
     });
 
     it('pick map in columbus view', function() {
