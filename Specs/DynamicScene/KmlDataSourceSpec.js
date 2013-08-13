@@ -240,6 +240,38 @@ defineSuite(['DynamicScene/KmlDataSource',
         }).toThrow();
     });
 
+    it('handles LineStyle', function() {
+        var width = new ConstantProperty(4);
+        var outerWidth = new ConstantProperty(0);
+        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+            <LineStyle>\
+            <color>000000ff</color>\
+            <width>4</width>\
+            <gx:labelVisibility>1</gx:labelVisibility>\
+            <gx:outerColor>ffffffff</gx:outerColor>\
+            <gx:outerWidth>0.0</gx:outerWidth>\
+            <gx:physicalWidth>0.0</gx:physicalWidth>\
+            <gx:labelVisibility>0</gx:labelVisibility>\
+            </LineStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(lineKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].polyline.width.getValue()).toEqual(width.getValue());
+        expect(objects[0].polyline.outlineWidth.getValue()).toEqual(outerWidth.getValue());
+    });
+
     it('handles Color in normal mode', function() {
         var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
         var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
