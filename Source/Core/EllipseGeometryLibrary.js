@@ -20,6 +20,10 @@ define([
     var unitQuat = new Quaternion();
     var rotMtx = new Matrix3();
 
+    /**
+     * Returns a point on an ellipsoid
+     * @private
+     */
     EllipseGeometryLibrary.pointOnEllipsoid = function(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
         var azimuth = theta + rotation;
 
@@ -50,6 +54,10 @@ define([
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchNormal = new Cartesian3();
+    /**
+     * Returns the positions raised to the given heights
+     * @private
+     */
     EllipseGeometryLibrary.raisePositionsToHeight = function(positions, options, extrude) {
         var ellipsoid = options.ellipsoid;
         var height = options.height;
@@ -93,6 +101,10 @@ define([
     var unitPosScratch = new Cartesian3();
     var eastVecScratch = new Cartesian3();
     var northVecScratch = new Cartesian3();
+    /**
+     * Returns an array of positions that make up the ellipse.
+     * @private
+     */
     EllipseGeometryLibrary.computeEllipsePositions = function(options, addFillPositions, addEdgePositions) {
         var semiMinorAxis = options.semiMinorAxis;
         var semiMajorAxis = options.semiMajorAxis;

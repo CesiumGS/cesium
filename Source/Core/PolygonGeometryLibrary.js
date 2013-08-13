@@ -19,6 +19,10 @@ define([
         return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
     }
 
+    /**
+     * Returns an array of points between p0 and p1
+     * @returns private
+     */
     PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity) {
         var length = Cartesian3.distance(p0, p1);
         var angleBetween = Cartesian3.angleBetween(p0, p1);
@@ -50,6 +54,10 @@ define([
     var scaleToGeodeticHeightN1 = new Cartesian3();
     var scaleToGeodeticHeightN2 = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
+    /**
+     * Raises the positions to the correct heights
+     * @private
+     */
     PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function(geometry, maxHeight, minHeight, ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 

@@ -21,7 +21,7 @@ define([
 
     var WallGeometryLibrary = {};
 
-    WallGeometryLibrary.subdivideHeights = function(p0, p1, h0, h1, granularity) {
+    function subdivideHeights(p0, p1, h0, h1, granularity) {
         var angleBetween = Cartesian3.angleBetween(p0, p1);
         var numPoints = Math.ceil(angleBetween/granularity);
         var heights = new Array(numPoints);
@@ -43,7 +43,7 @@ define([
 
         heights[0] = h0;
         return heights;
-    };
+    }
 
     function latLonEquals(c0, c1) {
         return ((CesiumMath.equalsEpsilon(c0.latitude, c1.latitude, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(c0.longitude, c1.longitude, CesiumMath.EPSILON6)));
@@ -99,6 +99,10 @@ define([
         };
     }
 
+    /**
+     * Returns three sets of positions: the positions at the ellipsoid surface, at the maximum height and at the minimum height.
+     * @private
+     */
     WallGeometryLibrary.computePositions = function(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, duplicateCorners) {
         var o = removeDuplicates(ellipsoid, wallPositions, maximumHeights, minimumHeights);
 
@@ -136,7 +140,7 @@ define([
             var p2 = wallPositions[i + 1];
             var h1 = maximumHeights[i];
             var h2 = maximumHeights[i + 1];
-            newMaxHeights = newMaxHeights.concat(WallGeometryLibrary.subdivideHeights(p1, p2, h1, h2, granularity));
+            newMaxHeights = newMaxHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
             if (duplicateCorners) {
                 newMaxHeights.push(h2);
             }
@@ -146,7 +150,7 @@ define([
                 p2 = wallPositions[i + 1];
                 h1 = minimumHeights[i];
                 h2 = minimumHeights[i + 1];
-                newMinHeights = newMinHeights.concat(WallGeometryLibrary.subdivideHeights(p1, p2, h1, h2, granularity));
+                newMinHeights = newMinHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
                 if (duplicateCorners) {
                     newMinHeights.push(h2);
                 }
