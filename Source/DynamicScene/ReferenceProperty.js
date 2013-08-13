@@ -41,7 +41,6 @@ define([
      *
      * @see ReferenceProperty#fromString
      * @see DynamicProperty
-     * @see DynamicPositionProperty
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      * @see DynamicObjectCollection
@@ -79,7 +78,6 @@ define([
      *
      * @see ReferenceProperty#fromString
      * @see DynamicProperty
-     * @see DynamicPositionProperty
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      * @see DynamicObjectCollection

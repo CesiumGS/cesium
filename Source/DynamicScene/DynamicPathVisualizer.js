@@ -313,7 +313,7 @@ define([
 
                 var frameToVisualize = ReferenceFrame.FIXED;
                 if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty._getReferenceFrame();
+                    frameToVisualize = positionProperty.getReferenceFrame();
                 }
 
                 var currentUpdater = this._updaters[frameToVisualize];

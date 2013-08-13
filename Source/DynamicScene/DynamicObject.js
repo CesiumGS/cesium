@@ -7,7 +7,6 @@ define([
         '../Core/JulianDate',
         '../Core/TimeInterval',
         './processPacketData',
-        './DynamicPositionProperty',
         './DynamicVertexPositionsProperty',
         './CzmlUnitQuaternion',
         './CzmlCartesian3'
@@ -19,7 +18,6 @@ define([
         JulianDate,
         TimeInterval,
         processPacketData,
-        DynamicPositionProperty,
         DynamicVertexPositionsProperty,
         CzmlUnitQuaternion,
         CzmlCartesian3) {
@@ -35,7 +33,6 @@ define([
      * @param {Object} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
      *
      * @see DynamicProperty
-     * @see DynamicPositionProperty
      * @see DynamicVertexiPositionsProperty
      * @see DynamicObjectCollection
      * @see CompositeDynamicObjectCollection
@@ -78,7 +75,7 @@ define([
 
         /**
          * Gets or sets the position.
-         * @type {DynamicPositionProperty}
+         * @type {PositionProperty}
          * @default undefined
          */
         this.position = undefined;
@@ -236,23 +233,15 @@ define([
      * @param {Object} packet The CZML packet to process.
      * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
      *
-     * @see DynamicPositionProperty
      * @see DynamicObjectCollection
      * @see CzmlDefaults#updaters
      */
-    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
+    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (!defined(positionData)) {
             return false;
         }
-
-        var position = dynamicObject.position;
-        var propertyCreated = !defined(position);
-        if (propertyCreated) {
-            dynamicObject.position = position = new DynamicPositionProperty();
-        }
-        position.processCzmlIntervals(positionData);
-        return propertyCreated;
+        return processPacketData(CzmlCartesian3, dynamicObject, 'position', positionData, undefined, sourceUri);
     };
 
     /**

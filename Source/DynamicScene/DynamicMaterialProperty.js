@@ -31,7 +31,6 @@ define([
      * @see DynamicObject
      * @see DynamicProperty
      * @see ReferenceProperty
-     * @see DynamicPositionProperty
      * @see DynamicDirectionsProperty
      * @see DynamicVertexPositionsProperty
      */

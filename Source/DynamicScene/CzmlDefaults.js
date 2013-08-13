@@ -75,7 +75,7 @@ define([
                     DynamicEllipsoid.processCzmlPacket,
                     DynamicCone.processCzmlPacket,
                     DynamicLabel.processCzmlPacket,
-                    DynamicPath.processCzmlPacket,
+                    //DynamicPath.processCzmlPacket,
                     DynamicPoint.processCzmlPacket,
                     DynamicPolygon.processCzmlPacket,
                     DynamicPolyline.processCzmlPacket,

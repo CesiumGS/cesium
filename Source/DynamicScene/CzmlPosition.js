@@ -25,7 +25,6 @@ define([
      * @see Cartesian3
      * @see Cartographic
      * @see DynamicProperty
-     * @see DynamicPositionProperty
      * @see CzmlBoolean
      * @see CzmlCartesian2
      * @see CzmlColor

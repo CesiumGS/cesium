@@ -16,7 +16,6 @@ define([
      *
      * @see Cartesian3
      * @see DynamicProperty
-     * @see DynamicPositionProperty
      * @see CzmlBoolean
      * @see CzmlCartesian2
      * @see CzmlPosition

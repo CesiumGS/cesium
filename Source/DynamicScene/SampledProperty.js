@@ -302,7 +302,7 @@ define([
         var doublesPerValue = typeHandler.doublesPerValue;
         var index = binarySearch(times, time, JulianDate.compare);
         if (index < 0) {
-            if (this.numberOfPoints < 2) {
+            if (times.length < this.numberOfPoints) {
                 return undefined;
             }
             index = ~index;
@@ -400,6 +400,9 @@ define([
     SampledProperty.prototype.addSamplesFlatArray = function(data, epoch) {
         _mergeNewSamples(epoch, this._times, this._values, data, this._typeHandler.doublesPerValue);
     };
+
+    //Exposed for testing.
+    SampledProperty._mergeNewSamples = _mergeNewSamples;
 
     return SampledProperty;
 });

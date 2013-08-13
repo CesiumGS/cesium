@@ -65,7 +65,6 @@ define([
      * @see DynamicProperty
      * @see ReferenceProperty
      * @see DynamicMaterialProperty
-     * @see DynamicPositionProperty
      * @see DynamicVertexPositionsProperty
      */
     var DynamicDirectionsProperty = function() {
