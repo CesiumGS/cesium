@@ -157,23 +157,25 @@ define(['../Core/createGuid',
     function getColorValue(node, tagName){
         var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
-        var colorMode = node.getElementsByTagName('colorMode')[0];
+        var colorModeNode = node.getElementsByTagName('colorMode')[0];
         var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
         if (typeof value === 'undefined'){
             return new Color(1.0, 1.0, 1.0, 1.0); //white as default?
         }
+        var colorMode = colorModeNode.firstChild.data;
         if(colorMode === 'random'){
-            alpha = value.substring(0,1);
-            blue = value.substring(2,3);
-            green = value.substring(4,5);
-            red = value.substring(6,7);
-            return Color.fromRandom(red, green, blue, alpha);
+            var options = {};
+            options.alpha = parseInt(value.substring(0,2), 16) / 255.0;
+            options.blue = parseInt(value.substring(2,4), 16)  / 255.0;
+            options.green = parseInt(value.substring(4,6), 16) / 255.0;
+            options.red = parseInt(value.substring(6,8), 16) / 255.0;
+            return Color.fromRandom(options);
         }
         //normal mode as default
-        alpha = value.substring(0,1);
-        blue = value.substring(2,3);
-        green = value.substring(4,5);
-        red = value.substring(6,7);
+        alpha = value.substring(0,2);
+        blue = value.substring(2,4);
+        green = value.substring(4,6);
+        red = value.substring(6,8);
         return Color.fromBytes(red, green, blue, alpha);
     }
 

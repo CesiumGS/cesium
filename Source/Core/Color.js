@@ -159,24 +159,24 @@ define([
      * @memberof Color
      *
      */
-    Color.fromRandom = function(red, green, blue, alpha){
-        red = parseInt(red, 16);
-        green = parseInt(green, 16);
-        blue = parseInt(blue, 16);
-        alpha = parseInt(alpha, 16);
+    Color.fromRandom = function(options){
+        var red = options.red;
+        var green = options.green;
+        var blue = options.blue;
+        var alpha = options.alpha;
         if (red > 0){
-            red = Math.floor(Math.random() * red);
+            red = Math.random();
         }
         if (green > 0){
-            green = Math.floor(Math.random() * green);
+            green = Math.random();
         }
         if (blue > 0){
-            blue = Math.floor(Math.random() * blue);
+            blue = Math.random();
         }
         if (alpha > 0){
-            alpha = Math.floor(Math.random() * alpha);
+            alpha = Math.random();
         }
-        var randomColor = Color.fromBytes(red, green, blue, alpha);
+        var randomColor = new Color(red, green, blue, alpha);
         return randomColor;
     };
 
