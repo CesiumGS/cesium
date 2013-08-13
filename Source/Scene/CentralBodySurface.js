@@ -787,7 +787,7 @@ define([
         }
     }
 
-    var float32ArrayScratch = defined(Float32Array) ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();

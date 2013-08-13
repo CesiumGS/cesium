@@ -1732,7 +1732,7 @@ define([
     var scratchUniformMatrix2;
     var scratchUniformMatrix3;
     var scratchUniformMatrix4;
-    if (defined(Float32Array)) {
+    if (typeof Float32Array !== 'undefined') {
         scratchUniformMatrix2 = new Float32Array(4);
         scratchUniformMatrix3 = new Float32Array(9);
         scratchUniformMatrix4 = new Float32Array(16);
