@@ -89,14 +89,12 @@ define(['../Core/createGuid',
         }
         var coordsArray = text.split(/[\s\n]+/);
         var len = coordsArray.length;
-
         for (i = 0; i < len; i++){
             var string = coordsArray.shift();
             if (string.length > 0){ //empty string?
                 coordsArray.push(string);
             }
         }
-
         var finalCoords = [];
         for (var j = 0; coordsArray[j]; j++){
             var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
@@ -249,7 +247,7 @@ define(['../Core/createGuid',
             if(node.nodeName === "IconStyle"){
                 dynamicObject.billboard = new DynamicBillboard();
                 //Map style to billboard properties
-                //TODO heading, hotSpot and ColorMode
+                //TODO heading, hotSpot
                 var scale = getNumericValue(node, 'scale');
                 var icon = getStringValue(node,'href');
                 var color = getColorValue(node, 'color');
@@ -261,7 +259,6 @@ define(['../Core/createGuid',
             else if(node.nodeName ===  "LabelStyle")   {
                 dynamicObject.label = new DynamicLabel();
                 //Map style to label properties
-                //TODO ColorMode
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
 
@@ -272,11 +269,11 @@ define(['../Core/createGuid',
             else if(node.nodeName ===  "LineStyle")   {
                 dynamicObject.polyline = new DynamicPolyline();
                 //Map style to line properties
-                //TODO PhysicalWidth, Visibility, ColorMode
+                //TODO PhysicalWidth, Visibility
                 var lineColor = getColorValue(node, 'color');
                 var lineWidth = getNumericValue(node,'width');
-                var lineOuterColor = getColorValue(node,'gx:outerColor');
-                var lineOuterWidth = getNumericValue(node,'gx:outerWidth');
+                var lineOuterColor = getColorValue(node,'outerColor');
+                var lineOuterWidth = getNumericValue(node,'outerWidth');
 
                 dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(lineColor) : undefined;
                 dynamicObject.polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
