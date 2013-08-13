@@ -9,7 +9,7 @@ define(['Core/defined'], function(defined) {
     if (typeof Int8Array !== 'undefined') {
         typedArrayTypes.push(Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array);
 
-        if (defined(Uint8ClampedArray)) {
+        if (typeof Uint8ClampedArray !== 'undefined') {
             typedArrayTypes.push(Uint8ClampedArray);
         }
 
