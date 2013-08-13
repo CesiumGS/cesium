@@ -9,6 +9,7 @@ define([
         '../../Core/EventHelper',
         '../../Core/requestAnimationFrame',
         '../../Core/ScreenSpaceEventType',
+        '../../DynamicScene/DataSourceCollection',
         '../../DynamicScene/DataSourceDisplay',
         '../Animation/Animation',
         '../Animation/AnimationViewModel',
@@ -32,6 +33,7 @@ define([
         EventHelper,
         requestAnimationFrame,
         ScreenSpaceEventType,
+        DataSourceCollection,
         DataSourceDisplay,
         Animation,
         AnimationViewModel,
@@ -186,20 +188,11 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : false
         });
 
-        //Data source display
-        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene);
-        this._dataSourceDisplay = dataSourceDisplay;
+        var dataSourceCollection = new DataSourceCollection();
+        var dataSourceDisplay = new DataSourceDisplay(cesiumWidget.scene, dataSourceCollection);
 
         var clock = cesiumWidget.clock;
-
-        this._eventHelper = new EventHelper();
-
-        function updateDataSourceDisplay(clock) {
-            dataSourceDisplay.update(clock.currentTime);
-        }
-        this._eventHelper.add(clock.onTick, updateDataSourceDisplay);
-
-        this._clockViewModel = new ClockViewModel(clock);
+        var clockViewModel = new ClockViewModel(clock);
 
         var toolbar = document.createElement('div');
         toolbar.className = 'cesium-viewer-toolbar';
@@ -244,7 +237,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             var animationContainer = document.createElement('div');
             animationContainer.className = 'cesium-viewer-animationContainer';
             viewerContainer.appendChild(animationContainer);
-            animation = new Animation(animationContainer, new AnimationViewModel(this._clockViewModel));
+            animation = new Animation(animationContainer, new AnimationViewModel(clockViewModel));
         }
 
         //Timeline
@@ -285,9 +278,35 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
             timeline.container.style.right = 0;
         }
 
+        var eventHelper = new EventHelper();
+
+        function updateDataSourceDisplay(clock) {
+            dataSourceDisplay.update(clock.currentTime);
+        }
+
+        eventHelper.add(clock.onTick, updateDataSourceDisplay);
+
+        function setClockFromDataSource(dataSourceCollection, dataSource) {
+            if (dataSourceCollection.getLength() === 1) {
+                var dataSourceClock = dataSource.getClock();
+                if (typeof dataSourceClock !== 'undefined') {
+                    dataSourceClock.clone(clock);
+                    if (typeof timeline !== 'undefined') {
+                        timeline.updateFromClock();
+                        timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
+                    }
+                }
+            }
+        }
+
+        eventHelper.add(dataSourceCollection.dataSourceAdded, setClockFromDataSource);
+
         this._container = container;
         this._viewerContainer = viewerContainer;
         this._cesiumWidget = cesiumWidget;
+        this._dataSourceCollection = dataSourceCollection;
+        this._dataSourceDisplay = dataSourceDisplay;
+        this._clockViewModel = clockViewModel;
         this._toolbar = toolbar;
         this._homeButton = homeButton;
         this._sceneModePicker = sceneModePicker;
@@ -295,6 +314,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._animation = animation;
         this._timeline = timeline;
         this._fullscreenButton = fullscreenButton;
+        this._eventHelper = eventHelper;
         this._lastWidth = 0;
         this._lastHeight = 0;
         this._useDefaultRenderLoop = undefined;
@@ -412,7 +432,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
          */
         dataSources : {
             get : function() {
-                return this._dataSourceDisplay.getDataSources();
+                return this._dataSourceCollection;
             }
         },
 
@@ -693,6 +713,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._clockViewModel = this._clockViewModel.destroy();
         this._dataSourceDisplay = this._dataSourceDisplay.destroy();
         this._cesiumWidget = this._cesiumWidget.destroy();
+
+        this._dataSourceCollection = this._dataSourceCollection.destroy();
 
         return destroyObject(this);
     };
