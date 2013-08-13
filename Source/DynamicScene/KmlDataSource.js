@@ -12,6 +12,7 @@ define(['../Core/createGuid',
         '../Core/loadXML',
         './ConstantProperty',
         './DynamicProperty',
+        './DynamicMaterialProperty',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -36,6 +37,7 @@ define(['../Core/createGuid',
         loadXML,
         ConstantProperty,
         DynamicProperty,
+        DynamicMaterialProperty,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -224,22 +226,40 @@ define(['../Core/createGuid',
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node){
-      //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum, altitudeMode
+      //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
+    }
 
+    function processPolygon(dataSource, dynamicObject, kml, node){
+        var el = node.getElementsByTagName('coordinates');
+        var coordinates = [];
+        for (var j = 0; j < el.length; j++) {
+            coordinates = coordinates.concat(readCoordinates(el[j]));
+        }
+        var polygon = new DynamicPolygon();
+        polygon.material = new DynamicMaterialProperty();
+        polygonMaterial.processCzmlIntervals({
+            solidColor : {
+                color : {
+                    rgba : [255, 255, 255, 255]
+                }
+            }
+        }, undefined, undefined);
+        dynamicObject.polygon = polygon;
     }
 
     //Object that holds all supported Geometry
     var geometryTypes = {
             Point : processPoint,
             LineString : processLineString,
-            LinearRing : processLinearRing
-            //TODO Polygon, MultiGeometry, Model, gxTrack, gxMultitrack
+            LinearRing : processLinearRing,
+            Polygon: processPolygon
+            //TODO MultiGeometry, Model, gxTrack, gxMultitrack
     };
 
     function processStyle(styleNode, dynamicObject) {
@@ -247,7 +267,7 @@ define(['../Core/createGuid',
             var node = styleNode.childNodes.item(i);
 
             if(node.nodeName === "IconStyle"){
-                dynamicObject.billboard = new DynamicBillboard();
+                dynamicObject.billboard = typeof dynamicObject.billboard !== 'undefined' ? dynamicObject.billboard : new DynamicBillboard();
                 //Map style to billboard properties
                 //TODO heading, hotSpot
                 var scale = getNumericValue(node, 'scale');
@@ -259,7 +279,7 @@ define(['../Core/createGuid',
                 dynamicObject.billboard.color = typeof color !== 'undefined' ? new ConstantProperty(color) : undefined;
             }
             else if(node.nodeName ===  "LabelStyle")   {
-                dynamicObject.label = new DynamicLabel();
+                dynamicObject.label = typeof dynamicObject.label !== 'undefined' ? dynamicObject.label : new DynamicLabel();
                 //Map style to label properties
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
@@ -269,7 +289,7 @@ define(['../Core/createGuid',
                 dynamicObject.label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
             }
             else if(node.nodeName ===  "LineStyle")   {
-                dynamicObject.polyline = new DynamicPolyline();
+                dynamicObject.polyline = typeof dynamicObject.polyline !== 'undefined' ? dynamicObject.polyline : new DynamicPolyline();
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility
                 var lineColor = getColorValue(node, 'color');
@@ -283,9 +303,24 @@ define(['../Core/createGuid',
                 dynamicObject.polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
             }
             else if(node.nodeName === "PolyStyle")   {
-                dynamicObject.polygon = new DynamicPolygon();
+                dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
+                var polygonMaterial = new DynamicMaterialProperty();
+                polyline = new DynamicPolyline();
+                polyline.color = new ConstantProperty(Color.WHITE);
+                polyline.width = new ConstantProperty(1);
+                polyline.outlineColor = new ConstantProperty(Color.BLACK);
+                polyline.outlineWidth = new ConstantProperty(0);
+                DinamicObject.polyline = polyline;
+                dynamicObject.polygon.material = polygonMaterial;
+                polygonMaterial.processCzmlIntervals({
+                    solidColor : {
+                        color : {
+                            rgba : [255, 255, 0, 25]
+                        }
+                    }
+                }, undefined, undefined);
             }
         }
     }
