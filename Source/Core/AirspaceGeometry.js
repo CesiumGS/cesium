@@ -42,6 +42,7 @@ define([
     var scratchCartesian7 = new Cartesian3();
     var scratchCartesian8 = new Cartesian3();
     var scratchCartesian9 = new Cartesian3();
+    var scratch = new Cartesian3();
 
     var cross = new Cartesian3();
     function angleIsGreaterThanPi (first, second) {
@@ -49,10 +50,10 @@ define([
         return cross.z < 0;
     }
 
-    function addAttributes(attributes, normal, forward, left, front, back) {
-        var normals = attributes.normal;
-        var binormals = attributes.binormal;
-        var tangents = attributes.tangent;
+    function addAttributes(attributes, normal, left, front, back) {
+        var normals = attributes.normals;
+        var binormals = attributes.binormals;
+        var tangents = attributes.tangents;
         if (typeof normals !== 'undefined') {
             normals[front] = normal.x;
             normals[front+1] = normal.y;
@@ -74,13 +75,14 @@ define([
         }
 
         if (typeof binormals !== 'undefined') {
+            var forward = left.cross(normal, scratch).normalize(scratch);
             binormals[front] = forward.x;
             binormals[front+1] = forward.y;
             binormals[front+2] = forward.z;
 
             binormals[back] = forward.z;
-            binormals[back-5] = forward.y;
-            binormals[back-4] = forward.x;
+            binormals[back-1] = forward.y;
+            binormals[back-2] = forward.x;
         }
         return attributes;
     }
@@ -158,9 +160,16 @@ define([
 
         var attributes = new GeometryAttributes();
         var st = ((vertexFormat.st) ? new Float32Array(vertexCount * 2) : undefined);
-//        var normals = ((vertexFormat.normal) ? new Float32Array(threeVertex) : undefined);
-  //      var tangents = ((vertexFormat.tangent) ? new Float32Array(threeVertex) : undefined);
-    //    var binormals = ((vertexFormat.binormal) ? new Float32Array(threeVertex) : undefined);
+        var normals = ((vertexFormat.normal) ? new Float32Array(threeVertex) : undefined);
+        var tangents = ((vertexFormat.tangent) ? new Float32Array(threeVertex) : undefined);
+        var binormals = ((vertexFormat.binormal) ? new Float32Array(threeVertex) : undefined);
+
+        var attr = {
+                st: st,
+                normals: normals,
+                tangents: tangents,
+                binormals: binormals
+        };
 
         var i;
         var front = 0;
@@ -211,8 +220,8 @@ define([
         finalPositions[back-1] = rightPos.y;
         finalPositions[back-2] = rightPos.x;
 
+        attr = addAttributes(attr, normal, left, front, back);
 
-//        attributes = addAttributes(attributes, normal, forward, left, front, back);
         front += 3;
         back -= 3;
 
@@ -224,9 +233,7 @@ define([
             normal = positionNormals[i]; //add midpoint
             midpoint = position.add(previousPosition, midpoint).multiplyByScalar(0.5, midpoint);
             midNormal = normal.add(previousNormal, midNormal).normalize(midNormal);
-            if (i !== 1) {
-                left = midNormal.cross(forward, left).normalize(left);
-            }
+            left = midNormal.cross(forward, left).normalize(left);
 
             leftPos = midpoint.add(left.multiplyByScalar(width, scratch), scratch);
             finalPositions[front] = leftPos.x;
@@ -238,7 +245,8 @@ define([
             finalPositions[back-1] = rightPos.y;
             finalPositions[back-2] = rightPos.x;
 
-//            attributes = addAttributes(attributes, midNormal, forward, left, front, back);
+            attr = addAttributes(attr, midNormal, left, front, back);
+
             front += 3;
             back -= 3;
             if (i === length-1) {
@@ -250,6 +258,8 @@ define([
             var angle = Cartesian3.angleBetween(forward, backward);
             if ( angle !== Math.PI && angle !== 0) {
                 left = forward.add(backward, left).normalize(left);
+//                var f = normal.cross(left);
+  //              left = f.cross(normal, left);
             }
             if (angleIsGreaterThanPi(forward, backward) || angle === 0 ) {
                 left = left.negate(left);
@@ -264,8 +274,8 @@ define([
             finalPositions[back] = rightPos.z;
             finalPositions[back-1] = rightPos.y;
             finalPositions[back-2] = rightPos.x;
+            attr = addAttributes(attr, normal, left, front, back);
 
-//            attributes = addAttributes(attributes, normal, forward, left, front, back);
             front += 3;
             back -= 3;
 
@@ -274,7 +284,8 @@ define([
             backward = forward.negate(backward);
             previousNormal = normal;
         }
-
+        normal = positionNormals[positionNormals.length-1];
+        left = normal.cross(forward, left).normalize(left);
         leftPos = position.add(left.multiplyByScalar(width, scratch), scratch); // add last position
         finalPositions[front] = leftPos.x;
         finalPositions[front+1] = leftPos.y;
@@ -283,6 +294,8 @@ define([
         finalPositions[back] = rightPos.z;
         finalPositions[back-1] = rightPos.y;
         finalPositions[back-2] = rightPos.x;
+
+        attr = addAttributes(attr, normal, left, front, back);
 
         if (vertexFormat.st) {
             var stvar = 1 / (vertexCount/2-1);
@@ -307,13 +320,13 @@ define([
                 componentsPerAttribute : 3,
                 values : finalPositions
             });
-        }/*
+        }
 
         if (vertexFormat.normal) {
             attributes.normal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : normals
+                values : attr.normals
             });
         }
 
@@ -321,7 +334,7 @@ define([
             attributes.tangent = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : tangents
+                values : attr.tangents
             });
         }
 
@@ -329,10 +342,10 @@ define([
             attributes.binormal = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
-                values : binormals
+                values : attr.binormals
             });
         }
-*/
+
         var indices = IndexDatatype.createTypedArray(vertexCount, threeVertex - 6);
         var index = 0;
 
