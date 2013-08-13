@@ -101,13 +101,6 @@ define([
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
 
-                    var dataClock = source.getClock();
-                    if (defined(dataClock)) {
-                        dataClock.clone(viewer.clock);
-                        viewer.timeline.updateFromClock();
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                    }
-
                     if (defined(endUserOptions.lookAt)) {
                         var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
                         if (defined(dynamicObject)) {
