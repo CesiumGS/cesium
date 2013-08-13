@@ -156,7 +156,7 @@ define([
             for ( var i = 0; i < length; i++) {
                 var f = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f.name, i === 0);
+                reader.onload = createOnLoadCallback(viewer, f.name);
                 reader.onerror = createOnDropErrorCallback(viewer, f.name);
                 reader.readAsText(f);
             }
@@ -202,7 +202,7 @@ define([
         return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
-    function createOnLoadCallback(viewer, source, firstTime) {
+    function createOnLoadCallback(viewer, source) {
         var DataSource;
         var sourceUpperCase = source.toUpperCase();
         if (endsWith(sourceUpperCase, ".CZML")) {
@@ -220,16 +220,6 @@ define([
             try {
                 when(dataSource.load(JSON.parse(evt.target.result), source), function() {
                     viewer.dataSources.add(dataSource);
-                    if (firstTime) {
-                        var dataClock = dataSource.getClock();
-                        if (typeof dataClock !== 'undefined') {
-                            dataClock.clone(viewer.clock);
-                            if (typeof viewer.timeline !== 'undefined') {
-                                viewer.timeline.updateFromClock();
-                                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                            }
-                        }
-                    }
                 }, function(error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 });
