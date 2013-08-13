@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/jsonp',
         '../Core/Cartesian2',
         '../Core/DeveloperError',
@@ -14,6 +15,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         jsonp,
         Cartesian2,
         DeveloperError,
@@ -71,7 +73,7 @@ define([
     var BingMapsImageryProvider = function BingMapsImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.url === 'undefined') {
+        if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -125,7 +127,7 @@ define([
             that._imageUrlTemplate = resource.imageUrl.replace('{culture}', '');
 
             // Install the default tile discard policy if none has been supplied.
-            if (typeof that._tileDiscardPolicy === 'undefined') {
+            if (!defined(that._tileDiscardPolicy)) {
                 that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
                     missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
                     pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
@@ -465,7 +467,7 @@ define([
         imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
 
         var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             imageUrl = proxy.getURL(imageUrl);
         }
 

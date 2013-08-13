@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
              'Core/loadImageViaBlob',
+             'Core/defined',
              'ThirdParty/when'
             ], function(
              loadImageViaBlob,
+             defined,
              when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -17,7 +19,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof loadedImage !== 'undefined';
+            return defined(loadedImage);
         }, 'The image should load.', 5000);
 
         runs(function() {
@@ -33,7 +35,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof loadedImage !== 'undefined';
+            return defined(loadedImage);
         }, 'The image should load.');
 
         runs(function() {

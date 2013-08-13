@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Iau2006XysData',
         './Iau2006XysSample',
@@ -18,6 +19,7 @@ define([
     ],
     function(
         defaultValue,
+        defined,
         DeveloperError,
         Iau2006XysData,
         Iau2006XysSample,
@@ -70,7 +72,7 @@ define([
      * var transform = Transforms.eastNorthUpToFixedFrame(center);
      */
     Transforms.eastNorthUpToFixedFrame = function(origin, ellipsoid, result) {
-        if (typeof origin === 'undefined') {
+        if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
 
@@ -78,7 +80,7 @@ define([
         if (CesiumMath.equalsEpsilon(origin.x, 0.0, CesiumMath.EPSILON14) &&
             CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
             var sign = CesiumMath.sign(origin.z);
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 return new Matrix4(
                         0.0, -sign,  0.0, origin.x,
                         1.0,   0.0,  0.0, origin.y,
@@ -118,7 +120,7 @@ define([
 
         normal.cross(tangent, bitangent);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(
                     tangent.x, bitangent.x, normal.x, origin.x,
                     tangent.y, bitangent.y, normal.y, origin.y,
@@ -174,7 +176,7 @@ define([
      * var transform = Transforms.northEastDownToFixedFrame(center);
      */
     Transforms.northEastDownToFixedFrame = function(origin, ellipsoid, result) {
-        if (typeof origin === 'undefined') {
+        if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
 
@@ -182,7 +184,7 @@ define([
             CesiumMath.equalsEpsilon(origin.y, 0.0, CesiumMath.EPSILON14)) {
             // The poles are special cases.  If x and y are zero, assume origin is at a pole.
             var sign = CesiumMath.sign(origin.z);
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 return new Matrix4(
                   -sign, 0.0,   0.0, origin.x,
                     0.0, 1.0,   0.0, origin.y,
@@ -222,7 +224,7 @@ define([
 
         normal.cross(tangent, bitangent);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(
                     bitangent.x, tangent.x, -normal.x, origin.x,
                     bitangent.y, tangent.y, -normal.y, origin.y,
@@ -281,7 +283,7 @@ define([
      * updateAndRender();
      */
     Transforms.computeTemeToPseudoFixedMatrix = function (date, result) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
 
@@ -309,7 +311,7 @@ define([
         var cosGha = Math.cos(gha);
         var sinGha = Math.sin(gha);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix3(cosGha, sinGha, 0.0,
                               -sinGha, cosGha, 0.0,
                                   0.0,    0.0, 1.0);
@@ -413,7 +415,7 @@ define([
      *     scene.initializeFrame();
      *     scene.setSunPosition(Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame(now));
      *     var icrfToFixed = Transforms.computeIcrfToFixedMatrix(now);
-     *     if (typeof icrfToFixed !== 'undefined') {
+     *     if (defined(icrfToFixed)) {
      *         scene.getCamera().transform = Matrix4.fromRotationTranslation(icrfToFixed, Cartesian3.ZERO);
      *     }
      *     scene.render();
@@ -422,12 +424,12 @@ define([
      * updateAndRender();
      */
     Transforms.computeIcrfToFixedMatrix = function(date, result) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
 
         var fixedToIcrfMtx = Transforms.computeFixedToIcrfMatrix(date, result);
-        if (typeof fixedToIcrfMtx === 'undefined') {
+        if (!defined(fixedToIcrfMtx)) {
             return undefined;
         }
 
@@ -463,18 +465,18 @@ define([
      * var pointInFixed = new Cartesian3(...);
      * var fixedToIcrf = Transforms.computeIcrfToFixedMatrix(now);
      * var pointInInertial;
-     * if (typeof fixedToIcrf !== 'undefined') {
+     * if (defined(fixedToIcrf)) {
      *     pointInInertial = fixedToIcrf.multiplyByVector(pointInFixed);
      * }
      */
     Transforms.computeFixedToIcrfMatrix = function(date, result) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError('date is required.');
         }
 
         // Compute pole wander
         var eop = Transforms.earthOrientationParameters.compute(date, eopScratch);
-        if (typeof eop === 'undefined') {
+        if (!defined(eop)) {
             return undefined;
         }
 
@@ -487,7 +489,7 @@ define([
         var secondTT = date.getSecondsOfDay() + ttMinusTai;
 
         var xys = Transforms.iau2006XysData.computeXysRadians(dayTT, secondTT, xysScratch);
-        if (typeof xys === 'undefined') {
+        if (!defined(xys)) {
             return undefined;
         }
 
@@ -588,15 +590,15 @@ define([
      * @see czm_viewportTransformation
      */
     Transforms.pointToWindowCoordinates = function (modelViewProjectionMatrix, viewportTransformation, point, result) {
-        if (typeof modelViewProjectionMatrix === 'undefined') {
+        if (!defined(modelViewProjectionMatrix)) {
             throw new DeveloperError('modelViewProjectionMatrix is required.');
         }
 
-        if (typeof viewportTransformation === 'undefined') {
+        if (!defined(viewportTransformation)) {
             throw new DeveloperError('viewportTransformation is required.');
         }
 
-        if (typeof point === 'undefined') {
+        if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
 

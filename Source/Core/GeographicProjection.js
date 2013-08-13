@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './Cartesian3',
         './Cartographic',
         './Ellipsoid'
     ], function(
         defaultValue,
+        defined,
         Cartesian3,
         Cartographic,
         Ellipsoid) {
@@ -63,7 +65,7 @@ define([
         var y = cartographic.latitude * semimajorAxis;
         var z = cartographic.height;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian3(x, y, z);
         }
 
@@ -93,7 +95,7 @@ define([
         var latitude = cartesian.y * oneOverEarthSemimajorAxis;
         var height = cartesian.z;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
 

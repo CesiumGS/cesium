@@ -1,10 +1,12 @@
 /*global define*/
 define([
-    './DeveloperError',
-    './defaultValue'
+        './defaultValue',
+        './defined',
+        './DeveloperError'
     ], function(
-        DeveloperError,
-        defaultValue) {
+        defaultValue,
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -48,7 +50,7 @@ define([
         var maximumIndex = description.maximumIndex;
         var cacheSize = defaultValue(description.cacheSize, 24);
 
-        if (typeof indices === 'undefined') {
+        if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
 
@@ -65,7 +67,7 @@ define([
         }
 
         // Compute the maximumIndex if not given
-        if (typeof maximumIndex === 'undefined') {
+        if (!defined(maximumIndex)) {
             maximumIndex = 0;
             var currentIndex = 0;
             var intoIndices = indices[currentIndex];
@@ -171,7 +173,7 @@ define([
             return n;
         }
 
-        if (typeof indices === 'undefined') {
+        if (!defined(indices)) {
             throw new DeveloperError('indices is required.');
         }
         var numIndices = indices.length;
@@ -191,7 +193,7 @@ define([
         var currentIndex = 0;
         var intoIndices = indices[currentIndex];
         var endIndex = numIndices;
-        if (typeof maximumIndex !== 'undefined') {
+        if (defined(maximumIndex)) {
             maximumIndexPlusOne = maximumIndex + 1;
         } else {
             while (currentIndex < endIndex) {

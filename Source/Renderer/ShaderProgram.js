@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/RuntimeError',
         '../Core/destroyObject',
@@ -10,6 +11,7 @@ define([
         './UniformDatatype',
         '../Shaders/BuiltinFunctions'
     ], function(
+        defined,
         DeveloperError,
         RuntimeError,
         destroyObject,
@@ -1971,9 +1973,9 @@ define([
                 return function() {
                     var v = this.value;
 
-                    if (typeof v.red !== 'undefined') {
+                    if (defined(v.red)) {
                         _gl.uniform4f(_location, v.red, v.green, v.blue, v.alpha);
-                    } else if (typeof v.x !== 'undefined') {
+                    } else if (defined(v.x)) {
                         _gl.uniform4f(_location, v.x, v.y, v.z, v.w);
                     } else {
                         throw new DeveloperError('Invalid vec4 value for uniform "' + activeUniform.name + '".');
@@ -2095,9 +2097,9 @@ define([
                     for ( var i = 0; i < _locations.length; ++i) {
                         var v = this.value[i];
 
-                        if (typeof v.red !== 'undefined') {
+                        if (defined(v.red)) {
                             _gl.uniform4f(_locations[i], v.red, v.green, v.blue, v.alpha);
-                        } else if (typeof v.x !== 'undefined') {
+                        } else if (defined(v.x)) {
                             _gl.uniform4f(_locations[i], v.x, v.y, v.z, v.w);
                         } else {
                             throw new DeveloperError('Invalid vec4 value.');
@@ -2596,7 +2598,7 @@ define([
         gl.deleteShader(vertexShader);
         gl.deleteShader(fragmentShader);
 
-        if (typeof attributeLocations !== 'undefined') {
+        if (defined(attributeLocations)) {
             for ( var attribute in attributeLocations) {
                 if (attributeLocations.hasOwnProperty(attribute)) {
                     gl.bindAttribLocation(program, attributeLocations[attribute], attribute);

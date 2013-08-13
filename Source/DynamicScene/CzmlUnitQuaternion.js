@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/Quaternion',
+        '../Core/defined',
         '../Core/Cartesian3'
     ], function(
         Quaternion,
+        defined,
         Cartesian3) {
     "use strict";
 
@@ -105,7 +107,7 @@ define([
          * @returns The modified result parameter or a new Quaternion instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Quaternion();
             }
             result.x = unwrappedInterval[0];
@@ -124,7 +126,7 @@ define([
          * @returns The modified result parameter or a new Quaternion instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Quaternion();
             }
             result.x = array[startingIndex];
@@ -146,7 +148,7 @@ define([
          * @returns The modified result parameter or a new Quaternion instance if result was not defined.
          */
         getValueFromInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Quaternion();
             }
             rotationVector.x = array[0];

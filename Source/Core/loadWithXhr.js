@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './RequestErrorEvent',
         '../ThirdParty/when'
     ], function(
+        defined,
         DeveloperError,
         RequestErrorEvent,
         when) {
@@ -39,7 +41,7 @@ define([
      * });
      */
     var loadWithXhr = function(url, responseType, headers) {
-        if (typeof url === 'undefined') {
+        if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 
@@ -57,7 +59,7 @@ define([
         var xhr = new XMLHttpRequest();
         xhr.open('GET', url, true);
 
-        if (typeof headers !== 'undefined') {
+        if (defined(headers)) {
             for ( var key in headers) {
                 if (headers.hasOwnProperty(key)) {
                     xhr.setRequestHeader(key, headers[key]);
@@ -65,7 +67,7 @@ define([
             }
         }
 
-        if (typeof responseType !== 'undefined') {
+        if (defined(responseType)) {
             xhr.responseType = responseType;
         }
 

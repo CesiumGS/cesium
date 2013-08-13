@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './Enumeration',
+        './defined',
         './DeveloperError',
         './Math'
     ], function(
         Enumeration,
+        defined,
         DeveloperError,
         CesiumMath) {
     "use strict";
@@ -94,7 +96,7 @@ define([
      * this.indices = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
-        if (typeof numberOfVertices === 'undefined') {
+        if (!defined(numberOfVertices)) {
             throw new DeveloperError('numberOfVertices is required.');
         }
 

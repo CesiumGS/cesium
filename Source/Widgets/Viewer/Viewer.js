@@ -2,6 +2,7 @@
 define([
         '../../Core/Cartesian2',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -26,6 +27,7 @@ define([
     ], function(
         Cartesian2,
         defaultValue,
+        defined,
         DeveloperError,
         defineProperties,
         destroyObject,
@@ -151,23 +153,23 @@ define([
      * });
      */
     var Viewer = function(container, options) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
         container = getElement(container);
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var createBaseLayerPicker = typeof options.baseLayerPicker === 'undefined' || options.baseLayerPicker !== false;
+        var createBaseLayerPicker = !defined(options.baseLayerPicker) || options.baseLayerPicker !== false;
 
         //If using BaseLayerPicker, imageryProvider is an invalid option
-        if (createBaseLayerPicker && typeof options.imageryProvider !== 'undefined') {
+        if (createBaseLayerPicker && defined(options.imageryProvider)) {
             throw new DeveloperError('options.imageryProvider is not available when using the BaseLayerPicker widget. \
 Either specify options.selectedImageryProviderViewModel instead or set options.baseLayerPicker to false.');
         }
 
         //If not using BaseLayerPicker, selectedImageryProviderViewModel is an invalid option
-        if (!createBaseLayerPicker && typeof options.selectedImageryProviderViewModel !== 'undefined') {
+        if (!createBaseLayerPicker && defined(options.selectedImageryProviderViewModel)) {
             throw new DeveloperError('options.selectedImageryProviderViewModel is not available when not using the BaseLayerPicker widget. \
 Either specify options.imageryProvider instead or set options.baseLayerPicker to true.');
         }
@@ -200,7 +202,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         //HomeButton
         var homeButton;
-        if (typeof options.homeButton === 'undefined' || options.homeButton !== false) {
+        if (!defined(options.homeButton) || options.homeButton !== false) {
             var homeButtonContainer = document.createElement('div');
             homeButtonContainer.className = 'cesium-viewer-homeButtonContainer';
             toolbar.appendChild(homeButtonContainer);
@@ -209,7 +211,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         //SceneModePicker
         var sceneModePicker;
-        if (typeof options.sceneModePicker === 'undefined' || options.sceneModePicker !== false) {
+        if (!defined(options.sceneModePicker) || options.sceneModePicker !== false) {
             var sceneModePickerContainer = document.createElement('div');
             sceneModePickerContainer.className = 'cesium-viewer-sceneModePickerContainer';
             toolbar.appendChild(sceneModePickerContainer);
@@ -233,7 +235,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         //Animation
         var animation;
-        if (typeof options.animation === 'undefined' || options.animation !== false) {
+        if (!defined(options.animation) || options.animation !== false) {
             var animationContainer = document.createElement('div');
             animationContainer.className = 'cesium-viewer-animationContainer';
             viewerContainer.appendChild(animationContainer);
@@ -242,7 +244,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         //Timeline
         var timeline;
-        if (typeof options.timeline === 'undefined' || options.timeline !== false) {
+        if (!defined(options.timeline) || options.timeline !== false) {
             var timelineContainer = document.createElement('div');
             timelineContainer.className = 'cesium-viewer-timelineContainer';
             viewerContainer.appendChild(timelineContainer);
@@ -253,7 +255,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         //Fullscreen
         var fullscreenButton;
-        if (typeof options.fullscreenButton === 'undefined' || options.fullscreenButton !== false) {
+        if (!defined(options.fullscreenButton) || options.fullscreenButton !== false) {
             var fullscreenContainer = document.createElement('div');
             fullscreenContainer.className = 'cesium-viewer-fullscreenContainer';
             viewerContainer.appendChild(fullscreenContainer);
@@ -267,14 +269,14 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
                 } else {
                     fullscreenContainer.style.display = 'none';
                 }
-                if (typeof timeline !== 'undefined') {
+                if (defined(timeline)) {
                     timeline.container.style.right = fullscreenContainer.clientWidth + 'px';
                     timeline.resize();
                 }
             };
             this._fullscreenSubscription = knockout.getObservable(fullscreenButton.viewModel, 'isFullscreenEnabled').subscribe(fullScreenEnabledCallback);
             fullScreenEnabledCallback(fullscreenButton.viewModel.isFullscreenEnabled);
-        } else if (typeof timeline !== 'undefined') {
+        } else if (defined(timeline)) {
             timeline.container.style.right = 0;
         }
 
@@ -289,9 +291,9 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         function setClockFromDataSource(dataSourceCollection, dataSource) {
             if (dataSourceCollection.getLength() === 1) {
                 var dataSourceClock = dataSource.getClock();
-                if (typeof dataSourceClock !== 'undefined') {
+                if (defined(dataSourceClock)) {
                     dataSourceClock.clone(clock);
-                    if (typeof timeline !== 'undefined') {
+                    if (defined(timeline)) {
                         timeline.updateFromClock();
                         timeline.zoomTo(dataSourceClock.startTime, dataSourceClock.stopTime);
                     }
@@ -566,7 +568,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @see viewerDynamicObjectMixin
      */
     Viewer.prototype.extend = function(mixin, options) {
-        if (typeof mixin === 'undefined') {
+        if (!defined(mixin)) {
             throw new DeveloperError('mixin is required.');
         }
         mixin(this, options);
@@ -590,13 +592,13 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
-        if (typeof baseLayerPickerDropDown !== 'undefined') {
+        if (defined(baseLayerPickerDropDown)) {
             var baseLayerPickerMaxHeight = height - 125;
             baseLayerPickerDropDown.style.maxHeight = baseLayerPickerMaxHeight + 'px';
         }
 
-        var timelineExists = typeof this._timeline !== 'undefined';
-        var animationExists = typeof this._animation !== 'undefined';
+        var timelineExists = defined(this._timeline);
+        var animationExists = defined(this._animation);
         var animationContainer;
 
         var resizeWidgets = !animationExists;
@@ -681,30 +683,30 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
 
         this._eventHelper.removeAll();
 
-        if (typeof this._homeButton !== 'undefined') {
+        if (defined(this._homeButton)) {
             this._homeButton = this._homeButton.destroy();
         }
 
-        if (typeof this._sceneModePicker !== 'undefined') {
+        if (defined(this._sceneModePicker)) {
             this._sceneModePicker = this._sceneModePicker.destroy();
         }
 
-        if (typeof this._baseLayerPicker !== 'undefined') {
+        if (defined(this._baseLayerPicker)) {
             this._baseLayerPicker = this._baseLayerPicker.destroy();
         }
 
-        if (typeof this._animation !== 'undefined') {
+        if (defined(this._animation)) {
             this._viewerContainer.removeChild(this._animation.container);
             this._animation = this._animation.destroy();
         }
 
-        if (typeof this._timeline !== 'undefined') {
+        if (defined(this._timeline)) {
             this._timeline.removeEventListener('settime', onTimelineScrubfunction, false);
             this._viewerContainer.removeChild(this._timeline.container);
             this._timeline = this._timeline.destroy();
         }
 
-        if (typeof this._fullscreenButton !== 'undefined') {
+        if (defined(this._fullscreenButton)) {
             this._fullscreenSubscription.dispose();
             this._viewerContainer.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();

@@ -582,7 +582,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Quaternion.clone()).toEqual('undefined');
+        expect(Quaternion.clone()).toBeUndefined();
     });
 
     it('static conjugate throws with no parameter', function() {

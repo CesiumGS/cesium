@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian2',
         '../Core/createGuid',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './PixelFormat'
@@ -12,6 +13,7 @@ define([
         Cartesian2,
         createGuid,
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         PixelFormat) {
@@ -55,7 +57,7 @@ define([
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
 
         var context = description.context;
-        if (typeof context === 'undefined') {
+        if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
 
@@ -85,12 +87,12 @@ define([
 
         // Add initial images if there are any.
         var images = description.images;
-        if (typeof images !== 'undefined' && images.length > 0) {
+        if (defined(images) && images.length > 0) {
             this.addImages(images);
         }
 
         var image = description.image;
-        if (typeof image !== 'undefined') {
+        if (defined(image)) {
             this.addImage(image);
         }
     };
@@ -117,7 +119,7 @@ define([
             // Resize texture coordinates.
             for ( var i = 0; i < textureAtlas._textureCoordinates.length; i++) {
                 var texCoord = textureAtlas._textureCoordinates[i];
-                if (typeof texCoord !== 'undefined') {
+                if (defined(texCoord)) {
                     texCoord.x *= widthRatio;
                     texCoord.y *= heightRatio;
                     texCoord.width *= widthRatio;
@@ -160,16 +162,16 @@ define([
     // a new image based on existing image 'nodes'.
     // Inspired by: http://blackpawn.com/texts/lightmaps/default.html
     function findNode(textureAtlas, node, image) {
-        if (typeof node === 'undefined') {
+        if (!defined(node)) {
             return undefined;
         }
 
         // If a leaf node
-        if (typeof node.childNode1 === 'undefined' &&
-            typeof node.childNode2 === 'undefined') {
+        if (!defined(node.childNode1) &&
+            !defined(node.childNode2)) {
 
             // Node already contains an image, don't add to it.
-            if (typeof node.imageIndex !== 'undefined') {
+            if (defined(node.imageIndex)) {
                 return undefined;
             }
 
@@ -216,14 +218,14 @@ define([
 
     // Adds image of given index to the texture atlas. Called from addImage and addImages.
     function addImage(textureAtlas, image, index) {
-        if (typeof image === 'undefined') {
+        if (!defined(image)) {
             throw new DeveloperError('image is required.');
         }
 
         var node = findNode(textureAtlas, textureAtlas._root, image);
 
         // Found a node that can hold the image.
-        if (typeof node !== 'undefined') {
+        if (defined(node)) {
             node.imageIndex = index;
 
             // Add texture coordinate and write to texture
@@ -289,7 +291,7 @@ define([
      */
     TextureAtlas.prototype.addImages = function(images) {
         // Check if image array is valid.
-        if (typeof images === 'undefined' || (images.length < 1)) {
+        if (!defined(images) || (images.length < 1)) {
             throw new DeveloperError('images is required and must have length greater than zero.');
         }
 

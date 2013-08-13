@@ -2,6 +2,7 @@
 define([
         './buildModuleUrl',
         './defaultValue',
+        './defined',
         './Iau2006XysSample',
         './JulianDate',
         './loadJson',
@@ -10,6 +11,7 @@ define([
     ], function(
         buildModuleUrl,
         defaultValue,
+        defined,
         Iau2006XysSample,
         JulianDate,
         loadJson,
@@ -172,12 +174,12 @@ define([
         // We can assume so if the first and last are present
         var isDataMissing = false;
         var samples = this._samples;
-        if (typeof samples[firstIndex * 3] === 'undefined') {
+        if (!defined(samples[firstIndex * 3])) {
             requestXysChunk(this, (firstIndex / this._samplesPerXysFile) | 0);
             isDataMissing = true;
         }
 
-        if (typeof samples[lastIndex * 3] === 'undefined') {
+        if (!defined(samples[lastIndex * 3])) {
             requestXysChunk(this, (lastIndex / this._samplesPerXysFile) | 0);
             isDataMissing = true;
         }
@@ -186,7 +188,7 @@ define([
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Iau2006XysSample(0.0, 0.0, 0.0);
         } else {
             result.x = 0.0;
@@ -238,7 +240,7 @@ define([
 
         var chunkUrl;
         var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
-        if (typeof xysFileUrlTemplate !== 'undefined') {
+        if (defined(xysFileUrlTemplate)) {
             chunkUrl = xysFileUrlTemplate.replace('{0}', chunkIndex);
         } else {
             chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
