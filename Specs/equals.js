@@ -1,15 +1,15 @@
 /*global define*/
-define(function() {
+define(['Core/defined'], function(defined) {
     "use strict";
-    /*global Uint8ClampedArray,CanvasPixelArray*/
+    /*global CanvasPixelArray*/
 
     var typedArrayTypes = [];
 
     // Earlier versions of IE do not support typed arrays
-    if (typeof Int8Array !== 'undefined') {
+    if (defined(Int8Array)) {
         typedArrayTypes.push(Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array);
 
-        if (typeof Uint8ClampedArray !== 'undefined') {
+        if (defined(Uint8ClampedArray)) {
             typedArrayTypes.push(Uint8ClampedArray);
         }
 
