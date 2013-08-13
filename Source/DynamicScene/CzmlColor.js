@@ -13,33 +13,9 @@ define([
      * Provides methods for working with a Color defined in CZML.
      *
      * @exports CzmlColor
-     *
-     * @see Color
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlColor = {
         type : Color,
-        /**
-         * The number of doubles per packed Color value.
-         */
-        length : length,
-
-        /**
-         * The number of doubles per packed value used for interpolation.
-         */
-        interpolationLength : length,
 
         /**
          * Returns the packed Color representation contained within the provided CZML interval
@@ -84,7 +60,7 @@ define([
          * @param {Object} unwrappedInterval The result of CzmlColor.unwrapInterval.
          */
         isSampled : function(unwrappedInterval) {
-            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > length;
+            return unwrappedInterval.length > length;
         },
 
         /**
@@ -102,26 +78,6 @@ define([
             result.green = unwrappedInterval[1];
             result.blue = unwrappedInterval[2];
             result.alpha = unwrappedInterval[3];
-            return result;
-        },
-
-
-        /**
-         * Given a packed array of red, green, blue, and alpha values, extracts a Color instance.
-         *
-         * @param {Array} array A packed array of Color values, where every four elements represents a Color.
-         * @param {Number} startingIndex The index into the array that contains the red value of the Color you would like.
-         * @param {Color} result The object to store the result in, if undefined a new instance will be created.
-         * @returns The modified result parameter or a new Color instance if result was not defined.
-         */
-        getValueFromArray : function(array, startingIndex, result) {
-            if (!defined(result)) {
-                result = new Color();
-            }
-            result.red = array[startingIndex];
-            result.green = array[startingIndex + 1];
-            result.blue = array[startingIndex + 2];
-            result.alpha = array[startingIndex + 3];
             return result;
         }
     };

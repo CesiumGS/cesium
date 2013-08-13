@@ -48,10 +48,6 @@ defineSuite(['DynamicScene/CzmlDirection',
         expect(CzmlDirection.getValue(constantCartesianInterval.unitCartesian)).toEqual(cartesian1);
     });
 
-    it('getValueFromArray', function() {
-        expect(CzmlDirection.getValueFromArray(sampledCartesianInterval.unitCartesian, 5)).toEqual(cartesian2);
-    });
-
     it('Spherical unwrapInterval', function() {
         expect(CzmlDirection.unwrapInterval(constantSphericalInterval)).toEqual(constantCartesianInterval.unitCartesian);
         expect(CzmlDirection.unwrapInterval(sampledSphericalInterval)).toEqual(sampledCartesianInterval.unitCartesian);

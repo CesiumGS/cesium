@@ -13,20 +13,6 @@ define([
      * Provides methods for working with a image defined in CZML.
      *
      * @exports CzmlImage
-     *
-     * @see DynamicProperty
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlImage
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlImage = {
         /**

@@ -34,8 +34,4 @@ defineSuite([
     it('getValue', function() {
         expect(CzmlUnitCartesian3.getValue(constantCartesianInterval.unitCartesian)).toEqual(cartesian1);
     });
-
-    it('getValueFromArray', function() {
-        expect(CzmlUnitCartesian3.getValueFromArray(sampledCartesianInterval.unitCartesian, 5)).toEqualEpsilon(cartesian2, CesiumMath.EPSILON15);
-    });
 });

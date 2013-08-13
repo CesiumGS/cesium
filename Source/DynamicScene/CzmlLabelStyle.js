@@ -11,21 +11,6 @@ define([
      * Provides methods for working with a label style defined in CZML.
      *
      * @exports CzmlLabelStyle
-     *
-     * @see LabelStyle
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlLabelStyle = {
         /**

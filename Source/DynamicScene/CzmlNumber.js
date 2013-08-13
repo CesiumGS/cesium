@@ -7,39 +7,13 @@ define([
         InterpolatableNumber) {
     "use strict";
 
-    var length = 1;
-
     /**
      * Provides methods for working with a number defined in CZML.
      *
      * @exports CzmlNumber
-     *
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlNumber = {
         type : InterpolatableNumber,
-
-        /**
-         * The number of doubles per packed value.
-         */
-        length : length,
-
-        /**
-         * The number of doubles per packed value used for interpolation.
-         */
-        interpolationLength : length,
 
         /**
          * Returns the packed numerical representation contained within the provided CZML interval
@@ -70,17 +44,6 @@ define([
          */
         getValue : function(unwrappedInterval) {
             return unwrappedInterval;
-        },
-
-        /**
-         * Given a packed array of numerical values, returns the number at the given index..
-         *
-         * @param {Array} array An array of numbers.
-         * @param {Number} startingIndex The index into the array that contains the value you would like.
-         * @returns The value at the specified index.
-         */
-        getValueFromArray : function(array, startingIndex) {
-            return array[startingIndex];
         }
     };
 

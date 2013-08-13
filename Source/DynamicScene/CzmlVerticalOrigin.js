@@ -11,21 +11,6 @@ define([
      * Provides methods for working with a vertical origin defined in CZML.
      *
      * @exports CzmlVerticalOrigin
-     *
-     * @see VerticalOrigin
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
      */
     var CzmlVerticalOrigin = {
         /**

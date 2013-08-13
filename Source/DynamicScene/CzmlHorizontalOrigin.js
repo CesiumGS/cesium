@@ -11,21 +11,6 @@ define([
      * Provides methods for working with a horizontal origin defined in CZML.
      *
      * @exports CzmlHorizontalOrigin
-     *
-     * @see HorizontalOrigin
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlHorizontalOrigin = {
         /**

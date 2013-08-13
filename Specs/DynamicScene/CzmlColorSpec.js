@@ -25,7 +25,6 @@ defineSuite([
     };
 
     var color1 = new Color(sampledRgbafInterval.rgbaf[1], sampledRgbafInterval.rgbaf[2], sampledRgbafInterval.rgbaf[3], sampledRgbafInterval.rgbaf[4]);
-    var color2 = new Color(sampledRgbafInterval.rgbaf[6], sampledRgbafInterval.rgbaf[7], sampledRgbafInterval.rgbaf[8], sampledRgbafInterval.rgbaf[9]);
 
     it('unwrapInterval', function() {
         expect(CzmlColor.unwrapInterval(constantRgbaInterval)).toEqual(constantRgbafInterval.rgbaf);
@@ -41,9 +40,5 @@ defineSuite([
 
     it('getValue', function() {
         expect(CzmlColor.getValue(constantRgbafInterval.rgbaf)).toEqual(color1);
-    });
-
-    it('getValueFromArray', function() {
-        expect(CzmlColor.getValueFromArray(sampledRgbafInterval.rgbaf, 6)).toEqual(color2);
     });
 });

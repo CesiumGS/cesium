@@ -9,20 +9,6 @@ define([
      * Provides methods for working with a string defined in CZML.
      *
      * @exports CzmlString
-     *
-     * @see DynamicProperty
-     * @see CzmlCartesian2
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlString = {
         /**

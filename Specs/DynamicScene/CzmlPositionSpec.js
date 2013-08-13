@@ -57,10 +57,6 @@ defineSuite(['DynamicScene/CzmlPosition',
         expect(CzmlPosition.getValue(constantCartesianInterval.cartesian)).toEqual(cartesian1);
     });
 
-    it('getValueFromArray', function() {
-        expect(CzmlPosition.getValueFromArray(sampledCartesianInterval.cartesian, 5)).toEqual(cartesian2);
-    });
-
     it('Cartographic unwrapInterval', function() {
         expect(CzmlPosition.unwrapInterval(constantCartographicInterval)).toEqual(constantCartesianInterval.cartesian);
         expect(CzmlPosition.unwrapInterval(constantCartographicDegreesInterval)).toEqual(constantCartesianInterval.cartesian);

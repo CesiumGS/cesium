@@ -7,39 +7,13 @@ define([
          defined) {
     "use strict";
 
-    var length = 2;
-
     /**
      * Provides methods for working with a Cartesian2 defined in CZML.
      *
      * @exports CzmlCartesian2
-     *
-     * @see Cartesian2
-     * @see DynamicProperty
-     * @see CzmlBoolean
-     * @see CzmlCartesian3
-     * @see CzmlPosition
-     * @see CzmlColor
-     * @see CzmlHorizontalOrigin
-     * @see CzmlLabelStyle
-     * @see CzmlNumber
-     * @see CzmlString
-     * @see CzmlUnitCartesian3
-     * @see CzmlUnitQuaternion
-     * @see CzmlUnitSpherical
-     * @see CzmlVerticalOrigin
      */
     var CzmlCartesian2 = {
         type : Cartesian2,
-        /**
-         * The number of doubles per packed Cartesian2 value.
-         */
-        length : length,
-
-        /**
-         * The number of doubles per packed value used for interpolation.
-         */
-        interpolationLength : length,
 
         /**
          * Returns the packed Cartesian2 representation contained within the provided CZML interval
@@ -58,7 +32,7 @@ define([
          * @param {Object} unwrappedInterval The result of CzmlCartesian2.unwrapInterval.
          */
         isSampled : function(unwrappedInterval) {
-            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > length;
+            return unwrappedInterval.length > 2;
         },
 
         /**
@@ -74,23 +48,6 @@ define([
             }
             result.x = unwrappedInterval[0];
             result.y = unwrappedInterval[1];
-            return result;
-        },
-
-        /**
-         * Given a packed array of x and y values, extracts a Cartesian2 instance.
-         *
-         * @param {Array} array A packed array of Cartesian2 values, where every two elements represents an x,y pair.
-         * @param {Number} startingIndex The index into the array that contains the x value of the Cartesian2 you would like.
-         * @param {Cartesian2} result The object to store the result in, if undefined a new instance will be created.
-         * @returns The modified result parameter or a new Cartesian2 instance if result was not defined.
-         */
-        getValueFromArray : function(array, startingIndex, result) {
-            if (!defined(result)) {
-                result = new Cartesian2();
-            }
-            result.x = array[startingIndex];
-            result.y = array[startingIndex + 1];
             return result;
         }
     };
