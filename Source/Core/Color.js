@@ -160,22 +160,16 @@ define([
      *
      */
     Color.fromRandom = function(options){
-        var red = options.red;
-        var green = options.green;
-        var blue = options.blue;
-        var alpha = options.alpha;
-        if (red > 0){
-            red = Math.random();
-        }
-        if (green > 0){
-            green = Math.random();
-        }
-        if (blue > 0){
-            blue = Math.random();
-        }
-        if (alpha > 0){
-            alpha = Math.random();
-        }
+        var red = typeof options.red !== 'undefined' ? options.red : 0;
+        var green = typeof options.green !== 'undefined' ? options.green : 0;
+        var blue = typeof options.blue !== 'undefined' ? options.blue : 0;
+        var alpha = typeof options.alpha !== 'undefined' ? options.alpha : 0;
+
+        red = Math.random() * red;
+        green = Math.random() * green;
+        blue = Math.random() * blue;
+        alpha = Math.random() * alpha;
+
         var randomColor = new Color(red, green, blue, alpha);
         return randomColor;
     };
