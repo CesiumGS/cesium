@@ -3,17 +3,19 @@ define([
         './Enumeration',
         './defined',
         './DeveloperError',
+        './FeatureDetection',
         './Math'
     ], function(
         Enumeration,
         defined,
         DeveloperError,
+        FeatureDetection,
         CesiumMath) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
-    if (typeof Int8Array === 'undefined') {
+    if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
 

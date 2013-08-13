@@ -3,12 +3,14 @@ define([
         './defaultValue',
         './defined',
         './freezeObject',
-        './DeveloperError'
+        './DeveloperError',
+        './FeatureDetection'
     ], function(
         defaultValue,
         defined,
         freezeObject,
-        DeveloperError) {
+        DeveloperError,
+        FeatureDetection) {
     "use strict";
 
     function hue2rgb(m1, m2, h) {
@@ -90,7 +92,7 @@ define([
     var scratchArrayBuffer;
     var scratchUint32Array;
     var scratchUint8Array;
-    if (typeof ArrayBuffer !== 'undefined') {
+    if (FeatureDetection.supportsTypedArrays()) {
         scratchArrayBuffer = new ArrayBuffer(4);
         scratchUint32Array = new Uint32Array(scratchArrayBuffer);
         scratchUint8Array = new Uint8Array(scratchArrayBuffer);
