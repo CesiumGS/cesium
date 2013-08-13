@@ -162,7 +162,7 @@ define(['../Core/createGuid',
         if (typeof value === 'undefined'){
             return new Color(1.0, 1.0, 1.0, 1.0); //white as default?
         }
-        var colorMode = colorModeNode.firstChild.data;
+        var colorMode = typeof colorModeNode !== 'undefined' ? colorModeNode.firstChild.data : undefined;
         if(colorMode === 'random'){
             var options = {};
             options.alpha = parseInt(value.substring(0,2), 16) / 255.0;
