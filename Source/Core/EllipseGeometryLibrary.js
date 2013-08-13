@@ -20,11 +20,7 @@ define([
     var unitQuat = new Quaternion();
     var rotMtx = new Matrix3();
 
-    /**
-     * Returns a point on an ellipsoid
-     * @private
-     */
-    EllipseGeometryLibrary.pointOnEllipsoid = function(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
+    function pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, result) {
         var azimuth = theta + rotation;
 
         Cartesian3.multiplyByScalar(eastVec, Math.cos(azimuth), rotAxis);
@@ -48,7 +44,7 @@ define([
         Cartesian3.normalize(result, result);
         Cartesian3.multiplyByScalar(result, mag, result);
         return result;
-    };
+    }
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -165,8 +161,8 @@ define([
         // Compute points in the 'northern' half of the ellipse
         var theta = CesiumMath.PI_OVER_TWO;
         for (i = 0; i < numPts && theta > 0; ++i) {
-            position = EllipseGeometryLibrary.pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            reflectedPosition = EllipseGeometryLibrary.pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            position = pointOnEllipsoid(theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            reflectedPosition = pointOnEllipsoid(Math.PI - theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             if (addFillPositions) {
                 positions[positionIndex++] = position.x;
@@ -204,8 +200,8 @@ define([
         for (i = numPts; i > 0; --i) {
             theta = CesiumMath.PI_OVER_TWO - (i - 1) * deltaTheta;
 
-            position = EllipseGeometryLibrary.pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
-            reflectedPosition = EllipseGeometryLibrary.pointOnEllipsoid(theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
+            position = pointOnEllipsoid(-theta, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, position);
+            reflectedPosition = pointOnEllipsoid(theta + Math.PI, rotation, northVec, eastVec, aSqr, ab, bSqr, mag, unitPos, reflectedPosition);
 
             if (addFillPositions) {
                 positions[positionIndex++] = position.x;

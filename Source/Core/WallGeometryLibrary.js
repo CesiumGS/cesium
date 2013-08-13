@@ -168,8 +168,8 @@ define([
                 newMinHeights.push(minimumHeights[length-1]);
             }
         }
-        var bottomPositions = (hasMinHeights) ? PolylinePipeline.scaleToGeodeticHeight(newWallPositions, ellipsoid, newMinHeights) : newWallPositions.slice(0);
-        var topPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, ellipsoid, newMaxHeights);
+        var bottomPositions = (hasMinHeights) ? PolylinePipeline.scaleToGeodeticHeight(newWallPositions, newMinHeights, ellipsoid) : newWallPositions.slice(0);
+        var topPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, newMaxHeights, ellipsoid);
 
         return {
             newWallPositions: newWallPositions,

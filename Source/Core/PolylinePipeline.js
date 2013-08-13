@@ -271,6 +271,7 @@ define([
      * @returns {Array} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
+     * @exception {DeveloperError} height must be defined.
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
@@ -281,11 +282,13 @@ define([
      *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, ellipsoid, height) {
+     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
         if (typeof positions === 'undefined') {
             throw new DeveloperError('positions must be defined.');
         }
-        height = defaultValue(height, 0);
+        if (typeof height === 'undefined') {
+            throw new DeveloperError('height must be defined');
+        }
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         var length = positions.length;

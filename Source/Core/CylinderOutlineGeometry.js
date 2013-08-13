@@ -4,6 +4,7 @@ define([
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
+        './CylinderGeometryLibrary',
         './Math',
         './ComponentDatatype',
         './IndexDatatype',
@@ -16,6 +17,7 @@ define([
         DeveloperError,
         Cartesian2,
         Cartesian3,
+        CylinderGeometryLibrary,
         CesiumMath,
         ComponentDatatype,
         IndexDatatype,
@@ -80,33 +82,9 @@ define([
 
         var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
-        var topZ = length * 0.5;
-        var bottomZ = -topZ;
-
         var numVertices = slices * 2;
 
-        var positions = new Float64Array(numVertices * 3);
-
-        var i;
-        var index = 0;
-
-        for (i = 0; i < slices; i++) {
-            var angle = i / slices * CesiumMath.TWO_PI;
-            var x = Math.cos(angle);
-            var y = Math.sin(angle);
-            var bottomX = x * bottomRadius;
-            var bottomY = y * bottomRadius;
-            var topX = x * topRadius;
-            var topY = y * topRadius;
-
-            positions[index + slices*3] = topX;
-            positions[index + slices*3 + 1] = topY;
-            positions[index + slices*3 + 2] = topZ;
-
-            positions[index++] = bottomX;
-            positions[index++] = bottomY;
-            positions[index++] = bottomZ;
-        }
+        var positions = CylinderGeometryLibrary.computePositions(options, slices);
         var numIndices = slices * 2;
         var numSide;
         if (numberOfVerticalLines > 0) {
@@ -116,9 +94,8 @@ define([
         }
 
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices*2);
-        index = 0;
-
-        for (i = 0; i < slices-1; i++) {
+        var index = 0;
+        for (var i = 0; i < slices-1; i++) {
             indices[index++] = i;
             indices[index++] = i+1;
             indices[index++] = i + slices;
