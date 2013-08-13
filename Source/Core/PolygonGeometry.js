@@ -648,7 +648,7 @@ define([
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (typeof options.positions === 'undefined') {
+        if (!defined(options.positions)) {
             throw new DeveloperError('options.positions is required.');
         }
 

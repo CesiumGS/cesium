@@ -8,6 +8,7 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
+         'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -25,6 +26,7 @@ defineSuite([
          frameState,
          pick,
          render,
+         defined,
          BoundingSphere,
          Cartesian3,
          Cartographic,
@@ -173,7 +175,7 @@ defineSuite([
             var commandList = [];
             extent.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 boundingVolume = commandList[0].colorList[0].boundingVolume;
                 return true;
             }
@@ -194,7 +196,7 @@ defineSuite([
             var commandList = [];
             extent.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 boundingVolume = commandList[0].colorList[0].boundingVolume;
                 return true;
             }
@@ -216,7 +218,7 @@ defineSuite([
             var commandList = [];
             extent.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 boundingVolume = commandList[0].colorList[0].boundingVolume;
                 return true;
             }

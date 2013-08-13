@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './FeatureDetection',
         './Enumeration'
     ], function(
+        defined,
         DeveloperError,
         FeatureDetection,
         Enumeration) {
@@ -138,11 +140,11 @@ define([
      * var typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, 100);
      */
     ComponentDatatype.createTypedArray = function(componentDatatype, valuesOrLength) {
-        if (typeof componentDatatype === 'undefined') {
+        if (!defined(componentDatatype)) {
             throw new DeveloperError('componentDatatype is required.');
         }
 
-        if (typeof valuesOrLength === 'undefined') {
+        if (!defined(valuesOrLength)) {
             throw new DeveloperError('valuesOrLength is required.');
         }
 
@@ -180,11 +182,11 @@ define([
      * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
      */
     ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset, length) {
-        if (typeof componentDatatype === 'undefined') {
+        if (!defined(componentDatatype)) {
             throw new DeveloperError('componentDatatype is required.');
         }
 
-        if (typeof buffer === 'undefined') {
+        if (!defined(buffer)) {
             throw new DeveloperError('buffer is required.');
         }
 

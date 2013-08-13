@@ -250,7 +250,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var positions = options.positions;
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
 
@@ -260,8 +260,8 @@ define([
         var min = options.minimumHeight;
         var max = options.maximumHeight;
 
-        var doMin = (typeof min !== 'undefined');
-        var doMax = (typeof max !== 'undefined');
+        var doMin = defined(min);
+        var doMax = defined(max);
         if (doMin || doMax) {
             var length = positions.length;
             minHeights = (doMin) ? new Array(length) : undefined;

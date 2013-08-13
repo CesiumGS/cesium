@@ -76,7 +76,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var slices = defaultValue(options.slices, 100);
 
-        if (typeof length === 'undefined' || length <= 0) {
+        if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0');
         }
 

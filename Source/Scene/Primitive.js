@@ -393,7 +393,6 @@ define([
                 }
             }
         }
-
     }
 
     var taskProcessor = new TaskProcessor('taskDispatcher', Number.POSITIVE_INFINITY);
@@ -440,7 +439,7 @@ define([
                 geometry = instances[i].geometry;
                 this._instanceIds.push(instances[i].id);
 
-                if (typeof geometry.attributes !== 'undefined' && typeof geometry.primitiveType !== 'undefined') {
+                if (defined(geometry.attributes) && defined(geometry.primitiveType)) {
                     this._createdGeometries.push({
                         geometry : cloneGeometry(geometry),
                         index : i
@@ -482,14 +481,14 @@ define([
                 attributes = geometry.attributes;
                 for (var name in attributes) {
                     if (attributes.hasOwnProperty(name) &&
-                            typeof attributes[name] !== 'undefined' &&
-                            typeof attributes[name].values !== 'undefined' &&
+                            defined(attributes[name]) &&
+                            defined(attributes[name].values) &&
                             transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
                         transferableObjects.push(attributes[name].values.buffer);
                     }
                 }
 
-                if (typeof geometry.indices !== 'undefined') {
+                if (defined(geometry.indices)) {
                     transferableObjects.push(geometry.indices.buffer);
                 }
             }
@@ -531,8 +530,8 @@ define([
             var attributeIndices = this._attributeIndices;
             var vaAttributes = this._vaAttributes;
 
-
             this._boundingSphere = BoundingSphere.clone(geometries[0].boundingSphere);
+            if (!this._allow3DOnly && defined(this._boundingSphere)) {
                 this._boundingSphere2D = BoundingSphere.projectTo2D(this._boundingSphere, projection);
             }
 
@@ -742,7 +741,7 @@ define([
             throw new DeveloperError('id is required');
         }
 
-        if (typeof this._perInstanceAttributeIndices === 'undefined') {
+        if (!defined(this._perInstanceAttributeIndices)) {
             throw new DeveloperError('must call update before calling getGeometryInstanceAttributes');
         }
 

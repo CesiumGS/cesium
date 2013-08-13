@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/defaultValue',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -13,6 +14,7 @@ define([
         '../Core/WebMercatorProjection',
         './createTaskProcessorWorker'
     ], function(
+        defined,
         defaultValue,
         Color,
         ComponentDatatype,
@@ -102,7 +104,7 @@ define([
                 for (var i = 1; i < length; ++i) {
                     var otherAttribute = instances[i].attributes[name];
 
-                    if ((typeof otherAttribute === 'undefined') ||
+                    if (!defined(otherAttribute) ||
                         (attribute.componentDatatype.value !== otherAttribute.componentDatatype.value) ||
                         (attribute.componentsPerAttribute !== otherAttribute.componentsPerAttribute) ||
                         (attribute.normalize !== otherAttribute.normalize)) {
@@ -278,11 +280,11 @@ define([
                         }
                     }
 
-                    if (typeof indices[i] === 'undefined') {
+                    if (!defined(indices[i])) {
                         indices[i] = {};
                     }
 
-                    if (typeof indices[i][name] === 'undefined') {
+                    if (!defined(indices[i][name])) {
                         indices[i][name] = {
                             dirty : false,
                             value : instance.attributes[name].value,
@@ -349,14 +351,14 @@ define([
             var attributes = geometry.attributes;
             for (var name in attributes) {
                 if (attributes.hasOwnProperty(name) &&
-                        typeof attributes[name] !== 'undefined' &&
-                        typeof attributes[name].values !== 'undefined' &&
+                        defined(attributes[name]) &&
+                        defined(attributes[name].values) &&
                         transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
                     transferableObjects.push(attributes[name].values.buffer);
                 }
             }
 
-            if (typeof geometry.indices !== 'undefined') {
+            if (defined(geometry.indices)) {
                 transferableObjects.push(geometry.indices.buffer);
             }
         }

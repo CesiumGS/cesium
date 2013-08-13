@@ -96,7 +96,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var dimensions = options.dimensions;
-        if (typeof dimensions === 'undefined') {
+        if (!defined(dimensions)) {
             throw new DeveloperError('options.dimensions is required.');
         }
 

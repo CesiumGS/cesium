@@ -5,6 +5,7 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/createFrameState',
          'Specs/render',
+         'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian2',
          'Core/Cartesian3',
@@ -31,6 +32,7 @@ defineSuite([
          destroyContext,
          createFrameState,
          render,
+         defined,
          BoundingSphere,
          Cartesian2,
          Cartesian3,
@@ -119,7 +121,7 @@ defineSuite([
             var commandList = [];
             primitive.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 bv = commandList[0].colorList[0].boundingVolume;
                 return true;
             }
@@ -156,7 +158,7 @@ defineSuite([
             var commandList = [];
             primitive.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 bv = commandList[0].colorList[0].boundingVolume;
                 return true;
             }
@@ -202,7 +204,7 @@ defineSuite([
             var commandList = [];
             primitive.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 bv = commandList[0].colorList[0].boundingVolume;
                 return true;
             }
@@ -238,7 +240,7 @@ defineSuite([
             var commandList = [];
             primitive.update(context, frameState, commandList);
 
-            if (commandList.length > 0 && typeof commandList[0].colorList !== 'undefined' && commandList[0].colorList.length > 0) {
+            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
                 bv = commandList[0].colorList[0].boundingVolume;
                 return true;
             }

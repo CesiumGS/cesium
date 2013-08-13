@@ -668,7 +668,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var extrudedOptions = options.extrudedOptions;
 
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 
@@ -798,7 +798,7 @@ define([
         };
 
         var geometry;
-        if (typeof extentGeometry._extrudedOptions !== 'undefined') {
+        if (defined(extentGeometry._extrudedOptions)) {
             geometry = constructExtrudedExtent(extentGeometry, vertexFormat, params);
         } else {
             geometry = constructExtent(extentGeometry, vertexFormat, params);

@@ -55,7 +55,7 @@ define([
             throw new DeveloperError('options.geometry is required.');
         }
 
-        if (typeof geometry.attributes === 'undefined' || typeof geometry.primitiveType === 'undefined') {
+        if (!defined(geometry.attributes) || !defined(geometry.primitiveType)) {
             // to create the debug lines, we need the computed attributes.
             // compute them if they are undefined.
             geometry = geometry.constructor.createGeometry(geometry);
