@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         knockout) {
@@ -22,7 +24,7 @@ define([
      * @param {String|Observable} [options.tooltip=''] A string, or observable, containing the button's tooltip.
      */
     var ToggleButtonViewModel = function(command, options) {
-        if (typeof command === 'undefined') {
+        if (!defined(command)) {
             throw new DeveloperError('command is required.');
         }
 

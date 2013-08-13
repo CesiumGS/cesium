@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Math',
@@ -10,6 +11,7 @@ define([
         './TextureWrap',
         './CubeMapFace'
     ], function(
+        defined,
         DeveloperError,
         destroyObject,
         CesiumMath,
@@ -180,7 +182,7 @@ define([
      * @exception {DeveloperError} This CubeMap was destroyed, i.e., destroy() was called.
      */
     CubeMap.prototype.setSampler = function(sampler) {
-        if (typeof sampler === 'undefined') {
+        if (!defined(sampler)) {
             var minFilter = TextureMinificationFilter.LINEAR;
             var magFilter = TextureMagnificationFilter.LINEAR;
             if (this._pixelDatatype === PixelDatatype.FLOAT) {

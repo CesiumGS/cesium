@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -20,6 +21,7 @@ define([
         './WindingOrder'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -89,15 +91,15 @@ define([
         var maximumHeights = options.maximumHeights;
         var minimumHeights = options.minimumHeights;
 
-        if (typeof wallPositions === 'undefined') {
+        if (!defined(wallPositions)) {
             throw new DeveloperError('positions is required.');
         }
 
-        if (typeof maximumHeights !== 'undefined' && maximumHeights.length !== wallPositions.length) {
+        if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and maximumHeights must have the same length.');
         }
 
-        if (typeof minimumHeights !== 'undefined' && minimumHeights.length !== wallPositions.length) {
+        if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
 
@@ -110,8 +112,7 @@ define([
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;
-        var size = length * 2;
+        var length = newWallPositions.length;        var size = length * 2;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
         var normals = vertexFormat.normal ? new Float32Array(size) : undefined;
@@ -366,7 +367,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var positions = options.positions;
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             throw new DeveloperError('options.positions is required.');
         }
 
@@ -376,8 +377,8 @@ define([
         var min = options.minimumHeight;
         var max = options.maximumHeight;
 
-        var doMin = (typeof min !== 'undefined');
-        var doMax = (typeof max !== 'undefined');
+        var doMin = (defined(min));
+        var doMax = (defined(max));
         if (doMin || doMax) {
             var length = positions.length;
             minHeights = (doMin) ? new Array(length) : undefined;

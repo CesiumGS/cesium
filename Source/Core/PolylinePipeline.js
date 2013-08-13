@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartographic',
         './Cartesian3',
@@ -13,6 +14,7 @@ define([
         './Plane'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartographic,
         Cartesian3,
@@ -116,7 +118,7 @@ define([
         var cartesians = [];
         var segments = [];
 
-        if (typeof positions !== 'undefined' && positions.length > 0) {
+        if (defined(positions) && positions.length > 0) {
             modelMatrix = defaultValue(modelMatrix, Matrix4.IDENTITY);
             var inverseModelMatrix = Matrix4.inverseTransformation(modelMatrix, wrapLongitudeInversMatrix);
 
@@ -138,7 +140,7 @@ define([
                 if (Plane.getPointDistance(yzPlane, prev) < 0.0 || Plane.getPointDistance(yzPlane, cur) < 0.0) {
                     // and intersects the xz-plane
                     var intersection = IntersectionTests.lineSegmentPlane(prev, cur, xzPlane, wrapLongitudeIntersection);
-                    if (typeof intersection !== 'undefined') {
+                    if (defined(intersection)) {
                         // move point on the xz-plane slightly away from the plane
                         var offset = Cartesian3.multiplyByScalar(xzNormal, 5.0e-9, wrapLongitudeOffset);
                         if (Plane.getPointDistance(xzPlane, prev) < 0.0) {
@@ -189,7 +191,7 @@ define([
      * var nonDuplicatePositions = PolylinePipeline.removeDuplicates(positions);
      */
     PolylinePipeline.removeDuplicates = function(positions) {
-        if (typeof positions  === 'undefined') {
+        if (!defined(positions )) {
             throw new DeveloperError('positions is required.');
         }
 
@@ -236,7 +238,7 @@ define([
      * var surfacePositions = PolylinePipeline.scaleToSurface(positions);
      */
     PolylinePipeline.scaleToSurface = function(positions, granularity, ellipsoid) {
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             throw new DeveloperError('positions is required');
         }
         granularity = defaultValue(granularity, CesiumMath.RADIANS_PER_DEGREE);
@@ -283,10 +285,10 @@ define([
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
      PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
-        if (typeof height === 'undefined') {
+        if (!defined(height)) {
             throw new DeveloperError('height must be defined');
         }
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

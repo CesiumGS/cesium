@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -16,6 +17,7 @@ define([
         './PrimitiveType'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -79,13 +81,13 @@ define([
         var rSurfaceY = kY / gamma;
         var rSurfaceZ = kZ / gamma;
 
-        if (typeof maxHeight !== 'undefined') {
+        if (defined(maxHeight)) {
             position.x = rSurfaceX + nX * maxHeight; // top
             position.y = rSurfaceY + nY * maxHeight;
             position.z = rSurfaceZ + nZ * maxHeight;
         }
 
-        if (typeof minHeight !== 'undefined') {
+        if ( minHeight !== 'undefined') {
             extrudedPosition.x = rSurfaceX + nX * minHeight; // bottom
             extrudedPosition.y = rSurfaceY + nY * minHeight;
             extrudedPosition.z = rSurfaceZ + nZ * minHeight;
@@ -291,7 +293,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 
@@ -317,7 +319,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (typeof rotation !== 'undefined') {
+        if (defined(rotation)) {
             var cosRotation = cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -374,7 +376,7 @@ define([
         };
 
         var extentGeometry;
-        if (typeof options.extrudedHeight !== 'undefined') {
+        if (defined(options.extrudedHeight)) {
             extentGeometry = constructExtrudedExtent(params, options.extrudedHeight);
         } else {
             extentGeometry = constructExtent(params);

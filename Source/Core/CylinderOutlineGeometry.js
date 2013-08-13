@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
@@ -14,6 +15,7 @@ define([
         './GeometryAttributes'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian2,
         Cartesian3,
@@ -60,15 +62,15 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
-        if (typeof length === 'undefined' || length <= 0) {
+        if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0.');
         }
         var topRadius = options.topRadius;
-        if (typeof topRadius === 'undefined' || topRadius < 0) {
+        if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0.');
         }
         var bottomRadius = options.bottomRadius;
-        if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
+        if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
         if (bottomRadius === 0 && topRadius === 0) {

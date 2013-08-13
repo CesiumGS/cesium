@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     var _supportsFullscreen;
@@ -28,7 +28,7 @@ define(function() {
      * <code>false</code> otherwise.
      */
     Fullscreen.supportsFullscreen = function() {
-        if (typeof _supportsFullscreen !== 'undefined') {
+        if (defined(_supportsFullscreen)) {
             return _supportsFullscreen;
         }
 
@@ -79,22 +79,22 @@ define(function() {
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenEnabled';
-            if (typeof document[name] !== 'undefined') {
+            if (defined(document[name])) {
                 _names.fullscreenEnabled = name;
             } else {
                 name = prefix + 'FullScreenEnabled';
-                if (typeof document[name] !== 'undefined') {
+                if (defined(document[name])) {
                     _names.fullscreenEnabled = name;
                 }
             }
 
             // casing of Fullscreen differs across browsers
             name = prefix + 'FullscreenElement';
-            if (typeof document[name] !== 'undefined') {
+            if (defined(document[name])) {
                 _names.fullscreenElement = name;
             } else {
                 name = prefix + 'FullScreenElement';
-                if (typeof document[name] !== 'undefined') {
+                if (defined(document[name])) {
                     _names.fullscreenElement = name;
                 }
             }
@@ -102,12 +102,12 @@ define(function() {
             // thankfully, event names are all lowercase per spec
             name = prefix + 'fullscreenchange';
             // event names do not have 'on' in the front, but the property on the document does
-            if (typeof document['on' + name] !== 'undefined') {
+            if (defined(document['on' + name])) {
                 _names.fullscreenchange = name;
             }
 
             name = prefix + 'fullscreenerror';
-            if (typeof document['on' + name] !== 'undefined') {
+            if (defined(document['on' + name])) {
                 _names.fullscreenerror = name;
             }
         }

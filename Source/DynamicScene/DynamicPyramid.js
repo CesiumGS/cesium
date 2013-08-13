@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -11,6 +12,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -98,79 +100,79 @@ define([
      */
     DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var pyramidData = packet.pyramid;
-        if (typeof pyramidData === 'undefined') {
+        if (!defined(pyramidData)) {
             return false;
         }
 
         var pyramidUpdated = false;
         var pyramid = dynamicObject.pyramid;
-        pyramidUpdated = typeof pyramid === 'undefined';
+        pyramidUpdated = !defined(pyramid);
         if (pyramidUpdated) {
             dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }
 
         var interval = pyramidData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pyramidData.show !== 'undefined') {
+        if (defined(pyramidData.show)) {
             var show = pyramid.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 pyramid.show = show = new DynamicProperty(CzmlBoolean);
                 pyramidUpdated = true;
             }
             show.processCzmlIntervals(pyramidData.show, interval);
         }
 
-        if (typeof pyramidData.radius !== 'undefined') {
+        if (defined(pyramidData.radius)) {
             var radius = pyramid.radius;
-            if (typeof radius === 'undefined') {
+            if (!defined(radius)) {
                 pyramid.radius = radius = new DynamicProperty(CzmlNumber);
                 pyramidUpdated = true;
             }
             radius.processCzmlIntervals(pyramidData.radius, interval);
         }
 
-        if (typeof pyramidData.showIntersection !== 'undefined') {
+        if (defined(pyramidData.showIntersection)) {
             var showIntersection = pyramid.showIntersection;
-            if (typeof showIntersection === 'undefined') {
+            if (!defined(showIntersection)) {
                 pyramid.showIntersection = showIntersection = new DynamicProperty(CzmlBoolean);
                 pyramidUpdated = true;
             }
             showIntersection.processCzmlIntervals(pyramidData.showIntersection, interval);
         }
 
-        if (typeof pyramidData.intersectionColor !== 'undefined') {
+        if (defined(pyramidData.intersectionColor)) {
             var intersectionColor = pyramid.intersectionColor;
-            if (typeof intersectionColor === 'undefined') {
+            if (!defined(intersectionColor)) {
                 pyramid.intersectionColor = intersectionColor = new DynamicProperty(CzmlColor);
                 pyramidUpdated = true;
             }
             intersectionColor.processCzmlIntervals(pyramidData.intersectionColor, interval);
         }
 
-        if (typeof pyramidData.intersectionWidth !== 'undefined') {
+        if (defined(pyramidData.intersectionWidth)) {
             var intersectionWidth = pyramid.intersectionWidth;
-            if (typeof intersectionWidth === 'undefined') {
+            if (!defined(intersectionWidth)) {
                 pyramid.intersectionWidth = intersectionWidth = new DynamicProperty(CzmlNumber);
                 pyramidUpdated = true;
             }
             intersectionWidth.processCzmlIntervals(pyramidData.intersectionWidth, interval);
         }
 
-        if (typeof pyramidData.material !== 'undefined') {
+        if (defined(pyramidData.material)) {
             var material = pyramid.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 pyramid.material = material = new DynamicMaterialProperty();
                 pyramidUpdated = true;
             }
             material.processCzmlIntervals(pyramidData.material, interval);
         }
 
-        if (typeof pyramidData.directions !== 'undefined') {
+        if (defined(pyramidData.directions)) {
             var directions = pyramid.directions;
-            if (typeof directions === 'undefined') {
+            if (!defined(directions)) {
                 pyramid.directions = directions = new DynamicDirectionsProperty();
                 pyramidUpdated = true;
             }
@@ -192,10 +194,10 @@ define([
      */
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
         var pyramidToMerge = objectToMerge.pyramid;
-        if (typeof pyramidToMerge !== 'undefined') {
+        if (defined(pyramidToMerge)) {
 
             var targetPyramid = targetObject.pyramid;
-            if (typeof targetPyramid === 'undefined') {
+            if (!defined(targetPyramid)) {
                 targetObject.pyramid = targetPyramid = new DynamicPyramid();
             }
 

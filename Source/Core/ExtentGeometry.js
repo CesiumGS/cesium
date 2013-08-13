@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -24,6 +25,7 @@ define([
         './VertexFormat'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -106,13 +108,13 @@ define([
         var rSurfaceY = kY / gamma;
         var rSurfaceZ = kZ / gamma;
 
-        if (typeof maxHeight !== 'undefined') {
+        if (defined(maxHeight)) {
             position.x = rSurfaceX + nX * maxHeight; // top
             position.y = rSurfaceY + nY * maxHeight;
             position.z = rSurfaceZ + nZ * maxHeight;
         }
 
-        if (typeof minHeight !== 'undefined') {
+        if (defined(minHeight)) {
             extrudedPosition.x = rSurfaceX + nX * minHeight; // bottom
             extrudedPosition.y = rSurfaceY + nY * minHeight;
             extrudedPosition.z = rSurfaceZ + nZ * minHeight;
@@ -311,7 +313,7 @@ define([
         textureCoordsScratch.x += 0.5;
         textureCoordsScratch.y += 0.5;
 
-        if (typeof offset !== 'undefined') {
+        if (defined(offset)) {
             wallTextureCoordinates[stIndex + offset] = textureCoordsScratch.x;
             wallTextureCoordinates[stIndex + 1 + offset] = textureCoordsScratch.y;
         }
@@ -661,7 +663,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 
@@ -689,7 +691,7 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        if (typeof rotation !== 'undefined') {
+        if (defined(rotation)) {
             var cosRotation = cos(rotation);
             granYCos *= cosRotation;
             granXCos *= cosRotation;
@@ -740,7 +742,7 @@ define([
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var size = width * height;
 
-        if (typeof stRotation !== 'undefined') {
+        if (defined(stRotation)) {
             // negate angle for a counter-clockwise rotation
             Matrix2.fromRotation(-stRotation, textureMatrix);
 
@@ -770,7 +772,7 @@ define([
         };
 
         var extentGeometry;
-        if (typeof options.extrudedHeight !== 'undefined') {
+        if (defined(options.extrudedHeight)) {
             params.extrudedHeight = options.extrudedHeight;
             params.closeTop = options.closeTop;
             params.closeBottom = options.closeBottom;

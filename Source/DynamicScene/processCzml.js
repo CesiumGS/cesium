@@ -1,17 +1,19 @@
 /*global define*/
 define([
         '../Core/createGuid',
+        '../Core/defined',
         '../Core/DeveloperError',
         './CzmlDefaults'
     ], function(
         createGuid,
+        defined,
         DeveloperError,
         CzmlDefaults) {
     "use strict";
 
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
-        if (typeof objectId === 'undefined') {
+        if (!defined(objectId)) {
             objectId = createGuid();
         }
 
@@ -20,7 +22,7 @@ define([
         } else {
             var object = dynamicObjectCollection.getOrCreateObject(objectId);
             for ( var i = updaterFunctions.length - 1; i > -1; i--) {
-                if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && typeof updatedObjectsHash[objectId] === 'undefined') {
+                if (updaterFunctions[i](object, packet, dynamicObjectCollection, sourceUri) && !defined(updatedObjectsHash[objectId])) {
                     updatedObjectsHash[objectId] = true;
                     updatedObjects.push(object);
                 }
@@ -51,16 +53,16 @@ define([
      * });
      */
     var processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
-        if (typeof czml === 'undefined') {
+        if (!defined(czml)) {
             throw new DeveloperError('czml is required.');
         }
-        if (typeof dynamicObjectCollection === 'undefined') {
+        if (!defined(dynamicObjectCollection)) {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
         var updatedObjects = [];
         var updatedObjectsHash = {};
-        updaterFunctions = typeof updaterFunctions !== 'undefined' ? updaterFunctions : CzmlDefaults.updaters;
+        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDefaults.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {

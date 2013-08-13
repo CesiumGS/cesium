@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian3',
         './ComponentDatatype',
@@ -16,6 +17,7 @@ define([
         './Quaternion'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -172,15 +174,15 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
 
-        if (typeof center === 'undefined') {
+        if (!defined(center)) {
             throw new DeveloperError('center is required.');
         }
 
-        if (typeof semiMajorAxis === 'undefined') {
+        if (!defined(semiMajorAxis)) {
             throw new DeveloperError('semiMajorAxis is required.');
         }
 
-        if (typeof semiMinorAxis === 'undefined') {
+        if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
 
@@ -208,7 +210,7 @@ define([
             throw new DeveloperError('granularity must be greater than zero.');
         }
 
-        var extrude = (typeof newOptions.extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
+        var extrude = (defined(newOptions.extrudedHeight) && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
 
         var ellipseGeometry;
         if (extrude) {

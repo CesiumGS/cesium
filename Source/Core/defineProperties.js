@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     var definePropertyWorks = (function() {
@@ -21,7 +21,7 @@ define(function() {
      * @exports defineProperties
      */
     var defineProperties = Object.defineProperties;
-    if (!definePropertyWorks || typeof defineProperties === 'undefined') {
+    if (!definePropertyWorks || !defined(defineProperties)) {
         defineProperties = function(o) {
             return o;
         };

@@ -4,6 +4,7 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
+        './defined',
         './Geometry',
         './GeometryAttribute',
         './Ellipsoid',
@@ -19,6 +20,7 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
+        defined,
         Geometry,
         GeometryAttribute,
         Ellipsoid,
@@ -38,14 +40,14 @@ define([
     }
 
     DoublyLinkedList.prototype.add = function(item) {
-        if (typeof item !== 'undefined') {
+        if (defined(item)) {
             var node = {
                 item : item,
                 previous : this.tail,
                 next : undefined
             };
 
-            if (typeof this.tail !== 'undefined') {
+            if (defined(this.tail)) {
                 this.tail.next = node;
                 this.tail = node;
             } else {
@@ -59,15 +61,15 @@ define([
     };
 
     DoublyLinkedList.prototype.remove = function(item) {
-        if (typeof item !== 'undefined') {
-            if (typeof item.previous !== 'undefined' && typeof item.next  !== 'undefined') {
+        if (defined(item)) {
+            if (defined(item.previous) && defined(item.next)) {
                 item.previous.next = item.next;
                 item.next.previous = item.previous;
-            } else if (typeof item.previous  !== 'undefined') {
+            } else if (defined(item.previous )) {
                 // Remove last node.
                 item.previous.next = undefined;
                 this.tail = item.previous;
-            } else if (typeof item.next !== 'undefined') {
+            } else if (defined(item.next)) {
                 // Remove first node.
                 item.next.previous = undefined;
                 this.head = item.next;
@@ -392,7 +394,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         removeDuplicates : function(positions) {
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -422,7 +424,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -468,7 +470,7 @@ define([
             //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
             //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
 
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -555,11 +557,11 @@ define([
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
         computeSubdivision : function(positions, indices, granularity) {
-            if (typeof positions === 'undefined') {
+            if (!defined(positions)) {
                 throw new DeveloperError('positions is required.');
             }
 
-            if (typeof indices === 'undefined') {
+            if (!defined(indices)) {
                 throw new DeveloperError('indices is required.');
             }
 
@@ -718,7 +720,7 @@ define([
 
             height = defaultValue(height, 0.0);
 
-            if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
+            if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
                 var positions = geometry.attributes.position.values;
                 var length = positions.length;
 
@@ -758,13 +760,13 @@ define([
          * polygon.setPositions(outerRing);
          */
         eliminateHoles : function(outerRing, innerRings, ellipsoid) {
-            if (typeof outerRing === 'undefined') {
+            if (!defined(outerRing)) {
                 throw new DeveloperError('outerRing is required.');
             }
             if (outerRing.length === 0) {
                 throw new DeveloperError('outerRing must not be empty.');
             }
-            if (typeof innerRings === 'undefined') {
+            if (!defined(innerRings)) {
                 throw new DeveloperError('innerRings is required.');
             }
             ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './EllipseOutlineGeometry'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         EllipseOutlineGeometry) {
     "use strict";
@@ -41,7 +43,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
-        if (typeof radius === 'undefined') {
+        if (!defined(radius)) {
             throw new DeveloperError('radius is required.');
         }
 

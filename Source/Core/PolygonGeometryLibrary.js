@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './Cartesian3',
         './Ellipsoid'
     ], function(
         defaultValue,
+        defined,
         Cartesian3,
         Ellipsoid) {
     "use strict";
@@ -65,7 +67,7 @@ define([
         var n2 = scaleToGeodeticHeightN2;
         var p = scaleToGeodeticHeightP;
 
-        if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
+        if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
             var positions = geometry.attributes.position.values;
             var length = positions.length / 2;
 

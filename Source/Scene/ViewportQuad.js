@@ -4,6 +4,7 @@ define([
         '../Core/combine',
         '../Core/destroyObject',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
         '../Core/ComponentDatatype',
@@ -22,6 +23,7 @@ define([
         combine,
         destroyObject,
         defaultValue,
+        defined,
         DeveloperError,
         BoundingRectangle,
         ComponentDatatype,
@@ -67,7 +69,7 @@ define([
          */
         this.show = true;
 
-        if (typeof rectangle === 'undefined') {
+        if (!defined(rectangle)) {
             rectangle = new BoundingRectangle();
         }
 
@@ -81,7 +83,7 @@ define([
          */
         this.rectangle = BoundingRectangle.clone(rectangle);
 
-        if (typeof material === 'undefined') {
+        if (!defined(material)) {
             material = Material.fromType(undefined, Material.ColorType);
             material.uniforms.color = new Color(1.0, 1.0, 1.0, 1.0);
         }
@@ -117,7 +119,7 @@ define([
         // Per-context cache for viewport quads
         var vertexArray = context.cache.viewportQuad_vertexArray;
 
-        if (typeof vertexArray !== 'undefined') {
+        if (defined(vertexArray)) {
             return vertexArray;
         }
 
@@ -172,21 +174,21 @@ define([
             return;
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
-        if (typeof this.rectangle === 'undefined') {
+        if (!defined(this.rectangle)) {
             throw new DeveloperError('this.rectangle must be defined.');
         }
 
-        if (typeof this._va === 'undefined') {
+        if (!defined(this._va)) {
             this._va = getVertexArray(context);
             this._overlayCommand.vertexArray = this._va;
         }
 
         var rs = this._overlayCommand.renderState;
-        if ((typeof rs === 'undefined') || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
+        if ((!defined(rs)) || !BoundingRectangle.equals(rs.viewport, this.rectangle)) {
             this._overlayCommand.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 viewport : this.rectangle

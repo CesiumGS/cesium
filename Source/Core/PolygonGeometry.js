@@ -6,6 +6,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
+        './defined',
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -31,6 +32,7 @@ define([
         Cartesian2,
         Cartesian3,
         ComponentDatatype,
+        defined,
         DeveloperError,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -71,7 +73,7 @@ define([
             Matrix3.multiplyByVector(textureMatrix, p, p);
             var st = tangentPlane.projectPointOntoPlane(p, computeBoundingRectangleCartesian2);
 
-            if (typeof st !== 'undefined') {
+            if (defined(st)) {
                 minX = Math.min(minX, st.x);
                 maxX = Math.max(maxX, st.x);
 
@@ -515,7 +517,7 @@ define([
         var height = defaultValue(options.height, 0.0);
 
         var extrudedHeight = defaultValue(options.extrudedHeight, undefined);
-        var extrude = (typeof extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6));
+        var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, CesiumMath.EPSILON6));
         if (extrude) {
             var h = extrudedHeight;
             extrudedHeight = Math.min(h, height);
@@ -523,7 +525,7 @@ define([
         }
 
         var polygonHierarchy = options.polygonHierarchy;
-        if (typeof polygonHierarchy === 'undefined') {
+        if (!defined(polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
 
@@ -563,7 +565,7 @@ define([
                     holes.push(hole.positions);
 
                     var numGrandchildren = 0;
-                    if (typeof hole.holes !== 'undefined') {
+                    if (defined(hole.holes)) {
                         numGrandchildren = hole.holes.length;
                     }
 
@@ -592,7 +594,7 @@ define([
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, polygonHierarchy[i]);
-                if (typeof geometry !== 'undefined') {
+                if (defined(geometry)) {
                     topAndBottom = geometry.topAndBottom;
                     topAndBottom.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(topAndBottom.geometry, height, extrudedHeight, ellipsoid);
                     topAndBottom.geometry = computeAttributes(vertexFormat, topAndBottom.geometry, outerPositions, ellipsoid, stRotation, true, false);
@@ -610,7 +612,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
-                if (typeof geometry !== 'undefined') {
+                if (defined(geometry)) {
                     geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
                     geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
                     geometries.push(geometry);
@@ -707,7 +709,7 @@ define([
     PolygonGeometry.fromPositions = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (typeof options.positions === 'undefined') {
+        if (!defined(options.positions)) {
             throw new DeveloperError('options.positions is required.');
         }
 

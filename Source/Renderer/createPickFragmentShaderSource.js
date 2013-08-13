@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError'
     ], function(
         defaultValue,
+        defined,
         DeveloperError) {
     "use strict";
 
@@ -27,7 +29,7 @@ define([
      * var pickFS = createPickFragmentShaderSource('void main() { gl_FragColor = vec4(1.0); }', 'uniform');
      */
     function createPickFragmentShaderSource(fragmentShaderSource, qualifier) {
-        if (typeof fragmentShaderSource === 'undefined') {
+        if (!defined(fragmentShaderSource)) {
             throw new DeveloperError('fragmentShaderSource is required.');
         }
         if (qualifier !== 'uniform' && qualifier !== 'varying') {

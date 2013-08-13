@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -25,6 +26,7 @@ define([
         '../Shaders/PolylineVS',
         '../Shaders/PolylineFS'
     ], function(
+        defined,
         DeveloperError,
         Color,
         combine,
@@ -239,7 +241,7 @@ define([
             this._polylines[polyline._index] = undefined; // Removed later
             this._polylinesRemoved = true;
             this._createVertexArray = true;
-            if (typeof polyline._bucket !== 'undefined') {
+            if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
                 bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.release();
@@ -292,7 +294,7 @@ define([
      * @see PolylineCollection#get
      */
     PolylineCollection.prototype.contains = function(polyline) {
-        return typeof polyline !== 'undefined' && polyline._polylineCollection === this;
+        return defined(polyline) && polyline._polylineCollection === this;
     };
 
     /**
@@ -326,7 +328,7 @@ define([
      * }
      */
     PolylineCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 
@@ -439,7 +441,7 @@ define([
         commandLists.colorList = emptyArray;
         commandLists.pickList = emptyArray;
 
-        if ((typeof this._rs === 'undefined') || (this._rs.depthTest.enabled !== useDepthTest)) {
+        if ((!defined(this._rs)) || (this._rs.depthTest.enabled !== useDepthTest)) {
             this._rs = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : !useDepthTest,
@@ -500,7 +502,7 @@ define([
                     var polyline = polylines[s];
                     var mId = createMaterialId(polyline._material);
                     if (mId !== currentId) {
-                        if (typeof currentId !== 'undefined') {
+                        if (defined(currentId)) {
                             if (commandIndex >= commandsLength) {
                                 command = new DrawCommand();
                                 command.owner = polylineCollection;
@@ -546,11 +548,11 @@ define([
                     } else if (frameState.mode === SceneMode.COLUMBUS_VIEW) {
                         boundingVolume = polyline._boundingVolume2D;
                     } else if (frameState.mode === SceneMode.SCENE2D) {
-                        if (typeof polyline._boundingVolume2D !== 'undefined') {
+                        if (defined(polyline._boundingVolume2D)) {
                             boundingVolume = BoundingSphere.clone(polyline._boundingVolume2D, boundingSphereScratch2);
                             boundingVolume.center.x = 0.0;
                         }
-                    } else if (typeof polyline._boundingVolume !== 'undefined' && typeof polyline._boundingVolume2D !== 'undefined') {
+                    } else if (defined(polyline._boundingVolume) && defined(polyline._boundingVolume2D)) {
                         boundingVolume = BoundingSphere.union(polyline._boundingVolume, polyline._boundingVolume2D, boundingSphereScratch2);
                     }
 
@@ -562,7 +564,7 @@ define([
                     }
                 }
 
-                if (typeof currentId !== 'undefined' && count > 0) {
+                if (defined(currentId) && count > 0) {
                     if (commandIndex >= commandsLength) {
                         command = new DrawCommand();
                         command.owner = polylineCollection;
@@ -714,7 +716,7 @@ define([
                     bucket.write(positionArray, pickColorArray, texCoordExpandWidthAndShowArray, positionIndex, colorIndex, texCoordExpandWidthAndShowIndex, context);
 
                     if (mode === SceneMode.MORPHING) {
-                        if (typeof position3DArray === 'undefined') {
+                        if (!defined(position3DArray)) {
                             position3DArray = new Float32Array(6 * totalLength * 3);
                         }
                         bucket.writeForMorph(position3DArray, positionIndex);
@@ -735,7 +737,7 @@ define([
 
             collection._positionBuffer = context.createVertexBuffer(positionArray, positionBufferUsage);
             var position3DBuffer;
-            if (typeof position3DArray !== 'undefined') {
+            if (defined(position3DArray)) {
                 position3DBuffer = context.createVertexBuffer(position3DArray, positionBufferUsage);
             }
             collection._pickColorBuffer = context.createVertexBuffer(pickColorArray, BufferUsage.STATIC_DRAW);
@@ -928,7 +930,7 @@ define([
                 p.update();
                 var material = p.getMaterial();
                 var value = polylineBuckets[material.type];
-                if (typeof value === 'undefined') {
+                if (!defined(value)) {
                     value = polylineBuckets[material.type] = new PolylineBucket(material, mode, projection, modelMatrix);
                 }
                 value.addPolyline(p);
@@ -957,7 +959,7 @@ define([
             var length = collection._polylines.length;
             for ( var i = 0, j = 0; i < length; ++i) {
                 var polyline = collection._polylines[i];
-                if (typeof polyline !== 'undefined') {
+                if (defined(polyline)) {
                     polyline._index = j++;
                     polylines.push(polyline);
                 }
@@ -971,9 +973,9 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (typeof polylines[i] !== 'undefined') {
+            if (defined(polylines[i])) {
                 var bucket = polylines[i]._bucket;
-                if (typeof bucket !== 'undefined') {
+                if (defined(bucket)) {
                     bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.release();
                 }
             }
@@ -998,7 +1000,7 @@ define([
         var polylines = collection._polylines;
         var length = polylines.length;
         for ( var i = 0; i < length; ++i) {
-            if (typeof polylines[i] !== 'undefined') {
+            if (defined(polylines[i])) {
                 polylines[i]._destroy();
             }
         }
@@ -1031,7 +1033,7 @@ define([
     };
 
     PolylineBucket.prototype.updateShader = function(context) {
-        if (typeof this.shaderProgram !== 'undefined') {
+        if (defined(this.shaderProgram)) {
             return;
         }
 

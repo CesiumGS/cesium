@@ -7,6 +7,7 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
+    * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * Replaced `ExtentGeometry` parameters for extruded extent to make it consistent with other Geometries.
       * options.extrudedOptions.height -> options.extrudedHeight
       * options.extrudedOptions.closeTop -> options.closeBottom
@@ -18,6 +19,7 @@ Beta Releases
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
+* `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Added outline geometry [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021)
 
 ### b19 - 2013-08-01

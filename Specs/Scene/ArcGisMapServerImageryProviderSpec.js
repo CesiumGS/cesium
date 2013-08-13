@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/ArcGisMapServerImageryProvider',
+         'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
          'Core/loadWithXhr',
@@ -15,6 +16,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          ArcGisMapServerImageryProvider,
+         defined,
          jsonp,
          loadImage,
          loadWithXhr,
@@ -120,7 +122,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -201,7 +203,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -263,7 +265,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -351,7 +353,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {

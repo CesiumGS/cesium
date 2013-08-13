@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defined',
         './Cartographic',
         './Cartesian3',
         './DeveloperError',
@@ -9,6 +10,7 @@ define([
         './Math',
         './WindingOrder'
     ], function(
+        defined,
         Cartographic,
         Cartesian3,
         DeveloperError,
@@ -52,8 +54,8 @@ define([
     var scratchCartographic1 = new Cartographic();
     var scratchCartographic2 = new Cartographic();
     function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
-        var hasBottomHeights = (typeof bottomHeights !== 'undefined');
-        var hasTopHeights = (typeof topHeights !== 'undefined');
+        var hasBottomHeights = (defined(bottomHeights));
+        var hasTopHeights = (defined(topHeights));
         var cleanedPositions = [];
         var cleanedTopHeights = [];
         var cleanedBottomHeights = hasBottomHeights ? [] : undefined;
@@ -113,7 +115,7 @@ define([
         if (wallPositions.length < 2) {
             throw new DeveloperError('unique positions must be greater than or equal to 2');
         }
-        var hasMinHeights = (typeof minimumHeights !== 'undefined');
+        var hasMinHeights = (defined(minimumHeights));
 
         if (wallPositions.length >= 3) {
             // Order positions counter-clockwise

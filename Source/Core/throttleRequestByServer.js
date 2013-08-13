@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         when) {
     "use strict";
 
@@ -12,7 +14,7 @@ define([
     var anchor;
 
     function getServer(url) {
-        if (typeof anchor === 'undefined') {
+        if (!defined(anchor)) {
             anchor = document.createElement('a');
         }
         anchor.href = url;
@@ -43,7 +45,7 @@ define([
      *     function(url) {
      *        return loadImage(url);
      *     });
-     * if (typeof promise === 'undefined') {
+     * if (!defined(promise)) {
      *     // too many active requests, try again later.
      * } else {
      *     when(promise, function(image) {
