@@ -8,6 +8,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/EllipsoidGeometry',
+        '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
@@ -32,6 +33,7 @@ define([
         Cartesian3,
         Cartesian4,
         EllipsoidGeometry,
+        FeatureDetection,
         DeveloperError,
         Ellipsoid,
         EllipsoidalOccluder,
@@ -787,7 +789,7 @@ define([
         }
     }
 
-    var float32ArrayScratch = typeof Float32Array !== 'undefined' ? new Float32Array(1) : undefined;
+    var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(1) : undefined;
     var modifiedModelViewScratch = new Matrix4();
     var tileExtentScratch = new Cartesian4();
     var rtcScratch = new Cartesian3();
