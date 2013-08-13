@@ -267,47 +267,50 @@ define(['../Core/createGuid',
             var node = styleNode.childNodes.item(i);
 
             if(node.nodeName === "IconStyle"){
-                dynamicObject.billboard = typeof dynamicObject.billboard !== 'undefined' ? dynamicObject.billboard : new DynamicBillboard();
                 //Map style to billboard properties
                 //TODO heading, hotSpot
+                var billboard = typeof dynamicObject.billboard !== 'undefined' ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
                 var icon = getStringValue(node,'href');
                 var color = getColorValue(node, 'color');
 
-                dynamicObject.billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
-                dynamicObject.billboard.scale = typeof scale !== 'undefined' ? new ConstantProperty(scale) : undefined;
-                dynamicObject.billboard.color = typeof color !== 'undefined' ? new ConstantProperty(color) : undefined;
+                billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
+                billboard.scale = typeof scale !== 'undefined' ? new ConstantProperty(scale) : undefined;
+                billboard.color = typeof color !== 'undefined' ? new ConstantProperty(color) : undefined;
+                dynamicObject.billboard = billboard;
             }
             else if(node.nodeName ===  "LabelStyle")   {
-                dynamicObject.label = typeof dynamicObject.label !== 'undefined' ? dynamicObject.label : new DynamicLabel();
                 //Map style to label properties
+                var label = typeof dynamicObject.label !== 'undefined' ? dynamicObject.label : new DynamicLabel();
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
 
-                dynamicObject.label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
-                dynamicObject.label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(labelColor) : undefined;
-                dynamicObject.label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
+                label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
+                label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(labelColor) : undefined;
+                label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
+                dynamicObject.label = label;
             }
             else if(node.nodeName ===  "LineStyle")   {
-                dynamicObject.polyline = typeof dynamicObject.polyline !== 'undefined' ? dynamicObject.polyline : new DynamicPolyline();
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility
+                var polyline = typeof dynamicObject.polyline !== 'undefined' ? dynamicObject.polyline : new DynamicPolyline();
                 var lineColor = getColorValue(node, 'color');
                 var lineWidth = getNumericValue(node,'width');
                 var lineOuterColor = getColorValue(node,'outerColor');
                 var lineOuterWidth = getNumericValue(node,'outerWidth');
 
-                dynamicObject.polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(lineColor) : undefined;
-                dynamicObject.polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
-                dynamicObject.polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(lineOuterColor) : undefined;
-                dynamicObject.polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
+                polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(lineColor) : undefined;
+                polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
+                polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(lineOuterColor) : undefined;
+                polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
+                dynamicObject.polyline = polyline;
             }
             else if(node.nodeName === "PolyStyle")   {
                 dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
                 var polygonMaterial = new DynamicMaterialProperty();
-                polyline = new DynamicPolyline();
+                var polyline = new DynamicPolyline();
                 polyline.color = new ConstantProperty(Color.WHITE);
                 polyline.width = new ConstantProperty(1);
                 polyline.outlineColor = new ConstantProperty(Color.BLACK);
