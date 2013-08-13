@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defined',
         './ImageryState',
         './TerrainState'
     ], function(
+        defined,
         ImageryState,
         TerrainState) {
     "use strict";
@@ -42,9 +44,9 @@ define([
         var tileToTrim = this.tail;
         var keepTrimming = true;
         while (keepTrimming &&
-               typeof this._lastBeforeStartOfFrame !== 'undefined' &&
+               defined(this._lastBeforeStartOfFrame) &&
                this.count > maximumTiles &&
-               typeof tileToTrim !== 'undefined') {
+               defined(tileToTrim)) {
             // Stop trimming after we process the last tile not used in the
             // current frame.
             keepTrimming = tileToTrim !== this._lastBeforeStartOfFrame;
@@ -54,11 +56,11 @@ define([
             // Do not remove tiles that are transitioning or that have
             // imagery that is transitioning.
             var loadedTerrain = tileToTrim.loadedTerrain;
-            var loadingIsTransitioning = typeof loadedTerrain !== 'undefined' &&
+            var loadingIsTransitioning = defined(loadedTerrain) &&
                                          (loadedTerrain.state === TerrainState.RECEIVING || loadedTerrain.state === TerrainState.TRANSFORMING);
 
             var upsampledTerrain = tileToTrim.upsampledTerrain;
-            var upsamplingIsTransitioning = typeof upsampledTerrain !== 'undefined' &&
+            var upsamplingIsTransitioning = defined(upsampledTerrain) &&
                                             (upsampledTerrain.state === TerrainState.RECEIVING || upsampledTerrain.state === TerrainState.TRANSFORMING);
 
             var shouldRemoveTile = !loadingIsTransitioning && !upsamplingIsTransitioning;
@@ -66,7 +68,7 @@ define([
             var imagery = tileToTrim.imagery;
             for (var i = 0, len = imagery.length; shouldRemoveTile && i < len; ++i) {
                 var tileImagery = imagery[i];
-                shouldRemoveTile = typeof tileImagery.loadingImagery === 'undefined' || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
+                shouldRemoveTile = !defined(tileImagery.loadingImagery) || tileImagery.loadingImagery.state !== ImageryState.TRANSITIONING;
             }
 
             if (shouldRemoveTile) {
@@ -123,7 +125,7 @@ define([
 
         ++this.count;
 
-        if (typeof head === 'undefined') {
+        if (!defined(head)) {
             // no other tiles in the list
             item.replacementPrevious = undefined;
             item.replacementNext = undefined;
@@ -132,7 +134,7 @@ define([
             return;
         }
 
-        if (typeof item.replacementPrevious !== 'undefined' || typeof item.replacementNext !== 'undefined') {
+        if (defined(item.replacementPrevious) || defined(item.replacementNext)) {
             // tile already in the list, remove from its current location
             remove(this, item);
         }

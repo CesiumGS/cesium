@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -11,6 +12,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -98,12 +100,12 @@ define([
      */
     DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
-        if (typeof pyramidData === 'undefined') {
+        if (!defined(pyramidData)) {
             return false;
         }
 
         var interval = pyramidData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -119,18 +121,18 @@ define([
         pyramidUpdated = processPacketData(CzmlColor, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
         pyramidUpdated = processPacketData(CzmlNumber, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
 
-        if (typeof pyramidData.material !== 'undefined') {
+        if (defined(pyramidData.material)) {
             var material = pyramid.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 pyramid.material = material = new DynamicMaterialProperty();
                 pyramidUpdated = true;
             }
             material.processCzmlIntervals(pyramidData.material, interval);
         }
 
-        if (typeof pyramidData.directions !== 'undefined') {
+        if (defined(pyramidData.directions)) {
             var directions = pyramid.directions;
-            if (typeof directions === 'undefined') {
+            if (!defined(directions)) {
                 pyramid.directions = directions = new DynamicDirectionsProperty();
                 pyramidUpdated = true;
             }
@@ -153,10 +155,10 @@ define([
      */
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
         var pyramidToMerge = objectToMerge.pyramid;
-        if (typeof pyramidToMerge !== 'undefined') {
+        if (defined(pyramidToMerge)) {
 
             var targetPyramid = targetObject.pyramid;
-            if (typeof targetPyramid === 'undefined') {
+            if (!defined(targetPyramid)) {
                 targetObject.pyramid = targetPyramid = new DynamicPyramid();
             }
 

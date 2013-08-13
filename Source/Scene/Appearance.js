@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Renderer/BlendingState',
         '../Renderer/CullFace'
     ], function(
         defaultValue,
+        defined,
         BlendingState,
         CullFace) {
     "use strict";
@@ -79,7 +81,7 @@ define([
         var flat = this.flat ? '#define FLAT 1\n#line 0 \n' : '#line 0 \n';
         var faceForward = this.faceForward ? '#define FACE_FORWARD 1\n#line 0 \n' : '#line 0 \n';
 
-        if (typeof this.material !== 'undefined') {
+        if (defined(this.material)) {
             return '#line 0\n' +
                 this.material.shaderSource +
                 flat +

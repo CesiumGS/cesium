@@ -2,6 +2,7 @@
 define([
         './freezeObject',
         './defaultValue',
+        './defined',
         './Ellipsoid',
         './Cartographic',
         './DeveloperError',
@@ -9,6 +10,7 @@ define([
     ], function(
         freezeObject,
         defaultValue,
+        defined,
         Ellipsoid,
         Cartographic,
         DeveloperError,
@@ -82,7 +84,7 @@ define([
         east = CesiumMath.toRadians(defaultValue(east, 0.0));
         north = CesiumMath.toRadians(defaultValue(north, 0.0));
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(west, south, east, north);
         }
 
@@ -103,7 +105,7 @@ define([
      * @return {Extent} The modified result parameter or a new Extent instance if none was provided.
      */
     Extent.fromCartographicArray = function(cartographics, result) {
-        if (typeof cartographics === 'undefined') {
+        if (!defined(cartographics)) {
             throw new DeveloperError('cartographics is required.');
         }
 
@@ -120,7 +122,7 @@ define([
             maxLat = Math.max(maxLat, position.latitude);
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(minLon, minLat, maxLon, maxLat);
         }
 
@@ -141,11 +143,11 @@ define([
      * @return {Extent} The modified result parameter or a new Extent instance if none was provided. (Returns undefined if extent is undefined)
      */
     Extent.clone = function(extent, result) {
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(extent.west, extent.south, extent.east, extent.north);
         }
 
@@ -193,8 +195,8 @@ define([
      */
     Extent.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.west === right.west) &&
                 (left.south === right.south) &&
                 (left.east === right.east) &&
@@ -218,7 +220,7 @@ define([
             throw new DeveloperError('epsilon is required and must be a number.');
         }
 
-        return typeof other !== 'undefined' &&
+        return defined(other) &&
                (Math.abs(this.west - other.west) <= epsilon) &&
                (Math.abs(this.south - other.south) <= epsilon) &&
                (Math.abs(this.east - other.east) <= epsilon) &&
@@ -283,7 +285,7 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getSouthwest = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.west, this.south);
         }
         result.longitude = this.west;
@@ -300,7 +302,7 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getNorthwest = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.west, this.north);
         }
         result.longitude = this.west;
@@ -317,7 +319,7 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getNortheast = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.east, this.north);
         }
         result.longitude = this.east;
@@ -334,7 +336,7 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getSoutheast = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(this.east, this.south);
         }
         result.longitude = this.east;
@@ -351,7 +353,7 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if none was provided.
      */
     Extent.prototype.getCenter = function(result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic((this.west + this.east) * 0.5, (this.south + this.north) * 0.5);
         }
         result.longitude = (this.west + this.east) * 0.5;
@@ -371,14 +373,14 @@ define([
      * @exception {DeveloperError} otherExtent is required.
      */
     Extent.prototype.intersectWith = function(otherExtent, result) {
-        if (typeof otherExtent === 'undefined') {
+        if (!defined(otherExtent)) {
             throw new DeveloperError('otherExtent is required.');
         }
         var west = Math.max(this.west, otherExtent.west);
         var south = Math.max(this.south, otherExtent.south);
         var east = Math.min(this.east, otherExtent.east);
         var north = Math.min(this.north, otherExtent.north);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Extent(west, south, east, north);
         }
         result.west = west;
@@ -398,7 +400,7 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     Extent.prototype.contains = function(cartographic) {
-        if (typeof cartographic === 'undefined') {
+        if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
         return cartographic.longitude >= this.west &&
@@ -434,7 +436,7 @@ define([
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = [];
         }
         var length = 0;

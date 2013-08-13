@@ -2,11 +2,13 @@
 define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
+        '../Core/defined',
         '../Core/Math',
         '../Core/Ellipsoid'
        ], function(
          Cartesian3,
          Cartographic,
+         defined,
          CesiumMath,
          Ellipsoid) {
     "use strict";
@@ -56,7 +58,7 @@ define([
          */
         unwrapInterval : function(czmlInterval) {
             var cartesian = czmlInterval.cartesian;
-            if (typeof cartesian !== 'undefined') {
+            if (defined(cartesian)) {
                 return cartesian;
             }
 
@@ -64,7 +66,7 @@ define([
             var len;
             var tmp = scratchCartesian;
             var cartographic = czmlInterval.cartographicRadians;
-            if (typeof cartographic !== 'undefined') {
+            if (defined(cartographic)) {
                 if (!this.isSampled(cartographic)) {
                     scratchCartographic.longitude = cartographic[0];
                     scratchCartographic.latitude = cartographic[1];
@@ -88,7 +90,7 @@ define([
                 }
             } else {
                 var cartographicDegrees = czmlInterval.cartographicDegrees;
-                if (typeof cartographicDegrees === 'undefined') {
+                if (!defined(cartographicDegrees)) {
                     return undefined;
                 }
 
@@ -135,7 +137,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = unwrappedInterval[0];
@@ -153,7 +155,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = array[startingIndex];

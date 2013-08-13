@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/Cartesian2'
+        '../Core/Cartesian2',
+        '../Core/defined'
        ], function(
-         Cartesian2) {
+         Cartesian2,
+         defined) {
     "use strict";
 
     var doublesPerValue = 2;
@@ -67,7 +69,7 @@ define([
          * @returns The modified result parameter or a new Cartesian2 instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian2();
             }
             result.x = unwrappedInterval[0];
@@ -84,7 +86,7 @@ define([
          * @returns The modified result parameter or a new Cartesian2 instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian2();
             }
             result.x = array[startingIndex];

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian3',
         './Cartesian4',
@@ -12,6 +13,7 @@ define([
         './Matrix4'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian3,
         Cartesian4,
@@ -76,11 +78,11 @@ define([
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
     BoundingSphere.fromPoints = function(positions, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
@@ -244,11 +246,11 @@ define([
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
@@ -294,7 +296,7 @@ define([
         surfaceHeight = defaultValue(surfaceHeight, 0.0);
 
         var positions;
-        if (typeof extent !== 'undefined') {
+        if (defined(extent)) {
             positions = extent.subsample(ellipsoid, surfaceHeight, fromExtent3DScratch);
         }
 
@@ -336,21 +338,21 @@ define([
      * var sphere = BoundingSphere.fromVertices(points, center, 5);
      */
     BoundingSphere.fromVertices = function(positions, center, stride, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.center = Cartesian3.ZERO.clone(result.center);
             result.radius = 0.0;
             return result;
         }
 
-        if (typeof center === 'undefined') {
+        if (!defined(center)) {
             center = Cartesian3.ZERO;
         }
 
-        if (typeof stride === 'undefined') {
+        if (!defined(stride)) {
             stride = 3;
         }
 
@@ -508,11 +510,11 @@ define([
      * var sphere = BoundingSphere.fromCornerPoints(new Cartesian3(-0.5, -0.5, -0.5), new Cartesian3(0.5, 0.5, 0.5));
      */
     BoundingSphere.fromCornerPoints = function(corner, oppositeCorner, result) {
-        if ((typeof corner === 'undefined') || (typeof oppositeCorner === 'undefined')) {
+        if (!defined(corner) || !defined(oppositeCorner)) {
             throw new DeveloperError('corner and oppositeCorner are required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -539,11 +541,11 @@ define([
      * var boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
      */
     BoundingSphere.fromEllipsoid = function(ellipsoid, result) {
-        if (typeof ellipsoid === 'undefined') {
+        if (!defined(ellipsoid)) {
             throw new DeveloperError('ellipsoid is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -561,11 +563,11 @@ define([
      * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new BoundingSphere(sphere.center, sphere.radius);
         }
 
@@ -589,15 +591,15 @@ define([
      * @exception {DeveloperError} right is required.
      */
     BoundingSphere.union = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
 
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -630,11 +632,11 @@ define([
      * @exception {DeveloperError} point is required.
      */
     BoundingSphere.expand = function(sphere, point, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof point === 'undefined') {
+        if (!defined(point)) {
             throw new DeveloperError('point is required.');
         }
 
@@ -664,11 +666,11 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     BoundingSphere.intersect = function(sphere, plane) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
 
@@ -700,15 +702,15 @@ define([
      * @exception {DeveloperError} transform is required.
      */
     BoundingSphere.transform = function(sphere, transform, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof transform === 'undefined') {
+        if (!defined(transform)) {
             throw new DeveloperError('transform is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new BoundingSphere();
         }
 
@@ -739,19 +741,19 @@ define([
      * @exception {DeveloperError} direction is required.
      */
     BoundingSphere.getPlaneDistances = function(sphere, position, direction, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
-        if (typeof direction === 'undefined') {
+        if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Interval();
         }
 
@@ -787,7 +789,7 @@ define([
      * @exception {DeveloperError} sphere is required.
      */
     BoundingSphere.projectTo2D = function(sphere, projection, result) {
-        if (typeof sphere === 'undefined') {
+        if (!defined(sphere)) {
             throw new DeveloperError('sphere is required.');
         }
 
@@ -887,8 +889,8 @@ define([
      */
     BoundingSphere.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 Cartesian3.equals(left.center, right.center) &&
                 left.radius === right.radius);
     };

@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -11,6 +12,7 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
         destroyObject,
         Cartesian2,
         Cartesian3,
@@ -75,7 +77,7 @@ define([
         /**
          * The distance of the near plane.
          * @type {Number}
-         * @default 1.0 
+         * @default 1.0
          */
         this.near = 1.0;
         this._near = this.near;
@@ -83,7 +85,7 @@ define([
         /**
          * The distance of the far plane.
          * @type {Number}
-         * @default 500000000.0 
+         * @default 500000000.0
          */
         this.far = 500000000.0;
         this._far = this.far;
@@ -122,9 +124,9 @@ define([
     };
 
     function update(frustum) {
-        if (typeof frustum.right === 'undefined' || typeof frustum.left === 'undefined' ||
-                typeof frustum.top === 'undefined' || typeof frustum.bottom === 'undefined' ||
-                typeof frustum.near ===' undefined' || typeof frustum.far === 'undefined') {
+        if (!defined(frustum.right) || !defined(frustum.left) ||
+            !defined(frustum.top) || !defined(frustum.bottom) ||
+            !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('right, left, top, bottom, near, or far parameters are not set.');
         }
 
@@ -179,15 +181,15 @@ define([
      * var intersect = cullingVolume.getVisibility(boundingVolume);
      */
     PerspectiveOffCenterFrustum.prototype.computeCullingVolume = function(position, direction, up) {
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
-        if (typeof direction === 'undefined') {
+        if (!defined(direction)) {
             throw new DeveloperError('direction is required.');
         }
 
-        if (typeof up === 'undefined') {
+        if (!defined(up)) {
             throw new DeveloperError('up is required.');
         }
 
@@ -220,7 +222,7 @@ define([
         Cartesian3.cross(normal, up, normal);
 
         var plane = planes[0];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[0] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -236,7 +238,7 @@ define([
         Cartesian3.cross(up, normal, normal);
 
         plane = planes[1];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[1] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -252,7 +254,7 @@ define([
         Cartesian3.cross(right, normal, normal);
 
         plane = planes[2];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[2] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -268,7 +270,7 @@ define([
         Cartesian3.cross(normal, right, normal);
 
         plane = planes[3];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[3] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -278,7 +280,7 @@ define([
 
         //Near plane computation
         plane = planes[4];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[4] = new Cartesian4();
         }
         plane.x = direction.x;
@@ -290,7 +292,7 @@ define([
         Cartesian3.negate(direction, normal);
 
         plane = planes[5];
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             plane = planes[5] = new Cartesian4();
         }
         plane.x = normal.x;
@@ -333,7 +335,7 @@ define([
     PerspectiveOffCenterFrustum.prototype.getPixelSize = function(canvasDimensions, distance) {
         update(this);
 
-        if (typeof canvasDimensions === 'undefined') {
+        if (!defined(canvasDimensions)) {
             throw new DeveloperError('canvasDimensions is required.');
         }
 
@@ -387,7 +389,7 @@ define([
      * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveOffCenterFrustum.prototype.equals = function(other) {
-        return (typeof other !== 'undefined' &&
+        return (defined(other) &&
                 this.right === other.right &&
                 this.left === other.left &&
                 this.top === other.top &&

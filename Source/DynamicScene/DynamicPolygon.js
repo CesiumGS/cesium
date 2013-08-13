@@ -2,12 +2,14 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './processPacketData',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
          defaultValue,
+         defined,
          CzmlBoolean,
          processPacketData,
          DynamicMaterialProperty) {
@@ -62,12 +64,12 @@ define([
      */
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
-        if (typeof polygonData === 'undefined') {
+        if (!defined(polygonData)) {
             return false;
         }
 
         var interval = polygonData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -81,7 +83,7 @@ define([
 
         if (typeof polygonData.material !== 'undefined') {
             var material = polygon.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 polygon.material = material = new DynamicMaterialProperty();
                 polygonUpdated = true;
             }
@@ -104,10 +106,10 @@ define([
      */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
-        if (typeof polygonToMerge !== 'undefined') {
+        if (defined(polygonToMerge)) {
 
             var targetPolygon = targetObject.polygon;
-            if (typeof targetPolygon === 'undefined') {
+            if (!defined(targetPolygon)) {
                 targetObject.polygon = targetPolygon = new DynamicPolygon();
             }
 

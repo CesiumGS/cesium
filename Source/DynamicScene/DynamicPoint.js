@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/TimeInterval',
         '../Core/defaultValue',
         './CzmlBoolean',
@@ -7,6 +8,7 @@ define([
         './CzmlColor',
         './processPacketData'
     ], function(
+         defined,
          TimeInterval,
          defaultValue,
          CzmlBoolean,
@@ -76,12 +78,12 @@ define([
      */
     DynamicPoint.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pointData = packet.point;
-        if (typeof pointData === 'undefined') {
+        if (!defined(pointData)) {
             return false;
         }
 
         var interval = pointData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -113,10 +115,10 @@ define([
      */
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
-        if (typeof pointToMerge !== 'undefined') {
+        if (defined(pointToMerge)) {
 
             var targetPoint = targetObject.point;
-            if (typeof targetPoint === 'undefined') {
+            if (!defined(targetPoint)) {
                 targetObject.point = targetPoint = new DynamicPoint();
             }
 

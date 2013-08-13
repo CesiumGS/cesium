@@ -3,6 +3,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Renderer/PixelFormat',
         './Material',
@@ -11,6 +12,7 @@ define([
         BoundingRectangle,
         Color,
         defaultValue,
+        defined,
         destroyObject,
         PixelFormat,
         Material,
@@ -80,7 +82,7 @@ define([
      * each call records a frame in the internal buffer and redraws the display.
      */
     PerformanceDisplay.prototype.update = function(context, frameState, commandList) {
-        if (typeof this._time === 'undefined') {
+        if (!defined(this._time)) {
             //first update
             this._lastFpsSampleTime = this._time = Date.now();
             return;
@@ -118,7 +120,7 @@ define([
         ctx.fillStyle = this._backgroundColor;
         ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-        if (typeof fps !== 'undefined') {
+        if (defined(fps)) {
             ctx.fillStyle = this._fpsColor;
             ctx.textAlign = 'left';
             ctx.fillText(fps + ' FPS', 1, 10);
@@ -140,11 +142,11 @@ define([
             }
         }
 
-        if (typeof this._quad === 'undefined') {
+        if (!defined(this._quad)) {
             this._quad = new ViewportQuad(undefined, Material.fromType(context, Material.ImageType));
         }
 
-        if (typeof this._texture === 'undefined') {
+        if (!defined(this._texture)) {
             this._texture = context.createTexture2D({
                 source : this._canvas,
                 pixelFormat : PixelFormat.RGBA

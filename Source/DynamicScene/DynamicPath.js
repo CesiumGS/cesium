@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -9,6 +10,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -98,12 +100,12 @@ function(
      */
     DynamicPath.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
-        if (typeof pathData === 'undefined') {
+        if (!defined(pathData)) {
             return false;
         }
 
         var interval = pathData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -137,10 +139,10 @@ function(
      */
     DynamicPath.mergeProperties = function(targetObject, objectToMerge) {
         var pathToMerge = objectToMerge.path;
-        if (typeof pathToMerge !== 'undefined') {
+        if (defined(pathToMerge)) {
 
             var targetpath = targetObject.path;
-            if (typeof targetpath === 'undefined') {
+            if (!defined(targetpath)) {
                 targetObject.path = targetpath = new DynamicPath();
             }
 

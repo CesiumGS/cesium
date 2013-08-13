@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defined',
         '../Core/Spherical',
         '../Core/Math',
         '../Core/Ellipsoid'
        ], function(
          Cartesian3,
+         defined,
          Spherical,
          CesiumMath,
          Ellipsoid) {
@@ -56,12 +58,12 @@ define([
          */
         unwrapInterval : function(czmlInterval) {
             var unitCartesian = czmlInterval.unitCartesian;
-            if (typeof unitCartesian !== 'undefined') {
+            if (defined(unitCartesian)) {
                 return unitCartesian;
             }
 
             var unitSpherical = czmlInterval.unitSpherical;
-            if (typeof unitSpherical !== 'undefined') {
+            if (defined(unitSpherical)) {
                 var len = unitSpherical.length;
                 if (len === 2) {
                     scratchSpherical.clock = unitSpherical[0];
@@ -105,7 +107,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = unwrappedInterval[0];
@@ -123,7 +125,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = array[startingIndex];

@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -15,6 +16,7 @@ define([
        ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -135,12 +137,12 @@ define([
      */
     DynamicLabel.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
-        if (typeof labelData === 'undefined') {
+        if (!defined(labelData)) {
             return false;
         }
 
         var interval = labelData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -179,10 +181,10 @@ define([
      */
     DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {
         var labelToMerge = objectToMerge.label;
-        if (typeof labelToMerge !== 'undefined') {
+        if (defined(labelToMerge)) {
 
             var targetLabel = targetObject.label;
-            if (typeof targetLabel === 'undefined') {
+            if (!defined(targetLabel)) {
                 targetObject.label = targetLabel = new DynamicLabel();
             }
 

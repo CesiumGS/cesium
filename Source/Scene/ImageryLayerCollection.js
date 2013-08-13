@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Event',
         '../Core/Math',
@@ -9,6 +10,7 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
         destroyObject,
         Event,
         CesiumMath,
@@ -76,11 +78,11 @@ define([
      * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of the layers.
      */
     ImageryLayerCollection.prototype.add = function(layer, index) {
-        if (typeof layer === 'undefined') {
+        if (!defined(layer)) {
             throw new DeveloperError('layer is required.');
         }
 
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             index = this._layers.length;
             this._layers.push(layer);
         } else {
@@ -111,7 +113,7 @@ define([
      * @exception {DeveloperError} imageryProvider is required.
      */
     ImageryLayerCollection.prototype.addImageryProvider = function(imageryProvider, index) {
-        if (typeof imageryProvider === 'undefined') {
+        if (!defined(imageryProvider)) {
             throw new DeveloperError('imageryProvider is required.');
         }
 
@@ -212,7 +214,7 @@ define([
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
     ImageryLayerCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.', 'index');
         }
 
@@ -231,7 +233,7 @@ define([
     };
 
     function getLayerIndex(layers, layer) {
-        if (typeof layer === 'undefined') {
+        if (!defined(layer)) {
             throw new DeveloperError('layer is required.');
         }
 
@@ -396,8 +398,8 @@ define([
             }
 
             if (layer.show !== layer._show) {
-                if (typeof layer._show !== 'undefined') {
-                    if (typeof layersShownOrHidden === 'undefined') {
+                if (defined(layer._show)) {
+                    if (!defined(layersShownOrHidden)) {
                         layersShownOrHidden = [];
                     }
                     layersShownOrHidden.push(layer);
@@ -406,7 +408,7 @@ define([
             }
         }
 
-        if (typeof layersShownOrHidden !== 'undefined') {
+        if (defined(layersShownOrHidden)) {
             for (i = 0, len = layersShownOrHidden.length; i < len; ++i) {
                 layer = layersShownOrHidden[i];
                 this.layerShownOrHidden.raiseEvent(layer, layer._layerIndex, layer.show);

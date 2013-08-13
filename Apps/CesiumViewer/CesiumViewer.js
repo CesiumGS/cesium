@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        'Core/defined',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -9,6 +10,7 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
+        defined,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -82,7 +84,7 @@ define([
             context.setThrowOnWebGLError(true);
         }
 
-        if (typeof endUserOptions.source !== 'undefined') {
+        if (defined(endUserOptions.source)) {
             var source;
             var sourceUrl = endUserOptions.source.toUpperCase();
             if (endsWith(sourceUrl, ".GEOJSON") || //
@@ -95,20 +97,13 @@ define([
                 loadingIndicator.style.display = 'none';
                 window.alert("Unknown format: " + endUserOptions.source);
             }
-            if (typeof source !== 'undefined') {
+            if (defined(source)) {
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
 
-                    var dataClock = source.getClock();
-                    if (typeof dataClock !== 'undefined') {
-                        dataClock.clone(viewer.clock);
-                        viewer.timeline.updateFromClock();
-                        viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                    }
-
-                    if (typeof endUserOptions.lookAt !== 'undefined') {
+                    if (defined(endUserOptions.lookAt)) {
                         var dynamicObject = source.getDynamicObjectCollection().getObject(endUserOptions.lookAt);
-                        if (typeof dynamicObject !== 'undefined') {
+                        if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
                             window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
@@ -129,7 +124,7 @@ define([
         }
 
         var theme = endUserOptions.theme;
-        if (typeof theme !== 'undefined') {
+        if (defined(theme)) {
             if (endUserOptions.theme === 'lighter') {
                 document.body.classList.add('cesium-lighter');
                 viewer.animation.applyThemeChanges();

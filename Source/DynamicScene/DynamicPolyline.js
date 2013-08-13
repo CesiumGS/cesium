@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -9,6 +10,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -80,12 +82,12 @@ function(
      */
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
-        if (typeof polylineData === 'undefined') {
+        if (!defined(polylineData)) {
             return false;
         }
 
         var interval = polylineData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -116,10 +118,10 @@ function(
      */
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
-        if (typeof polylineToMerge !== 'undefined') {
+        if (defined(polylineToMerge)) {
 
             var targetPolyline = targetObject.polyline;
-            if (typeof targetPolyline === 'undefined') {
+            if (!defined(targetPolyline)) {
                 targetObject.polyline = targetPolyline = new DynamicPolyline();
             }
 

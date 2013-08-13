@@ -2,6 +2,7 @@
 defineSuite([
          'Renderer/loadCubeMap',
          'Core/Cartesian3',
+         'Core/defined',
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Specs/createContext',
@@ -10,6 +11,7 @@ defineSuite([
      ], function(
          loadCubeMap,
          Cartesian3,
+         defined,
          PrimitiveType,
          BufferUsage,
          createContext,
@@ -42,7 +44,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof cm !== 'undefined';
+            return defined(cm);
         }, 'The cube map should load.', 5000);
 
         runs(function() {

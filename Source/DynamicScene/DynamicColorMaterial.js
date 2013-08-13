@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './CzmlColor',
+        '../Core/defined',
         './processPacketData',
         '../Scene/Material'
     ], function(
-        CzmlColor,
-        processPacketData,
-        Material) {
+         CzmlColor,
+         defined,
+         processPacketData,
+         Material) {
     "use strict";
 
     /**
@@ -29,7 +31,7 @@ define([
      * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
      */
     DynamicColorMaterial.isMaterial = function(czmlInterval) {
-        return typeof czmlInterval !== 'undefined' && typeof czmlInterval.solidColor !== 'undefined';
+        return defined(czmlInterval) && defined(czmlInterval.solidColor);
     };
 
     /**
@@ -62,7 +64,7 @@ define([
      * @returns The modified existingMaterial parameter or a new Color Material instance if existingMaterial was undefined or not a Color Material.
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ColorType)) {
+        if (!defined(existingMaterial) || (existingMaterial.type !== Material.ColorType)) {
             existingMaterial = Material.fromType(context, Material.ColorType);
         }
         existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);

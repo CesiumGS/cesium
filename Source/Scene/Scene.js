@@ -3,6 +3,7 @@ define([
         '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
@@ -40,6 +41,7 @@ define([
         CesiumMath,
         Color,
         defaultValue,
+        defined,
         destroyObject,
         GeographicProjection,
         Ellipsoid,
@@ -103,7 +105,7 @@ define([
     var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
         var creditDisplay;
-        if (typeof creditContainer !== 'undefined') {
+        if (defined(creditContainer)) {
             creditDisplay = new CreditDisplay(creditContainer);
         } else {
             var creditDiv = document.createElement('div');
@@ -348,7 +350,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
+        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
@@ -369,7 +371,7 @@ define([
             }
 
             var frustumCommands = frustumCommandsList[m];
-            if (typeof frustumCommands === 'undefined') {
+            if (!defined(frustumCommands)) {
                 frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
             } else {
                 frustumCommands.near = curNear;
@@ -458,12 +460,12 @@ define([
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
-                if (typeof boundingVolume !== 'undefined') {
+                if (defined(boundingVolume)) {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
                     if (command.cull &&
                             ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
-                             (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV)))) {
+                             (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV)))) {
                         continue;
                     }
 
@@ -505,17 +507,17 @@ define([
     }
 
     function executeCommand(command, scene, context, passState) {
-        if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
+        if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         command.execute(context, passState);
 
-        if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
+        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
             // Assumes bounding volume is a bounding sphere.
 
-            if (typeof scene._debugSphere === 'undefined') {
+            if (!defined(scene._debugSphere)) {
                 var geometry = new EllipsoidGeometry({
                     ellipsoid : Ellipsoid.UNIT_SPHERE,
                     numberOfPartitions : 20,
@@ -555,11 +557,11 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        return ((typeof command !== 'undefined') &&
-                 ((typeof command.boundingVolume === 'undefined') ||
+        return ((defined(command)) &&
+                 ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                   (typeof occluder === 'undefined' || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
     }
 
     function executeCommands(scene, passState) {
@@ -569,9 +571,9 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
-        var skyBoxCommand = (frameState.passes.color && typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
+        var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
         if (sunVisible) {
@@ -592,15 +594,15 @@ define([
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
 
-        if (typeof skyBoxCommand !== 'undefined') {
+        if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (typeof skyAtmosphereCommand !== 'undefined') {
+        if (defined(skyAtmosphereCommand)) {
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined' && sunVisible) {
+        if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
             scene._sunPostProcess.execute(context);
             passState.framebuffer = undefined;
@@ -662,7 +664,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.render = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             time = new JulianDate();
         }
 
@@ -778,7 +780,7 @@ define([
         var primitives = this._primitives;
         var frameState = this._frameState;
 
-        if (typeof this._pickFramebuffer === 'undefined') {
+        if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 

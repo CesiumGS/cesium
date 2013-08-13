@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defined',
         './Billboard',
         './LabelStyle',
         './HorizontalOrigin',
@@ -15,6 +16,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         Billboard,
         LabelStyle,
         HorizontalOrigin,
@@ -100,7 +102,7 @@ define([
      * @see Label#getShow
      */
     Label.prototype.setShow = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -110,7 +112,7 @@ define([
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
                 var glyph = glyphs[i];
-                if (typeof glyph.billboard !== 'undefined') {
+                if (defined(glyph.billboard)) {
                     glyph.billboard.setShow(value);
                 }
             }
@@ -160,7 +162,7 @@ define([
      * });
      */
     Label.prototype.setPosition = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -171,7 +173,7 @@ define([
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
                 var glyph = glyphs[i];
-                if (typeof glyph.billboard !== 'undefined') {
+                if (defined(glyph.billboard)) {
                     glyph.billboard.setPosition(value);
                 }
             }
@@ -201,7 +203,7 @@ define([
      * @see Label#getText
      */
     Label.prototype.setText = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -238,7 +240,7 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#text-styles'>HTML canvas 2D context text styles</a>
      */
     Label.prototype.setFont = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -275,7 +277,7 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setFillColor = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -313,7 +315,7 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setOutlineColor = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -351,7 +353,7 @@ define([
      * @see <a href='http://www.whatwg.org/specs/web-apps/current-work/multipage/the-canvas-element.html#fill-and-stroke-styles'>HTML canvas 2D context fill and stroke styles</a>
      */
     Label.prototype.setOutlineWidth = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -386,7 +388,7 @@ define([
      * @see Label#setFillColor
      */
     Label.prototype.setStyle = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -438,7 +440,7 @@ define([
      * @see Billboard#setPixelOffset
      */
     Label.prototype.setPixelOffset = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -496,7 +498,7 @@ define([
      * @see Label#getEyeOffset
      */
     Label.prototype.setEyeOffset = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -507,7 +509,7 @@ define([
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
                 var glyph = glyphs[i];
-                if (typeof glyph.billboard !== 'undefined') {
+                if (defined(glyph.billboard)) {
                     glyph.billboard.setEyeOffset(value);
                 }
             }
@@ -550,7 +552,7 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setHorizontalOrigin = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -596,7 +598,7 @@ define([
      * l.setVerticalOrigin(VerticalOrigin.TOP);
      */
     Label.prototype.setVerticalOrigin = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -644,7 +646,7 @@ define([
      * @see Label#setFont
      */
     Label.prototype.setScale = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -654,7 +656,7 @@ define([
             var glyphs = this._glyphs;
             for ( var i = 0, len = glyphs.length; i < len; i++) {
                 var glyph = glyphs[i];
-                if (typeof glyph.billboard !== 'undefined') {
+                if (defined(glyph.billboard)) {
                     glyph.billboard.setScale(value);
                 }
             }
@@ -685,11 +687,11 @@ define([
      * console.log(l.computeScreenSpacePosition(scene.getContext(), scene.getFrameState()).toString());
      */
     Label.prototype.computeScreenSpacePosition = function(context, frameState) {
-        if (typeof context === 'undefined') {
+        if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
 
-        if (typeof frameState === 'undefined') {
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
 
@@ -712,7 +714,7 @@ define([
      */
     Label.prototype.equals = function(other) {
         return this === other ||
-               typeof other !== 'undefined' &&
+               defined(other) &&
                this._show === other._show &&
                this._scale === other._scale &&
                this._style === other._style &&

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/writeTextToCanvas',
@@ -9,6 +10,7 @@ define([
         './Credit'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Event,
         writeTextToCanvas,
@@ -89,7 +91,7 @@ define([
         var url = imageryProvider._url + level + '/' + x + '/' + y + '.' + imageryProvider._fileExtension;
 
         var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 

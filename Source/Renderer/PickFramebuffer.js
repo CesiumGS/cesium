@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/BoundingRectangle',
@@ -9,6 +10,7 @@ define([
         './RenderbufferFormat'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         Color,
         BoundingRectangle,
@@ -51,7 +53,7 @@ define([
         BoundingRectangle.clone(screenSpaceRectangle, this._passState.scissorTest.rectangle);
 
         // Initially create or recreate renderbuffers and framebuffer used for picking
-        if ((typeof this._fb === 'undefined') || (this._width !== width) || (this._height !== height)) {
+        if ((!defined(this._fb)) || (this._width !== width) || (this._height !== height)) {
             this._width = width;
             this._height = height;
 
@@ -113,7 +115,7 @@ define([
                 colorScratch.alpha = Color.byteToFloat(pixels[index + 3]);
 
                 var object = context.getObjectByPickColor(colorScratch);
-                if (typeof object !== 'undefined') {
+                if (defined(object)) {
                     return object;
                 }
             }

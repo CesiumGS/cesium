@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian3',
         './processPacketData',
@@ -9,6 +10,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian3,
         processPacketData,
@@ -70,12 +72,12 @@ define([
      */
     DynamicEllipsoid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipsoidData = packet.ellipsoid;
-        if (typeof ellipsoidData === 'undefined') {
+        if (!defined(ellipsoidData)) {
             return false;
         }
 
         var interval = ellipsoidData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -88,9 +90,9 @@ define([
         ellipsoidUpdated = processPacketData(CzmlBoolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
         ellipsoidUpdated = processPacketData(CzmlCartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
 
-        if (typeof ellipsoidData.material !== 'undefined') {
+        if (defined(ellipsoidData.material)) {
             var material = ellipsoid.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 ellipsoid.material = material = new DynamicMaterialProperty();
                 ellipsoidUpdated = true;
             }
@@ -113,10 +115,10 @@ define([
      */
     DynamicEllipsoid.mergeProperties = function(targetObject, objectToMerge) {
         var ellipsoidToMerge = objectToMerge.ellipsoid;
-        if (typeof ellipsoidToMerge !== 'undefined') {
+        if (defined(ellipsoidToMerge)) {
 
             var targetEllipsoid = targetObject.ellipsoid;
-            if (typeof targetEllipsoid === 'undefined') {
+            if (!defined(targetEllipsoid)) {
                 targetObject.ellipsoid = targetEllipsoid = new DynamicEllipsoid();
             }
 

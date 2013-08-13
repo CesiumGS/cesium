@@ -1,18 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError'
        ], function(
          defaultValue,
+         defined,
          DeveloperError) {
     "use strict";
 
     function resolve(referenceProperty) {
         var targetProperty = referenceProperty._targetProperty;
-        if (typeof targetProperty === 'undefined') {
+        if (!defined(targetProperty)) {
             var resolveBuffer = defaultValue(referenceProperty._dynamicObjectCollection.compositeCollection, referenceProperty._dynamicObjectCollection);
             var targetObject = resolveBuffer.getObject(referenceProperty._targetObjectId);
-            if (typeof targetObject !== 'undefined') {
+            if (defined(targetObject)) {
                 targetProperty = targetObject[referenceProperty._targetPropertyName];
                 referenceProperty._targetProperty = targetProperty;
                 referenceProperty._targetObject = targetObject;
@@ -46,13 +48,13 @@ define([
      * @see CompositeDynamicObjectCollection
      */
     var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
-        if (typeof dynamicObjectCollection === 'undefined') {
+        if (!defined(dynamicObjectCollection)) {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
-        if (typeof targetObjectId === 'undefined') {
+        if (!defined(targetObjectId)) {
             throw new DeveloperError('targetObjectId is required.');
         }
-        if (typeof targetPropertyName === 'undefined') {
+        if (!defined(targetPropertyName)) {
             throw new DeveloperError('targetPropertyName is required.');
         }
 
@@ -86,11 +88,11 @@ define([
      * @returns A new instance of ReferenceProperty.
      */
     ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
-        if (typeof dynamicObjectCollection === 'undefined') {
+        if (!defined(dynamicObjectCollection)) {
             throw new DeveloperError('dynamicObjectCollection is required.');
         }
 
-        if (typeof referenceString === 'undefined') {
+        if (!defined(referenceString)) {
             throw new DeveloperError('referenceString is required.');
         }
 

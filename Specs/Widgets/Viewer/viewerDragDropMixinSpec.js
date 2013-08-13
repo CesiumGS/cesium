@@ -1,11 +1,13 @@
 /*global defineSuite*/
 defineSuite([
          'Widgets/Viewer/viewerDragDropMixin',
+         'Core/defined',
          'Core/TimeInterval',
          'Specs/EventHelper',
          'Widgets/Viewer/Viewer'
      ], function(
          viewerDragDropMixin,
+         defined,
          TimeInterval,
          EventHelper,
          Viewer) {
@@ -23,7 +25,7 @@ defineSuite([
         //Impersonate FileReader for drag and drop tests
         var fakeFileReader = jasmine.createSpyObj('FileReader', ['readAsText']);
         fakeFileReader.readAsText = function(file) {
-            if (typeof file.czmlString !== 'undefined') {
+            if (defined(file.czmlString)) {
                 this.onload({
                     target : {
                         result : file.czmlString

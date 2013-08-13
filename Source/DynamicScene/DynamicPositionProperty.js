@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Iso8601',
@@ -12,6 +13,7 @@ define([
         './CzmlPosition',
         './DynamicProperty'
     ], function(
+        defined,
         DeveloperError,
         Ellipsoid,
         Iso8601,
@@ -29,7 +31,7 @@ define([
 
     function convertToFixed(time, value) {
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-        if (typeof icrfToFixed === 'undefined') {
+        if (!defined(icrfToFixed)) {
             icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
         return icrfToFixed.multiplyByVector(value, value);
@@ -87,20 +89,20 @@ define([
      * @returns The modified result property, or a new instance if result was undefined.
      */
     DynamicPositionProperty.prototype.getValue = function(time, result) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 
         var interval = this._cachedInterval;
         if (!JulianDate.equals(this._cachedTime, time)) {
             this._cachedTime = JulianDate.clone(time, this._cachedTime);
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
+            if (!defined(interval) || !interval.contains(time)) {
                 interval = this._propertyIntervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
             }
         }
 
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             return undefined;
         }
         var property = interval.data;
@@ -116,13 +118,13 @@ define([
         this._cachedInterval = undefined;
 
         var iso8601Interval = czmlInterval.interval, property, unwrappedInterval;
-        if (typeof iso8601Interval === 'undefined') {
+        if (!defined(iso8601Interval)) {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
-        if (typeof constrainedInterval !== 'undefined') {
+        if (defined(constrainedInterval)) {
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
@@ -130,10 +132,10 @@ define([
         var thisIntervals = this._propertyIntervals;
         var existingInterval = thisIntervals.findInterval(iso8601Interval.start, iso8601Interval.stop);
 
-        if (typeof existingInterval !== 'undefined') {
+        if (defined(existingInterval)) {
             //If so, see if the new data is the same type.
             property = existingInterval.data;
-            if (typeof property !== 'undefined') {
+            if (defined(property)) {
                 unwrappedInterval = CzmlPosition.unwrapInterval(czmlInterval);
             }
         } else {
@@ -142,9 +144,9 @@ define([
             thisIntervals.addInterval(existingInterval);
         }
 
-        if (typeof unwrappedInterval === 'undefined') {
+        if (!defined(unwrappedInterval)) {
             unwrappedInterval = CzmlPosition.unwrapInterval(czmlInterval);
-            if (typeof unwrappedInterval !== 'undefined') {
+            if (defined(unwrappedInterval)) {
                 property = new DynamicProperty(CzmlPosition);
                 this._dynamicProperties.push(property);
                 existingInterval.data = property;
@@ -153,8 +155,8 @@ define([
         }
 
         //We could handle the data, add it to the property.
-        if (typeof unwrappedInterval !== 'undefined') {
-            if (typeof czmlInterval.referenceFrame !== 'undefined') {
+        if (defined(unwrappedInterval)) {
+            if (defined(czmlInterval.referenceFrame)) {
                 existingInterval.data.referenceFrame = ReferenceFrame[czmlInterval.referenceFrame];
             }
             property._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
@@ -170,20 +172,20 @@ define([
     };
 
     DynamicPositionProperty.prototype._getValueInReferenceFrame = function(time, referenceFrame, result) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 
         var interval = this._cachedInterval;
         if (!JulianDate.equals(this._cachedTime, time)) {
             this._cachedTime = JulianDate.clone(time, this._cachedTime);
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
+            if (!defined(interval) || !interval.contains(time)) {
                 interval = this._propertyIntervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
             }
         }
 
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             return undefined;
         }
         var property = interval.data;
@@ -195,7 +197,7 @@ define([
             }
             if (referenceFrame === ReferenceFrame.INERTIAL) {
                 var fixedToIcrf = Transforms.computeFixedToIcrfMatrix(time, scratchMatrix3);
-                if (typeof fixedToIcrf === 'undefined') {
+                if (!defined(fixedToIcrf)) {
                     return undefined;
                 }
                 return fixedToIcrf.multiplyByVector(result, result);
@@ -205,22 +207,22 @@ define([
     };
 
     DynamicPositionProperty.prototype._getValueRangeInReferenceFrame = function(start, stop, currentTime, referenceFrame, maximumStep, result) {
-        if (typeof start === 'undefined') {
+        if (!defined(start)) {
             throw new DeveloperError('start is required');
         }
 
-        if (typeof stop === 'undefined') {
+        if (!defined(stop)) {
             throw new DeveloperError('stop is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = [];
         }
 
         var propertyIntervals = this._propertyIntervals;
 
-        var startIndex = typeof start !== 'undefined' ? propertyIntervals.indexOf(start) : 0;
-        var stopIndex = typeof stop !== 'undefined' ? propertyIntervals.indexOf(stop) : propertyIntervals.length - 1;
+        var startIndex = defined(start) ? propertyIntervals.indexOf(start) : 0;
+        var stopIndex = defined(stop) ? propertyIntervals.indexOf(stop) : propertyIntervals.length - 1;
         if (startIndex < 0) {
             startIndex = ~startIndex;
         }
@@ -243,17 +245,17 @@ define([
         //Always step exactly on start (but only use it if it exists.)
         var tmp;
         tmp = this._getValueInReferenceFrame(start, referenceFrame, result[r]);
-        if (typeof tmp !== 'undefined') {
+        if (defined(tmp)) {
             result[r++] = tmp;
         }
 
-        var steppedOnNow = typeof currentTime === 'undefined' || currentTime.lessThan(start) || currentTime.greaterThan(stop);
+        var steppedOnNow = !defined(currentTime) || currentTime.lessThan(start) || currentTime.greaterThan(stop);
         for ( var i = startIndex; i < stopIndex + 1; i++) {
             var current;
             var interval = propertyIntervals.get(i);
             var nextInterval = propertyIntervals.get(i + 1);
             var loopStop = stop;
-            if (typeof nextInterval !== 'undefined' && stop.greaterThan(nextInterval.start)) {
+            if (defined(nextInterval) && stop.greaterThan(nextInterval.start)) {
                 loopStop = nextInterval.start;
             }
 
@@ -265,7 +267,7 @@ define([
             var property = interval.data;
             var currentInterval = property._intervals.get(0);
             var times = currentInterval.data.times;
-            if (typeof times !== 'undefined') {
+            if (defined(times)) {
                 //Iterate over all interval times and add the ones that fall in our
                 //time range.  Note that times can contain data outside of
                 //the intervals range.  This is by design for use with interpolation.
@@ -275,14 +277,14 @@ define([
                 while(t < len) {
                     if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
                         tmp = this._getValueInReferenceFrame(currentTime, referenceFrame, result[r]);
-                        if (typeof tmp !== 'undefined') {
+                        if (defined(tmp)) {
                             result[r++] = tmp;
                         }
                         steppedOnNow = true;
                     }
                     if (current.greaterThan(start) && current.lessThan(loopStop)) {
                         tmp = this._getValueInReferenceFrame(current, referenceFrame, result[r]);
-                        if (typeof tmp !== 'undefined') {
+                        if (defined(tmp)) {
                             result[r++] = tmp;
                         }
                     }
@@ -323,7 +325,7 @@ define([
                 //Finally, get the value at this non-sampled interval.
                 if (current.lessThan(loopStop)) {
                     tmp = this._getValueInReferenceFrame(current, referenceFrame, result[r]);
-                    if (typeof tmp !== 'undefined') {
+                    if (defined(tmp)) {
                         result[r++] = tmp;
                     }
                 }
@@ -332,7 +334,7 @@ define([
 
         //Always step exactly on stop (but only use it if it exists.)
         tmp = this._getValueInReferenceFrame(stop, referenceFrame, result[r]);
-        if (typeof tmp !== 'undefined') {
+        if (defined(tmp)) {
             result[r++] = tmp;
         }
 

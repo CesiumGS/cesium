@@ -1,6 +1,8 @@
 /*global define*/
-define(['../Core/TimeInterval',
+define([
+        '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Shapes',
@@ -9,6 +11,7 @@ define(['../Core/TimeInterval',
         ], function (
             TimeInterval,
             defaultValue,
+            defined,
             Cartesian3,
             Ellipsoid,
             Shapes,
@@ -77,12 +80,12 @@ define(['../Core/TimeInterval',
      */
     DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipseData = packet.ellipse;
-        if (typeof ellipseData === 'undefined') {
+        if (!defined(ellipseData)) {
             return false;
         }
 
         var interval = ellipseData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -112,10 +115,10 @@ define(['../Core/TimeInterval',
      */
     DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
         var ellipseToMerge = objectToMerge.ellipse;
-        if (typeof ellipseToMerge !== 'undefined') {
+        if (defined(ellipseToMerge)) {
 
             var targetEllipse = targetObject.ellipse;
-            if (typeof targetEllipse === 'undefined') {
+            if (!defined(targetEllipse)) {
                 targetObject.ellipse = targetEllipse = new DynamicEllipse();
             }
 
@@ -150,9 +153,9 @@ define(['../Core/TimeInterval',
         var semiMajorAxisProperty = this.semiMajorAxis;
         var semiMinorAxisProperty = this.semiMinorAxis;
 
-        if (typeof position === 'undefined' || //
-            typeof semiMajorAxisProperty === 'undefined' || //
-            typeof semiMinorAxisProperty === 'undefined') {
+        if (!defined(position) || //
+            !defined(semiMajorAxisProperty) || //
+            !defined(semiMinorAxisProperty)) {
             return undefined;
         }
 
@@ -161,12 +164,12 @@ define(['../Core/TimeInterval',
 
         var bearing = 0.0;
         var bearingProperty = this.bearing;
-        if (typeof bearingProperty !== 'undefined') {
+        if (defined(bearingProperty)) {
             bearing = bearingProperty.getValue(time);
         }
 
-        if (typeof semiMajorAxis === 'undefined' || //
-            typeof semiMinorAxis === 'undefined' || //
+        if (!defined(semiMajorAxis) || //
+            !defined(semiMinorAxis) || //
             semiMajorAxis === 0.0 || //
             semiMinorAxis === 0.0) {
             return undefined;

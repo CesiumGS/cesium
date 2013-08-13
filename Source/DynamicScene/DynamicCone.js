@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -10,6 +11,7 @@ define([
        ], function(
          TimeInterval,
          defaultValue,
+         defined,
          CzmlBoolean,
          CzmlNumber,
          CzmlColor,
@@ -130,12 +132,12 @@ define([
      */
     DynamicCone.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var coneData = packet.cone;
-        if (typeof coneData === 'undefined') {
+        if (!defined(coneData)) {
             return false;
         }
 
         var interval = coneData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -155,36 +157,36 @@ define([
         coneUpdated = processPacketData(CzmlNumber, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
         coneUpdated = processPacketData(CzmlNumber, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
 
-        if (typeof coneData.capMaterial !== 'undefined') {
+        if (defined(coneData.capMaterial)) {
             var capMaterial = cone.capMaterial;
-            if (typeof capMaterial === 'undefined') {
+            if (!defined(capMaterial)) {
                 cone.capMaterial = capMaterial = new DynamicMaterialProperty();
                 coneUpdated = true;
             }
             capMaterial.processCzmlIntervals(coneData.capMaterial, interval);
         }
 
-        if (typeof coneData.innerMaterial !== 'undefined') {
+        if (defined(coneData.innerMaterial)) {
             var innerMaterial = cone.innerMaterial;
-            if (typeof innerMaterial === 'undefined') {
+            if (!defined(innerMaterial)) {
                 cone.innerMaterial = innerMaterial = new DynamicMaterialProperty();
                 coneUpdated = true;
             }
             innerMaterial.processCzmlIntervals(coneData.innerMaterial, interval);
         }
 
-        if (typeof coneData.outerMaterial !== 'undefined') {
+        if (defined(coneData.outerMaterial)) {
             var outerMaterial = cone.outerMaterial;
-            if (typeof outerMaterial === 'undefined') {
+            if (!defined(outerMaterial)) {
                 cone.outerMaterial = outerMaterial = new DynamicMaterialProperty();
                 coneUpdated = true;
             }
             outerMaterial.processCzmlIntervals(coneData.outerMaterial, interval);
         }
 
-        if (typeof coneData.silhouetteMaterial !== 'undefined') {
+        if (defined(coneData.silhouetteMaterial)) {
             var silhouetteMaterial = cone.silhouetteMaterial;
-            if (typeof silhouetteMaterial === 'undefined') {
+            if (!defined(silhouetteMaterial)) {
                 cone.silhouetteMaterial = silhouetteMaterial = new DynamicMaterialProperty();
                 coneUpdated = true;
             }
@@ -207,10 +209,10 @@ define([
      */
     DynamicCone.mergeProperties = function(targetObject, objectToMerge) {
         var coneToMerge = objectToMerge.cone;
-        if (typeof coneToMerge !== 'undefined') {
+        if (defined(coneToMerge)) {
 
             var targetCone = targetObject.cone;
-            if (typeof targetCone === 'undefined') {
+            if (!defined(targetCone)) {
                 targetObject.cone = targetCone = new DynamicCone();
             }
 

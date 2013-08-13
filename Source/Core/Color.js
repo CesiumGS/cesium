@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './freezeObject',
         './DeveloperError'
     ], function(
         defaultValue,
+        defined,
         freezeObject,
         DeveloperError) {
     "use strict";
@@ -178,12 +180,12 @@ define([
      * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
      */
     Color.fromCssColorString = function(color) {
-        if (typeof color === 'undefined') {
+        if (!defined(color)) {
             throw new DeveloperError('color is required');
         }
 
         var namedColor = Color[color.toUpperCase()];
-        if (typeof namedColor !== 'undefined') {
+        if (defined(namedColor)) {
             return namedColor.clone();
         }
 
@@ -257,10 +259,10 @@ define([
      * @return {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
      */
     Color.clone = function(color, result) {
-        if (typeof color === 'undefined'){
+        if (!defined(color)){
             return undefined;
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Color(color.red, color.green, color.blue, color.alpha);
         }
         result.red = color.red;
@@ -280,8 +282,8 @@ define([
      */
     Color.equals = function(left, right) {
         return (left === right) ||
-               (typeof left !== 'undefined' &&
-                typeof right !== 'undefined' &&
+               (defined(left) &&
+                defined(right) &&
                 left.red === right.red &&
                 left.green === right.green &&
                 left.blue === right.blue &&
@@ -320,7 +322,7 @@ define([
      */
     Color.prototype.equalsEpsilon = function(other, epsilon) {
         return (this === other) ||
-               ((typeof other !== 'undefined') &&
+               ((defined(other)) &&
                 (Math.abs(this.red - other.red) <= epsilon) &&
                 (Math.abs(this.green - other.green) <= epsilon) &&
                 (Math.abs(this.blue - other.blue) <= epsilon) &&

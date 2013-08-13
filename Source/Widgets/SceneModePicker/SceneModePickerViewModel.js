@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defineProperties',
+        '../../Core/defined',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../../Core/EventHelper',
@@ -9,6 +10,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
+        defined,
         destroyObject,
         DeveloperError,
         EventHelper,
@@ -27,7 +29,7 @@ define([
      * @exception {DeveloperError} transitioner is required.
      */
     var SceneModePickerViewModel = function(transitioner) {
-        if (typeof transitioner === 'undefined') {
+        if (!defined(transitioner)) {
             throw new DeveloperError('transitioner is required.');
         }
 

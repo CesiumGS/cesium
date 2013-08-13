@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -14,6 +15,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -124,12 +126,12 @@ define([
      */
     DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
-        if (typeof billboardData === 'undefined') {
+        if (!defined(billboardData)) {
             return false;
         }
 
         var interval = billboardData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -167,10 +169,10 @@ define([
      */
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
-        if (typeof billboardToMerge !== 'undefined') {
+        if (defined(billboardToMerge)) {
 
             var targetBillboard = targetObject.billboard;
-            if (typeof targetBillboard === 'undefined') {
+            if (!defined(targetBillboard)) {
                 targetObject.billboard = targetBillboard = new DynamicBillboard();
             }
 

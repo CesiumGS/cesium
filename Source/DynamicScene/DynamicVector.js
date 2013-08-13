@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlDirection',
         './CzmlNumber',
@@ -10,6 +11,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlDirection,
         CzmlNumber,
@@ -81,12 +83,12 @@ function(
      */
     DynamicVector.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vectorData = packet.vector;
-        if (typeof vectorData === 'undefined') {
+        if (!defined(vectorData)) {
             return false;
         }
 
         var interval = vectorData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
@@ -118,10 +120,10 @@ function(
      */
     DynamicVector.mergeProperties = function(targetObject, objectToMerge) {
         var vectorToMerge = objectToMerge.vector;
-        if (typeof vectorToMerge !== 'undefined') {
+        if (defined(vectorToMerge)) {
 
             var targetVector = targetObject.vector;
-            if (typeof targetVector === 'undefined') {
+            if (!defined(targetVector)) {
                 targetObject.vector = targetVector = new DynamicVector();
             }
 

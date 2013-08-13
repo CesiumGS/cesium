@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './DeveloperError',
-        './defaultValue'
+        './defaultValue',
+        './defined'
     ], function(
         DeveloperError,
-        defaultValue) {
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -62,7 +64,7 @@ define([
     var combineTwoObjects = function(object1, object2, deep, allowDuplicates) {
         for (var property in object2) {
             if (object2.hasOwnProperty(property)) {
-                if (object1.hasOwnProperty(property) && (typeof object1[property] !== 'undefined')) {
+                if (object1.hasOwnProperty(property) && (defined(object1[property]))) {
                     if (!allowDuplicates) {
                         throw new DeveloperError('Duplicate member: ' + property);
                     }
