@@ -7,7 +7,7 @@ define([
         defined) {
     "use strict";
 
-    var doublesPerValue = 4;
+    var length = 4;
 
     /**
      * Provides methods for working with a Color defined in CZML.
@@ -34,12 +34,12 @@ define([
         /**
          * The number of doubles per packed Color value.
          */
-        doublesPerValue : doublesPerValue,
+        length : length,
 
         /**
          * The number of doubles per packed value used for interpolation.
          */
-        doublesPerInterpolationValue : doublesPerValue,
+        interpolationLength : length,
 
         /**
          * Returns the packed Color representation contained within the provided CZML interval
@@ -84,7 +84,7 @@ define([
          * @param {Object} unwrappedInterval The result of CzmlColor.unwrapInterval.
          */
         isSampled : function(unwrappedInterval) {
-            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
+            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > length;
         },
 
         /**

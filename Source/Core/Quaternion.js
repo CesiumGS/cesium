@@ -174,6 +174,79 @@ define([
         return result;
     };
 
+    var sampledQuaternionAxis = new Cartesian3();
+    var sampledQuaternionRotation = new Cartesian3();
+    var sampledQuaternionTempQuaternion = new Quaternion();
+    var sampledQuaternionQuaternion0 = new Quaternion();
+    var sampledQuaternionQuaternion0Conjugate = new Quaternion();
+
+    Quaternion.length = 4;
+
+    Quaternion.interpolationLength = 3;
+
+    Quaternion.pack = function(array, startingIndex, value) {
+        array[startingIndex++] = value.x;
+        array[startingIndex++] = value.y;
+        array[startingIndex++] = value.z;
+        array[startingIndex++] = value.w;
+        return startingIndex;
+    };
+
+    Quaternion.packForInterpolation = function(sourceArray, destinationArray, firstIndex, lastIndex) {
+        Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
+        sampledQuaternionQuaternion0Conjugate.conjugate(sampledQuaternionQuaternion0Conjugate);
+
+        for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
+            var offset = i * 3;
+            Quaternion.unpack(sourceArray, (firstIndex + i) * 4, sampledQuaternionTempQuaternion);
+
+            sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
+
+            if (sampledQuaternionTempQuaternion.w < 0) {
+                sampledQuaternionTempQuaternion.negate(sampledQuaternionTempQuaternion);
+            }
+
+            sampledQuaternionTempQuaternion.getAxis(sampledQuaternionAxis);
+            var angle = sampledQuaternionTempQuaternion.getAngle();
+            destinationArray[offset] = sampledQuaternionAxis.x * angle;
+            destinationArray[offset + 1] = sampledQuaternionAxis.y * angle;
+            destinationArray[offset + 2] = sampledQuaternionAxis.z * angle;
+        }
+    };
+
+    Quaternion.unpack = function(array, startingIndex, result) {
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
+        result.x = array[startingIndex];
+        result.y = array[startingIndex + 1];
+        result.z = array[startingIndex + 2];
+        result.w = array[startingIndex + 3];
+        return result;
+    };
+
+    Quaternion.unpackInterpolationResult = function(array, result, sourceArray, firstIndex, lastIndex) {
+        if (!defined(result)) {
+            result = new Quaternion();
+        }
+        sampledQuaternionRotation.x = array[0];
+        sampledQuaternionRotation.y = array[1];
+        sampledQuaternionRotation.z = array[2];
+        var magnitude = sampledQuaternionRotation.magnitude();
+
+        Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
+
+        if (magnitude === 0) {
+            //Can't just use Quaternion.IDENTITY here because sampledQuaternionTempQuaternion may be modified in the future.
+            sampledQuaternionTempQuaternion.x = sampledQuaternionTempQuaternion.y = sampledQuaternionTempQuaternion.z = 0.0;
+            sampledQuaternionTempQuaternion.w = 1.0;
+        } else {
+            Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
+        }
+
+        return sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0, result);
+    };
+
     /**
      * Duplicates a Quaternion instance.
      * @memberof Quaternion

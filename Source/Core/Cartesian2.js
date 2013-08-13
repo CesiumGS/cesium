@@ -148,6 +148,23 @@ define([
      */
     Cartesian2.fromCartesian4 = Cartesian2.clone;
 
+    Cartesian2.length = 2;
+
+    Cartesian2.pack = function(array, startingIndex, value) {
+        array[startingIndex++] = value.x;
+        array[startingIndex++] = value.y;
+        return startingIndex;
+    };
+
+    Cartesian2.unpack = function(array, startingIndex, result) {
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+        result.x = array[startingIndex++];
+        result.y = array[startingIndex];
+        return result;
+    };
+
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian2

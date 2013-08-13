@@ -173,6 +173,25 @@ define([
      */
     Cartesian3.fromCartesian4 = Cartesian3.clone;
 
+    Cartesian3.length = 3;
+
+    Cartesian3.pack = function(array, startingIndex, value) {
+        array[startingIndex++] = value.x;
+        array[startingIndex++] = value.y;
+        array[startingIndex++] = value.z;
+        return startingIndex;
+    };
+
+    Cartesian3.unpack = function(array, startingIndex, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+        result.x = array[startingIndex++];
+        result.y = array[startingIndex++];
+        result.z = array[startingIndex];
+        return result;
+    };
+
     /**
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian3

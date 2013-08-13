@@ -226,6 +226,27 @@ define([
         return undefined;
     };
 
+    Color.length = 4;
+
+    Color.pack = function(array, startingIndex, value) {
+        array[startingIndex++] = value.red;
+        array[startingIndex++] = value.green;
+        array[startingIndex++] = value.blue;
+        array[startingIndex++] = value.alpha;
+        return startingIndex;
+    };
+
+    Color.unpack = function(array, startingIndex, result) {
+        if (!defined(result)) {
+            result = new Color();
+        }
+        result.red = array[startingIndex++];
+        result.green = array[startingIndex++];
+        result.blue = array[startingIndex++];
+        result.alpha = array[startingIndex];
+        return result;
+    };
+
     /**
      * Converts a 'byte' color component in the range of 0 to 255 into
      * a 'float' color component in the range of 0 to 1.0.

@@ -39,10 +39,10 @@ defineSuite([
         expect(CzmlUnitQuaternion.getValueFromArray(sampledQuaternionInterval.unitQuaternion, 6)).toEqualEpsilon(quaternion2, CesiumMath.EPSILON15);
     });
 
-    it('packValuesForInterpolation and getValueFromInterpolationResult', function() {
+    it('packForInterpolation and getValueFromInterpolationResult', function() {
         var destination = [];
         var source = [quaternion1.x, quaternion1.y, quaternion1.z, quaternion1.w, quaternion2.x, quaternion2.y, quaternion2.z, quaternion2.w];
-        CzmlUnitQuaternion.packValuesForInterpolation(source, destination, 0, 1);
+        CzmlUnitQuaternion.packForInterpolation(source, destination, 0, 1);
         expect(CzmlUnitQuaternion.getValueFromInterpolationResult(destination, undefined, source, 0, 1)).toEqualEpsilon(quaternion1, CesiumMath.EPSILON15);
     });
 });

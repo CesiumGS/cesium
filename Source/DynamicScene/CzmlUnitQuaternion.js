@@ -43,12 +43,12 @@ define([
         /**
          * The number of doubles per packed Quaternion value.
          */
-        doublesPerValue : doublesPerQuaternion,
+        length : doublesPerQuaternion,
 
         /**
          * The number of doubles per packed value used for interpolation.
          */
-        doublesPerInterpolationValue : doublesPerCartesian,
+        interpolationLength : doublesPerCartesian,
 
         /**
          * Returns the packed Quaternion representation contained within the provided CZML interval
@@ -79,7 +79,7 @@ define([
          * @param {Number} firstIndex The index of the first element to be packed.
          * @param {Number} lastIndex The index of the last element to be packed.
          */
-        packValuesForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
+        packForInterpolation : function(sourceArray, destinationArray, firstIndex, lastIndex) {
             CzmlUnitQuaternion.getValueFromArray(sourceArray, lastIndex * doublesPerQuaternion, quaternion0Conjugate);
             quaternion0Conjugate.conjugate(quaternion0Conjugate);
 
@@ -139,14 +139,14 @@ define([
         },
 
         /**
-         * Given a packed array of axis-angle rotations returned from CzmlUnitQuaternion.packValuesForInterpolation,
+         * Given a packed array of axis-angle rotations returned from CzmlUnitQuaternion.packForInterpolation,
          * converts the desired index into a unit Quaternion.
          *
          * @param {Array} array The array containing the packed axis-angle rotations.
          * @param {Quaternion} result The object to store the result in, if undefined a new instance will be created.
-         * @param {Array} sourceArray The source array of the original Quaternion values previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
-         * @param {Number} firstIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation.
-         * @param {Number} lastIndex The index previously passed to CzmlUnitQuaternion.packValuesForInterpolation
+         * @param {Array} sourceArray The source array of the original Quaternion values previously passed to CzmlUnitQuaternion.packForInterpolation.
+         * @param {Number} firstIndex The index previously passed to CzmlUnitQuaternion.packForInterpolation.
+         * @param {Number} lastIndex The index previously passed to CzmlUnitQuaternion.packForInterpolation
          * @returns The modified result parameter or a new Quaternion instance if result was not defined.
          */
         getValueFromInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {

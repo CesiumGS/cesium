@@ -18,7 +18,7 @@ define([
         return this.value;
     };
 
-    MockProperty.prototype._getReferenceFrame = function() {
+    MockProperty.prototype.getReferenceFrame = function() {
         return ReferenceFrame.FIXED;
     };
 

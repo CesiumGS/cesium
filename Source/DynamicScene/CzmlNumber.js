@@ -1,11 +1,13 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        '../Core/InterpolatableNumber'
     ], function(
-        defaultValue) {
+        defaultValue,
+        InterpolatableNumber) {
     "use strict";
 
-    var doublesPerValue = 1;
+    var length = 1;
 
     /**
      * Provides methods for working with a number defined in CZML.
@@ -27,15 +29,17 @@ define([
      * @see CzmlVerticalOrigin
      */
     var CzmlNumber = {
+        type : InterpolatableNumber,
+
         /**
          * The number of doubles per packed value.
          */
-        doublesPerValue : doublesPerValue,
+        length : length,
 
         /**
          * The number of doubles per packed value used for interpolation.
          */
-        doublesPerInterpolationValue : doublesPerValue,
+        interpolationLength : length,
 
         /**
          * Returns the packed numerical representation contained within the provided CZML interval

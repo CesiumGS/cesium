@@ -13,7 +13,7 @@ define([
          Ellipsoid) {
     "use strict";
 
-    var doublesPerValue = 3;
+    var length = 3;
     var scratchCartesian = new Cartesian3();
     var scratchSpherical = new Spherical();
 
@@ -43,12 +43,12 @@ define([
          /**
          * The number of doubles per packed Cartesian3 value.
          */
-        doublesPerValue : doublesPerValue,
+        length : length,
 
         /**
          * The number of doubles per packed value used for interpolation.
          */
-        doublesPerInterpolationValue : doublesPerValue,
+        interpolationLength : length,
 
         /**
          * Returns the packed Cartesian3 representation contained within the provided CZML interval
@@ -96,7 +96,7 @@ define([
          * @param {Object} unwrappedInterval The result of CzmlDirection.unwrapInterval.
          */
         isSampled : function(unwrappedInterval) {
-            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
+            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > length;
         },
 
         /**

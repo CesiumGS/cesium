@@ -7,7 +7,7 @@ define([
          defined) {
     "use strict";
 
-    var doublesPerValue = 3;
+    var length = 3;
 
     /**
      * Provides methods for working with a Cartesian3 defined in CZML.
@@ -34,12 +34,12 @@ define([
          /**
          * The number of doubles per packed Cartesian3 value.
          */
-        doublesPerValue : doublesPerValue,
+        length : length,
 
         /**
          * The number of doubles per packed value used for interpolation.
          */
-        doublesPerInterpolationValue : doublesPerValue,
+        interpolationLength : length,
 
         /**
          * Returns the packed Cartesian3 representation contained within the provided CZML interval
@@ -58,7 +58,7 @@ define([
          * @param {Object} unwrappedInterval The result of CzmlCartesian3.unwrapInterval.
          */
         isSampled : function(unwrappedInterval) {
-            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > doublesPerValue;
+            return Array.isArray(unwrappedInterval) && unwrappedInterval.length > length;
         },
 
         /**
