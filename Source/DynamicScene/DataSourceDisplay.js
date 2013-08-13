@@ -59,7 +59,7 @@ define([
         if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
-        if (typeof dataSourceCollection === 'undefined') {
+        if (!defined(dataSourceCollection)) {
             throw new DeveloperError('dataSourceCollection is required.');
         }
 
