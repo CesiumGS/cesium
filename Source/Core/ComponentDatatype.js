@@ -9,7 +9,7 @@ define([
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
-    if (!defined(Int8Array)) {
+    if (typeof Int8Array === 'undefined') {
         return {};
     }
 

@@ -90,7 +90,7 @@ define([
     var scratchArrayBuffer;
     var scratchUint32Array;
     var scratchUint8Array;
-    if (defined(ArrayBuffer)) {
+    if (typeof ArrayBuffer !== 'undefined') {
         scratchArrayBuffer = new ArrayBuffer(4);
         scratchUint32Array = new Uint32Array(scratchArrayBuffer);
         scratchUint8Array = new Uint8Array(scratchArrayBuffer);
