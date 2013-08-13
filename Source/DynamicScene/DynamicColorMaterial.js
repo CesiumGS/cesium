@@ -50,7 +50,7 @@ define([
      */
     DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.solidColor;
-        if (typeof materialData !== 'undefined') {
+        if (defined(materialData)) {
             processPacketData(CzmlColor, this, 'color', materialData.color);
         }
     };

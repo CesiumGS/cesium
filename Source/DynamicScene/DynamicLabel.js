@@ -147,7 +147,7 @@ define([
         }
 
         var label = dynamicObject.label;
-        var labelUpdated = typeof label === 'undefined';
+        var labelUpdated = !defined(label);
         if (labelUpdated) {
             dynamicObject.label = label = new DynamicLabel();
         }

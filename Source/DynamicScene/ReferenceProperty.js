@@ -113,7 +113,7 @@ define([
      */
     ReferenceProperty.prototype.getIsTimeVarying = function() {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' ? targetProperty.getIsTimeVarying() : undefined;
+        return defined(targetProperty) ? targetProperty.getIsTimeVarying() : undefined;
     };
 
     /**
@@ -125,7 +125,7 @@ define([
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
         var targetProperty = resolve(this);
-        return typeof targetProperty !== 'undefined' && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
+        return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };
 
     return ReferenceProperty;

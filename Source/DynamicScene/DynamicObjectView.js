@@ -49,7 +49,7 @@ define([
         }
 
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
-        if (typeof cartesian !== 'undefined') {
+        if (defined(cartesian)) {
             var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
             //We are assigning the position of the camera, not of the object, so modify the height appropriately.
             cartographic.height = viewDistance;
@@ -171,7 +171,7 @@ define([
 
         //The swizzling here is intentional because ColumbusView uses a different coordinate system.
         var cartesian = positionProperty.getValue(time, that._lastCartesian);
-        if (typeof cartesian !== 'undefined') {
+        if (defined(cartesian)) {
             var cartographic = ellipsoid.cartesianToCartographic(cartesian, that._lastCartographic);
 
             var projectedPosition = projection.project(cartographic);

@@ -90,7 +90,7 @@ define([
         }
 
         var ellipse = dynamicObject.ellipse;
-        var ellipseUpdated = typeof ellipse === 'undefined';
+        var ellipseUpdated = !defined(ellipse);
         if (ellipseUpdated) {
             dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }

@@ -74,14 +74,14 @@ define([
         }
 
         var polygon = dynamicObject.polygon;
-        var polygonUpdated = typeof polygon === 'undefined';
+        var polygonUpdated = !defined(polygon);
         if (polygonUpdated) {
             dynamicObject.polygon = polygon = new DynamicPolygon();
         }
 
         polygonUpdated = processPacketData(CzmlBoolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
 
-        if (typeof polygonData.material !== 'undefined') {
+        if (defined(polygonData.material)) {
             var material = polygon.material;
             if (!defined(material)) {
                 polygon.material = material = new DynamicMaterialProperty();

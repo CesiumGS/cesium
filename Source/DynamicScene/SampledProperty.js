@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Color',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/JulianDate',
         '../Core/LinearApproximation',
@@ -15,6 +16,7 @@ define([
         Cartesian2,
         Cartesian3,
         Color,
+        defined,
         DeveloperError,
         JulianDate,
         LinearApproximation,
@@ -31,7 +33,7 @@ define([
             array.push(value.y);
         },
         inflate : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian2();
             }
             result.x = array[startingIndex];
@@ -49,7 +51,7 @@ define([
             array.push(value.z);
         },
         inflate : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = array[startingIndex];
@@ -63,7 +65,7 @@ define([
         doublesPerValue : 4,
         doublesPerInterpolationValue : 4,
         flatten : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Color();
             }
             result.red = array[startingIndex];
@@ -73,7 +75,7 @@ define([
             return result;
         },
         inflate : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Color();
             }
             result.red = array[startingIndex];
@@ -126,7 +128,7 @@ define([
             }
         },
         inflate : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Quaternion();
             }
             result.x = array[startingIndex];
@@ -136,7 +138,7 @@ define([
             return result;
         },
         inflateInterpolationResult : function(array, result, sourceArray, firstIndex, lastIndex) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Quaternion();
             }
             sampledQuaternionRotation.x = array[0];
@@ -215,7 +217,7 @@ define([
                 nextTime = times[timesInsertionPoint];
                 while (newDataIndex < newData.length) {
                     currentTime = convertDate(newData[newDataIndex], epoch);
-                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) || (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
+                    if ((defined(prevItem) && JulianDate.compare(prevItem, currentTime) >= 0) || (defined(nextTime) && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
                     timesSpliceArgs.push(currentTime);
@@ -250,7 +252,7 @@ define([
      */
     var SampledProperty = function(type) {
         var typeHandler;
-        if (typeof type === 'undefined') {
+        if (!defined(type)) {
             typeHandler = SampledNumber;
         } else if (type === Cartesian2) {
             typeHandler = SampledCartesian2;
@@ -341,7 +343,7 @@ define([
             var xTable = this._xTable;
             var yTable = this._yTable;
 
-            if (typeof xTable === 'undefined') {
+            if (!defined(xTable)) {
                 xTable = this._xTable = new Array(this.numberOfPoints);
                 yTable = this._yTable = new Array(this.numberOfPoints * doublesPerInterpolationValue);
             }
@@ -351,7 +353,7 @@ define([
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
             }
             var specializedPackFunction = typeHandler.packValuesForInterpolation;
-            if (typeof specializedPackFunction === 'undefined') {
+            if (!defined(specializedPackFunction)) {
                 var destinationIndex = 0;
                 var sourceIndex = firstIndex * doublesPerValue;
                 var stop = (lastIndex + 1) * doublesPerValue;
@@ -369,7 +371,7 @@ define([
             var x = times[lastIndex].getSecondsDifference(time);
             interpolationScratch = this.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScratch);
 
-            if (typeof typeHandler.inflateInterpolationResult === 'undefined') {
+            if (!defined(typeHandler.inflateInterpolationResult)) {
                 return typeHandler.inflate(interpolationScratch, 0, result);
             }
             return typeHandler.inflateInterpolationResult(interpolationScratch, result, values, firstIndex, lastIndex);

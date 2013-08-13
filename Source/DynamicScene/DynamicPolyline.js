@@ -92,7 +92,7 @@ function(
         }
 
         var polyline = dynamicObject.polyline;
-        var polylineUpdated = typeof polyline === 'undefined';
+        var polylineUpdated = !defined(polyline);
         if (polylineUpdated) {
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }

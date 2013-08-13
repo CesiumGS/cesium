@@ -110,7 +110,7 @@ define([
         }
 
         var pyramid = dynamicObject.pyramid;
-        var pyramidUpdated = typeof pyramid === 'undefined';
+        var pyramidUpdated = !defined(pyramid);
         if (pyramidUpdated) {
             dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }

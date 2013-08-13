@@ -1,13 +1,16 @@
 /*global define*/
-define(['../Core/defineProperties',
+define([
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration',
         '../Core/TimeIntervalCollection'
-        ], function(
-                defineProperties,
-                DeveloperError,
-                Enumeration,
-                TimeIntervalCollection) {
+    ], function(
+        defined,
+        defineProperties,
+        DeveloperError,
+        Enumeration,
+        TimeIntervalCollection) {
     "use strict";
 
     /**
@@ -45,14 +48,14 @@ define(['../Core/defineProperties',
      * @exception {DeveloperError} time is required.
      */
     TimeIntervalCollectionProperty.prototype.getValue = function(time, result) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
 
         var interval = this._intervals.findIntervalContainingDate(time);
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             var value = interval.data;
-            if (typeof value !== 'undefined' && typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && !(value instanceof Enumeration) && !Array.isArray(value)) {
+            if (defined(value) && typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && !(value instanceof Enumeration) && !Array.isArray(value)) {
                 if (typeof value.clone === 'function') {
                     return value.clone(result);
                 }

@@ -93,7 +93,7 @@ function(
         }
 
         var vector = dynamicObject.vector;
-        var vectorUpdated = typeof vector === 'undefined';
+        var vectorUpdated = !defined(vector);
         if (vectorUpdated) {
             dynamicObject.vector = vector = new DynamicVector();
         }

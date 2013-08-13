@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/TimeInterval',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -8,6 +9,7 @@ define([
         './SampledProperty',
         './TimeIntervalCollectionProperty'
     ], function(
+        defined,
         TimeInterval,
         Iso8601,
         JulianDate,
@@ -20,18 +22,18 @@ define([
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri) {
         var combinedInterval;
         var packetInterval = packetData.interval;
-        if (typeof packetInterval !== 'undefined') {
+        if (defined(packetInterval)) {
             combinedInterval = TimeInterval.fromIso8601(packetInterval);
-            if (typeof constrainedInterval !== 'undefined') {
+            if (defined(constrainedInterval)) {
                 combinedInterval = combinedInterval.intersect(constrainedInterval);
             }
-        } else if (typeof constrainedInterval !== 'undefined') {
+        } else if (defined(constrainedInterval)) {
             combinedInterval = constrainedInterval;
         }
 
         var unwrappedInterval = type.unwrapInterval(packetData, sourceUri);
 
-        var hasInterval = typeof combinedInterval !== 'undefined' && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
         var isSampled = type.isSampled(unwrappedInterval);
         if (!isSampled && !hasInterval) {
             object[propertyName] = new ConstantProperty(type.getValue(unwrappedInterval));
@@ -44,7 +46,7 @@ define([
             combinedInterval = combinedInterval.clone();
             combinedInterval.data = type.getValue(unwrappedInterval);
 
-            if (typeof property === 'undefined') {
+            if (!defined(property)) {
                 property = new TimeIntervalCollectionProperty();
                 object[propertyName] = property;
                 propertyCreated = true;
@@ -63,7 +65,7 @@ define([
             }
             property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
         } else if (isSampled && hasInterval) {
-            if (typeof property === 'undefined') {
+            if (!defined(property)) {
                 property = new CompositeProperty();
                 object[propertyName] = property;
                 propertyCreated = true;
@@ -72,7 +74,7 @@ define([
                 var intervals = property.getIntervals();
                 var interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
                 var intervalData;
-                if (typeof interval !== 'undefined') {
+                if (defined(interval)) {
                     intervalData = interval.data;
                 } else {
                     interval = combinedInterval.clone();
@@ -93,7 +95,7 @@ define([
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri) {
-        if (typeof packetData === 'undefined') {
+        if (!defined(packetData)) {
             return false;
         }
 

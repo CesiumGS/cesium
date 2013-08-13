@@ -110,7 +110,7 @@ function(
         }
 
         var path = dynamicObject.path;
-        var pathUpdated = typeof path === 'undefined';
+        var pathUpdated = !defined(path);
         if (pathUpdated) {
             dynamicObject.path = path = new DynamicPath();
         }

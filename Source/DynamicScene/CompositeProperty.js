@@ -1,11 +1,14 @@
 /*global define*/
-define(['../Core/defineProperties',
+define([
+        '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/TimeIntervalCollection'
-        ], function(
-                defineProperties,
-                DeveloperError,
-                TimeIntervalCollection) {
+    ], function(
+        defined,
+        defineProperties,
+        DeveloperError,
+        TimeIntervalCollection) {
     "use strict";
 
     /**
@@ -39,14 +42,14 @@ define(['../Core/defineProperties',
      * @exception {DeveloperError} time is required.
      */
     CompositeProperty.prototype.getValue = function(time, result) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required');
         }
 
         var interval = this._intervals.findIntervalContainingDate(time);
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             var data = interval.data;
-            if (typeof data !== 'undefined') {
+            if (defined(data)) {
                 return data.getValue(time, result);
             }
         }

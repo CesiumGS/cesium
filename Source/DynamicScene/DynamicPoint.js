@@ -88,7 +88,7 @@ define([
         }
 
         var point = dynamicObject.point;
-        var pointUpdated = typeof point === 'undefined';
+        var pointUpdated = !defined(point);
         if (pointUpdated) {
             dynamicObject.point = point = new DynamicPoint();
         }

@@ -82,7 +82,7 @@ define([
         }
 
         var ellipsoid = dynamicObject.ellipsoid;
-        var ellipsoidUpdated = typeof ellipsoid === 'undefined';
+        var ellipsoidUpdated = !defined(ellipsoid);
         if (ellipsoidUpdated) {
             dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }

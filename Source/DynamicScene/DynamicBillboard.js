@@ -136,7 +136,7 @@ define([
         }
 
         var billboard = dynamicObject.billboard;
-        var billboardUpdated = typeof billboard === 'undefined';
+        var billboardUpdated = !defined(billboard);
         if (billboardUpdated) {
             dynamicObject.billboard = billboard = new DynamicBillboard();
         }

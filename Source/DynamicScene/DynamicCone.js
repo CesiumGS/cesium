@@ -142,7 +142,7 @@ define([
         }
 
         var cone = dynamicObject.cone;
-        var coneUpdated = typeof cone === 'undefined';
+        var coneUpdated = !defined(cone);
         if (coneUpdated) {
             dynamicObject.cone = cone = new DynamicCone();
         }

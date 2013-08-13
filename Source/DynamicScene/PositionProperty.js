@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Matrix3',
         '../Core/ReferenceFrame',
         '../Core/Transforms'
     ], function(
         Cartesian3,
+        defined,
         DeveloperError,
         Matrix3,
         ReferenceFrame,
@@ -81,7 +83,7 @@ define([
         }
 
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-        if (typeof icrfToFixed === 'undefined') {
+        if (defined(icrfToFixed)) {
             icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
         if (inputFrame === ReferenceFrame.INERTIAL) {

@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Enumeration'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Enumeration) {
     "use strict";
@@ -31,7 +33,7 @@ define([
      * @exception {DeveloperError} clone is a required function.
      */
     var ConstantProperty = function(value, clone) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
