@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './freezeObject',
         './DeveloperError',
         './Cartesian3',
@@ -8,6 +9,7 @@ define([
         './Math'
     ], function(
         defaultValue,
+        defined,
         freezeObject,
         DeveloperError,
         Cartesian3,
@@ -106,23 +108,23 @@ define([
      * });
      */
     HeightmapTessellator.computeVertices = function(description) {
-        if (typeof description === 'undefined' || typeof description.heightmap === 'undefined') {
+        if (!defined(description) || !defined(description.heightmap)) {
             throw new DeveloperError('description.heightmap is required.');
         }
 
-        if (typeof description.width === 'undefined' || typeof description.height === 'undefined') {
+        if (!defined(description.width) || !defined(description.height)) {
             throw new DeveloperError('description.width and description.height are required.');
         }
 
-        if (typeof description.vertices === 'undefined') {
+        if (!defined(description.vertices)) {
             throw new DeveloperError('description.vertices is required.');
         }
 
-        if (typeof description.nativeExtent === 'undefined') {
+        if (!defined(description.nativeExtent)) {
             throw new DeveloperError('description.nativeExtent is required.');
         }
 
-        if (typeof description.skirtHeight === 'undefined') {
+        if (!defined(description.skirtHeight)) {
             throw new DeveloperError('description.skirtHeight is required.');
         }
 
@@ -158,7 +160,7 @@ define([
         var geographicNorth;
 
         var extent = description.extent;
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             if (isGeographic) {
                 geographicWest = toRadians(nativeExtent.west);
                 geographicSouth = toRadians(nativeExtent.south);

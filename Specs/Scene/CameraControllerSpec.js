@@ -5,6 +5,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartographic',
+         'Core/defined',
          'Core/Ellipsoid',
          'Core/GeographicProjection',
          'Core/Extent',
@@ -21,6 +22,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Cartographic,
+         defined,
          Ellipsoid,
          GeographicProjection,
          Extent,
@@ -774,7 +776,7 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = controller.pickEllipsoid(Cartesian2.ZERO, ellipsoid);
-        expect(typeof p === 'undefined').toEqual(true);
+        expect(p).toBeUndefined();
     });
 
     it('pick map in 2D', function() {
@@ -804,7 +806,7 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = controller.pickEllipsoid(Cartesian2.ZERO);
-        expect(typeof p === 'undefined').toEqual(true);
+        expect(p).toBeUndefined();
     });
 
     it('pick map in columbus view', function() {
@@ -838,7 +840,7 @@ defineSuite([
         expect(c).toEqual(new Cartographic(0.0, 0.0, 0.0));
 
         p = controller.pickEllipsoid(Cartesian2.ZERO);
-        expect(typeof p).toEqual('undefined');
+        expect(p).toBeUndefined();
     });
 
     it('set position cartographic throws without a cartographic', function() {

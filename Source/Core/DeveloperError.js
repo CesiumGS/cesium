@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     /**
@@ -54,7 +54,7 @@ define(function() {
     DeveloperError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
 
-        if (typeof this.stack !== 'undefined') {
+        if (defined(this.stack)) {
             str += '\n' + this.stack.toString();
         } else {
             str += '\n' + this.error.toString();

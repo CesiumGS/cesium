@@ -4,6 +4,7 @@ define([
         '../Core/combine',
         '../Core/loadImage',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
@@ -48,6 +49,7 @@ define([
         combine,
         loadImage,
         defaultValue,
+        defined,
         destroyObject,
         BoundingRectangle,
         BoundingSphere,
@@ -364,7 +366,7 @@ define([
                     rect.x, rect.y + rect.height
                 ];
 
-                if (typeof centralBody._northPoleCommand.vertexArray === 'undefined') {
+                if (!defined(centralBody._northPoleCommand.vertexArray)) {
                     centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
                     geometry = new Geometry({
                         attributes : {
@@ -412,7 +414,7 @@ define([
                      rect.x, rect.y + rect.height
                  ];
 
-                 if (typeof centralBody._southPoleCommand.vertexArray === 'undefined') {
+                 if (!defined(centralBody._southPoleCommand.vertexArray)) {
                      centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
                      geometry = new Geometry({
                          attributes : {
@@ -439,7 +441,7 @@ define([
 
         var poleIntensity = 0.0;
         var baseLayer = centralBody._imageryLayerCollection.getLength() > 0 ? centralBody._imageryLayerCollection.get(0) : undefined;
-        if (typeof baseLayer !== 'undefined' && typeof baseLayer.getImageryProvider() !== 'undefined' && typeof baseLayer.getImageryProvider().getPoleIntensity !== 'undefined') {
+        if (defined(baseLayer) && defined(baseLayer.getImageryProvider()) && defined(baseLayer.getImageryProvider().getPoleIntensity)) {
             poleIntensity = baseLayer.getImageryProvider().getPoleIntensity();
         }
 
@@ -450,7 +452,7 @@ define([
         };
 
         var that = centralBody;
-        if (typeof centralBody._northPoleCommand.uniformMap === 'undefined') {
+        if (!defined(centralBody._northPoleCommand.uniformMap)) {
             var northPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.northPoleColor;
@@ -459,7 +461,7 @@ define([
             centralBody._northPoleCommand.uniformMap = combine([northPoleUniforms, centralBody._drawUniforms], false, false);
         }
 
-        if (typeof centralBody._southPoleCommand.uniformMap === 'undefined') {
+        if (!defined(centralBody._southPoleCommand.uniformMap)) {
             var southPoleUniforms = combine([drawUniforms, {
                 u_color : function() {
                     return that.southPoleColor;
@@ -488,7 +490,7 @@ define([
         var projection = frameState.scene2D.projection;
         var modeChanged = false;
 
-        if (this._mode !== mode || typeof this._rsColor === 'undefined') {
+        if (this._mode !== mode || !defined(this._rsColor)) {
             modeChanged = true;
             if (mode === SceneMode.SCENE3D || mode === SceneMode.COLUMBUS_VIEW) {
                 this._rsColor = context.createRenderState({ // Write color and depth
@@ -571,7 +573,7 @@ define([
 
         var shaderCache = context.getShaderCache();
 
-        if (typeof this._depthCommand.shaderProgram === 'undefined') {
+        if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
                     CentralBodyVSDepth,
                     '#line 0\n' +
@@ -599,13 +601,13 @@ define([
         var hasWaterMask = this._surface._terrainProvider.hasWaterMask();
         var hasWaterMaskChanged = this._hasWaterMask !== hasWaterMask;
 
-        if (typeof this._surfaceShaderSet === 'undefined' ||
-            typeof this._northPoleCommand.shaderProgram === 'undefined' ||
-            typeof this._southPoleCommand.shaderProgram === 'undefined' ||
+        if (!defined(this._surfaceShaderSet) ||
+            !defined(this._northPoleCommand.shaderProgram) ||
+            !defined(this._southPoleCommand.shaderProgram) ||
             modeChanged ||
             projectionChanged ||
             hasWaterMaskChanged ||
-            (typeof this._oceanNormalMap !== 'undefined') !== this._showingPrettyOcean) {
+            (defined(this._oceanNormalMap)) !== this._showingPrettyOcean) {
 
             var getPosition3DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition3DMode(position3DWC); }';
             var getPosition2DMode = 'vec4 getPosition(vec3 position3DWC) { return getPosition2DMode(position3DWC); }';
@@ -646,7 +648,7 @@ define([
                  getPositionMode + '\n' +
                  get2DYPositionFraction;
 
-            var showPrettyOcean = hasWaterMask && typeof this._oceanNormalMap !== 'undefined';
+            var showPrettyOcean = hasWaterMask && defined(this._oceanNormalMap);
 
             this._surfaceShaderSet.baseFragmentShaderString =
                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
@@ -661,7 +663,7 @@ define([
             this._northPoleCommand.shaderProgram = poleShaderProgram;
             this._southPoleCommand.shaderProgram = poleShaderProgram;
 
-            this._showingPrettyOcean = typeof this._oceanNormalMap !== 'undefined';
+            this._showingPrettyOcean = defined(this._oceanNormalMap);
             this._hasWaterMask = hasWaterMask;
         }
 
@@ -792,7 +794,7 @@ define([
     function displayCredits(centralBody, frameState) {
         var creditDisplay = frameState.creditDisplay;
         var credit = centralBody._surface._terrainProvider.getCredit();
-        if (typeof credit !== 'undefined') {
+        if (defined(credit)) {
             creditDisplay.addCredit(credit);
         }
 
@@ -801,7 +803,7 @@ define([
             var layer = imageryLayerCollection.get(i);
             if (layer.show) {
                 credit = layer.getImageryProvider().getCredit();
-                if (typeof credit !== 'undefined') {
+                if (defined(credit)) {
                     creditDisplay.addCredit(credit);
                 }
             }

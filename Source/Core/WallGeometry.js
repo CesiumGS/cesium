@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
@@ -20,6 +21,7 @@ define([
         './WindingOrder'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian3,
         Cartographic,
@@ -81,8 +83,8 @@ define([
     }
 
     function removeDuplicates(ellipsoid, positions, topHeights, bottomHeights) {
-        var hasBottomHeights = (typeof bottomHeights !== 'undefined');
-        var hasTopHeights = (typeof topHeights !== 'undefined');
+        var hasBottomHeights = (defined(bottomHeights));
+        var hasTopHeights = (defined(topHeights));
         var cleanedPositions = [];
         var cleanedTopHeights = [];
         var cleanedBottomHeights = hasBottomHeights ? [] : undefined;
@@ -173,15 +175,15 @@ define([
         var maximumHeights = options.maximumHeights;
         var minimumHeights = options.minimumHeights;
 
-        if (typeof wallPositions === 'undefined') {
+        if (!defined(wallPositions)) {
             throw new DeveloperError('positions is required.');
         }
 
-        if (typeof maximumHeights !== 'undefined' && maximumHeights.length !== wallPositions.length) {
+        if (defined(maximumHeights) && maximumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and maximumHeights must have the same length.');
         }
 
-        if (typeof minimumHeights !== 'undefined' && minimumHeights.length !== wallPositions.length) {
+        if (defined(minimumHeights) && minimumHeights.length !== wallPositions.length) {
             throw new DeveloperError('positions and minimumHeights must have the same length.');
         }
 
@@ -309,7 +311,7 @@ define([
                 wallPositions.reverse();
                 maximumHeights.reverse();
 
-                if (typeof minimumHeights !== 'undefined') {
+                if (defined(minimumHeights)) {
                     minimumHeights.reverse();
                 }
             }
@@ -318,7 +320,7 @@ define([
         var i;
         var length = wallPositions.length;
         var newMaxHeights = [];
-        var newMinHeights = (typeof minimumHeights !== 'undefined') ? [] : undefined;
+        var newMinHeights = (defined(minimumHeights)) ? [] : undefined;
         var newWallPositions = [];
         for (i = 0; i < length-1; i++) {
             var p1 = wallPositions[i];
@@ -327,7 +329,7 @@ define([
             var h2 = maximumHeights[i + 1];
             newMaxHeights = newMaxHeights.concat(subdivideHeights(p1, p2, h1, h2, granularity));
 
-            if (typeof minimumHeights !== 'undefined') {
+            if (defined(minimumHeights)) {
                 p1 = wallPositions[i];
                 p2 = wallPositions[i + 1];
                 h1 = minimumHeights[i];

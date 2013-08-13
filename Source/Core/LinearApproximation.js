@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError'
        ],function(
+         defined,
          DeveloperError) {
     "use strict";
 
@@ -67,7 +69,7 @@ define([
             throw new DeveloperError('There must be at least 1 dependent variable for each independent variable.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(yStride);
         }
 

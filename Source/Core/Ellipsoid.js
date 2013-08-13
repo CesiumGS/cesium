@@ -2,6 +2,7 @@
 define([
         './freezeObject',
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Math',
         './Cartesian3',
@@ -9,6 +10,7 @@ define([
        ], function(
          freezeObject,
          defaultValue,
+         defined,
          DeveloperError,
          CesiumMath,
          Cartesian3,
@@ -81,12 +83,12 @@ define([
      * @returns {Ellipsoid} The cloned Ellipsoid. (Returns undefined if ellipsoid is undefined)
      */
     Ellipsoid.clone = function(ellipsoid, result) {
-        if (typeof ellipsoid === 'undefined') {
+        if (!defined(ellipsoid)) {
             return undefined;
         }
         var radii = ellipsoid._radii;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Ellipsoid(radii.x, radii.y, radii.z);
         }
 
@@ -114,7 +116,7 @@ define([
      * @see Ellipsoid.UNIT_SPHERE
      */
     Ellipsoid.fromCartesian3 = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             return new Ellipsoid();
         }
         return new Ellipsoid(cartesian.x, cartesian.y, cartesian.z);
@@ -226,7 +228,7 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     Ellipsoid.prototype.geodeticSurfaceNormalCartographic = function(cartographic, result) {
-        if (typeof cartographic === 'undefined') {
+        if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required.');
         }
 
@@ -238,7 +240,7 @@ define([
         var y = cosLatitude * Math.sin(longitude);
         var z = Math.sin(latitude);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Cartesian3();
         }
         result.x = x;
@@ -310,12 +312,12 @@ define([
      * var cartesianPositions = Ellipsoid.WGS84.cartographicArrayToCartesianArray(positions);
      */
     Ellipsoid.prototype.cartographicArrayToCartesianArray = function(cartographics, result) {
-        if (typeof cartographics === 'undefined') {
+        if (!defined(cartographics)) {
             throw new DeveloperError('cartographics is required.');
         }
 
         var length = cartographics.length;
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(length);
         } else {
             result.length = length;
@@ -350,7 +352,7 @@ define([
         //`cartesian is required.` is thrown from scaleToGeodeticSurface
         var p = this.scaleToGeodeticSurface(cartesian, cartesianToCartographicP);
 
-        if (typeof p === 'undefined') {
+        if (!defined(p)) {
             return undefined;
         }
 
@@ -361,7 +363,7 @@ define([
         var latitude = Math.asin(n.z);
         var height = CesiumMath.sign(Cartesian3.dot(h, cartesian)) * Cartesian3.magnitude(h);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
         result.longitude = longitude;
@@ -388,12 +390,12 @@ define([
      * var cartographicPositions = Ellipsoid.WGS84.cartesianArrayToCartographicArray(positions);
      */
     Ellipsoid.prototype.cartesianArrayToCartographicArray = function(cartesians, result) {
-        if (typeof cartesians === 'undefined') {
+        if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
 
         var length = cartesians.length;
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(length);
         } else {
             result.length = length;
@@ -420,7 +422,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeodeticSurface = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
 
@@ -503,7 +505,7 @@ define([
             correction = func / derivative;
         } while (Math.abs(func) > CesiumMath.EPSILON12);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian3(positionX * xMultiplier, positionY * yMultiplier, positionZ * zMultiplier);
         }
         result.x = positionX * xMultiplier;
@@ -524,7 +526,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Ellipsoid.prototype.scaleToGeocentricSurface = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
 
@@ -566,7 +568,7 @@ define([
      */
     Ellipsoid.prototype.equals = function(right) {
         return (this === right) ||
-               (typeof right !== 'undefined' &&
+               (defined(right) &&
                 Cartesian3.equals(this._radii, right._radii));
     };
 

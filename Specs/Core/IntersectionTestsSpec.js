@@ -2,6 +2,7 @@
 defineSuite([
          'Core/IntersectionTests',
          'Core/Cartesian3',
+         'Core/defined',
          'Core/Ellipsoid',
          'Core/Math',
          'Core/Plane',
@@ -9,6 +10,7 @@ defineSuite([
      ], function(
          IntersectionTests,
          Cartesian3,
+         defined,
          Ellipsoid,
          CesiumMath,
          Plane,
@@ -110,15 +112,15 @@ defineSuite([
 
         ray = new Ray(new Cartesian3(-2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
         intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
-        expect(typeof intersections === 'undefined').toEqual(true);
+        expect(intersections).toBeUndefined();
 
         ray = new Ray(new Cartesian3(0.0, -2.0, 0.0), new Cartesian3(0.0, -1.0, 0.0));
         intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
-        expect(typeof intersections === 'undefined').toEqual(true);
+        expect(intersections).toBeUndefined();
 
         ray = new Ray(new Cartesian3(0.0, 0.0, -2.0), new Cartesian3(0.0, 0.0, -1.0));
         intersections = IntersectionTests.rayEllipsoid(ray, unitSphere);
-        expect(typeof intersections === 'undefined').toEqual(true);
+        expect(intersections).toBeUndefined();
     });
 
     it('rayEllipsoid ray inside pointing in intersection', function() {

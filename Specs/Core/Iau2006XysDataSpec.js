@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite([
-         'Core/Iau2006XysData',
-         'Core/loadText'
+             'Core/Iau2006XysData',
+             'Core/defined',
+             'Core/loadText'
      ], function(
          Iau2006XysData,
+         defined,
          loadText) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -20,7 +22,7 @@ defineSuite([
 
     it('eventually returns an answer', function() {
         waitsFor(function() {
-            return typeof xys.computeXysRadians(2442398, 1234.56) !== 'undefined';
+            return defined(xys.computeXysRadians(2442398, 1234.56));
         }, 'computeXysRadians to return an answer');
 
         // Once the data file has been downloaded, later requests
@@ -34,7 +36,7 @@ defineSuite([
         var result;
         waitsFor(function() {
             result = xys.computeXysRadians(2442399, 777.77);
-            return typeof result !== 'undefined';
+            return defined(result);
         }, 'computeXysRadians to return an answer');
 
         runs(function() {

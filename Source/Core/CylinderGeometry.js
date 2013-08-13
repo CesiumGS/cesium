@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
@@ -15,6 +16,7 @@ define([
         './VertexFormat'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian2,
         Cartesian3,
@@ -78,11 +80,11 @@ define([
             throw new DeveloperError('options.length must be greater than 0');
         }
 
-        if (typeof topRadius === 'undefined' || topRadius < 0) {
+        if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0');
         }
 
-        if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
+        if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0');
         }
 

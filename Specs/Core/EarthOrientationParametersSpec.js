@@ -5,6 +5,7 @@ defineSuite(['Core/EarthOrientationParameters',
              'Core/Cartesian2',
              'Core/Cartesian3',
              'Core/Cartesian4',
+             'Core/defined',
              'Core/Ellipsoid',
              'Core/JulianDate',
              'Core/LeapSecond',
@@ -24,6 +25,7 @@ defineSuite(['Core/EarthOrientationParameters',
              Cartesian2,
              Cartesian3,
              Cartesian4,
+             defined,
              Ellipsoid,
              JulianDate,
              LeapSecond,
@@ -82,7 +84,7 @@ defineSuite(['Core/EarthOrientationParameters',
                 foundNew = true;
             }
 
-            if (typeof previousDate !== 'undefined') {
+            if (defined(previousDate)) {
                 expect(JulianDate.compare(previousDate, leapSecond.julianDate)).toBeLessThan(0);
             }
 

@@ -5,6 +5,7 @@ defineSuite([
          'Core/Cartesian2',
          'Core/Cartesian3',
          'Core/Cartesian4',
+         'Core/defined',
          'Core/Ellipsoid',
          'Core/Iau2006XysData',
          'Core/JulianDate',
@@ -23,6 +24,7 @@ defineSuite([
          Cartesian2,
          Cartesian3,
          Cartesian4,
+         defined,
          Ellipsoid,
          Iau2006XysData,
          JulianDate,
@@ -248,7 +250,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return typeof componentsData !== 'undefined';
+                return defined(componentsData);
             });
 
             runs(function() {

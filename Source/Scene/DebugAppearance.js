@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         './Appearance'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Appearance) {
     "use strict";
@@ -42,7 +44,7 @@ define([
 
         var attributeName = options.attributeName;
 
-        if (typeof attributeName === 'undefined') {
+        if (!defined(attributeName)) {
             throw new DeveloperError('options.attributeName is required.');
         }
 

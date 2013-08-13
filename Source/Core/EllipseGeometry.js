@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -23,6 +24,7 @@ define([
         './VertexFormat'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -816,15 +818,15 @@ define([
         var extrudedHeight = options.extrudedHeight;
         var extrude = (typeof extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
 
-        if (typeof center === 'undefined') {
+        if (!defined(center)) {
             throw new DeveloperError('center is required.');
         }
 
-        if (typeof semiMajorAxis === 'undefined') {
+        if (!defined(semiMajorAxis)) {
             throw new DeveloperError('semiMajorAxis is required.');
         }
 
-        if (typeof semiMinorAxis === 'undefined') {
+        if (!defined(semiMinorAxis)) {
             throw new DeveloperError('semiMinorAxis is required.');
         }
 

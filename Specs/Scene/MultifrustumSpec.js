@@ -2,6 +2,7 @@
 defineSuite([
          'Specs/createScene',
          'Specs/destroyScene',
+         'Core/defined',
          'Core/destroyObject',
          'Core/BoundingSphere',
          'Core/BoxGeometry',
@@ -23,6 +24,7 @@ defineSuite([
      ], 'Scene/Multifrustum', function(
          createScene,
          destroyScene,
+         defined,
          destroyObject,
          BoundingSphere,
          BoxGeometry,
@@ -204,7 +206,7 @@ defineSuite([
         };
 
         Primitive.prototype.update = function(context, frameState, commandLists) {
-            if (typeof this._sp === 'undefined') {
+            if (!defined(this._sp)) {
                 var vs = '';
                 vs += 'attribute vec4 position;';
                 vs += 'void main()';

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './Cartesian3',
         './ComponentDatatype',
@@ -11,6 +12,7 @@ define([
         './VertexFormat',
         './Geometry'
     ], function(
+        defined,
         DeveloperError,
         Cartesian3,
         ComponentDatatype,
@@ -55,11 +57,11 @@ define([
         var min = options.minimumCorner;
         var max = options.maximumCorner;
 
-        if (typeof min === 'undefined') {
+        if (!defined(min)) {
             throw new DeveloperError('options.minimumCorner is required.');
         }
 
-        if (typeof max === 'undefined') {
+        if (!defined(max)) {
             throw new DeveloperError('options.maximumCorner is required');
         }
 

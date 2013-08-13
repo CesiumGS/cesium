@@ -6,6 +6,7 @@ define([
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
@@ -32,6 +33,7 @@ define([
         Color,
         ComponentDatatype,
         defaultValue,
+        defined,
         destroyObject,
         Geometry,
         GeometryAttribute,
@@ -113,7 +115,7 @@ define([
         // Per-context cache for viewport quads
         var vertexArray = context.cache.viewportQuad_vertexArray;
 
-        if (typeof vertexArray !== 'undefined') {
+        if (defined(vertexArray)) {
             return vertexArray;
         }
 
@@ -168,7 +170,7 @@ define([
 
         var that = this;
 
-        if (typeof this._fbo === 'undefined') {
+        if (!defined(this._fbo)) {
             this._fbo = context.createFramebuffer();
 
             this._downSampleFBO1 = context.createFramebuffer();
@@ -287,7 +289,7 @@ define([
 
         var fbo = this._fbo;
         var colorTexture = fbo.getColorTexture();
-        if (typeof colorTexture === 'undefined' || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
+        if (!defined(colorTexture) || colorTexture.getWidth() !== width || colorTexture.getHeight() !== height) {
             fbo.setColorTexture(context.createTexture2D({
                 width : width,
                 height : height
