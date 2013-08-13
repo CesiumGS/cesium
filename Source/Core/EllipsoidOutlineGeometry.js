@@ -26,7 +26,8 @@ define([
     "use strict";
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
-
+    var cos = Math.cos;
+    var sin = Math.sin;
     /**
      * A {@link Geometry} that represents vertices and indices for the outline of an ellipsoid centered at the origin.
      *
@@ -58,10 +59,10 @@ define([
         var slicePartitions = defaultValue(options.slicePartitions, 8);
         var subdivisions = defaultValue(options.subdivisions, 128);
         if (stackPartitions < 1) {
-            throw new DeveloperError('options.stackPartitions must be greater than or equal to one.');
+            throw new DeveloperError('options.stackPartitions cannot be less than 1');
         }
         if (slicePartitions < 0) {
-            throw new DeveloperError('options.slicePartitions must be greater than or equal to zero.');
+            throw new DeveloperError('options.slicePartitions cannot be less than 0');
         }
 
         if (subdivisions < 0) {
@@ -75,27 +76,38 @@ define([
 
         var i;
         var j;
+        var theta;
         var phi;
         var cosPhi;
         var sinPhi;
-        var theta;
-        var cosTheta;
-        var sinTheta;
         var index = 0;
+
+        var cosTheta = new Array(subdivisions);
+        var sinTheta = new Array(subdivisions);
+        for (i = 0; i < subdivisions; i++) {
+            theta = CesiumMath.TWO_PI * i / subdivisions;
+            cosTheta[i] = cos(theta);
+            sinTheta[i] = sin(theta);
+        }
+
         for (i = 1; i < stackPartitions; i++) {
             phi = Math.PI * i / stackPartitions;
-            cosPhi = Math.cos(phi);
-            sinPhi = Math.sin(phi);
+            cosPhi = cos(phi);
+            sinPhi = sin(phi);
 
             for (j = 0; j < subdivisions; j++) {
-                theta = CesiumMath.TWO_PI * j / subdivisions;
-                cosTheta = Math.cos(theta);
-                sinTheta = Math.sin(theta);
-
-                positions[index++] = radii.x * cosTheta * sinPhi;
-                positions[index++] = radii.y * sinTheta * sinPhi;
+                positions[index++] = radii.x * cosTheta[j] * sinPhi;
+                positions[index++] = radii.y * sinTheta[j] * sinPhi;
                 positions[index++] = radii.z * cosPhi;
             }
+        }
+
+        cosTheta.length = slicePartitions;
+        sinTheta.length = slicePartitions;
+        for (i = 0; i < slicePartitions; i++) {
+            theta = CesiumMath.TWO_PI * i / slicePartitions;
+            cosTheta[i] = cos(theta);
+            sinTheta[i] = sin(theta);
         }
 
         positions[index++] = 0;
@@ -103,16 +115,12 @@ define([
         positions[index++] = radii.z;
         for (i = 1; i < subdivisions; i++) {
             phi = Math.PI * i / subdivisions;
-            cosPhi = Math.cos(phi);
-            sinPhi = Math.sin(phi);
+            cosPhi = cos(phi);
+            sinPhi = sin(phi);
 
             for (j = 0; j < slicePartitions; j++) {
-                theta = CesiumMath.TWO_PI * j / slicePartitions;
-                cosTheta = Math.cos(theta);
-                sinTheta = Math.sin(theta);
-
-                positions[index++] = radii.x * cosTheta * sinPhi;
-                positions[index++] = radii.y * sinTheta * sinPhi;
+                positions[index++] = radii.x * cosTheta[j] * sinPhi;
+                positions[index++] = radii.y * sinTheta[j] * sinPhi;
                 positions[index++] = radii.z * cosPhi;
             }
         }
