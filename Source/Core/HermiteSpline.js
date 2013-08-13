@@ -1,15 +1,18 @@
 /*global define*/
-define(['./defaultValue',
+define([
+        './defaultValue',
+        './defined',
         './DeveloperError',
         './Matrix4',
         './Cartesian4',
         './TridiagonalSystemSolver'
-        ], function(
-                defaultValue,
-                DeveloperError,
-                Matrix4,
-                Cartesian4,
-                TridiagonalSystemSolver) {
+    ], function(
+        defaultValue,
+        defined,
+        DeveloperError,
+        Matrix4,
+        Cartesian4,
+        TridiagonalSystemSolver) {
     "use strict";
 
     /**
@@ -64,7 +67,7 @@ define(['./defaultValue',
      * var spline = new HermiteSpline(controlPoints);
      */
     var HermiteSpline = function(controlPoints) {
-        if (typeof controlPoints === 'undefined' || !(controlPoints instanceof Array) || controlPoints.length < 3) {
+        if (!defined(controlPoints) || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required. It must be an array with at least a length of 3.');
         }
 
@@ -72,9 +75,9 @@ define(['./defaultValue',
 
         this._lastTimeIndex = 0;
 
-        if (typeof this._points[0].tangent === 'undefined' || typeof this._points[this._points.length - 1].tangent === 'undefined') {
+        if (!defined(this._points[0].tangent) || !defined(this._points[this._points.length - 1].tangent)) {
             generateNatural(this);
-        } else if (typeof this._points[0].tangent !== 'undefined' && typeof this._points[1].tangent === 'undefined' && typeof this._points[this._points.length - 1].tangent !== 'undefined' && typeof this._points[this._points.length - 2].tangent === 'undefined') {
+        } else if (defined(this._points[0].tangent) && !defined(this._points[1].tangent) && defined(this._points[this._points.length - 1].tangent) && !defined(this._points[this._points.length - 2].tangent)) {
             generateClamped(this);
         }
     };
@@ -207,7 +210,7 @@ define(['./defaultValue',
      * var position = spline.evaluate(5.0);
      */
     HermiteSpline.prototype.evaluate = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 

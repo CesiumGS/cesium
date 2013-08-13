@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Transforms',
         './AxisAlignedBoundingBox',
@@ -12,6 +13,7 @@ define([
         './Plane'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Transforms,
         AxisAlignedBoundingBox,
@@ -37,14 +39,14 @@ define([
      * @exception {DeveloperError} origin must not be at the center of the ellipsoid.
      */
     var EllipsoidTangentPlane = function(origin, ellipsoid) {
-        if (typeof origin === 'undefined') {
+        if (!defined(origin)) {
             throw new DeveloperError('origin is required.');
         }
 
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
 
         origin = ellipsoid.scaleToGeodeticSurface(origin);
-        if (typeof origin === 'undefined') {
+        if (!defined(origin)) {
             throw new DeveloperError('origin must not be at the center of the ellipsoid.');
         }
         var eastNorthUp = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
@@ -70,7 +72,7 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.fromPoints = function(cartesians, ellipsoid) {
-        if (typeof cartesians === 'undefined') {
+        if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
 
@@ -108,7 +110,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     EllipsoidTangentPlane.prototype.projectPointOntoPlane = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
 
@@ -118,12 +120,12 @@ define([
 
         var intersectionPoint = IntersectionTests.rayPlane(ray, this._plane, projectPointOntoPlaneCartesian3);
 
-        if (typeof intersectionPoint !== 'undefined') {
+        if (defined(intersectionPoint)) {
             var v = intersectionPoint.subtract(this._origin, intersectionPoint);
             var x = this._xAxis.dot(v);
             var y = this._yAxis.dot(v);
 
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 return new Cartesian2(x, y);
             }
             result.x = x;
@@ -144,11 +146,11 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoPlane = function(cartesians, result) {
-        if (typeof cartesians === 'undefined') {
+        if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = [];
         }
 
@@ -156,7 +158,7 @@ define([
         var length = cartesians.length;
         for ( var i = 0; i < length; i++) {
             var p = this.projectPointOntoPlane(cartesians[i], result[count]);
-            if (typeof p !== 'undefined') {
+            if (defined(p)) {
                 result[count] = p;
                 count++;
             }
@@ -178,12 +180,12 @@ define([
      * @exception {DeveloperError} cartesians is required.
      */
     EllipsoidTangentPlane.prototype.projectPointsOntoEllipsoid = function(cartesians, result) {
-        if (typeof cartesians === 'undefined') {
+        if (!defined(cartesians)) {
             throw new DeveloperError('cartesians is required.');
         }
 
         var length = cartesians.length;
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(length);
         } else {
             result.length = length;

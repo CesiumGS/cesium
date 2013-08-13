@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian2',
         './CzmlCartesian3',
@@ -15,6 +16,7 @@ define([
        ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian2,
         CzmlCartesian3,
@@ -135,124 +137,124 @@ define([
      */
     DynamicLabel.processCzmlPacket = function(dynamicObject, packet) {
         var labelData = packet.label;
-        if (typeof labelData === 'undefined') {
+        if (!defined(labelData)) {
             return false;
         }
 
         var labelUpdated = false;
         var label = dynamicObject.label;
-        labelUpdated = typeof label === 'undefined';
+        labelUpdated = !defined(label);
         if (labelUpdated) {
             dynamicObject.label = label = new DynamicLabel();
         }
 
         var interval = labelData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof labelData.fillColor !== 'undefined') {
+        if (defined(labelData.fillColor)) {
             var fillColor = label.fillColor;
-            if (typeof fillColor === 'undefined') {
+            if (!defined(fillColor)) {
                 label.fillColor = fillColor = new DynamicProperty(CzmlColor);
                 labelUpdated = true;
             }
             fillColor.processCzmlIntervals(labelData.fillColor, interval);
         }
 
-        if (typeof labelData.outlineColor !== 'undefined') {
+        if (defined(labelData.outlineColor)) {
             var outlineColor = label.outlineColor;
-            if (typeof outlineColor === 'undefined') {
+            if (!defined(outlineColor)) {
                 label.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
                 labelUpdated = true;
             }
             outlineColor.processCzmlIntervals(labelData.outlineColor, interval);
         }
 
-        if (typeof labelData.outlineWidth !== 'undefined') {
+        if (defined(labelData.outlineWidth)) {
             var outlineWidth = label.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
+            if (!defined(outlineWidth)) {
                 label.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
                 labelUpdated = true;
             }
             outlineWidth.processCzmlIntervals(labelData.outlineWidth, interval);
         }
 
-        if (typeof labelData.eyeOffset !== 'undefined') {
+        if (defined(labelData.eyeOffset)) {
             var eyeOffset = label.eyeOffset;
-            if (typeof eyeOffset === 'undefined') {
+            if (!defined(eyeOffset)) {
                 label.eyeOffset = eyeOffset = new DynamicProperty(CzmlCartesian3);
                 labelUpdated = true;
             }
             eyeOffset.processCzmlIntervals(labelData.eyeOffset, interval);
         }
 
-        if (typeof labelData.horizontalOrigin !== 'undefined') {
+        if (defined(labelData.horizontalOrigin)) {
             var horizontalOrigin = label.horizontalOrigin;
-            if (typeof horizontalOrigin === 'undefined') {
+            if (!defined(horizontalOrigin)) {
                 label.horizontalOrigin = horizontalOrigin = new DynamicProperty(CzmlHorizontalOrigin);
                 labelUpdated = true;
             }
             horizontalOrigin.processCzmlIntervals(labelData.horizontalOrigin, interval);
         }
 
-        if (typeof labelData.text !== 'undefined') {
+        if (defined(labelData.text)) {
             var text = label.text;
-            if (typeof text === 'undefined') {
+            if (!defined(text)) {
                 label.text = text = new DynamicProperty(CzmlString);
                 labelUpdated = true;
             }
             text.processCzmlIntervals(labelData.text, interval);
         }
 
-        if (typeof labelData.pixelOffset !== 'undefined') {
+        if (defined(labelData.pixelOffset)) {
             var pixelOffset = label.pixelOffset;
-            if (typeof pixelOffset === 'undefined') {
+            if (!defined(pixelOffset)) {
                 label.pixelOffset = pixelOffset = new DynamicProperty(CzmlCartesian2);
                 labelUpdated = true;
             }
             pixelOffset.processCzmlIntervals(labelData.pixelOffset, interval);
         }
 
-        if (typeof labelData.scale !== 'undefined') {
+        if (defined(labelData.scale)) {
             var scale = label.scale;
-            if (typeof scale === 'undefined') {
+            if (!defined(scale)) {
                 label.scale = scale = new DynamicProperty(CzmlNumber);
                 labelUpdated = true;
             }
             scale.processCzmlIntervals(labelData.scale, interval);
         }
 
-        if (typeof labelData.show !== 'undefined') {
+        if (defined(labelData.show)) {
             var show = label.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 label.show = show = new DynamicProperty(CzmlBoolean);
                 labelUpdated = true;
             }
             show.processCzmlIntervals(labelData.show, interval);
         }
 
-        if (typeof labelData.verticalOrigin !== 'undefined') {
+        if (defined(labelData.verticalOrigin)) {
             var verticalOrigin = label.verticalOrigin;
-            if (typeof verticalOrigin === 'undefined') {
+            if (!defined(verticalOrigin)) {
                 label.verticalOrigin = verticalOrigin = new DynamicProperty(CzmlVerticalOrigin);
                 labelUpdated = true;
             }
             verticalOrigin.processCzmlIntervals(labelData.verticalOrigin, interval);
         }
 
-        if (typeof labelData.font !== 'undefined') {
+        if (defined(labelData.font)) {
             var font = label.font;
-            if (typeof font === 'undefined') {
+            if (!defined(font)) {
                 label.font = font = new DynamicProperty(CzmlString);
                 labelUpdated = true;
             }
             font.processCzmlIntervals(labelData.font, interval);
         }
 
-        if (typeof labelData.style !== 'undefined') {
+        if (defined(labelData.style)) {
             var style = label.style;
-            if (typeof style === 'undefined') {
+            if (!defined(style)) {
                 label.style = style = new DynamicProperty(CzmlLabelStyle);
                 labelUpdated = true;
             }
@@ -274,10 +276,10 @@ define([
      */
     DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {
         var labelToMerge = objectToMerge.label;
-        if (typeof labelToMerge !== 'undefined') {
+        if (defined(labelToMerge)) {
 
             var targetLabel = targetObject.label;
-            if (typeof targetLabel === 'undefined') {
+            if (!defined(targetLabel)) {
                 targetObject.label = targetLabel = new DynamicLabel();
             }
 

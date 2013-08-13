@@ -2,12 +2,14 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './DynamicProperty',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
          defaultValue,
+         defined,
          CzmlBoolean,
          DynamicProperty,
          DynamicMaterialProperty) {
@@ -62,34 +64,34 @@ define([
      */
     DynamicPolygon.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
-        if (typeof polygonData === 'undefined') {
+        if (!defined(polygonData)) {
             return false;
         }
 
         var polygonUpdated = false;
         var polygon = dynamicObject.polygon;
-        polygonUpdated = typeof polygon === 'undefined';
+        polygonUpdated = !defined(polygon);
         if (polygonUpdated) {
             dynamicObject.polygon = polygon = new DynamicPolygon();
         }
 
         var interval = polygonData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof polygonData.show !== 'undefined') {
+        if (defined(polygonData.show)) {
             var show = polygon.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 polygon.show = show = new DynamicProperty(CzmlBoolean);
                 polygonUpdated = true;
             }
             show.processCzmlIntervals(polygonData.show, interval);
         }
 
-        if (typeof polygonData.material !== 'undefined') {
+        if (defined(polygonData.material)) {
             var material = polygon.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 polygon.material = material = new DynamicMaterialProperty();
                 polygonUpdated = true;
             }
@@ -111,10 +113,10 @@ define([
      */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
-        if (typeof polygonToMerge !== 'undefined') {
+        if (defined(polygonToMerge)) {
 
             var targetPolygon = targetObject.polygon;
-            if (typeof targetPolygon === 'undefined') {
+            if (!defined(targetPolygon)) {
                 targetObject.polygon = targetPolygon = new DynamicPolygon();
             }
 

@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './Cartesian3',
         './Cartographic',
         './Math',
         './Ellipsoid'
     ], function(
         defaultValue,
+        defined,
         Cartesian3,
         Cartographic,
         CesiumMath,
@@ -112,7 +114,7 @@ define([
         var y = WebMercatorProjection.geodeticLatitudeToMercatorAngle(cartographic.latitude) * semimajorAxis;
         var z = cartographic.height;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian3(x, y, z);
         }
 
@@ -140,7 +142,7 @@ define([
         var latitude = WebMercatorProjection.mercatorAngleToGeodeticLatitude(cartesian.y * oneOverEarthSemimajorAxis);
         var height = cartesian.z;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
 

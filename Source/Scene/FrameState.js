@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defined',
         '../Core/Cartesian2',
         './SceneMode'
     ], function(
         DeveloperError,
+        defined,
         Cartesian2,
         SceneMode) {
     "use strict";
@@ -19,7 +21,7 @@ define([
      * @constructor
      */
     var FrameState = function(creditDisplay) {
-        if (typeof creditDisplay === 'undefined') {
+        if (!defined(creditDisplay)) {
             throw new DeveloperError('credit display is required');
         }
 

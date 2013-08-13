@@ -4,6 +4,7 @@ define(['dojo',
         'Core/Clock',
         'Core/ClockRange',
         'Core/Color',
+        'Core/defined',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/requestAnimationFrame',
@@ -17,6 +18,7 @@ define(['dojo',
          Clock,
          ClockRange,
          Color,
+         defined,
          JulianDate,
          TimeInterval,
          requestAnimationFrame,
@@ -34,7 +36,7 @@ define(['dojo',
     }
 
     function handleSetTime(e) {
-        if (typeof timeline !== 'undefined') {
+        if (defined(timeline)) {
             var scrubJulian = e.timeJulian;
             clock.shouldAnimate = false;
             clock.currentTime = scrubJulian;

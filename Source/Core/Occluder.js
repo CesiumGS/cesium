@@ -1,6 +1,7 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Math',
         './Cartesian3',
@@ -9,6 +10,7 @@ define([
         './BoundingSphere'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         CesiumMath,
         Cartesian3,
@@ -369,7 +371,7 @@ define([
      * which is a boolean value.
      */
     Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 

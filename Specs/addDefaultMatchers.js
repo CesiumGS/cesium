@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        'Core/defined',
         './equals'
     ], function(
+        defined,
         equals) {
     "use strict";
 
@@ -35,11 +37,11 @@ define([
 
         toEqualEpsilon : function(expected, epsilon) {
             function equalityTester(a, b) {
-                if (a !== 'undefined' && typeof a.equalsEpsilon === 'function') {
+                if (defined(a) && typeof a.equalsEpsilon === 'function') {
                     return a.equalsEpsilon(b, epsilon);
                 }
 
-                if (typeof b !== 'undefined' && typeof b.equalsEpsilon === 'function') {
+                if (defined(b) && typeof b.equalsEpsilon === 'function') {
                     return b.equalsEpsilon(a, epsilon);
                 }
 
@@ -65,12 +67,10 @@ define([
             var actualPrototype = this.actual.prototype;
             var expectedInterfacePrototype = expectedInterface.prototype;
 
-            for (var item in expectedInterfacePrototype) {
-                if (expectedInterfacePrototype.hasOwnProperty(item) &&
-                    typeof expectedInterfacePrototype[item] === 'function' &&
-                    !actualPrototype.hasOwnProperty(item)) {
-                        this.message = createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype);
-                        return false;
+            for ( var item in expectedInterfacePrototype) {
+                if (expectedInterfacePrototype.hasOwnProperty(item) && typeof expectedInterfacePrototype[item] === 'function' && !actualPrototype.hasOwnProperty(item)) {
+                    this.message = createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype);
+                    return false;
                 }
             }
 

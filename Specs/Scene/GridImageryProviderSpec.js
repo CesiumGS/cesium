@@ -4,12 +4,14 @@ defineSuite([
          'Scene/GeographicTilingScheme',
          'Scene/ImageryProvider',
          'Scene/WebMercatorTilingScheme',
+         'Core/defined',
          'ThirdParty/when'
      ], function(
          GridImageryProvider,
          GeographicTilingScheme,
          ImageryProvider,
          WebMercatorTilingScheme,
+         defined,
          when) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -41,7 +43,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {

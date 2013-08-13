@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian3',
         './Intersect'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian3,
         Intersect) {
@@ -38,7 +40,7 @@ define([
         this.maximum = Cartesian3.clone(defaultValue(maximum, Cartesian3.ZERO));
 
         //If center was not defined, compute it.
-        if (typeof center === 'undefined') {
+        if (!defined(center)) {
             center = Cartesian3.add(this.minimum, this.maximum);
             Cartesian3.multiplyByScalar(center, 0.5, center);
         } else {
@@ -66,11 +68,11 @@ define([
      * var box = AxisAlignedBoundingBox.fromPoints([new Cartesian3(2, 0, 0), new Cartesian3(-2, 0, 0)]);
      */
     AxisAlignedBoundingBox.fromPoints = function(positions, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new AxisAlignedBoundingBox();
         }
 
-        if (typeof positions === 'undefined' || positions.length === 0) {
+        if (!defined(positions) || positions.length === 0) {
             result.minimum = Cartesian3.clone(Cartesian3.ZERO, result.minimum);
             result.maximum = Cartesian3.clone(Cartesian3.ZERO, result.maximum);
             result.center = Cartesian3.clone(Cartesian3.ZERO, result.center);
@@ -125,11 +127,11 @@ define([
      * @return {AxisAlignedBoundingBox} The modified result parameter or a new AxisAlignedBoundingBox instance if none was provided. (Returns undefined if box is undefined)
      */
     AxisAlignedBoundingBox.clone = function(box, result) {
-        if (typeof box === 'undefined') {
+        if (!defined(box)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new AxisAlignedBoundingBox(box.minimum, box.maximum);
         }
 
@@ -150,8 +152,8 @@ define([
      */
     AxisAlignedBoundingBox.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 Cartesian3.equals(left.center, right.center) &&
                 Cartesian3.equals(left.minimum, right.minimum) &&
                 Cartesian3.equals(left.maximum, right.maximum));
@@ -174,11 +176,11 @@ define([
      * @exception {DeveloperError} plane is required.
      */
     AxisAlignedBoundingBox.intersect = function(box, plane) {
-        if (typeof box === 'undefined') {
+        if (!defined(box)) {
             throw new DeveloperError('box is required.');
         }
 
-        if (typeof plane === 'undefined') {
+        if (!defined(plane)) {
             throw new DeveloperError('plane is required.');
         }
 

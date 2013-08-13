@@ -1,10 +1,12 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Intersect'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Intersect) {
     "use strict";
@@ -38,7 +40,7 @@ define([
      * @exception {DeveloperError} boundingVolume is required.
      */
     CullingVolume.prototype.getVisibility = function(boundingVolume) {
-        if (typeof boundingVolume === 'undefined') {
+        if (!defined(boundingVolume)) {
             throw new DeveloperError('boundingVolume is required.');
         }
 

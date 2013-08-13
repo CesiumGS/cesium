@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './CzmlDefaults'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         CzmlDefaults) {
@@ -23,7 +25,7 @@ define([
      * @see CzmlDefaults#createVisualizers
      */
     var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
-        this._visualizers = typeof visualizers !== 'undefined' ? visualizers : [];
+        this._visualizers = defined(visualizers) ? visualizers : [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
     };
@@ -41,7 +43,7 @@ define([
      * @see CzmlDefaults#createVisualizers
      */
     VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
@@ -75,7 +77,7 @@ define([
             }
         }
 
-        if (typeof visualizers === 'undefined') {
+        if (!defined(visualizers)) {
             visualizers = [];
         }
         this._visualizers = visualizers;
