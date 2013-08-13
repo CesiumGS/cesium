@@ -44,7 +44,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a sphere.
+     * Computes the geometric representation of a sphere, including its vertices, indices, and a bounding sphere.
      *
      * @param {SphereGeometry} sphereGeometry A description of the sphere.
      * @returns {Geometry} The computed vertices and indices.

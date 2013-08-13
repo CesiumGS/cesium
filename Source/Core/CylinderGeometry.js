@@ -94,7 +94,6 @@ define([
             throw new DeveloperError('options.slices must be greater that 3');
         }
 
-
         this._length = length;
         this._topRadius = topRadius;
         this._bottomRadius = bottomRadius;
@@ -104,7 +103,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a cylinder.
+     * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
      * @returns {Geometry} The computed vertices and indices.

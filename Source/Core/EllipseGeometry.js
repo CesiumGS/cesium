@@ -781,7 +781,7 @@ define([
      * @param {Number} [options.extrudedHeight] The height of the extrusion.
      * @param {Number} [options.rotation=0.0] The angle from north (clockwise) in radians. The default is zero.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Number} [options.granularity=0.02] The angular distance between points on the ellipse in radians.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} center is required.
@@ -811,7 +811,7 @@ define([
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
-        var granularity = defaultValue(options.granularity, 0.02);
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = options.extrudedHeight;
         var extrude = (typeof extrudedHeight !== 'undefined' && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
@@ -855,7 +855,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of an ellipse on an ellipsoid.
+     * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

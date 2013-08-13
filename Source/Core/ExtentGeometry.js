@@ -684,7 +684,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of an extent.
+     * Computes the geometric representation of an extent, including its vertices, indices, and a bounding sphere.
      *
      * @param {ExtentGeometry} extentGeometry A description of the extent.
      * @returns {Geometry} The computed vertices and indices.

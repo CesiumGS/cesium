@@ -632,7 +632,7 @@ define([
      *
      * @example
      * // create a polygon from points
-     * var polygon = new PolygonGeometry({
+     * var polygon = PolygonGeometry.fromPositions({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0),
@@ -665,7 +665,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a polygon.
+     * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
      *
      * @param {PolygonGeometry} polygonGeometry A description of the polygon.
      * @returns {Geometry} The computed vertices and indices.

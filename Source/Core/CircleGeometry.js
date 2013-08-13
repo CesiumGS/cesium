@@ -71,7 +71,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a circle on an ellipsoid.
+     * Computes the geometric representation of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
      *
      * @param {CircleGeometry} circleGeometry A description of the circle.
      * @returns {Geometry} The computed vertices and indices.

@@ -237,7 +237,7 @@ define([
      * ];
      *
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = new WallGeometry({
+     * var wall = WallGeometry.fromConstantHeights({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
      *     minimumHeight : 20000.0,
      *     maximumHeight : 10000.0
@@ -287,7 +287,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a wall.
+     * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
      *
      * @param {WallGeometry} wallGeometry A description of the wall.
      * @returns {Geometry} The computed vertices and indices.

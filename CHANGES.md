@@ -7,7 +7,24 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
-    * ...
+    * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
+    * The geometry types no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
+    
+        var boxGeometry = new BoxGeometry({
+            minimumCorner : min,
+            maximumCorner : max,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+      
+      should now look like:
+      
+        var box = new BoxGeometry({
+            minimumCorner : min,
+            maximumCorner : max,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+        var geometry = BoxGeometry.createGeometry(box);
+        
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
@@ -15,6 +32,7 @@ Beta Releases
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
+* Improved geometry batching performance by moving work to a web worker.
 
 ### b19 - 2013-08-01
 

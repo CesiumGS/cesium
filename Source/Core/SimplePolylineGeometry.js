@@ -58,7 +58,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a simple polyline.
+     * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
      *
      * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
      * @returns {Geometry} The computed vertices and indices.

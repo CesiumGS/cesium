@@ -72,7 +72,7 @@ define([
     };
 
     /**
-     * Describes a cube centered at the origin given its dimensions.
+     * Creates a cube centered at the origin given its dimensions.
      * @memberof BoxGeometry
      *
      * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
@@ -115,7 +115,7 @@ define([
     };
 
     /**
-     * Computes vertices and indices of a box.
+     * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
      * @returns {Geometry} The computed vertices and indices.
