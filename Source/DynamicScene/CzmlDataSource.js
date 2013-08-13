@@ -52,13 +52,13 @@ define([
             clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
         }
 
-        if (typeof dataSource._name === 'undefined') {
+        if (!defined(dataSource._name)) {
             var name;
-            if (typeof documentObject !== 'undefined') {
+            if (defined(documentObject)) {
                 //name = documentObject.name;
             }
 
-            if (typeof name === 'undefined') {
+            if (!defined(name)) {
                 name = sourceUri.substr(sourceUri.lastIndexOf('/') + 1);
             }
 

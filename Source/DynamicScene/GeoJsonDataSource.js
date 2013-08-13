@@ -397,7 +397,7 @@ define([
             throw new DeveloperError('geoJson is required.');
         }
 
-        if (typeof this._name === 'undefined' && typeof source !== 'undefined') {
+        if (!defined(this._name) && defined(source)) {
             this._name = source.substr(source.lastIndexOf('/') + 1);
         }
 
