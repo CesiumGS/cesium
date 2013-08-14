@@ -32,6 +32,9 @@ require(['Cesium'], function(Cesium) {
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
+    var blinkPrimitive = null;
+    var blinkCount = 0;
+    var blinkTimer;
 
     // http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom_23.html
     var SeededRandom = function(seed) {
@@ -348,9 +351,35 @@ require(['Cesium'], function(Cesium) {
     wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
     scene.getPrimitives().add(wallPrimitive);
 
+    var blink = function () {
+        blinkTimer = undefined;
+        if (blinkPrimitive) {
+            if (blinkPrimitive.show) {
+                blinkPrimitive.show = false;
+            } else {
+                blinkPrimitive.show = true;
+                blinkCount--;
+            }
+            if (blinkCount > 0) {
+                blinkTimer = window.setTimeout(blink, 100);
+            }
+        }
+    };
+
     viewer.screenSpaceEventHandler.setInputAction(function(movement) {
         var pickedPrimitive = viewer.scene.pick(movement.position);
         Sandcastle.highlight(pickedPrimitive);
+        if (blinkPrimitive) {
+            blinkPrimitive.show = true;
+        }
+        blinkPrimitive = pickedPrimitive;
+        if (blinkPrimitive) {
+            blinkPrimitive.show = false;
+            blinkCount = 3;
+            if (!blinkTimer) {
+                window.setTimeout(blink, 100);
+            }
+        }
     }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     Sandcastle.finishedLoading();
