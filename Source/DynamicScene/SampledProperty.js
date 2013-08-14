@@ -50,7 +50,7 @@ define([
         return epoch.addSeconds(date);
     }
 
-    var _mergeNewSamples = function(epoch, times, values, newData, length) {
+    var _mergeNewSamples = function(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
@@ -70,7 +70,7 @@ define([
                 timesInsertionPoint = ~timesInsertionPoint;
                 timesSpliceArgs = [];
 
-                valuesInsertionPoint = timesInsertionPoint * length;
+                valuesInsertionPoint = timesInsertionPoint * packedLength;
                 valuesSpliceArgs = [];
                 prevItem = undefined;
                 nextTime = times[timesInsertionPoint];
@@ -81,7 +81,7 @@ define([
                     }
                     timesSpliceArgs.push(currentTime);
                     newDataIndex = newDataIndex + 1;
-                    for (i = 0; i < length; i++) {
+                    for (i = 0; i < packedLength; i++) {
                         valuesSpliceArgs.push(newData[newDataIndex]);
                         newDataIndex = newDataIndex + 1;
                     }
@@ -92,9 +92,9 @@ define([
                 arrayInsert(times, timesInsertionPoint, timesSpliceArgs);
             } else {
                 //Found an exact match
-                for (i = 0; i < length; i++) {
+                for (i = 0; i < packedLength; i++) {
                     newDataIndex++;
-                    values[(timesInsertionPoint * length) + i] = newData[newDataIndex];
+                    values[(timesInsertionPoint * packedLength) + i] = newData[newDataIndex];
                 }
                 newDataIndex++;
             }
@@ -190,14 +190,14 @@ define([
             }
 
             var length = lastIndex - firstIndex + 1;
-
-            var interpolationLength = defaultValue(innerType.packedLength, innerType.packedInterpolationLength);
+            var packedLength = innerType.packedLength;
+            var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, packedLength);
             var xTable = this._xTable;
             var yTable = this._yTable;
 
             if (!defined(xTable)) {
                 xTable = this._xTable = new Array(this.numberOfPoints);
-                yTable = this._yTable = new Array(this.numberOfPoints * interpolationLength);
+                yTable = this._yTable = new Array(this.numberOfPoints * packedInterpolationLength);
             }
 
             // Build the tables
@@ -207,8 +207,8 @@ define([
             var specializedPackFunction = innerType.packForInterpolation;
             if (!defined(specializedPackFunction)) {
                 var destinationIndex = 0;
-                var sourceIndex = firstIndex * length;
-                var stop = (lastIndex + 1) * length;
+                var sourceIndex = firstIndex * packedLength;
+                var stop = (lastIndex + 1) * packedLength;
 
                 while (sourceIndex < stop) {
                     yTable[destinationIndex] = values[sourceIndex];
@@ -221,7 +221,7 @@ define([
 
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
-            interpolationScratch = this.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, interpolationLength, interpolationScratch);
+            interpolationScratch = this.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, interpolationScratch);
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationScratch, 0, result);
