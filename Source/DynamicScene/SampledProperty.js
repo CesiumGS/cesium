@@ -121,13 +121,12 @@ define([
         }
 
         this._innerType = type;
-        this.interpolationAlgorithm = LinearApproximation;
-        this.interpolationDegree = 1;
-        this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
+        this._interpolationAlgorithm = LinearApproximation;
+        this._numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
         this._times = [];
         this._values = [];
-        this._xTable = new Array(this.numberOfPoints);
-        this._yTable = new Array(this.numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength), 1);
+        this._xTable = new Array(this._numberOfPoints);
+        this._yTable = new Array(this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength), 1);
     };
 
     /**
@@ -154,7 +153,7 @@ define([
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
         if (index < 0) {
-            if (times.length < this.numberOfPoints) {
+            if (times.length < this._numberOfPoints) {
                 return undefined;
             }
             index = ~index;
@@ -166,7 +165,7 @@ define([
             var firstIndex = 0;
             var lastIndex = times.length - 1;
 
-            var degree = this.numberOfPoints - 1;
+            var degree = this._numberOfPoints - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
             if (pointsInCollection < degree + 1) {
@@ -195,11 +194,6 @@ define([
             var xTable = this._xTable;
             var yTable = this._yTable;
 
-            if (!defined(xTable)) {
-                xTable = this._xTable = new Array(this.numberOfPoints);
-                yTable = this._yTable = new Array(this.numberOfPoints * packedInterpolationLength);
-            }
-
             // Build the tables
             for ( var i = 0; i < length; ++i) {
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
@@ -221,7 +215,7 @@ define([
 
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
-            interpolationScratch = this.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, interpolationScratch);
+            interpolationScratch = this._interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, interpolationScratch);
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationScratch, 0, result);
