@@ -214,27 +214,9 @@ function(JulianDate,
         }).toThrow();
     });
 
-    it('Fail to construct from a null JavaScript Date', function() {
-        expect(function() {
-            return JulianDate.fromDate(null);
-        }).toThrow();
-    });
-
     it('Fail to construct from an invalid JavaScript Date', function() {
         expect(function() {
             return JulianDate.fromDate(new Date(Date.parse('garbage')));
-        }).toThrow();
-    });
-
-    it('Fail to construct from a non-date JavaScript Date', function() {
-        expect(function() {
-            return JulianDate.fromDate(0);
-        }).toThrow();
-    });
-
-    it('Fail to construct from a JavaScript Date with null time standard', function() {
-        expect(function() {
-            return JulianDate.fromDate(new Date(), null);
         }).toThrow();
     });
 
