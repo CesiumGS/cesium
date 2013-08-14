@@ -4,7 +4,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
 
     var InterpolatableNumber = {};
 
-    InterpolatableNumber.length = 1;
+    InterpolatableNumber.packedLength = 1;
 
     InterpolatableNumber.pack = function(array, startingIndex, value) {
         array[startingIndex++] = value;

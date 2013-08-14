@@ -173,7 +173,7 @@ define([
      */
     Cartesian3.fromCartesian4 = Cartesian3.clone;
 
-    Cartesian3.length = 3;
+    Cartesian3.packedLength = 3;
 
     Cartesian3.pack = function(array, startingIndex, value) {
         array[startingIndex++] = value.x;

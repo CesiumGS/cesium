@@ -223,9 +223,11 @@ define([
         }
 
         var unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
-
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
-        var isSampled = typeof unwrappedInterval !== 'string' && defined(unwrappedInterval.length) && defined(type) && defined(type.length) && (unwrappedInterval.length > type.length);
+        var packedLength = defaultValue(type.packedLength, 1);
+        var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+        var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+
         if (!isSampled && !hasInterval) {
             if (defined(type.unpack)) {
                 object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));

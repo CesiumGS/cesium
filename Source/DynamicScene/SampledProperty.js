@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/InterpolatableNumber',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
        ], function(
@@ -11,6 +12,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        InterpolatableNumber,
         JulianDate,
         LinearApproximation) {
     "use strict";
@@ -113,13 +115,19 @@ define([
         }
 
         this.type = type;
+
+        if (type === Number) {
+            type = InterpolatableNumber;
+        }
+
+        this._innerType = type;
         this.interpolationAlgorithm = LinearApproximation;
         this.interpolationDegree = 1;
         this.numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
         this._times = [];
         this._values = [];
         this._xTable = new Array(this.numberOfPoints);
-        this._yTable = new Array(this.numberOfPoints * defaultValue(type.interpolationLength, type.length), 1);
+        this._yTable = new Array(this.numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength), 1);
     };
 
     /**
@@ -141,7 +149,7 @@ define([
      * @exception {DeveloperError} time is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
-        var type = this.type;
+        var innerType = this._innerType;
         var times = this._times;
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
@@ -183,7 +191,7 @@ define([
 
             var length = lastIndex - firstIndex + 1;
 
-            var interpolationLength = defaultValue(type.length, type.interpolationLength);
+            var interpolationLength = defaultValue(innerType.packedLength, innerType.packedInterpolationLength);
             var xTable = this._xTable;
             var yTable = this._yTable;
 
@@ -196,7 +204,7 @@ define([
             for ( var i = 0; i < length; ++i) {
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
             }
-            var specializedPackFunction = type.packForInterpolation;
+            var specializedPackFunction = innerType.packForInterpolation;
             if (!defined(specializedPackFunction)) {
                 var destinationIndex = 0;
                 var sourceIndex = firstIndex * length;
@@ -215,34 +223,34 @@ define([
             var x = times[lastIndex].getSecondsDifference(time);
             interpolationScratch = this.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, interpolationLength, interpolationScratch);
 
-            if (!defined(type.unpackInterpolationResult)) {
-                return type.unpack(interpolationScratch, 0, result);
+            if (!defined(innerType.unpackInterpolationResult)) {
+                return innerType.unpack(interpolationScratch, 0, result);
             }
-            return type.unpackInterpolationResult(interpolationScratch, result, values, firstIndex, lastIndex);
+            return innerType.unpackInterpolationResult(interpolationScratch, result, values, firstIndex, lastIndex);
         }
-        return type.unpack(this._values, index * type.length, result);
+        return innerType.unpack(this._values, index * innerType.packedLength, result);
     };
 
     SampledProperty.prototype.addSample = function(time, value) {
-        var type = this.type;
+        var innerType = this._innerType;
         var data = [time];
-        type.pack(data, 1, value);
-        _mergeNewSamples(undefined, this._times, this._values, data, type.length);
+        innerType.pack(data, 1, value);
+        _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
     };
 
     SampledProperty.prototype.addSamples = function(times, values) {
-        var type = this.type;
+        var innerType = this._innerType;
         var length = times.length;
         var data = [];
         for ( var i = 0; i < length; i++) {
             data.push(times[i]);
-            type.pack(data, data.length, values[i]);
+            innerType.pack(data, data.length, values[i]);
         }
-        _mergeNewSamples(undefined, this._times, this._values, data, type.length);
+        _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
     };
 
     SampledProperty.prototype.addSamplesFlatArray = function(data, epoch) {
-        _mergeNewSamples(epoch, this._times, this._values, data, this.type.length);
+        _mergeNewSamples(epoch, this._times, this._values, data, this._innerType.packedLength);
     };
 
     //Exposed for testing.

@@ -180,9 +180,9 @@ define([
     var sampledQuaternionQuaternion0 = new Quaternion();
     var sampledQuaternionQuaternion0Conjugate = new Quaternion();
 
-    Quaternion.length = 4;
+    Quaternion.packedLength = 4;
 
-    Quaternion.interpolationLength = 3;
+    Quaternion.packedInterpolationLength = 3;
 
     Quaternion.pack = function(array, startingIndex, value) {
         array[startingIndex++] = value.x;

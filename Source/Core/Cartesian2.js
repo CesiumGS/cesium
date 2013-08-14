@@ -148,7 +148,7 @@ define([
      */
     Cartesian2.fromCartesian4 = Cartesian2.clone;
 
-    Cartesian2.length = 2;
+    Cartesian2.packedLength = 2;
 
     Cartesian2.pack = function(array, startingIndex, value) {
         array[startingIndex++] = value.x;

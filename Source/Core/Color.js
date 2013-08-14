@@ -228,7 +228,7 @@ define([
         return undefined;
     };
 
-    Color.length = 4;
+    Color.packedLength = 4;
 
     Color.pack = function(array, startingIndex, value) {
         array[startingIndex++] = value.red;

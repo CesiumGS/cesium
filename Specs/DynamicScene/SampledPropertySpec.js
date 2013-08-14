@@ -1,12 +1,10 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/SampledProperty',
-             'Core/JulianDate',
-             'Core/InterpolatableNumber'
+             'Core/JulianDate'
      ], function(
              SampledProperty,
-             JulianDate,
-             InterpolatableNumber) {
+             JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -14,7 +12,7 @@ defineSuite([
         var data = [0, 7, 1, 8, 2, 9];
         var epoch = new JulianDate(0, 0);
 
-        var property = new SampledProperty(InterpolatableNumber);
+        var property = new SampledProperty(Number);
         property.addSamplesFlatArray(data, epoch);
         expect(property.getIsTimeVarying()).toEqual(true);
         expect(property.getValue(epoch)).toEqual(7);
@@ -25,7 +23,7 @@ defineSuite([
         var values = [7, 8, 9];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
-        var property = new SampledProperty(InterpolatableNumber);
+        var property = new SampledProperty(Number);
         property.addSample(times[0], values[0]);
         property.addSample(times[1], values[1]);
         property.addSample(times[2], values[2]);
@@ -40,7 +38,7 @@ defineSuite([
         var values = [7, 8, 9];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
 
-        var property = new SampledProperty(InterpolatableNumber);
+        var property = new SampledProperty(Number);
         property.addSamples(times, values);
         expect(property.getValue(times[0])).toEqual(values[0]);
         expect(property.getValue(times[1])).toEqual(values[1]);
@@ -52,7 +50,7 @@ defineSuite([
         var value = 7;
         var time = new JulianDate(0, 0);
 
-        var property = new SampledProperty(InterpolatableNumber);
+        var property = new SampledProperty(Number);
         property.addSample(time, value);
 
         expect(property.getValue(time)).toEqual(value);
