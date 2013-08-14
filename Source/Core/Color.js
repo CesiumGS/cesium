@@ -168,7 +168,6 @@ define([
         red = Math.random() * red;
         green = Math.random() * green;
         blue = Math.random() * blue;
-        alpha = Math.random() * alpha;
 
         var randomColor = new Color(red, green, blue, alpha);
         return randomColor;

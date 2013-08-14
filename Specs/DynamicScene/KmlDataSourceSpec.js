@@ -273,13 +273,13 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles Color in normal mode', function() {
-        var color = new ConstantProperty(Color.fromBytes(255, 0, 0, 0));
+        var color = new Color(1, 0, 0, 1);
         var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
             <IconStyle>\
-                <color>000000ff</color>\
+                <color>ff0000ff</color>\
                 <colorMode>normal</colorMode>\
             </IconStyle>\
             </Style>\
@@ -293,11 +293,41 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(colorKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var generatedColor = objects[0].billboard.color.getValue();
         expect(objects.length).toEqual(1);
-        expect(objects[0].billboard.color.red).toEqual(color.red);
-        expect(objects[0].billboard.color.green).toEqual(color.green);
-        expect(objects[0].billboard.color.blue).toEqual(color.blue);
-        expect(objects[0].billboard.color.alpha).toEqual(color.alpha);
+        expect(generatedColor.red).toEqual(color.red);
+        expect(generatedColor.green).toEqual(color.green);
+        expect(generatedColor.blue).toEqual(color.blue);
+        expect(generatedColor.alpha).toEqual(color.alpha);
+    });
+
+    it('handles Color in random mode', function() {
+        var color = new Color(1, 0, 0, 1);
+        var colorKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+            <IconStyle>\
+                <color>ff0000ff</color>\
+                <colorMode>random</colorMode>\
+            </IconStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(colorKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var generatedColor = objects[0].billboard.color.getValue();
+        expect(objects.length).toEqual(1);
+        expect(generatedColor.red <= color.red).toBe(true);
+        expect(generatedColor.green).toEqual(color.green);
+        expect(generatedColor.blue).toEqual(color.blue);
+        expect(generatedColor.alpha).toEqual(color.alpha);
     });
 
     it('load throws with undefined KML', function() {

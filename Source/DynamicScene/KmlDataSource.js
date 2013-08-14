@@ -167,18 +167,19 @@ define(['../Core/createGuid',
         var colorMode = typeof colorModeNode !== 'undefined' ? colorModeNode.firstChild.data : undefined;
         if(colorMode === 'random'){
             var options = {};
-            options.alpha = parseInt(value.substring(0,2), 16) / 255.0;
             options.blue = parseInt(value.substring(2,4), 16)  / 255.0;
             options.green = parseInt(value.substring(4,6), 16) / 255.0;
             options.red = parseInt(value.substring(6,8), 16) / 255.0;
-            return Color.fromRandom(options);
+            var color = Color.fromRandom(options);
+            color.alpha = parseInt(value.substring(0,2), 16) / 255.0;
+            return color;
         }
         //normal mode as default
-        alpha = value.substring(0,2);
-        blue = value.substring(2,4);
-        green = value.substring(4,6);
-        red = value.substring(6,8);
-        return Color.fromBytes(red, green, blue, alpha);
+        alpha = parseInt(value.substring(0,2), 16) / 255.0;
+        blue = parseInt(value.substring(2,4), 16)  / 255.0;
+        green = parseInt(value.substring(4,6), 16) / 255.0;
+        red = parseInt(value.substring(6,8), 16) / 255.0;
+        return new Color(red, green, blue, alpha);
     }
 
     // KML processing functions
@@ -315,7 +316,7 @@ define(['../Core/createGuid',
                 polyline.width = new ConstantProperty(1);
                 polyline.outlineColor = new ConstantProperty(Color.BLACK);
                 polyline.outlineWidth = new ConstantProperty(0);
-                DinamicObject.polyline = polyline;
+                dinamicObject.polyline = polyline;
                 dynamicObject.polygon.material = polygonMaterial;
                 polygonMaterial.processCzmlIntervals({
                     solidColor : {
