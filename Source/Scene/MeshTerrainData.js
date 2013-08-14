@@ -114,6 +114,8 @@ define([
         }
 
         this._center = description.center;
+        this._minimumHeight = defaultValue(description.minimumHeight, -1000.0);
+        this._maximumHeight = defaultValue(description.maximumHeight, 10000.0);
         this._vertexBuffer = description.vertexBuffer;
         this._indexBuffer = description.indexBuffer;
         this._westVertices = toArray(description.westVertices);
@@ -218,7 +220,7 @@ define([
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._northVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
         vertexBufferIndex += this._northVertices.length * 6;
 
-        return new TerrainMesh(this._center, vertexBuffer, indexBuffer, -1000.0, 10000.0, boundingSphere, undefined);
+        return new TerrainMesh(this._center, vertexBuffer, indexBuffer, this._minimumHeight, this._maximumHeight, boundingSphere, undefined);
     };
 
     function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, extent, skirtLength, isWestOrNorthEdge) {
@@ -622,6 +624,9 @@ define([
         var eastVertices = [];
         var northVertices = [];
 
+        var minimumHeight = Number.MAX_VALUE;
+        var maximumHeight = -minimumHeight;
+
         for (i = 0; i < vertices.length; i += vertexStride) {
             u = vertices[i + uIndex];
             if (u <= minU) {
@@ -649,6 +654,14 @@ define([
 
             vertices[i + vIndex] = v;
 
+            var height = vertices[i + hIndex];
+            if (height < minimumHeight) {
+                minimumHeight = height;
+            }
+            if (height > maximumHeight) {
+                maximumHeight = height;
+            }
+
             if (typeof vertices[i + xIndex] === 'undefined') {
                 cartographicScratch.longitude = CesiumMath.lerp(extent.west, extent.east, u);
                 cartographicScratch.latitude = CesiumMath.lerp(extent.south, extent.north, v);
@@ -665,6 +678,8 @@ define([
 
         return new MeshTerrainData({
             center : this._center,
+            minimumHeight : minimumHeight,
+            maximumHeight : maximumHeight,
             vertexBuffer : new Float32Array(vertices),
             indexBuffer : new Uint16Array(indices),
             createdByUpsampling : true,

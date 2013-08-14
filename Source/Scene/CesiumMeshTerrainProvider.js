@@ -107,10 +107,18 @@ define([
         return when(promise, function(buffer) {
             var view = new DataView(buffer);
             var center = new Cartesian3(view.getFloat64(0, true), view.getFloat64(8, true), view.getFloat64(16, true));
-            var vertexCount = view.getInt32(24, true);
-            var vertexBuffer = new Float32Array(buffer, 28, vertexCount * 6);
 
-            var triangleStart = 28 + vertexCount * 6 * 4;
+            var minimumHeightStart = 24;
+            var minimumHeight = view.getFloat32(minimumHeightStart, true);
+
+            var maximumHeightStart = minimumHeightStart + 4;
+            var maximumHeight = view.getFloat32(maximumHeightStart, true);
+
+            var vertexStart = maximumHeightStart + 4;
+            var vertexCount = view.getInt32(vertexStart, true);
+            var vertexBuffer = new Float32Array(buffer, vertexStart + 4, vertexCount * 6);
+
+            var triangleStart = vertexStart + 4 + vertexCount * 6 * 4;
             var triangleCount = view.getInt32(triangleStart, true);
             var indexBuffer = new Uint32Array(buffer, triangleStart + 4, triangleCount * 3);
 
@@ -132,6 +140,8 @@ define([
 
             return new MeshTerrainData({
                 center : center,
+                minimumHeight : minimumHeight,
+                maximumHeight : maximumHeight,
                 vertexBuffer : vertexBuffer,
                 indexBuffer : indexBuffer,
                 westVertices : westVertices,
