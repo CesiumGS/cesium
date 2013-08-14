@@ -117,12 +117,14 @@ require(['Cesium'], function(Cesium) {
         })
     });
 
-    primitives.add(new Cesium.Primitive({
+    var stripedPrimitive = new Cesium.Primitive({
         geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
         appearance : new Cesium.EllipsoidSurfaceAppearance({
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
-    }));
+    });
+    Sandcastle.declare(stripedPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(stripedPrimitive);
 
     // Create extruded extent
     var extrudedExtent = new Cesium.GeometryInstance({
@@ -192,13 +194,15 @@ require(['Cesium'], function(Cesium) {
             }
         });
 
-    primitives.add(new Cesium.Primitive({
+    var extrudedShapesPrimitive = new Cesium.Primitive({
         geometryInstances: [extrudedPolygon, extrudedEllipse, extrudedExtent, cylinderInstance],
         appearance: new Cesium.PerInstanceColorAppearance({
             translucent: false,
             closed: true
         })
-    }));
+    });
+    Sandcastle.declare(extrudedShapesPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(extrudedShapesPrimitive);
 
     // Combine instances each with a unique color.
     // We can combine heterogeneous geometries as we 
@@ -234,10 +238,12 @@ require(['Cesium'], function(Cesium) {
         }));
     }
 
-    primitives.add(new Cesium.Primitive({
+    var circleAndExtentPrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance()
-    }));
+    });
+    Sandcastle.declare(circleAndExtentPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(circleAndExtentPrimitive);
 
     // Create box and ellipsoid boxes, and use the instance's
     // modelMatrix to scale and position them.
@@ -273,13 +279,15 @@ require(['Cesium'], function(Cesium) {
         }));
     }
 
-    primitives.add(new Cesium.Primitive({
+    var boxAndEllipsoidPrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : false,
             closed : true
         })
-    }));
+    });
+    Sandcastle.declare(boxAndEllipsoidPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(boxAndEllipsoidPrimitive);
 
     // Combine several polylines, each with a unique color.
     // Override the appearance render state to change the
@@ -301,7 +309,7 @@ require(['Cesium'], function(Cesium) {
         }));
     }
 
-    primitives.add(new Cesium.Primitive({
+    var linePrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
@@ -312,7 +320,9 @@ require(['Cesium'], function(Cesium) {
                 lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
-    }));
+    });
+    Sandcastle.declare(linePrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(linePrimitive);
 
     // Create a single wall
     var wallInstance = new Cesium.GeometryInstance({
@@ -334,8 +344,14 @@ require(['Cesium'], function(Cesium) {
             faceForward : true
         })
     });
+    Sandcastle.declare(wallPrimitive); // For highlighting on click in Sandcastle.
     wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
     scene.getPrimitives().add(wallPrimitive);
+
+    viewer.screenSpaceEventHandler.setInputAction(function(movement) {
+        var pickedPrimitive = viewer.scene.pick(movement.position);
+        Sandcastle.highlight(pickedPrimitive);
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
 
     Sandcastle.finishedLoading();
 });
