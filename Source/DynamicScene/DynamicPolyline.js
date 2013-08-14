@@ -3,17 +3,13 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlNumber',
-        './CzmlColor',
+        '../Core/Color',
         './processPacketData'],
 function(
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlNumber,
-        CzmlColor,
+        Color,
         processPacketData) {
     "use strict";
 
@@ -34,31 +30,31 @@ function(
      */
     var DynamicPolyline = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the line's color.
+         * A DynamicProperty of type Color which determines the line's color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the line's outline color.
+         * A DynamicProperty of type Color which determines the line's outline color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the line's outline width.
+         * A DynamicProperty of type Number which determines the line's outline width.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the lines's visibility.
+         * A DynamicProperty of type Boolean which determines the lines's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.show = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the line's width.
+         * A DynamicProperty of type Number which determines the line's width.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -97,11 +93,11 @@ function(
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
-        polylineUpdated = processPacketData(CzmlColor, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(CzmlNumber, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(CzmlColor, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(CzmlNumber, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(CzmlBoolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
         return polylineUpdated;
     };
 

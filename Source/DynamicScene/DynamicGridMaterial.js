@@ -1,14 +1,12 @@
 /*global define*/
 define([
         './processPacketData',
-        './CzmlColor',
-        './CzmlNumber',
+        '../Core/Color',
         '../Core/defined',
         '../Scene/Material'
     ], function(
          processPacketData,
-         CzmlColor,
-         CzmlNumber,
+         Color,
          defined,
          Material) {
     "use strict";
@@ -20,42 +18,42 @@ define([
      */
     var DynamicGridMaterial = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the grid's color.
+         * A DynamicProperty of type Color which determines the grid's color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.color = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the grid cells alpha value, when combined with the color alpha.
+         * A DynamicProperty of type Number which determines the grid cells alpha value, when combined with the color alpha.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.cellAlpha = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the number of horizontal rows.
+         * A DynamicProperty of type Number which determines the number of horizontal rows.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.rowCount = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the number of vertical columns.
+         * A DynamicProperty of type Number which determines the number of vertical columns.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.columnCount = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the width of each horizontal line, in pixels.
+         * A DynamicProperty of type Number which determines the width of each horizontal line, in pixels.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.rowThickness = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the width of each vertical line, in pixels.
+         * A DynamicProperty of type Number which determines the width of each vertical line, in pixels.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -92,12 +90,12 @@ define([
             return;
         }
 
-        processPacketData(CzmlColor, this, 'color', materialData.color, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'rowCount', materialData.rowCount, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'columnCount', materialData.columnCount, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
+        processPacketData(Color, this, 'color', materialData.color, undefined, sourceUri);
+        processPacketData(Number, this, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
+        processPacketData(Number, this, 'rowCount', materialData.rowCount, undefined, sourceUri);
+        processPacketData(Number, this, 'columnCount', materialData.columnCount, undefined, sourceUri);
+        processPacketData(Number, this, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
+        processPacketData(Number, this, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
     };
 
     /**

@@ -1,23 +1,214 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Color',
+        '../Core/defaultValue',
         '../Core/defined',
+        '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/Math',
+        '../Core/Quaternion',
+        '../Core/Spherical',
+        '../Scene/HorizontalOrigin',
+        '../Scene/LabelStyle',
+        '../Scene/VerticalOrigin',
         '../Core/TimeInterval',
         '../Core/Iso8601',
         '../Core/JulianDate',
         './CompositeProperty',
         './ConstantProperty',
         './SampledProperty',
-        './TimeIntervalCollectionProperty'
+        './TimeIntervalCollectionProperty',
+        '../ThirdParty/Uri'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Color,
+        defaultValue,
         defined,
+        DeveloperError,
+        Ellipsoid,
+        CesiumMath,
+        Quaternion,
+        Spherical,
+        HorizontalOrigin,
+        LabelStyle,
+        VerticalOrigin,
         TimeInterval,
         Iso8601,
         JulianDate,
         CompositeProperty,
         ConstantProperty,
         SampledProperty,
-        TimeIntervalCollectionProperty) {
+        TimeIntervalCollectionProperty,
+        Uri) {
     "use strict";
+
+    var scratchCartesian = new Cartesian3();
+    var scratchSpherical = new Spherical();
+    var scratchCartographic = new Cartographic();
+
+    function unwrapColorInterval(czmlInterval) {
+        var rgbaf = czmlInterval.rgbaf;
+        if (defined(rgbaf)) {
+            return rgbaf;
+        }
+
+        var rgba = czmlInterval.rgba;
+        if (!defined(rgba)) {
+            return undefined;
+        }
+
+        if (rgba.length === Color.length) {
+            return [Color.byteToFloat(rgba[0]), Color.byteToFloat(rgba[1]), Color.byteToFloat(rgba[2]), Color.byteToFloat(rgba[3])];
+        }
+
+        var len = rgba.length;
+        rgbaf = new Array(len);
+        for ( var i = 0; i < len; i += 5) {
+            rgbaf[i] = rgba[i];
+            rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
+            rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
+            rgbaf[i + 3] = Color.byteToFloat(rgba[i + 3]);
+            rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
+        }
+        return rgbaf;
+    }
+
+    function unwrapImageInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapCartesianInterval(czmlInterval) {
+        if (defined(czmlInterval.cartesian)) {
+            return czmlInterval.cartesian;
+        }
+
+        if (defined(czmlInterval.unitCartesian)) {
+            return czmlInterval.unitCartesian;
+        }
+
+        var i;
+        var len;
+        var result;
+
+        var unitSpherical = czmlInterval.unitSpherical;
+        if (defined(unitSpherical)) {
+            len = unitSpherical.length;
+            if (len === 2) {
+                scratchSpherical.clock = unitSpherical[0];
+                scratchSpherical.cone = unitSpherical[1];
+                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+                result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+            } else {
+                var sphericalIt = 0;
+                result = new Array((len / 3) * 4);
+                for (i = 0; i < len; i += 4) {
+                    result[i] = unitSpherical[sphericalIt++];
+
+                    scratchSpherical.clock = unitSpherical[sphericalIt++];
+                    scratchSpherical.cone = unitSpherical[sphericalIt++];
+                    Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+                    result[i + 1] = scratchCartesian.x;
+                    result[i + 2] = scratchCartesian.y;
+                    result[i + 3] = scratchCartesian.z;
+                }
+            }
+            return result;
+        }
+
+        var tmp = scratchCartesian;
+        var cartographic = czmlInterval.cartographicRadians;
+        if (defined(cartographic)) {
+            if (cartographic.length > 3) {
+                scratchCartographic.longitude = cartographic[0];
+                scratchCartographic.latitude = cartographic[1];
+                scratchCartographic.height = cartographic[2];
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                result = [tmp.x, tmp.y, tmp.z];
+            } else {
+                len = cartographic.length;
+                result = new Array(len);
+                for (i = 0; i < len; i += 4) {
+                    scratchCartographic.longitude = cartographic[i + 1];
+                    scratchCartographic.latitude = cartographic[i + 2];
+                    scratchCartographic.height = cartographic[i + 3];
+                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+
+                    result[i] = cartographic[i];
+                    result[i + 1] = tmp.x;
+                    result[i + 2] = tmp.y;
+                    result[i + 3] = tmp.z;
+                }
+            }
+        } else {
+            var cartographicDegrees = czmlInterval.cartographicDegrees;
+            if (!defined(cartographicDegrees)) {
+                return undefined;
+            }
+
+            if (cartographicDegrees.length > 3) {
+                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
+                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
+                scratchCartographic.height = cartographicDegrees[2];
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                result = [tmp.x, tmp.y, tmp.z];
+            } else {
+                len = cartographicDegrees.length;
+                result = new Array(len);
+                for (i = 0; i < len; i += 4) {
+                    scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+                    scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+                    scratchCartographic.height = cartographicDegrees[i + 3];
+                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+
+                    result[i] = cartographicDegrees[i];
+                    result[i + 1] = tmp.x;
+                    result[i + 2] = tmp.y;
+                    result[i + 3] = tmp.z;
+                }
+            }
+        }
+    }
+
+    function unwrapInterval(type, czmlInterval, sourceUri) {
+        switch (type) {
+        case Boolean:
+            return defaultValue(czmlInterval.boolean, czmlInterval);
+        case Cartesian2:
+            return czmlInterval.cartesian2;
+        case Cartesian3:
+            return unwrapCartesianInterval(czmlInterval);
+        case Color:
+            return unwrapColorInterval(czmlInterval);
+        case HorizontalOrigin:
+            return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+        case Image:
+            return unwrapImageInterval(czmlInterval, sourceUri);
+        case LabelStyle:
+            return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+        case Number:
+            return defaultValue(czmlInterval.number, czmlInterval);
+        case String:
+            return defaultValue(czmlInterval.string, czmlInterval);
+        case Quaternion:
+            return czmlInterval.unitQuaternion;
+        case VerticalOrigin:
+            return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        default:
+            throw new DeveloperError(type);
+        }
+    }
 
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri) {
         var combinedInterval;
@@ -31,12 +222,16 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        var unwrappedInterval = type.unwrapInterval(packetData, sourceUri);
+        var unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
 
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
-        var isSampled = type.isSampled(unwrappedInterval);
+        var isSampled = typeof unwrappedInterval !== 'string' && defined(unwrappedInterval.length) && defined(type) && defined(type.length) && (unwrappedInterval.length > type.length);
         if (!isSampled && !hasInterval) {
-            object[propertyName] = new ConstantProperty(type.getValue(unwrappedInterval));
+            if (defined(type.unpack)) {
+                object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
+            } else {
+                object[propertyName] = new ConstantProperty(unwrappedInterval);
+            }
             return true;
         }
 
@@ -44,7 +239,11 @@ define([
         var property = object[propertyName];
         if (!isSampled && hasInterval) {
             combinedInterval = combinedInterval.clone();
-            combinedInterval.data = type.getValue(unwrappedInterval);
+            if (defined(type.unpack)) {
+                combinedInterval.data = type.unpack(unwrappedInterval, 0);
+            } else {
+                combinedInterval.data = unwrappedInterval;
+            }
 
             if (!defined(property)) {
                 property = new TimeIntervalCollectionProperty();
@@ -55,11 +254,11 @@ define([
             if (property instanceof TimeIntervalCollectionProperty) {
                 property.getIntervals().addInterval(combinedInterval);
             } else {
-                //TODO
+                //TODO Morph to CompositeProperty
             }
         } else if (isSampled && !hasInterval) {
             if (!(property instanceof SampledProperty)) {
-                property = new SampledProperty(type.type);
+                property = new SampledProperty(type);
                 object[propertyName] = property;
                 propertyCreated = true;
             }
@@ -78,17 +277,17 @@ define([
                     intervalData = interval.data;
                 } else {
                     interval = combinedInterval.clone();
-                    intervalData = new SampledProperty(type.type);
+                    intervalData = new SampledProperty(type);
                     interval.data = intervalData;
                     intervals.addInterval(interval);
                 }
                 if (!(intervalData instanceof SampledProperty)) {
-                    intervalData = new SampledProperty(type.type);
+                    intervalData = new SampledProperty(type);
                     interval.Data = intervalData;
                 }
                 intervalData.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
             } else {
-                //TODO
+                //TODO Morph to CompositeProperty
             }
         }
         return propertyCreated;

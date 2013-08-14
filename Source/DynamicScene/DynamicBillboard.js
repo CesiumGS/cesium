@@ -3,27 +3,21 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlCartesian2',
-        './CzmlCartesian3',
-        './CzmlNumber',
-        './CzmlImage',
-        './CzmlHorizontalOrigin',
-        './CzmlVerticalOrigin',
-        './CzmlColor',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Scene/HorizontalOrigin',
+        '../Scene/VerticalOrigin',
+        '../Core/Color',
         './processPacketData'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlCartesian2,
-        CzmlCartesian3,
-        CzmlNumber,
-        CzmlImage,
-        CzmlHorizontalOrigin,
-        CzmlVerticalOrigin,
-        CzmlColor,
+        Cartesian2,
+        Cartesian3,
+        HorizontalOrigin,
+        VerticalOrigin,
+        Color,
         processPacketData) {
     "use strict";
 
@@ -45,61 +39,61 @@ define([
      */
     var DynamicBillboard = function() {
         /**
-         * A DynamicProperty of type CzmlImage which determines the billboard's texture.
+         * A DynamicProperty of type Image which determines the billboard's texture.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.image = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the billboard's scale.
+         * A DynamicProperty of type Number which determines the billboard's scale.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.scale = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the billboard's rotation.
+         * A DynamicProperty of type Number which determines the billboard's rotation.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.rotation = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's aligned axis.
+         * A DynamicProperty of type Cartesian3 which determines the billboard's aligned axis.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.alignedAxis = undefined;
         /**
-         * A DynamicProperty of type CzmlHorizontalOrigin which determines the billboard's horizontal origin.
+         * A DynamicProperty of type HorizontalOrigin which determines the billboard's horizontal origin.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.horizontalOrigin = undefined;
         /**
-         * A DynamicProperty of type CzmlVerticalHorigin which determines the billboard's vertical origin.
+         * A DynamicProperty of type VerticalOrigin which determines the billboard's vertical origin.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.verticalOrigin = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the billboard's color.
+         * A DynamicProperty of type Color which determines the billboard's color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian3 which determines the billboard's eye offset.
+         * A DynamicProperty of type Cartesian3 which determines the billboard's eye offset.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.eyeOffset = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian2 which determines the billboard's pixel offset.
+         * A DynamicProperty of type Cartesian2 which determines the billboard's pixel offset.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.pixelOffset = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the billboard's visibility.
+         * A DynamicProperty of type Boolean which determines the billboard's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -141,16 +135,16 @@ define([
             dynamicObject.billboard = billboard = new DynamicBillboard();
         }
 
-        billboardUpdated = processPacketData(CzmlColor, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlCartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlHorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlImage, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlCartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlNumber, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlNumber, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlCartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlBoolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(CzmlVerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
 
         return billboardUpdated;
     };

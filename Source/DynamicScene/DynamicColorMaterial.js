@@ -1,11 +1,11 @@
 /*global define*/
 define([
-        './CzmlColor',
+        '../Core/Color',
         '../Core/defined',
         './processPacketData',
         '../Scene/Material'
     ], function(
-         CzmlColor,
+         Color,
          defined,
          processPacketData,
          Material) {
@@ -18,7 +18,7 @@ define([
      */
     var DynamicColorMaterial = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the material's color.
+         * A DynamicProperty of type Color which determines the material's color.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -51,7 +51,7 @@ define([
     DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.solidColor;
         if (defined(materialData)) {
-            processPacketData(CzmlColor, this, 'color', materialData.color);
+            processPacketData(Color, this, 'color', materialData.color);
         }
     };
 

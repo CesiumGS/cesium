@@ -6,7 +6,6 @@ define([
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Shapes',
-        './CzmlNumber',
         './processPacketData'
         ], function (
             TimeInterval,
@@ -15,7 +14,6 @@ define([
             Cartesian3,
             Ellipsoid,
             Shapes,
-            CzmlNumber,
             processPacketData) {
     "use strict";
 
@@ -35,20 +33,20 @@ define([
      */
     var DynamicEllipse = function() {
         /**
-         * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMajorAxis.
+         * A DynamicProperty of type Number which determines the ellipse's semiMajorAxis.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.semiMajorAxis = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the ellipse's semiMinorAxis.
+         * A DynamicProperty of type Number which determines the ellipse's semiMinorAxis.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.semiMinorAxis = undefined;
 
         /**
-         * A DynamicProperty of type CzmlNumber which determines the bearing of the ellipse.
+         * A DynamicProperty of type Number which determines the bearing of the ellipse.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -95,9 +93,9 @@ define([
             dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
-        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(CzmlNumber, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(Number, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
 
         return ellipseUpdated;
     };

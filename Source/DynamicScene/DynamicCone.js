@@ -3,18 +3,14 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlNumber',
-        './CzmlColor',
+        '../Core/Color',
         './processPacketData',
         './DynamicMaterialProperty'
        ], function(
          TimeInterval,
          defaultValue,
          defined,
-         CzmlBoolean,
-         CzmlNumber,
-         CzmlColor,
+         Color,
          processPacketData,
          DynamicMaterialProperty) {
     "use strict";
@@ -36,25 +32,25 @@ define([
      */
     var DynamicCone = function() {
         /**
-         * A DynamicProperty of type CzmlNumber which determines the cone's minimum clock-angle.
+         * A DynamicProperty of type Number which determines the cone's minimum clock-angle.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.minimumClockAngle = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the cone's maximum clock-angle.
+         * A DynamicProperty of type Number which determines the cone's maximum clock-angle.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.maximumClockAngle = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the cone's inner half-angle.
+         * A DynamicProperty of type Number which determines the cone's inner half-angle.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.innerHalfAngle = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the cone's outer half-angle.
+         * A DynamicProperty of type Number which determines the cone's outer half-angle.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -84,31 +80,31 @@ define([
          */
         this.silhouetteMaterial = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the cone and other central bodies.
+         * A DynamicProperty of type Color which determines the color of the line formed by the intersection of the cone and other central bodies.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.intersectionColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the approximate pixel width of the line formed by the intersection of the cone and other central bodies.
+         * A DynamicProperty of type Number which determines the approximate pixel width of the line formed by the intersection of the cone and other central bodies.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.intersectionWidth = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the cone's intersection visibility
+         * A DynamicProperty of type Boolean which determines the cone's intersection visibility
          * @type {DynamicProperty}
          * @default undefined
          */
         this.showIntersection = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the cone's radius.
+         * A DynamicProperty of type Number which determines the cone's radius.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.radius = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the cone's visibility
+         * A DynamicProperty of type Boolean which determines the cone's visibility
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -147,15 +143,15 @@ define([
             dynamicObject.cone = cone = new DynamicCone();
         }
 
-        coneUpdated = processPacketData(CzmlBoolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlBoolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlColor, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(CzmlNumber, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
 
         if (defined(coneData.capMaterial)) {
             var capMaterial = cone.capMaterial;

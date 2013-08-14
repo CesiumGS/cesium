@@ -3,19 +3,15 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlDirection',
-        './CzmlNumber',
-        './CzmlColor',
+        '../Core/Cartesian3',
+        '../Core/Color',
         './processPacketData'],
 function(
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlDirection,
-        CzmlNumber,
-        CzmlColor,
+        Cartesian3,
+        Color,
         processPacketData) {
     "use strict";
 
@@ -35,31 +31,31 @@ function(
      */
     var DynamicVector = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the vector's color.
+         * A DynamicProperty of type Color which determines the vector's color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the vector's visibility.
+         * A DynamicProperty of type Boolean which determines the vector's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.show = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the vector's width.
+         * A DynamicProperty of type Number which determines the vector's width.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.width = undefined;
         /**
-         * A DynamicProperty of type CzmlDirection which determines the vector's direction.
+         * A DynamicProperty of type Cartesian3 which determines the vector's direction.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.direction = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the vector's graphical length.
+         * A DynamicProperty of type Number which determines the vector's graphical length.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -98,11 +94,11 @@ function(
             dynamicObject.vector = vector = new DynamicVector();
         }
 
-        vectorUpdated = processPacketData(CzmlColor, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(CzmlBoolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(CzmlNumber, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(CzmlDirection, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(CzmlNumber, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
 
         return vectorUpdated;
     };

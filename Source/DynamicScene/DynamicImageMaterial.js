@@ -1,14 +1,10 @@
 /*global define*/
 define([
         './processPacketData',
-        './CzmlImage',
-        './CzmlNumber',
         '../Core/defined',
         '../Scene/Material'
     ], function(
          processPacketData,
-         CzmlImage,
-         CzmlNumber,
          defined,
          Material) {
     "use strict";
@@ -20,19 +16,19 @@ define([
      */
     var DynamicImageMaterial = function() {
         /**
-         * A DynamicProperty of type CzmlNumber which determines the material's image.
+         * A DynamicProperty of type Number which determines the material's image.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.image = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the material's vertical repeat.
+         * A DynamicProperty of type Number which determines the material's vertical repeat.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.verticalRepeat = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the material's horizontal repeat.
+         * A DynamicProperty of type Number which determines the material's horizontal repeat.
          *
          * @type {DynamicProperty}
          * @default undefined
@@ -70,9 +66,9 @@ define([
             return;
         }
 
-        processPacketData(CzmlImage, this, 'image', materialData.image, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
-        processPacketData(CzmlNumber, this, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
+        processPacketData(Image, this, 'image', materialData.image, undefined, sourceUri);
+        processPacketData(Number, this, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
+        processPacketData(Number, this, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
     };
 
     /**

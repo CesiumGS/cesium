@@ -3,9 +3,7 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlNumber',
-        './CzmlColor',
+        '../Core/Color',
         './processPacketData',
         './DynamicDirectionsProperty',
         './DynamicMaterialProperty'
@@ -13,9 +11,7 @@ define([
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlNumber,
-        CzmlColor,
+        Color,
         processPacketData,
         DynamicDirectionsProperty,
         DynamicMaterialProperty) {
@@ -38,7 +34,7 @@ define([
      */
     var DynamicPyramid = function() {
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the pyramid's visibility.
+         * A DynamicProperty of type Boolean which determines the pyramid's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -50,25 +46,25 @@ define([
          */
         this.directions = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the pyramid's radius.
+         * A DynamicProperty of type Number which determines the pyramid's radius.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.radius = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the pyramid's intersection visibility.
+         * A DynamicProperty of type Boolean which determines the pyramid's intersection visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.showIntersection = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the color of the line formed by the intersection of the pyramid and other central bodies.
+         * A DynamicProperty of type Color which determines the color of the line formed by the intersection of the pyramid and other central bodies.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.intersectionColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the approximate pixel width of the line formed by the intersection of the pyramid and other central bodies.
+         * A DynamicProperty of type Number which determines the approximate pixel width of the line formed by the intersection of the pyramid and other central bodies.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -115,11 +111,11 @@ define([
             dynamicObject.pyramid = pyramid = new DynamicPyramid();
         }
 
-        pyramidUpdated = processPacketData(CzmlBoolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(CzmlNumber, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(CzmlBoolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(CzmlColor, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(CzmlNumber, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
 
         if (defined(pyramidData.material)) {
             var material = pyramid.material;

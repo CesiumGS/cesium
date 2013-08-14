@@ -3,29 +3,23 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlCartesian2',
-        './CzmlCartesian3',
-        './CzmlNumber',
-        './CzmlString',
-        './CzmlHorizontalOrigin',
-        './CzmlVerticalOrigin',
-        './CzmlLabelStyle',
-        './CzmlColor',
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Scene/HorizontalOrigin',
+        '../Scene/VerticalOrigin',
+        '../Scene/LabelStyle',
+        '../Core/Color',
         './processPacketData'
        ], function(
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlCartesian2,
-        CzmlCartesian3,
-        CzmlNumber,
-        CzmlString,
-        CzmlHorizontalOrigin,
-        CzmlVerticalOrigin,
-        CzmlLabelStyle,
-        CzmlColor,
+        Cartesian2,
+        Cartesian3,
+        HorizontalOrigin,
+        VerticalOrigin,
+        LabelStyle,
+        Color,
         processPacketData) {
     "use strict";
 
@@ -47,73 +41,73 @@ define([
      */
     var DynamicLabel = function() {
         /**
-         * A DynamicProperty of type CzmlString which determines the label's text.
+         * A DynamicProperty of type String which determines the label's text.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.text = undefined;
         /**
-         * A DynamicProperty of type CzmlString which determines the label's font.
+         * A DynamicProperty of type String which determines the label's font.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.font = undefined;
         /**
-         * A DynamicProperty of type CzmlLabelStyle which determines the label's style.
+         * A DynamicProperty of type LabelStyle which determines the label's style.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.style = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the label's fill color.
+         * A DynamicProperty of type Color which determines the label's fill color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.fillColor = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the label's outline color.
+         * A DynamicProperty of type Color which determines the label's outline color.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the label's outline width.
+         * A DynamicProperty of type Number which determines the label's outline width.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type CzmlHorizontalOrigin which determines the label's horizontal origin.
+         * A DynamicProperty of type HorizontalOrigin which determines the label's horizontal origin.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.horizontalOrigin = undefined;
         /**
-         * A DynamicProperty of type CzmlVerticalOrigin which determines the label's vertical origin.
+         * A DynamicProperty of type VerticalOrigin which determines the label's vertical origin.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.verticalOrigin = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian3 which determines the label's eye offset.
+         * A DynamicProperty of type Cartesian3 which determines the label's eye offset.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.eyeOffset = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian2 which determines the label's pixel offset.
+         * A DynamicProperty of type Cartesian2 which determines the label's pixel offset.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.pixelOffset = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the label's scale.
+         * A DynamicProperty of type Number which determines the label's scale.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.scale = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the label's visibility.
+         * A DynamicProperty of type Boolean which determines the label's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -152,18 +146,18 @@ define([
             dynamicObject.label = label = new DynamicLabel();
         }
 
-        labelUpdated = processPacketData(CzmlColor, label, 'fillColor', labelData.fillColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlColor, label, 'outlineColor', labelData.outlineColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlNumber, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlCartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlHorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlString, label, 'text', labelData.text, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlCartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlNumber, label, 'scale', labelData.scale, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlBoolean, label, 'show', labelData.show, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlVerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlString, label, 'font', labelData.font, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(CzmlLabelStyle, label, 'style', labelData.style, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(String, label, 'text', labelData.text, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(String, label, 'font', labelData.font, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri) || labelUpdated;
 
         return labelUpdated;
     };

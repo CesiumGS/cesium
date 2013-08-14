@@ -3,16 +3,14 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
-        './CzmlCartesian3',
+        '../Core/Cartesian3',
         './processPacketData',
         './DynamicMaterialProperty'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
-        CzmlBoolean,
-        CzmlCartesian3,
+        Cartesian3,
         processPacketData,
         DynamicMaterialProperty) {
     "use strict";
@@ -34,13 +32,13 @@ define([
      */
     var DynamicEllipsoid = function() {
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the ellipsoid's visibility.
+         * A DynamicProperty of type Boolean which determines the ellipsoid's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
         this.show = undefined;
         /**
-         * A DynamicProperty of type CzmlCartesian3 which determines the ellipsoid's radii.
+         * A DynamicProperty of type Cartesian3 which determines the ellipsoid's radii.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -87,8 +85,8 @@ define([
             dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }
 
-        ellipsoidUpdated = processPacketData(CzmlBoolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processPacketData(CzmlCartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
+        ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
+        ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
 
         if (defined(ellipsoidData.material)) {
             var material = ellipsoid.material;

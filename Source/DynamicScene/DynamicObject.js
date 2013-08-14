@@ -5,22 +5,22 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/JulianDate',
+        '../Core/Quaternion',
         '../Core/TimeInterval',
         './processPacketData',
         './DynamicVertexPositionsProperty',
-        './CzmlUnitQuaternion',
-        './CzmlCartesian3'
+        '../Core/Cartesian3'
     ], function(
         createGuid,
         defaultValue,
         defined,
         DeveloperError,
         JulianDate,
+        Quaternion,
         TimeInterval,
         processPacketData,
         DynamicVertexPositionsProperty,
-        CzmlUnitQuaternion,
-        CzmlCartesian3) {
+        Cartesian3) {
     "use strict";
 
     /**
@@ -241,7 +241,7 @@ define([
         if (!defined(positionData)) {
             return false;
         }
-        return processPacketData(CzmlCartesian3, dynamicObject, 'position', positionData, undefined, sourceUri);
+        return processPacketData(Cartesian3, dynamicObject, 'position', positionData, undefined, sourceUri);
     };
 
     /**
@@ -262,7 +262,7 @@ define([
         if (!defined(viewFromData)) {
             return false;
         }
-        return processPacketData(CzmlCartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
+        return processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
     };
 
     /**
@@ -284,7 +284,7 @@ define([
             return false;
         }
 
-        return processPacketData(CzmlUnitQuaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
+        return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
     };
 
     /**

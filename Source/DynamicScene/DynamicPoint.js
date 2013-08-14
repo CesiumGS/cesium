@@ -3,17 +3,13 @@ define([
         '../Core/defined',
         '../Core/TimeInterval',
         '../Core/defaultValue',
-        './CzmlBoolean',
-        './CzmlNumber',
-        './CzmlColor',
+        '../Core/Color',
         './processPacketData'
     ], function(
          defined,
          TimeInterval,
          defaultValue,
-         CzmlBoolean,
-         CzmlNumber,
-         CzmlColor,
+         Color,
          processPacketData) {
     "use strict";
 
@@ -35,27 +31,27 @@ define([
      */
     var DynamicPoint = function() {
         /**
-         * A DynamicProperty of type CzmlColor which determines the point's color.
+         * A DynamicProperty of type Color which determines the point's color.
          * @type DynamicProperty
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the point's pixel size.
+         * A DynamicProperty of type Number which determines the point's pixel size.
          * @type DynamicProperty
          */
         this.pixelSize = undefined;
         /**
-         * A DynamicProperty of type CzmlColor which determines the point's outline color.
+         * A DynamicProperty of type Color which determines the point's outline color.
          * @type DynamicProperty
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type CzmlNumber which determines the point's outline width.
+         * A DynamicProperty of type Number which determines the point's outline width.
          * @type DynamicProperty
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the point's visibility.
+         * A DynamicProperty of type Boolean which determines the point's visibility.
          * @type DynamicProperty
          */
         this.show = undefined;
@@ -93,11 +89,11 @@ define([
             dynamicObject.point = point = new DynamicPoint();
         }
 
-        pointUpdated = processPacketData(CzmlColor, point, 'color', pointData.color, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(CzmlNumber, point, 'pixelSize', pointData.pixelSize, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(CzmlColor, point, 'outlineColor', pointData.outlineColor, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(CzmlNumber, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(CzmlBoolean, point, 'show', pointData.show, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Color, point, 'color', pointData.color, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri) || pointUpdated;
 
         return pointUpdated;
     };

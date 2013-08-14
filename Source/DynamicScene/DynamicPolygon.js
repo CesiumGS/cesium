@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './CzmlBoolean',
         './processPacketData',
         './DynamicMaterialProperty'
     ], function(
          TimeInterval,
          defaultValue,
          defined,
-         CzmlBoolean,
          processPacketData,
          DynamicMaterialProperty) {
     "use strict";
@@ -32,7 +30,7 @@ define([
      */
     var DynamicPolygon = function() {
         /**
-         * A DynamicProperty of type CzmlBoolean which determines the polygon's visibility.
+         * A DynamicProperty of type Boolean which determines the polygon's visibility.
          * @type {DynamicProperty}
          * @default undefined
          */
@@ -79,7 +77,7 @@ define([
             dynamicObject.polygon = polygon = new DynamicPolygon();
         }
 
-        polygonUpdated = processPacketData(CzmlBoolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
+        polygonUpdated = processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
 
         if (defined(polygonData.material)) {
             var material = polygon.material;
