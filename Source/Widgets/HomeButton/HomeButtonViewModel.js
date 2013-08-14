@@ -42,27 +42,9 @@ define([
         camera.controller.constrainedAxis = Cartesian3.UNIT_Z;
 
         var controller = scene.getScreenSpaceCameraController();
-        var enableLook = controller.enableLook;
-        var enableRotate = controller.enableRotate;
-        var enableTilt = controller.enableTilt;
-        var enableTranslate = controller.enableTranslate;
-        var enableZoom = controller.enableZoom;
 
-        controller.enableLook = false;
-        controller.enableRotate = false;
-        controller.enableTilt = false;
-        controller.enableTranslate = false;
-        controller.enableZoom = false;
         controller.setEllipsoid(ellipsoid);
         controller.columbusViewMode = CameraColumbusViewMode.FREE;
-
-        function onComplete() {
-            controller.enableLook = enableLook;
-            controller.enableRotate = enableRotate;
-            controller.enableTilt = enableTilt;
-            controller.enableTranslate = enableTranslate;
-            controller.enableZoom = enableZoom;
-        }
 
         var canvas = scene.getCanvas();
         if (defined(transitioner) && mode === SceneMode.MORPHING) {
@@ -78,8 +60,7 @@ define([
                                            0, 0, 0, 1);
             description = {
                 destination : Extent.MAX_VALUE,
-                duration : flightDuration,
-                onComplete : onComplete
+                duration : flightDuration
             };
             flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
