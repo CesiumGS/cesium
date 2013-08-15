@@ -143,9 +143,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2
-            }
+            extrudedHeight : 2
         });
         var positions = m.attributes.position.values;
 
@@ -158,9 +156,7 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             extent : new Extent(-2.0, -1.0, 0.0, 1.0),
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2
-            }
+            extrudedHeight : 2
         });
         expect(m.attributes.position.values.length).toEqual((9 + 8 + 4) * 3 * 2);
         expect(m.attributes.st.values.length).toEqual((9 + 8 + 4) * 2 * 2);
@@ -178,9 +174,7 @@ defineSuite([
             extent : extent,
             rotation : angle,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2
-            }
+            extrudedHeight : 2
         });
         var positions = m.attributes.position.values;
         var length = positions.length;
@@ -204,10 +198,8 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2,
-                closeTop : false
-            }
+            extrudedHeight : 2,
+            closeTop : false
         });
         var positions = m.attributes.position.values;
 
@@ -221,10 +213,8 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2,
-                closeBottom : false
-            }
+            extrudedHeight : 2,
+            closeBottom : false
         });
         var positions = m.attributes.position.values;
 
@@ -238,30 +228,14 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 2,
-                closeTop : false,
-                closeBottom : false
-            }
+            extrudedHeight : 2,
+            closeTop : false,
+            closeBottom : false
         });
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual((8 + 4) * 2 * 3);
         expect(m.indices.length).toEqual(4 * 3 * 4);
-    });
-
-    it('computes non-extruded extent if height is not specified', function() {
-        var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentGeometry({
-            vertexFormat : VertexFormat.POSITION_ONLY,
-            extent : extent,
-            granularity : 1.0,
-            extrudedOptions : {}
-        });
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual(9 * 3);
-        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes non-extruded extent if height is small', function() {
@@ -270,9 +244,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             extent : extent,
             granularity : 1.0,
-            extrudedOptions : {
-                height : 0.1
-            }
+            extrudedHeight : 0.1
         });
         var positions = m.attributes.position.values;
 

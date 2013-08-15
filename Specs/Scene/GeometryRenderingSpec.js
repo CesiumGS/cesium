@@ -449,7 +449,7 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('Extruded ExtentGeometry', function() {
+    describe('Extruded EllipseGeometry', function() {
         var instance;
         var extrudedHeight;
         var geometryHeight;
@@ -675,9 +675,7 @@ defineSuite([
                     ellipsoid : ellipsoid,
                     extent : extent,
                     height : geometryHeight,
-                    extrudedOptions : {
-                        height : extrudedHeight
-                    }
+                    extrudedHeight : extrudedHeight
                 }),
                 id : 'extent',
                 attributes : {

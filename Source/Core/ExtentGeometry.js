@@ -1,6 +1,5 @@
 /*global define*/
 define([
-        './clone',
         './defaultValue',
         './defined',
         './BoundingSphere',
@@ -25,7 +24,6 @@ define([
         './Quaternion',
         './VertexFormat'
     ], function(
-        clone,
         defaultValue,
         defined,
         BoundingSphere,
@@ -334,7 +332,7 @@ define([
         return wallPositions;
     }
 
-    function constructExtent(options, vertexFormat, params) {
+    function constructExtent(vertexFormat, params) {
         var ellipsoid = params.ellipsoid;
         var size = params.size;
         var height = params.height;
@@ -403,30 +401,27 @@ define([
         }
 
         return {
-            boundingSphere : BoundingSphere.fromExtent3D(options.extent, ellipsoid, surfaceHeight),
+            boundingSphere : BoundingSphere.fromExtent3D(params.extent, ellipsoid, surfaceHeight),
             geometry : geo
         };
     }
 
-
-    function constructExtrudedExtent(options, vertexFormat, params) {
+    function constructExtrudedExtent(vertexFormat, params) {
         var surfaceHeight = params.surfaceHeight;
+        var extrudedHeight = params.extrudedHeight;
+        var minHeight = Math.min(extrudedHeight, surfaceHeight);
+        var maxHeight = Math.max(extrudedHeight, surfaceHeight);
+        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
+            return constructExtent(vertexFormat, params);
+        }
+
         var height = params.height;
         var width = params.width;
         var size = params.size;
         var ellipsoid = params.ellipsoid;
-        var extrudedOptions = options.extrudedOptions;
-        if (typeof extrudedOptions.height !== 'number') {
-            return constructExtent(options, vertexFormat, params);
-        }
-        var minHeight = Math.min(extrudedOptions.height, surfaceHeight);
-        var maxHeight = Math.max(extrudedOptions.height, surfaceHeight);
-        if (CesiumMath.equalsEpsilon(minHeight, maxHeight, 0.1)) {
-            return constructExtent(options, vertexFormat, params);
-        }
 
-        var closeTop = defaultValue(extrudedOptions.closeTop, true);
-        var closeBottom = defaultValue(extrudedOptions.closeBottom, true);
+        var closeTop = defaultValue(params.closeTop, true);
+        var closeBottom = defaultValue(params.closeBottom, true);
 
         var perimeterPositions = 2 * width + 2 * height - 4;
         var wallCount = (perimeterPositions + 4) * 2;
@@ -610,8 +605,8 @@ define([
             ]);
         }
 
-        var topBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, maxHeight, topBoundingSphere);
-        var bottomBS = BoundingSphere.fromExtent3D(options.extent, ellipsoid, minHeight, bottomBoundingSphere);
+        var topBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, maxHeight, topBoundingSphere);
+        var bottomBS = BoundingSphere.fromExtent3D(params.extent, ellipsoid, minHeight, bottomBoundingSphere);
         var boundingSphere = BoundingSphere.union(topBS, bottomBS);
 
         return {
@@ -634,9 +629,9 @@ define([
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.height] Height of extruded surface.
-     * @param {Boolean} [options.extrudedOptions.closeTop=true] <code>true</code> to render top of the extruded extent; <code>false</code> otherwise.
-     * @param {Boolean} [options.extrudedOptions.closeBottom=true] <code>true</code> to render bottom of the extruded extent; <code>false</code> otherwise.
+     * @param {Number} [options.extrudedHeight] Height of extruded surface.
+     * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
+     * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -648,10 +643,20 @@ define([
      * @exception {DeveloperError} Rotated extent is invalid.
      *
      * @example
+     * //an extent
      * var extent = new ExtentGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
+     * });
+     *
+     * //an extruded extent without a top
+     * var extent = new ExtentGeometry({
+     *   ellipsoid : Ellipsoid.WGS84,
+     *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
+     *   height : 10000.0,
+     *   extrudedHieght: 300000,
+     *   closeTop: false
      * });
      */
     var ExtentGeometry = function(options) {
@@ -767,10 +772,13 @@ define([
         };
 
         var extentGeometry;
-        if (defined(options.extrudedOptions)) {
-            extentGeometry = constructExtrudedExtent(options, vertexFormat, params);
+        if (defined(options.extrudedHeight)) {
+            params.extrudedHeight = options.extrudedHeight;
+            params.closeTop = options.closeTop;
+            params.closeBottom = options.closeBottom;
+            extentGeometry = constructExtrudedExtent(vertexFormat, params);
         } else {
-            extentGeometry = constructExtent(options, vertexFormat, params);
+            extentGeometry = constructExtent(vertexFormat, params);
         }
         var geometry = extentGeometry.geometry;
 
