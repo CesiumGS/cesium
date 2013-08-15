@@ -126,7 +126,23 @@ define([
         this._times = [];
         this._values = [];
         this._xTable = new Array(this._numberOfPoints);
-        this._yTable = new Array(this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength), 1);
+        this._yTable = new Array(this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength));
+    };
+
+    SampledProperty.prototype.getInterpolationAlgorithm = function() {
+        return this._interpolationAlgorithm;
+    };
+
+    SampledProperty.prototype.setInterpolationAlgorithm = function(value) {
+        if (typeof value === 'undefined') {
+            throw new DeveloperError('value is required');
+        }
+
+        this._interpolationAlgorithm = value;
+        this._numberOfPoints = value.getRequiredDataPoints(1);
+        this._xTable.length = this._numberOfPoints;
+        var type = this._innerType;
+        this._yTable.length = this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength);
     };
 
     /**
