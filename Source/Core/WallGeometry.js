@@ -253,8 +253,8 @@ define([
         var topPositions;
 
         var minH = defaultValue(newMinHeights, 0);
-        bottomPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, minH, ellipsoid);
-        topPositions = PolylinePipeline.scaleToGeodeticHeight(newWallPositions, newMaxHeights, ellipsoid);
+        bottomPositions = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(newWallPositions, minH, ellipsoid);
+        topPositions = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(newWallPositions, newMaxHeights, ellipsoid);
 
 
         // add lower and upper points one after the other, lower

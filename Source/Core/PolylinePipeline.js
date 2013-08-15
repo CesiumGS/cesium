@@ -284,7 +284,7 @@ define([
      *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
+     PolylinePipeline.scaleFromSurfaceToGeodeticHeight = function(positions, height, ellipsoid) {
         if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
@@ -297,7 +297,7 @@ define([
         var length = positions.length;
         var i;
         var p = scaleP;
-        var newPositions = new Array(positions.length);
+        var newPositions = new Float64Array(positions.length);
         if (Array.isArray(height)) {
             if (height.length !== length/3) {
                 throw new DeveloperError('height.length must be equal to positions.length');

@@ -49,6 +49,7 @@ define([
     var scratchCartesian6 = new Cartesian3();
     var scratchCartesian7 = new Cartesian3();
     var scratchCartesian8 = new Cartesian3();
+    var scratchCartesian11 = new Cartesian3();
     var scratch = new Cartesian3();
 
     var cross = new Cartesian3();
@@ -73,64 +74,9 @@ define([
 
         return attribute;
     }
-
+/*
     function computeAttributes(calculatedNormals, calculatedLefts, attr, attributes, extrude, threeVertex, vertexFormat, vertexCount) {
         var i;
-        var st = [];
-        if (vertexFormat.st) {
-            var stIndex = 0;
-            var repeat;
-            var stvar;
-            var half = vertexCount / 2;
-            if (extrude) {
-                half /= 4;
-                repeat = 4;
-            } else {
-                repeat = 1;
-            }
-            stvar = 1 / (half-1);
-
-            for (var j = 0; j < repeat; j++) {
-                for (i = 0; i < half; i++) {
-                    st[stIndex++] = i*stvar;
-                    st[stIndex++] = 1;
-                }
-                for (i = half; i > 0; i--) {
-                    st[stIndex++] = (i-1)*stvar;
-                    st[stIndex++] = 0;
-                }
-            }
-
-            attributes.st = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 2,
-                values : st
-            });
-        }
-
-        if (vertexFormat.normal) {
-            attributes.normal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.normals
-            });
-        }
-
-        if (vertexFormat.tangent) {
-            attributes.tangent = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.tangents
-            });
-        }
-
-        if (vertexFormat.binormal) {
-            attributes.binormal = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.FLOAT,
-                componentsPerAttribute : 3,
-                values : attr.binormals
-            });
-        }
         var normals = attributes.normals;
         var binormals = attributes.binormals;
         var tangents = attributes.tangents;
@@ -242,20 +188,6 @@ define([
             back -= 3;
         }
 
-        normal = Cartesian3.fromArray(calculatedNormals, (length-1)*3, scratchCartesian1);
-        left = Cartesian3.fromArray(calculatedLefts, (length-1)*3, scratchCartesian2);
-        forward = left.cross(normal, scratchCartesian3).normalize(scratchCartesian3);
-        if (computeNormals) {
-            normals = addAttribute(normals, normal, front, back);
-        }
-        if (computeTangents) {
-            tangents = addAttribute(tangents, left, front, back);
-        }
-
-        if (computeBinormals) {
-            binormals = addAttribute(binormals, forward, front, back);
-        }
-
         if (extrude) {
             if (computeNormals || computeBinormals) {
                 n = left.add(forward, scratchCartesian4).normalize(scratchCartesian4);
@@ -288,8 +220,27 @@ define([
             }
         }
 
-
         return attributes;
+    }
+*/
+    function addNormals(attr, normal, left, front, back, vertexFormat) {
+        var normals = attr.normals;
+        var tangents = attr.tangents;
+        var binormals = attr.binormals;
+
+        var forward = left.cross(normal, scratchCartesian3).normalize(scratchCartesian3);
+        if (vertexFormat.normal) {
+            normals = addAttribute(normals, normal, front, back);
+        }
+        if (vertexFormat.tangent) {
+            tangents = addAttribute(tangents, left, front, back);
+        }
+
+        if (vertexFormat.binormal) {
+            binormals = addAttribute(binormals, forward, front, back);
+        }
+
+        return attr;
     }
 
     function scalePositionToHeight(position, height, ellipsoid) {
@@ -306,36 +257,6 @@ define([
         return positions;
     }
 
-    function removeDuplicates(positions, normals) {
-        var length = positions.length;
-        if (length < 2) {
-            return {
-                positions: positions.slice(0),
-                normals: normals.slice(0)
-            };
-        }
-
-        var cleanedPositions = [];
-        var cleanedNormals = [];
-        cleanedPositions.push(positions[0]);
-        cleanedNormals.push(normals[0]);
-
-        for (var i = 1; i < length; ++i) {
-            var v0 = positions[i - 1];
-            var v1 = positions[i];
-
-            if (!v0.equals(v1)) {
-                cleanedPositions.push(v1); // Shallow copy!
-                cleanedNormals.push(normals[i-1]);
-            }
-        }
-
-        return {
-            positions: cleanedPositions,
-            normals: cleanedNormals
-        };
-    }
-
     function computeRoundCorner(params, position, corner) {
         return {
             leftPositions: [],
@@ -343,21 +264,213 @@ define([
         };
     }
 
-    function computeMiteredCorner(position, leftCorner, leftPositions, rightPositions, leftIsOutside) {
-        var leftArray = leftPositions.slice(0, 3);
-        var rightArray = rightPositions.slice(0, 3);
+    function computeMiteredCorner(position, leftCornerDirection, lastPoint, leftIsOutside) {
+        var leftArray;
+        var rightArray;
         if (leftIsOutside) {
-            var leftPos = position.add(leftCorner, scratch);
-            leftArray.push(leftPos.x, leftPos.y, leftPos.z);
-            leftArray.push(leftPositions.slice(3, 6));
+            var leftPos = position.add(leftCornerDirection, scratch);
+            leftArray = [leftPos.x, leftPos.y, leftPos.z, lastPoint[0], lastPoint[1], lastPoint[2]];
         } else {
-            var rightPos = position.add(leftCorner.negate(leftCorner), scratch);
-            rightArray.push(rightPos.x, rightPos.y, rightPos.z);
-            rightArray.push(rightPositions.slice(3, 6));
+            leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
+            var rightPos = position.add(leftCornerDirection, scratch);
+            rightArray = [rightPos.x, rightPos.y, rightPos.z, lastPoint[0], lastPoint[1], lastPoint[2]];
         }
         return {
             leftPositions: leftArray,
             rightPositions: rightArray
+        };
+    }
+
+    function combine(positions, corners, computedLefts, computedNormals, vertexFormat) {
+        var attributes = new GeometryAttributes();
+        var leftCount = positions.length/2;
+        var rightCount = leftCount;
+        var i;
+        for (i = 0; i < corners.length; i++) {
+            var leftPos = corners[i].leftPositions;
+            if (defined(leftPos)) {
+                leftCount += leftPos.length;
+            } else {
+                rightCount += corners[i].rightPositions.length;
+            }
+        }
+        var size = leftCount + rightCount;
+        var finalPositions = new Float64Array(size);
+        var normals = (vertexFormat.normal) ? new Float32Array(size) : undefined;
+        var tangents = (vertexFormat.tangent) ? new Float32Array(size) : undefined;
+        var binormals = (vertexFormat.binormal) ? new Float32Array(size) : undefined;
+        var attr = {
+                normals: normals,
+                tangents: tangents,
+                binormals: binormals
+        };
+
+        var front = 0;
+        var back = size - 1;
+
+        var indices = [];
+        var UL, LL, UR, LR;
+        var positionIndex = 0;
+        var compIndex = 0;
+
+
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), front); //add first two positions
+        positionIndex += 3;
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), undefined, back);
+        positionIndex += 3;
+
+        var normal = Cartesian3.fromArray(computedNormals, compIndex, scratchCartesian1);
+        var left = Cartesian3.fromArray(computedLefts, compIndex, scratchCartesian2);
+        attr = addNormals(attr, normal, left, front, back, vertexFormat);
+
+        front+=3;
+        back -= 3;
+        compIndex += 3;
+
+        for (i = 0; i < corners.length; i++) {
+            var j;
+            UR = front/3;
+            UL = UR - 1;
+            LR = (back-2)/3;
+            LL = LR + 1;
+            indices.push(UL, LL, UR, UR, LL, LR);
+
+            finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), front);
+            positionIndex += 3;
+            finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), undefined, back);
+            positionIndex += 3;
+            normal = Cartesian3.fromArray(computedNormals, compIndex, scratchCartesian1);
+            left = Cartesian3.fromArray(computedLefts, compIndex, scratchCartesian2);
+
+            var corner = corners[i];
+            var l = corner.leftPositions;
+            var r = corner.rightPositions;
+            var p;
+            var start;
+            var pos;
+            var before;
+            var after;
+            if (defined(l)) {
+                attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                front+=3;
+                compIndex += 3;
+                p = LR;
+                start = UR;
+                for (j = 0; j < l.length/3; j++) {
+                    pos = Cartesian3.fromArray(l, j*3, scratchCartesian6);
+                    indices.push(p, start + j + 1, start + j);
+                    finalPositions = addAttribute(finalPositions, pos, front);
+                    left = Cartesian3.fromArray(finalPositions, (start + j + 1)*3, scratchCartesian3).subtract(Cartesian3.fromArray(finalPositions, p*3, scratchCartesian4), scratchCartesian2).normalize(scratchCartesian2);
+                    attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                    front+=3;
+                }
+
+                pos = Cartesian3.fromArray(finalPositions, p*3, scratchCartesian6);
+                before = Cartesian3.fromArray(finalPositions, (start)*3, scratchCartesian3).subtract(pos);
+                after = Cartesian3.fromArray(finalPositions, (start + j)*3, scratchCartesian4).subtract(pos);
+                left = before.add(after, scratchCartesian2).normalize(scratchCartesian2);
+                attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
+                back -= 3;
+            } else {
+                attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
+                back -= 3;
+                compIndex += 3;
+                p = UR;
+                start = LR;
+                for (j = 0; j < r.length/3; j++) {
+                    pos = Cartesian3.fromArray(r, j*3, scratchCartesian6);
+                    indices.push(p, start - j, start - j - 1);
+                    finalPositions = addAttribute(finalPositions, pos, undefined, back);
+                    left = Cartesian3.fromArray(finalPositions, p*3, scratchCartesian3).subtract(Cartesian3.fromArray(finalPositions, (start - j - 1)*3, scratchCartesian4), scratchCartesian2).normalize(scratchCartesian2);
+                    attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
+                    back -= 3;
+                }
+                pos = Cartesian3.fromArray(finalPositions, p*3, scratchCartesian6);
+                before = Cartesian3.fromArray(finalPositions, (start - j)*3, scratchCartesian3).subtract(pos);
+                after = Cartesian3.fromArray(finalPositions, start*3, scratchCartesian4).subtract(pos);
+                left = after.add(before, scratchCartesian2).negate(scratchCartesian2).normalize(scratchCartesian2);
+                attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                front+=3;
+            }
+        }
+
+        UR = front/3;
+        UL = UR - 1;
+        LR = (back-2)/3;
+        LL = LR + 1;
+        indices.push(UL, LL, UR, UR, LL, LR);
+
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), front); //add last positions
+        positionIndex += 3;
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratch), undefined, back);
+        positionIndex += 3;
+
+
+        normal = Cartesian3.fromArray(computedNormals, compIndex, scratchCartesian1);
+        left = Cartesian3.fromArray(computedLefts, compIndex, scratchCartesian2);
+        attr = addNormals(attr, normal, left, front, back, vertexFormat);
+
+        if (vertexFormat.position) {
+            attributes.position = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : finalPositions
+            });
+        }
+
+        if (vertexFormat.st) {
+            leftCount /= 3;
+            rightCount /= 3;
+            var st = new Float32Array(size/3*2);
+            var leftSt = 1 / (leftCount-1);
+            var rightSt = 1 / (rightCount-1);
+
+            var stIndex = 0;
+
+            for (i = 0; i < leftCount; i++) {
+                st[stIndex++] = i*leftSt;
+                st[stIndex++] = 1;
+            }
+            for (i = rightCount; i > 0; i--) {
+                st[stIndex++] = (i-1)*rightSt;
+                st[stIndex++] = 0;
+            }
+
+            attributes.st = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 2,
+                values : st
+            });
+        }
+
+        if (vertexFormat.normal) {
+            attributes.normal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.normals
+            });
+        }
+
+        if (vertexFormat.tangent) {
+            attributes.tangent = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.tangents
+            });
+        }
+
+        if (vertexFormat.binormal) {
+            attributes.binormal = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.FLOAT,
+                componentsPerAttribute : 3,
+                values : attr.binormals
+            });
+        }
+
+        return {
+            attributes: attributes,
+            indices: indices,
+            boundingSphere: BoundingSphere.fromVertices(finalPositions)
         };
     }
 
@@ -367,15 +480,14 @@ define([
         var ellipsoid = params.ellipsoid;
         var roundCorners = params.roundCorners;
 
-        var leftPositions = [];
-        var rightPositions = [];
+        var pos = [];
 
         var normal = scratchCartesian1;
         var forward = scratchCartesian2;
         var backward = scratchCartesian3;
         var left = scratchCartesian4;
         var scratch = scratchCartesian7;
-        var corner = scratchCartesian8;
+        var cornerDirection = scratchCartesian8;
 
         var calculatedNormals = [];
         var calculatedLefts = [];
@@ -390,9 +502,9 @@ define([
         var rightPos;
 
         leftPos = position.add(left.multiplyByScalar(width, scratch), scratch);
-        leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
+        pos.push(leftPos.x, leftPos.y, leftPos.z);
         rightPos = position.add(left.multiplyByScalar(width, scratch).negate(scratch), scratch);
-        rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
+        pos.push(rightPos.x, rightPos.y, rightPos.z);
         calculatedNormals.push(normal.x, normal.y, normal.z);
         calculatedLefts.push(left.x, left.y, left.z);
 
@@ -400,8 +512,8 @@ define([
         backward = forward.negate(backward);
         var corners = [];
         var i;
-        var leftCorners = new Array(6);
-        var rightCorners = new Array(6);
+        var cornerPoint = new Array(3);
+        var length = positions.length;
         for (i = 1; i < length-1; i++) {
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
 
@@ -409,65 +521,47 @@ define([
             forward = nextPosition.subtract(position, forward).normalize(forward);
             var angle = Cartesian3.angleBetween(forward, backward);
             if ( angle !== Math.PI && angle !== 0) {
-                corner = forward.add(backward, corner).normalize(corner);
+                cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
+                var f = cornerDirection.cross(normal, scratchCartesian11);
+                cornerDirection = normal.cross(f, cornerDirection);
             }
-            var scalar = width / (Cartesian3.cross(corner, backward, scratch).magnitude());
+            var scalar = width / (Cartesian3.cross(cornerDirection, backward, scratch).magnitude());
             var leftIsOutside = angleIsGreaterThanPi(forward, backward);
-            corner = corner.multiplyByScalar(scalar, corner, corner);
+            cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
             if (leftIsOutside) {
-                rightPos = position.add(corner, scratch);
-                rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
-                rightCorners[0] = rightPos.x;
-                rightCorners[1] = rightPos.y;
-                rightCorners[2] = rightPos.z;
-                leftPos = rightPos.add(left.multiplyByScalar(width*2, scratch), scratch);
-                leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
-                leftCorners[0] = leftPos.x;
-                leftCorners[1] = leftPos.y;
-                leftCorners[2] = leftPos.z;
+                rightPos = position.add(cornerDirection, scratchCartesian6);
+                leftPos = rightPos.add(left.multiplyByScalar(width*2, scratchCartesian5), scratch);
+                pos.push(leftPos.x, leftPos.y, leftPos.z);
+                pos.push(rightPos.x, rightPos.y, rightPos.z);
                 calculatedNormals.push(normal.x, normal.y, normal.z);
                 calculatedLefts.push(left.x, left.y, left.z);
 
-                rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
                 left = normal.cross(forward, left).normalize(left);
-                leftPos = rightPos.add(left.multiplyByScalar(width*2, scratch), scratch);
-                leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
-                leftCorners[3] = leftPos.x;
-                leftCorners[4] = leftPos.y;
-                leftCorners[5] = leftPos.z;
-                calculatedNormals.push(normal.x, normal.y, normal.z);
-                calculatedLefts.push(left.x, left.y, left.z);
+                leftPos = rightPos.add(left.multiplyByScalar(width*2, scratchCartesian5), scratch);
+                cornerPoint[0] = leftPos.x;
+                cornerPoint[1] = leftPos.y;
+                cornerPoint[2] = leftPos.z;
 
-                corner = corner.negate(corner);
+                cornerDirection = cornerDirection.negate(cornerDirection);
             } else {
-                leftPos = position.add(corner, scratch);
-                leftCorners[0] = leftPos.x;
-                leftCorners[1] = leftPos.y;
-                leftCorners[2] = leftPos.z;
-                leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
-                rightPos = leftPos.add(left.multiplyByScalar(width*2, scratch).negate(scratch), scratch);
-                rightCorners[0] = rightPos.x;
-                rightCorners[1] = rightPos.y;
-                rightCorners[2] = rightPos.z;
-                rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
+                leftPos = position.add(cornerDirection, scratchCartesian6);
+                pos.push(leftPos.x, leftPos.y, leftPos.z);
+                rightPos = leftPos.add(left.multiplyByScalar(width*2, scratchCartesian5).negate(scratchCartesian5), scratch);
+                pos.push(rightPos.x, rightPos.y, rightPos.z);
                 calculatedNormals.push(normal.x, normal.y, normal.z);
                 calculatedLefts.push(left.x, left.y, left.z);
 
-                leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
                 left = normal.cross(forward, left).normalize(left);
-                rightPos = leftPos.add(left.multiplyByScalar(width*2, scratch).negate(scratch), scratch);
-                rightCorners[4] = rightPos.x;
-                rightCorners[5] = rightPos.y;
-                rightCorners[6] = rightPos.z;
-                rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
-                calculatedNormals.push(normal.x, normal.y, normal.z);
-                calculatedLefts.push(left.x, left.y, left.z);
+                rightPos = leftPos.add(left.multiplyByScalar(width*2, scratchCartesian5).negate(scratchCartesian5), scratch);
+                cornerPoint[0] = rightPos.x;
+                cornerPoint[1] = rightPos.y;
+                cornerPoint[2] = rightPos.z;
             }
 
             if (roundCorners) {
-                corners.push(computeRoundCorner(params, corner));
+                corners.push(computeRoundCorner(params, cornerDirection));
             } else {
-                corners.push(computeMiteredCorner(position, corner, leftCorners, rightCorners, leftIsOutside));
+                corners.push(computeMiteredCorner(position, cornerDirection, cornerPoint, leftIsOutside));
             }
 
             position = nextPosition;
@@ -476,92 +570,18 @@ define([
 
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
         leftPos = position.add(left.multiplyByScalar(width, scratch), scratch); // add last position
-        leftPositions.push(leftPos.x, leftPos.y, leftPos.z);
+        pos.push(leftPos.x, leftPos.y, leftPos.z);
         rightPos = position.add(left.multiplyByScalar(width, scratch).negate(scratch), scratch);
-        rightPositions.unshift(rightPos.x, rightPos.y, rightPos.z);
+        pos.push(rightPos.x, rightPos.y, rightPos.z);
         calculatedNormals.push(normal.x, normal.y, normal.z);
         calculatedLefts.push(left.x, left.y, left.z);
 
-        var pos = leftPositions.concat(rightPositions);
-        var len = pos.length/6;
-        var UL, UR, LL, LR;
-
-        var indices = [];
-
-        for (i = 0; i < len - 1; i+=2) {
-            UL = i;
-            UR = UL + 1;
-            LL = len - 1 - i;
-            LR = LL - 1;
-
-            indices.push(UL, LL, UR, UR, LL, LR);
-        }
-        var blockGeometry = new GeometryInstance({
-            geometry: new Geometry({
-                attributes: new GeometryAttributes({
-                    position: new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array(pos)
-                    })
-                }),
-                indices: indices,
-                primitiveType: PrimitiveType.TRIANGLES
-            })
-        });
-
-        var cornerIndices = [];
-
-        leftPositions = [];
-        rightPositions = [];
-        var l, r;
-        for(i = 0; i < corners.length; i++) {
-            l = corners[i].leftPositions;
-            r = corners[i].rightPositions;
-            leftPositions = leftPositions.concat(l);
-            rightPositions = r.concat(rightPositions);
-        }
-        var cornerPositions = leftPositions.concat(rightPositions);
-
-        var back = cornerPositions.length/3-1;
-        var front = 0;
-        var j;
-        for(i = 0; i < corners.length; i++) {
-            l = corners[i].leftPositions;
-            r = corners[i].rightPositions;
-            var p;
-            if (r.length === 1) {
-                p = back--;
-                for (j = 0; j < l.length-1; j++) {
-                    cornerIndices.push(p, front + 1, front);
-                    front++;
-                }
-                front++;
-            } else {
-                p = front++;
-                for (j = 0; j < r.length-1; j++) {
-                    cornerIndices.push(p, back, back - 1);
-                    back--;
-                }
-                back--;
-            }
+        var r = combine(pos, corners, calculatedLefts, calculatedNormals, params.vertexFormat);
+        if (params.vertexFormat.position) {
+            r.attributes.position.values = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(r.attributes.position.values, params.height, ellipsoid);
         }
 
-        var cornerGeometry = new GeometryInstance({
-            geometry: new Geometry({
-                attributes: new GeometryAttributes({
-                    position: new GeometryAttribute({
-                        componentDatatype : ComponentDatatype.DOUBLE,
-                        componentsPerAttribute : 3,
-                        values : new Float64Array(cornerPositions)
-                    })
-                }),
-                indices: cornerIndices,
-                primitiveType: PrimitiveType.TRIANGLES
-            })
-        });
-
-        return GeometryPipeline.combine(blockGeometry, cornerGeometry);
+        return r;
     }
 
     function computePositionsExtruded(params) {
@@ -614,7 +634,7 @@ define([
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
         var extrude = (height !== extrudedHeight);
 
-        var cleanPositions = PolylinePipeline.removeDuplicates(cleanPositions);
+        var cleanPositions = PolylinePipeline.removeDuplicates(positions);
         var params = {
                 ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
                 vertexFormat: vertexFormat,
@@ -635,8 +655,9 @@ define([
             attr = computePositions(params);
         }
 
-        attr = computeAttributes(attr, extrude);
-        attr.boundingSphere = BoundingSphere.fromPoints(positions);
+        var attributes = attr.attributes;
+        var indices = attr.indices;
+        var boundingSphere = attr.boundingSphere;
 
         /**
          * An object containing {@link GeometryAttribute} properties named after each of the
@@ -646,14 +667,14 @@ define([
          *
          * @see Geometry#attributes
          */
-        this.attributes = attr.attributes;
+        this.attributes = attributes;
 
         /**
          * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
          *
          * @type Array
          */
-        this.indices = attr.indices;
+        this.indices = IndexDatatype.createTypedArray(attributes.position.values.length/3, indices);
 
         /**
          * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
@@ -667,7 +688,7 @@ define([
          *
          * @type BoundingSphere
          */
-        this.boundingSphere = attr.boundingSphere;
+        this.boundingSphere = boundingSphere;
     };
 
     return AirspaceGeometry;
