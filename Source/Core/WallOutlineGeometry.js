@@ -77,7 +77,7 @@ define([
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
      */
-    var WallGeometry = function(options) {
+    var WallOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var wallPositions = options.positions;
@@ -201,7 +201,7 @@ define([
      * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
-     * @memberof WallGeometry
+     * @memberof WallOutlineGeometry
      *
      * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
      * @param {Number} [maximumHeight] A constant that defines the maximum height of the
@@ -222,13 +222,13 @@ define([
      * ];
      *
      * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = new WallGeometry({
+     * var wall = new WallOutlineGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
      *     topHeight : 20000.0,
      *     bottomHeight : 10000.0
      * });
      */
-    WallGeometry.fromConstantHeights = function(options) {
+    WallOutlineGeometry.fromConstantHeights = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var positions = options.positions;
@@ -266,8 +266,8 @@ define([
             minimumHeights : minHeights,
             ellipsoid : options.ellipsoid
         };
-        return new WallGeometry(newOptions);
+        return new WallOutlineGeometry(newOptions);
     };
 
-    return WallGeometry;
+    return WallOutlineGeometry;
 });

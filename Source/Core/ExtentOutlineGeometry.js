@@ -87,7 +87,7 @@ define([
             position.z = rSurfaceZ + nZ * maxHeight;
         }
 
-        if ( minHeight !== 'undefined') {
+        if (defined(minHeight)) {
             extrudedPosition.x = rSurfaceX + nX * minHeight; // bottom
             extrudedPosition.y = rSurfaceY + nY * minHeight;
             extrudedPosition.z = rSurfaceZ + nZ * minHeight;
