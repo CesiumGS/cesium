@@ -1,12 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Matrix4',
         './Cartesian3',
         './HermiteSpline'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Matrix4,
         Cartesian3,
@@ -44,14 +46,14 @@ define([
      * var spline = new CatmullRomSpline(controlPoints);
      */
     var CatmullRomSpline = function(controlPoints, firstTangent, lastTangent) {
-        if (typeof controlPoints === 'undefined' || !(controlPoints instanceof Array) || controlPoints.length < 3) {
+        if (!defined(controlPoints) || !(controlPoints instanceof Array) || controlPoints.length < 3) {
             throw new DeveloperError('controlPoints is required and must be an array of objects with point and time properties, with a length of at least 3.');
         }
 
         this._points = controlPoints;
         this._lastTimeIndex = 0;
 
-        if (typeof firstTangent !== 'undefined') {
+        if (defined(firstTangent)) {
             this._ti = Cartesian3.clone(firstTangent);
         } else {
             var controlPoint0 = Cartesian3.clone(controlPoints[0].point);
@@ -65,7 +67,7 @@ define([
                            .multiplyByScalar(0.5);
         }
 
-        if (typeof lastTangent !== 'undefined') {
+        if (defined(lastTangent)) {
             this._to = Cartesian3.clone(lastTangent);
         } else {
             var n = controlPoints.length - 1;
@@ -185,7 +187,7 @@ define([
      * var position = spline.evaluate(5.0);
      */
     CatmullRomSpline.prototype.evaluate = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 

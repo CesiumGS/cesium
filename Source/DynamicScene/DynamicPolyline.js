@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -9,6 +10,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -80,61 +82,61 @@ function(
      */
     DynamicPolyline.processCzmlPacket = function(dynamicObject, packet) {
         var polylineData = packet.polyline;
-        if (typeof polylineData === 'undefined') {
+        if (!defined(polylineData)) {
             return false;
         }
 
         var polylineUpdated = false;
         var polyline = dynamicObject.polyline;
-        polylineUpdated = typeof polyline === 'undefined';
+        polylineUpdated = !defined(polyline);
         if (polylineUpdated) {
             dynamicObject.polyline = polyline = new DynamicPolyline();
         }
 
         var interval = polylineData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof polylineData.color !== 'undefined') {
+        if (defined(polylineData.color)) {
             var color = polyline.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 polyline.color = color = new DynamicProperty(CzmlColor);
                 polylineUpdated = true;
             }
             color.processCzmlIntervals(polylineData.color, interval);
         }
 
-        if (typeof polylineData.width !== 'undefined') {
+        if (defined(polylineData.width)) {
             var width = polyline.width;
-            if (typeof width === 'undefined') {
+            if (!defined(width)) {
                 polyline.width = width = new DynamicProperty(CzmlNumber);
                 polylineUpdated = true;
             }
             width.processCzmlIntervals(polylineData.width, interval);
         }
 
-        if (typeof polylineData.outlineColor !== 'undefined') {
+        if (defined(polylineData.outlineColor)) {
             var outlineColor = polyline.outlineColor;
-            if (typeof outlineColor === 'undefined') {
+            if (!defined(outlineColor)) {
                 polyline.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
                 polylineUpdated = true;
             }
             outlineColor.processCzmlIntervals(polylineData.outlineColor, interval);
         }
 
-        if (typeof polylineData.outlineWidth !== 'undefined') {
+        if (defined(polylineData.outlineWidth)) {
             var outlineWidth = polyline.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
+            if (!defined(outlineWidth)) {
                 polyline.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
                 polylineUpdated = true;
             }
             outlineWidth.processCzmlIntervals(polylineData.outlineWidth, interval);
         }
 
-        if (typeof polylineData.show !== 'undefined') {
+        if (defined(polylineData.show)) {
             var show = polyline.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 polyline.show = show = new DynamicProperty(CzmlBoolean);
                 polylineUpdated = true;
             }
@@ -156,10 +158,10 @@ function(
      */
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
-        if (typeof polylineToMerge !== 'undefined') {
+        if (defined(polylineToMerge)) {
 
             var targetPolyline = targetObject.polyline;
-            if (typeof targetPolyline === 'undefined') {
+            if (!defined(targetPolyline)) {
                 targetObject.polyline = targetPolyline = new DynamicPolyline();
             }
 

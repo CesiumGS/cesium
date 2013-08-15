@@ -138,7 +138,7 @@ define([
      *     someParameter : true,
      *     another : 'hello'
      * });
-     * if (typeof promise === 'undefined') {
+     * if (!defined(promise)) {
      *     // too many active tasks - try again later
      * } else {
      *     when(promise, function(result) {

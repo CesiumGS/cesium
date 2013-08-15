@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/EventHelper',
@@ -10,6 +11,7 @@ define([
         '../../DynamicScene/DynamicObjectView'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         defineProperties,
         EventHelper,
@@ -40,7 +42,7 @@ define([
      * viewer.trackedObject = dynamicObject; //Camera will now track dynamicObject
      */
     var viewerDynamicObjectMixin = function(viewer) {
-        if (typeof viewer === 'undefined') {
+        if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
         if (viewer.hasOwnProperty('trackedObject')) {
@@ -53,7 +55,7 @@ define([
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
-            if (typeof dynamicObjectView !== 'undefined') {
+            if (defined(dynamicObjectView)) {
                 dynamicObjectView.update(clock.currentTime);
             }
         }
@@ -61,9 +63,9 @@ define([
 
         function pickAndTrackObject(e) {
             var pickedPrimitive = viewer.scene.pick(e.position);
-            if (typeof pickedPrimitive !== 'undefined' &&
-                typeof pickedPrimitive.dynamicObject !== 'undefined' &&
-                typeof pickedPrimitive.dynamicObject.position !== 'undefined') {
+            if (defined(pickedPrimitive) &&
+                defined(pickedPrimitive.dynamicObject) &&
+                defined(pickedPrimitive.dynamicObject.position)) {
                 viewer.trackedObject = pickedPrimitive.dynamicObject;
             }
         }
@@ -74,7 +76,7 @@ define([
 
         //Subscribe to the home button click if it exists, so that we can
         //clear the trackedObject when it is clicked.
-        if (typeof viewer.homeButton !== 'undefined') {
+        if (defined(viewer.homeButton)) {
             eventHelper.add(viewer.homeButton.viewModel.command.beforeExecute, clearTrackedObject);
         }
 
@@ -94,16 +96,16 @@ define([
                 set : function(value) {
                     if (trackedObject !== value) {
                         trackedObject = value;
-                        dynamicObjectView = typeof value !== 'undefined' ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
                     var sceneMode = viewer.scene.getFrameState().mode;
 
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
-                        viewer.scene.getScreenSpaceCameraController().enableTranslate = typeof value === 'undefined';
+                        viewer.scene.getScreenSpaceCameraController().enableTranslate = !defined(value);
                     }
 
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
-                        viewer.scene.getScreenSpaceCameraController().enableTilt = typeof value === 'undefined';
+                        viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
                     }
                 }
             }

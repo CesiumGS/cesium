@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'],function(defined) {
     "use strict";
 
     /**
@@ -52,7 +52,7 @@ define(function() {
      * @memberof LagrangePolynomialApproximation
      */
     LagrangePolynomialApproximation.interpolateOrderZero = function(x, xTable, yTable, yStride, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Array(yStride);
         }
 

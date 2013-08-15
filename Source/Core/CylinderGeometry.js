@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
+        './CylinderGeometryLibrary',
         './Math',
         './ComponentDatatype',
         './IndexDatatype',
@@ -14,9 +16,11 @@ define([
         './VertexFormat'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartesian2,
         Cartesian3,
+        CylinderGeometryLibrary,
         CesiumMath,
         ComponentDatatype,
         IndexDatatype,
@@ -43,7 +47,7 @@ define([
      * @param {Number} options.length The length of the cylinder
      * @param {Number} options.topRadius The radius of the top of the cylinder
      * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
-     * @param {Number} [options.slices = 100] The number of edges around perimeter of the cylinder
+     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
      * @exception {DeveloperError} options.length must be greater than 0
@@ -65,38 +69,31 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
-        if (typeof length === 'undefined' || length <= 0) {
+        if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0');
         }
         var topRadius = options.topRadius;
-        if (typeof topRadius === 'undefined' || topRadius < 0) {
+        if (!defined(topRadius) || topRadius < 0) {
             throw new DeveloperError('options.topRadius must be greater than 0');
         }
         var bottomRadius = options.bottomRadius;
-        if (typeof bottomRadius === 'undefined' || bottomRadius < 0) {
+        if (!defined(bottomRadius) || bottomRadius < 0) {
             throw new DeveloperError('options.bottomRadius must be greater than 0');
         }
         if (bottomRadius === 0 && topRadius === 0) {
             throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
         }
-
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-
-        var slices = defaultValue(options.slices, 100);
+        var slices = defaultValue(options.slices, 128);
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3');
         }
+
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;
-
-        var topZ = length * 0.5;
-        var bottomZ = -topZ;
-
         var numVertices = twoSlices + twoSlices;
 
-        var positions = new Array(twoSlices);
-        var bottomCircle = new Array(slices);
-        var topCircle = new Array(slices);
         var st = (vertexFormat.st) ? new Float32Array(numVertices * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(numVertices * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(numVertices * 3) : undefined;
@@ -105,9 +102,6 @@ define([
         var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
         var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
         var i;
-        var index = 0;
-        var bottomIndex = 0;
-        var topIndex = 0;
         var normalIndex = 0;
         var tangentIndex = 0;
         var binormalIndex = 0;
@@ -116,30 +110,11 @@ define([
         normal.z = 0;
         var tangent = tangentScratch;
         var binormal = binormalScratch;
+        var positions = CylinderGeometryLibrary.computePositions(options, slices, true);
         for (i = 0; i < slices; i++) {
             var angle = i / slices * CesiumMath.TWO_PI;
             var x = Math.cos(angle);
             var y = Math.sin(angle);
-            var bottomX = x * bottomRadius;
-            var bottomY = y * bottomRadius;
-            var topX = x * topRadius;
-            var topY = y * topRadius;
-
-            bottomCircle[bottomIndex++] = bottomX;
-            bottomCircle[bottomIndex++] = bottomY;
-            bottomCircle[bottomIndex++] = bottomZ;
-
-            topCircle[topIndex++] = topX;
-            topCircle[topIndex++] = topY;
-            topCircle[topIndex++] = topZ;
-
-            positions[index++] = bottomX;
-            positions[index++] = bottomY;
-            positions[index++] = bottomZ;
-            positions[index++] = topX;
-            positions[index++] = topY;
-            positions[index++] = topZ;
-
             if (computeNormal) {
                 normal.x = x;
                 normal.y = y;
@@ -177,8 +152,6 @@ define([
                 }
             }
         }
-
-        positions = positions.concat(bottomCircle).concat(topCircle);
 
         if (computeNormal) {
             for (i = 0; i < slices; i++) {
@@ -218,9 +191,9 @@ define([
             }
         }
 
-        var numIndices = 18 * slices - 24;
+        var numIndices = 12 * slices - 12;
         var indices = IndexDatatype.createTypedArray(numVertices, numIndices);
-        index = 0;
+        var index = 0;
         var j = 0;
         for (i = 0; i < slices - 1; i++) {
             indices[index++] = j;
@@ -268,7 +241,7 @@ define([
             attributes.position = new GeometryAttribute({
                 componentDatatype: ComponentDatatype.DOUBLE,
                 componentsPerAttribute: 3,
-                values: new Float64Array(positions)
+                values: positions
             });
         }
 

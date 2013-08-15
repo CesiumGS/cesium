@@ -3,6 +3,7 @@ defineSuite([
          'Core/BoxGeometry',
          'Core/CircleGeometry',
          'Core/CylinderGeometry',
+         'Core/defined',
          'Core/EllipseGeometry',
          'Core/EllipsoidGeometry',
          'Core/SphereGeometry',
@@ -44,6 +45,7 @@ defineSuite([
          BoxGeometry,
          CircleGeometry,
          CylinderGeometry,
+         defined,
          EllipseGeometry,
          EllipsoidGeometry,
          SphereGeometry,
@@ -114,7 +116,7 @@ defineSuite([
     }
 
     function render3D(instance, afterView, appearance) {
-        if (typeof appearance === 'undefined') {
+        if (!defined(appearance)) {
             appearance = new PerInstanceColorAppearance({
                 flat : true
             });
@@ -447,7 +449,7 @@ defineSuite([
         });
     }, 'WebGL');
 
-    describe('Extruded ExtentGeometry', function() {
+    describe('Extruded EllipseGeometry', function() {
         var instance;
         var extrudedHeight;
         var geometryHeight;
@@ -673,9 +675,7 @@ defineSuite([
                     ellipsoid : ellipsoid,
                     extent : extent,
                     height : geometryHeight,
-                    extrudedOptions : {
-                        height : extrudedHeight
-                    }
+                    extrudedHeight : extrudedHeight
                 }),
                 id : 'extent',
                 attributes : {

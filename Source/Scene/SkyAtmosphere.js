@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
         '../Core/GeometryPipeline',
@@ -15,6 +16,7 @@ define([
         '../Shaders/SkyAtmosphereFS'
     ], function(
         defaultValue,
+        defined,
         EllipsoidGeometry,
         destroyObject,
         GeometryPipeline,
@@ -131,10 +133,11 @@ define([
 
         var command = this._command;
 
-        if (typeof command.vertexArray === 'undefined') {
+        if (!defined(command.vertexArray)) {
             var geometry = new EllipsoidGeometry({
                 radii : this._ellipsoid.getRadii().multiplyByScalar(1.025),
-                numberOfPartitions : 60
+                slicePartitions : 256,
+                stackPartitions : 256
             });
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,

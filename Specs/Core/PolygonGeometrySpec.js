@@ -65,6 +65,22 @@ defineSuite([
         }).toThrow();
     });
 
+    it('throws due to duplicate positions extruded', function() {
+        var ellipsoid = Ellipsoid.UNIT_SPHERE;
+
+        expect(function() {
+            return PolygonGeometry.fromPositions({
+                positions : [
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
+                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
+                ],
+                ellipsoid : ellipsoid,
+                extrudedHeight: 2
+            });
+        }).toThrow();
+    });
+
     it('throws due to duplicate hierarchy positions', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
         var hierarchy = {

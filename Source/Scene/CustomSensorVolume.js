@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/combine',
@@ -24,6 +25,7 @@ define([
         './SceneMode'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Color,
         combine,
@@ -180,7 +182,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = typeof options.material !== 'undefined' ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
         this._material = undefined;
 
         /**
@@ -356,12 +358,12 @@ define([
             throw new DeveloperError('this.radius must be greater than or equal to zero.');
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
         // Initial render state creation
-        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (typeof this._frontFaceColorCommand.renderState === 'undefined')) {
+        if ((this._showThroughEllipsoid !== this.showThroughEllipsoid) || (!defined(this._frontFaceColorCommand.renderState))) {
             this._showThroughEllipsoid = this.showThroughEllipsoid;
 
             var rs = context.createRenderState({
@@ -425,7 +427,7 @@ define([
             }
         }
 
-        if (typeof this._frontFaceColorCommand.vertexArray === 'undefined') {
+        if (!defined(this._frontFaceColorCommand.vertexArray)) {
             return;
         }
 
@@ -444,7 +446,7 @@ define([
             var backFaceColorCommand = this._backFaceColorCommand;
 
             // Recompile shader when material changes
-            if (materialChanged || typeof frontFaceColorCommand.shaderProgram === 'undefined') {
+            if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
                 var fsSource =
                     '#line 0\n' +
                     ShadersSensorVolume +
@@ -471,12 +473,12 @@ define([
         if (pass.pick) {
             var pickCommand = this._pickCommand;
 
-            if (typeof this._pickId === 'undefined') {
+            if (!defined(this._pickId)) {
                 this._pickId = context.createPickId(this._pickIdThis);
             }
 
             // Recompile shader when material changes
-            if (materialChanged || typeof pickCommand.shaderProgram === 'undefined') {
+            if (materialChanged || !defined(pickCommand.shaderProgram)) {
                 var pickFS = createPickFragmentShaderSource(
                     '#line 0\n' +
                     ShadersSensorVolume +

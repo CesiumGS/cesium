@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/clone',
         '../ThirdParty/Tween',
         '../Core/defaultValue'
     ], function(
+        defined,
         DeveloperError,
         clone,
         Tween,
@@ -31,7 +33,7 @@ define([
     AnimationCollection.prototype.add = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        if (typeof options.duration === 'undefined') {
+        if (!defined(options.duration)) {
             throw new DeveloperError('duration is required.');
         }
 
@@ -68,7 +70,7 @@ define([
      * @exception {DeveloperError} material has no properties with alpha components.
      */
     AnimationCollection.prototype.addAlpha = function(material, start, stop, options) {
-        if (typeof material === 'undefined') {
+        if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
 
@@ -76,8 +78,8 @@ define([
 
         for ( var property in material.uniforms) {
             if (material.uniforms.hasOwnProperty(property) &&
-                typeof material.uniforms[property] !== 'undefined' &&
-                typeof material.uniforms[property].alpha !== 'undefined') {
+                defined(material.uniforms[property]) &&
+                defined(material.uniforms[property].alpha)) {
                 properties.push(property);
             }
         }
@@ -127,15 +129,15 @@ define([
      * @exception {DeveloperError} pbject must have the specified property.
      */
     AnimationCollection.prototype.addProperty = function(object, property, start, stop, options) {
-        if (typeof object === 'undefined') {
+        if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
 
-        if (typeof property === 'undefined') {
+        if (!defined(property)) {
             throw new DeveloperError('property is required.');
         }
 
-        if (typeof object[property] === 'undefined') {
+        if (!defined(object[property])) {
             throw new DeveloperError('object must have the specified property.');
         }
 
@@ -172,11 +174,11 @@ define([
      * @exception {DeveloperError} material must have an offset property.
      */
     AnimationCollection.prototype.addOffsetIncrement = function(material, options) {
-        if (typeof material === 'undefined') {
+        if (!defined(material)) {
             throw new DeveloperError('material is required.');
         }
 
-        if (typeof material.uniforms.offset === 'undefined') {
+        if (!defined(material.uniforms.offset)) {
             throw new DeveloperError('material must have an offset property.');
         }
 
@@ -216,7 +218,7 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.remove = function(animation) {
-        if (typeof animation !== 'undefined') {
+        if (defined(animation)) {
             var count = Tween.getAll().length;
             Tween.remove(animation._tween);
 
@@ -239,7 +241,7 @@ define([
      * @memberof Animationcollection
      */
     AnimationCollection.prototype.contains = function(animation) {
-        if (typeof animation !== 'undefined') {
+        if (defined(animation)) {
             return Tween.getAll().indexOf(animation._tween) !== -1;
         }
         return false;

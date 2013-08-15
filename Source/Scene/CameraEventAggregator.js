@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Math',
@@ -8,6 +9,7 @@ define([
         '../Core/Cartesian2',
         './CameraEventType'
     ], function(
+        defined,
         DeveloperError,
         destroyObject,
         CesiumMath,
@@ -34,11 +36,11 @@ define([
      * @see ScreenSpaceEventHandler
      */
     var CameraEventAggregator = function(canvas, moveType, moveModifier) {
-        if (typeof canvas === 'undefined') {
+        if (!defined(canvas)) {
             throw new DeveloperError('description.canvas is required.');
         }
 
-        if (typeof moveType === 'undefined') {
+        if (!defined(moveType)) {
             throw new DeveloperError('moveType is required.');
         }
 
