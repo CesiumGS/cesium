@@ -62,7 +62,7 @@ define([
      *
      * @example
      * // create cylinder geometry
-     * var cylinder = new Cesium.CylinderGeometry({
+     * var cylinder = new CylinderGeometry({
      *     length: 200000,
      *     topRadius: 80000,
      *     bottomRadius: 200000,
@@ -79,23 +79,23 @@ define([
         var slices = defaultValue(options.slices, 128);
 
         if (!defined(length) || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0');
+            throw new DeveloperError('options.length must be greater than 0.');
         }
 
         if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0');
+            throw new DeveloperError('options.topRadius must be greater than 0.');
         }
 
         if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0');
+            throw new DeveloperError('options.bottomRadius must be greater than 0.');
         }
 
         if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
+            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
         }
 
         if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3');
+            throw new DeveloperError('options.slices must be greater that 3.');
         }
 
         this._length = length;
@@ -108,6 +108,7 @@ define([
 
     /**
      * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
+     * @memberof CylinderGeometry
      *
      * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
      * @returns {Geometry} The computed vertices and indices.
@@ -123,66 +124,70 @@ define([
         var threeSlices = slices + twoSlices;
         var numVertices = twoSlices + twoSlices;
 
+        var positions = CylinderGeometryLibrary.computePositions(length, topRadius, bottomRadius, slices, true);
+
         var st = (vertexFormat.st) ? new Float32Array(numVertices * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(numVertices * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(numVertices * 3) : undefined;
         var binormals = (vertexFormat.binormal) ? new Float32Array(numVertices * 3) : undefined;
 
-        var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
-        var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
         var i;
-        var normalIndex = 0;
-        var tangentIndex = 0;
-        var binormalIndex = 0;
-
-        var normal = normalScratch;
-        normal.z = 0;
-        var tangent = tangentScratch;
-        var binormal = binormalScratch;
-        var positions = CylinderGeometryLibrary.computePositions(options, slices, true);
-        for (i = 0; i < slices; i++) {
-            var angle = i / slices * CesiumMath.TWO_PI;
-            var x = Math.cos(angle);
-            var y = Math.sin(angle);
-            if (computeNormal) {
-                normal.x = x;
-                normal.y = y;
-
-                if (computeTangent) {
-                    tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-                }
-
-                if (vertexFormat.normal) {
-                    normals[normalIndex++] = x;
-                    normals[normalIndex++] = y;
-                    normals[normalIndex++] = 0;
-                    normals[normalIndex++] = x;
-                    normals[normalIndex++] = y;
-                    normals[normalIndex++] = 0;
-                }
-
-                if (vertexFormat.tangent) {
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                }
-
-                if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                }
-            }
-        }
+        var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
         if (computeNormal) {
+            var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
+
+            var normalIndex = 0;
+            var tangentIndex = 0;
+            var binormalIndex = 0;
+
+            var normal = normalScratch;
+            normal.z = 0;
+            var tangent = tangentScratch;
+            var binormal = binormalScratch;
+
+            for (i = 0; i < slices; i++) {
+                var angle = i / slices * CesiumMath.TWO_PI;
+                var x = Math.cos(angle);
+                var y = Math.sin(angle);
+                if (computeNormal) {
+                    normal.x = x;
+                    normal.y = y;
+
+                    if (computeTangent) {
+                        tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                    }
+
+                    if (vertexFormat.normal) {
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
+                    }
+
+                    if (vertexFormat.tangent) {
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                    }
+
+                    if (vertexFormat.binormal) {
+                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        binormals[binormalIndex++] = binormal.x;
+                        binormals[binormalIndex++] = binormal.y;
+                        binormals[binormalIndex++] = binormal.z;
+                        binormals[binormalIndex++] = binormal.x;
+                        binormals[binormalIndex++] = binormal.y;
+                        binormals[binormalIndex++] = binormal.z;
+                    }
+                }
+            }
+
             for (i = 0; i < slices; i++) {
                 if (vertexFormat.normal) {
                     normals[normalIndex++] = 0;

@@ -10,9 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the outline of a sphere.
-     *
-     * Creates vertices and indices for an sphere centered at the origin.
+     * A description of the outline of a sphere.
      *
      * @alias SphereOutlineGeometry
      * @constructor
@@ -32,6 +30,7 @@ define([
      *   stackPartitions : 6,
      *   slicePartitions: 5
      * });
+     * var geometry = SphereOutlineGeometry.createGeometry(sphere);
      */
     var SphereOutlineGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
@@ -43,37 +42,18 @@ define([
                 subdivisions: options.subdivisions
         };
 
-        var ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
+        this._ellipsoidGeometry = new EllipsoidOutlineGeometry(ellipsoidOptions);
+        this._workerName = 'createSphereOutlineGeometry';
+    };
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipsoidGeometry.attributes;
-
-        /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipsoidGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = ellipsoidGeometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipsoidGeometry.boundingSphere;
+    /**
+     * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {SphereGeometry} sphereGeometry A description of the sphere outline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    SphereOutlineGeometry.createGeometry = function(sphereGeometry) {
+        return EllipsoidOutlineGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
     };
 
     return SphereOutlineGeometry;

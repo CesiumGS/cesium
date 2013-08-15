@@ -9,6 +9,7 @@ define([
         './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes'
     ], function(
@@ -21,6 +22,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes) {
     "use strict";
@@ -28,8 +30,9 @@ define([
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
     var cos = Math.cos;
     var sin = Math.sin;
+
     /**
-     * A {@link Geometry} that represents vertices and indices for the outline of an ellipsoid centered at the origin.
+     * A description of the outline of an ellipsoid centered at the origin.
      *
      * @alias EllipsoidOutlineGeometry
      * @constructor
@@ -49,18 +52,20 @@ define([
      *   stackPartitions: 6,
      *   slicePartitions: 5
      * });
+     * var geometry = EllipsoidOutlineGeometry.createGeometry(ellipsoid);
      */
     var EllipsoidOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var radii = defaultValue(options.radii, defaultRadii);
-        var ellipsoid = Ellipsoid.fromCartesian3(radii);
         var stackPartitions = defaultValue(options.stackPartitions, 10);
         var slicePartitions = defaultValue(options.slicePartitions, 8);
         var subdivisions = defaultValue(options.subdivisions, 128);
+
         if (stackPartitions < 1) {
             throw new DeveloperError('options.stackPartitions cannot be less than 1');
         }
+
         if (slicePartitions < 0) {
             throw new DeveloperError('options.slicePartitions cannot be less than 0');
         }
@@ -69,10 +74,31 @@ define([
             throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
         }
 
+        this._radii = Cartesian3.clone(radii);
+        this._stackPartitions = stackPartitions;
+        this._slicePartitions = slicePartitions;
+        this._subdivisions = subdivisions;
+        this._workerName = 'createEllipsoidOutlineGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof EllipsoidOutlineGeometry
+     *
+     * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid outline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
+        var radii = ellipsoidGeometry._radii;
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        var stackPartitions = ellipsoidGeometry._stackPartitions;
+        var slicePartitions = ellipsoidGeometry._slicePartitions;
+        var subdivisions = ellipsoidGeometry._subdivisions;
+
         var indicesSize = subdivisions * (stackPartitions + slicePartitions - 1);
         var positionSize = indicesSize - slicePartitions + 2;
         var positions = new Float64Array(positionSize * 3);
-        var indices = IndexDatatype.createTypedArray(length, indicesSize * 2);
+        var indices = IndexDatatype.createTypedArray(positionSize, indicesSize * 2);
 
         var i;
         var j;
@@ -113,6 +139,7 @@ define([
         positions[index++] = 0;
         positions[index++] = 0;
         positions[index++] = radii.z;
+
         for (i = 1; i < subdivisions; i++) {
             phi = Math.PI * i / subdivisions;
             cosPhi = cos(phi);
@@ -124,6 +151,7 @@ define([
                 positions[index++] = radii.z * cosPhi;
             }
         }
+
         positions[index++] = 0;
         positions[index++] = 0;
         positions[index++] = -radii.z;
@@ -135,6 +163,7 @@ define([
                 indices[index++] = topRowOffset + j;
                 indices[index++] = topRowOffset + j + 1;
             }
+
             indices[index++] = topRowOffset + subdivisions - 1;
             indices[index++] = topRowOffset;
         }
@@ -153,24 +182,18 @@ define([
                 indices[index++] = bottomOffset + j;
                 indices[index++] = topOffset + j;
             }
+
             indices[index++] = bottomOffset + slicePartitions - 1;
             indices[index++] = topOffset + slicePartitions - 1;
         }
 
-        var lastPosition = positions.length/3 - 1;
+        var lastPosition = positions.length / 3 - 1;
         for (j = lastPosition - 1; j > lastPosition - slicePartitions - 1; --j) {
             indices[index++] = lastPosition;
             indices[index++] = j;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = new GeometryAttributes({
+        var attributes = new GeometryAttributes({
             position: new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
@@ -178,26 +201,12 @@ define([
             })
         });
 
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
+        });
     };
 
     return EllipsoidOutlineGeometry;
