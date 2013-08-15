@@ -1,15 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'Core/CylinderGeometry',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Math',
          'Core/VertexFormat'
      ], function(
          CylinderGeometry,
-         Cartesian3,
-         Ellipsoid,
-         CesiumMath,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -95,7 +89,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('compute all vertex attributes', function() {
@@ -112,7 +106,7 @@ defineSuite([
         expect(m.attributes.normal.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.tangent.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.binormal.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with topRadius equals 0', function() {
@@ -125,7 +119,7 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with bottomRadius equals 0', function() {
@@ -138,6 +132,6 @@ defineSuite([
         });
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 });
