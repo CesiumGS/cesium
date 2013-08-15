@@ -339,7 +339,7 @@ define([
      * var julianDate = JulianDate.fromDate(date, TimeStandard.UTC);
      */
     JulianDate.fromDate = function(date, timeStandard) {
-        if (!defined(date) || date === null || isNaN(date.getTime())) {
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
             throw new DeveloperError('date must be a valid JavaScript Date.');
         }
 
