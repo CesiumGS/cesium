@@ -11,7 +11,8 @@
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.6/require.js"></script>
     <script type="text/javascript">
     require.config({
-        baseUrl : '../../../Source'
+        baseUrl : '../../../Source',
+        waitSeconds : 60
     });
     </script>
 </head>
@@ -27,13 +28,35 @@ require(['Cesium'], function(Cesium) {
     "use strict";
 
     var viewer = new Cesium.Viewer('cesiumContainer');
-    
+
     var scene = viewer.scene;
     var primitives = scene.getPrimitives();
     var ellipsoid = viewer.centralBody.getEllipsoid();
-    
+    var blinkPrimitive = null;
+    var blinkCount = 0;
+    var blinkTimer;
+
+    // http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom_23.html
+    var SeededRandom = function(seed) {
+        var constant = Math.pow(2, 13) + 1;
+        var prime = 1987;
+        var precision = 1000;
+
+        return function() {
+            seed *= constant;
+            seed += prime;
+            seed %= 1e15;
+            return 0.2 + seed % precision / precision * 0.8;
+        };
+    };
+    var seededRandom = new SeededRandom(98778);
+
+    function getRandomColor(alpha) {
+        return new Cesium.ColorGeometryInstanceAttribute(seededRandom(), seededRandom(), seededRandom(), alpha);
+    }
+
     // Combine instances for an extent, polygon, ellipse, and circle into a single primitive.
-    
+
     var extentInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.ExtentGeometry({
             extent : Cesium.Extent.fromDegrees(-92.0, 30.0, -85.0, 40.0),
@@ -78,7 +101,7 @@ require(['Cesium'], function(Cesium) {
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
         })
     });
-    
+
     var ellipseInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.EllipseGeometry({
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 35.0)),
@@ -96,14 +119,16 @@ require(['Cesium'], function(Cesium) {
             vertexFormat : Cesium.EllipsoidSurfaceAppearance.VERTEX_FORMAT
         })
     });
-    
-    primitives.add(new Cesium.Primitive({
+
+    var stripedPrimitive = new Cesium.Primitive({
         geometryInstances : [extentInstance, polygonInstance, ellipseInstance, circleInstance],
         appearance : new Cesium.EllipsoidSurfaceAppearance({
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
-    }));
-        
+    });
+    Sandcastle.declare(stripedPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(stripedPrimitive);
+
     // Create extruded extent
     var extrudedExtent = new Cesium.GeometryInstance({
         geometry: new Cesium.ExtentGeometry({
@@ -116,11 +141,11 @@ require(['Cesium'], function(Cesium) {
             }
         }),
         attributes: {
-            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            color : getRandomColor(1.0)
         }
     });
-    
-    // Create extruded extent
+
+    // Create extruded ellipse
     var extrudedEllipse = new Cesium.GeometryInstance({
         geometry : new Cesium.EllipseGeometry({
             center : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-110.0, 35.0)),
@@ -132,7 +157,7 @@ require(['Cesium'], function(Cesium) {
             extrudedHeight: 700000
         }),
         attributes: {
-            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            color : getRandomColor(1.0)
         }
     });
 
@@ -152,7 +177,7 @@ require(['Cesium'], function(Cesium) {
             extrudedHeight: 300000
         }),
         attributes: {
-            color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+            color : getRandomColor(1.0)
         }
     });
 
@@ -168,17 +193,19 @@ require(['Cesium'], function(Cesium) {
             modelMatrix : Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                     ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-80.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, 100000.0)),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                color : getRandomColor(0.5)
             }
         });
-    
-    primitives.add(new Cesium.Primitive({
+
+    var extrudedShapesPrimitive = new Cesium.Primitive({
         geometryInstances: [extrudedPolygon, extrudedEllipse, extrudedExtent, cylinderInstance],
         appearance: new Cesium.PerInstanceColorAppearance({
             translucent: false,
             closed: true
         })
-    }));
+    });
+    Sandcastle.declare(extrudedShapesPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(extrudedShapesPrimitive);
 
     // Combine instances each with a unique color.
     // We can combine heterogeneous geometries as we 
@@ -186,7 +213,7 @@ require(['Cesium'], function(Cesium) {
     var instances = [];
     var i;
     var height;
-    
+
     for (i = 0; i < 5; ++i) {
         height = 200000.0 * i;
 
@@ -198,10 +225,10 @@ require(['Cesium'], function(Cesium) {
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                color : getRandomColor(0.5)
             }
         }));
-        
+
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.ExtentGeometry({
                 extent : Cesium.Extent.fromDegrees(-62.0, 33.0, -57.0, 38.0),
@@ -209,16 +236,18 @@ require(['Cesium'], function(Cesium) {
                 vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                color : getRandomColor(0.5)
             }
         }));
     }
 
-    primitives.add(new Cesium.Primitive({
+    var circleAndExtentPrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance()
-    }));
-    
+    });
+    Sandcastle.declare(circleAndExtentPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(circleAndExtentPrimitive);
+
     // Create box and ellipsoid boxes, and use the instance's
     // modelMatrix to scale and position them.
     var boxGeometry = Cesium.BoxGeometry.fromDimensions({
@@ -233,34 +262,36 @@ require(['Cesium'], function(Cesium) {
     instances = [];
     for (i = 0; i < 5; ++i) {
         height = 100000.0 + (200000.0 * i);
-        
+
         instances.push(new Cesium.GeometryInstance({
             geometry : boxGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-105.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+                color : getRandomColor(1.0)
             }
         }));
-        
+
         instances.push(new Cesium.GeometryInstance({
             geometry : ellipsoidGeometry,
             modelMatrix : Cesium.Matrix4.multiplyByUniformScale(Cesium.Matrix4.multiplyByTranslation(Cesium.Transforms.eastNorthUpToFixedFrame(
                 ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-102.0, 45.0))), new Cesium.Cartesian3(0.0, 0.0, height)), 90000.0),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+                color : getRandomColor(1.0)
             }
         }));
     }
-    
-    primitives.add(new Cesium.Primitive({
+
+    var boxAndEllipsoidPrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
             translucent : false,
             closed : true
         })
-    }));
-    
+    });
+    Sandcastle.declare(boxAndEllipsoidPrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(boxAndEllipsoidPrimitive);
+
     // Combine several polylines, each with a unique color.
     // Override the appearance render state to change the
     // line on system's that support it (Linx/Mac).
@@ -276,12 +307,12 @@ require(['Cesium'], function(Cesium) {
                 ])
             }),
             attributes : {
-                color : new Cesium.ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 1.0)
+                color : getRandomColor(1.0)
             }
         }));
     }
-    
-    primitives.add(new Cesium.Primitive({
+
+    var linePrimitive = new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
             flat : true,
@@ -292,8 +323,10 @@ require(['Cesium'], function(Cesium) {
                 lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
             }
         })
-    }));
-    
+    });
+    Sandcastle.declare(linePrimitive); // For highlighting on click in Sandcastle.
+    primitives.add(linePrimitive);
+
     // Create a single wall
     var wallInstance = new Cesium.GeometryInstance({
         geometry : new Cesium.WallGeometry({
@@ -314,9 +347,41 @@ require(['Cesium'], function(Cesium) {
             faceForward : true
         })
     });
+    Sandcastle.declare(wallPrimitive); // For highlighting on click in Sandcastle.
     wallMaterial.uniforms.repeat = new Cesium.Cartesian2(20.0, 6.0);
     scene.getPrimitives().add(wallPrimitive);
-    
+
+    var blink = function () {
+        blinkTimer = undefined;
+        if (blinkPrimitive) {
+            if (blinkPrimitive.show) {
+                blinkPrimitive.show = false;
+            } else {
+                blinkPrimitive.show = true;
+                blinkCount--;
+            }
+            if (blinkCount > 0) {
+                blinkTimer = window.setTimeout(blink, 100);
+            }
+        }
+    };
+
+    viewer.screenSpaceEventHandler.setInputAction(function(movement) {
+        var pickedPrimitive = viewer.scene.pick(movement.position);
+        Sandcastle.highlight(pickedPrimitive);
+        if (blinkPrimitive) {
+            blinkPrimitive.show = true;
+        }
+        blinkPrimitive = pickedPrimitive;
+        if (blinkPrimitive) {
+            blinkPrimitive.show = false;
+            blinkCount = 3;
+            if (!blinkTimer) {
+                window.setTimeout(blink, 100);
+            }
+        }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
     Sandcastle.finishedLoading();
 });
 </script>
