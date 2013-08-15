@@ -4,13 +4,15 @@ define([
         './defined',
         './freezeObject',
         './DeveloperError',
-        './FeatureDetection'
+        './FeatureDetection',
+        './SeededRandom'
     ], function(
         defaultValue,
         defined,
         freezeObject,
         DeveloperError,
-        FeatureDetection) {
+        FeatureDetection,
+        SeededRandom) {
     "use strict";
 
     function hue2rgb(m1, m2, h) {
@@ -164,14 +166,22 @@ define([
      *
      */
     Color.fromRandom = function(options){
-        var red = typeof options.red !== 'undefined' ? options.red : 0;
-        var green = typeof options.green !== 'undefined' ? options.green : 0;
-        var blue = typeof options.blue !== 'undefined' ? options.blue : 0;
-        var alpha = typeof options.alpha !== 'undefined' ? options.alpha : 0;
+        var seed = typeof options.seed !== 'undefined' ? options.seed : Math.random();
+        var seededRandom = new SeededRandom(seed);
 
-        red = Math.random() * red;
-        green = Math.random() * green;
-        blue = Math.random() * blue;
+        var minimumRed = typeof options.minimunRed !== 'undefined' ? options.minimumRed : 0;
+        var maximumRed = typeof options.maximumRed !== 'undefined' ? options.maximumRed : 1.0;
+        var red = typeof options.red !== 'undefined' ? options.red : minimumRed + seededRandom(seed) * maximumRed;
+
+        var minimumGreen = typeof options.minimunGreen !== 'undefined' ? options.minimumGreen : 0;
+        var maximumGreen = typeof options.maximumGreen !== 'undefined' ? options.maximumGreen : 1.0;
+        var green = typeof options.green !== 'undefined' ? options.green : minimumGreen + seededRandom(seed) * maximumGreen;
+
+        var minimumBlue = typeof options.minimunBlue !== 'undefined' ? options.minimumBlue : 0;
+        var maximumBlue = typeof options.maximumBlue !== 'undefined' ? options.maximumBlue : 1.0;
+        var blue = typeof options.blue !== 'undefined' ? options.blue : minimumBlue + seededRandom(seed) * maximumBlue;
+
+        var alpha = typeof options.alpha !== 'undefined' ? options.alpha : 1;
 
         var randomColor = new Color(red, green, blue, alpha);
         return randomColor;
