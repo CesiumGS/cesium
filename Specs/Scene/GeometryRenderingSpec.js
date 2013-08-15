@@ -695,9 +695,7 @@ defineSuite([
                     ellipsoid : ellipsoid,
                     extent : extent,
                     height : geometryHeight,
-                    extrudedOptions : {
-                        height : extrudedHeight
-                    }
+                    extrudedHeight : extrudedHeight
                 }),
                 id : 'extent',
                 attributes : {

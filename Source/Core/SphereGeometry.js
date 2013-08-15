@@ -16,10 +16,12 @@ define([
      * @constructor
      *
      * @param {Number} [options.radius=1.0] The radius of the sphere.
-     * @param {Number} [options.numberOfPartitions=32] The number of times to partition the sphere in a plane formed by two radii in a single quadrant.
+     * @param {Number} [options.stackPartitions=64] The number of times to partition the ellipsoid into stacks.
+     * @param {Number} [options.slicePartitions=64] The number of times to partition the ellipsoid into radial slices.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} options.numberOfPartitions must be greater than zero.
+     * @exception {DeveloperError} options.slicePartitions cannot be less than three.
+     * @exception {DeveloperError} options.stackPartitions cannot be less than three.
      *
      * @see SphereGeometry#createGeometry
      *
@@ -35,7 +37,8 @@ define([
         var radii = new Cartesian3(radius, radius, radius);
         var ellipsoidOptions = {
                 radii: radii,
-                numberOfPartitions: options.numberOfPartitions,
+                stackPartitions: options.stackPartitions,
+                slicePartitions: options.slicePartitions,
                 vertexFormat: options.vertexFormat
         };
 
