@@ -22,12 +22,5 @@ define([
         return ReferenceFrame.FIXED;
     };
 
-    MockProperty.prototype._getValueRangeInReferenceFrame = function(start, stop, currentTime, result) {
-        this.lastStart = start;
-        this.lastStop = stop;
-        this.lastCurrentTime = currentTime;
-        return this.value;
-    };
-
     return MockProperty;
 });

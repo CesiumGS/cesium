@@ -370,7 +370,7 @@ define([
         var property = object[propertyName];
         if (!isSampled && hasInterval) {
             combinedInterval = combinedInterval.clone();
-            object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval, 0), referenceFrame);
+            combinedInterval.data = Cartesian3.unpack(unwrappedInterval, 0);
 
             if (!defined(property)) {
                 property = new TimeIntervalCollectionPositionProperty(referenceFrame);

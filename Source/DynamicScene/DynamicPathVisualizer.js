@@ -74,7 +74,7 @@ define([
                 }
                 steppedOnNow = true;
             }
-            if (current.greaterThan(start) && current.lessThan(loopStop)) {
+            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(currentTime)) {
                 tmp = positionProperty.getValueInReferenceFrame(current, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
