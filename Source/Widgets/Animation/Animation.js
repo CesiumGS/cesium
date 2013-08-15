@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -9,6 +10,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -336,11 +338,11 @@ define([
      * Cesium.requestAnimationFrame(tick);
      */
     var Animation = function(container, viewModel) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof viewModel === 'undefined') {
+        if (!defined(viewModel)) {
             throw new DeveloperError('viewModel is required.');
         }
 
@@ -995,7 +997,7 @@ define([
             }]
         });
 
-        if (typeof this._defsElement === 'undefined') {
+        if (!defined(this._defsElement)) {
             this._svgNode.appendChild(defsElement);
         } else {
             this._svgNode.replaceChild(defsElement, this._defsElement);

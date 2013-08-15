@@ -1,23 +1,23 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     var implementation = window.requestAnimationFrame;
 
     (function() {
         // look for vendor prefixed function
-        if (typeof implementation === 'undefined') {
+        if (!defined(implementation)) {
             var vendors = ['webkit', 'moz', 'ms', 'o'];
             var i = 0;
             var len = vendors.length;
-            while (i < len && typeof implementation === 'undefined') {
+            while (i < len && !defined(implementation)) {
                 implementation = window[vendors[i] + 'RequestAnimationFrame'];
                 ++i;
             }
         }
 
         // build an implementation based on setTimeout
-        if (typeof implementation === 'undefined') {
+        if (!defined(implementation)) {
             var lastFrameTime = 0;
             implementation = function(callback) {
                 var currentTime = Date.now();

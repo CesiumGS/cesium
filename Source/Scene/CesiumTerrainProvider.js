@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/loadArrayBuffer',
         '../Core/throttleRequestByServer',
         '../Core/writeTextToCanvas',
@@ -13,6 +14,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         loadArrayBuffer,
         throttleRequestByServer,
         writeTextToCanvas,
@@ -40,7 +42,7 @@ define([
      * @see TerrainProvider
      */
     var CesiumTerrainProvider = function CesiumTerrainProvider(description) {
-        if (typeof description === 'undefined' || typeof description.url === 'undefined') {
+        if (!defined(description) || !defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -95,7 +97,7 @@ define([
         var url = this._url + '/' + level + '/' + x + '/' + (yTiles - y - 1) + '.terrain';
 
         var proxy = this._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 
@@ -104,7 +106,7 @@ define([
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, loadArrayBuffer);
-            if (typeof promise === 'undefined') {
+            if (!defined(promise)) {
                 return undefined;
             }
         } else {

@@ -11,9 +11,16 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
-    * ...
+    * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Added `EllipsoidGeodesic`
+* Improved `WallGeometry` to follow the curvature of the earth.
+* Added `PolylinePipeline.scaleToSurface`.
+* Added `PolylinePipeline.scaleToGeodeticHeight`.
+* `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
+* Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 
 ### b19 - 2013-08-01
 

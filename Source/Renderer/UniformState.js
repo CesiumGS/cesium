@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/defined',
         '../Core/Math',
         '../Core/EncodedCartesian3',
         '../Core/BoundingRectangle',
@@ -21,6 +22,7 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        defined,
         CesiumMath,
         EncodedCartesian3,
         BoundingRectangle,
@@ -188,7 +190,7 @@ define([
     var transformMatrix = new Matrix3();
     var sunCartographicScratch = new Cartographic();
     function setSunAndMoonDirections(uniformState, frameState) {
-        if (typeof Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix) === 'undefined') {
+        if (!defined(Transforms.computeIcrfToFixedMatrix(frameState.time, transformMatrix))) {
             transformMatrix = Transforms.computeTemeToPseudoFixedMatrix(frameState.time, transformMatrix);
         }
 
@@ -222,7 +224,7 @@ define([
      */
     UniformState.prototype.updateFrustum = function(frustum) {
         setProjection(this, frustum.getProjectionMatrix());
-        if (typeof frustum.getInfiniteProjectionMatrix !== 'undefined') {
+        if (defined(frustum.getInfiniteProjectionMatrix)) {
             setInfiniteProjection(this, frustum.getInfiniteProjectionMatrix());
         }
         this._currentFrustum.x = frustum.near;
@@ -1200,7 +1202,7 @@ define([
         enuToFixed.multiplyByVector(d, d);
 
         // Compute the view matrix based on the new fixed-frame camera position and directions.
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Matrix4();
         }
 

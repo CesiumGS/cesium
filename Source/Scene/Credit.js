@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError'
     ], function (
-            DeveloperError) {
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -21,9 +23,9 @@ define([
      */
 
     var Credit = function(text, imageUrl, link) {
-        var hasLink = (typeof link !== 'undefined');
-        var hasImage = (typeof imageUrl !== 'undefined');
-        var hasText = (typeof text !== 'undefined');
+        var hasLink = (defined(link));
+        var hasImage = (defined(imageUrl));
+        var hasText = (defined(text));
         if (!hasText && !hasImage && !hasLink) {
             throw new DeveloperError('text, imageUrl or link is required');
         }
@@ -99,8 +101,8 @@ define([
      * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
-        var leftUndefined = (typeof left === 'undefined');
-        var rightUndefined = (typeof right === 'undefined');
+        var leftUndefined = (!defined(left));
+        var rightUndefined = (!defined(right));
 
         return ((left === right) ||
                ((leftUndefined && rightUndefined) ||

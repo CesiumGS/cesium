@@ -2,10 +2,12 @@
 define([
         './DynamicProperty',
         './CzmlColor',
+        '../Core/defined',
         '../Scene/Material'
     ], function(
          DynamicProperty,
          CzmlColor,
+         defined,
          Material) {
     "use strict";
 
@@ -29,7 +31,7 @@ define([
      * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
      */
     DynamicColorMaterial.isMaterial = function(czmlInterval) {
-        return typeof czmlInterval !== 'undefined' && typeof czmlInterval.solidColor !== 'undefined';
+        return defined(czmlInterval) && defined(czmlInterval.solidColor);
     };
 
     /**
@@ -48,10 +50,10 @@ define([
      */
     DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
         var materialData = czmlInterval.solidColor;
-        if (typeof materialData !== 'undefined') {
-            if (typeof materialData.color !== 'undefined') {
+        if (defined(materialData)) {
+            if (defined(materialData.color)) {
                 var color = this.color;
-                if (typeof color === 'undefined') {
+                if (!defined(color)) {
                     this.color = color = new DynamicProperty(CzmlColor);
                 }
                 color.processCzmlIntervals(materialData.color);
@@ -68,7 +70,7 @@ define([
      * @returns The modified existingMaterial parameter or a new Color Material instance if existingMaterial was undefined or not a Color Material.
      */
     DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ColorType)) {
+        if (!defined(existingMaterial) || (existingMaterial.type !== Material.ColorType)) {
             existingMaterial = Material.fromType(context, Material.ColorType);
         }
         existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);

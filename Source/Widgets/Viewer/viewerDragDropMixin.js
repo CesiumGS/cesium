@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
         '../../Core/Event',
@@ -11,6 +12,7 @@ define([
         '../getElement'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         defineProperties,
         Event,
@@ -49,7 +51,7 @@ define([
      * });
      */
     var viewerDragDropMixin = function(viewer, options) {
-        if (typeof viewer === 'undefined') {
+        if (!defined(viewer)) {
             throw new DeveloperError('viewer is required.');
         }
         if (viewer.hasOwnProperty('dropTarget')) {
@@ -88,7 +90,7 @@ define([
                     return dropTarget;
                 },
                 set : function(value) {
-                    if (typeof value === 'undefined') {
+                    if (!defined(value)) {
                         throw new DeveloperError('value is required.');
                     }
                     unsubscribe(dropTarget, handleDrop);
@@ -156,7 +158,7 @@ define([
             for ( var i = 0; i < length; i++) {
                 var f = files[i];
                 var reader = new FileReader();
-                reader.onload = createOnLoadCallback(viewer, f.name, i === 0);
+                reader.onload = createOnLoadCallback(viewer, f.name);
                 reader.onerror = createOnDropErrorCallback(viewer, f.name);
                 reader.readAsText(f);
             }
@@ -181,7 +183,7 @@ define([
 
     function unsubscribe(dropTarget, handleDrop) {
         var currentTarget = dropTarget;
-        if (typeof currentTarget !== 'undefined') {
+        if (defined(currentTarget)) {
             currentTarget.removeEventListener('drop', handleDrop, false);
             currentTarget.removeEventListener('dragenter', stop, false);
             currentTarget.removeEventListener('dragover', stop, false);
@@ -202,7 +204,7 @@ define([
         return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
-    function createOnLoadCallback(viewer, source, firstTime) {
+    function createOnLoadCallback(viewer, source) {
         var DataSource;
         var sourceUpperCase = source.toUpperCase();
         if (endsWith(sourceUpperCase, ".CZML")) {
@@ -220,16 +222,6 @@ define([
             try {
                 when(dataSource.load(JSON.parse(evt.target.result), source), function() {
                     viewer.dataSources.add(dataSource);
-                    if (firstTime) {
-                        var dataClock = dataSource.getClock();
-                        if (typeof dataClock !== 'undefined') {
-                            dataClock.clone(viewer.clock);
-                            if (typeof viewer.timeline !== 'undefined') {
-                                viewer.timeline.updateFromClock();
-                                viewer.timeline.zoomTo(dataClock.startTime, dataClock.stopTime);
-                            }
-                        }
-                    }
                 }, function(error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
                 });

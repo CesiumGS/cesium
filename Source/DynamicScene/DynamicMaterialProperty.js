@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
         '../Core/Iso8601',
@@ -7,6 +8,7 @@ define([
         './DynamicImageMaterial',
         './DynamicGridMaterial'
     ], function(
+        defined,
         TimeInterval,
         TimeIntervalCollection,
         Iso8601,
@@ -67,8 +69,8 @@ define([
      */
     DynamicMaterialProperty.prototype.getValue = function(time, context, existingMaterial) {
         var value = this._intervals.findIntervalContainingDate(time);
-        var material = typeof value !== 'undefined' ? value.data : undefined;
-        if (typeof material !== 'undefined') {
+        var material = defined(value) ? value.data : undefined;
+        if (defined(material)) {
             return material.getValue(time, context, existingMaterial);
         }
         return existingMaterial;
@@ -76,13 +78,13 @@ define([
 
     function addCzmlInterval(dynamicMaterialProperty, czmlInterval, constrainedInterval, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
-        if (typeof iso8601Interval === 'undefined') {
+        if (!defined(iso8601Interval)) {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL.clone();
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
-        if (typeof constrainedInterval !== 'undefined') {
+        if (defined(constrainedInterval)) {
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
@@ -92,7 +94,7 @@ define([
         var foundMaterial = false;
         var existingMaterial;
 
-        if (typeof existingInterval !== 'undefined') {
+        if (defined(existingInterval)) {
             //We have an interval, but we need to make sure the
             //new data is the same type of material as the old data.
             existingMaterial = existingInterval.data;

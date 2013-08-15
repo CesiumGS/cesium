@@ -1,12 +1,14 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/loadImageViaBlob',
         '../Core/getImagePixels',
         '../Core/DeveloperError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         loadImageViaBlob,
         getImagePixels,
         DeveloperError,
@@ -33,11 +35,11 @@ define([
     var DiscardMissingTileImagePolicy = function(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.missingImageUrl === 'undefined') {
+        if (!defined(description.missingImageUrl)) {
             throw new DeveloperError('description.missingImageUrl is required.');
         }
 
-        if (typeof description.pixelsToCheck === 'undefined') {
+        if (!defined(description.pixelsToCheck)) {
             throw new DeveloperError('description.pixelsToCheck is required.');
         }
 
@@ -49,7 +51,7 @@ define([
         var that = this;
 
         function success(image) {
-            if (typeof image.blob !== 'undefined') {
+            if (defined(image.blob)) {
                 that._missingImageByteLength = image.blob.size;
             }
 
@@ -115,11 +117,11 @@ define([
         var missingImagePixels = this._missingImagePixels;
 
         // If missingImagePixels is undefined, it indicates that the discard check has been disabled.
-        if (typeof missingImagePixels === 'undefined') {
+        if (!defined(missingImagePixels)) {
             return false;
         }
 
-        if (typeof image.blob !== 'undefined' && image.blob.size !== this._missingImageByteLength) {
+        if (defined(image.blob) && image.blob.size !== this._missingImageByteLength) {
             return false;
         }
 

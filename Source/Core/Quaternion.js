@@ -2,6 +2,7 @@
 define([
         './Cartesian3',
         './defaultValue',
+        './defined',
         './DeveloperError',
         './freezeObject',
         './Math',
@@ -9,6 +10,7 @@ define([
     ], function(
         Cartesian3,
         defaultValue,
+        defined,
         DeveloperError,
         freezeObject,
         CesiumMath,
@@ -70,7 +72,7 @@ define([
      * @exception {DeveloperError} angle is required and must be a number.
      */
     Quaternion.fromAxisAngle = function(axis, angle, result) {
-        if (typeof axis === 'undefined') {
+        if (!defined(axis)) {
             throw new DeveloperError('axis is required.');
         }
         if (typeof angle !== 'number') {
@@ -85,7 +87,7 @@ define([
         var y = fromAxisAngleScratch.y * s;
         var z = fromAxisAngleScratch.z * s;
         var w = Math.cos(halfAngle);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(x, y, z, w);
         }
         result.x = x;
@@ -110,7 +112,7 @@ define([
      * @see Matrix3.fromQuaternion
      */
     Quaternion.fromRotationMatrix = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
 
@@ -162,7 +164,7 @@ define([
             z = quat[2];
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(x, y, z, w);
         }
         result.x = x;
@@ -181,11 +183,11 @@ define([
      * @return {Quaternion} The modified result parameter or a new Quaternion instance if one was not provided. (Returns undefined if quaternion is undefined)
      */
     Quaternion.clone = function(quaternion, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(quaternion.x, quaternion.y, quaternion.z, quaternion.w);
         }
 
@@ -207,10 +209,10 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.conjugate = function(quaternion, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, quaternion.w);
         }
         result.x = -quaternion.x;
@@ -230,7 +232,7 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.magnitudeSquared = function(quaternion) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         return quaternion.x * quaternion.x + quaternion.y * quaternion.y + quaternion.z * quaternion.z + quaternion.w * quaternion.w;
@@ -246,7 +248,7 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.magnitude = function(quaternion) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         return Math.sqrt(Quaternion.magnitudeSquared(quaternion));
@@ -269,7 +271,7 @@ define([
         var z = quaternion.z * inverseMagnitude;
         var w = quaternion.w * inverseMagnitude;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(x, y, z, w);
         }
         result.x = x;
@@ -308,13 +310,13 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Quaternion.add = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(left.x + right.x, left.y + right.y, left.z + right.z, left.w + right.w);
         }
         result.x = left.x + right.x;
@@ -337,13 +339,13 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Quaternion.subtract = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(left.x - right.x, left.y - right.y, left.z - right.z, left.w - right.w);
         }
         result.x = left.x - right.x;
@@ -364,10 +366,10 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.negate = function(quaternion, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(-quaternion.x, -quaternion.y, -quaternion.z, -quaternion.w);
         }
         result.x = -quaternion.x;
@@ -389,10 +391,10 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Quaternion.dot = function(left, right) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
         return left.x * right.x + left.y * right.y + left.z * right.z + left.w * right.w;
@@ -412,10 +414,10 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Quaternion.multiply = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
         var leftX = left.x;
@@ -433,7 +435,7 @@ define([
         var z = leftW * rightZ + leftX * rightY - leftY * rightX + leftZ * rightW;
         var w = leftW * rightW - leftX * rightX - leftY * rightY - leftZ * rightZ;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(x, y, z, w);
         }
         result.x = x;
@@ -456,13 +458,13 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Quaternion.multiplyByScalar = function(quaternion, scalar, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(quaternion.x * scalar,  quaternion.y * scalar, quaternion.z * scalar, quaternion.w * scalar);
         }
         result.x = quaternion.x * scalar;
@@ -485,13 +487,13 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Quaternion.divideByScalar = function(quaternion, scalar, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Quaternion(quaternion.x / scalar, quaternion.y / scalar, quaternion.z / scalar, quaternion.w / scalar);
         }
         result.x = quaternion.x / scalar;
@@ -512,13 +514,13 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.getAxis = function(quaternion, result) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
 
         var w = quaternion.w;
         if (Math.abs(w - 1.0) < CesiumMath.EPSILON6) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 return new Cartesian3();
             }
             result.x = result.y = result.z = 0;
@@ -526,7 +528,7 @@ define([
         }
 
         var scalar = 1.0 / Math.sqrt(1.0 - (w * w));
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian3(quaternion.x * scalar, quaternion.y * scalar, quaternion.z * scalar);
         }
         result.x = quaternion.x * scalar;
@@ -545,7 +547,7 @@ define([
      * @exception {DeveloperError} quaternion is required.
      */
     Quaternion.getAngle = function(quaternion) {
-        if (typeof quaternion === 'undefined') {
+        if (!defined(quaternion)) {
             throw new DeveloperError('quaternion is required');
         }
 
@@ -571,10 +573,10 @@ define([
      * @exception {DeveloperError} t is required and must be a number.
      */
     Quaternion.lerp = function(start, end, t, result) {
-        if (typeof start === 'undefined') {
+        if (!defined(start)) {
             throw new DeveloperError('start is required.');
         }
-        if (typeof end === 'undefined') {
+        if (!defined(end)) {
             throw new DeveloperError('end is required.');
         }
         if (typeof t !== 'number') {
@@ -603,10 +605,10 @@ define([
      * @exception {DeveloperError} t is required and must be a number.
      */
     Quaternion.slerp = function(start, end, t, result) {
-        if (typeof start === 'undefined') {
+        if (!defined(start)) {
             throw new DeveloperError('start is required.');
         }
-        if (typeof end === 'undefined') {
+        if (!defined(end)) {
             throw new DeveloperError('end is required.');
         }
         if (typeof t !== 'number') {
@@ -647,8 +649,8 @@ define([
      */
     Quaternion.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.x === right.x) &&
                 (left.y === right.y) &&
                 (left.z === right.z) &&
@@ -673,8 +675,8 @@ define([
             throw new DeveloperError('epsilon is required and must be a number.');
         }
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (Math.abs(left.x - right.x) <= epsilon) &&
                 (Math.abs(left.y - right.y) <= epsilon) &&
                 (Math.abs(left.z - right.z) <= epsilon) &&
