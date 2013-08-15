@@ -9,6 +9,7 @@ define([
         '../Core/Color',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
+        './SampledPositionProperty',
         '../Scene/Material',
         '../Scene/SceneMode',
         '../Scene/PolylineCollection'
@@ -22,10 +23,98 @@ define([
          Color,
          Transforms,
          ReferenceFrame,
+         SampledPositionProperty,
          Material,
          SceneMode,
          PolylineCollection) {
     "use strict";
+
+    function getValueRangeInReferenceFrame(positionProperty, start, stop, currentTime, referenceFrame, maximumStep, result) {
+        var times = positionProperty._property._times;
+
+        if (!defined(start)) {
+            throw new DeveloperError('start is required');
+        }
+
+        if (!defined(stop)) {
+            throw new DeveloperError('stop is required');
+        }
+
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var r = 0;
+        //Always step exactly on start (but only use it if it exists.)
+        var tmp;
+        tmp = positionProperty.getValueInReferenceFrame(start, referenceFrame, result[r]);
+        if (defined(tmp)) {
+            result[r++] = tmp;
+        }
+
+        var steppedOnNow = !defined(currentTime) || currentTime.lessThan(start) || currentTime.greaterThan(stop);
+
+        //Iterate over all interval times and add the ones that fall in our
+        //time range.  Note that times can contain data outside of
+        //the intervals range.  This is by design for use with interpolation.
+        var t = 0;
+        var len = times.length;
+        var current = times[t];
+        var loopStop = stop;
+        var sampling = false;
+        var sampleStepsToTake;
+        var sampleStepsTaken;
+        var sampleStepSize;
+
+        while (t < len) {
+            if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
+                tmp = positionProperty.getValueInReferenceFrame(currentTime, referenceFrame, result[r]);
+                if (defined(tmp)) {
+                    result[r++] = tmp;
+                }
+                steppedOnNow = true;
+            }
+            if (current.greaterThan(start) && current.lessThan(loopStop)) {
+                tmp = positionProperty.getValueInReferenceFrame(current, referenceFrame, result[r]);
+                if (defined(tmp)) {
+                    result[r++] = tmp;
+                }
+            }
+
+            if (t < (len - 1)) {
+                if (!sampling) {
+                    var next = times[t + 1];
+                    var secondsUntilNext = current.getSecondsDifference(next);
+                    sampling = secondsUntilNext > maximumStep;
+
+                    if (sampling) {
+                        sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                        sampleStepsTaken = 0;
+                        sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
+                        sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                    }
+                }
+
+                if (sampling && sampleStepsTaken < sampleStepsToTake) {
+                    current = current.addSeconds(sampleStepSize);
+                    sampleStepsTaken++;
+                    continue;
+                }
+            }
+            sampling = false;
+            t++;
+            current = times[t];
+        }
+
+        //Always step exactly on stop (but only use it if it exists.)
+        tmp = positionProperty.getValueInReferenceFrame(stop, referenceFrame, result[r]);
+        if (defined(tmp)) {
+            result[r++] = tmp;
+        }
+
+        result.length = r;
+        return result;
+    }
 
     var toFixedScratch = new Matrix3();
     var PolylineUpdater = function(scene, referenceFrame) {
@@ -53,7 +142,7 @@ define([
         }
 
         var positionProperty = dynamicObject.position;
-        if (!defined(positionProperty)) {
+        if (!(positionProperty instanceof SampledPositionProperty)) {
             return;
         }
 
@@ -160,7 +249,7 @@ define([
             resolution = property.getValue(time);
         }
 
-        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
+        polyline.setPositions(getValueRangeInReferenceFrame(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (defined(property)) {
@@ -313,7 +402,7 @@ define([
 
                 var frameToVisualize = ReferenceFrame.FIXED;
                 if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty.getReferenceFrame();
+                    frameToVisualize = positionProperty.referenceFrame;
                 }
 
                 var currentUpdater = this._updaters[frameToVisualize];
