@@ -6,7 +6,7 @@ define([
         '../Core/DeveloperError',
         '../Core/TimeIntervalCollection',
         '../Core/ReferenceFrame',
-        '../PositionProperty'
+        './PositionProperty'
     ], function(
         defaultValue,
         defined,

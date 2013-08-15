@@ -10,7 +10,11 @@ define([
         '../Core/Ellipsoid',
         '../Core/Math',
         '../Core/Quaternion',
+        '../Core/ReferenceFrame',
         '../Core/Spherical',
+        '../Core/HermitePolynomialApproximation',
+        '../Core/LinearApproximation',
+        '../Core/LagrangePolynomialApproximation',
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
@@ -21,6 +25,10 @@ define([
         './ConstantProperty',
         './SampledProperty',
         './TimeIntervalCollectionProperty',
+        './CompositePositionProperty',
+        './ConstantPositionProperty',
+        './SampledPositionProperty',
+        './TimeIntervalCollectionPositionProperty',
         '../ThirdParty/Uri'
     ], function(
         Cartesian2,
@@ -33,7 +41,11 @@ define([
         Ellipsoid,
         CesiumMath,
         Quaternion,
+        ReferenceFrame,
         Spherical,
+        HermitePolynomialApproximation,
+        LinearApproximation,
+        LagrangePolynomialApproximation,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
@@ -44,6 +56,10 @@ define([
         ConstantProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        CompositePositionProperty,
+        ConstantPositionProperty,
+        SampledPositionProperty,
+        TimeIntervalCollectionPositionProperty,
         Uri) {
     "use strict";
 
@@ -310,6 +326,118 @@ define([
         }
         return updated;
     }
+
+    var interpolators = {
+            HERMITE : HermitePolynomialApproximation,
+            LAGRANGE : LagrangePolynomialApproximation,
+            LINEAR : LinearApproximation
+        };
+
+    function updateInterpolationSettings(packetData, property) {
+        var interpolator = interpolators[packetData.interpolationAlgorithm];
+        if (defined(interpolator)) {
+            property.interpolationAlgorithm = interpolator;
+        }
+        if (defined(packetData.interpolationDegree)) {
+            property.interpolationDegree = packetData.interpolationDegree;
+        }
+
+    }
+
+    function processPositionProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            combinedInterval = TimeInterval.fromIso8601(packetInterval);
+            if (defined(constrainedInterval)) {
+                combinedInterval = combinedInterval.intersect(constrainedInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var referenceFrame = ReferenceFrame[defaultValue(packetData.referenceFrame, "FIXED")];
+        var unwrappedInterval = unwrapCartesianInterval(packetData);
+        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+        var isSampled = unwrappedInterval.length > Cartesian3.packedLength;
+
+        if (!isSampled && !hasInterval) {
+            object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval, 0), referenceFrame);
+            return true;
+        }
+
+        var propertyCreated = false;
+        var property = object[propertyName];
+        if (!isSampled && hasInterval) {
+            combinedInterval = combinedInterval.clone();
+            object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval, 0), referenceFrame);
+
+            if (!defined(property)) {
+                property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            if (property instanceof TimeIntervalCollectionPositionProperty) {
+                property.intervals.addInterval(combinedInterval);
+                updateInterpolationSettings(packetData, property);
+            } else {
+                //TODO Morph to CompositePositionProperty
+            }
+        } else if (isSampled && !hasInterval) {
+            if (!(property instanceof SampledPositionProperty)) {
+                property = new SampledPositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+            updateInterpolationSettings(packetData, property);
+        } else if (isSampled && hasInterval) {
+            if (!defined(property)) {
+                property = new CompositePositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            if (property instanceof CompositePositionProperty) {
+                var intervals = property.intervals;
+                var interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
+                var intervalData;
+                if (defined(interval)) {
+                    intervalData = interval.data;
+                } else {
+                    interval = combinedInterval.clone();
+                    intervalData = new SampledPositionProperty(referenceFrame);
+                    interval.data = intervalData;
+                    intervals.addInterval(interval);
+                }
+                if (!(intervalData instanceof SampledPositionProperty)) {
+                    intervalData = new SampledPositionProperty(referenceFrame);
+                    interval.Data = intervalData;
+                }
+                intervalData.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+                updateInterpolationSettings(packetData, property);
+            } else {
+                //TODO Morph to CompositePositionProperty
+            }
+        }
+        return propertyCreated;
+    }
+
+    function processPositionPacketData(object, propertyName, packetData, interval, sourceUri) {
+        if (!defined(packetData)) {
+            return false;
+        }
+
+        var updated = false;
+        if (Array.isArray(packetData)) {
+            for ( var i = 0, len = packetData.length; i < len; i++) {
+                updated = processPositionProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+            }
+        } else {
+            updated = processPositionProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+        }
+        return updated;
+    }
+    processPacketData.position = processPositionPacketData;
 
     return processPacketData;
 });

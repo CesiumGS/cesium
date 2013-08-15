@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/Cartesian3',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/ReferenceFrame',
@@ -8,6 +9,7 @@ define([
         './SampledProperty'
        ], function(
         Cartesian3,
+        defaultValue,
         defined,
         defineProperties,
         ReferenceFrame,
@@ -23,8 +25,9 @@ define([
      *
      * @exception {DeveloperError} value is required.
      */
-    var SampledPositionProperty = function() {
+    var SampledPositionProperty = function(referenceFrame) {
         this._property = new SampledProperty(Cartesian3);
+        this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     };
 
     defineProperties(SampledPositionProperty.prototype, {
@@ -37,6 +40,11 @@ define([
         isTimeVarying : {
             get : function() {
                 return this._property.isTimeVarying;
+            }
+        },
+        referenceFrame : {
+            get : function() {
+                return this._referenceFrame;
             }
         },
         interpolationDegree : {

@@ -80,11 +80,11 @@ define([
         }
 
         var icrfToFixed = Transforms.computeIcrfToFixedMatrix(time, scratchMatrix3);
-        if (defined(icrfToFixed)) {
+        if (!defined(icrfToFixed)) {
             icrfToFixed = Transforms.computeTemeToPseudoFixedMatrix(time, scratchMatrix3);
         }
         if (inputFrame === ReferenceFrame.INERTIAL) {
-            return icrfToFixed(scratchMatrix3).multiplyByVector(value, result);
+            return icrfToFixed.multiplyByVector(value, result);
         }
         if (inputFrame === ReferenceFrame.FIXED) {
             return icrfToFixed.transpose(scratchMatrix3).multiplyByVector(value, result);

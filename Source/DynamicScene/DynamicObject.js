@@ -241,7 +241,7 @@ define([
         if (!defined(positionData)) {
             return false;
         }
-        return processPacketData(Cartesian3, dynamicObject, 'position', positionData, undefined, sourceUri);
+        return processPacketData.position(dynamicObject, 'position', positionData, undefined, sourceUri);
     };
 
     /**
