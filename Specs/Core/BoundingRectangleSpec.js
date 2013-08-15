@@ -225,7 +225,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof BoundingRectangle.clone()).toEqual('undefined');
+        expect(BoundingRectangle.clone()).toBeUndefined();
     });
 
     it('static union throws with no left parameter', function() {

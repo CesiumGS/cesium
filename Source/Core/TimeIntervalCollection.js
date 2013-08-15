@@ -1,14 +1,16 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './binarySearch',
         './TimeInterval',
         './JulianDate'
-       ], function(
-         DeveloperError,
-         binarySearch,
-         TimeInterval,
-         JulianDate) {
+    ], function(
+        defined,
+        DeveloperError,
+        binarySearch,
+        TimeInterval,
+        JulianDate) {
     "use strict";
 
     function compareIntervalStartTimes(left, right) {
@@ -143,7 +145,7 @@ define([
      * @exception {DeveloperError} date is required.
      */
     TimeIntervalCollection.prototype.indexOf = function(date) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError('date required');
         }
         var thisIntervals = this._intervals;
@@ -185,10 +187,10 @@ define([
         var thisIntervals = this._intervals, interval;
         for ( var i = 0, len = thisIntervals.length; i < len; i++) {
             interval = thisIntervals[i];
-            if ((typeof start === 'undefined' || interval.start.equals(start)) &&
-                (typeof stop === 'undefined' || interval.stop.equals(stop)) &&
-                (typeof isStartIncluded === 'undefined' || interval.isStartIncluded === isStartIncluded) &&
-                (typeof isStopIncluded === 'undefined' || interval.isStopIncluded === isStopIncluded)) {
+            if ((!defined(start) || interval.start.equals(start)) &&
+                (!defined(stop) || interval.stop.equals(stop)) &&
+                (!defined(isStartIncluded) || interval.isStartIncluded === isStartIncluded) &&
+                (!defined(isStopIncluded) || interval.isStopIncluded === isStopIncluded)) {
                 return thisIntervals[i];
             }
         }
@@ -210,7 +212,7 @@ define([
      * @exception {DeveloperError} interval is required.
      */
     TimeIntervalCollection.prototype.addInterval = function(interval, equalsCallback) {
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             throw new DeveloperError("interval is required");
         }
         if (!interval.isEmpty) {
@@ -253,7 +255,7 @@ define([
                 comparison = JulianDate.compare(thisIntervals[index - 1].stop, interval.start);
                 if (comparison > 0 || (comparison === 0 && (thisIntervals[index - 1].isStopIncluded || interval.isStartIncluded))) {
                     // There is an overlap
-                    if (typeof equalsCallback !== 'undefined' ? equalsCallback(thisIntervals[index - 1].data, interval.data) : (thisIntervals[index - 1].data === interval.data)) {
+                    if (defined(equalsCallback) ? equalsCallback(thisIntervals[index - 1].data, interval.data) : (thisIntervals[index - 1].data === interval.data)) {
                         // Overlapping intervals have the same data, so combine them
                         if (interval.stop.greaterThan(thisIntervals[index - 1].stop)) {
                             interval = new TimeInterval(thisIntervals[index - 1].start,
@@ -304,7 +306,7 @@ define([
                 if (comparison > 0 ||
                     (comparison === 0 && (interval.isStopIncluded || thisIntervals[index].isStartIncluded))) {
                     // There is an overlap
-                    if (typeof equalsCallback !== 'undefined' ? equalsCallback(thisIntervals[index].data, interval.data) : thisIntervals[index].data === interval.data) {
+                    if (defined(equalsCallback) ? equalsCallback(thisIntervals[index].data, interval.data) : thisIntervals[index].data === interval.data) {
                         // Overlapping intervals have the same data, so combine them
                         interval = new TimeInterval(interval.start,
                                                     thisIntervals[index].stop.greaterThan(interval.stop) ? thisIntervals[index].stop : interval.stop,
@@ -352,7 +354,7 @@ define([
      * @exception {DeveloperError} interval is required.
      */
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             throw new DeveloperError("interval is required");
         }
 
@@ -465,7 +467,7 @@ define([
      * @exception {DeveloperError} timeIntervalCollection is required.
      */
     TimeIntervalCollection.prototype.intersect = function(timeIntervalCollection, equalsCallback, mergeCallback) {
-        if (typeof timeIntervalCollection === 'undefined') {
+        if (!defined(timeIntervalCollection)) {
             throw new DeveloperError('timeIntervalCollection is required.');
         }
         return intersectInternal(this, timeIntervalCollection, equalsCallback, mergeCallback);
@@ -490,7 +492,7 @@ define([
      * @exception {DeveloperError} timeIntervalCollection is required.
      */
     TimeIntervalCollection.prototype.intersectInterval = function(interval, equalsCallback, mergeCallback) {
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             throw new DeveloperError('interval is required.');
         }
         var intervals = new TimeIntervalCollection();
@@ -514,9 +516,9 @@ define([
                 ++right;
             } else {
                 // The following will return an intersection whose data is 'merged' if the callback is defined
-                if (typeof mergeCallback !== 'undefined' ||
-                   ((typeof equalsCallback !== 'undefined' && equalsCallback(leftInterval, rightInterval)) ||
-                    (typeof equalsCallback === 'undefined' && rightInterval.data === leftInterval.data))) {
+                if (defined(mergeCallback) ||
+                   ((defined(equalsCallback) && equalsCallback(leftInterval, rightInterval)) ||
+                    (!defined(equalsCallback) && rightInterval.data === leftInterval.data))) {
 
                     var intersection = leftInterval.intersect(rightInterval, mergeCallback);
                     if (!intersection.isEmpty) {

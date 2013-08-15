@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/defaultValue'
+        '../Core/defaultValue',
+        '../Core/defined'
     ], function(
-        defaultValue) {
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -100,7 +102,7 @@ define([
      */
     TileProviderError.handleError = function(previousError, provider, event, message, x, y, level, retryFunction) {
         var error = previousError;
-        if (typeof previousError === 'undefined') {
+        if (!defined(previousError)) {
             error = new TileProviderError(provider, message, x, y, level, 0);
         } else {
             error.provider = provider;
@@ -120,7 +122,7 @@ define([
             console.log(message);
         }
 
-        if (error.retry && typeof retryFunction !== 'undefined') {
+        if (error.retry && defined(retryFunction)) {
             retryFunction();
         }
 
@@ -137,7 +139,7 @@ define([
      *        not previously resulted in an error.
      */
     TileProviderError.handleSuccess = function(previousError) {
-        if (typeof previousError !== 'undefined') {
+        if (defined(previousError)) {
             previousError.timesRetried = -1;
         }
     };

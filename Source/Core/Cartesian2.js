@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './freezeObject'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         freezeObject) {
     "use strict";
@@ -59,7 +61,7 @@ define([
      * var p2 = Cartesian2.fromArray(v2, 2);
      */
     Cartesian2.fromArray = function(values, offset, result) {
-        if (typeof values === 'undefined') {
+        if (!defined(values)) {
             throw new DeveloperError('values is required.');
         }
 
@@ -69,7 +71,7 @@ define([
 
         offset = defaultValue(offset, 0);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Cartesian2();
         }
 
@@ -88,7 +90,7 @@ define([
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
      */
     Cartesian2.fromElements = function(x, y, result) {
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(x, y);
         }
 
@@ -106,11 +108,11 @@ define([
      * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided. (Returns undefined if cartesian is undefined)
      */
     Cartesian2.clone = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(cartesian.x, cartesian.y);
         }
 
@@ -156,7 +158,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.getMaximumComponent = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         return Math.max(cartesian.x, cartesian.y);
@@ -172,7 +174,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.getMinimumComponent = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         return Math.min(cartesian.x, cartesian.y);
@@ -188,7 +190,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.magnitudeSquared = function(cartesian) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         return cartesian.x * cartesian.x + cartesian.y * cartesian.y;
@@ -225,7 +227,7 @@ define([
      * var d = Cartesian2.distance(new Cartesian2(1.0, 0.0), new Cartesian2(2.0, 0.0));
      */
     Cartesian2.distance = function(left, right) {
-        if ((typeof left === 'undefined') || (typeof right === 'undefined')) {
+        if (!defined(left) || !defined(right)) {
             throw new DeveloperError('left and right are required.');
         }
 
@@ -244,11 +246,11 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.normalize = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         var magnitude = Cartesian2.magnitude(cartesian);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(cartesian.x / magnitude, cartesian.y / magnitude);
         }
         result.x = cartesian.x / magnitude;
@@ -268,10 +270,10 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian2.dot = function(left, right) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
         return left.x * right.x + left.y * right.y;
@@ -290,13 +292,13 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian2.multiplyComponents = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(left.x * right.x, left.y * right.y);
         }
         result.x = left.x * right.x;
@@ -317,13 +319,13 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian2.add = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(left.x + right.x, left.y + right.y);
         }
         result.x = left.x + right.x;
@@ -344,13 +346,13 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian2.subtract = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(left.x - right.x, left.y - right.y);
         }
         result.x = left.x - right.x;
@@ -371,13 +373,13 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian2.multiplyByScalar = function(cartesian, scalar, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(cartesian.x * scalar, cartesian.y * scalar);
         }
         result.x = cartesian.x * scalar;
@@ -398,13 +400,13 @@ define([
      * @exception {DeveloperError} scalar is required and must be a number.
      */
     Cartesian2.divideByScalar = function(cartesian, scalar, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(cartesian.x / scalar, cartesian.y / scalar);
         }
         result.x = cartesian.x / scalar;
@@ -423,10 +425,10 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.negate = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(-cartesian.x, -cartesian.y);
         }
         result.x = -cartesian.x;
@@ -445,10 +447,10 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.abs = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian2(Math.abs(cartesian.x), Math.abs(cartesian.y));
         }
         result.x = Math.abs(cartesian.x);
@@ -472,10 +474,10 @@ define([
      * @exception {DeveloperError} t is required and must be a number.
      */
     Cartesian2.lerp = function(start, end, t, result) {
-        if (typeof start === 'undefined') {
+        if (!defined(start)) {
             throw new DeveloperError('start is required.');
         }
-        if (typeof end === 'undefined') {
+        if (!defined(end)) {
             throw new DeveloperError('end is required.');
         }
         if (typeof t !== 'number') {
@@ -500,10 +502,10 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Cartesian2.angleBetween = function(left, right) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
         Cartesian2.normalize(left, angleBetweenScratch);
@@ -523,7 +525,7 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.mostOrthogonalAxis = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
 
@@ -550,8 +552,8 @@ define([
      */
     Cartesian2.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.x === right.x) &&
                 (left.y === right.y));
     };
@@ -574,8 +576,8 @@ define([
             throw new DeveloperError('epsilon is required and must be a number.');
         }
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (Math.abs(left.x - right.x) <= epsilon) &&
                 (Math.abs(left.y - right.y) <= epsilon));
     };

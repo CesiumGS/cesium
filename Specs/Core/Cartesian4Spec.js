@@ -466,7 +466,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Cartesian4.clone()).toEqual('undefined');
+        expect(Cartesian4.clone()).toBeUndefined();
     });
 
     it('static getMaximumComponent throws with no parameter', function() {

@@ -1,10 +1,12 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../createCommand',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         DeveloperError,
         createCommand,
@@ -25,11 +27,11 @@ define([
      * @see ImageryProviderViewModel
      */
     var BaseLayerPickerViewModel = function(imageryLayers, imageryProviderViewModels) {
-        if (typeof imageryLayers === 'undefined') {
+        if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required');
         }
 
-        if (typeof imageryProviderViewModels === 'undefined') {
+        if (!defined(imageryProviderViewModels)) {
             imageryProviderViewModels = [];
         } else if (!Array.isArray(imageryProviderViewModels)) {
             throw new DeveloperError('imageryProviderViewModels must be an array');
@@ -63,7 +65,7 @@ define([
         this.selectedName = undefined;
         knockout.defineProperty(this, 'selectedName', function() {
             var selected = that.selectedItem;
-            return typeof selected !== 'undefined' ? selected.name : undefined;
+            return defined(selected) ? selected.name : undefined;
         });
 
         /**
@@ -74,7 +76,7 @@ define([
         this.selectedIconUrl = undefined;
         knockout.defineProperty(this, 'selectedIconUrl', function() {
             var viewModel = that.selectedItem;
-            return typeof viewModel !== 'undefined' ? viewModel.iconUrl : undefined;
+            return defined(viewModel) ? viewModel.iconUrl : undefined;
         });
 
         /**
@@ -105,7 +107,7 @@ define([
                     }
                 }
 
-                if (typeof value !== 'undefined') {
+                if (defined(value)) {
                     var newProviders = value.creationCommand();
                     if (Array.isArray(newProviders)) {
                         var newProvidersLength = newProviders.length;

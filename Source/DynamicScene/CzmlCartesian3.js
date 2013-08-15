@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/Cartesian3'
+        '../Core/Cartesian3',
+        '../Core/defined'
        ], function(
-         Cartesian3) {
+         Cartesian3,
+         defined) {
     "use strict";
 
     var doublesPerValue = 3;
@@ -67,7 +69,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = unwrappedInterval[0];
@@ -85,7 +87,7 @@ define([
          * @returns The modified result parameter or a new Cartesian3 instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Cartesian3();
             }
             result.x = array[startingIndex];

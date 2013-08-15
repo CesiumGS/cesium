@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Color',
         '../Core/destroyObject',
         '../Core/Math',
@@ -15,6 +16,7 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
         Color,
         destroyObject,
         CesiumMath,
@@ -154,11 +156,11 @@ define([
      * @private
      */
     ExtentPrimitive.prototype.update = function(context, frameState, commandList) {
-        if (typeof this.ellipsoid === 'undefined') {
+        if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
@@ -166,7 +168,7 @@ define([
             throw new DeveloperError('this.granularity and scene2D/scene3D overrides must be greater than zero.');
         }
 
-        if (!this.show || (typeof this.extent === 'undefined')) {
+        if (!this.show || (!defined(this.extent))) {
             return;
         }
 
@@ -197,7 +199,7 @@ define([
                 id : this
             });
 
-            if (typeof this._primitive !== 'undefined') {
+            if (defined(this._primitive)) {
                 this._primitive.destroy();
             }
 

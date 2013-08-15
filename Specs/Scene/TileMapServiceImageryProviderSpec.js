@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/TileMapServiceImageryProvider',
+         'Core/defined',
          'Core/jsonp',
          'Core/loadImage',
          'Core/loadXML',
@@ -16,6 +17,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          TileMapServiceImageryProvider,
+         defined,
          jsonp,
          loadImage,
          loadXML,
@@ -130,7 +132,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -181,7 +183,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
