@@ -39,7 +39,7 @@ define([
          */
         isTimeVarying : {
             get : function() {
-                return false;
+                return this._property.isTimeVarying;
             }
         },
         /**
@@ -61,7 +61,7 @@ define([
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    ConstantPositionProperty.prototype.getValue = function(time, result, referenceFrame) {
+    ConstantPositionProperty.prototype.getValue = function(time, result) {
         return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
     };
 
@@ -74,7 +74,7 @@ define([
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
-    ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, result, referenceFrame) {
+    ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         var value = this._property.getValue(time, result);
         return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, value);
     };
