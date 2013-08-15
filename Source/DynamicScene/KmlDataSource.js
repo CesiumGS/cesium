@@ -242,16 +242,17 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-        var polygon = new DynamicPolygon();
-        polygon.material = new DynamicMaterialProperty();
-        polygonMaterial.processCzmlIntervals({
-            solidColor : {
-                color : {
-                    rgba : [255, 255, 255, 255]
-                }
-            }
-        }, undefined, undefined);
-        dynamicObject.polygon = polygon;
+
+//        var polygon = new DynamicPolygon();
+//        polygon.material = new DynamicMaterialProperty();
+//        polygonMaterial.processCzmlIntervals({
+//            solidColor : {
+//                color : {
+//                    rgba : [255, 255, 255, 255]
+//                }
+//            }
+//        }, undefined, undefined);
+//        dynamicObject.polygon = polygon;
     }
 
     //Object that holds all supported Geometry
@@ -310,21 +311,21 @@ define(['../Core/createGuid',
                 dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
-                var polygonMaterial = new DynamicMaterialProperty();
-                var polyline = new DynamicPolyline();
-                polyline.color = new ConstantProperty(Color.WHITE);
-                polyline.width = new ConstantProperty(1);
-                polyline.outlineColor = new ConstantProperty(Color.BLACK);
-                polyline.outlineWidth = new ConstantProperty(0);
-                dinamicObject.polyline = polyline;
-                dynamicObject.polygon.material = polygonMaterial;
-                polygonMaterial.processCzmlIntervals({
-                    solidColor : {
-                        color : {
-                            rgba : [255, 255, 0, 25]
-                        }
-                    }
-                }, undefined, undefined);
+//                var polygonMaterial = new DynamicMaterialProperty();
+//                var polyline = new DynamicPolyline();
+//                polyline.color = new ConstantProperty(Color.WHITE);
+//                polyline.width = new ConstantProperty(1);
+//                polyline.outlineColor = new ConstantProperty(Color.BLACK);
+//                polyline.outlineWidth = new ConstantProperty(0);
+//                dinamicObject.polyline = polyline;
+//                dynamicObject.polygon.material = polygonMaterial;
+//                polygonMaterial.processCzmlIntervals({
+//                    solidColor : {
+//                        color : {
+//                            rgba : [255, 255, 0, 25]
+//                        }
+//                    }
+//                }, undefined, undefined);
             }
         }
     }
