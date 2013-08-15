@@ -111,7 +111,7 @@ define(['../Core/createGuid',
         }
         for (var k = 0; k < finalCoords.length; k++){
             if (isNaN(finalCoords[k][0]) || isNaN(finalCoords[k][1])) {
-                throw new RuntimeError('Longitude and latitude are required.');
+                throw new DeveloperError('Longitude and latitude are required.');
             }
         }
         if (finalCoords.length === 1){
@@ -197,7 +197,7 @@ define(['../Core/createGuid',
                 var geometryType = placemark.geometry;
                 var geometryHandler = geometryTypes[geometryType];
                 if (typeof geometryHandler === 'undefined') {
-                    throw new RuntimeError('Unknown geometry type: ' + geometryType);
+                    throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
                 geometryHandler(dataSource, dynamicObject, placemark, node);
             }
@@ -232,6 +232,9 @@ define(['../Core/createGuid',
         var coordinates = [];
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
+        }
+        if (coordinates[0] !== coordinates[coordinates.length - 1]){
+            throw new DeveloperError("The first and last coordinate tuples must be the same.");
         }
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
