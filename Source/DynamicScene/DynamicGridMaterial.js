@@ -3,11 +3,13 @@ define([
         './DynamicProperty',
         './CzmlColor',
         './CzmlNumber',
+        '../Core/defined',
         '../Scene/Material'
     ], function(
          DynamicProperty,
          CzmlColor,
          CzmlNumber,
+         defined,
          Material) {
     "use strict";
 
@@ -66,7 +68,7 @@ define([
      * @returns {Boolean} true if the interval contains CZML grid material data, false otherwise.
      */
     DynamicGridMaterial.isMaterial = function(czmlInterval) {
-        return typeof czmlInterval.grid !== 'undefined';
+        return defined(czmlInterval.grid);
     };
 
     /**
@@ -86,53 +88,53 @@ define([
      */
     DynamicGridMaterial.prototype.processCzmlIntervals = function(czmlInterval, sourceUri) {
         var materialData = czmlInterval.grid;
-        if (typeof materialData === 'undefined') {
+        if (!defined(materialData)) {
             return;
         }
 
-        if (typeof materialData.color !== 'undefined') {
+        if (defined(materialData.color)) {
             var color = this.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 this.color = color = new DynamicProperty(CzmlColor);
             }
             color.processCzmlIntervals(materialData.color, undefined, sourceUri);
         }
 
-        if (typeof materialData.cellAlpha !== 'undefined') {
+        if (defined(materialData.cellAlpha)) {
             var cellAlpha = this.cellAlpha;
-            if (typeof cellAlpha === 'undefined') {
+            if (!defined(cellAlpha)) {
                 this.cellAlpha = cellAlpha = new DynamicProperty(CzmlNumber);
             }
             cellAlpha.processCzmlIntervals(materialData.cellAlpha, undefined, sourceUri);
         }
 
-        if (typeof materialData.rowCount !== 'undefined') {
+        if (defined(materialData.rowCount)) {
             var rowCount = this.rowCount;
-            if (typeof rowCount === 'undefined') {
+            if (!defined(rowCount)) {
                 this.rowCount = rowCount = new DynamicProperty(CzmlNumber);
             }
             rowCount.processCzmlIntervals(materialData.rowCount, undefined, sourceUri);
         }
 
-        if (typeof materialData.columnCount !== 'undefined') {
+        if (defined(materialData.columnCount)) {
             var columnCount = this.columnCount;
-            if (typeof columnCount === 'undefined') {
+            if (!defined(columnCount)) {
                 this.columnCount = columnCount = new DynamicProperty(CzmlNumber);
             }
             columnCount.processCzmlIntervals(materialData.columnCount, undefined, sourceUri);
         }
 
-        if (typeof materialData.rowThickness !== 'undefined') {
+        if (defined(materialData.rowThickness)) {
             var rowThickness = this.rowThickness;
-            if (typeof rowThickness === 'undefined') {
+            if (!defined(rowThickness)) {
                 this.rowThickness = rowThickness = new DynamicProperty(CzmlNumber);
             }
             rowThickness.processCzmlIntervals(materialData.rowThickness, undefined, sourceUri);
         }
 
-        if (typeof materialData.columnThickness !== 'undefined') {
+        if (defined(materialData.columnThickness)) {
             var columnThickness = this.columnThickness;
-            if (typeof columnThickness === 'undefined') {
+            if (!defined(columnThickness)) {
                 this.columnThickness = columnThickness = new DynamicProperty(CzmlNumber);
             }
             columnThickness.processCzmlIntervals(materialData.columnThickness, undefined, sourceUri);
@@ -148,19 +150,19 @@ define([
      * @returns The modified existingMaterial parameter or a new Grid Material instance if existingMaterial was undefined or not a Grid Material.
      */
     DynamicGridMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.GridType)) {
+        if (!defined(existingMaterial) || (existingMaterial.type !== Material.GridType)) {
             existingMaterial = Material.fromType(context, Material.GridType);
         }
 
         var property = this.color;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             property.getValue(time, existingMaterial.uniforms.color);
         }
 
         property = this.cellAlpha;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var cellAlpha = property.getValue(time);
-            if (typeof cellAlpha !== 'undefined') {
+            if (defined(cellAlpha)) {
                 existingMaterial.uniforms.cellAlpha = cellAlpha;
             }
         }
@@ -168,17 +170,17 @@ define([
         var lineCount = existingMaterial.uniforms.lineCount;
 
         property = this.rowCount;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var rowCount = property.getValue(time);
-            if (typeof rowCount !== 'undefined') {
+            if (defined(rowCount)) {
                 lineCount.x = rowCount;
             }
         }
 
         property = this.columnCount;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var columnCount = property.getValue(time);
-            if (typeof columnCount !== 'undefined') {
+            if (defined(columnCount)) {
                 lineCount.y = columnCount;
             }
         }
@@ -186,17 +188,17 @@ define([
         var lineThickness = existingMaterial.uniforms.lineThickness;
 
         property = this.rowThickness;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var rowThickness = property.getValue(time);
-            if (typeof rowThickness !== 'undefined') {
+            if (defined(rowThickness)) {
                 lineThickness.x = rowThickness;
             }
         }
 
         property = this.columnThickness;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var columnThickness = property.getValue(time);
-            if (typeof columnThickness !== 'undefined') {
+            if (defined(columnThickness)) {
                 lineThickness.y = columnThickness;
             }
         }

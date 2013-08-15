@@ -1143,7 +1143,7 @@ defineSuite([
     });
 
     it('static clone returns undefined without matrix parameter', function() {
-        expect(typeof Matrix4.clone(undefined)).toEqual('undefined');
+        expect(Matrix4.clone(undefined)).toBeUndefined();
     });
 
     it('static toArray throws without matrix parameter', function() {

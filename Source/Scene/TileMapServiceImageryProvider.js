@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Cartographic',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -13,6 +14,7 @@ define([
         './GeographicTilingScheme'
     ], function(
         defaultValue,
+        defined,
         Cartographic,
         DeveloperError,
         Event,
@@ -74,7 +76,7 @@ define([
     var TileMapServiceImageryProvider = function TileMapServiceImageryProvider(description) {
         description = defaultValue(description, {});
 
-        if (typeof description.url === 'undefined') {
+        if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -113,7 +115,7 @@ define([
 
             // extent handling
             that._extent = description.extent;
-            if (typeof that._extent === 'undefined') {
+            if (!defined(that._extent)) {
                 var bbox = xml.getElementsByTagName('BoundingBox')[0];
                 var sw = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('miny')), parseFloat(bbox.getAttribute('minx')));
                 var ne = Cartographic.fromDegrees(parseFloat(bbox.getAttribute('maxy')), parseFloat(bbox.getAttribute('maxx')));
@@ -124,7 +126,7 @@ define([
 
             // tiling scheme handling
             var tilingScheme = description.tilingScheme;
-            if (typeof tilingScheme === 'undefined') {
+            if (!defined(tilingScheme)) {
                 var tilingSchemeName = xml.getElementsByTagName('TileSets')[0].getAttribute('profile');
                 tilingScheme = tilingSchemeName === 'geodetic' ? new GeographicTilingScheme() : new WebMercatorTilingScheme();
             }
@@ -174,7 +176,7 @@ define([
         var url = imageryProvider._url + level + '/' + x + '/' + (yTiles - y - 1) + '.' + imageryProvider._fileExtension;
 
         var proxy = imageryProvider._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 

@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/defined',
         './ImageryState'
     ], function(
+        defined,
         ImageryState) {
     "use strict";
 
@@ -28,11 +30,11 @@ define([
      * @memberof TileImagery
      */
     TileImagery.prototype.freeResources = function() {
-        if (typeof this.readyImagery !== 'undefined') {
+        if (defined(this.readyImagery)) {
             this.readyImagery.releaseReference();
         }
 
-        if (typeof this.loadingImagery !== 'undefined') {
+        if (defined(this.loadingImagery)) {
             this.loadingImagery.releaseReference();
         }
     };
@@ -64,7 +66,7 @@ define([
         }
 
         if (loadingImagery.state === ImageryState.READY) {
-            if (typeof this.readyImagery !== 'undefined') {
+            if (defined(this.readyImagery)) {
                 this.readyImagery.releaseReference();
             }
             this.readyImagery = this.loadingImagery;
@@ -76,19 +78,19 @@ define([
         // Find some ancestor imagery we can use while this imagery is still loading.
         var ancestor = loadingImagery.parent;
         var ancestorsAreStillLoading = false;
-        while (typeof ancestor !== 'undefined' && ancestor.state !== ImageryState.READY) {
+        while (defined(ancestor) && ancestor.state !== ImageryState.READY) {
             ancestorsAreStillLoading = ancestorsAreStillLoading || (ancestor.state !== ImageryState.FAILED && ancestor.state !== ImageryState.INVALID);
             ancestor = ancestor.parent;
         }
 
         if (this.readyImagery !== ancestor) {
-            if (typeof this.readyImagery !== 'undefined') {
+            if (defined(this.readyImagery)) {
                 this.readyImagery.releaseReference();
             }
 
             this.readyImagery = ancestor;
 
-            if (typeof ancestor !== 'undefined') {
+            if (defined(ancestor)) {
                 ancestor.addReference();
                 this.textureTranslationAndScale = imageryLayer._calculateTextureTranslationAndScale(tile, this);
             }

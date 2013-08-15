@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/TimeInterval',
         '../Core/defaultValue',
         './CzmlBoolean',
@@ -7,6 +8,7 @@ define([
         './CzmlColor',
         './DynamicProperty'
     ], function(
+         defined,
          TimeInterval,
          defaultValue,
          CzmlBoolean,
@@ -76,61 +78,61 @@ define([
      */
     DynamicPoint.processCzmlPacket = function(dynamicObject, packet) {
         var pointData = packet.point;
-        if (typeof pointData === 'undefined') {
+        if (!defined(pointData)) {
             return false;
         }
 
         var pointUpdated = false;
         var point = dynamicObject.point;
-        pointUpdated = typeof point === 'undefined';
+        pointUpdated = !defined(point);
         if (pointUpdated) {
             dynamicObject.point = point = new DynamicPoint();
         }
 
         var interval = pointData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pointData.color !== 'undefined') {
+        if (defined(pointData.color)) {
             var color = point.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 point.color = color = new DynamicProperty(CzmlColor);
                 pointUpdated = true;
             }
             color.processCzmlIntervals(pointData.color, interval);
         }
 
-        if (typeof pointData.pixelSize !== 'undefined') {
+        if (defined(pointData.pixelSize)) {
             var pixelSize = point.pixelSize;
-            if (typeof pixelSize === 'undefined') {
+            if (!defined(pixelSize)) {
                 point.pixelSize = pixelSize = new DynamicProperty(CzmlNumber);
                 pointUpdated = true;
             }
             pixelSize.processCzmlIntervals(pointData.pixelSize, interval);
         }
 
-        if (typeof pointData.outlineColor !== 'undefined') {
+        if (defined(pointData.outlineColor)) {
             var outlineColor = point.outlineColor;
-            if (typeof outlineColor === 'undefined') {
+            if (!defined(outlineColor)) {
                 point.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
                 pointUpdated = true;
             }
             outlineColor.processCzmlIntervals(pointData.outlineColor, interval);
         }
 
-        if (typeof pointData.outlineWidth !== 'undefined') {
+        if (defined(pointData.outlineWidth)) {
             var outlineWidth = point.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
+            if (!defined(outlineWidth)) {
                 point.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
                 pointUpdated = true;
             }
             outlineWidth.processCzmlIntervals(pointData.outlineWidth, interval);
         }
 
-        if (typeof pointData.show !== 'undefined') {
+        if (defined(pointData.show)) {
             var show = point.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 point.show = show = new DynamicProperty(CzmlBoolean);
                 pointUpdated = true;
             }
@@ -152,10 +154,10 @@ define([
      */
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
-        if (typeof pointToMerge !== 'undefined') {
+        if (defined(pointToMerge)) {
 
             var targetPoint = targetObject.point;
-            if (typeof targetPoint === 'undefined') {
+            if (!defined(targetPoint)) {
                 targetObject.point = targetPoint = new DynamicPoint();
             }
 

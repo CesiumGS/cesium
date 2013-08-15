@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/loadImage',
         '../Core/loadXML',
         '../Core/getImagePixels',
@@ -19,6 +20,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         loadImage,
         loadXML,
         getImagePixels,
@@ -65,7 +67,7 @@ define([
      */
     var VRTheWorldTerrainProvider = function VRTheWorldTerrainProvider(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
-        if (typeof description.url === 'undefined') {
+        if (!defined(description.url)) {
             throw new DeveloperError('description.url is required.');
         }
 
@@ -170,7 +172,7 @@ define([
         var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
 
         var proxy = this._proxy;
-        if (typeof proxy !== 'undefined') {
+        if (defined(proxy)) {
             url = proxy.getURL(url);
         }
 
@@ -179,7 +181,7 @@ define([
         throttleRequests = defaultValue(throttleRequests, true);
         if (throttleRequests) {
             promise = throttleRequestByServer(url, loadImage);
-            if (typeof promise === 'undefined') {
+            if (!defined(promise)) {
                 return undefined;
             }
         } else {

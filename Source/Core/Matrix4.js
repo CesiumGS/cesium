@@ -3,6 +3,7 @@ define([
         './Cartesian3',
         './Cartesian4',
         './defaultValue',
+        './defined',
         './DeveloperError',
         './freezeObject',
         './Math',
@@ -12,6 +13,7 @@ define([
         Cartesian3,
         Cartesian4,
         defaultValue,
+        defined,
         DeveloperError,
         freezeObject,
         CesiumMath,
@@ -88,10 +90,10 @@ define([
      * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
     Matrix4.clone = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             return undefined;
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(matrix[0], matrix[4], matrix[8], matrix[12],
                                matrix[1], matrix[5], matrix[9], matrix[13],
                                matrix[2], matrix[6], matrix[10], matrix[14],
@@ -128,7 +130,7 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix4.fromColumnMajorArray = function(values, result) {
-        if (typeof values === 'undefined') {
+        if (!defined(values)) {
             throw new DeveloperError('values parameter is required');
         }
         return Matrix4.clone(values, result);
@@ -146,10 +148,10 @@ define([
      * @exception {DeveloperError} values is required.
      */
     Matrix4.fromRowMajorArray = function(values, result) {
-        if (typeof values === 'undefined') {
+        if (!defined(values)) {
             throw new DeveloperError('values is required.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(values[0], values[1], values[2], values[3],
                                values[4], values[5], values[6], values[7],
                                values[8], values[9], values[10], values[11],
@@ -188,13 +190,13 @@ define([
      * @exception {DeveloperError} translation is required.
      */
     Matrix4.fromRotationTranslation = function(rotation, translation, result) {
-        if (typeof rotation === 'undefined') {
+        if (!defined(rotation)) {
             throw new DeveloperError('rotation is required.');
         }
-        if (typeof translation === 'undefined') {
+        if (!defined(translation)) {
             throw new DeveloperError('translation is required.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(rotation[0], rotation[3], rotation[6], translation.x,
                                rotation[1], rotation[4], rotation[7], translation.y,
                                rotation[2], rotation[5], rotation[8], translation.z,
@@ -255,10 +257,10 @@ define([
      * var m = Matrix4.fromScale(new Cartesian3(7.0, 8.0, 9.0));
      */
     Matrix4.fromScale = function(scale, result) {
-        if (typeof scale === 'undefined') {
+        if (!defined(scale)) {
             throw new DeveloperError('scale is required.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(
                 scale.x, 0.0,     0.0,     0.0,
                 0.0,     scale.y, 0.0,     0.0,
@@ -307,7 +309,7 @@ define([
         if (typeof scale !== 'number') {
             throw new DeveloperError('scale is required.');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(scale, 0.0,   0.0,   0.0,
                                0.0,   scale, 0.0,   0.0,
                                0.0,   0.0,   scale, 0.0,
@@ -351,7 +353,7 @@ define([
      * @exception {DeveloperError} camera.up is required.
      */
     Matrix4.fromCamera = function(camera, result) {
-        if (typeof camera === 'undefined') {
+        if (!defined(camera)) {
             throw new DeveloperError('camera is required.');
         }
 
@@ -359,13 +361,13 @@ define([
         var target = camera.target;
         var up = camera.up;
 
-        if (typeof eye === 'undefined') {
+        if (!defined(eye)) {
             throw new DeveloperError('camera.eye is required.');
         }
-        if (typeof target === 'undefined') {
+        if (!defined(target)) {
             throw new DeveloperError('camera.target is required.');
         }
-        if (typeof up === 'undefined') {
+        if (!defined(up)) {
             throw new DeveloperError('camera.up is required.');
         }
 
@@ -404,7 +406,7 @@ define([
         //                0.0, 0.0, 1.0, -eye.z,
         //                0.0, 0.0, 0.0, 1.0);
         //return rotation.multiply(translation);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(
                     sX,   sY,  sZ, t0,
                     uX,   uY,  uZ, t1,
@@ -471,7 +473,7 @@ define([
         var column2Row2 = (far + near) / (near - far);
         var column3Row2 = (2.0 * far * near) / (near - far);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(column0Row0,         0.0,         0.0,         0.0,
                                        0.0, column1Row1,         0.0,         0.0,
                                        0.0,         0.0, column2Row2, column3Row2,
@@ -518,22 +520,22 @@ define([
     * @exception {DeveloperError} far is required.
     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
-        if (typeof bottom === 'undefined') {
+        if (!defined(bottom)) {
             throw new DeveloperError('bottom is required.');
         }
-        if (typeof top === 'undefined') {
+        if (!defined(top)) {
             throw new DeveloperError('top is required.');
         }
-        if (typeof near === 'undefined') {
+        if (!defined(near)) {
             throw new DeveloperError('near is required.');
         }
-        if (typeof far === 'undefined') {
+        if (!defined(far)) {
             throw new DeveloperError('far is required.');
         }
 
@@ -548,7 +550,7 @@ define([
         b *= 2.0;
         c *= -2.0;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(  a, 0.0, 0.0, tx,
                                0.0,   b, 0.0, ty,
                                0.0, 0.0,   c, tz,
@@ -595,22 +597,22 @@ define([
      * @exception {DeveloperError} far is required.
      */
     Matrix4.computePerspectiveOffCenter = function(left, right, bottom, top, near, far, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
-        if (typeof bottom === 'undefined') {
+        if (!defined(bottom)) {
             throw new DeveloperError('bottom is required.');
         }
-        if (typeof top === 'undefined') {
+        if (!defined(top)) {
             throw new DeveloperError('top is required.');
         }
-        if (typeof near === 'undefined') {
+        if (!defined(near)) {
             throw new DeveloperError('near is required.');
         }
-        if (typeof far === 'undefined') {
+        if (!defined(far)) {
             throw new DeveloperError('far is required.');
         }
 
@@ -622,7 +624,7 @@ define([
         var column2Row3 = -1.0;
         var column3Row2 = -2.0 * far * near / (far - near);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
                                        0.0, column1Row1, column2Row1, 0.0,
                                        0.0, 0.0,         column2Row2, column3Row2,
@@ -668,19 +670,19 @@ define([
      * @exception {DeveloperError} near is required.
      */
     Matrix4.computeInfinitePerspectiveOffCenter = function(left, right, bottom, top, near, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required.');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required.');
         }
-        if (typeof bottom === 'undefined') {
+        if (!defined(bottom)) {
             throw new DeveloperError('bottom is required.');
         }
-        if (typeof top === 'undefined') {
+        if (!defined(top)) {
             throw new DeveloperError('top is required.');
         }
-        if (typeof near === 'undefined') {
+        if (!defined(near)) {
             throw new DeveloperError('near is required.');
         }
 
@@ -692,7 +694,7 @@ define([
         var column2Row3 = -1.0;
         var column3Row2 = -2.0 * near;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(column0Row0, 0.0,         column2Row0, 0.0,
                                        0.0, column1Row1, column2Row1, 0.0,
                                        0.0, 0.0,         column2Row2, column3Row2,
@@ -764,7 +766,7 @@ define([
         var column3Row2 = nearDepthRange + halfDepth;
         var column3Row3 = 1.0;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(column0Row0, 0.0,         0.0,         column3Row0,
                                0.0,         column1Row1, 0.0,         column3Row1,
                                0.0,         0.0,         column2Row2, column3Row2,
@@ -813,10 +815,10 @@ define([
      *
      */
     Matrix4.toArray = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return [matrix[0], matrix[1], matrix[2], matrix[3],
                     matrix[4], matrix[5], matrix[6], matrix[7],
                     matrix[8], matrix[9], matrix[10], matrix[11],
@@ -900,7 +902,7 @@ define([
      *
      */
     Matrix4.getColumn = function(matrix, index, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
 
@@ -914,7 +916,7 @@ define([
         var z = matrix[startIndex + 2];
         var w = matrix[startIndex + 3];
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian4(x, y, z, w);
         }
         result.x = x;
@@ -957,10 +959,10 @@ define([
      *
      */
     Matrix4.setColumn = function(matrix, index, cartesian, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 3) {
@@ -1006,7 +1008,7 @@ define([
      * // a.x = 18.0; a.y = 19.0; a.z = 20.0; a.w = 21.0;
      */
     Matrix4.getRow = function(matrix, index, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required.');
         }
 
@@ -1019,7 +1021,7 @@ define([
         var z = matrix[index + 8];
         var w = matrix[index + 12];
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian4(x, y, z, w);
         }
         result.x = x;
@@ -1062,10 +1064,10 @@ define([
      *
      */
     Matrix4.setRow = function(matrix, index, cartesian, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
         if (typeof index !== 'number' || index < 0 || index > 3) {
@@ -1093,10 +1095,10 @@ define([
      * @exception {DeveloperError} right is required.
      */
     Matrix4.multiply = function(left, right, result) {
-        if (typeof left === 'undefined') {
+        if (!defined(left)) {
             throw new DeveloperError('left is required');
         }
-        if (typeof right === 'undefined') {
+        if (!defined(right)) {
             throw new DeveloperError('right is required');
         }
 
@@ -1154,7 +1156,7 @@ define([
         var column3Row2 = left2 * right12 + left6 * right13 + left10 * right14 + left14 * right15;
         var column3Row3 = left3 * right12 + left7 * right13 + left11 * right14 + left15 * right15;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
                                column0Row1, column1Row1, column2Row1, column3Row1,
                                column0Row2, column1Row2, column2Row2, column3Row2,
@@ -1202,10 +1204,10 @@ define([
      * Matrix4.multiplyByTranslation(m, position, m);
      */
     Matrix4.multiplyByTranslation = function(matrix, translation, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof translation === 'undefined') {
+        if (!defined(translation)) {
             throw new DeveloperError('translation is required');
         }
 
@@ -1217,7 +1219,7 @@ define([
         var ty = (x * matrix[1]) + (y * matrix[5]) + (z * matrix[9]) + matrix[13];
         var tz = (x * matrix[2]) + (y * matrix[6]) + (z * matrix[10]) + matrix[14];
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(matrix[0], matrix[4], matrix[8], tx,
                                matrix[1], matrix[5], matrix[9], ty,
                                matrix[2], matrix[6], matrix[10], tz,
@@ -1266,7 +1268,7 @@ define([
      * Matrix4.multiplyByUniformScale(m, scale, m);
      */
     Matrix4.multiplyByUniformScale = function(matrix, scale, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (typeof scale !== 'number') {
@@ -1277,7 +1279,7 @@ define([
             return Matrix4.clone(matrix, result);
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(
                 scale * matrix[0], scale * matrix[4], scale * matrix[8],  matrix[12],
                 scale * matrix[1], scale * matrix[5], scale * matrix[9],  matrix[13],
@@ -1317,10 +1319,10 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Matrix4.multiplyByVector = function(matrix, cartesian, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
 
@@ -1334,7 +1336,7 @@ define([
         var z = matrix[2] * vX + matrix[6] * vY + matrix[10] * vZ + matrix[14] * vW;
         var w = matrix[3] * vX + matrix[7] * vY + matrix[11] * vZ + matrix[15] * vW;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian4(x, y, z, w);
         }
         result.x = x;
@@ -1367,7 +1369,7 @@ define([
      * //   Matrix4.multiplyByVector(matrix, new Cartesian4(p.x, p.y, p.z, 1.0), result);
      */
     Matrix4.multiplyByPoint = function(matrix, cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required');
         }
 
@@ -1408,14 +1410,14 @@ define([
      *
      */
     Matrix4.multiplyByScalar = function(matrix, scalar, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
         if (typeof scalar !== 'number') {
             throw new DeveloperError('scalar is required and must be a number');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(matrix[0] * scalar, matrix[4] * scalar, matrix[8] * scalar, matrix[12] * scalar,
                                matrix[1] * scalar, matrix[5] * scalar, matrix[9] * scalar, matrix[13] * scalar,
                                matrix[2] * scalar, matrix[6] * scalar, matrix[10] * scalar, matrix[14] * scalar,
@@ -1467,11 +1469,11 @@ define([
      *
      */
     Matrix4.negate = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(-matrix[0], -matrix[4], -matrix[8], -matrix[12],
                                -matrix[1], -matrix[5], -matrix[9], -matrix[13],
                                -matrix[2], -matrix[6], -matrix[10], -matrix[14],
@@ -1523,10 +1525,10 @@ define([
      *
      */
     Matrix4.transpose = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(matrix[0], matrix[1], matrix[2], matrix[3],
                                matrix[4], matrix[5], matrix[6], matrix[7],
                                matrix[8], matrix[9], matrix[10], matrix[11],
@@ -1592,8 +1594,8 @@ define([
      */
     Matrix4.equals = function(left, right) {
         return (left === right) ||
-               (typeof left !== 'undefined' &&
-                typeof right !== 'undefined' &&
+               (defined(left) &&
+                defined(right) &&
                 left[0] === right[0] &&
                 left[1] === right[1] &&
                 left[2] === right[2] &&
@@ -1653,8 +1655,8 @@ define([
         }
 
         return (left === right) ||
-                (typeof left !== 'undefined' &&
-                typeof right !== 'undefined' &&
+                (defined(left) &&
+                defined(right) &&
                 Math.abs(left[0] - right[0]) <= epsilon &&
                 Math.abs(left[1] - right[1]) <= epsilon &&
                 Math.abs(left[2] - right[2]) <= epsilon &&
@@ -1686,10 +1688,10 @@ define([
      * @see Cartesian3
      */
     Matrix4.getTranslation = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartesian3(matrix[12], matrix[13], matrix[14]);
         }
         result.x = matrix[12];
@@ -1727,10 +1729,10 @@ define([
      *
      */
     Matrix4.getRotation = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix3(matrix[0], matrix[4], matrix[8],
                                matrix[1], matrix[5], matrix[9],
                                matrix[2], matrix[6], matrix[10]);
@@ -1762,7 +1764,7 @@ define([
       * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
       */
     Matrix4.inverse = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
 
@@ -1844,7 +1846,7 @@ define([
 
         // calculate matrix inverse
         det = 1.0 / det;
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(dst0 * det, dst4 * det, dst8 * det, dst12 * det,
                                dst1 * det, dst5 * det, dst9 * det, dst13 * det,
                                dst2 * det, dst6 * det, dst10 * det, dst14 * det,
@@ -1887,7 +1889,7 @@ define([
      * @exception {DeveloperError} matrix is required.
      */
     Matrix4.inverseTransformation = function(matrix, result) {
-        if (typeof matrix === 'undefined') {
+        if (!defined(matrix)) {
             throw new DeveloperError('matrix is required');
         }
 
@@ -1915,7 +1917,7 @@ define([
         var y = -matrix4 * vX - matrix5 * vY - matrix6 * vZ;
         var z = -matrix8 * vX - matrix9 * vY - matrix10 * vZ;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Matrix4(matrix0, matrix1, matrix2,  x,
                                matrix4, matrix5, matrix6,  y,
                                matrix8, matrix9, matrix10, z,

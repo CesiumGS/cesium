@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Iso8601',
         '../Core/JulianDate',
@@ -10,6 +11,7 @@ define([
         '../Core/LinearApproximation',
         '../Core/LagrangePolynomialApproximation'
     ], function(
+        defined,
         DeveloperError,
         Iso8601,
         JulianDate,
@@ -123,7 +125,7 @@ define([
      * @see DynamicVertexPositionsProperty
      */
     var DynamicProperty = function(valueType) {
-        if (typeof valueType === 'undefined') {
+        if (!defined(valueType)) {
             throw new DeveloperError('valueType is required.');
         }
         this.valueType = valueType;
@@ -164,20 +166,20 @@ define([
     DynamicProperty.prototype.getValue = function(time, result) {
         var valueType = this.valueType;
 
-        if (typeof this._staticValue !== 'undefined') {
+        if (defined(this._staticValue)) {
             return valueType.getValue(this._staticValue, result);
         }
 
         var interval = this._cachedInterval;
         if (!JulianDate.equals(this._cachedTime, time)) {
             this._cachedTime = JulianDate.clone(time, this._cachedTime);
-            if (typeof interval === 'undefined' || !interval.contains(time)) {
+            if (!defined(interval) || !interval.contains(time)) {
                 interval = this._intervals.findIntervalContainingDate(time);
                 this._cachedInterval = interval;
             }
         }
 
-        if (typeof interval === 'undefined') {
+        if (!defined(interval)) {
             return undefined;
         }
 
@@ -229,7 +231,7 @@ define([
                 var xTable = intervalData.xTable;
                 var yTable = intervalData.yTable;
 
-                if (typeof xTable === 'undefined') {
+                if (!defined(xTable)) {
                     xTable = intervalData.xTable = new Array(intervalData.numberOfPoints);
                     yTable = intervalData.yTable = new Array(intervalData.numberOfPoints * doublesPerInterpolationValue);
                 }
@@ -239,7 +241,7 @@ define([
                     xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
                 }
                 var specializedPackFunction = valueType.packValuesForInterpolation;
-                if (typeof specializedPackFunction === 'undefined') {
+                if (!defined(specializedPackFunction)) {
                     var destinationIndex = 0;
                     var sourceIndex = firstIndex * doublesPerValue;
                     var stop = (lastIndex + 1) * doublesPerValue;
@@ -258,7 +260,7 @@ define([
                 interpolationScratch = intervalData.interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, doublesPerInterpolationValue, interpolationScratch);
 
                 var specializedGetFunction = valueType.getValueFromInterpolationResult;
-                if (typeof specializedGetFunction === 'undefined') {
+                if (!defined(specializedGetFunction)) {
                     return valueType.getValueFromArray(interpolationScratch, 0, result);
                 }
                 return specializedGetFunction(interpolationScratch, result, values, firstIndex, lastIndex);
@@ -294,8 +296,8 @@ define([
                 nextTime = times[timesInsertionPoint];
                 while (newDataIndex < newData.length) {
                     currentTime = czmlDateToJulianDate(newData[newDataIndex], epoch);
-                    if ((typeof prevItem !== 'undefined' && JulianDate.compare(prevItem, currentTime) >= 0) ||
-                        (typeof nextTime !== 'undefined' && JulianDate.compare(currentTime, nextTime) >= 0)) {
+                    if ((defined(prevItem) && JulianDate.compare(prevItem, currentTime) >= 0) ||
+                        (defined(nextTime) && JulianDate.compare(currentTime, nextTime) >= 0)) {
                         break;
                     }
                     timesSpliceArgs.push(currentTime);
@@ -322,18 +324,18 @@ define([
 
     DynamicProperty.prototype._addCzmlInterval = function(czmlInterval, constrainedInterval, sourceUri) {
         var iso8601Interval = czmlInterval.interval;
-        if (typeof iso8601Interval === 'undefined') {
+        if (!defined(iso8601Interval)) {
             iso8601Interval = Iso8601.MAXIMUM_INTERVAL;
         } else {
             iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
         }
 
-        if (typeof constrainedInterval !== 'undefined') {
+        if (defined(constrainedInterval)) {
             iso8601Interval = iso8601Interval.intersect(constrainedInterval);
         }
 
         var unwrappedInterval = this.valueType.unwrapInterval(czmlInterval, sourceUri);
-        if (typeof unwrappedInterval !== 'undefined') {
+        if (defined(unwrappedInterval)) {
             this._addCzmlIntervalUnwrapped(iso8601Interval.start, iso8601Interval.stop, unwrappedInterval, czmlInterval.epoch, czmlInterval.interpolationAlgorithm, czmlInterval.interpolationDegree);
         }
     };
@@ -345,7 +347,7 @@ define([
         this._cachedInterval = undefined;
 
         var intervalData;
-        if (typeof existingInterval === 'undefined') {
+        if (!defined(existingInterval)) {
             intervalData = new IntervalData();
             existingInterval = new TimeInterval(start, stop, true, true, intervalData);
             thisIntervals.addInterval(existingInterval);
@@ -356,11 +358,11 @@ define([
         var valueType = this.valueType;
         if (valueType.isSampled(unwrappedInterval)) {
             var interpolationAlgorithm;
-            if (typeof interpolationAlgorithmType !== 'undefined') {
+            if (defined(interpolationAlgorithmType)) {
                 interpolationAlgorithm = interpolators[interpolationAlgorithmType];
                 intervalData.interpolationAlgorithm = interpolationAlgorithm;
             }
-            if (typeof interpolationAlgorithm !== 'undefined' && typeof interpolationDegree !== 'undefined') {
+            if (defined(interpolationAlgorithm) && defined(interpolationDegree)) {
                 intervalData.interpolationDegree = interpolationDegree;
                 intervalData.xTable = undefined;
                 intervalData.yTable = undefined;
@@ -371,7 +373,7 @@ define([
                 intervalData.values = [];
                 intervalData.isSampled = true;
             }
-            if (typeof epoch !== 'undefined') {
+            if (defined(epoch)) {
                 epoch = JulianDate.fromIso8601(epoch);
             }
             DynamicProperty._mergeNewSamples(epoch, intervalData.times, intervalData.values, unwrappedInterval, valueType.doublesPerValue, valueType);

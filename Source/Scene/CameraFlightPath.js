@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HermiteSpline',
         '../Core/Math',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         clone,
         defaultValue,
+        defined,
         DeveloperError,
         HermiteSpline,
         CesiumMath,
@@ -198,7 +200,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
+        if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             point.point.negate(direction3D).normalize(direction3D);
@@ -317,7 +319,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
+        if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             point.orientation = quat;
@@ -413,10 +415,10 @@ define([
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
-        if (typeof frameState === 'undefined') {
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
-        if (typeof destination === 'undefined') {
+        if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
         if (frameState.mode === SceneMode.MORPHING) {
@@ -447,7 +449,7 @@ define([
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
-                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = position.negate(dirScratch).normalize(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
                     } else {
@@ -456,7 +458,7 @@ define([
                     }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
-                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
                     } else {
@@ -541,10 +543,10 @@ define([
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
-        if (typeof frameState === 'undefined') {
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
-        if (typeof destination === 'undefined') {
+        if (!defined(destination)) {
             throw new DeveloperError('description.destination is required.');
         }
 
@@ -584,10 +586,10 @@ define([
     CameraFlightPath.createAnimationExtent = function(frameState, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.destination;
-        if (typeof frameState === 'undefined') {
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('description.destination is required.');
         }
         if (frameState.mode === SceneMode.MORPHING) {

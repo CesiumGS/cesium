@@ -1,6 +1,8 @@
 /*global define*/
-define(['../Core/TimeInterval',
+define([
+        '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Shapes',
@@ -9,6 +11,7 @@ define(['../Core/TimeInterval',
         ], function (
             TimeInterval,
             defaultValue,
+            defined,
             Cartesian3,
             Ellipsoid,
             Shapes,
@@ -77,43 +80,43 @@ define(['../Core/TimeInterval',
      */
     DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var ellipseData = packet.ellipse;
-        if (typeof ellipseData === 'undefined') {
+        if (!defined(ellipseData)) {
             return false;
         }
 
         var ellipseUpdated = false;
         var ellipse = dynamicObject.ellipse;
-        ellipseUpdated = typeof ellipse === 'undefined';
+        ellipseUpdated = !defined(ellipse);
         if (ellipseUpdated) {
             dynamicObject.ellipse = ellipse = new DynamicEllipse();
         }
 
         var interval = ellipseData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof ellipseData.bearing !== 'undefined') {
+        if (defined(ellipseData.bearing)) {
             var bearing = ellipse.bearing;
-            if (typeof bearing === 'undefined') {
+            if (!defined(bearing)) {
                 ellipse.bearing = bearing = new DynamicProperty(CzmlNumber);
                 ellipseUpdated = true;
             }
             bearing.processCzmlIntervals(ellipseData.bearing, interval);
         }
 
-        if (typeof ellipseData.semiMajorAxis !== 'undefined') {
+        if (defined(ellipseData.semiMajorAxis)) {
             var semiMajorAxis = ellipse.semiMajorAxis;
-            if (typeof semiMajorAxis === 'undefined') {
+            if (!defined(semiMajorAxis)) {
                 ellipse.semiMajorAxis = semiMajorAxis = new DynamicProperty(CzmlNumber);
                 ellipseUpdated = true;
             }
             semiMajorAxis.processCzmlIntervals(ellipseData.semiMajorAxis, interval);
         }
 
-        if (typeof ellipseData.semiMinorAxis !== 'undefined') {
+        if (defined(ellipseData.semiMinorAxis)) {
             var semiMinorAxis = ellipse.semiMinorAxis;
-            if (typeof semiMinorAxis === 'undefined') {
+            if (!defined(semiMinorAxis)) {
                 ellipse.semiMinorAxis = semiMinorAxis = new DynamicProperty(CzmlNumber);
                 ellipseUpdated = true;
             }
@@ -136,10 +139,10 @@ define(['../Core/TimeInterval',
      */
     DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
         var ellipseToMerge = objectToMerge.ellipse;
-        if (typeof ellipseToMerge !== 'undefined') {
+        if (defined(ellipseToMerge)) {
 
             var targetEllipse = targetObject.ellipse;
-            if (typeof targetEllipse === 'undefined') {
+            if (!defined(targetEllipse)) {
                 targetObject.ellipse = targetEllipse = new DynamicEllipse();
             }
 
@@ -174,9 +177,9 @@ define(['../Core/TimeInterval',
         var semiMajorAxisProperty = this.semiMajorAxis;
         var semiMinorAxisProperty = this.semiMinorAxis;
 
-        if (typeof position === 'undefined' || //
-            typeof semiMajorAxisProperty === 'undefined' || //
-            typeof semiMinorAxisProperty === 'undefined') {
+        if (!defined(position) || //
+            !defined(semiMajorAxisProperty) || //
+            !defined(semiMinorAxisProperty)) {
             return undefined;
         }
 
@@ -185,12 +188,12 @@ define(['../Core/TimeInterval',
 
         var bearing = 0.0;
         var bearingProperty = this.bearing;
-        if (typeof bearingProperty !== 'undefined') {
+        if (defined(bearingProperty)) {
             bearing = bearingProperty.getValue(time);
         }
 
-        if (typeof semiMajorAxis === 'undefined' || //
-            typeof semiMinorAxis === 'undefined' || //
+        if (!defined(semiMajorAxis) || //
+            !defined(semiMinorAxis) || //
             semiMajorAxis === 0.0 || //
             semiMinorAxis === 0.0) {
             return undefined;

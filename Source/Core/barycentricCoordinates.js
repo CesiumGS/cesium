@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './Cartesian3',
+        './defined',
         './DeveloperError'
     ], function(
         Cartesian3,
+        defined,
         DeveloperError) {
     "use strict";
 
@@ -35,11 +37,11 @@ define([
      *   new Cartesian3( 0.0, 1.0, 1.0));
      */
     var barycentricCoordinates = function(point, p0, p1, p2, result) {
-        if (typeof point === 'undefined' || typeof p0 === 'undefined' || typeof p1 === 'undefined' || typeof p2 === 'undefined') {
+        if (!defined(point) || !defined(p0) || !defined(p1) || !defined(p2)) {
             throw new DeveloperError('point, p0, p1, and p2 are required.');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Cartesian3();
         }
 

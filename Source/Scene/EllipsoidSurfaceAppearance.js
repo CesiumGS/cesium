@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/VertexFormat',
         './Material',
         './Appearance',
@@ -9,6 +10,7 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
+        defined,
         VertexFormat,
         Material,
         Appearance,
@@ -67,7 +69,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = (defined(options.material)) ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * The GLSL source code for the vertex shader.

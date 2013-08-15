@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/destroyObject',
@@ -7,6 +8,7 @@ define([
         './FullscreenButtonViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         DeveloperError,
         destroyObject,
@@ -30,7 +32,7 @@ define([
      * @see Fullscreen
      */
     var FullscreenButton = function(container, fullscreenElement) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
@@ -40,8 +42,13 @@ define([
         this._viewModel = new FullscreenButtonViewModel(fullscreenElement);
 
         this._element = document.createElement('button');
+        this._element.type = 'button';
         this._element.className = 'cesium-fullscreenButton';
-        this._element.setAttribute('data-bind', 'attr: { title: tooltip }, css: { "cesium-fullscreenButton-exit": isFullscreen }, click: command, enable: isFullscreenEnabled');
+        this._element.setAttribute('data-bind', '\
+attr: { title: tooltip },\
+css: { "cesium-fullscreenButton-exit": isFullscreen },\
+click: command,\
+enable: isFullscreenEnabled');
         container.appendChild(this._element);
 
         knockout.applyBindings(this._viewModel, this._element);
