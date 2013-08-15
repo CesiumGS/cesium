@@ -4,6 +4,7 @@ define([
         '../Core/loadArrayBuffer',
         '../Core/throttleRequestByServer',
         '../Core/writeTextToCanvas',
+        '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Event',
@@ -17,6 +18,7 @@ define([
         loadArrayBuffer,
         throttleRequestByServer,
         writeTextToCanvas,
+        BoundingSphere,
         Cartesian3,
         DeveloperError,
         Event,
@@ -105,43 +107,72 @@ define([
         }
 
         return when(promise, function(buffer) {
+            var pos = 0;
+            var uint32Length = 4;
+            var float32Length = 4;
+            var float64Length = 8;
+            var cartesian3Elements = 3;
+            var boundingSphereElements = cartesian3Elements + 1;
+            var cartesian3Length = float64Length * cartesian3Elements;
+            var boundingSphereLength = float64Length * boundingSphereElements;
+            var vertexElements = 6;
+            var vertexLength = float32Length * vertexElements;
+            var triangleElements = 3;
+            var triangleLength = uint32Length * triangleElements;
+
             var view = new DataView(buffer);
-            var center = new Cartesian3(view.getFloat64(0, true), view.getFloat64(8, true), view.getFloat64(16, true));
+            var center = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
+            pos += cartesian3Length;
 
-            var minimumHeightStart = 24;
-            var minimumHeight = view.getFloat32(minimumHeightStart, true);
+            var minimumHeight = view.getFloat32(pos, true);
+            pos += float32Length;
+            var maximumHeight = view.getFloat32(pos, true);
+            pos += float32Length;
 
-            var maximumHeightStart = minimumHeightStart + 4;
-            var maximumHeight = view.getFloat32(maximumHeightStart, true);
+            var boundingSphere = new BoundingSphere(
+                    new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true)),
+                    view.getFloat64(pos + cartesian3Length, true));
+            pos += boundingSphereLength;
 
-            var vertexStart = maximumHeightStart + 4;
-            var vertexCount = view.getInt32(vertexStart, true);
-            var vertexBuffer = new Float32Array(buffer, vertexStart + 4, vertexCount * 6);
+            var horizonOcclusionPoint = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
+            pos += cartesian3Length;
 
-            var triangleStart = vertexStart + 4 + vertexCount * 6 * 4;
-            var triangleCount = view.getInt32(triangleStart, true);
-            var indexBuffer = new Uint32Array(buffer, triangleStart + 4, triangleCount * 3);
+            var vertexCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var vertexBuffer = new Float32Array(buffer, pos, vertexCount * vertexElements);
+            pos += vertexCount * vertexLength;
 
-            var westStart = triangleStart + 4 + triangleCount * 3 * 4;
-            var westVertexCount = view.getInt32(westStart, true);
-            var westVertices = new Uint32Array(buffer, westStart + 4, westVertexCount);
+            var triangleCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var indexBuffer = new Uint32Array(buffer, pos, triangleCount * triangleElements);
+            pos += triangleCount * triangleLength;
 
-            var southStart = westStart + 4 + westVertexCount * 4;
-            var southVertexCount = view.getInt32(southStart, true);
-            var southVertices = new Uint32Array(buffer, southStart + 4, southVertexCount);
+            var westVertexCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var westVertices = new Uint32Array(buffer, pos, westVertexCount);
+            pos += westVertexCount * uint32Length;
 
-            var eastStart = southStart + 4 + southVertexCount * 4;
-            var eastVertexCount = view.getInt32(eastStart, true);
-            var eastVertices = new Uint32Array(buffer, eastStart + 4, eastVertexCount);
+            var southVertexCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var southVertices = new Uint32Array(buffer, pos, southVertexCount);
+            pos += southVertexCount * uint32Length;
 
-            var northStart = eastStart + 4 + eastVertexCount * 4;
-            var northVertexCount = view.getInt32(northStart, true);
-            var northVertices = new Uint32Array(buffer, northStart + 4, northVertexCount);
+            var eastVertexCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var eastVertices = new Uint32Array(buffer, pos, eastVertexCount);
+            pos += eastVertexCount * uint32Length;
+
+            var northVertexCount = view.getUint32(pos, true);
+            pos += uint32Length;
+            var northVertices = new Uint32Array(buffer, pos, northVertexCount);
+            pos += northVertexCount * uint32Length;
 
             return new MeshTerrainData({
                 center : center,
                 minimumHeight : minimumHeight,
                 maximumHeight : maximumHeight,
+                boundingSphere : boundingSphere,
+                horizonOcclusionPoint : horizonOcclusionPoint,
                 vertexBuffer : vertexBuffer,
                 indexBuffer : indexBuffer,
                 westVertices : westVertices,

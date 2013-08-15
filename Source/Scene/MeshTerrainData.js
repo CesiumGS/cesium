@@ -1,10 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
+        '../Core/EllipsoidalOccluder',
         '../Core/HeightmapTessellator',
         '../Core/Intersections2D',
         '../Core/Math',
@@ -16,10 +19,13 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         BoundingSphere,
         Cartesian3,
         Cartographic,
         DeveloperError,
+        Ellipsoid,
+        EllipsoidalOccluder,
         HeightmapTessellator,
         Intersections2D,
         CesiumMath,
@@ -116,6 +122,8 @@ define([
         this._center = description.center;
         this._minimumHeight = defaultValue(description.minimumHeight, -1000.0);
         this._maximumHeight = defaultValue(description.maximumHeight, 10000.0);
+        this._boundingSphere = description.boundingSphere;
+        this._horizonOcclusionPoint = description.horizonOcclusionPoint;
         this._vertexBuffer = description.vertexBuffer;
         this._indexBuffer = description.indexBuffer;
         this._westVertices = toArray(description.westVertices);
@@ -127,6 +135,15 @@ define([
 
         this._createdByUpsampling = defaultValue(description.createdByUpsampling, false);
         this._waterMask = description.waterMask;
+
+        if (!defined(this._boundingSphere)) {
+            this._boundingSphere = BoundingSphere.fromVertices(this._vertexBuffer, this._center, 6);
+        }
+
+        if (!defined(this._horizonOcclusionPoint)) {
+            var occluder = new EllipsoidalOccluder(Ellipsoid.WGS84);
+            this._horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(this._center, this._vertexBuffer, 6, this._center);
+        }
     };
 
     function toArray(typedArray) {
@@ -166,8 +183,6 @@ define([
         if (typeof level === 'undefined') {
             throw new DeveloperError('level is required.');
         }
-
-        var boundingSphere = BoundingSphere.fromVertices(this._vertexBuffer, this._center, 6);
 
         var edgeVertices = this._westVertices.length + this._eastVertices.length +
                            this._southVertices.length + this._northVertices.length;
@@ -220,7 +235,14 @@ define([
         indexBufferIndex = addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, this._northVertices, this._center, ellipsoid, extent, thisLevelMaxError, true);
         vertexBufferIndex += this._northVertices.length * 6;
 
-        return new TerrainMesh(this._center, vertexBuffer, indexBuffer, this._minimumHeight, this._maximumHeight, boundingSphere, undefined);
+        return new TerrainMesh(
+                this._center,
+                vertexBuffer,
+                indexBuffer,
+                this._minimumHeight,
+                this._maximumHeight,
+                this._boundingSphere,
+                this._horizonOcclusionPoint);
     };
 
     function addSkirt(vertexBuffer, vertexBufferIndex, indexBuffer, indexBufferIndex, edgeVertices, center, ellipsoid, extent, skirtLength, isWestOrNorthEdge) {
