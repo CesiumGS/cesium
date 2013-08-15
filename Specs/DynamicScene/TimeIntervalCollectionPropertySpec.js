@@ -16,8 +16,8 @@ defineSuite([
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionProperty();
-        expect(property.getIsTimeVarying()).toEqual(true);
-        expect(property.getIntervals()).toBeInstanceOf(TimeIntervalCollection);
+        expect(property.isTimeVarying).toEqual(true);
+        expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
@@ -32,8 +32,8 @@ defineSuite([
         }
 
         var property = new TimeIntervalCollectionProperty(noClone);
-        property.getIntervals().addInterval(interval1);
-        property.getIntervals().addInterval(interval2);
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
 
         expect(property.getValue(interval1.start)).toBe(interval1.data);
         expect(timesCalled).toEqual(1);
@@ -46,8 +46,8 @@ defineSuite([
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
 
         var property = new TimeIntervalCollectionProperty();
-        property.getIntervals().addInterval(interval1);
-        property.getIntervals().addInterval(interval2);
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
 
         var result1 = property.getValue(interval1.start);
         expect(result1).not.toBe(interval1.data);
@@ -63,8 +63,8 @@ defineSuite([
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new Cartesian3(4, 5, 6));
 
         var property = new TimeIntervalCollectionProperty();
-        property.getIntervals().addInterval(interval1);
-        property.getIntervals().addInterval(interval2);
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
 
         var expected = new Cartesian3();
         var result1 = property.getValue(interval1.start, expected);

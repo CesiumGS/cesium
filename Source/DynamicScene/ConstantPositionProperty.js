@@ -4,6 +4,7 @@ define([
         './PositionProperty',
         '../Core/Cartesian3',
         '../Core/defaultValue',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/ReferenceFrame'
     ], function(
@@ -11,6 +12,7 @@ define([
         PositionProperty,
         Cartesian3,
         defaultValue,
+        defineProperties,
         DeveloperError,
         ReferenceFrame) {
     "use strict";
@@ -28,23 +30,28 @@ define([
         this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
     };
 
-    /**
-     * @memberof ConstantPositionProperty
-     * @returns {Boolean} Always returns false, since this property never varies with simulation time.
-     */
-    ConstantPositionProperty.prototype.getIsTimeVarying = function() {
-        return this._property.getIsTimeVarying();
-    };
-
-    /**
-     * Gets the reference frame that the position is defined in.
-     *
-     * @memberof PositionProperty
-     * @returns {ReferenceFrame} The reference frame that the position is defined in.
-     */
-    ConstantPositionProperty.prototype.getReferenceFrame = function() {
-        return this._referenceFrame;
-    };
+    defineProperties(ConstantPositionProperty.prototype, {
+        /**
+         * Always returns true, since this property always varies with simulation time.
+         * @memberof SampledProperty
+         *
+         * @type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                return false;
+            }
+        },
+        /**
+         * Gets the reference frame that the position is defined in.
+         * @Type {ReferenceFrame}
+         */
+        referenceFrame : {
+            get : function() {
+                return this._referenceFrame;
+            }
+        }
+    });
 
     /**
      * Returns the value of the property at the specified simulation time in the fixed frame.

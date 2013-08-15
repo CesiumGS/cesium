@@ -2,10 +2,12 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError'
        ], function(
          defaultValue,
          defined,
+         defineProperties,
          DeveloperError) {
     "use strict";
 
@@ -102,17 +104,19 @@ define([
         return new ReferenceProperty(dynamicObjectCollection, parts[0], parts[1]);
     };
 
-    /**
-     * If the property varies with simulation time, this function returns true.  If the property
-     * is constant or changes in ways not related to simulation time, this function returns false.
-     *
-     * @memberof Property
-     * @returns {Boolean} True if the property varies with simulation time, false otherwise.
-     */
-    ReferenceProperty.prototype.getIsTimeVarying = function() {
-        var targetProperty = resolve(this);
-        return defined(targetProperty) ? targetProperty.getIsTimeVarying() : undefined;
-    };
+    defineProperties(ReferenceProperty.prototype, {
+        /**
+         * True if the property varies with simulation time, false otherwise.
+         * @memberof ReferenceProperty
+         * Type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                var targetProperty = resolve(this);
+                return defined(targetProperty) ? targetProperty.isTimeVarying() : undefined;
+            }
+        }
+    });
 
     /**
      * Retrieves the value of the property at the specified time.

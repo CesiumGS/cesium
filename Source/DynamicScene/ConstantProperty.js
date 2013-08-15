@@ -2,11 +2,13 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Enumeration) {
     "use strict";
@@ -37,7 +39,7 @@ define([
             throw new DeveloperError('value is required.');
         }
 
-        if (typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && !(value instanceof Enumeration) && !Array.isArray(value)) {
+        if (typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
             if (typeof value.clone !== 'function' && typeof clone !== 'function') {
                 throw new DeveloperError('clone is a required function.');
             }
@@ -49,13 +51,19 @@ define([
         this._clone = defaultValue(clone, noClone);
     };
 
-    /**
-     * @memberof ConstantProperty
-     * @returns {Boolean} Always returns false, since this property never varies with simulation time.
-     */
-    ConstantProperty.prototype.getIsTimeVarying = function() {
-        return false;
-    };
+    defineProperties(ConstantProperty.prototype, {
+        /**
+         * Always returns false, since this property always varies with simulation time.
+         * @memberof ConstantProperty
+         *
+         * @type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                return false;
+            }
+        }
+    });
 
     /**
      * Returns the value of the property at the specified simulation time.

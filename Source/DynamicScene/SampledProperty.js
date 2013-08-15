@@ -3,6 +3,7 @@ define([
         '../Core/binarySearch',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/InterpolatableNumber',
         '../Core/JulianDate',
@@ -11,6 +12,7 @@ define([
         binarySearch,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         InterpolatableNumber,
         JulianDate,
@@ -101,6 +103,15 @@ define([
         }
     };
 
+    function updateTables(property) {
+        var numberOfPoints = Math.min(property._interpolationAlgorithm.getRequiredDataPoints(property._interpolationDegree), property._times.length);
+        if (numberOfPoints !== property._numberOfPoints) {
+            property._numberOfPoints = numberOfPoints;
+            property._xTable.length = numberOfPoints;
+            property._yTable.length = numberOfPoints * property._packedInterpolationLength;
+        }
+    }
+
     /**
      * A {@link Property} whose value never changes.
      *
@@ -121,37 +132,47 @@ define([
         }
 
         this._innerType = type;
+        this._interpolationDegree = 1;
         this._interpolationAlgorithm = LinearApproximation;
-        this._numberOfPoints = LinearApproximation.getRequiredDataPoints(1);
         this._times = [];
         this._values = [];
-        this._xTable = new Array(this._numberOfPoints);
-        this._yTable = new Array(this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength));
+        this._xTable = [];
+        this._yTable = [];
+        this._packedInterpolationLength = defaultValue(type.packedInterpolationLength, type.packedLength);
+        updateTables(this);
     };
 
-    SampledProperty.prototype.getInterpolationAlgorithm = function() {
-        return this._interpolationAlgorithm;
-    };
-
-    SampledProperty.prototype.setInterpolationAlgorithm = function(value) {
-        if (typeof value === 'undefined') {
-            throw new DeveloperError('value is required');
+    defineProperties(SampledProperty.prototype, {
+        /**
+         * Always returns true, since this property always varies with simulation time.
+         * @memberof SampledProperty
+         *
+         * @type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                return true;
+            }
+        },
+        interpolationDegree : {
+            get : function() {
+                return this._interpolationDegree;
+            },
+            set : function(value) {
+                this._interpolationDegree = value;
+                updateTables(this);
+            }
+        },
+        interpolationAlgorithm : {
+            get : function() {
+                return this._interpolationAlgorithm;
+            },
+            set : function(value) {
+                this._interpolationAlgorithm = value;
+                updateTables(this);
+            }
         }
-
-        this._interpolationAlgorithm = value;
-        this._numberOfPoints = value.getRequiredDataPoints(1);
-        this._xTable.length = this._numberOfPoints;
-        var type = this._innerType;
-        this._yTable.length = this._numberOfPoints * defaultValue(type.packedInterpolationLength, type.packedLength);
-    };
-
-    /**
-     * @memberof SampledProperty
-     * @returns {Boolean} Always returns true, since this property always varies with simulation time.
-     */
-    SampledProperty.prototype.getIsTimeVarying = function() {
-        return true;
-    };
+    });
 
     /**
      * Gets the value of the property, optionally cloning it.
@@ -169,7 +190,8 @@ define([
         var values = this._values;
         var index = binarySearch(times, time, JulianDate.compare);
         if (index < 0) {
-            if (times.length < this._numberOfPoints) {
+            var degree = this._numberOfPoints - 1;
+            if (degree < 1) {
                 return undefined;
             }
             index = ~index;
@@ -181,7 +203,6 @@ define([
             var firstIndex = 0;
             var lastIndex = times.length - 1;
 
-            var degree = this._numberOfPoints - 1;
             var pointsInCollection = lastIndex - firstIndex + 1;
 
             if (pointsInCollection < degree + 1) {
@@ -205,8 +226,6 @@ define([
             }
 
             var length = lastIndex - firstIndex + 1;
-            var packedLength = innerType.packedLength;
-            var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, packedLength);
             var xTable = this._xTable;
             var yTable = this._yTable;
 
@@ -217,6 +236,7 @@ define([
             var specializedPackFunction = innerType.packForInterpolation;
             if (!defined(specializedPackFunction)) {
                 var destinationIndex = 0;
+                var packedLength = innerType.packedLength;
                 var sourceIndex = firstIndex * packedLength;
                 var stop = (lastIndex + 1) * packedLength;
 
@@ -231,7 +251,7 @@ define([
 
             // Interpolate!
             var x = times[lastIndex].getSecondsDifference(time);
-            interpolationScratch = this._interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, packedInterpolationLength, interpolationScratch);
+            interpolationScratch = this._interpolationAlgorithm.interpolateOrderZero(x, xTable, yTable, this._packedInterpolationLength, interpolationScratch);
 
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationScratch, 0, result);
@@ -246,6 +266,7 @@ define([
         var data = [time];
         innerType.pack(data, 1, value);
         _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        updateTables(this);
     };
 
     SampledProperty.prototype.addSamples = function(times, values) {
@@ -257,10 +278,12 @@ define([
             innerType.pack(data, data.length, values[i]);
         }
         _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        updateTables(this);
     };
 
     SampledProperty.prototype.addSamplesFlatArray = function(data, epoch) {
         _mergeNewSamples(epoch, this._times, this._values, data, this._innerType.packedLength);
+        updateTables(this);
     };
 
     //Exposed for testing.

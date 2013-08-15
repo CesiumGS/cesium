@@ -23,13 +23,30 @@ define([
         this._intervals = new TimeIntervalCollection();
     };
 
-    /**
-     * @memberof ConstantProperty
-     * @returns {Boolean} Always returns true, since this property always varies with simulation time.
-     */
-    CompositeProperty.prototype.getIsTimeVarying = function() {
-        return true;
-    };
+    defineProperties(CompositeProperty.prototype, {
+        /**
+         * Always returns true, since this property always varies with simulation time.
+         * @memberof SampledProperty
+         *
+         * @type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                return true;
+            }
+        },
+        /**
+         * Gets the interval collection.
+         * @memberof CompositeProperty.prototype
+         *
+         * @type {TimeIntervalCollection}
+         */
+        intervals : {
+            get : function() {
+                return this._intervals;
+            }
+        }
+    });
 
     /**
      * Returns the value of the property at the specified simulation time.
@@ -54,16 +71,6 @@ define([
             }
         }
         return undefined;
-    };
-
-    /**
-     * Gets the interval collection.
-     * @memberof CompositeProperty.prototype
-     *
-     * @type {TimeIntervalCollection}
-     */
-    CompositeProperty.prototype.getIntervals = function() {
-        return this._intervals;
     };
 
     return CompositeProperty;

@@ -14,7 +14,7 @@ defineSuite([
 
         var property = new SampledProperty(Number);
         property.addSamplesFlatArray(data, epoch);
-        expect(property.getIsTimeVarying()).toEqual(true);
+        expect(property.isTimeVarying).toEqual(true);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(7.5);
     });

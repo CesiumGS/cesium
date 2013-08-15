@@ -26,13 +26,10 @@ define(['../Core/DeveloperError'
     var Property = throwInstantiationError;
 
     /**
-     * If the property varies with simulation time, this function returns true.  If the property
-     * is constant or changes in ways not related to simulation time, this function returns false.
-     *
+     * Gets a value indicating if the property varies with simulation time or is constant.
      * @memberof Property
-     * @returns {Boolean} True if the property varies with simulation time, false otherwise.
      */
-    Property.prototype.getIsTimeVarying = throwInstantiationError;
+    Property.prototype.isTimeVarying = undefined;
 
     /**
      * Returns the value of the property at the specified simulation time.

@@ -29,13 +29,30 @@ define([
         this._clone = clone;
     };
 
-    /**
-     * @memberof TimeIntervalCollectionProperty
-     * @returns {Boolean} Always returns true, since this property always varies with simulation time.
-     */
-    TimeIntervalCollectionProperty.prototype.getIsTimeVarying = function() {
-        return true;
-    };
+    defineProperties(TimeIntervalCollectionProperty.prototype, {
+        /**
+         * Always returns true, since this property always varies with simulation time.
+         * @memberof TimeIntervalCollectionProperty
+         *
+         * @type {Boolean}
+         */
+        isTimeVarying : {
+            get : function() {
+                return true;
+            }
+        },
+        /**
+         * Gets the interval collection.
+         * @memberof TimeIntervalCollectionProperty
+         *
+         * @type {TimeIntervalCollection}
+         */
+        intervals : {
+            get : function() {
+                return this._intervals;
+            }
+        }
+    });
 
     /**
      * Returns the value of the property at the specified simulation time.
@@ -55,7 +72,7 @@ define([
         var interval = this._intervals.findIntervalContainingDate(time);
         if (defined(interval)) {
             var value = interval.data;
-            if (defined(value) && typeof value !== 'string' && typeof value !== 'number' && typeof value !== 'boolean' && !(value instanceof Enumeration) && !Array.isArray(value)) {
+            if (defined(value) && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
                 if (typeof value.clone === 'function') {
                     return value.clone(result);
                 }
@@ -64,16 +81,6 @@ define([
             return value;
         }
         return undefined;
-    };
-
-    /**
-     * Gets the interval collection.
-     * @memberof TimeIntervalCollectionProperty
-     *
-     * @type {TimeIntervalCollection}
-     */
-    TimeIntervalCollectionProperty.prototype.getIntervals = function() {
-        return this._intervals;
     };
 
     return TimeIntervalCollectionProperty;

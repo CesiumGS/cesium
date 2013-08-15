@@ -18,8 +18,8 @@ defineSuite([
 
     it('default constructor has expected values', function() {
         var property = new CompositeProperty();
-        expect(property.getIsTimeVarying()).toEqual(true);
-        expect(property.getIntervals()).toBeInstanceOf(TimeIntervalCollection);
+        expect(property.isTimeVarying).toEqual(true);
+        expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
@@ -28,8 +28,8 @@ defineSuite([
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
 
         var property = new CompositeProperty();
-        property.getIntervals().addInterval(interval1);
-        property.getIntervals().addInterval(interval2);
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
 
         var result1 = property.getValue(interval1.start);
         expect(result1).not.toBe(interval1.data.getValue());
@@ -45,8 +45,8 @@ defineSuite([
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
 
         var property = new CompositeProperty();
-        property.getIntervals().addInterval(interval1);
-        property.getIntervals().addInterval(interval2);
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
 
         var expected = new Cartesian3();
         var result1 = property.getValue(interval1.start, expected);

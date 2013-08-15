@@ -254,7 +254,7 @@ define([
             }
 
             if (property instanceof TimeIntervalCollectionProperty) {
-                property.getIntervals().addInterval(combinedInterval);
+                property.intervals.addInterval(combinedInterval);
             } else {
                 //TODO Morph to CompositeProperty
             }
@@ -272,7 +272,7 @@ define([
                 propertyCreated = true;
             }
             if (property instanceof CompositeProperty) {
-                var intervals = property.getIntervals();
+                var intervals = property.intervals;
                 var interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
                 var intervalData;
                 if (defined(interval)) {
