@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     /**
@@ -34,7 +34,7 @@ define(function() {
          */
         this.name = name;
 
-        if (typeof properties !== 'undefined') {
+        if (defined(properties)) {
             for ( var propertyName in properties) {
                 if (properties.hasOwnProperty(propertyName)) {
                     this[propertyName] = properties[propertyName];

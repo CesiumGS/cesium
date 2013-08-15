@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './defined',
+        './DeveloperError'
+    ], function(
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -34,13 +39,13 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var index = binarySearch(numbers, 6, comparator); // 3
      */
     var binarySearch = function(array, itemToFind, comparator) {
-        if (typeof array === 'undefined') {
+        if (!defined(array)) {
             throw new DeveloperError('array is required.');
         }
-        if (typeof itemToFind === 'undefined') {
+        if (!defined(itemToFind)) {
             throw new DeveloperError('itemToFind is required.');
         }
-        if (typeof comparator === 'undefined') {
+        if (!defined(comparator)) {
             throw new DeveloperError('comparator is required.');
         }
 

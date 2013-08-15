@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Scene/VRTheWorldTerrainProvider',
+         'Core/defined',
          'Core/loadImage',
          'Core/loadXML',
          'Core/DefaultProxy',
@@ -11,6 +12,7 @@ defineSuite([
          'ThirdParty/when'
      ], function(
          VRTheWorldTerrainProvider,
+         defined,
          loadImage,
          loadXML,
          DefaultProxy,
@@ -264,7 +266,7 @@ defineSuite([
             });
 
             waitsFor(function() {
-                return typeof loadedData !== 'undefined';
+                return defined(loadedData);
             }, 'request to complete');
 
             runs(function() {

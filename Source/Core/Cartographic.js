@@ -1,11 +1,13 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         './DeveloperError',
         './freezeObject',
         './Math'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         freezeObject,
         CesiumMath) {
@@ -62,7 +64,7 @@ define([
         latitude = CesiumMath.toRadians(defaultValue(latitude, 0.0));
         height = defaultValue(height, 0.0);
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(longitude, latitude, height);
         }
 
@@ -81,10 +83,10 @@ define([
      * @return {Cartographic} The modified result parameter or a new Cartographic instance if one was not provided. (Returns undefined if cartographic is undefined)
      */
     Cartographic.clone = function(cartographic, result) {
-        if (typeof cartographic === 'undefined') {
+        if (!defined(cartographic)) {
             return undefined;
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Cartographic(cartographic.longitude, cartographic.latitude, cartographic.height);
         }
         result.longitude = cartographic.longitude;
@@ -104,8 +106,8 @@ define([
      */
     Cartographic.equals = function(left, right) {
         return (left === right) ||
-                ((typeof left !== 'undefined') &&
-                 (typeof right !== 'undefined') &&
+                ((defined(left)) &&
+                 (defined(right)) &&
                  (left.longitude === right.longitude) &&
                  (left.latitude === right.latitude) &&
                  (left.height === right.height));
@@ -129,8 +131,8 @@ define([
             throw new DeveloperError('epsilon is required and must be a number.');
         }
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (Math.abs(left.longitude - right.longitude) <= epsilon) &&
                 (Math.abs(left.latitude - right.latitude) <= epsilon) &&
                 (Math.abs(left.height - right.height) <= epsilon));
@@ -146,7 +148,7 @@ define([
      * @exception {DeveloperError} cartographic is required.
      */
     Cartographic.toString = function(cartographic) {
-        if (typeof cartographic === 'undefined') {
+        if (!defined(cartographic)) {
             throw new DeveloperError('cartographic is required');
         }
         return '(' + cartographic.longitude + ', ' + cartographic.latitude + ', ' + cartographic.height + ')';

@@ -1,18 +1,20 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './Credit'
     ], function (
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         Credit) {
     "use strict";
 
     function displayTextCredit(credit, container, delimiter) {
-        if (typeof credit.element === 'undefined') {
+        if (!defined(credit.element)) {
             var text = credit.getText();
             var link = credit.getLink();
             var span = document.createElement('span');
@@ -38,14 +40,14 @@ define([
     }
 
     function displayImageCredit(credit, container) {
-        if (typeof credit.element === 'undefined') {
+        if (!defined(credit.element)) {
             var text = credit.getText();
             var link = credit.getLink();
             var span = document.createElement('span');
             var content = document.createElement('img');
             content.src = credit.getImageUrl();
             content.style['vertical-align'] = 'bottom';
-            if (typeof text !== 'undefined') {
+            if (defined(text)) {
                 content.alt = text;
                 content.title = text;
             }
@@ -78,7 +80,7 @@ define([
 
     function removeCredit(credit) {
         var element = credit.element;
-        if (typeof element !== 'undefined') {
+        if (defined(element)) {
             var container = element.parentNode;
             if (!credit.hasImage()) {
                 var delimiter = element.previousSibling;
@@ -148,7 +150,7 @@ define([
      */
 
     var CreditDisplay = function(container, delimiter) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('credit container is required');
         }
         var imageContainer = document.createElement('span');
@@ -183,7 +185,7 @@ define([
      * @param {Credit} credit The credit to display
      */
     CreditDisplay.prototype.addCredit = function(credit) {
-        if (typeof credit === 'undefined') {
+        if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
 
@@ -208,7 +210,7 @@ define([
      * @param {Credit} credit The credit to added to defaults
      */
     CreditDisplay.prototype.addDefaultCredit = function(credit) {
-        if (typeof credit === 'undefined') {
+        if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
 
@@ -233,7 +235,7 @@ define([
      * @param {Credit} credit The credit to be removed from defaults
      */
     CreditDisplay.prototype.removeDefaultCredit = function(credit) {
-        if (typeof credit === 'undefined') {
+        if (!defined(credit)) {
             throw new DeveloperError('credit must be defined');
         }
 

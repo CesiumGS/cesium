@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/Spherical'
-       ], function(
-         Spherical) {
+    ], function(
+        defined,
+        Spherical) {
     "use strict";
 
     var doublesPerValue = 2;
@@ -66,7 +68,7 @@ define([
          * @returns The modified result parameter or a new Spherical instance if result was not defined.
          */
         getValue : function(unwrappedInterval, spherical) {
-            if (typeof spherical === 'undefined') {
+            if (!defined(spherical)) {
                 spherical = new Spherical();
             }
             spherical.clock = unwrappedInterval[0];
@@ -84,7 +86,7 @@ define([
          * @returns The modified result parameter or a new Spherical instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, spherical) {
-            if (typeof spherical === 'undefined') {
+            if (!defined(spherical)) {
                 spherical = new Spherical();
             }
             spherical.clock = array[startingIndex];

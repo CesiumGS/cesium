@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Cartographic',
         '../Core/Cartesian2',
@@ -13,6 +14,7 @@ define([
     ],
     function(
         defaultValue,
+        defined,
         DeveloperError,
         Cartographic,
         Cartesian2,
@@ -60,18 +62,18 @@ define([
      * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
      */
     SceneTransforms.wgs84ToWindowCoordinates = function(scene, position, result) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
-        if (typeof position === 'undefined') {
+        if (!defined(position)) {
             throw new DeveloperError('position is required.');
         }
 
         // Transform for 3D, 2D, or Columbus view
         SceneTransforms.computeActualWgs84Position(scene.getFrameState(), position, actualPosition);
 
-        if (typeof actualPosition === 'undefined') {
+        if (!defined(actualPosition)) {
             result = undefined;
             return undefined;
         }
@@ -98,7 +100,7 @@ define([
 
         var projection = frameState.scene2D.projection;
         projection.getEllipsoid().cartesianToCartographic(position, positionInCartographic);
-        if (typeof positionInCartographic === 'undefined') {
+        if (!defined(positionInCartographic)) {
             result = undefined;
             return result;
         }

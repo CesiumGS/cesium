@@ -2,6 +2,7 @@
 define([
         './DeveloperError',
         './binarySearch',
+        './defined',
         './TimeConstants',
         './LeapSecond',
         './TimeStandard',
@@ -10,6 +11,7 @@ define([
     ], function(
         DeveloperError,
         binarySearch,
+        defined,
         TimeConstants,
         LeapSecond,
         TimeStandard,
@@ -151,7 +153,7 @@ define([
             secondsOfDay += TimeConstants.SECONDS_PER_DAY;
         }
 
-        if (typeof julianDate === 'undefined') {
+        if (!defined(julianDate)) {
             return new JulianDate(wholeDays, secondsOfDay, TimeStandard.TAI);
         }
 
@@ -254,8 +256,8 @@ define([
         var wholeDays;
         var secondsOfDay;
         //If any of the properties are defined, then we are constructing from components.
-        if (typeof julianDayNumber !== 'undefined' || typeof julianSecondsOfDay !== 'undefined' || typeof timeStandard !== 'undefined') {
-            if (typeof timeStandard === 'undefined') {
+        if (defined(julianDayNumber) || defined(julianSecondsOfDay) || defined(timeStandard)) {
+            if (!defined(timeStandard)) {
                 timeStandard = TimeStandard.UTC;
             } else if (timeStandard !== TimeStandard.UTC && timeStandard !== TimeStandard.TAI) {
                 throw new DeveloperError('timeStandard is not a known TimeStandard.');
@@ -298,10 +300,10 @@ define([
      * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if date is undefined)
      */
     JulianDate.clone = function(date, result) {
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             return undefined;
         }
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new JulianDate(date._julianDayNumber, date._secondsOfDay, TimeStandard.TAI);
         }
         result._julianDayNumber = date._julianDayNumber;
@@ -337,7 +339,7 @@ define([
      * var julianDate = JulianDate.fromDate(date, TimeStandard.UTC);
      */
     JulianDate.fromDate = function(date, timeStandard) {
-        if (typeof date === 'undefined' || date === null || isNaN(date.getTime())) {
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
             throw new DeveloperError('date must be a valid JavaScript Date.');
         }
 
@@ -396,7 +398,7 @@ define([
         var time = tokens[1];
         var tmp;
         var inLeapYear;
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             throw new DeveloperError(iso8601ErrorMessage);
         }
 
@@ -446,8 +448,8 @@ define([
 
                             dashCount = date.split('-').length - 1;
                             if (dashCount > 0 &&
-                               ((typeof tokens[3] === 'undefined' && dashCount !== 1) ||
-                               (typeof tokens[3] !== 'undefined' && dashCount !== 2))) {
+                               ((!defined(tokens[3]) && dashCount !== 1) ||
+                               (defined(tokens[3]) && dashCount !== 2))) {
                                 throw new DeveloperError(iso8601ErrorMessage);
                             }
 
@@ -475,7 +477,7 @@ define([
 
         //Not move onto the time string, which is much simpler.
         var offsetIndex;
-        if (typeof time !== 'undefined') {
+        if (defined(time)) {
             tokens = time.match(matchHoursMinutesSeconds);
             if (tokens !== null) {
                 dashCount = time.split(':').length - 1;
@@ -670,8 +672,8 @@ define([
      */
     JulianDate.equals = function(left, right) {
         return (left === right) ||
-               (typeof left !== 'undefined' &&
-                typeof right !== 'undefined' &&
+               (defined(left) &&
+                defined(right) &&
                 left._julianDayNumber === right._julianDayNumber &&
                 left._secondsOfDay === right._secondsOfDay);
     };
@@ -753,7 +755,7 @@ define([
     JulianDate.prototype.toGregorianDate = function() {
         var isLeapSecond = false;
         var thisUtc = convertTaiToUtc(this, toGregorianDateScratch);
-        if (typeof thisUtc === 'undefined') {
+        if (!defined(thisUtc)) {
             //Conversion to UTC will fail if we are during a leap second.
             //If that's the case, subtract a second and convert again.
             //JavaScript doesn't support leap seconds, so this results in second 59 being repeated twice.
@@ -830,14 +832,14 @@ define([
         var gDate = this.toGregorianDate();
         var millisecondStr;
 
-        if (typeof precision === 'undefined' && gDate.millisecond !== 0) {
+        if (!defined(precision) && gDate.millisecond !== 0) {
             //Forces milliseconds into a number with at least 3 digits to whatever the default toString() precision is.
             millisecondStr = (gDate.millisecond * 0.01).toString().replace('.', '');
             return sprintf("%04d-%02d-%02dT%02d:%02d:%02d.%sZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second, millisecondStr);
         }
 
         //Precision is either 0 or milliseconds is 0 with undefined precision, in either case, leave off milliseconds entirely
-        if (typeof precision === 'undefined' || precision === 0) {
+        if (!defined(precision) || precision === 0) {
             return sprintf("%04d-%02d-%02dT%02d:%02d:%02dZ", gDate.year, gDate.month, gDate.day, gDate.hour, gDate.minute, gDate.second);
         }
 

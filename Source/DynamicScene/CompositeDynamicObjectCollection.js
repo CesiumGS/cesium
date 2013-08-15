@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Event',
         '../Core/Iso8601',
         '../Core/TimeInterval',
@@ -9,6 +10,7 @@ define([
         './CzmlDefaults'
     ], function(
         defaultValue,
+        defined,
         Event,
         Iso8601,
         TimeInterval,
@@ -118,7 +120,7 @@ define([
      * @param {Array} collections The collections to be composited.
      */
     CompositeDynamicObjectCollection.prototype.setCollections = function(collections) {
-        collections = typeof collections !== 'undefined' ? collections : [];
+        collections = defined(collections) ? collections : [];
 
         var thisCollections = this._collections;
         if (collections !== thisCollections) {
@@ -169,7 +171,7 @@ define([
      * @exception {DeveloperError} id is required.
      */
     CompositeDynamicObjectCollection.prototype.getObject = function(id) {
-        if (typeof id === 'undefined') {
+        if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
         return this._hash[id];
@@ -221,7 +223,7 @@ define([
         for ( var i = updatedObjects.length - 1; i > -1; i--) {
             updatedObject = updatedObjects[i];
             compositeObject = this.getObject(updatedObject.id);
-            if (typeof compositeObject !== 'undefined') {
+            if (defined(compositeObject)) {
                 for ( var iDeleteFuncs = thisCleanFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
                     var deleteFunc = thisCleanFunctions[iDeleteFuncs];
                     deleteFunc(compositeObject);
@@ -234,7 +236,7 @@ define([
             for ( var iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
                 var currentCollection = thisCollections[iCollection];
                 var objectToUpdate = currentCollection.getObject(updatedObject.id);
-                if (typeof objectToUpdate !== 'undefined') {
+                if (defined(objectToUpdate)) {
                     for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
                         var mergeFunc = thisMergeFunctions[iMergeFuncs];
                         mergeFunc(compositeObject, objectToUpdate);

@@ -1,8 +1,10 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Scene/PerspectiveOffCenterFrustum'
     ], function(
+        defined,
         DeveloperError,
         PerspectiveOffCenterFrustum) {
     "use strict";
@@ -47,7 +49,7 @@ define([
         /**
          * The distance of the near plane.
          * @type {Number}
-         * @default 1.0 
+         * @default 1.0
          */
         this.near = 1.0;
         this._near = this.near;
@@ -90,8 +92,7 @@ define([
     };
 
     function update(frustum) {
-        if (typeof frustum.fovy === 'undefined' || typeof frustum.aspectRatio === 'undefined' ||
-                typeof frustum.near === 'undefined' || typeof frustum.far === 'undefined') {
+        if (!defined(frustum.fovy) || !defined(frustum.aspectRatio) || !defined(frustum.near) || !defined(frustum.far)) {
             throw new DeveloperError('fovy, aspectRatio, near, or far parameters are not set.');
         }
 
@@ -217,7 +218,7 @@ define([
      * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
-        if (typeof other === 'undefined') {
+        if (!defined(other)) {
             return false;
         }
 

@@ -3,6 +3,7 @@ defineSuite([
          'Scene/Tile',
          'Specs/createContext',
          'Specs/destroyContext',
+         'Core/defined',
          'Core/Extent',
          'Core/Math',
          'Scene/CesiumTerrainProvider',
@@ -15,6 +16,7 @@ defineSuite([
          Tile,
          createContext,
          destroyContext,
+         defined,
          Extent,
          CesiumMath,
          CesiumTerrainProvider,
@@ -483,7 +485,7 @@ defineSuite([
                 childTile.processStateMachine(context, realTerrainProvider, imageryLayerCollection);
                 grandchildTile.processStateMachine(context, alwaysDeferTerrainProvider, imageryLayerCollection);
                 return childTile.state === TileState.READY &&
-                       typeof grandchildTile.upsampledTerrain === 'undefined';
+                       !defined(grandchildTile.upsampledTerrain);
             }, 'child to be loaded and grandchild to be upsampled.');
 
             runs(function() {
@@ -497,7 +499,7 @@ defineSuite([
             var allWaterTerrainProvider = {
                     requestTileGeometry : function(x, y, level) {
                         var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                        if (typeof real === 'undefined') {
+                        if (!defined(real)) {
                             return real;
                         }
 
@@ -536,7 +538,7 @@ defineSuite([
             var allLandTerrainProvider = {
                     requestTileGeometry : function(x, y, level) {
                         var real = realTerrainProvider.requestTileGeometry(x, y, level);
-                        if (typeof real === 'undefined') {
+                        if (!defined(real)) {
                             return real;
                         }
 

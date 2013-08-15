@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './ComponentDatatype',
         './IndexDatatype',
@@ -9,6 +10,7 @@ define([
         './GeometryAttribute',
         './GeometryAttributes'
     ], function(
+        defined,
         DeveloperError,
         ComponentDatatype,
         IndexDatatype,
@@ -44,7 +46,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
 
-        if ((typeof positions === 'undefined') || (positions.length < 2)) {
+        if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
 

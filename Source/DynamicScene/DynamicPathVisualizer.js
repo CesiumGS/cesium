@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Cartesian3',
@@ -12,6 +13,7 @@ define([
         '../Scene/SceneMode',
         '../Scene/PolylineCollection'
        ], function(
+         defined,
          DeveloperError,
          destroyObject,
          Cartesian3,
@@ -37,7 +39,7 @@ define([
     PolylineUpdater.prototype.update = function(time) {
         if (this._referenceFrame === ReferenceFrame.INERTIAL) {
             var toFixed = Transforms.computeIcrfToFixedMatrix(time, toFixedScratch);
-            if (typeof toFixed === 'undefined') {
+            if (!defined(toFixed)) {
                 toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, toFixedScratch);
             }
             Matrix4.fromRotationTranslation(toFixed, Cartesian3.ZERO, this._polylineCollection.modelMatrix);
@@ -46,12 +48,12 @@ define([
 
     PolylineUpdater.prototype.updateObject = function(time, dynamicObject) {
         var dynamicPath = dynamicObject.path;
-        if (typeof dynamicPath === 'undefined') {
+        if (!defined(dynamicPath)) {
             return;
         }
 
         var positionProperty = dynamicObject.position;
-        if (typeof positionProperty === 'undefined') {
+        if (!defined(positionProperty)) {
             return;
         }
 
@@ -61,7 +63,7 @@ define([
         var sampleStop;
         var showProperty = dynamicPath.show;
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        var show = typeof showProperty === 'undefined' || showProperty.getValue(time);
+        var show = !defined(showProperty) || showProperty.getValue(time);
 
         //While we want to show the path, there may not actually be anything to show
         //depending on lead/trail settings.  Compute the interval of the path to
@@ -69,20 +71,20 @@ define([
         if (show) {
             property = dynamicPath.leadTime;
             var leadTime;
-            if (typeof property !== 'undefined') {
+            if (defined(property)) {
                 leadTime = property.getValue(time);
             }
 
             property = dynamicPath.trailTime;
             var trailTime;
-            if (typeof property !== 'undefined') {
+            if (defined(property)) {
                 trailTime = property.getValue(time);
             }
 
             var availability = dynamicObject.availability;
-            var hasAvailability = typeof availability !== 'undefined';
-            var hasLeadTime = typeof leadTime !== 'undefined';
-            var hasTrailTime = typeof trailTime !== 'undefined';
+            var hasAvailability = defined(availability);
+            var hasLeadTime = defined(leadTime);
+            var hasTrailTime = defined(trailTime);
 
             //Objects need to have either defined availability or both a lead and trail time in order to
             //draw a path (since we can't draw "infinite" paths.
@@ -111,7 +113,7 @@ define([
 
         if (!show) {
             //don't bother creating or updating anything else
-            if (typeof pathVisualizerIndex !== 'undefined') {
+            if (defined(pathVisualizerIndex)) {
                 polyline = this._polylineCollection.get(pathVisualizerIndex);
                 polyline.setShow(false);
                 dynamicObject._pathVisualizerIndex = undefined;
@@ -121,7 +123,7 @@ define([
         }
 
         var uniforms;
-        if (typeof pathVisualizerIndex === 'undefined') {
+        if (!defined(pathVisualizerIndex)) {
             var unusedIndexes = this._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
@@ -137,7 +139,7 @@ define([
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);
             var material = polyline.getMaterial();
-            if (typeof material === 'undefined' || (material.type !== Material.PolylineOutlineType)) {
+            if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
                 material = Material.fromType(this._scene.getContext(), Material.PolylineOutlineType);
                 polyline.setMaterial(material);
             }
@@ -154,31 +156,31 @@ define([
 
         var resolution = 60.0;
         property = dynamicPath.resolution;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             resolution = property.getValue(time);
         }
 
         polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.color = property.getValue(time, uniforms.color);
         }
 
         property = dynamicPath.outlineColor;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
         }
 
         property = dynamicPath.outlineWidth;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.outlineWidth = property.getValue(time);
         }
 
         property = dynamicPath.width;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var width = property.getValue(time);
-            if (typeof width !== 'undefined') {
+            if (defined(width)) {
                 polyline.setWidth(width);
             }
         }
@@ -186,7 +188,7 @@ define([
 
     PolylineUpdater.prototype.removeObject = function(dynamicObject) {
         var pathVisualizerIndex = dynamicObject._pathVisualizerIndex;
-        if (typeof pathVisualizerIndex !== 'undefined') {
+        if (defined(pathVisualizerIndex)) {
             var polyline = this._polylineCollection.get(pathVisualizerIndex);
             polyline.setShow(false);
             this._unusedIndexes.push(pathVisualizerIndex);
@@ -227,7 +229,7 @@ define([
      *
      */
     var DynamicPathVisualizer = function(scene, dynamicObjectCollection) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
@@ -262,12 +264,12 @@ define([
     DynamicPathVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
-            if (typeof oldCollection !== 'undefined') {
+            if (defined(oldCollection)) {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
-            if (typeof dynamicObjectCollection !== 'undefined') {
+            if (defined(dynamicObjectCollection)) {
                 dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPathVisualizer.prototype._onObjectsRemoved, this);
             }
         }
@@ -282,11 +284,11 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DynamicPathVisualizer.prototype.update = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is requied.');
         }
 
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var updaters = this._updaters;
             for ( var key in updaters) {
                 if (updaters.hasOwnProperty(key)) {
@@ -298,12 +300,12 @@ define([
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
                 var dynamicObject = dynamicObjects[i];
 
-                if (typeof dynamicObject.path === 'undefined') {
+                if (!defined(dynamicObject.path)) {
                     continue;
                 }
 
                 var positionProperty = dynamicObject.position;
-                if (typeof positionProperty === 'undefined') {
+                if (!defined(positionProperty)) {
                     continue;
                 }
 
@@ -316,23 +318,23 @@ define([
 
                 var currentUpdater = this._updaters[frameToVisualize];
 
-                if ((lastUpdater === currentUpdater) && (typeof currentUpdater !== 'undefined')) {
+                if ((lastUpdater === currentUpdater) && (defined(currentUpdater))) {
                     currentUpdater.updateObject(time, dynamicObject);
                     continue;
                 }
 
-                if (typeof lastUpdater !== 'undefined') {
+                if (defined(lastUpdater)) {
                     lastUpdater.removeObject(dynamicObject);
                 }
 
-                if (typeof currentUpdater === 'undefined') {
+                if (!defined(currentUpdater)) {
                     currentUpdater = new PolylineUpdater(this._scene, frameToVisualize);
                     currentUpdater.update(time);
                     this._updaters[frameToVisualize] = currentUpdater;
                 }
 
                 dynamicObject._pathUpdater = currentUpdater;
-                if (typeof currentUpdater !== 'undefined') {
+                if (defined(currentUpdater)) {
                     currentUpdater.updateObject(time, dynamicObject);
                 }
             }
@@ -351,7 +353,7 @@ define([
         }
         this._updaters = {};
 
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = dynamicObjects.length - 1; i > -1; i--) {
                 dynamicObjects[i]._pathUpdater = undefined;
@@ -404,7 +406,7 @@ define([
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var _pathUpdater = dynamicObject._pathUpdater;
-            if (typeof _pathUpdater !== 'undefined') {
+            if (defined(_pathUpdater)) {
                 _pathUpdater.removeObject(dynamicObject);
             }
         }

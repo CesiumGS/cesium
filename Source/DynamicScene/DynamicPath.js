@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlNumber',
         './CzmlColor',
@@ -9,6 +10,7 @@ define([
 function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlNumber,
         CzmlColor,
@@ -98,88 +100,88 @@ function(
      */
     DynamicPath.processCzmlPacket = function(dynamicObject, packet) {
         var pathData = packet.path;
-        if (typeof pathData === 'undefined') {
+        if (!defined(pathData)) {
             return false;
         }
 
         var pathUpdated = false;
         var path = dynamicObject.path;
-        pathUpdated = typeof path === 'undefined';
+        pathUpdated = !defined(path);
         if (pathUpdated) {
             dynamicObject.path = path = new DynamicPath();
         }
 
         var interval = pathData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof pathData.color !== 'undefined') {
+        if (defined(pathData.color)) {
             var color = path.color;
-            if (typeof color === 'undefined') {
+            if (!defined(color)) {
                 path.color = color = new DynamicProperty(CzmlColor);
                 pathUpdated = true;
             }
             color.processCzmlIntervals(pathData.color, interval);
         }
 
-        if (typeof pathData.width !== 'undefined') {
+        if (defined(pathData.width)) {
             var width = path.width;
-            if (typeof width === 'undefined') {
+            if (!defined(width)) {
                 path.width = width = new DynamicProperty(CzmlNumber);
                 pathUpdated = true;
             }
             width.processCzmlIntervals(pathData.width, interval);
         }
 
-        if (typeof pathData.resolution !== 'undefined') {
+        if (defined(pathData.resolution)) {
             var resolution = path.resolution;
-            if (typeof resolution === 'undefined') {
+            if (!defined(resolution)) {
                 path.resolution = resolution = new DynamicProperty(CzmlNumber);
                 pathUpdated = true;
             }
             resolution.processCzmlIntervals(pathData.resolution, interval);
         }
 
-        if (typeof pathData.outlineColor !== 'undefined') {
+        if (defined(pathData.outlineColor)) {
             var outlineColor = path.outlineColor;
-            if (typeof outlineColor === 'undefined') {
+            if (!defined(outlineColor)) {
                 path.outlineColor = outlineColor = new DynamicProperty(CzmlColor);
                 pathUpdated = true;
             }
             outlineColor.processCzmlIntervals(pathData.outlineColor, interval);
         }
 
-        if (typeof pathData.outlineWidth !== 'undefined') {
+        if (defined(pathData.outlineWidth)) {
             var outlineWidth = path.outlineWidth;
-            if (typeof outlineWidth === 'undefined') {
+            if (!defined(outlineWidth)) {
                 path.outlineWidth = outlineWidth = new DynamicProperty(CzmlNumber);
                 pathUpdated = true;
             }
             outlineWidth.processCzmlIntervals(pathData.outlineWidth, interval);
         }
 
-        if (typeof pathData.show !== 'undefined') {
+        if (defined(pathData.show)) {
             var show = path.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 path.show = show = new DynamicProperty(CzmlBoolean);
                 pathUpdated = true;
             }
             show.processCzmlIntervals(pathData.show, interval);
         }
 
-        if (typeof pathData.leadTime !== 'undefined') {
+        if (defined(pathData.leadTime)) {
             var leadTime = path.leadTime;
-            if (typeof leadTime === 'undefined') {
+            if (!defined(leadTime)) {
                 path.leadTime = leadTime = new DynamicProperty(CzmlNumber);
                 pathUpdated = true;
             }
             leadTime.processCzmlIntervals(pathData.leadTime, interval);
         }
 
-        if (typeof pathData.trailTime !== 'undefined') {
+        if (defined(pathData.trailTime)) {
             var trailTime = path.trailTime;
-            if (typeof trailTime === 'undefined') {
+            if (!defined(trailTime)) {
                 path.trailTime = trailTime = new DynamicProperty(CzmlNumber);
                 pathUpdated = true;
             }
@@ -202,10 +204,10 @@ function(
      */
     DynamicPath.mergeProperties = function(targetObject, objectToMerge) {
         var pathToMerge = objectToMerge.path;
-        if (typeof pathToMerge !== 'undefined') {
+        if (defined(pathToMerge)) {
 
             var targetpath = targetObject.path;
-            if (typeof targetpath === 'undefined') {
+            if (!defined(targetpath)) {
                 targetObject.path = targetpath = new DynamicPath();
             }
 
