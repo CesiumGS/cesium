@@ -1,16 +1,12 @@
 /*global define*/
 define([
         './defaultValue',
-        './defined',
         './freezeObject',
-        './DeveloperError',
-        './FeatureDetection'
+        './DeveloperError'
     ], function(
         defaultValue,
-        defined,
         freezeObject,
-        DeveloperError,
-        FeatureDetection) {
+        DeveloperError) {
     "use strict";
 
     function hue2rgb(m1, m2, h) {
@@ -92,7 +88,7 @@ define([
     var scratchArrayBuffer;
     var scratchUint32Array;
     var scratchUint8Array;
-    if (FeatureDetection.supportsTypedArrays()) {
+    if (typeof ArrayBuffer !== 'undefined') {
         scratchArrayBuffer = new ArrayBuffer(4);
         scratchUint32Array = new Uint32Array(scratchArrayBuffer);
         scratchUint8Array = new Uint8Array(scratchArrayBuffer);
@@ -157,6 +153,26 @@ define([
         return new Color(red, green, blue, alpha);
     };
 
+    /**
+     * Creates a random Color instance from red, green, blue and alpha string parameters, using
+     * the semantics defined in the KML reference
+     * @memberof Color
+     *
+     */
+    Color.fromRandom = function(options){
+        var red = typeof options.red !== 'undefined' ? options.red : 0;
+        var green = typeof options.green !== 'undefined' ? options.green : 0;
+        var blue = typeof options.blue !== 'undefined' ? options.blue : 0;
+        var alpha = typeof options.alpha !== 'undefined' ? options.alpha : 0;
+
+        red = Math.random() * red;
+        green = Math.random() * green;
+        blue = Math.random() * blue;
+
+        var randomColor = new Color(red, green, blue, alpha);
+        return randomColor;
+    };
+
     //#rgb
     var rgbMatcher = /^#([0-9a-f])([0-9a-f])([0-9a-f])$/i;
     //#rrggbb
@@ -182,12 +198,12 @@ define([
      * @see <a href="http://www.w3.org/TR/css3-color">CSS color values</a>
      */
     Color.fromCssColorString = function(color) {
-        if (!defined(color)) {
+        if (typeof color === 'undefined') {
             throw new DeveloperError('color is required');
         }
 
         var namedColor = Color[color.toUpperCase()];
-        if (defined(namedColor)) {
+        if (typeof namedColor !== 'undefined') {
             return namedColor.clone();
         }
 
@@ -261,10 +277,10 @@ define([
      * @return {Color} The modified result parameter or a new instance if result was undefined. (Returns undefined if color is undefined)
      */
     Color.clone = function(color, result) {
-        if (!defined(color)){
+        if (typeof color === 'undefined'){
             return undefined;
         }
-        if (!defined(result)) {
+        if (typeof result === 'undefined') {
             return new Color(color.red, color.green, color.blue, color.alpha);
         }
         result.red = color.red;
@@ -284,8 +300,8 @@ define([
      */
     Color.equals = function(left, right) {
         return (left === right) ||
-               (defined(left) &&
-                defined(right) &&
+               (typeof left !== 'undefined' &&
+                typeof right !== 'undefined' &&
                 left.red === right.red &&
                 left.green === right.green &&
                 left.blue === right.blue &&
@@ -324,7 +340,7 @@ define([
      */
     Color.prototype.equalsEpsilon = function(other, epsilon) {
         return (this === other) ||
-               ((defined(other)) &&
+               ((typeof other !== 'undefined') &&
                 (Math.abs(this.red - other.red) <= epsilon) &&
                 (Math.abs(this.green - other.green) <= epsilon) &&
                 (Math.abs(this.blue - other.blue) <= epsilon) &&
