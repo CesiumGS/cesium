@@ -5,7 +5,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/defined',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
         '../Core/Occluder',
@@ -44,7 +43,6 @@ define([
         defaultValue,
         defined,
         destroyObject,
-        defined,
         GeographicProjection,
         Ellipsoid,
         Occluder,
@@ -404,9 +402,9 @@ define([
             command.debugOverlappingFrustums = 0;
         }
 
+        var frustumCount = 0;
         var frustumCommandsList = scene._frustumCommandsList;
         var length = frustumCommandsList.length;
-        var frustumCount = 0;
 
         for (var i = 0; i < length; ++i) {
             var frustumCommands = frustumCommandsList[i];
@@ -420,21 +418,6 @@ define([
             if (distance.stop < curNear) {
                 break;
             }
-
-            // PERFORMANCE_IDEA: sort bins
-            frustumCommands.commands[frustumCommands.index++] = command;
-
-            if (command.executeInClosestFrustum) {
-                break;
-            }
-        }
-    }
-
-    function insertIntoAllBins(scene, command) {
-        var frustumCommandsList = scene._frustumCommandsList;
-        var length = frustumCommandsList.length;
-        for (var i = 0; i < length; ++i) {
-            var frustumCommands = frustumCommandsList[i];
 
             // PERFORMANCE_IDEA: sort bins
             frustumCommands.commands[frustumCommands.index++] = command;
@@ -453,6 +436,22 @@ define([
         if (scene.debugComputeFrustumsPerCommand) {
             ++scene._debugFrustumsPerCommand.totalCommands;
             ++scene._debugFrustumsPerCommand.commandsInFrustums[frustumCount];
+        }
+    }
+
+// TODO: remove this function?
+    function insertIntoAllBins(scene, command) {
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+        for (var i = 0; i < length; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+
+            // PERFORMANCE_IDEA: sort bins
+            frustumCommands.commands[frustumCommands.index++] = command;
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
         }
     }
 
