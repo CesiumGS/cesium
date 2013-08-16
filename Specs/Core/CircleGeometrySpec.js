@@ -118,14 +118,14 @@ defineSuite([
 
     it('compute texture coordinates with rotation', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var m = new CircleGeometry({
+        var m = CircleGeometry.createGeometry(new CircleGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             ellipsoid : ellipsoid,
             center : ellipsoid.cartographicToCartesian(new Cartographic()),
             granularity : 0.75,
             radius : 1.0,
             stRotation : CesiumMath.PI_OVER_TWO
-        });
+        }));
 
         var positions = m.attributes.position.values;
         var st = m.attributes.st.values;
