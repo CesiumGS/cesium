@@ -21,6 +21,18 @@ defineSuite([
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
+    it('works with basic types', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, 5);
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, 6);
+
+        var property = new TimeIntervalCollectionProperty();
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+
+        expect(property.getValue(interval1.start)).toBe(interval1.data);
+        expect(property.getValue(interval2.stop)).toBe(interval2.data);
+    });
+
     it('works with non-clonable objects', function() {
         var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, {});
         var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, {});

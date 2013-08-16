@@ -1,12 +1,23 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/SampledProperty',
-             'Core/JulianDate'
+             'Core/defined',
+             'Core/JulianDate',
+             'Core/LinearApproximation'
      ], function(
              SampledProperty,
-             JulianDate) {
+             defined,
+             JulianDate,
+             LinearApproximation) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    it('constructor sets expected defaults', function() {
+        var property = new SampledProperty(Number);
+        expect(property.isTimeVarying).toEqual(true);
+        expect(property.interpolationDegree).toEqual(1);
+        expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
+    });
 
     it('addSamplesFlatArray works', function() {
         var data = [0, 7, 1, 8, 2, 9];
@@ -14,7 +25,6 @@ defineSuite([
 
         var property = new SampledProperty(Number);
         property.addSamplesFlatArray(data, epoch);
-        expect(property.isTimeVarying).toEqual(true);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(7.5);
     });
@@ -44,6 +54,98 @@ defineSuite([
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(7.5);
+    });
+
+    it('works with specialized interpolation packing', function() {
+        var CustomType = function(value) {
+            this.x = value;
+        };
+
+        CustomType.packedLength = 1;
+
+        CustomType.packedInterpolationLength = 2;
+
+        CustomType.pack = function(array, startingIndex, value) {
+            array[startingIndex++] = value.x;
+            return startingIndex;
+        };
+
+        CustomType.unpack = function(array, startingIndex, result) {
+            return array[startingIndex];
+        };
+
+        CustomType.packForInterpolation = function(sourceArray, destinationArray, firstIndex, lastIndex) {
+            for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
+                var offset = i * 2;
+                destinationArray[offset] = sourceArray[i] * 0.5;
+                destinationArray[offset + 1] = sourceArray[i] * 0.5;
+            }
+        };
+
+        CustomType.unpackInterpolationResult = function(array, result, sourceArray, firstIndex, lastIndex) {
+            if (!defined(result)) {
+                result = new CustomType();
+            }
+            result.x = array[0] + array[1];
+            return result;
+        };
+
+        var values = [new CustomType(0), new CustomType(2), new CustomType(4)];
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+
+        var property = new SampledProperty(CustomType);
+        property.addSample(times[0], values[0]);
+        property.addSample(times[1], values[1]);
+        property.addSample(times[2], values[2]);
+
+        expect(property.getValue(new JulianDate(0.5, 0)).x).toEqual(1);
+    });
+
+    it('can set interpolationAlgorithm and degree', function() {
+        var data = [0, 7, 2, 9, 4, 11];
+        var epoch = new JulianDate(0, 0);
+
+        var timesCalled = 0;
+        var MockInterpolation = {
+            type : 'Mock',
+            getRequiredDataPoints : function(degree) {
+                return 3;
+            },
+
+            interpolateOrderZero : function(x, xTable, yTable, yStride, result) {
+                expect(x).toEqual(-1);
+
+                expect(xTable.length).toEqual(3);
+                expect(xTable[0]).toBe(-4);
+                expect(xTable[1]).toBe(-2);
+                expect(xTable[2]).toBe(0);
+
+                expect(yTable.length).toEqual(3);
+                expect(yTable[0]).toBe(7);
+                expect(yTable[1]).toBe(9);
+                expect(yTable[2]).toBe(11);
+
+                expect(yStride).toEqual(1);
+
+                expect(result.length).toEqual(1);
+
+                result[0] = 2;
+                timesCalled++;
+                return result;
+            }
+        };
+
+        var property = new SampledProperty(Number);
+        property.addSamplesFlatArray(data, epoch);
+        expect(property.getValue(epoch)).toEqual(7);
+        expect(property.getValue(new JulianDate(0, 1))).toEqual(8);
+
+        property.interpolationDegree = 2;
+        property.interpolationAlgorithm = MockInterpolation;
+        expect(property.getValue(epoch)).toEqual(7);
+        expect(property.getValue(new JulianDate(0, 3))).toEqual(2);
+
+        expect(timesCalled).toEqual(1);
     });
 
     it('Returns undefined if trying to interpolate with less than enough samples.', function() {
@@ -167,28 +269,10 @@ defineSuite([
 
     var interwovenData = [{
         epoch : JulianDate.fromIso8601("20130205T150405.704999999999927Z"),
-        values : [0.0, 1,
-                   120.0, 2,
-                   240.0, 3,
-                   360.0, 4,
-                   480.0, 6,
-                   600.0, 8,
-                   720.0, 10,
-                   840.0, 12,
-                   960.0, 14,
-                   1080.0, 16]
+        values : [0.0, 1, 120.0, 2, 240.0, 3, 360.0, 4, 480.0, 6, 600.0, 8, 720.0, 10, 840.0, 12, 960.0, 14, 1080.0, 16]
     }, {
         epoch : JulianDate.fromIso8601("20130205T151151.60499999999956Z"),
-         values : [0.0, 5,
-                   120.0, 7,
-                   240.0, 9,
-                   360.0, 11,
-                   480.0, 13,
-                   600.0, 15,
-                   720.0, 17,
-                   840.0, 18,
-                   960.0, 19,
-                   1080.0, 20]
+        values : [0.0, 5, 120.0, 7, 240.0, 9, 360.0, 11, 480.0, 13, 600.0, 15, 720.0, 17, 840.0, 18, 960.0, 19, 1080.0, 20]
     }];
 
     it('_mergeNewSamples works with interwoven data', function() {
@@ -199,5 +283,11 @@ defineSuite([
         for ( var i = 0; i < values.length; i++) {
             expect(values[i]).toBe(i + 1);
         }
+    });
+
+    it('constructor throws without type parameter.', function() {
+        expect(function() {
+            return new SampledProperty(undefined);
+        }).toThrow();
     });
 });

@@ -8,9 +8,9 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
 
     var InterpolatableValue = {};
 
-    InterpolatableValue.length = 0;
+    InterpolatableValue.packedLength = undefined;
 
-    InterpolatableValue.interpolationLength = 0;
+    InterpolatableValue.packedInterpolationLength = undefined;
 
     InterpolatableValue.pack = throwInstantiationError;
 

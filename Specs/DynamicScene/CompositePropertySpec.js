@@ -58,6 +58,21 @@ defineSuite([
         expect(result2).toEqual(interval2.data.getValue());
     });
 
+    it('works without a result parameter', function() {
+        var interval1 = new TimeInterval(new JulianDate(10, 0), new JulianDate(12, 0), true, true, new ConstantProperty(new Cartesian3(1, 2, 3)));
+        var interval2 = new TimeInterval(new JulianDate(12, 0), new JulianDate(14, 0), false, true, new ConstantProperty(new Cartesian3(4, 5, 6)));
+
+        var property = new CompositeProperty();
+        property.intervals.addInterval(interval1);
+        property.intervals.addInterval(interval2);
+
+        var result1 = property.getValue(interval1.start);
+        expect(result1).toEqual(interval1.data.getValue());
+
+        var result2 = property.getValue(interval2.stop);
+        expect(result2).toEqual(interval2.data.getValue());
+    });
+
     it('throws with no time parameter', function() {
         var property = new CompositeProperty();
         expect(function() {
