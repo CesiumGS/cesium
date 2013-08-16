@@ -85,7 +85,7 @@ define([
      * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
      * @memberof EllipsoidOutlineGeometry
      *
-     * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid outline.
+     * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
      * @returns {Geometry} The computed vertices and indices.
      */
     EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {

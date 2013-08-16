@@ -655,6 +655,7 @@ define([
 
     /**
      * Computes the geometric representation of a ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof EllipseGeometry
      *
      * @param {EllipseGeometry} ellipseGeometry A description of the ellipse.
      * @returns {Geometry} The computed vertices and indices.

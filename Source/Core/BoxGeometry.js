@@ -118,6 +118,7 @@ define([
 
     /**
      * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
+     * @memberof BoxGeometry
      *
      * @param {BoxGeometry} boxGeometry A description of the box.
      * @returns {Geometry} The computed vertices and indices.

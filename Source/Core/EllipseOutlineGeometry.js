@@ -9,12 +9,11 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipseGeometryLibrary',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './Math',
-        './Matrix3',
-        './PrimitiveType',
-        './Quaternion'
+        './PrimitiveType'
     ], function(
         defaultValue,
         defined,
@@ -25,12 +24,11 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipseGeometryLibrary,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         CesiumMath,
-        Matrix3,
-        PrimitiveType,
-        Quaternion) {
+        PrimitiveType) {
     "use strict";
 
     var scratchCartesian1 = new Cartesian3();
@@ -52,11 +50,11 @@ define([
         });
 
         var length = positions.length / 3;
-        var indices = IndexDatatype.createTypedArray(length, length*2);
+        var indices = IndexDatatype.createTypedArray(length, length * 2);
         var index = 0;
-        for (var i = 0; i < length - 1; i++) {
+        for ( var i = 0; i < length - 1; i++) {
             indices[index++] = i;
-            indices[index++] = i+1;
+            indices[index++] = i + 1;
         }
         indices[index++] = length - 1;
         indices[index++] = 0;
@@ -107,6 +105,7 @@ define([
             indices[index++] = i + length;
             indices[index++] = i + length + 1;
         }
+
         indices[index++] = length - 1;
         indices[index++] = 0;
         indices[index++] = length + length - 1;
@@ -117,9 +116,11 @@ define([
             var numSideLines = Math.min(numberOfVerticalLines, length);
             numSide = Math.round(length/numSideLines);
         }
-        var maxI = Math.min(numSide*numberOfVerticalLines, length);
+
+
+        var maxI = Math.min(numSide * numberOfVerticalLines, length);
         if (numberOfVerticalLines > 0) {
-            for (i = 0; i < maxI; i+= numSide){
+            for (i = 0; i < maxI; i += numSide) {
                 indices[index++] = i;
                 indices[index++] = i + length;
             }
@@ -134,7 +135,7 @@ define([
 
     /**
      *
-     * A {@link Geometry} that represents geometry for the outline of an ellipse on an ellipsoid
+     * A description of the outline of an ellipse on an ellipsoid.
      *
      * @alias EllipseOutlineGeometry
      * @constructor
@@ -156,8 +157,9 @@ define([
      * @exception {DeveloperError} semiMajorAxis must be larger than the semiMajorAxis.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
+     * @see EllipseOutlineGeometry#createGeometry
+     *
      * @example
-     * // Create an ellipse.
      * var ellipsoid = Ellipsoid.WGS84;
      * var ellipse = new EllipseOutlineGeometry({
      *   ellipsoid : ellipsoid,
@@ -166,6 +168,7 @@ define([
      *   semiMinorAxis : 300000.0,
      *   rotation : CesiumMath.toRadians(60.0)
      * });
+     * var geometry = EllipseOutlineGeometry.createGeometry(ellipse);
      */
     var EllipseOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -173,6 +176,10 @@ define([
         var center = options.center;
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (defined(extrudedHeight) && !CesiumMath.equalsEpsilon(height, extrudedHeight, 1.0));
 
         if (!defined(center)) {
             throw new DeveloperError('center is required.');
@@ -194,64 +201,57 @@ define([
             throw new DeveloperError('semiMajorAxis must be larger than the semiMajorAxis.');
         }
 
-        var newOptions = {
-            center : center,
-            semiMajorAxis : semiMajorAxis,
-            semiMinorAxis : semiMinorAxis,
-            ellipsoid : defaultValue(options.ellipsoid, Ellipsoid.WGS84),
-            rotation : defaultValue(options.rotation, 0.0),
-            height : defaultValue(options.height, 0.0),
-            granularity : defaultValue(options.granularity, 0.02),
-            extrudedHeight : options.extrudedHeight,
-            numberOfVerticalLines : Math.max(defaultValue(options.numberOfVerticalLines, 16), 0)
-        };
-
-        if (newOptions.granularity <= 0.0) {
+        if (granularity <= 0.0) {
             throw new DeveloperError('granularity must be greater than zero.');
         }
 
-        var extrude = (defined(newOptions.extrudedHeight) && !CesiumMath.equalsEpsilon(newOptions.height, newOptions.extrudedHeight, 1));
+        this._center = Cartesian3.clone(center);
+        this._semiMajorAxis = semiMajorAxis;
+        this._semiMinorAxis = semiMinorAxis;
+        this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        this._rotation = defaultValue(options.rotation, 0.0);
+        this._height = height;
+        this._granularity = granularity;
+        this._extrudedHeight = extrudedHeight;
+        this._extrude = extrude;
+        this._numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
+        this._workerName = 'createEllipseOutlineGeometry';
+    };
 
-        var ellipseGeometry;
-        if (extrude) {
-            var h = newOptions.extrudedHeight;
-            var height = newOptions.height;
-            newOptions.extrudedHeight = Math.min(h, height);
-            newOptions.height = Math.max(h, height);
-            ellipseGeometry = computeExtrudedEllipse(newOptions);
+    /**
+     * Computes the geometric representation of an outline of an ellipse on an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof EllipseOutlineGeometry
+     *
+     * @param {EllipseOutlineGeometry} ellipseGeometry A description of the ellipse.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    EllipseOutlineGeometry.createGeometry = function(ellipseGeometry) {
+        var options = {
+            center : ellipseGeometry._center,
+            semiMajorAxis : ellipseGeometry._semiMajorAxis,
+            semiMinorAxis : ellipseGeometry._semiMinorAxis,
+            ellipsoid : ellipseGeometry._ellipsoid,
+            rotation : ellipseGeometry._rotation,
+            height : ellipseGeometry._height,
+            extrudedHeight : ellipseGeometry._extrudedHeight,
+            granularity : ellipseGeometry._granularity,
+            numberOfVerticalLines : ellipseGeometry._numberOfVerticalLines
+        };
+        var geometry;
+        if (ellipseGeometry._extrude) {
+            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+            geometry = computeExtrudedEllipse(options);
         } else {
-            ellipseGeometry = computeEllipse(newOptions);
+            geometry = computeEllipse(options);
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipseGeometry.attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipseGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipseGeometry.boundingSphere;
+        return new Geometry({
+            attributes : geometry.attributes,
+            indices : geometry.indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : geometry.boundingSphere
+        });
     };
 
     return EllipseOutlineGeometry;

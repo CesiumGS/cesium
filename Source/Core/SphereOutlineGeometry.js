@@ -49,7 +49,7 @@ define([
     /**
      * Computes the geometric representation of an outline of a sphere, including its vertices, indices, and a bounding sphere.
      *
-     * @param {SphereGeometry} sphereGeometry A description of the sphere outline.
+     * @param {SphereOutlineGeometry} sphereGeometry A description of the sphere outline.
      * @returns {Geometry} The computed vertices and indices.
      */
     SphereOutlineGeometry.createGeometry = function(sphereGeometry) {

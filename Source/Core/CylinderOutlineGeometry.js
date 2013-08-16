@@ -108,7 +108,7 @@ define([
      * Computes the geometric representation of an outline of a cylinder, including its vertices, indices, and a bounding sphere.
      * @memberof CylinderOutlineGeometry
      *
-     * @param {CylinderGeometry} cylinderGeometry A description of the cylinder outline.
+     * @param {CylinderOutlineGeometry} cylinderGeometry A description of the cylinder outline.
      * @returns {Geometry} The computed vertices and indices.
      */
     CylinderOutlineGeometry.createGeometry = function(cylinderGeometry) {
