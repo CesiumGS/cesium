@@ -5,14 +5,14 @@ define([
         './freezeObject',
         './DeveloperError',
         './FeatureDetection',
-        './SeededRandom'
+        './Math'
     ], function(
         defaultValue,
         defined,
         freezeObject,
         DeveloperError,
         FeatureDetection,
-        SeededRandom) {
+        CesiumMath) {
     "use strict";
 
     function hue2rgb(m1, m2, h) {
@@ -166,7 +166,7 @@ define([
      *
      */
     Color.fromRandom = function(options, result){
-        var random = defined(options.seed) ? new SeededRandom(options.seed) : Math.random;
+        var random = defined(options.seed) ? new CesiumMath.getSeededRandom(options.seed) : Math.random;
 
         var minimumRed = defined(options.minimunRed) ? options.minimumRed : 0;
         var maximumRed = defined(options.maximumRed) ? options.maximumRed : 1.0;
