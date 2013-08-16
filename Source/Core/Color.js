@@ -189,7 +189,9 @@ define([
         }
         var blue = defined(options.blue) ? options.blue : minimumBlue + (random() * (maximumBlue - minimumBlue));
 
-        var alpha = defined(options.alpha) ? options.alpha : 1;
+        var minimumAlpha = defined(options.minimumAlpha) ? options.minimumAlpha : 0;
+        var maximumAlpha = defined(options.maximumAlpha) ? options.maximumAlpha : 0;
+        var alpha = defined(options.alpha) ? options.alpha : minimumAlpha + (random() * (maximumAlpha - minimumAlpha));
 
         if(!defined(result)) {
             return new Color(red, green, blue, alpha);

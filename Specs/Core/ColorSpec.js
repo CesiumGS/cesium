@@ -236,7 +236,22 @@ defineSuite(['Core/Color',
         expect(randomColor.red <= 1.0 && randomColor. red >= 0.0).toBe(true);
         expect(randomColor.green <= 1.0 && randomColor.green >= 0.0).toBe(true);
         expect(randomColor.blue <= 1.0 && randomColor.blue >= 0.0).toBe(true);
-        expect(randomColor.alpha).toEqual(1);
+        expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
+    });
+
+    it('fromRandom generates a random color with a custom seed', function() {
+        var options = {
+                red: undefined,
+                green: undefined,
+                blue: undefined,
+                alpha: undefined,
+                seed: 42
+        };
+        var randomColor = Color.fromRandom(options);
+        expect(randomColor.red <= 1.0 && randomColor. red >= 0.0).toBe(true);
+        expect(randomColor.green <= 1.0 && randomColor.green >= 0.0).toBe(true);
+        expect(randomColor.blue <= 1.0 && randomColor.blue >= 0.0).toBe(true);
+        expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
     });
 
     it('fromRandom generates a random color with all options', function() {
@@ -250,7 +265,7 @@ defineSuite(['Core/Color',
         expect(randomColor.red <= 1.0 && randomColor. red >= 0.0).toBe(true);
         expect(randomColor.green <= 1.0 && randomColor.green >= 0.0).toBe(true);
         expect(randomColor.blue <= 1.0 && randomColor.blue >= 0.0).toBe(true);
-        expect(randomColor.alpha).toEqual(1);
+        expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
     });
 
     it('fromRandom generates a random kind of Red color within intervals', function() {
