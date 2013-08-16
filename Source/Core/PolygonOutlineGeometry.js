@@ -160,8 +160,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the outline of a polygon on the ellipsoid. The polygon is defined
-     * by a polygon hierarchy.
+     * A description of the outline of a polygon on the ellipsoid. The polygon is defined by a polygon hierarchy.
      *
      * @alias PolygonOutlineGeometry
      * @constructor
@@ -170,17 +169,17 @@ define([
      * @param {Number} [options.height=0.0] The height of the polygon.
      * @param {Number} [options.extrudedHeight] The height of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      *
      * @exception {DeveloperError} polygonHierarchy is required.
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     *
+     * @see PolygonOutlineGeometry#createGeometry
+     * @see PolygonOutlineGeometry#fromPositions
      *
      * @example
-     * // create a polygon from points
-     * var geometry = new PolygonOutlineGeometry({
+     * // 1. create a polygon outline from points
+     * var polygon = new PolygonOutlineGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-72.0, 40.0),
@@ -191,9 +190,10 @@ define([
      *         ])
      *     }
      * });
+     * var geometry = PolygonOutlineGeometry.createGeometry(polygon);
      *
-     * // create a nested polygon with holes
-     * var geometryWithHole = new PolygonOutlineGeometry({
+     * // 2. create a nested polygon with holes outline
+     * var polygonWithHole = new PolygonOutlineGeometry({
      *     polygonHierarchy : {
      *         positions : ellipsoid.cartographicArrayToCartesianArray([
      *             Cartographic.fromDegrees(-109.0, 30.0),
@@ -227,9 +227,10 @@ define([
      *         }]
      *     }
      * });
+     * var geometry = PolygonOutlineGeometry.createGeometry(polygonWithHole);
      *
-     * //create extruded polygon
-     * var geometry = new Cesium.PolygonOutlineGeometry({
+     * // 3. create extruded polygon outline
+     * var extrudedPolygon = new PolygonOutlineGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cesium.Cartographic.fromDegrees(-72.0, 40.0),
      *         Cesium.Cartographic.fromDegrees(-70.0, 35.0),
@@ -239,6 +240,7 @@ define([
      *     ]),
      *     extrudedHeight: 300000
      * });
+     * var geometry = PolygonOutlineGeometry.createGeometry(extrudedPolygon);
      *
      */
     var PolygonOutlineGeometry = function(options) {
@@ -260,6 +262,80 @@ define([
         if (!defined(polygonHierarchy)) {
             throw new DeveloperError('options.polygonHierarchy is required.');
         }
+
+        this._ellipsoid = ellipsoid;
+        this._granularity = granularity;
+        this._height = height;
+        this._extrudedHeight = extrudedHeight;
+        this._extrude = extrude;
+        this._polygonHierarchy = polygonHierarchy;
+        this._workerName = 'createPolygonOutlineGeometry';
+    };
+
+    /**
+     * A description of a polygon outline from an array of positions.
+     *
+     * @memberof PolygonOutlineGeometry
+     *
+     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
+     * @param {Number} [options.height=0.0] The height of the polygon.
+     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     *
+     * @exception {DeveloperError} options.positions is required.
+     *
+     * @see PolygonGeometry#createGeometry
+     *
+     * @example
+     * // create a polygon from points
+     * var polygon = PolygonOutlineGeometry.fromPositions({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(-72.0, 40.0),
+     *         Cartographic.fromDegrees(-70.0, 35.0),
+     *         Cartographic.fromDegrees(-75.0, 30.0),
+     *         Cartographic.fromDegrees(-70.0, 30.0),
+     *         Cartographic.fromDegrees(-68.0, 40.0)
+     *     ])
+     * });
+     * var geometry = PolygonOutlineGeometry.createGeometry(polygon);
+     */
+    PolygonOutlineGeometry.fromPositions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        if (!defined(options.positions)) {
+            throw new DeveloperError('options.positions is required.');
+        }
+
+        var newOptions = {
+            polygonHierarchy : {
+                positions : options.positions
+            },
+            height : options.height,
+            extrudedHeight : options.extrudedHeight,
+            ellipsoid : options.ellipsoid,
+            granularity : options.granularity
+        };
+        return new PolygonOutlineGeometry(newOptions);
+    };
+
+    /**
+     * Computes the geometric representation of a polygon outline, including its vertices, indices, and a bounding sphere.
+     * @memberof PolygonOutlineGeometry
+     *
+     * @param {PolygonOutlineGeometry} polygonGeometry A description of the polygon outline.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} At least three positions are required.
+     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
+     */
+    PolygonOutlineGeometry.createGeometry = function(polygonGeometry) {
+        var ellipsoid = polygonGeometry._ellipsoid;
+        var granularity = polygonGeometry._granularity;
+        var height = polygonGeometry._height;
+        var extrudedHeight = polygonGeometry._extrudedHeight;
+        var extrude = polygonGeometry._extrude;
+        var polygonHierarchy = polygonGeometry._polygonHierarchy;
 
         var boundingSphere;
         var outerPositions;
@@ -339,85 +415,12 @@ define([
             boundingSphere = BoundingSphere.union(boundingSphere, scratchBoundingSphere, boundingSphere);
         }
 
-        var attributes = geometry.attributes;
-
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = geometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = geometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = boundingSphere;
-    };
-
-    /**
-     * Creates a polygon outline from an array of positions.
-     *
-     * @memberof PolygonOutlineGeometry
-     *
-     * @param {Array} options.positions An array of positions that defined the corner points of the polygon.
-     * @param {Number} [options.height=0.0] The height of the polygon.
-     * @param {Number} [options.extrudedHeight] The height of the polygon extrusion.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordiantes, in radians. A positive rotation is counter-clockwise.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     *
-     * @exception {DeveloperError} options.positions is required.
-     * @exception {DeveloperError} At least three positions are required.
-     * @exception {DeveloperError} Duplicate positions result in not enough positions to form a polygon.
-     *
-     * @example
-     * // create a polygon from points
-     * var geometry = new PolygonOutlineGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray([
-     *         Cartographic.fromDegrees(-72.0, 40.0),
-     *         Cartographic.fromDegrees(-70.0, 35.0),
-     *         Cartographic.fromDegrees(-75.0, 30.0),
-     *         Cartographic.fromDegrees(-70.0, 30.0),
-     *         Cartographic.fromDegrees(-68.0, 40.0)
-     *     ])
-     * });
-     */
-    PolygonOutlineGeometry.fromPositions = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        if (!defined(options.positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-
-        var newOptions = {
-            polygonHierarchy : {
-                positions : options.positions
-            },
-            height : options.height,
-            extrudedHeight : options.extrudedHeight,
-            ellipsoid : options.ellipsoid,
-            granularity : options.granularity
-        };
-        return new PolygonOutlineGeometry(newOptions);
+        return new Geometry({
+            attributes : geometry.attributes,
+            indices : geometry.indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : boundingSphere
+        });
     };
 
     return PolygonOutlineGeometry;

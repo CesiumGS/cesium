@@ -128,7 +128,6 @@ require(['Cesium'], function(Cesium) {
             material : Cesium.Material.fromType(scene.getContext(), 'Stripe')
         })
     }));
-
     primitives.add(new Cesium.Primitive({
         geometryInstances : [extentOutlineInstance, polygonOutlineInstance, ellipseOutlineInstance, circleOutlineInstance],
         appearance : new Cesium.PerInstanceColorAppearance({
@@ -372,6 +371,7 @@ require(['Cesium'], function(Cesium) {
         outlineInstances.push(new Cesium.GeometryInstance({
             geometry : sphereOutlineGeometry,
             modelMatrix : sphereModelMatrix,
+            attributes : {
                 color : solidWhite
             }
         }));

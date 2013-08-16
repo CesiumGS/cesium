@@ -1440,7 +1440,7 @@ defineSuite([
     });
 
     it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
-        var geometry = new BoxGeometry({
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
@@ -1453,7 +1453,7 @@ defineSuite([
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
-        var expectedGeometry = new BoxGeometry({
+        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
             maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
             minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
