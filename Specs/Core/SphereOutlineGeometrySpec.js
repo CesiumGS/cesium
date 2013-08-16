@@ -30,11 +30,11 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var m = new SphereOutlineGeometry({
+        var m = SphereOutlineGeometry.createGeometry(new SphereOutlineGeometry({
             stackPartitions : 2,
             slicePartitions: 2,
             subdivisions: 2
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(6 * 3);
         expect(m.indices.length).toEqual(6 * 2);

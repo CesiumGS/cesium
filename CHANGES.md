@@ -7,6 +7,24 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
+    * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
+    * The geometry types no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
+    
+        var boxGeometry = new BoxGeometry({
+            minimumCorner : min,
+            maximumCorner : max,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+      
+      should now look like:
+      
+        var box = new BoxGeometry({
+            minimumCorner : min,
+            maximumCorner : max,
+            vertexFormat : VertexFormat.POSITION_ONLY
+        });
+        var geometry = BoxGeometry.createGeometry(box);
+        
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * Replaced `ExtentGeometry` parameters for extruded extent to make it consistent with other Geometries.
       * options.extrudedOptions.height -> options.extrudedHeight
@@ -19,6 +37,7 @@ Beta Releases
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
+* Improved geometry batching performance by moving work to a web worker.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added outline geometry [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021)

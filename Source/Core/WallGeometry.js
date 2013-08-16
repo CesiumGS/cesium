@@ -4,42 +4,35 @@ define([
         './defined',
         './BoundingSphere',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
         './IndexDatatype',
         './DeveloperError',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './Math',
-        './PolylinePipeline',
-        './PolygonPipeline',
         './PrimitiveType',
         './VertexFormat',
-        './WallGeometryLibrary',
-        './WindingOrder'
+        './WallGeometryLibrary'
     ], function(
         defaultValue,
         defined,
         BoundingSphere,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
         IndexDatatype,
         DeveloperError,
         Ellipsoid,
-        EllipsoidTangentPlane,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         CesiumMath,
-        PolylinePipeline,
-        PolygonPipeline,
         PrimitiveType,
         VertexFormat,
-        WallGeometryLibrary,
-        WindingOrder) {
+        WallGeometryLibrary) {
     "use strict";
+
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
     var scratchCartesian3Position3 = new Cartesian3();
@@ -50,7 +43,7 @@ define([
     var scratchNormal = new Cartesian3();
 
     /**
-     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
      * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
      *
      * @alias WallGeometry
@@ -68,7 +61,9 @@ define([
      * @exception {DeveloperError} positions is required.
      * @exception {DeveloperError} positions and maximumHeights must have the same length.
      * @exception {DeveloperError} positions and minimumHeights must have the same length.
-     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     *
+     * @see WallGeometry#createGeometry
+     * @see WallGeometry#fromConstantHeight
      *
      * @example
      * var positions = [
@@ -83,6 +78,7 @@ define([
      * var wall = new WallGeometry({
      *     positions : ellipsoid.cartographicArrayToCartesianArray(positions)
      * });
+     * var geometry = WallGeometry.createGeometry(wall);
      */
     var WallGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -107,12 +103,116 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
+        this._positions = wallPositions;
+        this._minimumHeights = minimumHeights;
+        this._maximumHeights = maximumHeights;
+        this._vertexFormat = vertexFormat;
+        this._granularity = granularity;
+        this._ellipsoid = ellipsoid;
+        this._workerName = 'createWallGeometry';
+    };
+
+    /**
+     * A description of a wall, which is similar to a KML line string. A wall is defined by a series of points,
+     * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
+     *
+     * @memberof WallGeometry
+     *
+     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
+     * @param {Number} [maximumHeight] A constant that defines the maximum height of the
+     *        wall at <code>positions</code>. If undefined, the height of each position in used.
+     * @param {Number} [minimumHeight] A constant that defines the minimum height of the
+     *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     *
+     * @exception {DeveloperError} positions is required.
+     *
+     * @see WallGeometry#createGeometry
+     *
+     * @example
+     * var positions = [
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
+     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
+     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
+     * ];
+     *
+     * // create a wall that spans from 10000 meters to 20000 meters
+     * var wall = WallGeometry.fromConstantHeights({
+     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
+     *     minimumHeight : 20000.0,
+     *     maximumHeight : 10000.0
+     * });
+     * var geometry = WallGeometry.createGeometry(wall);
+     */
+    WallGeometry.fromConstantHeights = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var positions = options.positions;
+        if (!defined(positions)) {
+            throw new DeveloperError('options.positions is required.');
+        }
+
+        var minHeights;
+        var maxHeights;
+
+        var min = options.minimumHeight;
+        var max = options.maximumHeight;
+
+        var doMin = defined(min);
+        var doMax = defined(max);
+        if (doMin || doMax) {
+            var length = positions.length;
+            minHeights = (doMin) ? new Array(length) : undefined;
+            maxHeights = (doMax) ? new Array(length) : undefined;
+
+            for (var i = 0; i < length; ++i) {
+                if (doMin) {
+                    minHeights[i] = min;
+                }
+
+                if (doMax) {
+                    maxHeights[i] = max;
+                }
+            }
+        }
+
+        var newOptions = {
+            positions : positions,
+            maximumHeights : maxHeights,
+            minimumHeights : minHeights,
+            ellipsoid : options.ellipsoid,
+            vertexFormat : options.vertexFormat
+        };
+        return new WallGeometry(newOptions);
+    };
+
+    /**
+     * Computes the geometric representation of a wall, including its vertices, indices, and a bounding sphere.
+     * @memberof WallGeometry
+     *
+     * @param {WallGeometry} wallGeometry A description of the wall.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} unique positions must be greater than or equal to 2.
+     */
+    WallGeometry.createGeometry = function(wallGeometry) {
+        var wallPositions = wallGeometry._positions;
+        var minimumHeights = wallGeometry._minimumHeights;
+        var maximumHeights = wallGeometry._maximumHeights;
+        var vertexFormat = wallGeometry._vertexFormat;
+        var granularity = wallGeometry._granularity;
+        var ellipsoid = wallGeometry._ellipsoid;
+
         var pos = WallGeometryLibrary.computePositions(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, true);
         var newWallPositions = pos.newWallPositions;
         var bottomPositions = pos.bottomPositions;
         var topPositions = pos.topPositions;
 
-        var length = newWallPositions.length;        var size = length * 2;
+        var length = newWallPositions.length;
+        var size = length * 2;
 
         var positions = vertexFormat.position ? new Float64Array(size) : undefined;
         var normals = vertexFormat.normal ? new Float32Array(size) : undefined;
@@ -299,112 +399,13 @@ define([
             indices[edgeIndex++] = LR;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = new BoundingSphere.fromVertices(positions);
-    };
-
-    /**
-     * A {@link Geometry} that represents a wall, which is similar to a KML line string. A wall is defined by a series of points,
-     * which extrude down to the ground. Optionally, they can extrude downwards to a specified height.
-     *
-     * @memberof WallGeometry
-     *
-     * @param {Array} positions An array of Cartesian objects, which are the points of the wall.
-     * @param {Number} [maximumHeight] A constant that defines the maximum height of the
-     *        wall at <code>positions</code>. If undefined, the height of each position in used.
-     * @param {Number} [minimumHeight] A constant that defines the minimum height of the
-     *        wall at <code>positions</code>. If undefined, the height at each position is 0.0.
-     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid for coordinate manipulation
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     *
-     * @exception {DeveloperError} positions is required.
-     *
-     * @example
-     * var positions = [
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 48.0, 10000.0),
-     *   Cartographic.fromDegrees(20.0, 47.0, 10000.0),
-     *   Cartographic.fromDegrees(19.0, 47.0, 10000.0)
-     * ];
-     *
-     * // create a wall that spans from 10000 meters to 20000 meters
-     * var wall = new WallGeometry({
-     *     positions : ellipsoid.cartographicArrayToCartesianArray(positions),
-     *     topHeight : 20000.0,
-     *     bottomHeight : 10000.0
-     * });
-     */
-    WallGeometry.fromConstantHeights = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var positions = options.positions;
-        if (!defined(positions)) {
-            throw new DeveloperError('options.positions is required.');
-        }
-
-        var minHeights;
-        var maxHeights;
-
-        var min = options.minimumHeight;
-        var max = options.maximumHeight;
-
-        var doMin = (defined(min));
-        var doMax = (defined(max));
-        if (doMin || doMax) {
-            var length = positions.length;
-            minHeights = (doMin) ? new Array(length) : undefined;
-            maxHeights = (doMax) ? new Array(length) : undefined;
-
-            for (var i = 0; i < length; ++i) {
-                if (doMin) {
-                    minHeights[i] = min;
-                }
-
-                if (doMax) {
-                    maxHeights[i] = max;
-                }
-            }
-        }
-
-        var newOptions = {
-            positions : positions,
-            maximumHeights : maxHeights,
-            minimumHeights : minHeights,
-            ellipsoid : options.ellipsoid,
-            vertexFormat : options.vertexFormat
-        };
-        return new WallGeometry(newOptions);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : new BoundingSphere.fromVertices(positions)
+        });
     };
 
     return WallGeometry;
 });
-

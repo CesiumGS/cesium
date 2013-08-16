@@ -11,19 +11,21 @@ define([
         Ellipsoid) {
     "use strict";
 
+    /**
+     * @private
+     */
     var PolygonGeometryLibrary = {};
 
     var distanceScratch = new Cartesian3();
     function getPointAtDistance(p0, p1, distance, length) {
-        distanceScratch = p1.subtract(p0, distanceScratch);
-        distanceScratch = distanceScratch.multiplyByScalar(distance/length, distanceScratch);
-        distanceScratch = p0.add(distanceScratch, distanceScratch);
+        Cartesian3.subtract(p1, p0, distanceScratch);
+        Cartesian3.multiplyByScalar(distanceScratch, distance / length, distanceScratch);
+        Cartesian3.add(p0, distanceScratch, distanceScratch);
         return [distanceScratch.x, distanceScratch.y, distanceScratch.z];
     }
 
     /**
-     * Returns an array of points between p0 and p1
-     * @returns private
+     * @private
      */
     PolygonGeometryLibrary.subdivideLine = function(p0, p1, granularity) {
         var length = Cartesian3.distance(p0, p1);
@@ -57,7 +59,6 @@ define([
     var scaleToGeodeticHeightN2 = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
     /**
-     * Raises the positions to the correct heights
      * @private
      */
     PolygonGeometryLibrary.scaleToGeodeticHeightExtruded = function(geometry, maxHeight, minHeight, ellipsoid) {

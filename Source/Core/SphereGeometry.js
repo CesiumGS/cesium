@@ -10,9 +10,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a sphere on the ellipsoid.
-     *
-     * Creates vertices and indices for an sphere centered at the origin.
+     * A description of a sphere centered at the origin.
      *
      * @alias SphereGeometry
      * @constructor
@@ -25,11 +23,14 @@ define([
      * @exception {DeveloperError} options.slicePartitions cannot be less than three.
      * @exception {DeveloperError} options.stackPartitions cannot be less than three.
      *
+     * @see SphereGeometry#createGeometry
+     *
      * @example
      * var sphere = new SphereGeometry({
      *   radius : 100.0,
      *   vertexFormat : VertexFormat.POSITION_ONLY
      * });
+     * var geometry = SphereGeometry.createGeometry(sphere);
      */
     var SphereGeometry = function(options) {
         var radius = defaultValue(options.radius, 1.0);
@@ -41,38 +42,18 @@ define([
                 vertexFormat: options.vertexFormat
         };
 
-        var ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        this._ellipsoidGeometry = new EllipsoidGeometry(ellipsoidOptions);
+        this._workerName = 'createSphereGeometry';
+    };
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipsoidGeometry.attributes;
-
-        /**
-         * Index data that - along with {@link Geometry#primitiveType} - determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipsoidGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = ellipsoidGeometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipsoidGeometry.boundingSphere;
+    /**
+     * Computes the geometric representation of a sphere, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {SphereGeometry} sphereGeometry A description of the sphere.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    SphereGeometry.createGeometry = function(sphereGeometry) {
+        return EllipsoidGeometry.createGeometry(sphereGeometry._ellipsoidGeometry);
     };
 
     return SphereGeometry;

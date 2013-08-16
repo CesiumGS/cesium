@@ -131,6 +131,18 @@ define([
          */
         this.material = defaultValue(options.material, material);
 
+        /**
+         * Determines if the geometry instances will be created and batched on
+         * a web worker.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @private
+         */
+        this.asynchronous = defaultValue(options.asynchronous, true);
+
         this._positions = options.positions;
         this._polygonHierarchy = options.polygonHierarchy;
         this._createPrimitive = false;
@@ -309,7 +321,8 @@ define([
                 geometryInstances : instance,
                 appearance : new EllipsoidSurfaceAppearance({
                     aboveGround : (this.height > 0.0)
-                })
+                }),
+                asynchronous : this.asynchronous
             });
         }
 

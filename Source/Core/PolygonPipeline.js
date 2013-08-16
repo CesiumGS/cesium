@@ -409,7 +409,7 @@ define([
                 var v0 = positions[i0];
                 var v1 = positions[i1];
 
-                if (!v0.equals(v1)) {
+                if (!Cartesian3.equals(v0, v1)) {
                     cleanedPositions.push(v1); // Shallow copy!
                 }
             }
@@ -605,12 +605,13 @@ define([
                 var v1 = subdividedPositions[triangle.i1];
                 var v2 = subdividedPositions[triangle.i2];
 
-                var g0 = v0.angleBetween(v1);
-                var g1 = v1.angleBetween(v2);
-                var g2 = v2.angleBetween(v0);
+                var g0 = Cartesian3.angleBetween(v0, v1);
+                var g1 = Cartesian3.angleBetween(v1, v2);
+                var g2 = Cartesian3.angleBetween(v2, v0);
 
                 var max = Math.max(g0, Math.max(g1, g2));
                 var edge;
+                var mid;
 
                 if (max > granularity) {
                     if (g0 === max) {
@@ -618,7 +619,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v0.add(v1).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v0, v1);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -638,7 +641,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v1.add(v2).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v1, v2);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -658,7 +663,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v2.add(v0).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v2, v0);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
