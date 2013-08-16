@@ -69,7 +69,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         expect(function() {
-            return PolygonGeometry.fromPositions({
+            return PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
                 positions : [
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
@@ -77,7 +77,7 @@ defineSuite([
                 ],
                 ellipsoid : ellipsoid,
                 extrudedHeight: 2
-            });
+            }));
         }).toThrow();
     });
 

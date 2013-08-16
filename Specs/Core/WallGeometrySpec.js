@@ -44,22 +44,22 @@ defineSuite([
 
     it('throws with less than 2 positions', function() {
         expect(function() {
-            return new WallGeometry({
+            return WallGeometry.createGeometry(new WallGeometry({
                 vertexFormat : VertexFormat.POSITION_ONLY,
                 positions    : ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
-            });
+            }));
         }).toThrow();
     });
 
     it('throws with less than 2 unique positions', function() {
         expect(function() {
-            return new WallGeometry({
+            return WallGeometry.createGeometry(new WallGeometry({
                 vertexFormat : VertexFormat.POSITION_ONLY,
                 positions    : ellipsoid.cartographicArrayToCartesianArray([
                                     Cartographic.fromDegrees(49.0, 18.0, 1000.0),
                                     Cartographic.fromDegrees(49.0, 18.0, 5000.0),
                                     Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
-            });
+            }));
         }).toThrow();
     });
 

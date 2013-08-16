@@ -50,7 +50,6 @@ define([
      * @exception {DeveloperError} options.bottomRadius must be greater than 0.
      * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater that 3.
-     * @exception {DeveloperError} options.numberOfVerticalLines must be grater than or equal to 0.
      *
      * @see CylinderOutlineGeometry#createGeometry
      *
@@ -70,7 +69,7 @@ define([
         var topRadius = options.topRadius;
         var bottomRadius = options.bottomRadius;
         var slices = defaultValue(options.slices, 128);
-        var numberOfVerticalLines = defaultValue(options.numberOfVerticalLines, 16);
+        var numberOfVerticalLines = Math.max(defaultValue(options.numberOfVerticalLines, 16), 0);
 
         if (!defined(length) || length <= 0) {
             throw new DeveloperError('options.length must be greater than 0.');
@@ -90,10 +89,6 @@ define([
 
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater that 3.');
-        }
-
-        if (numberOfVerticalLines < 0) {
-            throw new DeveloperError('options.numberOfVerticalLines must be grater than or equal to 0.');
         }
 
         this._length = length;
