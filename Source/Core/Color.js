@@ -168,21 +168,21 @@ define([
     Color.fromRandom = function(options, result){
         var random = defined(options.seed) ? new CesiumMath.getSeededRandom(options.seed) : Math.random;
 
-        var minimumRed = defined(options.minimunRed) ? options.minimumRed : 0;
+        var minimumRed = defined(options.minimumRed) ? options.minimumRed : 0;
         var maximumRed = defined(options.maximumRed) ? options.maximumRed : 1.0;
         if(minimumRed > maximumRed){
             throw new DeveloperError("minimumRed must be lower or equal to maximumRed");
         }
         var red = defined(options.red) ? options.red : minimumRed + (random() * (maximumRed - minimumRed));
 
-        var minimumGreen = defined(options.minimunGreen) ? options.minimumGreen : 0;
+        var minimumGreen = defined(options.minimumGreen) ? options.minimumGreen : 0;
         var maximumGreen = defined(options.maximumGreen) ? options.maximumGreen : 1.0;
         if(minimumGreen > maximumGreen){
             throw new DeveloperError("minimumGreen must be lower or equal to maximumGreen");
         }
         var green = defined(options.green) ? options.green : minimumGreen + (random() * (maximumGreen - minimumGreen));
 
-        var minimumBlue = defined(options.minimunBlue) ? options.minimumBlue : 0;
+        var minimumBlue = defined(options.minimumBlue) ? options.minimumBlue : 0;
         var maximumBlue = defined(options.maximumBlue) ? options.maximumBlue : 1.0;
         if(minimumRed > maximumRed){
             throw new DeveloperError("minimumBlue must be lower or equal to maximumBlue");

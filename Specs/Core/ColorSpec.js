@@ -254,7 +254,20 @@ defineSuite(['Core/Color',
         expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
     });
 
-    it('fromRandom generates a random color with all options', function() {
+    it('fromRandom generates the same color when seed is re-used', function() {
+        var options = {
+                red: undefined,
+                green: undefined,
+                blue: undefined,
+                alpha: undefined,
+                seed: 42
+        };
+        var randomColor = Color.fromRandom(options);
+        var anotherRandomColor = Color.fromRandom(options);
+        expect(randomColor).toEqual(anotherRandomColor);
+    });
+
+    it('fromRandom works with all components specified', function() {
         var options = {
                 red: 1,
                 green: 1,
@@ -262,15 +275,32 @@ defineSuite(['Core/Color',
                 alpha: 1
         };
         var randomColor = Color.fromRandom(options);
-        expect(randomColor.red <= 1.0 && randomColor. red >= 0.0).toBe(true);
-        expect(randomColor.green <= 1.0 && randomColor.green >= 0.0).toBe(true);
-        expect(randomColor.blue <= 1.0 && randomColor.blue >= 0.0).toBe(true);
-        expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
+        expect(randomColor.red).toEqual(1);
+        expect(randomColor.green).toEqual(1);
+        expect(randomColor.blue).toEqual(1);
+        expect(randomColor.alpha).toEqual(1);
+    });
+
+    it('fromRandom works with all components specified and a result paramenter', function() {
+        var options = {
+                red: 1,
+                green: 1,
+                blue: 1,
+                alpha: 1
+        };
+        var randomColor = new Color(0, 0, 0, 0);
+        Color.fromRandom(options, randomColor);
+        expect(randomColor.red).toEqual(1);
+        expect(randomColor.green).toEqual(1);
+        expect(randomColor.blue).toEqual(1);
+        expect(randomColor.alpha).toEqual(1);
     });
 
     it('fromRandom generates a random kind of Red color within intervals', function() {
         var options = {
-                red: 0.5,
+                red: undefined,
+                minimumRed: 0,
+                maximumRed: 0.5,
                 green: 0,
                 blue: 0,
                 alpha: 0
@@ -285,7 +315,9 @@ defineSuite(['Core/Color',
     it('fromRandom generates a random kind of Green color within intervals', function() {
         var options = {
                 red: 0,
-                green: 0.5,
+                green: undefined,
+                minimumGreen: 0,
+                maximumGreen: 0.5,
                 blue: 0,
                 alpha: 0
         };
@@ -300,7 +332,9 @@ defineSuite(['Core/Color',
         var options = {
                 red: 0,
                 green: 0,
-                blue: 0.5,
+                blue: undefined,
+                minimumBlue: 0,
+                maximumBlue: 0.5,
                 alpha: 0
         };
         var randomColor = Color.fromRandom(options);
@@ -315,7 +349,9 @@ defineSuite(['Core/Color',
                 red: 0,
                 green: 0,
                 blue: 0,
-                alpha: 0.5
+                alpha: undefined,
+                minimumAlpha: 0,
+                maximumAlpha: 0.5
         };
         var randomColor = Color.fromRandom(options);
         expect(randomColor.red).toEqual(0);
@@ -323,6 +359,21 @@ defineSuite(['Core/Color',
         expect(randomColor.blue).toEqual(0);
         expect(randomColor.alpha <= 0.5 && randomColor.alpha >= 0.0).toBe(true);
     });
+
+    it('fromRandom throws with invalid min\\max components', function() {
+        var options = {
+                red: undefined,
+                minimumRed: 1,
+                maximumRed: 0,
+                green: 0,
+                blue: 0,
+                alpha: 0.5
+        };
+        expect(function() {
+            Color.fromRandom(options);
+        }).toThrow();
+    });
+
 
     it('toString produces correct results', function() {
         expect(new Color(0.1, 0.2, 0.3, 0.4).toString()).toEqual('(0.1, 0.2, 0.3, 0.4)');
