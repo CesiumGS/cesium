@@ -613,6 +613,31 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(true);
     });
 
+    it('renders when using asynchronous pipeline', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance1,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        frameState.camera.controller.viewExtent(extent1);
+        us.update(frameState);
+
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
+
+        runs(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, primitive);
+            var pixels = context.readPixels();
+            expect(pixels).not.toEqual([0, 0, 0, 0]);
+
+            primitive = primitive && primitive.destroy();
+        });
+    });
+
     it('destroy before asynchonous pipeline is complete', function() {
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
