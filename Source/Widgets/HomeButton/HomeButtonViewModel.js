@@ -76,8 +76,7 @@ define([
                 destination : defaultCamera.position,
                 duration : flightDuration,
                 up : defaultCamera.up,
-                direction : defaultCamera.direction,
-                onComplete : onComplete
+                direction : defaultCamera.direction
             };
             flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
             scene.getAnimations().add(flight);
@@ -96,8 +95,7 @@ define([
                 destination : position,
                 duration : flightDuration,
                 up : up,
-                direction : direction,
-                onComplete : onComplete
+                direction : direction
             };
 
             flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
