@@ -533,7 +533,8 @@ define([
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
                         translucent : false
-                    })
+                    }),
+                    asynchronous : false
                 });
             }
 
