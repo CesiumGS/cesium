@@ -165,26 +165,40 @@ define([
      * @memberof Color
      *
      */
-    Color.fromRandom = function(options){
-        var seed = typeof options.seed !== 'undefined' ? options.seed : Math.random();
-        var seededRandom = new SeededRandom(seed);
+    Color.fromRandom = function(options, result){
+        var random = defined(options.seed) ? new SeededRandom(options.seed) : Math.random;
 
-        var minimumRed = typeof options.minimunRed !== 'undefined' ? options.minimumRed : 0;
-        var maximumRed = typeof options.maximumRed !== 'undefined' ? options.maximumRed : 1.0;
-        var red = typeof options.red !== 'undefined' ? options.red : minimumRed + seededRandom(seed) * maximumRed;
+        var minimumRed = defined(options.minimunRed) ? options.minimumRed : 0;
+        var maximumRed = defined(options.maximumRed) ? options.maximumRed : 1.0;
+        if(minimumRed > maximumRed){
+            throw new DeveloperError("minimumRed must be lower or equal to maximumRed");
+        }
+        var red = defined(options.red) ? options.red : minimumRed + (random() * (maximumRed - minimumRed));
 
-        var minimumGreen = typeof options.minimunGreen !== 'undefined' ? options.minimumGreen : 0;
-        var maximumGreen = typeof options.maximumGreen !== 'undefined' ? options.maximumGreen : 1.0;
-        var green = typeof options.green !== 'undefined' ? options.green : minimumGreen + seededRandom(seed) * maximumGreen;
+        var minimumGreen = defined(options.minimunGreen) ? options.minimumGreen : 0;
+        var maximumGreen = defined(options.maximumGreen) ? options.maximumGreen : 1.0;
+        if(minimumGreen > maximumGreen){
+            throw new DeveloperError("minimumGreen must be lower or equal to maximumGreen");
+        }
+        var green = defined(options.green) ? options.green : minimumGreen + (random() * (maximumGreen - minimumGreen));
 
-        var minimumBlue = typeof options.minimunBlue !== 'undefined' ? options.minimumBlue : 0;
-        var maximumBlue = typeof options.maximumBlue !== 'undefined' ? options.maximumBlue : 1.0;
-        var blue = typeof options.blue !== 'undefined' ? options.blue : minimumBlue + seededRandom(seed) * maximumBlue;
+        var minimumBlue = defined(options.minimunBlue) ? options.minimumBlue : 0;
+        var maximumBlue = defined(options.maximumBlue) ? options.maximumBlue : 1.0;
+        if(minimumRed > maximumRed){
+            throw new DeveloperError("minimumBlue must be lower or equal to maximumBlue");
+        }
+        var blue = defined(options.blue) ? options.blue : minimumBlue + (random() * (maximumBlue - minimumBlue));
 
-        var alpha = typeof options.alpha !== 'undefined' ? options.alpha : 1;
+        var alpha = defined(options.alpha) ? options.alpha : 1;
 
-        var randomColor = new Color(red, green, blue, alpha);
-        return randomColor;
+        if(!defined(result)) {
+            return new Color(red, green, blue, alpha);
+          }
+          result.red = red;
+          result.green = green;
+          result.blue = blue;
+          result.alpha = alpha;
+          return result;
     };
 
     //#rgb
