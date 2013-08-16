@@ -14,8 +14,7 @@ defineSuite([
          'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/waitsForRender'
+         'Specs/createFrameState'
      ], function(
          MaterialAppearance,
          Appearance,
@@ -31,8 +30,7 @@ defineSuite([
          destroyCanvas,
          createContext,
          destroyContext,
-         createFrameState,
-         waitsForRender) {
+         createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -54,7 +52,8 @@ defineSuite([
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
-            })
+            }),
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent);
@@ -91,13 +90,11 @@ defineSuite([
             material : Material.fromType(context, Material.DotType)
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders textured', function() {
@@ -108,13 +105,11 @@ defineSuite([
             material : Material.fromType(context, Material.ImageType)
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('renders all', function() {
@@ -125,13 +120,11 @@ defineSuite([
             material : Material.fromType(context, Material.NormalMapType)
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
 });

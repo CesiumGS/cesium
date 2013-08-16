@@ -8,8 +8,6 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
-         'Specs/waitsForRender',
-         'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -27,8 +25,6 @@ defineSuite([
          frameState,
          pick,
          render,
-         waitsForRender,
-         defined,
          BoundingSphere,
          Cartesian3,
          Cartographic,
@@ -60,7 +56,6 @@ defineSuite([
     });
 
     afterEach(function() {
-        frameState.mode = SceneMode.SCENE3D;
         extent = extent && extent.destroy();
         us = undefined;
     });
@@ -71,7 +66,8 @@ defineSuite([
         var e = new ExtentPrimitive({
             ellipsoid : ellipsoid,
             granularity : CesiumMath.toRadians(20.0),
-            extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0)
+            extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            asynchronous : false
         });
 
         return e;
@@ -107,13 +103,11 @@ defineSuite([
             alpha : 1.0
         };
 
-        waitsForRender(context, frameState, extent, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, extent);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        });
+        render(context, frameState, extent);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
@@ -139,10 +133,8 @@ defineSuite([
     it('is picked', function() {
         extent = createExtent();
 
-        waitsForRender(context, frameState, extent, function() {
-            var pickedObject = pick(context, frameState, extent, 0, 0);
-            expect(pickedObject).toEqual(extent);
-        });
+        var pickedObject = pick(context, frameState, extent, 0, 0);
+        expect(pickedObject).toEqual(extent);
     });
 
     it('is not picked (show === false)', function() {
@@ -163,68 +155,40 @@ defineSuite([
 
     it('test 3D bounding sphere', function() {
         extent = createExtent();
-
-        var boundingVolume;
-        waitsFor(function() {
-            var commandList = [];
-            extent.update(context, frameState, commandList);
-
-            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
-                boundingVolume = commandList[0].colorList[0].boundingVolume;
-                return true;
-            }
-            return false;
-        });
-
-        runs(function() {
-            expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
-        });
+        var commandList = [];
+        extent.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        expect(boundingVolume).toEqual(BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE));
     });
 
     it('test Columbus view bounding sphere', function() {
         extent = createExtent();
 
-        var boundingVolume;
-        waitsFor(function() {
-            frameState.mode = SceneMode.COLUMBUS_VIEW;
-            var commandList = [];
-            extent.update(context, frameState, commandList);
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.COLUMBUS_VIEW;
+        var commandList = [];
+        extent.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        frameState.mode = mode;
 
-            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
-                boundingVolume = commandList[0].colorList[0].boundingVolume;
-                return true;
-            }
-            return false;
-        });
-
-        runs(function() {
-            var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
-            expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
-        });
+        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+        expect(boundingVolume).toEqual(BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection));
     });
 
     it('test 2D bounding sphere', function() {
         extent = createExtent();
 
-        var boundingVolume;
-        waitsFor(function() {
-            frameState.mode = SceneMode.SCENE2D;
-            var commandList = [];
-            extent.update(context, frameState, commandList);
+        var mode = frameState.mode;
+        frameState.mode = SceneMode.SCENE2D;
+        var commandList = [];
+        extent.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        frameState.mode = mode;
 
-            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
-                boundingVolume = commandList[0].colorList[0].boundingVolume;
-                return true;
-            }
-            return false;
-        });
-
-        runs(function() {
-            var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
-            var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
-            b2D.center.x = 0.0;
-            expect(boundingVolume).toEqual(b2D);
-        });
+        var b3D = BoundingSphere.fromExtent3D(extent.extent, Ellipsoid.UNIT_SPHERE);
+        var b2D = BoundingSphere.projectTo2D(b3D, frameState.scene2D.projection);
+        b2D.center.x = 0.0;
+        expect(boundingVolume).toEqual(b2D);
     });
 
     it('isDestroyed', function() {

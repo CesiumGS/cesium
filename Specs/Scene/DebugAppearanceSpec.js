@@ -15,8 +15,7 @@ defineSuite([
          'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/waitsForRender'
+         'Specs/createFrameState'
      ], function(
          DebugAppearance,
          Appearance,
@@ -33,8 +32,7 @@ defineSuite([
          destroyCanvas,
          createContext,
          destroyContext,
-         createFrameState,
-         waitsForRender) {
+         createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -176,17 +174,17 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'normal'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders binormal', function() {
@@ -194,17 +192,17 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'binormal'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders tangent', function() {
@@ -212,17 +210,17 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'tangent'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders st', function() {
@@ -230,17 +228,17 @@ defineSuite([
             geometryInstances : extentInstance,
             appearance : new DebugAppearance({
                 attributeName : 'st'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders float', function() {
@@ -256,17 +254,17 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'float'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders vec2', function() {
@@ -282,17 +280,17 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec2'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders vec3', function() {
@@ -308,17 +306,17 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec3'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
     it('renders vec4', function() {
@@ -334,17 +332,17 @@ defineSuite([
             appearance : new DebugAppearance({
                 attributeName : 'debug',
                 glslDatatype : 'vec4'
-            })
+            }),
+            asynchronous : false
         });
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-            primitive = primitive && primitive.destroy();
-        });
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+        primitive = primitive && primitive.destroy();
     });
 
 });

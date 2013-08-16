@@ -9,7 +9,6 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
-         'Specs/waitsForRender',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/defaultValue',
@@ -31,7 +30,6 @@ defineSuite([
          frameState,
          pick,
          render,
-         waitsForRender,
          Cartesian3,
          Cartographic,
          defaultValue,
@@ -104,6 +102,7 @@ defineSuite([
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
                              ]);
+        polygon.asynchronous = false;
         return polygon;
     }
 
@@ -348,10 +347,8 @@ defineSuite([
         primitives.add(p0);
         primitives.add(p1);
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p1);
     });
 
     it('picks a primitive added with render order (1)', function() {
@@ -361,10 +358,8 @@ defineSuite([
         primitives.add(p1);
         primitives.add(p0);
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p0);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p0);
     });
 
     it('picks a primitive added with raise (0)', function() {
@@ -375,10 +370,8 @@ defineSuite([
         primitives.add(p1);
         primitives.raise(p1); // Already on top
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p1);
     });
 
     it('picks a primitive added with raise (1)', function() {
@@ -389,11 +382,8 @@ defineSuite([
         primitives.add(p1);
         primitives.raise(p0); // Moved to top
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p0);
-            expect(pickedObject).not.toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p0);
     });
 
     it('picks a primitive added with raiseToTop (0)', function() {
@@ -404,10 +394,8 @@ defineSuite([
         primitives.add(p1);
         primitives.raiseToTop(p1); // Already on top
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p1);
     });
 
     it('picks a primitive added with raiseToTop (1)', function() {
@@ -418,10 +406,8 @@ defineSuite([
         primitives.add(p1);
         primitives.raiseToTop(p0); // Moved to top
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p0);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p0);
     });
 
     it('picks a primitive added with lower (0)', function() {
@@ -432,10 +418,8 @@ defineSuite([
         primitives.add(p1);
         primitives.lower(p1); // Moved back
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p0);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p0);
     });
 
     it('picks a primitive added with lower (1)', function() {
@@ -446,10 +430,8 @@ defineSuite([
         primitives.add(p1);
         primitives.lower(p0); // Already on bottom
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p1);
     });
 
     it('picks a primitive added with lowerToBottom (0)', function() {
@@ -460,10 +442,8 @@ defineSuite([
         primitives.add(p1);
         primitives.lowerToBottom(p1); // Moved back
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p0);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p0);
     });
 
     it('picks a primitive added with lowerToBottom (1)', function() {
@@ -474,10 +454,8 @@ defineSuite([
         primitives.add(p1);
         primitives.lowerToBottom(p0); // Already on bottom
 
-        waitsForRender(context, frameState, primitives, function() {
-            var pickedObject = pick(context, frameState, primitives, 0, 0);
-            expect(pickedObject).toEqual(p1);
-        });
+        var pickedObject = pick(context, frameState, primitives, 0, 0);
+        expect(pickedObject).toEqual(p1);
     });
 
     it('renders a central body', function() {

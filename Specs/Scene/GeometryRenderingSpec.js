@@ -40,8 +40,7 @@ defineSuite([
          'Specs/destroyCanvas',
          'Specs/createContext',
          'Specs/destroyContext',
-         'Specs/createFrameState',
-         'Specs/waitsForRender'
+         'Specs/createFrameState'
      ], 'Scene/GeometryRendering', function(
          BoxGeometry,
          CircleGeometry,
@@ -83,8 +82,7 @@ defineSuite([
          destroyCanvas,
          createContext,
          destroyContext,
-         createFrameState,
-         waitsForRender) {
+         createFrameState) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -126,29 +124,27 @@ defineSuite([
 
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : appearance
+            appearance : appearance,
+            asynchronous : false
         });
 
         var frameState = createFrameState();
+        primitive.update(context, frameState, []);
+        viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState, primitive);
+        }
+
         context.getUniformState().update(frameState);
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-            if (typeof afterView === 'function') {
-                afterView(frameState, primitive);
-            }
-
-            context.getUniformState().update(frameState);
-
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-            primitive = primitive && primitive.destroy();
-        });
+        primitive = primitive && primitive.destroy();
     }
 
     function viewSphereCV(camera, sphere, modelMatrix) {
@@ -172,10 +168,13 @@ defineSuite([
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
                 flat : true
-            })
+            }),
+            asynchronous : false
         });
 
         var frameState = createFrameState();
+        primitive.update(context, frameState, []);
+
         frameState.mode = SceneMode.COLUMBUS_VIEW;
         frameState.morphTime = frameState.mode.morphTime;
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -183,25 +182,22 @@ defineSuite([
                                                   0.0, 1.0, 0.0, 0.0,
                                                   0.0, 0.0, 0.0, 1.0);
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
+
+        viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState, primitive);
+        }
+
         context.getUniformState().update(frameState);
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            viewSphereCV(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-            if (typeof afterView === 'function') {
-                afterView(frameState, primitive);
-            }
-
-            context.getUniformState().update(frameState);
-
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-            primitive = primitive && primitive.destroy();
-        });
+        primitive = primitive && primitive.destroy();
     }
 
     function viewSphere2D(camera, sphere, modelMatrix) {
@@ -231,10 +227,13 @@ defineSuite([
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
                 flat : true
-            })
+            }),
+            asynchronous : false
         });
 
         var frameState = createFrameState();
+        primitive.update(context, frameState, []);
+
         frameState.mode = SceneMode.SCENE2D;
         frameState.morphTime = frameState.mode.morphTime;
         frameState.camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -249,20 +248,16 @@ defineSuite([
         frameState.camera.frustum = frustum;
         frameState.camera.controller.update(frameState.mode, frameState.scene2D);
 
+        viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
         context.getUniformState().update(frameState);
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            viewSphere2D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-            context.getUniformState().update(frameState);
+        render(context, frameState, primitive);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, primitive);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-
-            primitive = primitive && primitive.destroy();
-        });
+        primitive = primitive && primitive.destroy();
     }
 
     function pickGeometry(instance, afterView) {
@@ -270,28 +265,24 @@ defineSuite([
             geometryInstances : instance,
             appearance : new PerInstanceColorAppearance({
                 flat : true
-            })
+            }),
+            asynchronous : false
         });
 
         var frameState = createFrameState();
+        primitive.update(context, frameState, []);
+
+        viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+        if (typeof afterView === 'function') {
+            afterView(frameState, primitive);
+        }
+
         context.getUniformState().update(frameState);
 
-        waitsForRender(context, frameState, primitive, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        expect(pick(context, frameState, primitive)).toEqual(instance.id);
 
-            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
-
-            if (typeof afterView === 'function') {
-                afterView(frameState, primitive);
-            }
-
-            context.getUniformState().update(frameState);
-
-            expect(pick(context, frameState, primitive)).toEqual(instance.id);
-
-            primitive = primitive && primitive.destroy();
-        });
+        primitive = primitive && primitive.destroy();
     }
 
     describe('BoxGeometry', function() {
@@ -371,14 +362,14 @@ defineSuite([
                     topRadius: 3,
                     bottomRadius: 5,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            }),
-            id: 'cylinder',
-            modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
-                    ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
-            attributes : {
-                color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
-            }
-        });
+                }),
+                id: 'cylinder',
+                modelMatrix : Matrix4.multiplyByUniformScale(Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                        ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-90.0, 45.0))), new Cartesian3(0.0, 0.0, 500000.0)), 90000.0),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(Math.random(), Math.random(), Math.random(), 0.5)
+                }
+            });
         });
 
         it('3D', function() {

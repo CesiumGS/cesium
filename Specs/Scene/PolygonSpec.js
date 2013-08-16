@@ -8,9 +8,6 @@ defineSuite([
          'Specs/frameState',
          'Specs/pick',
          'Specs/render',
-         'Specs/waitsForException',
-         'Specs/waitsForRender',
-         'Core/defined',
          'Core/BoundingSphere',
          'Core/Cartesian3',
          'Core/Cartographic',
@@ -27,9 +24,6 @@ defineSuite([
          frameState,
          pick,
          render,
-         waitsForException,
-         waitsForRender,
-         defined,
          BoundingSphere,
          Cartesian3,
          Cartographic,
@@ -54,13 +48,13 @@ defineSuite([
 
     beforeEach(function() {
         polygon = new Polygon();
+        polygon.asynchronous = false;
 
         us = context.getUniformState();
         us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
     });
 
     afterEach(function() {
-        frameState.mode = SceneMode.SCENE3D;
         polygon = polygon && polygon.destroy();
         us = undefined;
     });
@@ -77,6 +71,7 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
+        p.asynchronous = false;
 
         return p;
     }
@@ -171,10 +166,9 @@ defineSuite([
                 ])
         };
         polygon.configureFromPolygonHierarchy(hierarchy);
-
-        waitsForException(function() {
-            return render(context, frameState, polygon) > 0;
-        });
+        expect(function() {
+            render(context, frameState, polygon);
+        }).toThrow();
     });
 
     it('gets the default color', function() {
@@ -204,13 +198,11 @@ defineSuite([
             alpha : 1.0
         };
 
-        waitsForRender(context, frameState, polygon, function() {
-            ClearCommand.ALL.execute(context);
-            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
 
-            render(context, frameState, polygon);
-            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
-        });
+        render(context, frameState, polygon);
+        expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
     });
 
     it('does not render when show is false', function() {
@@ -230,6 +222,7 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.asynchronous = false;
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
@@ -243,10 +236,11 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
         ]);
+        polygon.asynchronous = false;
 
-        waitsForException(function() {
-            return render(context, frameState, polygon) > 0;
-        });
+        expect(function() {
+            render(context, frameState, polygon);
+        }).toThrow();
     });
 
     it('throws without hierarchy positions due to duplicates', function() {
@@ -269,19 +263,18 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.configureFromPolygonHierarchy(hierarchy);
+        polygon.asynchronous = false;
 
-        waitsForException(function() {
-            return render(context, frameState, polygon) > 0;
-        });
+        expect(function () {
+            render(context, frameState, polygon);
+        }).toThrow();
     });
 
     it('is picked', function() {
         polygon = createPolygon();
 
-        waitsForRender(context, frameState, polygon, function() {
-            var pickedObject = pick(context, frameState, polygon, 0, 0);
-            expect(pickedObject).toEqual(polygon);
-        });
+        var pickedObject = pick(context, frameState, polygon, 0, 0);
+        expect(pickedObject).toEqual(polygon);
     });
 
     it('is not picked (show === false)', function() {
@@ -302,22 +295,10 @@ defineSuite([
 
     it('test 3D bounding sphere from positions', function() {
         polygon = createPolygon();
-
-        var boundingVolume;
-        waitsFor(function() {
-            var commandList = [];
-            polygon.update(context, frameState, commandList);
-
-            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
-                boundingVolume = commandList[0].colorList[0].boundingVolume;
-                return true;
-            }
-            return false;
-        });
-
-        runs(function() {
-            expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
-        });
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        expect(boundingVolume).toEqual(BoundingSphere.fromPoints(polygon.getPositions()));
     });
 
     function test2DBoundingSphereFromPositions(testMode) {
@@ -334,26 +315,19 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
+        polygon.asynchronous = false;
 
-        var boundingVolume;
-        waitsFor(function() {
-            frameState.mode = testMode;
-            var commandList = [];
-            polygon.update(context, frameState, commandList);
+        var mode = frameState.mode;
+        frameState.mode = testMode;
+        var commandList = [];
+        polygon.update(context, frameState, commandList);
+        var boundingVolume = commandList[0].colorList[0].boundingVolume;
+        frameState.mode = mode;
 
-            if (commandList.length > 0 && defined(commandList[0].colorList) && commandList[0].colorList.length > 0) {
-                boundingVolume = commandList[0].colorList[0].boundingVolume;
-                return true;
-            }
-            return false;
-        });
-
-        runs(function() {
-            var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
-            sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
-            expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
-            expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
-        });
+        var sphere = BoundingSphere.projectTo2D(BoundingSphere.fromPoints(polygon.getPositions()));
+        sphere.center.x = (testMode === SceneMode.SCENE2D) ? 0.0 : sphere.center.x;
+        expect(boundingVolume.center).toEqualEpsilon(sphere.center, CesiumMath.EPSILON2);
+        expect(boundingVolume.radius).toEqualEpsilon(sphere.radius, CesiumMath.EPSILON2);
     }
 
     it('test Columbus view bounding sphere from positions', function() {
