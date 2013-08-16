@@ -628,7 +628,6 @@ define([
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Object} [options.extrudedOptions] Extruded options
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
      * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
@@ -644,7 +643,7 @@ define([
      * @see ExtentGeometry#createGeometry
      *
      * @example
-     * //an extent
+     * // 1. create an extent
      * var extent = new ExtentGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
@@ -652,7 +651,7 @@ define([
      * });
      * var geometry = ExtentGeometry.createGeometry(extent);
      *
-     * //an extruded extent without a top
+     * // 2. create an extruded extent without a top
      * var extent = new ExtentGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
@@ -660,6 +659,7 @@ define([
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
+     * var geometry = ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -671,7 +671,6 @@ define([
         var rotation = options.rotation;
         var stRotation = options.stRotation;
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
-        var extrudedOptions = options.extrudedOptions;
 
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
@@ -686,12 +685,15 @@ define([
         this._rotation = rotation;
         this._stRotation = stRotation;
         this._vertexFormat = vertexFormat;
-        this._extrudedOptions = extrudedOptions;
+        this._extrudedHeight = options.extrudedHeight;
+        this._closeTop = options.closeTop;
+        this._closeBottom = options.closeBottom;
         this._workerName = 'createExtentGeometry';
     };
 
     /**
      * Computes the geometric representation of an extent, including its vertices, indices, and a bounding sphere.
+     * @memberof ExtentGeometry
      *
      * @param {ExtentGeometry} extentGeometry A description of the extent.
      * @returns {Geometry} The computed vertices and indices.
@@ -706,6 +708,9 @@ define([
         var rotation = extentGeometry._rotation;
         var stRotation = extentGeometry._stRotation;
         var vertexFormat = extentGeometry._vertexFormat;
+        var extrudedHeight = extentGeometry._extrudedHeight;
+        var closeTop = extentGeometry._closeTop;
+        var closeBottom = extentGeometry._closeBottom;
 
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
@@ -799,17 +804,17 @@ define([
             width : width,
             height : height,
             surfaceHeight : surfaceHeight,
-            size : size
+            size : size,
+            extrudedHeight : extrudedHeight,
+            closeTop : closeTop,
+            closeBottom : closeBottom
         };
 
-        var extentGeometry;
-        if (defined(options.extrudedHeight)) {
-            params.extrudedHeight = options.extrudedHeight;
-            params.closeTop = options.closeTop;
-            params.closeBottom = options.closeBottom;
-            extentGeometry = constructExtrudedExtent(vertexFormat, params);
+        var geometry;
+        if (defined(extrudedHeight)) {
+            geometry = constructExtrudedExtent(vertexFormat, params);
         } else {
-            extentGeometry = constructExtent(vertexFormat, params);
+            geometry = constructExtent(vertexFormat, params);
         }
 
         var boundingSphere = geometry.boundingSphere;
