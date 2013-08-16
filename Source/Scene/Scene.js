@@ -520,7 +520,6 @@ define([
             if (!defined(scene._debugSphere)) {
                 var geometry = new EllipsoidGeometry({
                     ellipsoid : Ellipsoid.UNIT_SPHERE,
-                    numberOfPartitions : 20,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
                 });
                 scene._debugSphere = new Primitive({
