@@ -9,19 +9,16 @@
     var dojoConfig = {
         baseUrl : '../../Source',
         packages: [
-            { name: 'dojo', location: '../../ThirdParty/dojo-release-1.9.1/dojo' },
-            { name: 'dijit', location: '../../ThirdParty/dojo-release-1.9.1/dijit' }
+            { name: 'dojo', location: '../ThirdParty/dojo-release-1.9.1/dojo' },
+            { name: 'dijit', location: '../ThirdParty/dojo-release-1.9.1/dijit' }
         ]
     };
 	</script>
     <script data-dojo-config="async: 1, tlmSiblingOfDojo: 0" src="../../ThirdParty/dojo-release-1.9.1/dojo/dojo.js"></script>
     <link rel="stylesheet" href="../../ThirdParty/dojo-release-1.9.1/dijit/themes/claro/claro.css" type="text/css">
+    <link rel="stylesheet" href="TerrainInspector.css" type="text/css">
 </head>
 <body class="claro">
-
-<style>
-    @import url(TerrainInspector.css);
-</style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="toolbar">
 <div id="terrainMenu"></div>
@@ -93,13 +90,13 @@ require([
 	var tileBoundariesLayer;
 	
 	new CheckBox({
-		checked: typeof tileBoundariesLayer !== 'undefined',
+		checked: Cesium.defined(tileBoundariesLayer),
 		onChange: function(b) {
-			if (b && typeof tileBoundariesLayer === 'undefined') {
+			if (b && !Cesium.defined(tileBoundariesLayer)) {
 				tileBoundariesLayer = centralBody.getImageryLayers().addImageryProvider(new Cesium.TileCoordinatesImageryProvider({
 				    tilingScheme : centralBody.terrainProvider.getTilingScheme()
 				}));
-			} else if (!b && typeof tileBoundariesLayer !== 'undefined') {
+			} else if (!b && Cesium.defined(tileBoundariesLayer)) {
 				centralBody.getImageryLayers().remove(tileBoundariesLayer);
 				tileBoundariesLayer = undefined;
 			}
@@ -118,7 +115,7 @@ require([
 	    var ellipsoid = centralBody.getEllipsoid();
 	    var cartesian = scene.getCamera().controller.pickEllipsoid({x: event.clientX, y: event.clientY}, ellipsoid);
 
-	    if (typeof cartesian !== 'undefined') {
+	    if (Cesium.defined(cartesian)) {
 		    var cartographic = ellipsoid.cartesianToCartographic(cartesian);
 
 		    // Find a tile containing this position.
@@ -126,7 +123,7 @@ require([
 		    var tilesRendered = centralBody._surface._tilesToRenderByTextureCount;
 		    for (var textureCount = 0; !selectedTile && textureCount < tilesRendered.length; ++textureCount) {
 		        var tilesRenderedByTextureCount = tilesRendered[textureCount];
-		        if (typeof tilesRenderedByTextureCount === 'undefined') {
+		        if (!Cesium.defined(tilesRenderedByTextureCount)) {
 		            continue;
 		        }
 
@@ -199,12 +196,12 @@ require([
 		        suspendLodCheckbox.set("checked", true);
 		        centralBody._surface._tilesToRenderByTextureCount = [];
 
-		        if (typeof selectedTile !== 'undefined') {
+		        if (Cesium.defined(selectedTile)) {
 			        var readyTextureCount = 0;
 			        var tileImageryCollection = selectedTile.imagery;
 			        for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
 			            var tileImagery = tileImageryCollection[i];
-			            if (typeof tileImagery.readyImagery !== 'undefined' && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
+			            if (Cesium.defined(tileImagery.readyImagery) && tileImagery.readyImagery.imageryLayer.alpha !== 0.0) {
 			                ++readyTextureCount;
 			            }
 			        }
