@@ -9,6 +9,7 @@ define([
         './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './VertexFormat'
@@ -22,6 +23,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         VertexFormat) {
@@ -33,8 +35,11 @@ define([
     var scratchBinormal = new Cartesian3();
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
 
+    var cos = Math.cos;
+    var sin = Math.sin;
+
     /**
-     * A {@link Geometry} that represents vertices and indices for an ellipsoid centered at the origin.
+     * A description of an ellipsoid centered at the origin.
      *
      * @alias EllipsoidGeometry
      * @constructor
@@ -47,33 +52,56 @@ define([
      * @exception {DeveloperError} options.slicePartitions cannot be less than three.
      * @exception {DeveloperError} options.stackPartitions cannot be less than three.
      *
+     * @see EllipsoidGeometry#createGeometry
+     *
      * @example
      * var ellipsoid = new EllipsoidGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
      *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0)
      * });
+     * var geometry = EllipsoidGeometry.createGeometry(ellipsoid);
      */
-
-    var cos = Math.cos;
-    var sin = Math.sin;
     var EllipsoidGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var radii = defaultValue(options.radii, defaultRadii);
-        var ellipsoid = new Ellipsoid(radii.x, radii.y, radii.z);
         var stackPartitions = defaultValue(options.stackPartitions, 64);
         var slicePartitions = defaultValue(options.slicePartitions, 64);
-
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         if (slicePartitions < 3) {
             throw new DeveloperError ('options.slicePartitions cannot be less than three.');
         }
+
         if (stackPartitions < 3) {
             throw new DeveloperError('options.stackPartitions cannot be less than three.');
         }
+
+        this._radii = Cartesian3.clone(radii);
+        this._stackPartitions = stackPartitions;
+        this._slicePartitions = slicePartitions;
+        this._vertexFormat = vertexFormat;
+        this._workerName = 'createEllipsoidGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof EllipsoidGeometry
+     *
+     * @param {EllipsoidGeometry} ellipsoidGeometry A description of the ellipsoid.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    EllipsoidGeometry.createGeometry = function(ellipsoidGeometry) {
+        var radii = ellipsoidGeometry._radii;
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        var stackPartitions = ellipsoidGeometry._stackPartitions;
+        var slicePartitions = ellipsoidGeometry._slicePartitions;
+        var vertexFormat = ellipsoidGeometry._vertexFormat;
+
         var vertexCount = 2 + (stackPartitions - 1) * slicePartitions;
         var positions = new Float64Array(vertexCount * 3);
-        var numIndices =  6*slicePartitions*(stackPartitions - 1);
+
+        var numIndices = 6 * slicePartitions * (stackPartitions - 1);
         var indices = IndexDatatype.createTypedArray(vertexCount, numIndices);
 
         var normals = (vertexFormat.normal) ? new Float32Array(vertexCount * 3) : undefined;
@@ -124,35 +152,48 @@ define([
                 values : positions
             });
         }
+
         var stIndex = 0;
         var normalIndex = 0;
         var tangentIndex = 0;
         var binormalIndex = 0;
+
         if (vertexFormat.st || vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
             for( i = 0; i < vertexCount; i++) {
-                var position = Cartesian3.fromArray(positions, i*3, scratchPosition);
+                var position = Cartesian3.fromArray(positions, i * 3, scratchPosition);
                 var normal = ellipsoid.geodeticSurfaceNormal(position, scratchNormal);
+
                 if (vertexFormat.st) {
                     st[stIndex++] = (Math.atan2(normal.y, normal.x) / CesiumMath.TWO_PI) + 0.5;
                     st[stIndex++] = (Math.asin(normal.z) / Math.PI) + 0.5;
                 }
+
                 if (vertexFormat.normal) {
                     normals[normalIndex++] = normal.x;
                     normals[normalIndex++] = normal.y;
                     normals[normalIndex++] = normal.z;
                 }
+
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    var tangent;
+                    var tangent = scratchTangent;
                     if (i === 0 || i === vertexCount - 1) {
-                        tangent = Cartesian3.cross(Cartesian3.UNIT_X, normal, scratchTangent).normalize(tangent);
+                        Cartesian3.cross(Cartesian3.UNIT_X, normal, tangent);
+                        Cartesian3.normalize(tangent, tangent);
                     } else {
-                        tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, scratchTangent).normalize(tangent);
+                        Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent);
+                        Cartesian3.normalize(tangent, tangent);
                     }
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
+
+                    if (vertexFormat.tangent) {
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                    }
+
                     if (vertexFormat.binormal) {
-                        var binormal = Cartesian3.cross(normal, tangent, scratchBinormal).normalize(scratchBinormal);
+                        var binormal = Cartesian3.cross(normal, tangent, scratchBinormal);
+                        Cartesian3.normalize(binormal, binormal);
+
                         binormals[binormalIndex++] = binormal.x;
                         binormals[binormalIndex++] = binormal.y;
                         binormals[binormalIndex++] = binormal.z;
@@ -167,6 +208,7 @@ define([
                     values : st
                 });
             }
+
             if (vertexFormat.normal) {
                 attributes.normal = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -174,6 +216,7 @@ define([
                     values : normals
                 });
             }
+
             if (vertexFormat.tangent) {
                 attributes.tangent = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -181,6 +224,7 @@ define([
                     values : tangents
                 });
             }
+
             if (vertexFormat.binormal) {
                 attributes.binormal = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.FLOAT,
@@ -196,13 +240,14 @@ define([
             indices[index++] = i;
             indices[index++] = i + 1;
         }
+
         indices[index++] = 0;
         indices[index++] = slicePartitions;
         indices[index++] = 1;
 
         for (i = 0; i < stackPartitions - 2; i++) {
             var topOffset = (i * slicePartitions) + 1;
-            var bottomOffset = ((i+1) * slicePartitions) + 1;
+            var bottomOffset = ((i + 1) * slicePartitions) + 1;
 
             for (j = 0; j < slicePartitions - 1; j++) {
                 indices[index++] = bottomOffset + j;
@@ -228,40 +273,17 @@ define([
             indices[index++] = i;
             indices[index++] = i - 1;
         }
+
         indices[index++] = lastPos;
         indices[index++] = lastPos - slicePartitions;
         indices[index++] = lastPos - 1;
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromEllipsoid(ellipsoid);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
+        });
     };
 
     return EllipsoidGeometry;

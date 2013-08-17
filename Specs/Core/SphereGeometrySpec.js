@@ -29,12 +29,12 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var m = new SphereGeometry({
+        var m = SphereGeometry.createGeometry(new SphereGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             radius : 1,
             stackPartitions : 3,
             slicePartitions: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
         expect(m.indices.length).toEqual(12 * 3);
@@ -42,12 +42,12 @@ defineSuite([
     });
 
     it('compute all vertex attributes', function() {
-        var m = new SphereGeometry({
+        var m = SphereGeometry.createGeometry(new SphereGeometry({
             vertexFormat : VertexFormat.ALL,
             radius : 1,
             stackPartitions : 3,
             slicePartitions: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 8);
         expect(m.attributes.st.values.length).toEqual(2 * 8);
@@ -58,12 +58,12 @@ defineSuite([
     });
 
     it('computes attributes for a unit sphere', function() {
-        var m = new SphereGeometry({
+        var m = SphereGeometry.createGeometry(new SphereGeometry({
             vertexFormat : VertexFormat.ALL,
             radius : 1,
             stackPartitions : 3,
             slicePartitions: 3
-        });
+        }));
 
         var positions = m.attributes.position.values;
         var normals = m.attributes.normal.values;

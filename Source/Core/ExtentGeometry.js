@@ -616,7 +616,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents geometry for a cartographic extent on an ellipsoid centered at the origin.
+     * A description of a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentGeometry
      * @constructor
@@ -628,7 +628,6 @@ define([
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
-     * @param {Object} [options.extrudedOptions] Extruded options
      * @param {Number} [options.extrudedHeight] Height of extruded surface.
      * @param {Boolean} [options.closeTop=true] <code>true</code> to render top of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
      * @param {Boolean} [options.closeBottom=true] <code>true</code> to render bottom of an extruded extent; <code>false</code> otherwise.  (Only applicable if options.extrudedHeight is not equal to options.height.)
@@ -640,17 +639,19 @@ define([
      * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} Rotated extent is invalid.
+     *
+     * @see ExtentGeometry#createGeometry
      *
      * @example
-     * //an extent
+     * // 1. create an extent
      * var extent = new ExtentGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
+     * var geometry = ExtentGeometry.createGeometry(extent);
      *
-     * //an extruded extent without a top
+     * // 2. create an extruded extent without a top
      * var extent = new ExtentGeometry({
      *   ellipsoid : Ellipsoid.WGS84,
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
@@ -658,29 +659,65 @@ define([
      *   extrudedHieght: 300000,
      *   closeTop: false
      * });
+     * var geometry = ExtentGeometry.createGeometry(extent);
      */
     var ExtentGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var surfaceHeight = defaultValue(options.height, 0.0);
+        var rotation = options.rotation;
+        var stRotation = options.stRotation;
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 
         extent.validate();
 
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._extent = extent;
+        this._granularity = granularity;
+        this._ellipsoid = ellipsoid;
+        this._surfaceHeight = surfaceHeight;
+        this._rotation = rotation;
+        this._stRotation = stRotation;
+        this._vertexFormat = vertexFormat;
+        this._extrudedHeight = options.extrudedHeight;
+        this._closeTop = options.closeTop;
+        this._closeBottom = options.closeBottom;
+        this._workerName = 'createExtentGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of an extent, including its vertices, indices, and a bounding sphere.
+     * @memberof ExtentGeometry
+     *
+     * @param {ExtentGeometry} extentGeometry A description of the extent.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} Rotated extent is invalid.
+     */
+    ExtentGeometry.createGeometry = function(extentGeometry) {
+        var extent = extentGeometry._extent;
+        var granularity = extentGeometry._granularity;
+        var ellipsoid = extentGeometry._ellipsoid;
+        var surfaceHeight = extentGeometry._surfaceHeight;
+        var rotation = extentGeometry._rotation;
+        var stRotation = extentGeometry._stRotation;
+        var vertexFormat = extentGeometry._vertexFormat;
+        var extrudedHeight = extentGeometry._extrudedHeight;
+        var closeTop = extentGeometry._closeTop;
+        var closeBottom = extentGeometry._closeBottom;
+
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var radiiSquared = ellipsoid.getRadiiSquared();
-
-        var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
-        var stRotation = options.stRotation;
 
         Extent.clone(extent, stExtent);
         extent.getNorthwest(nwCartographic);
@@ -739,7 +776,6 @@ define([
         var lonScalar = 1.0 / (stExtent.east - stExtent.west);
         var latScalar = 1.0 / (stExtent.north - stExtent.south);
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var size = width * height;
 
         if (defined(stRotation)) {
@@ -768,49 +804,28 @@ define([
             width : width,
             height : height,
             surfaceHeight : surfaceHeight,
-            size : size
+            size : size,
+            extrudedHeight : extrudedHeight,
+            closeTop : closeTop,
+            closeBottom : closeBottom
         };
 
-        var extentGeometry;
-        if (defined(options.extrudedHeight)) {
-            params.extrudedHeight = options.extrudedHeight;
-            params.closeTop = options.closeTop;
-            params.closeBottom = options.closeBottom;
-            extentGeometry = constructExtrudedExtent(vertexFormat, params);
+        var geometry;
+        if (defined(extrudedHeight)) {
+            geometry = constructExtrudedExtent(vertexFormat, params);
         } else {
-            extentGeometry = constructExtent(vertexFormat, params);
+            geometry = constructExtent(vertexFormat, params);
         }
-        var geometry = extentGeometry.geometry;
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = new GeometryAttributes(geometry.attributes);
+        var boundingSphere = geometry.boundingSphere;
+        geometry = geometry.geometry;
 
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = geometry.indices;
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = extentGeometry.boundingSphere;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = geometry.primitiveType;
+        return new Geometry({
+            attributes : new GeometryAttributes(geometry.attributes),
+            indices : geometry.indices,
+            primitiveType : geometry.primitiveType,
+            boundingSphere : boundingSphere
+        });
     };
 
     return ExtentGeometry;

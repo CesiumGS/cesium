@@ -24,11 +24,11 @@ defineSuite([
         }).toThrow();
     });
 
-    it('constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY', function() {
-        var m = new BoxOutlineGeometry({
+    it('constructor creates positions', function() {
+        var m = BoxOutlineGeometry.createGeometry(new BoxOutlineGeometry({
             minimumCorner : new Cartesian3(-1, -2, -3),
             maximumCorner : new Cartesian3(1, 2, 3)
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 2);
@@ -49,9 +49,9 @@ defineSuite([
     });
 
     it('fromDimensions', function() {
-        var m = BoxOutlineGeometry.fromDimensions({
+        var m = BoxOutlineGeometry.createGeometry(BoxOutlineGeometry.fromDimensions({
             dimensions : new Cartesian3(1, 2, 3)
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(8 * 3);
         expect(m.indices.length).toEqual(12 * 2);

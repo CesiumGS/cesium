@@ -20,10 +20,10 @@ defineSuite([
 
     it('computes positions', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentOutlineGeometry({
+        var m = ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
             extent : extent,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(8 * 3);
@@ -36,11 +36,11 @@ defineSuite([
     it('compute positions with rotation', function() {
         var extent = new Extent(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = new ExtentOutlineGeometry({
+        var m = ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
             extent : extent,
             rotation : angle,
             granularity : 1.0
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -65,20 +65,20 @@ defineSuite([
 
     it('throws if rotated extent is invalid', function() {
         expect(function() {
-            return new ExtentOutlineGeometry({
+            return ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
                 extent : new Extent(-CesiumMath.PI_OVER_TWO, 1, CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_TWO),
                 rotation : CesiumMath.PI_OVER_TWO
-            });
+            }));
         }).toThrow();
     });
 
     it('computes positions extruded', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentOutlineGeometry({
+        var m = ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
             extent : extent,
             granularity : 1.0,
             extrudedHeight : 2
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(8 * 3 * 2);
@@ -88,12 +88,12 @@ defineSuite([
     it('compute positions with rotation extruded', function() {
         var extent = new Extent(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
-        var m = new ExtentOutlineGeometry({
+        var m = ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
             extent : extent,
             rotation : angle,
             granularity : 1.0,
             extrudedHeight : 2
-        });
+        }));
         var positions = m.attributes.position.values;
         var length = positions.length;
 
@@ -114,11 +114,11 @@ defineSuite([
 
     it('computes non-extruded extent if height is small', function() {
         var extent = new Extent(-2.0, -1.0, 0.0, 1.0);
-        var m = new ExtentOutlineGeometry({
+        var m = ExtentOutlineGeometry.createGeometry(new ExtentOutlineGeometry({
             extent : extent,
             granularity : 1.0,
             extrudedHeight : 0.1
-        });
+        }));
         var positions = m.attributes.position.values;
 
         expect(positions.length).toEqual(8 * 3);
