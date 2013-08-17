@@ -3,18 +3,18 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
-        './EllipseGeometry'
+        './EllipseOutlineGeometry'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
-        EllipseGeometry) {
+        EllipseOutlineGeometry) {
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a circle on the ellipsoid.
+     * A {@link Geometry} that represents vertices and indices for the outline of a circle on the ellipsoid.
      *
-     * @alias CircleGeometry
+     * @alias CircleOutlineGeometry
      * @constructor
      *
      * @param {Cartesian3} options.center The circle's center point in the fixed frame.
@@ -22,9 +22,8 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the circle will be on.
      * @param {Number} [options.height=0.0] The height above the ellipsoid.
      * @param {Number} [options.granularity=0.02] The angular distance between points on the circle in radians.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.extrudedHeight=0.0] The height of the extrusion relative to the ellipsoid.
-     * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+     * @param {Number} [options.numberOfVerticalLines = 16] Number of lines to draw between the top and bottom of an extruded circle.
      *
      * @exception {DeveloperError} center is required.
      * @exception {DeveloperError} radius is required.
@@ -34,13 +33,13 @@ define([
      * @example
      * // Create a circle.
      * var ellipsoid = Ellipsoid.WGS84;
-     * var circle = new CircleGeometry({
+     * var circle = new CircleOutlineGeometry({
      *   ellipsoid : ellipsoid,
      *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   radius : 100000.0
      * });
      */
-    var CircleGeometry = function(options) {
+    var CircleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var radius = options.radius;
 
@@ -60,14 +59,12 @@ define([
             height : options.height,
             extrudedHeight : options.extrudedHeight,
             granularity : options.granularity,
-            vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation
+            numberOfVerticalLines : options.numberOfVerticalLines
         };
-        var ellipseGeometry = new EllipseGeometry(ellipseGeometryOptions);
+        var ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
 
         /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
+         * An object containing {@link GeometryAttribute} position property.
          *
          * @type GeometryAttributes
          *
@@ -83,7 +80,7 @@ define([
         this.indices = ellipseGeometry.indices;
 
         /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
+         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
          *
          * @type PrimitiveType
          */
@@ -97,5 +94,5 @@ define([
         this.boundingSphere = ellipseGeometry.boundingSphere;
     };
 
-    return CircleGeometry;
+    return CircleOutlineGeometry;
 });

@@ -8,6 +8,10 @@ Beta Releases
 
 * Breaking changes:
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
+    * Replaced `ExtentGeometry` parameters for extruded extent to make it consistent with other Geometries.
+      * options.extrudedOptions.height -> options.extrudedHeight
+      * options.extrudedOptions.closeTop -> options.closeBottom
+      * options.extrudedOptions.closeBottom -> options.closeTop
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
@@ -16,6 +20,8 @@ Beta Releases
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
+* Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
+* Added outline geometry [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021)
 
 ### b19 - 2013-08-01
 
