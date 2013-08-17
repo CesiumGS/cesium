@@ -1,3 +1,4 @@
+/*global require,document*/
 require([
     'Cesium',
     'dojo/dom-construct',
@@ -117,8 +118,8 @@ require([
             ne = 'NE corner: ' + selectedTile.extent.east + ', ' + selectedTile.extent.north;
         } else {
             text = 'None';
-            sw = '&nbsp';
-            ne = '&nbsp;'
+            sw = '&nbsp;';
+            ne = '&nbsp;';
         }
 
         if (showBoundingSphere) {
