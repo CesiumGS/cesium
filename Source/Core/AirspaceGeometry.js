@@ -422,8 +422,7 @@ define([
         return {
             attributes: attributes,
             indices: indices,
-            boundingSphere: BoundingSphere.fromVertices(finalPositions),
-            rightPositionCount: rightCount*3
+            boundingSphere: BoundingSphere.fromVertices(finalPositions)
         };
     }
 
@@ -532,15 +531,14 @@ define([
             endPositions = addEndCaps(positions, calculatedPositions, width);
         }
 
-        var attr = combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, positions[0], positions[length-1]);
-
-        return attr;
+        return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, positions[0], positions[length-1]);
     }
 
-    function extrudedAttributes(attributes, vertexFormat, rightCount) {
+    function extrudedAttributes(attributes, vertexFormat) {
         if (!vertexFormat.normal && !vertexFormat.binormal && !vertexFormat.tangent && !vertexFormat.st) {
             return attributes;
         }
+        var positions = attributes.position.values;
 
         var topNormals;
         var topTangents;
@@ -562,167 +560,178 @@ define([
         var threeSize = size * 3;
         var twoSize = size * 2;
         var sixSize = threeSize * 2;
-        var nineSize = threeSize * 3;
-        var twelveSize = sixSize * 2;
         var i;
-        var normal = scratchCartesian1;
-        var tangent = scratchCartesian2;
-        var backward = scratchCartesian3;
-        var binormal = scratchCartesian4;
 
-        if (vertexFormat.normal) {
-            var normals = (vertexFormat.normal) ? new Float32Array(threeSize * 4) : undefined;
-            normals.set(topNormals); //top
-            for (i = 0; i < threeSize; i+=3) { //bottom normals
-                normals[i + threeSize] = -topNormals[i];
-                normals[i + threeSize + 1] = -topNormals[i + 1];
-                normals[i + threeSize + 2] = -topNormals[i + 2];
+        if (vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent) {
+            var normals = (vertexFormat.normal) ? new Float32Array(threeSize * 6) : undefined;
+            var binormals = (vertexFormat.binormal) ? new Float32Array(threeSize * 6) : undefined;
+            var tangents = (vertexFormat.tangent) ? new Float32Array(threeSize * 6) : undefined;
+
+            var topPosition = scratchCartesian1;
+            var bottomPosition = scratchCartesian2;
+            var nextPosition = scratchCartesian3;
+            var normal = scratchCartesian4;
+            var tangent = scratchCartesian5;
+            var binormal = scratchCartesian6;
+
+            var normalIndex = sixSize;
+            var tangentIndex = sixSize;
+            var binormalIndex = sixSize;
+            var x, y, z;
+
+            for (i = 0; i < threeSize; i+=3) {
+                topPosition = Cartesian3.fromArray(positions, i, topPosition);
+                bottomPosition = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
+                nextPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, nextPosition);
+
+                bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
+                nextPosition = nextPosition.subtract(topPosition, nextPosition);
+                normal = nextPosition.cross(bottomPosition, normal).normalize(normal);
+
+                if (vertexFormat.normal) {
+                    x = normal.x;
+                    y = normal.y;
+                    z = normal.z;
+                    normals[normalIndex + sixSize] = x;
+                    normals[normalIndex + sixSize + 1] = y;
+                    normals[normalIndex + sixSize + 2] = z;
+                    normals[normalIndex + sixSize + 3] = x;
+                    normals[normalIndex + sixSize + 4] = y;
+                    normals[normalIndex + sixSize + 5] = z;
+
+                    normals[normalIndex++] = x;
+                    normals[normalIndex++] = y;
+                    normals[normalIndex++] = z;
+                    normals[normalIndex++] = x;
+                    normals[normalIndex++] = y;
+                    normals[normalIndex++] = z;
+                }
+                if (vertexFormat.tangent || vertexFormat.binormal) {
+                    tangent = Cartesian3.fromArray(topNormals, i, tangent);
+
+                    if (vertexFormat.tangent) {
+                        x = tangent.x;
+                        y = tangent.y;
+                        z = tangent.z;
+                        tangents[tangentIndex + sixSize] = x;
+                        tangents[tangentIndex + sixSize + 1] = y;
+                        tangents[tangentIndex + sixSize + 2] = z;
+                        tangents[tangentIndex + sixSize + 3] = x;
+                        tangents[tangentIndex + sixSize + 4] = y;
+                        tangents[tangentIndex + sixSize + 5] = z;
+
+                        tangents[tangentIndex++] = x;
+                        tangents[tangentIndex++] = y;
+                        tangents[tangentIndex++] = z;
+                        tangents[tangentIndex++] = x;
+                        tangents[tangentIndex++] = y;
+                        tangents[tangentIndex++] = z;
+                    }
+
+                    if (vertexFormat.binormal) {
+                        binormal = tangent.cross(normal, binormal).normalize(binormal);
+                        x = binormal.x;
+                        y = binormal.y;
+                        z = binormal.z;
+                        binormals[binormalIndex + sixSize] = x;
+                        binormals[binormalIndex + sixSize + 1] = y;
+                        binormals[binormalIndex + sixSize + 2] = z;
+                        binormals[binormalIndex + sixSize + 3] = x;
+                        binormals[binormalIndex + sixSize + 4] = y;
+                        binormals[binormalIndex + sixSize + 5] = z;
+
+                        binormals[binormalIndex++] = x;
+                        binormals[binormalIndex++] = y;
+                        binormals[binormalIndex++] = z;
+                        binormals[binormalIndex++] = x;
+                        binormals[binormalIndex++] = y;
+                        binormals[binormalIndex++] = z;
+                    }
+                }
+
             }
-            for (i = 1; i < threeSize - rightCount - 3; i+=3) { //left wall normals
-                normals[i + sixSize] = topTangents[i];
-                normals[i + sixSize + 1] = topTangents[i + 1];
-                normals[i + sixSize + 2] = topTangents[i + 2];
 
-                normals[i + nineSize] = topTangents[i];
-                normals[i + nineSize + 1] = topTangents[i + 1];
-                normals[i + nineSize + 2] = topTangents[i + 2];
-             }
+            if (vertexFormat.normal) {
+                normals.set(topNormals); //top
+                for (i = 0; i < threeSize; i+=3) { //bottom normals
+                    normals[i + threeSize] = -topNormals[i];
+                    normals[i + threeSize + 1] = -topNormals[i + 1];
+                    normals[i + threeSize + 2] = -topNormals[i + 2];
+                }
 
-            for (i = 1; i < rightCount - 3; i+=3) { //right wall normals
-                normals[nineSize - i - 3] = -topTangents[threeSize - i - 3];
-                normals[nineSize - i - 2] = -topTangents[threeSize - i - 2];
-                normals[nineSize - i - 1] = -topTangents[threeSize - i - 1];
-
-                normals[twelveSize - i - 3] = -topTangents[threeSize - i - 3];
-                normals[twelveSize - i - 2] = -topTangents[threeSize - i - 2];
-                normals[twelveSize - i - 1] = -topTangents[threeSize - i - 1];
+                attributes.normal.values = normals;
             }
 
-            normal = Cartesian3.fromArray(topNormals, threeSize - 3, normal);
-            tangent = Cartesian3.fromArray(topTangents, threeSize - 3, tangent);
-            backward = normal.cross(tangent, backward).normalize(backward);
-            normal = tangent.add(backward, normal).normalize(normal);
-            normals[sixSize] = normal.x;
-            normals[sixSize + 1] = normal.y;
-            normals[sixSize + 2] = normal.z;
-            normals[nineSize] = normal.x;
-            normals[nineSize + 1] = normal.y;
-            normals[nineSize + 2] = normal.z;
-            tangent = tangent.negate(tangent);
-            normal = tangent.add(backward, normal).normalize(normal);
-            normals[nineSize - 3] = normal.x;
-            normals[nineSize - 2] = normal.y;
-            normals[nineSize - 1] = normal.z;
-            normals[twelveSize - 3] = normal.x;
-            normals[twelveSize - 2] = normal.y;
-            normals[twelveSize - 1] = normal.z;
+            if (vertexFormat.binormal) {
+                var topBinormals = attributes.binormal.values;
+                binormals.set(topBinormals); //top
+                binormals.set(topBinormals, threeSize); //bottom
 
-
-            normal = Cartesian3.fromArray(topNormals, threeSize - rightCount - 3);
-            tangent = Cartesian3.fromArray(topTangents, threeSize - rightCount - 3);
-            var forward = tangent.cross(normal, backward).normalize(backward);
-            normal = tangent.add(forward, normal).normalize(normal);
-            normals[nineSize - rightCount - 3] = normal.x;
-            normals[nineSize - rightCount - 2] = normal.y;
-            normals[nineSize - rightCount - 1] = normal.z;
-            normals[twelveSize - rightCount - 3] = normal.x;
-            normals[twelveSize - rightCount - 2] = normal.y;
-            normals[twelveSize - rightCount - 1] = normal.z;
-
-            tangent = tangent.negate(tangent);
-            normal = tangent.add(forward, normal).normalize(normal);
-            normals[nineSize - rightCount] = normal.x;
-            normals[nineSize - rightCount + 1] = normal.y;
-            normals[nineSize - rightCount + 2] = normal.z;
-            normals[twelveSize - rightCount] = normal.x;
-            normals[twelveSize - rightCount + 1] = normal.y;
-            normals[twelveSize - rightCount + 2] = normal.z;
-
-            attributes.normal.values = normals;
-        }
-
-        if (vertexFormat.binormal) {
-            var topBinormals = attributes.binormal.values;
-            var binormals = (vertexFormat.binormal) ? new Float32Array(threeSize * 4) : undefined;
-            binormals.set(topBinormals); //top
-            binormals.set(topBinormals, threeSize); //bottom
-            binormals.set(topBinormals, threeSize + threeSize); //top wall
-            binormals.set(topBinormals, threeSize + threeSize + threeSize); //bottom wall
-
-            normal = Cartesian3.fromArray(topNormals, threeSize - 3, normal);
-            tangent = Cartesian3.fromArray(topTangents, threeSize - 3, tangent);
-            backward = normal.cross(tangent, backward).normalize(backward);
-            tangent = tangent.add(backward, tangent).normalize(tangent);
-            binormal = tangent.cross(normal, binormal).normalize(binormal);
-            binormals[sixSize] = binormal.x;
-            binormals[sixSize + 1] = binormal.y;
-            binormals[sixSize + 2] = binormal.z;
-            binormals[nineSize] = binormal.x;
-            binormals[nineSize + 1] = binormal.y;
-            binormals[nineSize + 2] = binormal.z;
-
-            tangent = Cartesian3.fromArray(topTangents, threeSize - 3, tangent).negate(tangent);
-            tangent = tangent.add(backward, tangent).normalize(tangent);
-            binormal = tangent.cross(normal, binormal).normalize(binormal);
-            binormals[nineSize - 3] = binormal.x;
-            binormals[nineSize - 2] = binormal.y;
-            binormals[nineSize - 1] = binormal.z;
-            binormals[twelveSize - 3] = binormal.x;
-            binormals[twelveSize - 2] = binormal.y;
-            binormals[twelveSize - 1] = binormal.z;
-
-
-            normal = Cartesian3.fromArray(topNormals, threeSize - rightCount - 3);
-            tangent = Cartesian3.fromArray(topTangents, threeSize - rightCount - 3);
-            var f = tangent.cross(normal, backward).normalize(backward);
-            tangent = tangent.add(f, tangent).normalize(tangent);
-            binormal = normal.cross(tangent, binormal).normalize(binormal);
-            binormals[nineSize - rightCount - 3] = binormal.x;
-            binormals[nineSize - rightCount - 2] = binormal.y;
-            binormals[nineSize - rightCount - 1] = binormal.z;
-            binormals[twelveSize - rightCount - 3] = binormal.x;
-            binormals[twelveSize - rightCount - 2] = binormal.y;
-            binormals[twelveSize - rightCount - 1] = binormal.z;
-
-            tangent = Cartesian3.fromArray(topTangents, threeSize - rightCount - 3).negate(tangent);
-            tangent = tangent.add(f, tangent).normalize(tangent);
-            binormal = normal.cross(tangent, f).normalize(f);
-            binormals[nineSize - rightCount] = binormal.x;
-            binormals[nineSize - rightCount + 1] = binormal.y;
-            binormals[nineSize - rightCount + 2] = binormal.z;
-            binormals[twelveSize - rightCount] = binormal.x;
-            binormals[twelveSize - rightCount + 1] = binormal.y;
-            binormals[twelveSize - rightCount + 2] = binormal.z;
-
-            attributes.binormal.values = binormals;
-        }
-
-        if (vertexFormat.tangent) {
-            var tangents = (vertexFormat.tangent) ? new Float32Array(threeSize * 4) : undefined;
-            tangents.set(topTangents); //top
-            tangents.set(topTangents, threeSize); //bottom
-            for (i = 0; i < threeSize; i+=3) { //wall tangents
-                tangents[i + sixSize] = topNormals[i];
-                tangents[i + sixSize + 1] = topNormals[i + 1];
-                tangents[i + sixSize + 2] = topNormals[i + 2];
-                tangents[i + nineSize] = topNormals[i];
-                tangents[i + nineSize + 1] = topNormals[i + 1];
-                tangents[i + nineSize + 2] = topNormals[i + 2];
+                attributes.binormal.values = binormals;
             }
-            attributes.tangent.values = tangents;
+
+            if (vertexFormat.tangent) {
+                tangents.set(topTangents); //top
+                tangents.set(topTangents, threeSize); //bottom
+
+                attributes.tangent.values = tangents;
+            }
         }
 
         if (vertexFormat.st) {
             var topSt = attributes.st.values;
-            var st = (vertexFormat.st) ? new Float32Array(twoSize * 4) : undefined;
+            var st = (vertexFormat.st) ? new Float32Array(twoSize * 6) : undefined;
             st.set(topSt); //top
             st.set(topSt, twoSize); //bottom
-            st.set(topSt, twoSize + twoSize); //top wall
-            st.set(topSt, twoSize + twoSize + twoSize); //bottom wall
+            var index = twoSize * 2;
+
+            for (var j = 0; j < 2; j++) {
+                st[index++] = topSt[0];
+                st[index++] = topSt[1];
+
+                for (i = 2; i < twoSize; i += 2) {
+                    var s = topSt[i];
+                    var t = topSt[i + 1];
+                    st[index++] = s;
+                    st[index++] = t;
+                    st[index++] = s;
+                    st[index++] = t;
+                }
+
+                st[index++] = topSt[0];
+                st[index++] = topSt[1];
+            }
+
             attributes.st.values = st;
         }
 
         return attributes;
+    }
+
+    function addWallPositions(positions, index, wallPositions){
+        var length = positions.length;
+        wallPositions[index++] = positions[0];
+        wallPositions[index++] = positions[1];
+        wallPositions[index++] = positions[2];
+
+        for (var i = 3; i < length; i+=3) {
+            var x = positions[i];
+            var y = positions[i+1];
+            var z = positions[i+2];
+
+            wallPositions[index++] = x;
+            wallPositions[index++] = y;
+            wallPositions[index++] = z;
+            wallPositions[index++] = x;
+            wallPositions[index++] = y;
+            wallPositions[index++] = z;
+        }
+
+        wallPositions[index++] = positions[0];
+        wallPositions[index++] = positions[1];
+        wallPositions[index++] = positions[2];
+
+        return wallPositions;
     }
 
     function computePositionsExtruded(params) {
@@ -746,43 +755,40 @@ define([
         var positions = attributes.position.values;
         var extrudedPositions = positions.slice(0);
         var length = positions.length/3;
-        positions = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(positions, height, ellipsoid);
+        var wallPositions = new Array(length * 12);
 
-        extrudedPositions = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
+        positions = PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+        wallPositions = addWallPositions(positions, 0, wallPositions);
+
+        extrudedPositions = PolylinePipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
+        wallPositions = addWallPositions(extrudedPositions, length*6, wallPositions);
         positions = positions.concat(extrudedPositions);
         boundingSphere = BoundingSphere.fromVertices(positions, undefined, 3, boundingSphere);
-        positions = positions.concat(positions);
+        positions = positions.concat(wallPositions);
         attributes.position.values = positions;
 
         var i;
         var iLength = indices.length;
-        for (i = 0; i < iLength; i+=3) {
+        for (i = 0; i < iLength; i+=3) { // bottom indices
             var v0 = indices[i];
             var v1 = indices[i + 1];
             var v2 = indices[i + 2];
 
             indices.push(v2 + length, v1 + length, v0 + length);
         }
-        attributes = extrudedAttributes(attributes, vertexFormat, attr.rightPositionCount);
+
+        attributes = extrudedAttributes(attributes, vertexFormat);
 
         var UL, LL, UR, LR;
         var twoLength = length + length;
-        for (i = 0; i < length - 1; i++) {
+        for (i = 0; i < twoLength; i+=2) { //wall indices
             UR = i + twoLength;
-            LR = UR + length;
+            LR = UR + twoLength;
             UL = UR + 1;
             LL = LR + 1;
 
             indices.push(UL, LL, UR, UR, LL, LR);
         }
-
-        UR = twoLength + length - 1;
-        LR = UR + length;
-        UL = twoLength;
-        LL = UL + length;
-
-        indices.push(UL, LL, UR, UR, LL, LR);
-
 
         return {
             attributes: attributes,
@@ -857,7 +863,7 @@ define([
             attr = computePositionsExtruded(params);
         } else {
             attr = computePositions(params);
-            attr.attributes.position.values = PolylinePipeline.scaleFromSurfaceToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
+            attr.attributes.position.values = PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
         }
 
         if (vertexFormat.position) {

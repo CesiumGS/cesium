@@ -284,7 +284,7 @@ define([
      *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleFromSurfaceToGeodeticHeight = function(positions, height, ellipsoid) {
+     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
         if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
