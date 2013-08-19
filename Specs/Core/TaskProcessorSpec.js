@@ -95,7 +95,7 @@ defineSuite([
         waitsForPromise(promise, {
             expectRejection : true
         }).then(undefined, function(error) {
-            expect(error).toEqual(message);
+            expect(error.message).toEqual(message);
         });
     });
 
