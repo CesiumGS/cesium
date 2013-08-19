@@ -5,7 +5,7 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/InterpolatableNumber',
+        '../Core/PackableNumber',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
        ], function(
@@ -14,7 +14,7 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        InterpolatableNumber,
+        PackableNumber,
         JulianDate,
         LinearApproximation) {
     "use strict";
@@ -117,7 +117,7 @@ define([
         this.type = type;
 
         if (type === Number) {
-            type = InterpolatableNumber;
+            type = PackableNumber;
         }
 
         var packedInterpolationLength = defaultValue(type.packedInterpolationLength, type.packedLength);
@@ -237,7 +237,8 @@ define([
             for ( var i = 0; i < length; ++i) {
                 xTable[i] = times[lastIndex].getSecondsDifference(times[firstIndex + i]);
             }
-            if (!defined(innerType.packForInterpolation)) {
+
+            if (!defined(innerType.convertPackedArrayForInterpolation)) {
                 var destinationIndex = 0;
                 var packedLength = innerType.packedLength;
                 var sourceIndex = firstIndex * packedLength;
@@ -249,7 +250,7 @@ define([
                     destinationIndex++;
                 }
             } else {
-                innerType.packForInterpolation(values, yTable, firstIndex, lastIndex);
+                innerType.convertPackedArrayForInterpolation(values, firstIndex, lastIndex, yTable);
             }
 
             // Interpolate!
@@ -259,7 +260,7 @@ define([
             if (!defined(innerType.unpackInterpolationResult)) {
                 return innerType.unpack(interpolationResult, 0, result);
             }
-            return innerType.unpackInterpolationResult(interpolationResult, result, values, firstIndex, lastIndex);
+            return innerType.unpackInterpolationResult(interpolationResult, values, firstIndex, lastIndex, result);
         }
         return innerType.unpack(this._values, index * innerType.packedLength, result);
     };
@@ -267,7 +268,7 @@ define([
     SampledProperty.prototype.addSample = function(time, value) {
         var innerType = this._innerType;
         var data = [time];
-        innerType.pack(data, 1, value);
+        innerType.pack(value, data, 1);
         _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTables = true;
     };
@@ -278,7 +279,7 @@ define([
         var data = [];
         for ( var i = 0; i < length; i++) {
             data.push(times[i]);
-            innerType.pack(data, data.length, values[i]);
+            innerType.pack(values[i], data, data.length);
         }
         _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTables = true;

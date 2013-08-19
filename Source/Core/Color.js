@@ -228,9 +228,34 @@ define([
         return undefined;
     };
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
     Color.packedLength = 4;
 
-    Color.pack = function(array, startingIndex, value) {
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Color
+     *
+     * @param {Color} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    Color.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
         array[startingIndex++] = value.red;
         array[startingIndex++] = value.green;
         array[startingIndex++] = value.blue;
@@ -238,7 +263,23 @@ define([
         return startingIndex;
     };
 
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Color
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Color} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
     Color.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
         if (!defined(result)) {
             result = new Color();
         }

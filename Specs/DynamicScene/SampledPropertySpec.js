@@ -56,7 +56,7 @@ defineSuite([
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(7.5);
     });
 
-    it('works with specialized interpolation packing', function() {
+    it('works with PackableForInterpolation', function() {
         var CustomType = function(value) {
             this.x = value;
         };
@@ -65,7 +65,7 @@ defineSuite([
 
         CustomType.packedInterpolationLength = 2;
 
-        CustomType.pack = function(array, startingIndex, value) {
+        CustomType.pack = function(value, array, startingIndex) {
             array[startingIndex++] = value.x;
             return startingIndex;
         };
@@ -74,15 +74,15 @@ defineSuite([
             return array[startingIndex];
         };
 
-        CustomType.packForInterpolation = function(sourceArray, destinationArray, firstIndex, lastIndex) {
-            for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
+        CustomType.convertPackedArrayForInterpolation = function(packedArray, startingIndex, lastIndex, result) {
+            for ( var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
                 var offset = i * 2;
-                destinationArray[offset] = sourceArray[i] * 0.5;
-                destinationArray[offset + 1] = sourceArray[i] * 0.5;
+                result[offset] = packedArray[i] * 0.5;
+                result[offset + 1] = packedArray[i] * 0.5;
             }
         };
 
-        CustomType.unpackInterpolationResult = function(array, result, sourceArray, firstIndex, lastIndex) {
+        CustomType.unpackInterpolationResult = function(array, sourceArray, firstIndex, lastIndex, result) {
             if (!defined(result)) {
                 result = new CustomType();
             }

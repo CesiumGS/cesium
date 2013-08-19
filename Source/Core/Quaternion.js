@@ -180,11 +180,34 @@ define([
     var sampledQuaternionQuaternion0 = new Quaternion();
     var sampledQuaternionQuaternion0Conjugate = new Quaternion();
 
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
     Quaternion.packedLength = 4;
 
-    Quaternion.packedInterpolationLength = 3;
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Quaternion
+     *
+     * @param {Quaternion} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    Quaternion.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
 
-    Quaternion.pack = function(array, startingIndex, value) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
         array[startingIndex++] = value.x;
         array[startingIndex++] = value.y;
         array[startingIndex++] = value.z;
@@ -192,29 +215,23 @@ define([
         return startingIndex;
     };
 
-    Quaternion.packForInterpolation = function(sourceArray, destinationArray, firstIndex, lastIndex) {
-        Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
-        sampledQuaternionQuaternion0Conjugate.conjugate(sampledQuaternionQuaternion0Conjugate);
-
-        for ( var i = 0, len = lastIndex - firstIndex + 1; i < len; i++) {
-            var offset = i * 3;
-            Quaternion.unpack(sourceArray, (firstIndex + i) * 4, sampledQuaternionTempQuaternion);
-
-            sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
-
-            if (sampledQuaternionTempQuaternion.w < 0) {
-                sampledQuaternionTempQuaternion.negate(sampledQuaternionTempQuaternion);
-            }
-
-            sampledQuaternionTempQuaternion.getAxis(sampledQuaternionAxis);
-            var angle = sampledQuaternionTempQuaternion.getAngle();
-            destinationArray[offset] = sampledQuaternionAxis.x * angle;
-            destinationArray[offset + 1] = sampledQuaternionAxis.y * angle;
-            destinationArray[offset + 2] = sampledQuaternionAxis.z * angle;
-        }
-    };
-
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Quaternion
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Quaternion} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
     Quaternion.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
         if (!defined(result)) {
             result = new Quaternion();
         }
@@ -225,7 +242,59 @@ define([
         return result;
     };
 
-    Quaternion.unpackInterpolationResult = function(array, result, sourceArray, firstIndex, lastIndex) {
+    /**
+     * The number of elements used to store the object into an array in its interpolatable form.
+     * @Type {Number}
+     */
+    Quaternion.packedInterpolationLength = 3;
+
+    /**
+     * Converts a packed array into a form suitable for interpolation.
+     * @memberof Quaternion
+     *
+     * @param {Array} packedArray The packed array.
+     * @param {Number} [startingIndex=0] The index of the first element to be converted.
+     * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
+     * @param {Quaternion} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} packedArray is required.
+     */
+    Quaternion.convertPackedArrayForInterpolation = function(packedArray, startingIndex, lastIndex, result) {
+        Quaternion.unpack(packedArray, lastIndex * 4, sampledQuaternionQuaternion0Conjugate);
+        sampledQuaternionQuaternion0Conjugate.conjugate(sampledQuaternionQuaternion0Conjugate);
+
+        for ( var i = 0, len = lastIndex - startingIndex + 1; i < len; i++) {
+            var offset = i * 3;
+            Quaternion.unpack(packedArray, (startingIndex + i) * 4, sampledQuaternionTempQuaternion);
+
+            sampledQuaternionTempQuaternion.multiply(sampledQuaternionQuaternion0Conjugate, sampledQuaternionTempQuaternion);
+
+            if (sampledQuaternionTempQuaternion.w < 0) {
+                sampledQuaternionTempQuaternion.negate(sampledQuaternionTempQuaternion);
+            }
+
+            sampledQuaternionTempQuaternion.getAxis(sampledQuaternionAxis);
+            var angle = sampledQuaternionTempQuaternion.getAngle();
+            result[offset] = sampledQuaternionAxis.x * angle;
+            result[offset + 1] = sampledQuaternionAxis.y * angle;
+            result[offset + 2] = sampledQuaternionAxis.z * angle;
+        }
+    };
+
+    /**
+     * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
+     * @memberof Quaternion
+     *
+     * @param {Array} array The original packed array.
+     * @param {Array} sourceArray The converted array.
+     * @param {Number} [startingIndex=0] The startingIndex used to convert the array.
+     * @param {Number} [lastIndex=packedArray.length] The lastIndex used to convert the array.
+     * @param {Quaternion} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     * @exception {DeveloperError} sourceArray is required.
+     */
+    Quaternion.unpackInterpolationResult = function(array, sourceArray, firstIndex, lastIndex, result) {
         if (!defined(result)) {
             result = new Quaternion();
         }
