@@ -2,8 +2,10 @@
 defineSuite(['DynamicScene/KmlDataSource',
              'DynamicScene/ConstantProperty',
              'DynamicScene/DynamicObjectCollection',
+             'DynamicScene/DynamicMaterialProperty',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicPolyline',
+             'DynamicScene/DynamicPolygon',
              'Core/loadXML',
              'Core/Cartographic',
              'Core/Color',
@@ -14,8 +16,10 @@ defineSuite(['DynamicScene/KmlDataSource',
             KmlDataSource,
             ConstantProperty,
             DynamicObjectCollection,
+            DynamicMaterialProperty,
             DynamicBillboard,
             DynamicPolyline,
+            DynamicPolygon,
             loadXML,
             Cartographic,
             Color,
@@ -26,6 +30,19 @@ defineSuite(['DynamicScene/KmlDataSource',
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     var parser = new DOMParser();
+
+    function crsFunction(coordinates) {
+        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
+        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+    }
+
+    function coordinatesArrayToCartesianArray(coordinates) {
+        var positions = new Array(coordinates.length);
+        for ( var i = 0; i < coordinates.length; i++) {
+            positions[i] = crsFunction(coordinates[i]);
+        }
+        return positions;
+    }
 
     it('default constructor has expected values', function() {
         var dataSource = new KmlDataSource();
@@ -240,6 +257,42 @@ defineSuite(['DynamicScene/KmlDataSource',
         }).toThrow();
     });
 
+    it('handles Polygon geometry', function() {
+        var polygon = new DynamicPolygon();
+        polygon.material = new DynamicMaterialProperty();
+        polygon.material.processCzmlIntervals({
+            solidColor : {
+                color : {
+                    rgba : [255, 255, 255, 255]
+                }
+            }
+        }, undefined, undefined);
+        var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <kml xmlns="http://www.opengis.net/kml/2.2">\
+        <Placemark>\
+          <Polygon>\
+            <outerBoundaryIs>\
+              <LinearRing>\
+                <coordinates>\
+                  -122.365662,37.826988,0\
+                  -122.365202,37.826302,0\
+                  -122.364581,37.82655,0\
+                  -122.365038,37.827237,0\
+                  -122.365662,37.826988,0\
+                </coordinates>\
+              </LinearRing>\
+            </outerBoundaryIs>\
+          </Polygon>\
+        </Placemark>\
+        </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+    });
+
     it('handles LineStyle', function() {
         var width = new ConstantProperty(4);
         var outerWidth = new ConstantProperty(0);
@@ -270,6 +323,31 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects.length).toEqual(1);
         expect(objects[0].polyline.width.getValue()).toEqual(width.getValue());
         expect(objects[0].polyline.outlineWidth.getValue()).toEqual(outerWidth.getValue());
+    });
+
+    it('handles PolyStyle', function() {
+        var polyKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+            <PolyStyle>\
+            <color>000000ff</color>\
+            <colorMode>normal</colorMode>\
+            <fill>1</fill>\
+            <outline>1</outline>\
+            </PolyStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(polyKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
     });
 
     it('handles Color in normal mode', function() {

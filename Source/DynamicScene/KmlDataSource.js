@@ -244,20 +244,21 @@ define(['../Core/createGuid',
     }
 
     function processPolygon(dataSource, dynamicObject, kml, node){
+        //TODO innerBoundaryIS, extrude, tessellate, altitudeMode
         var el = node.getElementsByTagName('outerBoundaryIs');
         for (var j = 0; j < el.length; j++) {
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
-      var polygon = new DynamicPolygon();
-      polygon.material = new DynamicMaterialProperty();
-      polygon.material.processCzmlIntervals({
-      solidColor : {
-      color : {
-      rgba : [255, 255, 255, 255]
-      }
-      }
-      }, undefined, undefined);
-      dynamicObject.polygon = polygon;
+        var polygon = new DynamicPolygon();
+        polygon.material = new DynamicMaterialProperty();
+        polygon.material.processCzmlIntervals({
+            solidColor : {
+                color : {
+                    rgba : [255, 255, 255, 255]
+                }
+            }
+        }, undefined, undefined);
+        dynamicObject.polygon = polygon;
     }
 
     //Object that holds all supported Geometry
@@ -313,9 +314,18 @@ define(['../Core/createGuid',
                 dynamicObject.polyline = polyline;
             }
             else if(node.nodeName === "PolyStyle")   {
-                dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
+                dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
+                var polygonColor = getColorValue(node, 'color');
+                dynamicObject.polygon.material = new DynamicMaterialProperty();
+                dynamicObject.polygon.material.processCzmlIntervals({
+                    solidColor : {
+                        color : {
+                            rgba : [polygonColor.red, polygonColor.green, polygonColor.blue, polygonColor.alpha]
+                        }
+                    }
+                }, undefined, undefined);
             }
         }
     }
