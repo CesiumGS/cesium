@@ -27,8 +27,7 @@ define([
 
             startingIndex = defaultValue(startingIndex, 0);
 
-            array[startingIndex++] = value;
-            return startingIndex;
+            array[startingIndex] = value;
         },
 
         unpack : function(array, startingIndex, result) {

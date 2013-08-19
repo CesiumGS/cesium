@@ -26,6 +26,8 @@ define([
      * @param {Number} [y=0.0] The Y component.
      * @param {Number} [z=0.0] The Z component.
      * @param {Number} [w=0.0] The W component.
+     *
+     * @see PackableForInterpolation
      */
     var Quaternion = function(x, y, z, w) {
         /**
@@ -211,8 +213,7 @@ define([
         array[startingIndex++] = value.x;
         array[startingIndex++] = value.y;
         array[startingIndex++] = value.z;
-        array[startingIndex++] = value.w;
-        return startingIndex;
+        array[startingIndex] = value.w;
     };
 
     /**

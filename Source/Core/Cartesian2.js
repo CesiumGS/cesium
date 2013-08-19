@@ -178,8 +178,7 @@ define([
         startingIndex = defaultValue(startingIndex, 0);
 
         array[startingIndex++] = value.x;
-        array[startingIndex++] = value.y;
-        return startingIndex;
+        array[startingIndex] = value.y;
     };
 
     /**

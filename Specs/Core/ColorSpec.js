@@ -1,9 +1,11 @@
 /*global defineSuite*/
 defineSuite(['Core/Color',
-             'Core/Math'
+             'Core/Math',
+             'Specs/createPackableSpecs'
             ], function(
               Color,
-              CesiumMath) {
+              CesiumMath,
+              createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -242,4 +244,6 @@ defineSuite(['Core/Color',
         var newRgba = newColor.toRgba();
         expect(rgba).toEqual(newRgba);
     });
+
+    createPackableSpecs(Color, new Color(0.1, 0.2, 0.3, 0.4), [0.1, 0.2, 0.3, 0.4]);
 });

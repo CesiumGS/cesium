@@ -66,8 +66,7 @@ defineSuite([
         CustomType.packedInterpolationLength = 2;
 
         CustomType.pack = function(value, array, startingIndex) {
-            array[startingIndex++] = value.x;
-            return startingIndex;
+            array[startingIndex] = value.x;
         };
 
         CustomType.unpack = function(array, startingIndex, result) {

@@ -42,6 +42,8 @@ define([
      *
      * @constructor
      * @alias Color
+     *
+     * @see Packable
      */
     var Color = function(red, green, blue, alpha) {
         /**
@@ -259,8 +261,7 @@ define([
         array[startingIndex++] = value.red;
         array[startingIndex++] = value.green;
         array[startingIndex++] = value.blue;
-        array[startingIndex++] = value.alpha;
-        return startingIndex;
+        array[startingIndex] = value.alpha;
     };
 
     /**

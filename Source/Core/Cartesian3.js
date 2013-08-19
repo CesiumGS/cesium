@@ -204,8 +204,7 @@ define([
 
         array[startingIndex++] = value.x;
         array[startingIndex++] = value.y;
-        array[startingIndex++] = value.z;
-        return startingIndex;
+        array[startingIndex] = value.z;
     };
 
     /**
