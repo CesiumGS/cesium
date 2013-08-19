@@ -15,7 +15,7 @@ define([
         './DynamicPoint',
         './DynamicPolyline',
         './DynamicPolygon',
-        './DynamicMaterialProperty',
+        './DynamicColorMaterial',
         './DynamicObjectCollection',
         '../ThirdParty/when',
         '../ThirdParty/topojson'
@@ -35,7 +35,7 @@ define([
         DynamicPoint,
         DynamicPolyline,
         DynamicPolygon,
-        DynamicMaterialProperty,
+        DynamicColorMaterial,
         DynamicObjectCollection,
         when,
         topojson) {
@@ -232,23 +232,20 @@ define([
 
         //default polygon
         var defaultPolygon = new DynamicObject('GeoJsonDataSource.defaultPolygon');
-        var polygonMaterial = new DynamicMaterialProperty();
+
         polyline = new DynamicPolyline();
         polyline.color = new ConstantProperty(Color.YELLOW);
         polyline.width = new ConstantProperty(1);
         polyline.outlineColor = new ConstantProperty(Color.BLACK);
         polyline.outlineWidth = new ConstantProperty(0);
         defaultPolygon.polyline = polyline;
+
         var polygon = new DynamicPolygon();
-        polygon.material = polygonMaterial;
-        polygonMaterial.processCzmlIntervals({
-            solidColor : {
-                color : {
-                    rgba : [255, 255, 0, 25]
-                }
-            }
-        }, undefined, undefined);
         defaultPolygon.polygon = polygon;
+
+        var material = new DynamicColorMaterial();
+        material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.1));
+        polygon.material = material;
 
         this._changed = new Event();
         this._error = new Event();

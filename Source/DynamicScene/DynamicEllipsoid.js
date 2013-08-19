@@ -4,15 +4,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Cartesian3',
-        './processPacketData',
-        './DynamicMaterialProperty'
+        './processPacketData'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
         Cartesian3,
-        processPacketData,
-        DynamicMaterialProperty) {
+        processPacketData) {
     "use strict";
 
     /**
@@ -87,16 +85,7 @@ define([
 
         ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
         ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
-
-        if (defined(ellipsoidData.material)) {
-            var material = ellipsoid.material;
-            if (!defined(material)) {
-                ellipsoid.material = material = new DynamicMaterialProperty();
-                ellipsoidUpdated = true;
-            }
-            material.processCzmlIntervals(ellipsoidData.material, interval);
-        }
-
+        ellipsoidUpdated = processPacketData.material(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
         return ellipsoidUpdated;
     };
 

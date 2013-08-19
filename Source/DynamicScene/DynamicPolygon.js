@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        './processPacketData',
-        './DynamicMaterialProperty'
+        './processPacketData'
     ], function(
          TimeInterval,
          defaultValue,
          defined,
-         processPacketData,
-         DynamicMaterialProperty) {
+         processPacketData) {
     "use strict";
 
     /**
@@ -78,16 +76,7 @@ define([
         }
 
         polygonUpdated = processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
-
-        if (defined(polygonData.material)) {
-            var material = polygon.material;
-            if (!defined(material)) {
-                polygon.material = material = new DynamicMaterialProperty();
-                polygonUpdated = true;
-            }
-            material.processCzmlIntervals(polygonData.material, interval, sourceUri);
-        }
-
+        polygonUpdated = processPacketData.material(polygon, 'material', polygonData.material, interval, sourceUri);
         return polygonUpdated;
     };
 

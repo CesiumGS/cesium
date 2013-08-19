@@ -5,14 +5,16 @@ define([
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Scene/Polygon',
-        '../Scene/Material'
+        '../Scene/Material',
+        './processMaterial'
        ], function(
          Cartesian3,
          defined,
          DeveloperError,
          destroyObject,
          Polygon,
-         Material) {
+         Material,
+         processMaterial) {
     "use strict";
 
     /**
@@ -238,7 +240,7 @@ define([
 
         var material = dynamicPolygon.material;
         if (defined(material)) {
-            polygon.material = material.getValue(time, context, polygon.material);
+            polygon.material = processMaterial(time, material, context, polygon.material);
         }
     }
 

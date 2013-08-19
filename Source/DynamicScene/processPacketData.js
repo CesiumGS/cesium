@@ -29,6 +29,9 @@ define([
         './ConstantPositionProperty',
         './SampledPositionProperty',
         './TimeIntervalCollectionPositionProperty',
+        './DynamicColorMaterial',
+        './DynamicImageMaterial',
+        './DynamicGridMaterial',
         '../ThirdParty/Uri'
     ], function(
         Cartesian2,
@@ -60,6 +63,9 @@ define([
         ConstantPositionProperty,
         SampledPositionProperty,
         TimeIntervalCollectionPositionProperty,
+        DynamicColorMaterial,
+        DynamicImageMaterial,
+        DynamicGridMaterial,
         Uri) {
     "use strict";
 
@@ -438,6 +444,73 @@ define([
         return updated;
     }
     processPacketData.position = processPositionPacketData;
+
+    function processMaterialProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            combinedInterval = TimeInterval.fromIso8601(packetInterval);
+            if (defined(constrainedInterval)) {
+                combinedInterval = combinedInterval.intersect(constrainedInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        combinedInterval = defaultValue(combinedInterval, Iso8601.MAXIMUM_INTERVAL);
+
+        var propertyCreated = false;
+        var property = object[propertyName];
+        if (!defined(property)) {
+            property = new TimeIntervalCollectionProperty(function(value) {
+                return value;
+            });
+            object[propertyName] = property;
+            propertyCreated = true;
+        }
+
+        //See if we already have data at that interval.
+        var thisIntervals = property.intervals;
+        var existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
+        var existingMaterial;
+
+        if (defined(existingInterval)) {
+            //We have an interval, but we need to make sure the
+            //new data is the same type of material as the old data.
+            existingMaterial = existingInterval.data;
+        } else {
+            //If not, create it.
+            existingInterval = combinedInterval.clone();
+            thisIntervals.addInterval(existingInterval);
+        }
+
+        if (!defined(existingMaterial) || !existingMaterial.isMaterial(packetData)) {
+            if (defined(packetData.solidColor)) {
+                existingMaterial = new DynamicColorMaterial();
+                propertyCreated = processPacketData(Color, existingMaterial, 'color', packetData.solidColor.color);
+                existingInterval.data = existingMaterial;
+            }
+        }
+
+        return propertyCreated;
+    }
+
+    function processMaterialPacketData(object, propertyName, packetData, interval, sourceUri){
+        if (!defined(packetData)) {
+            return false;
+        }
+
+        var updated = false;
+        if (Array.isArray(packetData)) {
+            for ( var i = 0, len = packetData.length; i < len; i++) {
+                updated = processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+            }
+        } else {
+            updated = processMaterialProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+        }
+        return updated;
+    }
+    processPacketData.material = processMaterialPacketData;
 
     return processPacketData;
 });

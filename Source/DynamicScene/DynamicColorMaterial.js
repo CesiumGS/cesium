@@ -1,14 +1,8 @@
 /*global define*/
 define([
-        '../Core/Color',
-        '../Core/defined',
-        './processPacketData',
-        '../Scene/Material'
+        '../Core/defined'
     ], function(
-         Color,
-         defined,
-         processPacketData,
-         Material) {
+         defined) {
     "use strict";
 
     /**
@@ -40,36 +34,6 @@ define([
      * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
      */
     DynamicColorMaterial.prototype.isMaterial = DynamicColorMaterial.isMaterial;
-
-    /**
-     * Provided a CZML interval containing color material data, processes the
-     * interval into a new or existing instance of this class.
-     *
-     * @param {Object} czmlInterval The interval to process.
-     * @param {DynamicColorMaterial} [existingMaterial] The DynamicColorMaterial to modify.
-     */
-    DynamicColorMaterial.prototype.processCzmlIntervals = function(czmlInterval) {
-        var materialData = czmlInterval.solidColor;
-        if (defined(materialData)) {
-            processPacketData(Color, this, 'color', materialData.color);
-        }
-    };
-
-    /**
-     * Gets a Color Material that represents this dynamic material at the provided time.
-     *
-     * @param {JulianDate} time The desired time.
-     * @param {Context} context The context in which this material exists.
-     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not a Color Material, a new instance is created.
-     * @returns The modified existingMaterial parameter or a new Color Material instance if existingMaterial was undefined or not a Color Material.
-     */
-    DynamicColorMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (!defined(existingMaterial) || (existingMaterial.type !== Material.ColorType)) {
-            existingMaterial = Material.fromType(context, Material.ColorType);
-        }
-        existingMaterial.uniforms.color = this.color.getValue(time, existingMaterial.uniforms.color);
-        return existingMaterial;
-    };
 
     return DynamicColorMaterial;
 });

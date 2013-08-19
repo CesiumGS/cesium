@@ -4,15 +4,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Color',
-        './processPacketData',
-        './DynamicMaterialProperty'
+        './processPacketData'
        ], function(
          TimeInterval,
          defaultValue,
          defined,
          Color,
-         processPacketData,
-         DynamicMaterialProperty) {
+         processPacketData) {
     "use strict";
 
     /**
@@ -152,43 +150,10 @@ define([
         coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
         coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
         coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
-
-        if (defined(coneData.capMaterial)) {
-            var capMaterial = cone.capMaterial;
-            if (!defined(capMaterial)) {
-                cone.capMaterial = capMaterial = new DynamicMaterialProperty();
-                coneUpdated = true;
-            }
-            capMaterial.processCzmlIntervals(coneData.capMaterial, interval);
-        }
-
-        if (defined(coneData.innerMaterial)) {
-            var innerMaterial = cone.innerMaterial;
-            if (!defined(innerMaterial)) {
-                cone.innerMaterial = innerMaterial = new DynamicMaterialProperty();
-                coneUpdated = true;
-            }
-            innerMaterial.processCzmlIntervals(coneData.innerMaterial, interval);
-        }
-
-        if (defined(coneData.outerMaterial)) {
-            var outerMaterial = cone.outerMaterial;
-            if (!defined(outerMaterial)) {
-                cone.outerMaterial = outerMaterial = new DynamicMaterialProperty();
-                coneUpdated = true;
-            }
-            outerMaterial.processCzmlIntervals(coneData.outerMaterial, interval);
-        }
-
-        if (defined(coneData.silhouetteMaterial)) {
-            var silhouetteMaterial = cone.silhouetteMaterial;
-            if (!defined(silhouetteMaterial)) {
-                cone.silhouetteMaterial = silhouetteMaterial = new DynamicMaterialProperty();
-                coneUpdated = true;
-            }
-            silhouetteMaterial.processCzmlIntervals(coneData.silhouetteMaterial, interval);
-        }
-
+        coneUpdated = processPacketData.material(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
         return coneUpdated;
     };
 

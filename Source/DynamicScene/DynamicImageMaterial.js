@@ -71,47 +71,5 @@ define([
         processPacketData(Number, this, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
     };
 
-    /**
-     * Gets an Image Material that represents this dynamic material at the provided time.
-     *
-     * @param {JulianDate} time The desired time.
-     * @param {Context} context The context in which this material exists.
-     * @param {Material} [existingMaterial] An existing material to be modified.  If the material is undefined or not an Image Material, a new instance is created.
-     * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
-     */
-    DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (!defined(existingMaterial) || (existingMaterial.type !== Material.ImageType)) {
-            existingMaterial = Material.fromType(context, Material.ImageType);
-        }
-
-        var xRepeat;
-        var property = this.verticalRepeat;
-        if (defined(property)) {
-            xRepeat = property.getValue(time);
-            if (defined(xRepeat)) {
-                existingMaterial.uniforms.repeat.x = xRepeat;
-            }
-        }
-
-        var yRepeat;
-        property = this.horizontalRepeat;
-        if (defined(property)) {
-            yRepeat = property.getValue(time);
-            if (defined(yRepeat)) {
-                existingMaterial.uniforms.repeat.y = yRepeat;
-            }
-        }
-
-        property = this.image;
-        if (defined(property)) {
-            var url = this.image.getValue(time);
-            if (defined(url) && existingMaterial.currentUrl !== url) {
-                existingMaterial.currentUrl = url;
-                existingMaterial.uniforms.image = url;
-            }
-        }
-        return existingMaterial;
-    };
-
     return DynamicImageMaterial;
 });

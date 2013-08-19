@@ -70,7 +70,7 @@ define([
         var value = this._intervals.findIntervalContainingDate(time);
         var material = defined(value) ? value.data : undefined;
         if (defined(material)) {
-            return material.getValue(time, context, existingMaterial);
+            return material;
         }
         return existingMaterial;
     };

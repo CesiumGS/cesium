@@ -8,7 +8,8 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/Material'
+        '../Scene/Material',
+        './processMaterial'
        ], function(
          defaultValue,
          defined,
@@ -18,7 +19,8 @@ define([
          Matrix3,
          Matrix4,
          CustomSensorVolume,
-         Material) {
+         Material,
+         processMaterial) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -266,7 +268,7 @@ define([
 
         var material = dynamicPyramid.material;
         if (defined(material)) {
-            pyramid.material = material.getValue(time, context, pyramid.material);
+            pyramid.material = processMaterial(time, material, context, pyramid.material);
         }
 
         var property = dynamicPyramid.intersectionColor;

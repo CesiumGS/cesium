@@ -5,16 +5,14 @@ define([
         '../Core/defined',
         '../Core/Color',
         './processPacketData',
-        './DynamicDirectionsProperty',
-        './DynamicMaterialProperty'
+        './DynamicDirectionsProperty'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
         Color,
         processPacketData,
-        DynamicDirectionsProperty,
-        DynamicMaterialProperty) {
+        DynamicDirectionsProperty) {
     "use strict";
 
     /**
@@ -116,15 +114,7 @@ define([
         pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
         pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
         pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
-
-        if (defined(pyramidData.material)) {
-            var material = pyramid.material;
-            if (!defined(material)) {
-                pyramid.material = material = new DynamicMaterialProperty();
-                pyramidUpdated = true;
-            }
-            material.processCzmlIntervals(pyramidData.material, interval);
-        }
+        pyramidUpdated = processPacketData.material(pyramid, 'material', pyramidData.material, interval, sourceUri);
 
         if (defined(pyramidData.directions)) {
             var directions = pyramid.directions;

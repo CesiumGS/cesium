@@ -12,7 +12,8 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/Material'
+        '../Scene/Material',
+        './processMaterial'
     ], function(
         Cartesian3,
         Color,
@@ -26,7 +27,8 @@ define([
         Matrix4,
         Spherical,
         CustomSensorVolume,
-        Material) {
+        Material,
+        processMaterial) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -364,7 +366,7 @@ define([
 
         var material = dynamicCone.outerMaterial;
         if (defined(material)) {
-            cone.material = material.getValue(time, context, cone.material);
+            cone.material = processMaterial(time, material, context, cone.material);
         }
 
         property = dynamicCone.intersectionColor;

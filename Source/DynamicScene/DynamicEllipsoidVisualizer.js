@@ -7,7 +7,8 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
-        '../Scene/Material'
+        '../Scene/Material',
+        './processMaterial'
     ], function(
         defaultValue,
         defined,
@@ -16,7 +17,8 @@ define([
         Matrix3,
         Matrix4,
         EllipsoidPrimitive,
-        Material) {
+        Material,
+        processMaterial) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -254,7 +256,7 @@ define([
 
         var material = dynamicEllipsoid.material;
         if (defined(material)) {
-            ellipsoid.material = material.getValue(time, context, ellipsoid.material);
+            ellipsoid.material = processMaterial(time, material, context, ellipsoid.material);
         }
     }
 
