@@ -455,7 +455,7 @@ define([
 
         var latitudeFactor = 1.0;
 
-        // Adjust by latitude in 3D only.
+        /*// Adjust by latitude in 3D only.
         if (frameState.mode === SceneMode.SCENE3D) {
             var latitudeClosestToEquator = 0.0;
             if (extent.south > 0.0) {
@@ -465,7 +465,7 @@ define([
             }
 
             latitudeFactor = Math.cos(latitudeClosestToEquator);
-        }
+        }*/
 
         var maxGeometricError = latitudeFactor * surface._terrainProvider.getLevelMaximumGeometricError(tile.level);
 
