@@ -46,6 +46,9 @@ define([
     var scratchCartesian = new Cartesian3();
     var scratchCartesian20 = new Cartesian3();
 
+    var scratchPosition = new Cartesian3();
+    var scratchNextPosition = new Cartesian3();
+
     function angleIsGreaterThanPi (first, second) {
         scratchCartesian = first.cross(second, scratchCartesian);
         return scratchCartesian.z < 0;
@@ -131,14 +134,14 @@ define([
         var startPoint = scratchCartesian2;
         var endPoint = scratchCartesian3;
 
-        cornerPoint = originalPositions[0];
+        cornerPoint = Cartesian3.fromArray(originalPositions, 0, cornerPoint);
         startPoint = Cartesian3.fromArray(calculatedPositions, 0, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions, 3, endPoint);
 
         var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
 
         var length = calculatedPositions.length;
-        cornerPoint = originalPositions[originalPositions.length-1];
+        cornerPoint = Cartesian3.fromArray(originalPositions, originalPositions.length-3, cornerPoint);
         startPoint = Cartesian3.fromArray(calculatedPositions, length - 6, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions, length - 3, endPoint);
 
@@ -164,7 +167,7 @@ define([
         };
     }
 
-    function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions, firstPos, lastPos) {
+    function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions) {
         var attributes = new GeometryAttributes();
         var leftCount = positions.length/2;
         var rightCount = leftCount;
@@ -281,7 +284,6 @@ define([
                 if (defined(l)) {
                     attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
                     front+=3;
-                    compIndex += 3;
                     p = LR;
                     start = UR;
                     for (j = 0; j < l.length/3; j++) {
@@ -304,7 +306,6 @@ define([
                 } else {
                     attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
                     back -= 3;
-                    compIndex += 3;
                     p = UR;
                     start = LR;
                     for (j = 0; j < r.length/3; j++) {
@@ -329,6 +330,7 @@ define([
                 back -= 3;
                 front += 3;
             }
+            compIndex += 3;
         }
 
         UR = front/3;
@@ -454,11 +456,14 @@ define([
         var cornerDirection = scratchCartesian7;
         var startPoint = scratchCartesian8;
 
-        var calculatedNormals = [];
-        var calculatedLefts = [];
+        var position = scratchPosition;
+        var nextPosition = scratchNextPosition;
 
-        var position = positions[0]; //add first point
-        var nextPosition = positions[1];
+        var calculatedLefts = [];
+        var calculatedNormals = [];
+
+        position = Cartesian3.fromArray(positions, 0, position); //add first point
+        nextPosition = Cartesian3.fromArray(positions, 3, nextPosition);
         forward = nextPosition.subtract(position, forward).normalize(forward);
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
         left = normal.cross(forward, left).normalize(left);
@@ -467,18 +472,18 @@ define([
         calculatedPositions.push(leftPos.x, leftPos.y, leftPos.z);
         rightPos = position.add(left.multiplyByScalar(width, rightPos).negate(rightPos), rightPos);
         calculatedPositions.push(rightPos.x, rightPos.y, rightPos.z);
-        calculatedNormals.push(normal.x, normal.y, normal.z);
         calculatedLefts.push(left.x, left.y, left.z);
+        calculatedNormals.push(normal.x, normal.y, normal.z);
 
-        position = nextPosition;
+        position = nextPosition.clone(position);
         backward = forward.negate(backward);
         var corners = [];
         var i;
-        var length = positions.length;
+        var length = positions.length/3;
         for (i = 1; i < length-1; i++) {
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
 
-            nextPosition = positions[i+1];
+            nextPosition = Cartesian3.fromArray(positions, (i+1)*3, nextPosition);
             forward = nextPosition.subtract(position, forward).normalize(forward);
             var angle = Cartesian3.angleBetween(forward, backward);
             var doCorner = !(CesiumMath.equalsEpsilon(angle, Math.PI, 0.02)) && !(CesiumMath.equalsEpsilon(angle, 0, 0.02));
@@ -496,8 +501,8 @@ define([
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
                     calculatedPositions.push(leftPos.x, leftPos.y, leftPos.z);
                     calculatedPositions.push(rightPos.x, rightPos.y, rightPos.z);
-                    calculatedNormals.push(normal.x, normal.y, normal.z);
                     calculatedLefts.push(left.x, left.y, left.z);
+                    calculatedNormals.push(normal.x, normal.y, normal.z);
                     startPoint = leftPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
@@ -532,12 +537,10 @@ define([
                 calculatedPositions.push(rightPos.x, rightPos.y, rightPos.z);
                 calculatedNormals.push(normal.x, normal.y, normal.z);
                 calculatedLefts.push(left.x, left.y, left.z);
-
-                left = normal.cross(forward, left).normalize(left);
             }
 
 
-            position = nextPosition;
+            position = nextPosition.clone(position);
             backward = forward.negate(backward);
         }
 
@@ -546,15 +549,15 @@ define([
         calculatedPositions.push(leftPos.x, leftPos.y, leftPos.z);
         rightPos = position.add(left.multiplyByScalar(width, rightPos).negate(rightPos), rightPos);
         calculatedPositions.push(rightPos.x, rightPos.y, rightPos.z);
-        calculatedNormals.push(normal.x, normal.y, normal.z);
         calculatedLefts.push(left.x, left.y, left.z);
+        calculatedNormals.push(normal.x, normal.y, normal.z);
 
         var endPositions;
         if (roundCorners) {
             endPositions = addEndCaps(positions, calculatedPositions, width);
         }
 
-        return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, positions[0], positions[length-1]);
+        return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions);
     }
 
     function extrudedAttributes(attributes, vertexFormat) {
@@ -868,7 +871,8 @@ define([
         var extrude = (height !== extrudedHeight);
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
-//        cleanPositions = PolylinePipeline.scaleToSurface(cleanPositions);
+        cleanPositions = PolylinePipeline.scaleToSurface(cleanPositions);
+
         var params = {
                 ellipsoid: ellipsoid,
                 vertexFormat: vertexFormat,
@@ -877,6 +881,7 @@ define([
                 roundCorners: defaultValue(options.roundCorners, true),
                 beveledCorners: defaultValue(options.beveledCorners, false)
         };
+
         var attr;
         if (extrude) {
             var h = Math.max(height, extrudedHeight);
