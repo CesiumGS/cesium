@@ -55,6 +55,12 @@ define([
             throw new DeveloperError('options.geometry is required.');
         }
 
+        if (!defined(geometry.attributes) || !defined(geometry.primitiveType)) {
+            // to create the debug lines, we need the computed attributes.
+            // compute them if they are undefined.
+            geometry = geometry.constructor.createGeometry(geometry);
+        }
+
         var attributes = geometry.attributes;
         var modelMatrix = Matrix4.clone(defaultValue(options.modelMatrix, Matrix4.IDENTITY));
         var length = defaultValue(options.length, 10000.0);
@@ -89,13 +95,17 @@ define([
             }));
         }
 
-        return new Primitive({
-            geometryInstances : instances,
-            appearance : new PerInstanceColorAppearance({
-                flat : true,
-                translucent : false
-            })
-        });
+        if (instances.length > 0) {
+            return new Primitive({
+                geometryInstances : instances,
+                appearance : new PerInstanceColorAppearance({
+                    flat : true,
+                    translucent : false
+                })
+            });
+        }
+
+        return undefined;
     }
 
     return createTangentSpaceDebugPrimitive;

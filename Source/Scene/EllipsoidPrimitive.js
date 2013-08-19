@@ -201,9 +201,9 @@ define([
             return vertexArray;
         }
 
-        var geometry = BoxGeometry.fromDimensions({
+        var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
-        });
+        }));
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry: geometry,
