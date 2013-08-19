@@ -11,6 +11,7 @@ defineSuite(['DynamicScene/KmlDataSource',
              'Core/Color',
              'Core/Ellipsoid',
              'Core/Event',
+             'Core/JulianDate',
              'Core/Math'
          ], function(
             KmlDataSource,
@@ -25,6 +26,7 @@ defineSuite(['DynamicScene/KmlDataSource',
             Color,
             Ellipsoid,
             Event,
+            JulianDate,
             CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -258,6 +260,12 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles Polygon geometry', function() {
+        var coordinates = [[-122.365662, 37.826988, 0],
+                [-122.365202, 37.826302, 0],
+                [-122.364581, 37.82655, 0],
+                [-122.365038, 37.827237, 0],
+                [-122.365662, 37.826988, 0]];
+        coordinates = coordinatesArrayToCartesianArray(coordinates);
         var polygon = new DynamicPolygon();
         polygon.material = new DynamicMaterialProperty();
         polygon.material.processCzmlIntervals({
@@ -285,12 +293,16 @@ defineSuite(['DynamicScene/KmlDataSource',
           </Polygon>\
         </Placemark>\
         </kml>';
-
         var dataSource = new KmlDataSource();
         dataSource.load(parser.parseFromString(polygonKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var dynamicObject = objects[0];
         expect(objects.length).toEqual(1);
+        expect(dynamicObject.polygon).toBeDefined();
+        for(var i = 0; i < coordinates.length; i++){
+            expect(dynamicObject.vertexPositions._value[i]).toEqual(coordinates[i]);
+        }
     });
 
     it('handles LineStyle', function() {
@@ -326,16 +338,17 @@ defineSuite(['DynamicScene/KmlDataSource',
     });
 
     it('handles PolyStyle', function() {
+        var color = new Color(1, 0, 0, 0);
         var polyKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
             <Style id="testStyle">\
-            <PolyStyle>\
-            <color>000000ff</color>\
-            <colorMode>normal</colorMode>\
-            <fill>1</fill>\
-            <outline>1</outline>\
-            </PolyStyle>\
+                <PolyStyle>\
+                    <color>000000ff</color>\
+                    <colorMode>normal</colorMode>\
+                    <fill>1</fill>\
+                    <outline>1</outline>\
+                </PolyStyle>\
             </Style>\
             <Placemark>\
             <styleUrl>#testStyle</styleUrl>\
@@ -347,7 +360,11 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(polyKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var polygon = objects[0].polygon;
+        var time = new JulianDate();
+        var material = polygon.material.getValue(time);
         expect(objects.length).toEqual(1);
+        expect(material).toBeDefined();
     });
 
     it('handles Color in normal mode', function() {

@@ -322,7 +322,7 @@ define(['../Core/createGuid',
                 dynamicObject.polygon.material.processCzmlIntervals({
                     solidColor : {
                         color : {
-                            rgba : [polygonColor.red, polygonColor.green, polygonColor.blue, polygonColor.alpha]
+                            rgbaf : [polygonColor.red, polygonColor.green, polygonColor.blue, polygonColor.alpha]
                         }
                     }
                 }, undefined, undefined);
