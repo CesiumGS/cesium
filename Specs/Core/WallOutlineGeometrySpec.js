@@ -42,21 +42,21 @@ defineSuite([
 
     it('throws with less than 2 positions', function() {
         expect(function() {
-            return new WallOutlineGeometry({
+            return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
                 positions : ellipsoid.cartographicArrayToCartesianArray([Cartographic.fromDegrees(49.0, 18.0, 1000.0)])
-            });
+            }));
         }).toThrow();
     });
 
     it('throws with less than 2 unique positions', function() {
         expect(function() {
-            return new WallOutlineGeometry({
+            return WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
                 positions : ellipsoid.cartographicArrayToCartesianArray([
                     Cartographic.fromDegrees(49.0, 18.0, 1000.0),
                     Cartographic.fromDegrees(49.0, 18.0, 5000.0),
                     Cartographic.fromDegrees(49.0, 18.0, 1000.0)
                 ])
-            });
+            }));
         }).toThrow();
     });
 
@@ -66,10 +66,10 @@ defineSuite([
             Cartographic.fromDegrees(50.0, 18.0, 1000.0)
         ];
 
-        var w = new WallOutlineGeometry({
+        var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
             granularity : Math.PI
-        });
+        }));
 
         var positions = w.attributes.position.values;
         expect(positions.length).toEqual(2 * 2 * 3);
@@ -88,12 +88,12 @@ defineSuite([
             Cartographic.fromDegrees(50.0, 18.0, 1000.0)
         ];
 
-        var w = new WallOutlineGeometry({
+        var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
             minimumHeights : [1000.0, 2000.0],
             maximumHeights : [3000.0, 4000.0],
             granularity : Math.PI
-        });
+        }));
 
         var positions = w.attributes.position.values;
         expect(positions.length).toEqual(2 * 2 * 3);
@@ -122,9 +122,9 @@ defineSuite([
             Cartographic.fromDegrees(51.0, 18.0, 1000.0),
             Cartographic.fromDegrees(51.0, 18.0, 1000.0)
         ];
-        var w = new WallOutlineGeometry({
+        var w = WallOutlineGeometry.createGeometry(new WallOutlineGeometry({
             positions    : ellipsoid.cartographicArrayToCartesianArray(coords)
-        });
+        }));
 
         var positions = w.attributes.position.values;
         expect(positions.length).toEqual(3 * 2 * 3);
@@ -152,11 +152,11 @@ defineSuite([
         var min = 1000.0;
         var max = 2000.0;
 
-        var w = WallOutlineGeometry.fromConstantHeights({
+        var w = WallOutlineGeometry.createGeometry(WallOutlineGeometry.fromConstantHeights({
             positions    : ellipsoid.cartographicArrayToCartesianArray(coords),
             minimumHeight : min,
             maximumHeight : max
-        });
+        }));
 
         var positions = w.attributes.position.values;
         expect(positions.length).toEqual(2 * 2 * 3);

@@ -78,25 +78,25 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var m = new CylinderOutlineGeometry({
+        var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
             length: 1,
             topRadius: 1,
             bottomRadius: 1,
             slices: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 2);
         expect(m.indices.length).toEqual(9 * 2);
     });
 
     it('computes positions with no lines along the length', function() {
-        var m = new CylinderOutlineGeometry({
+        var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
             length: 1,
             topRadius: 1,
             bottomRadius: 1,
             slices: 3,
             numberOfVerticalLines: 0
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 2);
         expect(m.indices.length).toEqual(6 * 2);

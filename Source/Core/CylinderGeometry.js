@@ -11,6 +11,7 @@ define([
         './IndexDatatype',
         './PrimitiveType',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './VertexFormat'
@@ -26,6 +27,7 @@ define([
         IndexDatatype,
         PrimitiveType,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         VertexFormat) {
@@ -39,121 +41,153 @@ define([
 
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cylinder.
+     * A description of a cylinder.
      *
      * @alias CylinderGeometry
      * @constructor
      *
-     * @param {Number} options.length The length of the cylinder
-     * @param {Number} options.topRadius The radius of the top of the cylinder
-     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder
-     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder
+     * @param {Number} options.length The length of the cylinder.
+     * @param {Number} options.topRadius The radius of the top of the cylinder.
+     * @param {Number} options.bottomRadius The radius of the bottom of the cylinder.
+     * @param {Number} [options.slices = 128] The number of edges around perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
-     * @exception {DeveloperError} options.length must be greater than 0
-     * @exception {DeveloperError} options.topRadius must be greater than 0
-     * @exception {DeveloperError} options.bottomRadius must be greater than 0
-     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0
-     * @exception {DeveloperError} options.slices must be greater that 3
+     * @exception {DeveloperError} options.length must be greater than 0.
+     * @exception {DeveloperError} options.topRadius must be greater than 0.
+     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
+     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
+     * @exception {DeveloperError} options.slices must be greater that 3.
+     *
+     * @see CylinderGeometry#createGeometry
      *
      * @example
      * // create cylinder geometry
-     * var cylinder = new Cesium.CylinderGeometry({
+     * var cylinder = new CylinderGeometry({
      *     length: 200000,
      *     topRadius: 80000,
      *     bottomRadius: 200000,
      * });
-     *
+     * var geometry = CylinderGeometry.createGeometry(cylinder);
      */
     var CylinderGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var length = options.length;
-        if (!defined(length) || length <= 0) {
-            throw new DeveloperError('options.length must be greater than 0');
-        }
         var topRadius = options.topRadius;
-        if (!defined(topRadius) || topRadius < 0) {
-            throw new DeveloperError('options.topRadius must be greater than 0');
-        }
         var bottomRadius = options.bottomRadius;
-        if (!defined(bottomRadius) || bottomRadius < 0) {
-            throw new DeveloperError('options.bottomRadius must be greater than 0');
-        }
-        if (bottomRadius === 0 && topRadius === 0) {
-            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0');
-        }
+        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         var slices = defaultValue(options.slices, 128);
-        if (slices < 3) {
-            throw new DeveloperError('options.slices must be greater that 3');
+
+        if (!defined(length) || length <= 0) {
+            throw new DeveloperError('options.length must be greater than 0.');
         }
 
-        var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
+        if (!defined(topRadius) || topRadius < 0) {
+            throw new DeveloperError('options.topRadius must be greater than 0.');
+        }
+
+        if (!defined(bottomRadius) || bottomRadius < 0) {
+            throw new DeveloperError('options.bottomRadius must be greater than 0.');
+        }
+
+        if (bottomRadius === 0 && topRadius === 0) {
+            throw new DeveloperError('bottomRadius and topRadius cannot both equal 0.');
+        }
+
+        if (slices < 3) {
+            throw new DeveloperError('options.slices must be greater that 3.');
+        }
+
+        this._length = length;
+        this._topRadius = topRadius;
+        this._bottomRadius = bottomRadius;
+        this._vertexFormat = vertexFormat;
+        this._slices = slices;
+        this._workerName = 'createCylinderGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of a cylinder, including its vertices, indices, and a bounding sphere.
+     * @memberof CylinderGeometry
+     *
+     * @param {CylinderGeometry} cylinderGeometry A description of the cylinder.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    CylinderGeometry.createGeometry = function(cylinderGeometry) {
+        var length = cylinderGeometry._length;
+        var topRadius = cylinderGeometry._topRadius;
+        var bottomRadius = cylinderGeometry._bottomRadius;
+        var vertexFormat = cylinderGeometry._vertexFormat;
+        var slices = cylinderGeometry._slices;
 
         var twoSlices = slices + slices;
         var threeSlices = slices + twoSlices;
         var numVertices = twoSlices + twoSlices;
+
+        var positions = CylinderGeometryLibrary.computePositions(length, topRadius, bottomRadius, slices, true);
 
         var st = (vertexFormat.st) ? new Float32Array(numVertices * 2) : undefined;
         var normals = (vertexFormat.normal) ? new Float32Array(numVertices * 3) : undefined;
         var tangents = (vertexFormat.tangent) ? new Float32Array(numVertices * 3) : undefined;
         var binormals = (vertexFormat.binormal) ? new Float32Array(numVertices * 3) : undefined;
 
-        var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
-        var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
         var i;
-        var normalIndex = 0;
-        var tangentIndex = 0;
-        var binormalIndex = 0;
-
-        var normal = normalScratch;
-        normal.z = 0;
-        var tangent = tangentScratch;
-        var binormal = binormalScratch;
-        var positions = CylinderGeometryLibrary.computePositions(options, slices, true);
-        for (i = 0; i < slices; i++) {
-            var angle = i / slices * CesiumMath.TWO_PI;
-            var x = Math.cos(angle);
-            var y = Math.sin(angle);
-            if (computeNormal) {
-                normal.x = x;
-                normal.y = y;
-
-                if (computeTangent) {
-                    tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
-                }
-
-                if (vertexFormat.normal) {
-                    normals[normalIndex++] = x;
-                    normals[normalIndex++] = y;
-                    normals[normalIndex++] = 0;
-                    normals[normalIndex++] = x;
-                    normals[normalIndex++] = y;
-                    normals[normalIndex++] = 0;
-                }
-
-                if (vertexFormat.tangent) {
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                    tangents[tangentIndex++] = tangent.x;
-                    tangents[tangentIndex++] = tangent.y;
-                    tangents[tangentIndex++] = tangent.z;
-                }
-
-                if (vertexFormat.binormal) {
-                    binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                    binormals[binormalIndex++] = binormal.x;
-                    binormals[binormalIndex++] = binormal.y;
-                    binormals[binormalIndex++] = binormal.z;
-                }
-            }
-        }
+        var computeNormal = (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal);
 
         if (computeNormal) {
+            var computeTangent = (vertexFormat.tangent || vertexFormat.binormal);
+
+            var normalIndex = 0;
+            var tangentIndex = 0;
+            var binormalIndex = 0;
+
+            var normal = normalScratch;
+            normal.z = 0;
+            var tangent = tangentScratch;
+            var binormal = binormalScratch;
+
+            for (i = 0; i < slices; i++) {
+                var angle = i / slices * CesiumMath.TWO_PI;
+                var x = Math.cos(angle);
+                var y = Math.sin(angle);
+                if (computeNormal) {
+                    normal.x = x;
+                    normal.y = y;
+
+                    if (computeTangent) {
+                        tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                    }
+
+                    if (vertexFormat.normal) {
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
+                    }
+
+                    if (vertexFormat.tangent) {
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                        tangents[tangentIndex++] = tangent.x;
+                        tangents[tangentIndex++] = tangent.y;
+                        tangents[tangentIndex++] = tangent.z;
+                    }
+
+                    if (vertexFormat.binormal) {
+                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        binormals[binormalIndex++] = binormal.x;
+                        binormals[binormalIndex++] = binormal.y;
+                        binormals[binormalIndex++] = binormal.z;
+                        binormals[binormalIndex++] = binormal.x;
+                        binormals[binormalIndex++] = binormal.y;
+                        binormals[binormalIndex++] = binormal.z;
+                    }
+                }
+            }
+
             for (i = 0; i < slices; i++) {
                 if (vertexFormat.normal) {
                     normals[normalIndex++] = 0;
@@ -282,36 +316,12 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, radiusScratch.magnitude());
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = boundingSphere;
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : boundingSphere
+        });
     };
 
     return CylinderGeometry;

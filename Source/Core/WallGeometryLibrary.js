@@ -21,6 +21,9 @@ define([
         WindingOrder) {
     "use strict";
 
+    /**
+     * private
+     */
     var WallGeometryLibrary = {};
 
     function subdivideHeights(p0, p1, h0, h1, granularity) {
@@ -102,7 +105,6 @@ define([
     }
 
     /**
-     * Returns three sets of positions: the positions at the ellipsoid surface, at the maximum height and at the minimum height.
      * @private
      */
     WallGeometryLibrary.computePositions = function(ellipsoid, wallPositions, maximumHeights, minimumHeights, granularity, duplicateCorners) {

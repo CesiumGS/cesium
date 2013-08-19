@@ -10,6 +10,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './GeographicProjection',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './Math',
@@ -26,6 +27,7 @@ define([
         DeveloperError,
         Ellipsoid,
         GeographicProjection,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes,
         CesiumMath,
@@ -258,7 +260,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents geometry for the outline of a a cartographic extent on an ellipsoid centered at the origin.
+     * A description of the outline of a a cartographic extent on an ellipsoid centered at the origin.
      *
      * @alias ExtentOutlineGeometry
      * @constructor
@@ -268,10 +270,7 @@ define([
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0.0] The height from the surface of the ellipsoid.
      * @param {Number} [options.rotation=0.0] The rotation of the extent, in radians. A positive rotation is counter-clockwise.
-     * @param {Object} [options.extrudedOptions] Extruded options
-     * @param {Number} [options.extrudedOptions.height] Height of extruded surface.
-     * @param {Boolean} [options.extrudedOptions.closeTop=true] <code>true</code> to render top of the extruded extent; <code>false</code> otherwise.
-     * @param {Boolean} [options.extrudedOptions.closeBottom=true] <code>true</code> to render bottom of the extruded extent; <code>false</code> otherwise.
+     * @param {Number} [options.extrudedHeight] Height of extruded surface.
      *
      * @exception {DeveloperError} <code>options.extent</code> is required and must have north, south, east and west attributes.
      * @exception {DeveloperError} <code>options.extent.north</code> must be in the interval [<code>-Pi/2</code>, <code>Pi/2</code>].
@@ -280,7 +279,8 @@ define([
      * @exception {DeveloperError} <code>options.extent.west</code> must be in the interval [<code>-Pi</code>, <code>Pi</code>].
      * @exception {DeveloperError} <code>options.extent.north</code> must be greater than <code>extent.south</code>.
      * @exception {DeveloperError} <code>options.extent.east</code> must be greater than <code>extent.west</code>.
-     * @exception {DeveloperError} Rotated extent is invalid.
+     *
+     * @see ExtentOutlineGeometry#createGeometry
      *
      * @example
      * var extent = new ExtentOutlineGeometry({
@@ -288,28 +288,55 @@ define([
      *   extent : Extent.fromDegrees(-80.0, 39.0, -74.0, 42.0),
      *   height : 10000.0
      * });
+     * var geometry = ExtentOutlineGeometry.createGeometry(extent);
      */
     var ExtentOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var extent = options.extent;
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var surfaceHeight = defaultValue(options.height, 0.0);
+        var rotation = options.rotation;
+
         if (!defined(extent)) {
             throw new DeveloperError('extent is required.');
         }
 
         extent.validate();
 
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        this._extent = extent;
+        this._granularity = granularity;
+        this._ellipsoid = ellipsoid;
+        this._surfaceHeight = surfaceHeight;
+        this._rotation = rotation;
+        this._extrudedHeight = options.extrudedHeight;
+        this._workerName = 'createExtentOutlineGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of an outline of an extent, including its vertices, indices, and a bounding sphere.
+     * @memberof ExtentOutlineGeometry
+     *
+     * @param {ExtentOutlineGeometry} extentGeometry A description of the extent outline.
+     * @returns {Geometry} The computed vertices and indices.
+     *
+     * @exception {DeveloperError} Rotated extent is invalid.
+     */
+    ExtentOutlineGeometry.createGeometry = function(extentGeometry) {
+        var extent = extentGeometry._extent;
+        var granularity = extentGeometry._granularity;
+        var ellipsoid = extentGeometry._ellipsoid;
+        var surfaceHeight = extentGeometry._surfaceHeight;
+        var rotation = extentGeometry._rotation;
+        var extrudedHeight = extentGeometry._extrudedHeight;
+
         var width = Math.ceil((extent.east - extent.west) / granularity) + 1;
         var height = Math.ceil((extent.north - extent.south) / granularity) + 1;
         var granularityX = (extent.east - extent.west) / (width - 1);
         var granularityY = (extent.north - extent.south) / (height - 1);
 
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         var radiiSquared = ellipsoid.getRadiiSquared();
-
-        var surfaceHeight = defaultValue(options.height, 0.0);
-        var rotation = options.rotation;
 
         extent.getNorthwest(nwCartographic);
         extent.getCenter(centerCartographic);
@@ -375,47 +402,27 @@ define([
             size : size
         };
 
-        var extentGeometry;
-        if (defined(options.extrudedHeight)) {
-            extentGeometry = constructExtrudedExtent(params, options.extrudedHeight);
+        var geometry;
+        if (defined(extrudedHeight)) {
+            geometry = constructExtrudedExtent(params, extrudedHeight);
         } else {
-            extentGeometry = constructExtent(params);
+            geometry = constructExtent(params);
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = new GeometryAttributes({
+        var attributes = new GeometryAttributes({
             position: new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
-                values : extentGeometry.positions
+                values : geometry.positions
             })
         });
 
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = extentGeometry.indices;
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = extentGeometry.boundingSphere;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
+        return new Geometry({
+            attributes : attributes,
+            indices : geometry.indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : geometry.boundingSphere
+        });
     };
 
     return ExtentOutlineGeometry;

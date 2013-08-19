@@ -337,7 +337,7 @@ define([
         var frustumCull;
         var occludeePoint;
         var occluded;
-        var datatype;
+        var typedArray;
         var geometry;
         var rect;
         var positions;
@@ -385,8 +385,8 @@ define([
                         bufferUsage : BufferUsage.STREAM_DRAW
                     });
                 } else {
-                    datatype = ComponentDatatype.FLOAT;
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
+                    typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, positions);
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
                 }
             }
         }
@@ -433,8 +433,8 @@ define([
                          bufferUsage : BufferUsage.STREAM_DRAW
                      });
                  } else {
-                     datatype = ComponentDatatype.FLOAT;
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
+                     typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, positions);
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
                  }
             }
         }
@@ -567,8 +567,8 @@ define([
                 bufferUsage : BufferUsage.DYNAMIC_DRAW
             });
         } else {
-            var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
+            var typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, depthQuad);
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
         }
 
         var shaderCache = context.getShaderCache();

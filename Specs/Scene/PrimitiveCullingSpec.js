@@ -306,6 +306,7 @@ defineSuite([
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees( degree,  degree, 0.0)),
                               ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-degree,  degree, 0.0))
                              ]);
+        polygon.asynchronous = false;
         return polygon;
     }
 

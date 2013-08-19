@@ -31,11 +31,11 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var m = new EllipsoidOutlineGeometry({
+        var m = EllipsoidOutlineGeometry.createGeometry(new EllipsoidOutlineGeometry({
             stackPartitions : 3,
             slicePartitions: 3,
             subdivisions: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(14 * 3);
         expect(m.indices.length).toEqual(15 * 2);
