@@ -133,6 +133,10 @@ define(['../Core/createGuid',
         return positions;
     }
 
+    function equalCoordinateTuples(tuple1, tuple2){
+        return tuple1[0] === tuple2[0] && tuple1[1] === tuple2[1] && tuple1[2] === tuple2[2];
+    }
+
     function getId(node){
         var id;
         var idNode = node.attributes.id;
@@ -233,29 +237,27 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-        if (coordinates[0] !== coordinates[coordinates.length - 1]){
+        if (!equalCoordinateTuples(coordinates[0], coordinates[el.length -1])){
             throw new DeveloperError("The first and last coordinate tuples must be the same.");
         }
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
     }
 
     function processPolygon(dataSource, dynamicObject, kml, node){
-        var el = node.getElementsByTagName('coordinates');
-        var coordinates = [];
+        var el = node.getElementsByTagName('outerBoundaryIs');
         for (var j = 0; j < el.length; j++) {
-            coordinates = coordinates.concat(readCoordinates(el[j]));
+            processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
-
-//        var polygon = new DynamicPolygon();
-//        polygon.material = new DynamicMaterialProperty();
-//        polygonMaterial.processCzmlIntervals({
-//            solidColor : {
-//                color : {
-//                    rgba : [255, 255, 255, 255]
-//                }
-//            }
-//        }, undefined, undefined);
-//        dynamicObject.polygon = polygon;
+      var polygon = new DynamicPolygon();
+      polygon.material = new DynamicMaterialProperty();
+      polygon.material.processCzmlIntervals({
+      solidColor : {
+      color : {
+      rgba : [255, 255, 255, 255]
+      }
+      }
+      }, undefined, undefined);
+      dynamicObject.polygon = polygon;
     }
 
     //Object that holds all supported Geometry
@@ -314,21 +316,6 @@ define(['../Core/createGuid',
                 dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
                 //Map style to polygon properties
                 //TODO Fill, Outline
-//                var polygonMaterial = new DynamicMaterialProperty();
-//                var polyline = new DynamicPolyline();
-//                polyline.color = new ConstantProperty(Color.WHITE);
-//                polyline.width = new ConstantProperty(1);
-//                polyline.outlineColor = new ConstantProperty(Color.BLACK);
-//                polyline.outlineWidth = new ConstantProperty(0);
-//                dinamicObject.polyline = polyline;
-//                dynamicObject.polygon.material = polygonMaterial;
-//                polygonMaterial.processCzmlIntervals({
-//                    solidColor : {
-//                        color : {
-//                            rgba : [255, 255, 0, 25]
-//                        }
-//                    }
-//                }, undefined, undefined);
             }
         }
     }
