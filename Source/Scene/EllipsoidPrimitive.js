@@ -284,7 +284,6 @@ define([
             // Recompile shader when material changes
             if (materialChanged) {
                 var colorFS =
-                    '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
                     EllipsoidFS;
@@ -315,7 +314,6 @@ define([
             // Recompile shader when material changes
             if (materialChanged || !defined(this._pickSP)) {
                 var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
                     this.material.shaderSource +
                     '#line 0\n' +
                     EllipsoidFS, 'uniform');

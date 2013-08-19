@@ -1038,7 +1038,6 @@ define([
         }
 
         var fsSource =
-            '#line 0\n' +
             this.material.shaderSource +
             '#line 0\n' +
             PolylineFS;

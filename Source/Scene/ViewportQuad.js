@@ -202,7 +202,6 @@ define([
                 this._material = this.material;
 
                 var fsSource =
-                    '#line 0\n' +
                     this._material.shaderSource +
                     '#line 0\n' +
                     ViewportQuadFS;

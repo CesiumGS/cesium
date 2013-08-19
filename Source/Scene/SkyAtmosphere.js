@@ -153,21 +153,17 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var vs;
-            var fs;
             var shaderCache = context.getShaderCache();
-
-            vs = '#define SKY_FROM_SPACE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-            fs = '#line 0\n' +
-                 SkyAtmosphereFS;
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, fs);
+            var vs =
+                '#define SKY_FROM_SPACE\n' +
+                '#line 0\n' +
+                SkyAtmosphereVS;
+            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
 
             vs = '#define SKY_FROM_ATMOSPHERE\n' +
                  '#line 0\n' +
                  SkyAtmosphereVS;
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, fs);
+            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
         }
 
         var cameraPosition = frameState.camera.getPositionWC();

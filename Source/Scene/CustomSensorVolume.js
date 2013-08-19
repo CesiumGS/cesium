@@ -448,7 +448,6 @@ define([
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
                 var fsSource =
-                    '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
                     this._material.shaderSource +
@@ -480,7 +479,6 @@ define([
             // Recompile shader when material changes
             if (materialChanged || !defined(pickCommand.shaderProgram)) {
                 var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
                     ShadersSensorVolume +
                     '#line 0\n' +
                     this._material.shaderSource +

@@ -575,11 +575,10 @@ define([
 
         if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
-                    CentralBodyVSDepth,
-                    '#line 0\n' +
-                    CentralBodyFSDepth, {
-                        position : 0
-                    });
+                CentralBodyVSDepth,
+                CentralBodyFSDepth, {
+                    position : 0
+                });
         }
 
         if (this._surface._terrainProvider.hasWaterMask() &&

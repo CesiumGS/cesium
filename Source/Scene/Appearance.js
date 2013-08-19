@@ -82,8 +82,7 @@ define([
         var faceForward = this.faceForward ? '#define FACE_FORWARD 1\n#line 0 \n' : '#line 0 \n';
 
         if (defined(this.material)) {
-            return '#line 0\n' +
-                this.material.shaderSource +
+            return this.material.shaderSource +
                 flat +
                 faceForward +
                 this.fragmentShaderSource;
