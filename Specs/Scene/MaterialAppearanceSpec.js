@@ -52,7 +52,8 @@ defineSuite([
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
-            })
+            }),
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent);

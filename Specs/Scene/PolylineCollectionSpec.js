@@ -798,62 +798,6 @@ defineSuite([
         expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
     });
 
-    it('renders more than 64K vertices of different polylines of different widths', function() {
-        var positions = [];
-        for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES - 2; ++i) {
-            positions.push({
-                x : -1,
-                y : -1,
-                z : 0
-            });
-            positions.push({
-                x : -1,
-                y : 1,
-                z : 0
-            });
-        }
-
-        polylines.add({
-            positions : positions
-        });
-
-        polylines.add({
-            positions:positions,
-            width:2
-        });
-        positions = [];
-
-        positions.push({
-            x : 0,
-            y : -1,
-            z : 0
-        });
-        positions.push({
-            x : 0,
-            y : 1,
-            z : 0
-        });
-        positions.push({
-            x : 0,
-            y : -1,
-            z : 0
-        });
-        positions.push({
-            x : 0,
-            y : 1,
-            z : 0
-        });
-        polylines.add({
-           positions:positions,
-           width:5
-        });
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        render(context, frameState, polylines);
-        expect(context.readPixels()).toNotEqual([0, 0, 0, 0]);
-    });
-
     it('does not render', function() {
         var p = polylines.add({
             positions : [{

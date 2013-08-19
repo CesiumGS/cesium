@@ -48,6 +48,7 @@ defineSuite([
 
     beforeEach(function() {
         polygon = new Polygon();
+        polygon.asynchronous = false;
 
         us = context.getUniformState();
         us.update(createFrameState(createCamera(context, new Cartesian3(1.02, 0.0, 0.0), Cartesian3.ZERO, Cartesian3.UNIT_Z)));
@@ -70,6 +71,7 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(50.0, 50.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-50.0, 50.0, 0.0))
         ]);
+        p.asynchronous = false;
 
         return p;
     }
@@ -220,6 +222,7 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = Ellipsoid.UNIT_SPHERE;
         polygon.granularity = CesiumMath.toRadians(20.0);
+        polygon.asynchronous = false;
         expect(render(context, frameState, polygon)).toEqual(0);
     });
 
@@ -233,6 +236,7 @@ defineSuite([
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
             ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
         ]);
+        polygon.asynchronous = false;
 
         expect(function() {
             render(context, frameState, polygon);
@@ -259,6 +263,7 @@ defineSuite([
         polygon = new Polygon();
         polygon.ellipsoid = ellipsoid;
         polygon.configureFromPolygonHierarchy(hierarchy);
+        polygon.asynchronous = false;
 
         expect(function () {
             render(context, frameState, polygon);
@@ -310,6 +315,7 @@ defineSuite([
         polygon.ellipsoid = ellipsoid;
         polygon.granularity = CesiumMath.toRadians(20.0);
         polygon.setPositions(ellipsoid.cartographicArrayToCartesianArray(positions));
+        polygon.asynchronous = false;
 
         var mode = frameState.mode;
         frameState.mode = testMode;
