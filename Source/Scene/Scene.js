@@ -565,7 +565,7 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
     }
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
@@ -582,7 +582,7 @@ define([
         }
 
         var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
+        Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
         if (sunVisible) {
@@ -688,7 +688,8 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
-        executeCommands(this, passState);
+
+        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
     };
@@ -771,6 +772,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
      * DOC_TBA
@@ -798,7 +800,7 @@ define([
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
+        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         return this._pickFramebuffer.end(scratchRectangle);
     };
 
