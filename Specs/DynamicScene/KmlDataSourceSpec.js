@@ -305,6 +305,45 @@ defineSuite(['DynamicScene/KmlDataSource',
         }
     });
 
+    it('handles MultiGeometry', function() {
+        var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
+        var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
+        var position2 = new Cartographic(CesiumMath.toRadians(4), CesiumMath.toRadians(5), 0);
+        var cartesianPosition2 = Ellipsoid.WGS84.cartographicToCartesian(position2);
+        var position3 = new Cartographic(CesiumMath.toRadians(6), CesiumMath.toRadians(7), 0);
+        var cartesianPosition3 = Ellipsoid.WGS84.cartographicToCartesian(position3);
+        var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
+        var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
+        var multiKml = '<Placemark>\
+            <name>SF Marina Harbor Master</name>\
+            <visibility>0</visibility>\
+            <MultiGeometry>\
+              <LineString>\
+                <coordinates>\
+                  1,2,0\
+                  4,5,0\
+                </coordinates>\
+              </LineString>\
+              <LineString>\
+                <coordinates>\
+                  6,7,0\
+                  8,9,0\
+                </coordinates>\
+              </LineString>\
+            </MultiGeometry>\
+          </Placemark>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(2);
+        expect(objects[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
+        expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
+        expect(objects[1].vertexPositions._value[0]).toEqual(cartesianPosition3);
+        expect(objects[1].vertexPositions._value[1]).toEqual(cartesianPosition4);
+    });
+
     it('handles LineStyle', function() {
         var width = new ConstantProperty(4);
         var outerWidth = new ConstantProperty(0);

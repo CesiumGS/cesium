@@ -1,5 +1,6 @@
 /*global define*/
 define(['../Core/createGuid',
+        '../Core/defined',
         '../Core/Cartographic',
         '../Core/Color',
         '../Core/ClockRange',
@@ -25,6 +26,7 @@ define(['../Core/createGuid',
         '../ThirdParty/Uri'
     ], function(
         createGuid,
+        defined,
         Cartographic,
         Color,
         ClockRange,
@@ -203,7 +205,7 @@ define(['../Core/createGuid',
                 if (typeof geometryHandler === 'undefined') {
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
-                geometryHandler(dataSource, dynamicObject, placemark, node);
+                geometryHandler(dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
             }
         }
 
@@ -261,13 +263,38 @@ define(['../Core/createGuid',
         dynamicObject.polygon = polygon;
     }
 
+    function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
+        var geometryObject = dynamicObject;
+        // I want to iterate over every placemark
+        for(var i = 0, len = node.childNodes.length; i < len; i++){
+            var innerNode = node.childNodes.item(i);
+            //Checking if the node holds a supported Geometry type
+            if(geometryTypes.hasOwnProperty(innerNode.nodeName)){
+                kml.geometry = innerNode.nodeName;
+                var geometryType = kml.geometry;
+                var geometryHandler = geometryTypes[geometryType];
+                if (typeof geometryHandler === 'undefined') {
+                    throw new DeveloperError('Unknown geometry type: ' + geometryType);
+                }
+                //only create a new dynamicObject if the placemark's object was used already
+                if (!defined(geometryObject)){
+                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
+                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
+                }
+                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
+                geometryObject = undefined;
+            }
+        }
+    }
+
     //Object that holds all supported Geometry
     var geometryTypes = {
             Point : processPoint,
             LineString : processLineString,
             LinearRing : processLinearRing,
-            Polygon: processPolygon
-            //TODO MultiGeometry, Model, gxTrack, gxMultitrack
+            Polygon: processPolygon,
+            MultiGeometry: processMultiGeometry
+            //TODO Model, gxTrack, gxMultitrack
     };
 
     function processStyle(styleNode, dynamicObject) {
