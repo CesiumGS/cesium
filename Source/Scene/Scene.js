@@ -518,11 +518,11 @@ define([
             // Assumes bounding volume is a bounding sphere.
 
             if (!defined(scene._debugSphere)) {
-                var geometry = new EllipsoidGeometry({
+                var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                     ellipsoid : Ellipsoid.UNIT_SPHERE,
                     numberOfPartitions : 20,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                });
+                }));
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : GeometryPipeline.toWireframe(geometry),
@@ -533,7 +533,8 @@ define([
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
                         translucent : false
-                    })
+                    }),
+                    asynchronous : false
                 });
             }
 

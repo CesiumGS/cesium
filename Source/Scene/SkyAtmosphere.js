@@ -134,10 +134,11 @@ define([
         var command = this._command;
 
         if (!defined(command.vertexArray)) {
-            var geometry = new EllipsoidGeometry({
+            var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : this._ellipsoid.getRadii().multiplyByScalar(1.025),
-                numberOfPartitions : 60
-            });
+                slicePartitions : 256,
+                stackPartitions : 256
+            }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
                 attributeIndices : GeometryPipeline.createAttributeIndices(geometry),

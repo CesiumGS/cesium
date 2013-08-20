@@ -28,9 +28,9 @@ defineSuite([
 
     it('constructor computes all vertex attributes', function() {
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
-        var line = new SimplePolylineGeometry({
+        var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions
-        });
+        }));
 
         expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);
         expect(line.indices).toEqual([0, 1, 1, 2]);
