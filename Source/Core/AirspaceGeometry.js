@@ -230,25 +230,24 @@ define([
                 leftPos = Cartesian3.fromArray(firstEndPositions, (halfLength - 1 - i) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(firstEndPositions, (halfLength + i) * 3, rightPos);
 
-                finalPositions = addAttribute(finalPositions, leftPos, front);
-                finalPositions = addAttribute(finalPositions, rightPos, undefined, back);
+                finalPositions = addAttribute(finalPositions, rightPos, front);
+                finalPositions = addAttribute(finalPositions, leftPos, undefined, back);
 
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
-                LR = front/3;
-                LL = LR + 1;
-                UR = (back-2)/3;
-                UL = UR - 1;
-                indices.push(UL, LL, UR, UR, LL, LR);
-
                 front += 3;
                 back -= 3;
+                LR = front/3;
+                LL = LR - 1;
+                UR = (back-2)/3;
+                UL = UR + 1;
+                indices.push(UL, LL, UR, UR, LL, LR);
             }
         }
 
-        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front); //add first two positions
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), undefined, back); //add first two positions
         positionIndex += 3;
-        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), undefined, back);
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front);
         positionIndex += 3;
 
         normal = Cartesian3.fromArray(computedNormals, compIndex, normal);
@@ -261,15 +260,15 @@ define([
         length = corners.length;
         for (i = 0; i < length; i++) {
             var j;
-            UR = front/3;
-            UL = UR - 1;
-            LR = (back-2)/3;
-            LL = LR + 1;
+            LR = front/3;
+            LL = LR - 1;
+            UR = (back-2)/3;
+            UL = UR + 1;
             indices.push(UL, LL, UR, UR, LL, LR);
 
-            finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front);
-            positionIndex += 3;
             finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), undefined, back);
+            positionIndex += 3;
+            finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front);
             positionIndex += 3;
             normal = Cartesian3.fromArray(computedNormals, compIndex, normal);
             left = Cartesian3.fromArray(computedLefts, compIndex, left);
@@ -278,54 +277,54 @@ define([
             if (defined(corner)) {
                 var l = corner.leftPositions;
                 var r = corner.rightPositions;
-                var p;
+                var pivot;
                 var start;
                 var pos;
                 var before = scratchCartesian3;
                 var after = scratchCartesian4;
                 if (defined(l)) {
-                    attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
-                    front+=3;
-                    p = LR;
+                    attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
+                    back -= 3;
+
+                    pivot = LR;
                     start = UR;
                     for (j = 0; j < l.length/3; j++) {
                         pos = Cartesian3.fromArray(l, j*3, scratchCartesian6);
-                        indices.push(p, start + j + 1, start + j);
-                        finalPositions = addAttribute(finalPositions, pos, front);
-                        before = Cartesian3.fromArray(finalPositions, (start + j + 1)*3, before);
-                        after = Cartesian3.fromArray(finalPositions, p*3, after);
-                        left = before.subtract(after, left).normalize(left);
-                        attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
-                        front+=3;
-                    }
-
-                    pos = Cartesian3.fromArray(finalPositions, p*3, scratchCartesian6);
-                    before = Cartesian3.fromArray(finalPositions, (start)*3, before).subtract(pos);
-                    after = Cartesian3.fromArray(finalPositions, (start + j)*3, after).subtract(pos);
-                    left = before.add(after, left).normalize(left);
-                    attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
-                    back -= 3;
-                } else {
-                    attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
-                    back -= 3;
-                    p = UR;
-                    start = LR;
-                    for (j = 0; j < r.length/3; j++) {
-                        pos = Cartesian3.fromArray(r, j*3, scratchCartesian6);
-                        indices.push(p, start - j, start - j - 1);
+                        indices.push(pivot, start - j - 1, start - j);
                         finalPositions = addAttribute(finalPositions, pos, undefined, back);
-                        before = Cartesian3.fromArray(finalPositions, p*3, before);
-                        after = Cartesian3.fromArray(finalPositions, (start - j - 1)*3, after);
+                        before = Cartesian3.fromArray(finalPositions, (start - j - 1)*3, before);
+                        after = Cartesian3.fromArray(finalPositions, pivot*3, after);
                         left = before.subtract(after, left).normalize(left);
                         attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
                         back -= 3;
                     }
-                    pos = Cartesian3.fromArray(finalPositions, p*3, scratchCartesian6);
-                    before = Cartesian3.fromArray(finalPositions, (start - j)*3, before).subtract(pos);
+                    pos = Cartesian3.fromArray(finalPositions, pivot*3, scratchCartesian6);
+                    before = Cartesian3.fromArray(finalPositions, (start)*3, before).subtract(pos);
+                    after = Cartesian3.fromArray(finalPositions, (start - j)*3, after).subtract(pos);
+                    left = before.add(after, left).normalize(left);
+                    attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                    front += 3;
+                } else {
+                    attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                    front += 3;
+                    pivot = UR;
+                    start = LR;
+                    for (j = 0; j < r.length/3; j++) {
+                        pos = Cartesian3.fromArray(r, j*3, scratchCartesian6);
+                        indices.push(pivot, start + j + 1, start + j);
+                        finalPositions = addAttribute(finalPositions, pos, front);
+                        before = Cartesian3.fromArray(finalPositions, pivot*3, before);
+                        after = Cartesian3.fromArray(finalPositions, (start + j)*3, after);
+                        left = before.subtract(after, left).normalize(left);
+                        attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
+                        front += 3;
+                    }
+                    pos = Cartesian3.fromArray(finalPositions, pivot*3, scratchCartesian6);
+                    before = Cartesian3.fromArray(finalPositions, (start + j)*3, before).subtract(pos);
                     after = Cartesian3.fromArray(finalPositions, start*3, after).subtract(pos);
                     left = after.add(before, left).negate(left).normalize(left);
-                    attr = addNormals(attr, normal, left, front, undefined, vertexFormat);
-                    front+=3;
+                    attr = addNormals(attr, normal, left, undefined, back, vertexFormat);
+                    back -= 3;
                 }
             } else {
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
@@ -335,15 +334,15 @@ define([
             compIndex += 3;
         }
 
-        UR = front/3;
-        UL = UR - 1;
-        LR = (back-2)/3;
-        LL = LR + 1;
+        LR = front/3;
+        LL = LR - 1;
+        UR = (back-2)/3;
+        UL = UR + 1;
         indices.push(UL, LL, UR, UR, LL, LR);
 
-        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front); //add last positions
-        positionIndex += 3;
         finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), undefined, back);
+        positionIndex += 3;
+        finalPositions = addAttribute(finalPositions, Cartesian3.fromArray(positions, positionIndex, scratchCartesian), front); //add last positions
         positionIndex += 3;
 
         normal = Cartesian3.fromArray(computedNormals, compIndex, normal);
@@ -363,14 +362,14 @@ define([
                 leftPos = Cartesian3.fromArray(lastEndPositions, i * 3, leftPos);
                 rightPos = Cartesian3.fromArray(lastEndPositions, (length - i - 1) * 3, rightPos);
 
-                finalPositions = addAttribute(finalPositions, leftPos, front);
-                finalPositions = addAttribute(finalPositions, rightPos, undefined, back);
+                finalPositions = addAttribute(finalPositions, leftPos, undefined, back);
+                finalPositions = addAttribute(finalPositions, rightPos, front);
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
-                LR = front/3 - 1;
-                LL = LR + 1;
-                UR = (back-2)/3 + 1;
-                UL = UR - 1;
+                LR = front/3;
+                LL = LR - 1;
+                UR = (back-2)/3;
+                UL = UR + 1;
                 indices.push(UL, LL, UR, UR, LL, LR);
 
                 front += 3;
@@ -396,32 +395,32 @@ define([
                 leftSt = 1 / (leftCount - endPositionLength + 1);
                 rightSt = 1 / (rightCount - endPositionLength + 1);
                 var a;
-                for (i = endPositionLength/2; i > 0 ; i--) {
-                    a = CesiumMath.PI_OVER_TWO + theta * i;
-                    st[stIndex++] = leftSt + leftSt * Math.cos(a);
-                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
-                }
-                for (i = 1; i < leftCount - endPositionLength + 1; i++) {
-                    st[stIndex++] = i*leftSt;
-                    st[stIndex++] = 1;
-                }
-                for (i = 1; i < endPositionLength/2 +1; i++) {
-                    a = CesiumMath.PI_OVER_TWO - theta * i;
-                    st[stIndex++] = (1 - leftSt) + leftSt * Math.cos(a);
-                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
-                }
                 for (i = 1; i < endPositionLength/2 + 1; i++) {
+                    a = CesiumMath.PI_OVER_TWO + (i * theta + endPositionLength/2 * theta);
+                    st[stIndex++] = rightSt + rightSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
+                }
+                for (i = 1; i < rightCount- endPositionLength + 1; i++) {
+                    st[stIndex++] = i*rightSt;
+                    st[stIndex++] = 0;
+                }
+                for (i = endPositionLength/2; i > 0; i--) {
                     a = CesiumMath.PI_OVER_TWO - (i * theta + endPositionLength/2 * theta);
                     st[stIndex++] = (1 - rightSt) + rightSt * Math.cos(a);
                     st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
                 }
-                for (i = rightCount- endPositionLength + 1; i > 1; i--) {
-                    st[stIndex++] = (i-1)*rightSt;
-                    st[stIndex++] = 0;
+                for (i = endPositionLength/2; i > 0; i--) {
+                    a = CesiumMath.PI_OVER_TWO - theta * i;
+                    st[stIndex++] = (1 - leftSt) + leftSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
                 }
-                for (i = endPositionLength/2; i > 0 ; i--) {
-                    a = CesiumMath.PI_OVER_TWO + (i * theta + endPositionLength/2 * theta);
-                    st[stIndex++] = rightSt + rightSt * Math.cos(a);
+                for (i = leftCount - endPositionLength; i > 0; i--) {
+                    st[stIndex++] = i*leftSt;
+                    st[stIndex++] = 1;
+                }
+                for (i = 1; i < endPositionLength/2 + 1; i++) {
+                    a = CesiumMath.PI_OVER_TWO + theta * i;
+                    st[stIndex++] = leftSt + leftSt * Math.cos(a);
                     st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
                 }
             } else {
@@ -431,13 +430,13 @@ define([
                 leftSt = 1 / (leftCount-1);
                 rightSt = 1 / (rightCount-1);
 
-                for (i = 0; i < leftCount; i++) {
-                    st[stIndex++] = i*leftSt;
-                    st[stIndex++] = 1;
-                }
-                for (i = rightCount; i > 0; i--) {
-                    st[stIndex++] = (i-1)*rightSt;
+                for (i = 0; i < rightCount; i++) {
+                    st[stIndex++] = i*rightSt;
                     st[stIndex++] = 0;
+                }
+                for (i = leftCount; i > 0; i--) {
+                    st[stIndex++] = (i-1)*leftSt;
+                    st[stIndex++] = 1;
                 }
             }
 
@@ -637,7 +636,7 @@ define([
 
             var topPosition = scratchCartesian1;
             var bottomPosition = scratchCartesian2;
-            var nextPosition = scratchCartesian3;
+            var previousPosition = scratchCartesian3;
             var normal = scratchCartesian4;
             var tangent = scratchCartesian5;
             var binormal = scratchCartesian6;
@@ -650,11 +649,11 @@ define([
             for (i = 0; i < threeSize; i+=3) {
                 topPosition = Cartesian3.fromArray(positions, i, topPosition);
                 bottomPosition = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
-                nextPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, nextPosition);
+                previousPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, previousPosition);
 
                 bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
-                nextPosition = nextPosition.subtract(topPosition, nextPosition);
-                normal = nextPosition.cross(bottomPosition, normal).normalize(normal);
+                previousPosition = previousPosition.subtract(topPosition, previousPosition);
+                normal = bottomPosition.cross(previousPosition, normal).normalize(normal);
 
                 if (vertexFormat.normal) {
                     x = normal.x;
