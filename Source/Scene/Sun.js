@@ -42,14 +42,6 @@ define([
      * @see Scene.sun
      */
     var Sun = function() {
-        this._command = new DrawCommand();
-
-        this._boundingVolume = new BoundingSphere();
-        this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * 30.0;
-
-        this._boundingVolume2D = new BoundingSphere();
-        this._boundingVolume2D.radius = this._boundingVolume.radius;
-
         /**
          * Determines if the sun will be shown.
          *
@@ -57,6 +49,23 @@ define([
          * @default true
          */
         this.show = true;
+
+        this._sizeMultiplier = 20.0;
+
+        this._command = new DrawCommand();
+
+        this._boundingVolume = new BoundingSphere();
+        this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
+
+        this._boundingVolume2D = new BoundingSphere();
+        this._boundingVolume2D.radius = this._boundingVolume.radius;
+
+        var that = this;
+        this._uniformMap = {
+            u_sizeMultiplier : function() {
+                return that._sizeMultiplier;
+            }
+        };
     };
 
     /**
@@ -111,6 +120,7 @@ define([
             command.renderState = context.createRenderState({
                 blending : BlendingState.ALPHA_BLEND
             });
+            command.uniformMap = this._uniformMap;
             command.boundingVolume = new BoundingSphere();
         }
 
