@@ -445,6 +445,26 @@ define([
     }
     processPacketData.position = processPositionPacketData;
 
+    function cloneIntoUniforms(material, uniforms) {
+        if (!defined(uniforms)) {
+            uniforms = {};
+        }
+        if (material instanceof DynamicColorMaterial) {
+            //uniforms.color = material.color.getValue(time, uniforms.color);
+        }
+
+        if (material instanceof DynamicGridMaterial) {
+        }
+
+        if (material instanceof DynamicImageMaterial) {
+            return material;
+        }
+
+        //TODO
+        return material;
+        //throw new RuntimeError('unknown material');
+    }
+
     function processMaterialProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
         var combinedInterval;
         var packetInterval = packetData.interval;
@@ -462,9 +482,7 @@ define([
         var propertyCreated = false;
         var property = object[propertyName];
         if (!defined(property)) {
-            property = new TimeIntervalCollectionProperty(function(value) {
-                return value;
-            });
+            property = new TimeIntervalCollectionProperty(cloneIntoUniforms);
             object[propertyName] = property;
             propertyCreated = true;
         }
@@ -484,13 +502,34 @@ define([
             thisIntervals.addInterval(existingInterval);
         }
 
-        if (!defined(existingMaterial) || !existingMaterial.isMaterial(packetData)) {
-            if (defined(packetData.solidColor)) {
+        var materialData;
+        if (defined(packetData.solidColor)) {
+            if (!(existingMaterial instanceof DynamicColorMaterial)) {
                 existingMaterial = new DynamicColorMaterial();
-                propertyCreated = processPacketData(Color, existingMaterial, 'color', packetData.solidColor.color);
-                existingInterval.data = existingMaterial;
             }
+            materialData = packetData.solidColor;
+            processPacketData(Color, existingMaterial, 'color', materialData.color);
+        } else if (defined(packetData.grid)) {
+            if (!(existingMaterial instanceof DynamicGridMaterial)) {
+                existingMaterial = new DynamicGridMaterial();
+            }
+            materialData = packetData.grid;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'rowCount', materialData.rowCount, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'columnCount', materialData.columnCount, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
+        } else if (defined(packetData.image)) {
+            if (!(existingMaterial instanceof DynamicImageMaterial)) {
+                existingMaterial = new DynamicImageMaterial();
+            }
+            materialData = packetData.image;
+            processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
         }
+        existingInterval.data = existingMaterial;
 
         return propertyCreated;
     }

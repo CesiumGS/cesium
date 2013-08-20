@@ -70,10 +70,10 @@ defineSuite([
         expect(dynamicObject.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
         expect(dynamicObject.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
         expect(dynamicObject.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(dynamicObject.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(dynamicObject.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
         expect(dynamicObject.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
     });
@@ -138,10 +138,10 @@ defineSuite([
         expect(dynamicObject.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
         expect(dynamicObject.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
         expect(dynamicObject.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(validTime).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(validTime).uniforms.color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(validTime).uniforms.color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(validTime).uniforms.color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(dynamicObject.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(dynamicObject.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
         expect(dynamicObject.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
 

@@ -1,8 +1,5 @@
 /*global define*/
-define([
-        '../Core/defined'
-    ], function(
-         defined) {
+define(function() {
     "use strict";
 
     /**
@@ -18,22 +15,6 @@ define([
          */
         this.color = undefined;
     };
-
-    /**
-     * Returns true if the provided CZML interval contains color material data.
-     * @param czmlInterval The CZML interval to check.
-     * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
-     */
-    DynamicColorMaterial.isMaterial = function(czmlInterval) {
-        return defined(czmlInterval) && defined(czmlInterval.solidColor);
-    };
-
-    /**
-     * Returns true if the provided CZML interval contains color material data.
-     * @param czmlInterval The CZML interval to check.
-     * @returns {Boolean} true if the interval contains CZML color material data, false otherwise.
-     */
-    DynamicColorMaterial.prototype.isMaterial = DynamicColorMaterial.isMaterial;
 
     return DynamicColorMaterial;
 });
