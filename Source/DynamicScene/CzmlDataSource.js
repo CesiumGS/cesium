@@ -487,7 +487,6 @@ define([
         }
         return updated;
     }
-    processPacketData.position = processPositionPacketData;
 
     function cloneIntoUniforms(material, uniforms) {
         if (!defined(uniforms)) {
@@ -593,14 +592,13 @@ define([
         }
         return updated;
     }
-    processPacketData.material = processMaterialPacketData;
 
     function DynamicObjectprocessCzmlPacketPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (!defined(positionData)) {
             return false;
         }
-        return processPacketData.position(dynamicObject, 'position', positionData, undefined, sourceUri);
+        return processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri);
     }
 
     function DynamicObjectprocessCzmlPacketViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
@@ -743,10 +741,10 @@ define([
         coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
         coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
         coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData.material(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
+        coneUpdated = processMaterialPacketData(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
+        coneUpdated = processMaterialPacketData(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
+        coneUpdated = processMaterialPacketData(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
+        coneUpdated = processMaterialPacketData(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
         return coneUpdated;
     }
 
@@ -793,7 +791,7 @@ define([
 
         ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
         ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processPacketData.material(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
+        ellipsoidUpdated = processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
         return ellipsoidUpdated;
     }
 
@@ -902,7 +900,7 @@ define([
         }
 
         polygonUpdated = processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
-        polygonUpdated = processPacketData.material(polygon, 'material', polygonData.material, interval, sourceUri);
+        polygonUpdated = processMaterialPacketData(polygon, 'material', polygonData.material, interval, sourceUri);
         return polygonUpdated;
     }
 
@@ -953,7 +951,7 @@ define([
         pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
         pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
         pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData.material(pyramid, 'material', pyramidData.material, interval, sourceUri);
+        pyramidUpdated = processMaterialPacketData(pyramid, 'material', pyramidData.material, interval, sourceUri);
 
         if (defined(pyramidData.directions)) {
             var directions = pyramid.directions;
