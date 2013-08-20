@@ -395,17 +395,19 @@ define([
         if (s1.equals(cut) || s2.equals(cut)) {
             return false;
         } else if (s1.cross(s2).z < 0) {
-            if (s1.cross(cut).z < 0 && cut.cross(s2).z < 0) {
+            if (s1.cross(cut).z <= 0 && cut.cross(s2).z <= 0) {
                 return true;
             } else {
                 return false;
+            }
+        } else if (s1.cross(s2).z > 0) {
+            if (s1.cross(cut).z >= 0 && cut.cross(s2).z >= 0) {
+                return false;
+            } else {
+                return true;
             }
         } else {
-            if (s1.cross(cut).z > 0 && cut.cross(s2).z > 0) {
-                return false;
-            } else {
-                return true;
-            }
+            return false;
         }
     }
 
@@ -420,10 +422,15 @@ define([
      * @private
      */
     function intersectsSide(a1, a2, pArray) {
-        for (var i = 0; i < pArray.length-1; i++) {
+        for (var i = 0; i < pArray.length; i++) {
             /* Two points */
             var b1 = pArray[i].position;
-            var b2 = pArray[i+1].position;
+            var b2;
+            if (i < pArray.length-1) {
+                b2 = pArray[i+1].position;
+            } else {
+                b2 = pArray[0];
+            }
 
             /* If there's a duplicate point, there's no intersection here. */
             if (a1.equals(b1) || a2.equals(b2) || a1.equals(b2) || a2.equals(b1)) {
@@ -451,6 +458,29 @@ define([
             }
         }
         return false;
+    }
+
+    /**
+     * Determines whether triangle
+     *
+     * @param {type} pArray - Array of vertices
+     * @returns {Boolean} - The vertices are in-line
+     */
+    function triangleInLine(pArray) {
+        /* Get two sides */
+        var v1 = pArray[0].position;
+        var v2 = pArray[1].position;
+        var v3 = pArray[2].position;
+
+        var side1 = v2.subtract(v1);
+        var side2 = v3.subtract(v1);
+
+        /* Convert to 3-dimensional so we can use cross product */
+        side1 = new Cartesian3(side1.x, side1.y, 0);
+        side2 = new Cartesian3(side2.x, side2.y, 0);
+
+        /* If they're parallel or perpendicular, so is the last */
+        return side1.cross(side2).z === 0;
     }
 
     /**
@@ -485,8 +515,16 @@ define([
 
         /* Determine & verify number of vertices */
         var numVertices = nodeArray.length;
+
+        /* Is it already a triangle? */
         if (numVertices === 3) {
-            return [ nodeArray[0].index, nodeArray[1].index, nodeArray[2].index ];
+            /* Only return triangle if it has area (not a line) */
+            if (!triangleInLine(nodeArray)) {
+                return [ nodeArray[0].index, nodeArray[1].index, nodeArray[2].index ];
+            } else {
+                /* If it's a line, we don't need it. */
+                return [ ];
+            }
         } else if (nodeArray.length < 3) {
             throw new DeveloperError('Invalid polygon: must have at least three vertices.');
         }
@@ -642,6 +680,14 @@ define([
             /* Recursive chop */
             return randomChop(nodeArray);
 
+        },
+
+        /**
+         * This method is required for predictable testing
+         * @returns {undefined}
+         */
+        resetSeed: function(seed) {
+            rseed = seed || 0;
         },
 
         /**

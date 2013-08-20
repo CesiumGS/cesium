@@ -20,6 +20,10 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
+    beforeEach(function() {
+        PolygonPipeline.resetSeed();
+    });
+
     it('removeDuplicates removes duplicate points', function() {
         var positions = PolygonPipeline.removeDuplicates([
                                                  new Cartesian3(1.0, 1.0, 1.0),
@@ -134,44 +138,69 @@ defineSuite([
 
     ///////////////////////////////////////////////////////////////////////
 
-    it('earClip2D triangulates a triangle', function() {
-        var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)]);
+    it('triangulates a triangle', function() {
+        var indices = PolygonPipeline.triangulate([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0)]);
 
         expect(indices).toEqual([0, 1, 2]);
     });
 
-    it('earClip2D triangulates a square', function() {
-        var indices = PolygonPipeline.earClip2D([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(1.0, 1.0), new Cartesian2(0.0, 1.0)]);
+    it('triangulates a square', function() {
+        var indices = PolygonPipeline.triangulate([new Cartesian2(0.0, 0.0), new Cartesian2(1.0, 0.0), new Cartesian2(1.0, 1.0), new Cartesian2(0.0, 1.0)]);
 
         expect(indices).toEqual([ 0, 2, 3, 0, 1, 2 ]);
     });
 
-    it('earClip2D triangulates simple concave', function() {
+    it('triangulates simple concave', function() {
         var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 0.0), new Cartesian2(2.0, 2.0), new Cartesian2(1.0, 0.25), new Cartesian2(0.0, 2.0)];
 
-        var indices = PolygonPipeline.earClip2D(positions);
+        var indices = PolygonPipeline.triangulate(positions);
 
         expect(indices).toEqual([ 0, 3, 4, 0, 1, 3, 1, 2, 3 ]);
     });
 
-    it('earClip2D triangulates complex concave', function() {
+    it('triangulates complicated concave', function() {
         var positions = [new Cartesian2(0.0, 0.0), new Cartesian2(2.0, 0.0), new Cartesian2(2.0, 1.0), new Cartesian2(0.1, 1.5), new Cartesian2(2.0, 2.0), new Cartesian2(0.0, 2.0),
                 new Cartesian2(0.0, 1.0), new Cartesian2(1.9, 0.5)];
 
-        var indices = PolygonPipeline.earClip2D(positions);
+        var indices = PolygonPipeline.triangulate(positions);
 
-        expect(indices).toEqual([ 0, 1, 7, 1, 2, 7, 2, 6, 7, 2, 3, 6, 3, 5, 6, 3, 4, 5 ]);
+        expect(indices).toEqual([ 0, 1, 7, 1, 2, 7, 2, 3, 7, 3, 6, 7, 3, 5, 6, 3, 4, 5 ]);
+    });
+    it('triangulates an even more complicated concave', function() {
+        var positions = [new Cartesian2(0,0), new Cartesian2(1,0), new Cartesian2(1, -1), new Cartesian2(2, -1.4),
+                    new Cartesian2(40, 2), new Cartesian2(10, 5), new Cartesian2(30, 10), new Cartesian2(25, 20),
+                    new Cartesian2(20,20), new Cartesian2(10,15), new Cartesian2(15, 10), new Cartesian2(8, 10),
+                    new Cartesian2(-1, 3)];
+        var indices = PolygonPipeline.triangulate(positions);
+
+        expect(indices).toEqual([ 0, 11, 12, 0, 5, 11, 5, 6, 11, 6, 8, 10, 8, 9, 10, 6, 7, 8, 0, 1, 5, 1, 2, 5, 2, 3, 5, 3, 4, 5 ]);
+
+        /* Try it a bunch of times to make sure we can never get stuck on it */
+        for (var i = 0; i < 100; i++) {
+            var positions = [new Cartesian2(0,0), new Cartesian2(1,0), new Cartesian2(1, -1), new Cartesian2(2, -1.4),
+                        new Cartesian2(40, 2), new Cartesian2(10, 5), new Cartesian2(30, 10), new Cartesian2(25, 20),
+                        new Cartesian2(20,20), new Cartesian2(10,15), new Cartesian2(15, 10), new Cartesian2(8, 10),
+                        new Cartesian2(-1, 3)];
+            PolygonPipeline.triangulate(positions);
+        }
     });
 
-    it('earClip2D throws without positions', function() {
+    it('triangulates a polygon with a side that intersects on of its other vertices', function() {
+        var positions = [new Cartesian2(10, 5), new Cartesian2(25, 20), new Cartesian2(10,15), new Cartesian2(15, 10), new Cartesian2(8, 10)];
+        var indices = PolygonPipeline.triangulate(positions);
+
+        expect(indices).toEqual([ 0, 3, 4, 1, 2, 3 ]);
+    });
+
+    it('throws without positions', function() {
         expect(function() {
-            PolygonPipeline.earClip2D();
+            PolygonPipeline.triangulate();
         }).toThrow();
     });
 
-    it('earClip2D throws without three positions', function() {
+    it('throws without three positions', function() {
         expect(function() {
-            PolygonPipeline.earClip2D([Cartesian2.ZERO, Cartesian2.ZERO]);
+            PolygonPipeline.triangulate([Cartesian2.ZERO, Cartesian2.ZERO]);
         }).toThrow();
     });
 
