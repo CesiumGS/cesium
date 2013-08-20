@@ -71,11 +71,11 @@ define(['../Core/createGuid',
 
     function createObject(kml, dynamicObjectCollection) {
         var id = kml.id;
-        if (typeof id === 'undefined') {
+        if (!defined(id)) {
             id = createGuid();
         } else {
             var finalId = id;
-            while (typeof dynamicObjectCollection.getObject(finalId) !== 'undefined') {
+            while (defined(dynamicObjectCollection.getObject(finalId))) {
                 finalId = createGuid();
             }
             id = finalId;
@@ -107,7 +107,7 @@ define(['../Core/createGuid',
             finalCoords.push([]); //new inner array
             finalCoords[j][0] = parseFloat(coords[j][0], 10);
             finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
-            if (typeof coords[j][2] !== 'undefined'){ // altitude given?
+            if (defined(coords[j][2])){ // altitude given?
                 finalCoords[j][2] = parseFloat(coords[j][2].substring(1), 10);
             }
         }
@@ -142,7 +142,7 @@ define(['../Core/createGuid',
     function getId(node){
         var id;
         var idNode = node.attributes.id;
-        if(typeof idNode !== 'undefined') {
+        if(defined(idNode)) {
             id = idNode.value;
         } else {
             id = createGuid();
@@ -152,13 +152,13 @@ define(['../Core/createGuid',
 
     function getNumericValue(node, tagName){
         var element = node.getElementsByTagName(tagName)[0];
-        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.firstChild.data : undefined;
         return parseFloat(value, 10);
     }
 
     function getStringValue(node, tagName){
         var element = node.getElementsByTagName(tagName)[0];
-        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
+        var value = defined(element) ? element.firstChild.data : undefined;
         return value;
     }
 
@@ -166,11 +166,11 @@ define(['../Core/createGuid',
         var red, green, blue, alpha;
         var element = node.getElementsByTagName(tagName)[0];
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
-        var value = typeof element !== 'undefined' ? element.firstChild.data : undefined;
-        if (typeof value === 'undefined'){
+        var value = defined(element)  ? element.firstChild.data : undefined;
+        if (!defined(value)){
             return new Color(1.0, 1.0, 1.0, 1.0); //white as default?
         }
-        var colorMode = typeof colorModeNode !== 'undefined' ? colorModeNode.firstChild.data : undefined;
+        var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
         if(colorMode === 'random'){
             var options = {};
             options.blue = parseInt(value.substring(2,4), 16)  / 255.0;
@@ -191,7 +191,7 @@ define(['../Core/createGuid',
     // KML processing functions
     function processPlacemark(dataSource, dynamicObject, placemark, dynamicObjectCollection, styleCollection) {
         dynamicObject.name = getStringValue(placemark, 'name');
-        if(typeof dynamicObject.label !== 'undefined'){
+        if(defined(dynamicObject.label)){
             dynamicObject.label.text = new ConstantProperty(dynamicObject.name);
         }
         // I want to iterate over every placemark
@@ -202,7 +202,7 @@ define(['../Core/createGuid',
                 placemark.geometry = node.nodeName;
                 var geometryType = placemark.geometry;
                 var geometryHandler = geometryTypes[geometryType];
-                if (typeof geometryHandler === 'undefined') {
+                if (!defined(geometryHandler)) {
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
                 geometryHandler(dataSource, dynamicObject, placemark, node, dynamicObjectCollection);
@@ -273,7 +273,7 @@ define(['../Core/createGuid',
                 kml.geometry = innerNode.nodeName;
                 var geometryType = kml.geometry;
                 var geometryHandler = geometryTypes[geometryType];
-                if (typeof geometryHandler === 'undefined') {
+                if (!defined(geometryHandler)) {
                     throw new DeveloperError('Unknown geometry type: ' + geometryType);
                 }
                 //only create a new dynamicObject if the placemark's object was used already
@@ -304,46 +304,46 @@ define(['../Core/createGuid',
             if(node.nodeName === "IconStyle"){
                 //Map style to billboard properties
                 //TODO heading, hotSpot
-                var billboard = typeof dynamicObject.billboard !== 'undefined' ? dynamicObject.billboard : new DynamicBillboard();
+                var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
                 var icon = getStringValue(node,'href');
                 var color = getColorValue(node, 'color');
 
-                billboard.image = typeof icon !== 'undefined' ? new ConstantProperty(icon) : undefined;
-                billboard.scale = typeof scale !== 'undefined' ? new ConstantProperty(scale) : undefined;
-                billboard.color = typeof color !== 'undefined' ? new ConstantProperty(color) : undefined;
+                billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
+                billboard.scale = defined(scale) ? new ConstantProperty(scale) : undefined;
+                billboard.color = defined(color) ? new ConstantProperty(color) : undefined;
                 dynamicObject.billboard = billboard;
             }
             else if(node.nodeName ===  "LabelStyle")   {
                 //Map style to label properties
-                var label = typeof dynamicObject.label !== 'undefined' ? dynamicObject.label : new DynamicLabel();
+                var label = defined(dynamicObject.label) ? dynamicObject.label : new DynamicLabel();
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
 
-                label.scale = typeof labelScale !== 'undefined' ? new ConstantProperty(labelScale) : undefined;
-                label.fillColor = typeof labelColor !== 'undefined' ? new ConstantProperty(labelColor) : undefined;
-                label.text = typeof dynamicObject.name !== 'undefined' ? new ConstantProperty(dynamicObject.name) : undefined;
+                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : undefined;
+                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : undefined;
+                label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
                 dynamicObject.label = label;
             }
             else if(node.nodeName ===  "LineStyle")   {
                 //Map style to line properties
                 //TODO PhysicalWidth, Visibility
-                var polyline = typeof dynamicObject.polyline !== 'undefined' ? dynamicObject.polyline : new DynamicPolyline();
+                var polyline = defined(dynamicObject.polyline) ? dynamicObject.polyline : new DynamicPolyline();
                 var lineColor = getColorValue(node, 'color');
                 var lineWidth = getNumericValue(node,'width');
                 var lineOuterColor = getColorValue(node,'outerColor');
                 var lineOuterWidth = getNumericValue(node,'outerWidth');
 
-                polyline.color = typeof lineColor !== 'undefined' ? new ConstantProperty(lineColor) : undefined;
-                polyline.width = typeof lineWidth !== 'undefined' ? new ConstantProperty(lineWidth) : undefined;
-                polyline.outlineColor = typeof lineOuterColor !== 'undefined' ? new ConstantProperty(lineOuterColor) : undefined;
-                polyline.outlineWidth = typeof lineOuterWidth !== 'undefined' ? new ConstantProperty(lineOuterWidth) : undefined;
+                polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : undefined;
+                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : undefined;
+                polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
+                polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
                 dynamicObject.polyline = polyline;
             }
             else if(node.nodeName === "PolyStyle")   {
                 //Map style to polygon properties
                 //TODO Fill, Outline
-                dynamicObject.polygon = typeof dynamicObject.polygon !== 'undefined' ? dynamicObject.polygon : new DynamicPolygon();
+                dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
                 var polygonColor = getColorValue(node, 'color');
                 dynamicObject.polygon.material = new DynamicMaterialProperty();
                 dynamicObject.polygon.material.processCzmlIntervals({
@@ -401,13 +401,13 @@ define(['../Core/createGuid',
         for (i = styleNodesLength - 1; i >= 0; i--) {
             var node = styleNodes.item(i);
             var attributes = node.attributes;
-            var id = typeof attributes.id !== 'undefined' ? attributes.id.textContent : undefined;
-            if (typeof id !== 'undefined') {
+            var id = defined(attributes.id) ? attributes.id.textContent : undefined;
+            if (defined(id)) {
                 id = '#' + id;
-                if (typeof sourceUri !== 'undefined') {
+                if (defined(sourceUri)) {
                     id = sourceUri + id;
                 }
-                if (typeof styleCollection.getObject(id) === 'undefined') {
+                if (!defined(styleCollection.getObject(id))) {
                     var styleObject = styleCollection.getOrCreateObject(id);
                     processStyle(node, styleObject);
                 }
@@ -426,8 +426,8 @@ define(['../Core/createGuid',
                     throw new RuntimeError();
                 }
                 var uri = tokens[0];
-                if (typeof externalStyleHash[uri] === 'undefined') {
-                    if (typeof sourceUri !== 'undefined') {
+                if (!defined(externalStyleHash[uri])) {
+                    if (defined(sourceUri)) {
                         var baseUri = new Uri(document.location.href);
                         sourceUri = new Uri(sourceUri);
                         uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
@@ -451,7 +451,7 @@ define(['../Core/createGuid',
             var array = kml.getElementsByTagName('Placemark');
             for ( var i = 0, len = array.length; i < len; i++) {
                 var placemark = array[i];
-                var placemarkId = typeof placemark.id !== 'undefined' ? placemark.id : createGuid();
+                var placemarkId = defined(placemark.id) ? placemark.id : createGuid();
                 var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
                 processInlineStyles(placemarkDynamicObject, array[i], styleCollection);
                 processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
@@ -536,7 +536,7 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} KML is required.
      */
     KmlDataSource.prototype.load = function(kml, source) {
-        if (typeof kml === 'undefined') {
+        if (!defined(kml)) {
             throw new DeveloperError('kml is required.');
         }
 
@@ -554,7 +554,7 @@ define(['../Core/createGuid',
      * @exception {DeveloperError} url is required.
      */
     KmlDataSource.prototype.loadUrl = function(url) {
-        if (typeof url === 'undefined') {
+        if (!defined(url)) {
             throw new DeveloperError('url is required.');
         }
 

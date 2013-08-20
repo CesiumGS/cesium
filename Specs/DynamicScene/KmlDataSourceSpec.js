@@ -315,8 +315,6 @@ defineSuite(['DynamicScene/KmlDataSource',
         var position4 = new Cartographic(CesiumMath.toRadians(8), CesiumMath.toRadians(9), 0);
         var cartesianPosition4 = Ellipsoid.WGS84.cartographicToCartesian(position4);
         var multiKml = '<Placemark>\
-            <name>SF Marina Harbor Master</name>\
-            <visibility>0</visibility>\
             <MultiGeometry>\
               <LineString>\
                 <coordinates>\
