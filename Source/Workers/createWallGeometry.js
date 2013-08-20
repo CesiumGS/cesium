@@ -2,13 +2,13 @@
 define([
         '../Core/WallGeometry',
         '../Core/Ellipsoid',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         WallGeometry,
         Ellipsoid,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createWallGeometry(parameters, transferableObjects) {
@@ -16,7 +16,7 @@ define([
         wallGeometry._ellipsoid = Ellipsoid.clone(wallGeometry._ellipsoid);
 
         var geometry = WallGeometry.createGeometry(wallGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,
