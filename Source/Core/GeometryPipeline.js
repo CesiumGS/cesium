@@ -145,14 +145,14 @@ define([
 
         var indices = geometry.indices;
         if (defined(indices)) {
-            switch (geometry.primitiveType) {
-                case PrimitiveType.TRIANGLES:
+            switch (geometry.primitiveType.value) {
+                case PrimitiveType.TRIANGLES.value:
                     geometry.indices = trianglesToLines(indices);
                     break;
-                case PrimitiveType.TRIANGLE_STRIP:
+                case PrimitiveType.TRIANGLE_STRIP.value:
                     geometry.indices = triangleStripToLines(indices);
                     break;
-                case PrimitiveType.TRIANGLE_FAN:
+                case PrimitiveType.TRIANGLE_FAN.value:
                     geometry.indices = triangleFanToLines(indices);
                     break;
                 default:
@@ -418,7 +418,7 @@ define([
         }
 
         var indices = geometry.indices;
-        if ((geometry.primitiveType === PrimitiveType.TRIANGLES) && (defined(indices))) {
+        if ((geometry.primitiveType.value === PrimitiveType.TRIANGLES.value) && (defined(indices))) {
             var numIndices = indices.length;
             var maximumIndex = 0;
             for ( var j = 0; j < numIndices; j++) {
@@ -497,9 +497,9 @@ define([
         }
 
         if ((defined(geometry.indices)) &&
-            ((geometry.primitiveType !== PrimitiveType.TRIANGLES) &&
-             (geometry.primitiveType !== PrimitiveType.LINES) &&
-             (geometry.primitiveType !== PrimitiveType.POINTS))) {
+            ((geometry.primitiveType.value !== PrimitiveType.TRIANGLES.value) &&
+             (geometry.primitiveType.value !== PrimitiveType.LINES.value) &&
+             (geometry.primitiveType.value !== PrimitiveType.POINTS.value))) {
             throw new DeveloperError('geometry.primitiveType must equal to PrimitiveType.TRIANGLES, PrimitiveType.LINES, or PrimitiveType.POINTS.');
         }
 
@@ -519,11 +519,11 @@ define([
 
             var indicesPerPrimitive;
 
-            if (geometry.primitiveType === PrimitiveType.TRIANGLES) {
+            if (geometry.primitiveType.value === PrimitiveType.TRIANGLES.value) {
                 indicesPerPrimitive = 3;
-            } else if (geometry.primitiveType === PrimitiveType.LINES) {
+            } else if (geometry.primitiveType.value === PrimitiveType.LINES.value) {
                 indicesPerPrimitive = 2;
-            } else if (geometry.primitiveType === PrimitiveType.POINTS) {
+            } else if (geometry.primitiveType.value === PrimitiveType.POINTS.value) {
                 indicesPerPrimitive = 1;
             }
 
@@ -1053,7 +1053,7 @@ define([
             throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
         }
 
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+        if (geometry.primitiveType.value !== PrimitiveType.TRIANGLES.value) {
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
         }
 
@@ -1213,7 +1213,7 @@ define([
             throw new DeveloperError('geometry.indices length must be greater than 0 and be a multiple of 3.');
         }
 
-        if (geometry.primitiveType !== PrimitiveType.TRIANGLES) {
+        if (geometry.primitiveType.value !== PrimitiveType.TRIANGLES.value) {
             throw new DeveloperError('geometry.primitiveType must be PrimitiveType.TRIANGLES.');
         }
 
