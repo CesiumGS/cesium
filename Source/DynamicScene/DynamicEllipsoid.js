@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
-        './processPacketData'
+        '../Core/Cartesian3'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
-        Cartesian3,
-        processPacketData) {
+        Cartesian3) {
     "use strict";
 
     /**
@@ -47,46 +45,6 @@ define([
          * @default undefined
          */
         this.material = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's ellipsoid.
-     * If the DynamicObject does not have a ellipsoid, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the ellipsoid data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
-     *
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicEllipsoid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var ellipsoidData = packet.ellipsoid;
-        if (!defined(ellipsoidData)) {
-            return false;
-        }
-
-        var interval = ellipsoidData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var ellipsoid = dynamicObject.ellipsoid;
-        var ellipsoidUpdated = !defined(ellipsoid);
-        if (ellipsoidUpdated) {
-            dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
-        }
-
-        ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
-        ellipsoidUpdated = processPacketData.material(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
-        return ellipsoidUpdated;
     };
 
     /**

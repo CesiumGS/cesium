@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Color',
-        './processPacketData'
+        '../Core/Color'
        ], function(
          TimeInterval,
          defaultValue,
          defined,
-         Color,
-         processPacketData) {
+         Color) {
     "use strict";
 
     /**
@@ -107,54 +105,6 @@ define([
          * @default undefined
          */
         this.show = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's cone.
-     * If the DynamicObject does not have a cone, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the cone data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicCone.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var coneData = packet.cone;
-        if (!defined(coneData)) {
-            return false;
-        }
-
-        var interval = coneData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var cone = dynamicObject.cone;
-        var coneUpdated = !defined(cone);
-        if (coneUpdated) {
-            dynamicObject.cone = cone = new DynamicCone();
-        }
-
-        coneUpdated = processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
-        coneUpdated = processPacketData.material(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
-        coneUpdated = processPacketData.material(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
-        return coneUpdated;
     };
 
     /**

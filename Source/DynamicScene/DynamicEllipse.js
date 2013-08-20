@@ -5,16 +5,14 @@ define([
         '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
-        '../Core/Shapes',
-        './processPacketData'
+        '../Core/Shapes'
         ], function (
             TimeInterval,
             defaultValue,
             defined,
             Cartesian3,
             Ellipsoid,
-            Shapes,
-            processPacketData) {
+            Shapes) {
     "use strict";
 
     /**
@@ -57,47 +55,6 @@ define([
         this._lastSemiMinorAxis = undefined;
         this._lastBearing = undefined;
         this._cachedVertexPositions = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's ellipse.
-     * If the DynamicObject does not have a ellipse, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the ellipse data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
-     *
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicEllipse.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var ellipseData = packet.ellipse;
-        if (!defined(ellipseData)) {
-            return false;
-        }
-
-        var interval = ellipseData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var ellipse = dynamicObject.ellipse;
-        var ellipseUpdated = !defined(ellipse);
-        if (ellipseUpdated) {
-            dynamicObject.ellipse = ellipse = new DynamicEllipse();
-        }
-
-        ellipseUpdated = processPacketData(Number, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
-        ellipseUpdated = processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
-
-        return ellipseUpdated;
     };
 
     /**

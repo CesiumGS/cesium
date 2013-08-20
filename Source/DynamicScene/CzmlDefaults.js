@@ -62,31 +62,6 @@ define([
      * @see VisualizerCollection#createCzmlDefaultsCollection
      */
     var CzmlDefaults = {
-        //Any change to updaters needs to be reflected in the DynamicObject constructor,
-        //which has the superset of all properties created by the various updaters.
-        /**
-         * The standard set of updaters for processing CZML.  This array is the default
-         * set of updater methods used by DynamicObjectCollection.
-         * @see DynamicObjectCollection
-         */
-        updaters : [DynamicClock.processCzmlPacket,
-                    DynamicBillboard.processCzmlPacket,
-                    DynamicEllipse.processCzmlPacket,
-                    DynamicEllipsoid.processCzmlPacket,
-                    DynamicCone.processCzmlPacket,
-                    DynamicLabel.processCzmlPacket,
-                    DynamicPath.processCzmlPacket,
-                    DynamicPoint.processCzmlPacket,
-                    DynamicPolygon.processCzmlPacket,
-                    DynamicPolyline.processCzmlPacket,
-                    DynamicPyramid.processCzmlPacket,
-                    DynamicVector.processCzmlPacket,
-                    DynamicObject.processCzmlPacketPosition,
-                    DynamicObject.processCzmlPacketViewFrom,
-                    DynamicObject.processCzmlPacketOrientation,
-                    DynamicObject.processCzmlPacketVertexPositions,
-                    DynamicObject.processCzmlPacketAvailability],
-
         /**
          * The standard set of mergers for processing CZML.  This array is the default
          * set of updater methods used by CompositeDynamicObjectCollection.

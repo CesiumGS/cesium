@@ -1,31 +1,1015 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Color',
         '../Core/ClockRange',
         '../Core/ClockStep',
         '../Core/createGuid',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
+        '../Core/Ellipsoid',
         '../Core/Event',
+        '../Core/HermitePolynomialApproximation',
         '../Core/Iso8601',
+        '../Core/JulianDate',
+        '../Core/LagrangePolynomialApproximation',
+        '../Core/LinearApproximation',
         '../Core/loadJson',
+        '../Core/Math',
+        '../Core/Quaternion',
+        '../Core/ReferenceFrame',
+        '../Core/Spherical',
+        '../Core/TimeInterval',
+        '../Scene/HorizontalOrigin',
+        '../Scene/LabelStyle',
+        '../Scene/VerticalOrigin',
+        './CompositePositionProperty',
+        './CompositeProperty',
+        './ConstantPositionProperty',
+        './ConstantProperty',
         './CzmlDefaults',
+        './DynamicBillboard',
         './DynamicClock',
+        './DynamicColorMaterial',
+        './DynamicCone',
+        './DynamicLabel',
+        './DynamicDirectionsProperty',
+        './DynamicEllipse',
+        './DynamicEllipsoid',
+        './DynamicGridMaterial',
+        './DynamicImageMaterial',
         './DynamicObjectCollection',
+        './DynamicPath',
+        './DynamicPoint',
+        './DynamicPolyline',
+        './DynamicPolygon',
+        './DynamicPyramid',
+        './DynamicVector',
+        './DynamicVertexPositionsProperty',
+        './SampledPositionProperty',
+        './SampledProperty',
+        './TimeIntervalCollectionPositionProperty',
+        './TimeIntervalCollectionProperty',
+        '../ThirdParty/Uri',
         '../ThirdParty/when'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        Color,
         ClockRange,
         ClockStep,
         createGuid,
+        defaultValue,
         defined,
         DeveloperError,
+        Ellipsoid,
         Event,
+        HermitePolynomialApproximation,
         Iso8601,
+        JulianDate,
+        LagrangePolynomialApproximation,
+        LinearApproximation,
         loadJson,
+        CesiumMath,
+        Quaternion,
+        ReferenceFrame,
+        Spherical,
+        TimeInterval,
+        HorizontalOrigin,
+        LabelStyle,
+        VerticalOrigin,
+        CompositePositionProperty,
+        CompositeProperty,
+        ConstantPositionProperty,
+        ConstantProperty,
         CzmlDefaults,
+        DynamicBillboard,
         DynamicClock,
+        DynamicColorMaterial,
+        DynamicCone,
+        DynamicLabel,
+        DynamicDirectionsProperty,
+        DynamicEllipse,
+        DynamicEllipsoid,
+        DynamicGridMaterial,
+        DynamicImageMaterial,
         DynamicObjectCollection,
+        DynamicPath,
+        DynamicPoint,
+        DynamicPolyline,
+        DynamicPolygon,
+        DynamicPyramid,
+        DynamicVector,
+        DynamicVertexPositionsProperty,
+        SampledPositionProperty,
+        SampledProperty,
+        TimeIntervalCollectionPositionProperty,
+        TimeIntervalCollectionProperty,
+        Uri,
         when) {
     "use strict";
+
+    var scratchCartesian = new Cartesian3();
+    var scratchSpherical = new Spherical();
+    var scratchCartographic = new Cartographic();
+
+    function unwrapColorInterval(czmlInterval) {
+        var rgbaf = czmlInterval.rgbaf;
+        if (defined(rgbaf)) {
+            return rgbaf;
+        }
+
+        var rgba = czmlInterval.rgba;
+        if (!defined(rgba)) {
+            return undefined;
+        }
+
+        if (rgba.length === Color.length) {
+            return [Color.byteToFloat(rgba[0]), Color.byteToFloat(rgba[1]), Color.byteToFloat(rgba[2]), Color.byteToFloat(rgba[3])];
+        }
+
+        var len = rgba.length;
+        rgbaf = new Array(len);
+        for ( var i = 0; i < len; i += 5) {
+            rgbaf[i] = rgba[i];
+            rgbaf[i + 1] = Color.byteToFloat(rgba[i + 1]);
+            rgbaf[i + 2] = Color.byteToFloat(rgba[i + 2]);
+            rgbaf[i + 3] = Color.byteToFloat(rgba[i + 3]);
+            rgbaf[i + 4] = Color.byteToFloat(rgba[i + 4]);
+        }
+        return rgbaf;
+    }
+
+    function unwrapImageInterval(czmlInterval, sourceUri) {
+        var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapCartesianInterval(czmlInterval) {
+        if (defined(czmlInterval.cartesian)) {
+            return czmlInterval.cartesian;
+        }
+
+        if (defined(czmlInterval.unitCartesian)) {
+            return czmlInterval.unitCartesian;
+        }
+
+        var i;
+        var len;
+        var result;
+
+        var unitSpherical = czmlInterval.unitSpherical;
+        if (defined(unitSpherical)) {
+            len = unitSpherical.length;
+            if (len === 2) {
+                scratchSpherical.clock = unitSpherical[0];
+                scratchSpherical.cone = unitSpherical[1];
+                Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+                result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
+            } else {
+                var sphericalIt = 0;
+                result = new Array((len / 3) * 4);
+                for (i = 0; i < len; i += 4) {
+                    result[i] = unitSpherical[sphericalIt++];
+
+                    scratchSpherical.clock = unitSpherical[sphericalIt++];
+                    scratchSpherical.cone = unitSpherical[sphericalIt++];
+                    Cartesian3.fromSpherical(scratchSpherical, scratchCartesian);
+
+                    result[i + 1] = scratchCartesian.x;
+                    result[i + 2] = scratchCartesian.y;
+                    result[i + 3] = scratchCartesian.z;
+                }
+            }
+            return result;
+        }
+
+        var tmp = scratchCartesian;
+        var cartographic = czmlInterval.cartographicRadians;
+        if (defined(cartographic)) {
+            if (cartographic.length > 3) {
+                scratchCartographic.longitude = cartographic[0];
+                scratchCartographic.latitude = cartographic[1];
+                scratchCartographic.height = cartographic[2];
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                result = [tmp.x, tmp.y, tmp.z];
+            } else {
+                len = cartographic.length;
+                result = new Array(len);
+                for (i = 0; i < len; i += 4) {
+                    scratchCartographic.longitude = cartographic[i + 1];
+                    scratchCartographic.latitude = cartographic[i + 2];
+                    scratchCartographic.height = cartographic[i + 3];
+                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+
+                    result[i] = cartographic[i];
+                    result[i + 1] = tmp.x;
+                    result[i + 2] = tmp.y;
+                    result[i + 3] = tmp.z;
+                }
+            }
+        } else {
+            var cartographicDegrees = czmlInterval.cartographicDegrees;
+            if (!defined(cartographicDegrees)) {
+                return undefined;
+            }
+
+            if (cartographicDegrees.length > 3) {
+                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
+                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
+                scratchCartographic.height = cartographicDegrees[2];
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                result = [tmp.x, tmp.y, tmp.z];
+            } else {
+                len = cartographicDegrees.length;
+                result = new Array(len);
+                for (i = 0; i < len; i += 4) {
+                    scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+                    scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+                    scratchCartographic.height = cartographicDegrees[i + 3];
+                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+
+                    result[i] = cartographicDegrees[i];
+                    result[i + 1] = tmp.x;
+                    result[i + 2] = tmp.y;
+                    result[i + 3] = tmp.z;
+                }
+            }
+        }
+    }
+
+    function unwrapInterval(type, czmlInterval, sourceUri) {
+        switch (type) {
+        case Boolean:
+            return defaultValue(czmlInterval.boolean, czmlInterval);
+        case Cartesian2:
+            return czmlInterval.cartesian2;
+        case Cartesian3:
+            return unwrapCartesianInterval(czmlInterval);
+        case Color:
+            return unwrapColorInterval(czmlInterval);
+        case HorizontalOrigin:
+            return HorizontalOrigin[defaultValue(czmlInterval.horizontalOrigin, czmlInterval)];
+        case Image:
+            return unwrapImageInterval(czmlInterval, sourceUri);
+        case LabelStyle:
+            return LabelStyle[defaultValue(czmlInterval.labelStyle, czmlInterval)];
+        case Number:
+            return defaultValue(czmlInterval.number, czmlInterval);
+        case String:
+            return defaultValue(czmlInterval.string, czmlInterval);
+        case Quaternion:
+            return czmlInterval.unitQuaternion;
+        case VerticalOrigin:
+            return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
+        default:
+            throw new DeveloperError(type);
+        }
+    }
+
+    function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            combinedInterval = TimeInterval.fromIso8601(packetInterval);
+            if (defined(constrainedInterval)) {
+                combinedInterval = combinedInterval.intersect(constrainedInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
+        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+        var packedLength = defaultValue(type.packedLength, 1);
+        var unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
+        var isSampled = (typeof unwrappedInterval !== 'string') && unwrappedIntervalLength > packedLength;
+
+        if (!isSampled && !hasInterval) {
+            if (defined(type.unpack)) {
+                object[propertyName] = new ConstantProperty(type.unpack(unwrappedInterval, 0));
+            } else {
+                object[propertyName] = new ConstantProperty(unwrappedInterval);
+            }
+            return true;
+        }
+
+        var propertyCreated = false;
+        var property = object[propertyName];
+        if (!isSampled && hasInterval) {
+            combinedInterval = combinedInterval.clone();
+            if (defined(type.unpack)) {
+                combinedInterval.data = type.unpack(unwrappedInterval, 0);
+            } else {
+                combinedInterval.data = unwrappedInterval;
+            }
+
+            if (!defined(property)) {
+                property = new TimeIntervalCollectionProperty();
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+
+            if (property instanceof TimeIntervalCollectionProperty) {
+                property.intervals.addInterval(combinedInterval);
+            } else {
+                //TODO Morph to CompositeProperty
+            }
+        } else if (isSampled && !hasInterval) {
+            if (!(property instanceof SampledProperty)) {
+                property = new SampledProperty(type);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+        } else if (isSampled && hasInterval) {
+            if (!defined(property)) {
+                property = new CompositeProperty();
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            if (property instanceof CompositeProperty) {
+                var intervals = property.intervals;
+                var interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
+                var intervalData;
+                if (defined(interval)) {
+                    intervalData = interval.data;
+                } else {
+                    interval = combinedInterval.clone();
+                    intervalData = new SampledProperty(type);
+                    interval.data = intervalData;
+                    intervals.addInterval(interval);
+                }
+                if (!(intervalData instanceof SampledProperty)) {
+                    intervalData = new SampledProperty(type);
+                    interval.Data = intervalData;
+                }
+                intervalData.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+            } else {
+                //TODO Morph to CompositeProperty
+            }
+        }
+        return propertyCreated;
+    }
+
+    function processPacketData(type, object, propertyName, packetData, interval, sourceUri) {
+        if (!defined(packetData)) {
+            return false;
+        }
+
+        var updated = false;
+        if (Array.isArray(packetData)) {
+            for ( var i = 0, len = packetData.length; i < len; i++) {
+                updated = processProperty(type, object, propertyName, packetData[i], interval, sourceUri) || updated;
+            }
+        } else {
+            updated = processProperty(type, object, propertyName, packetData, interval, sourceUri) || updated;
+        }
+        return updated;
+    }
+
+    var interpolators = {
+            HERMITE : HermitePolynomialApproximation,
+            LAGRANGE : LagrangePolynomialApproximation,
+            LINEAR : LinearApproximation
+        };
+
+    function updateInterpolationSettings(packetData, property) {
+        var interpolator = interpolators[packetData.interpolationAlgorithm];
+        if (defined(interpolator)) {
+            property.interpolationAlgorithm = interpolator;
+        }
+        if (defined(packetData.interpolationDegree)) {
+            property.interpolationDegree = packetData.interpolationDegree;
+        }
+
+    }
+
+    function processPositionProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            combinedInterval = TimeInterval.fromIso8601(packetInterval);
+            if (defined(constrainedInterval)) {
+                combinedInterval = combinedInterval.intersect(constrainedInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var referenceFrame = ReferenceFrame[defaultValue(packetData.referenceFrame, "FIXED")];
+        var unwrappedInterval = unwrapCartesianInterval(packetData);
+        var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+        var isSampled = unwrappedInterval.length > Cartesian3.packedLength;
+
+        if (!isSampled && !hasInterval) {
+            object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval, 0), referenceFrame);
+            return true;
+        }
+
+        var propertyCreated = false;
+        var property = object[propertyName];
+        if (!isSampled && hasInterval) {
+            combinedInterval = combinedInterval.clone();
+            combinedInterval.data = Cartesian3.unpack(unwrappedInterval, 0);
+
+            if (!defined(property)) {
+                property = new TimeIntervalCollectionPositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            if (property instanceof TimeIntervalCollectionPositionProperty) {
+                property.intervals.addInterval(combinedInterval);
+                updateInterpolationSettings(packetData, property);
+            } else {
+                //TODO Morph to CompositePositionProperty
+            }
+        } else if (isSampled && !hasInterval) {
+            if (!(property instanceof SampledPositionProperty)) {
+                property = new SampledPositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+            updateInterpolationSettings(packetData, property);
+        } else if (isSampled && hasInterval) {
+            if (!defined(property)) {
+                property = new CompositePositionProperty(referenceFrame);
+                object[propertyName] = property;
+                propertyCreated = true;
+            }
+            if (property instanceof CompositePositionProperty) {
+                var intervals = property.intervals;
+                var interval = intervals.findInterval(combinedInterval.start, combinedInterval.stop, combinedInterval.isStartIncluded, combinedInterval.isStopIncluded);
+                var intervalData;
+                if (defined(interval)) {
+                    intervalData = interval.data;
+                } else {
+                    interval = combinedInterval.clone();
+                    intervalData = new SampledPositionProperty(referenceFrame);
+                    interval.data = intervalData;
+                    intervals.addInterval(interval);
+                }
+                if (!(intervalData instanceof SampledPositionProperty)) {
+                    intervalData = new SampledPositionProperty(referenceFrame);
+                    interval.Data = intervalData;
+                }
+                intervalData.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+                updateInterpolationSettings(packetData, property);
+            } else {
+                //TODO Morph to CompositePositionProperty
+            }
+        }
+        return propertyCreated;
+    }
+
+    function processPositionPacketData(object, propertyName, packetData, interval, sourceUri) {
+        if (!defined(packetData)) {
+            return false;
+        }
+
+        var updated = false;
+        if (Array.isArray(packetData)) {
+            for ( var i = 0, len = packetData.length; i < len; i++) {
+                updated = processPositionProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+            }
+        } else {
+            updated = processPositionProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+        }
+        return updated;
+    }
+    processPacketData.position = processPositionPacketData;
+
+    function cloneIntoUniforms(material, uniforms) {
+        if (!defined(uniforms)) {
+            uniforms = {};
+        }
+        if (material instanceof DynamicColorMaterial) {
+            //uniforms.color = material.color.getValue(time, uniforms.color);
+        }
+
+        if (material instanceof DynamicGridMaterial) {
+        }
+
+        if (material instanceof DynamicImageMaterial) {
+            return material;
+        }
+
+        //TODO
+        return material;
+        //throw new RuntimeError('unknown material');
+    }
+
+    function processMaterialProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
+        var combinedInterval;
+        var packetInterval = packetData.interval;
+        if (defined(packetInterval)) {
+            combinedInterval = TimeInterval.fromIso8601(packetInterval);
+            if (defined(constrainedInterval)) {
+                combinedInterval = combinedInterval.intersect(constrainedInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        combinedInterval = defaultValue(combinedInterval, Iso8601.MAXIMUM_INTERVAL);
+
+        var propertyCreated = false;
+        var property = object[propertyName];
+        if (!defined(property)) {
+            property = new TimeIntervalCollectionProperty(cloneIntoUniforms);
+            object[propertyName] = property;
+            propertyCreated = true;
+        }
+
+        //See if we already have data at that interval.
+        var thisIntervals = property.intervals;
+        var existingInterval = thisIntervals.findInterval(combinedInterval.start, combinedInterval.stop);
+        var existingMaterial;
+
+        if (defined(existingInterval)) {
+            //We have an interval, but we need to make sure the
+            //new data is the same type of material as the old data.
+            existingMaterial = existingInterval.data;
+        } else {
+            //If not, create it.
+            existingInterval = combinedInterval.clone();
+            thisIntervals.addInterval(existingInterval);
+        }
+
+        var materialData;
+        if (defined(packetData.solidColor)) {
+            if (!(existingMaterial instanceof DynamicColorMaterial)) {
+                existingMaterial = new DynamicColorMaterial();
+            }
+            materialData = packetData.solidColor;
+            processPacketData(Color, existingMaterial, 'color', materialData.color);
+        } else if (defined(packetData.grid)) {
+            if (!(existingMaterial instanceof DynamicGridMaterial)) {
+                existingMaterial = new DynamicGridMaterial();
+            }
+            materialData = packetData.grid;
+            processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'rowCount', materialData.rowCount, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'columnCount', materialData.columnCount, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
+        } else if (defined(packetData.image)) {
+            if (!(existingMaterial instanceof DynamicImageMaterial)) {
+                existingMaterial = new DynamicImageMaterial();
+            }
+            materialData = packetData.image;
+            processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
+            processPacketData(Number, existingMaterial, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
+        }
+        existingInterval.data = existingMaterial;
+
+        return propertyCreated;
+    }
+
+    function processMaterialPacketData(object, propertyName, packetData, interval, sourceUri){
+        if (!defined(packetData)) {
+            return false;
+        }
+
+        var updated = false;
+        if (Array.isArray(packetData)) {
+            for ( var i = 0, len = packetData.length; i < len; i++) {
+                updated = processMaterialProperty(object, propertyName, packetData[i], interval, sourceUri) || updated;
+            }
+        } else {
+            updated = processMaterialProperty(object, propertyName, packetData, interval, sourceUri) || updated;
+        }
+        return updated;
+    }
+    processPacketData.material = processMaterialPacketData;
+
+    function DynamicObjectprocessCzmlPacketPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var positionData = packet.position;
+        if (!defined(positionData)) {
+            return false;
+        }
+        return processPacketData.position(dynamicObject, 'position', positionData, undefined, sourceUri);
+    }
+
+    function DynamicObjectprocessCzmlPacketViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var viewFromData = packet.viewFrom;
+        if (!defined(viewFromData)) {
+            return false;
+        }
+        return processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
+    }
+
+    function DynamicObjectprocessCzmlPacketOrientation(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var orientationData = packet.orientation;
+        if (!defined(orientationData)) {
+            return false;
+        }
+
+        return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
+    }
+
+    function DynamicObjectprocessCzmlPacketVertexPositions(dynamicObject, packet, dynamicObjectCollection) {
+        var vertexPositionsData = packet.vertexPositions;
+        if (!defined(vertexPositionsData)) {
+            return false;
+        }
+
+        var vertexPositions = dynamicObject.vertexPositions;
+        var propertyCreated = !defined(dynamicObject.vertexPositions);
+        if (propertyCreated) {
+            dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
+        }
+        vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
+        return propertyCreated;
+    }
+
+    function DynamicObjectprocessCzmlPacketAvailability(dynamicObject, packet) {
+        var availability = packet.availability;
+        if (!defined(availability)) {
+            return false;
+        }
+
+        var propertyChanged = false;
+        var interval = TimeInterval.fromIso8601(availability);
+        if (defined(interval)) {
+            propertyChanged = dynamicObject._setAvailability(interval);
+        }
+        return propertyChanged;
+    }
+
+    function DynamicBillboardprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var billboardData = packet.billboard;
+        if (!defined(billboardData)) {
+            return false;
+        }
+
+        var interval = billboardData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var billboard = dynamicObject.billboard;
+        var billboardUpdated = !defined(billboard);
+        if (billboardUpdated) {
+            dynamicObject.billboard = billboard = new DynamicBillboard();
+        }
+
+        billboardUpdated = processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
+        billboardUpdated = processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
+
+        return billboardUpdated;
+    }
+
+    function DynamicClockprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var clockUpdated = false;
+        var clockPacket = packet.clock;
+        if (defined(clockPacket)) {
+            if (dynamicObject.id === 'document') {
+                var clock = dynamicObject.clock;
+                if (!defined(clock)) {
+                    clock = new DynamicClock();
+                    dynamicObject.clock = clock;
+                    clockUpdated = true;
+                }
+
+                if (defined(clockPacket.interval)) {
+                    var interval = TimeInterval.fromIso8601(clockPacket.interval);
+                    if (defined(interval)) {
+                        clock.startTime = interval.start;
+                        clock.stopTime = interval.stop;
+                    }
+                }
+                if (defined(clockPacket.currentTime)) {
+                    clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
+                }
+                if (defined(clockPacket.range)) {
+                    clock.clockRange = ClockRange[clockPacket.range];
+                }
+                if (defined(clockPacket.step)) {
+                    clock.clockStep = ClockStep[clockPacket.step];
+                }
+                if (defined(clockPacket.multiplier)) {
+                    clock.multiplier = clockPacket.multiplier;
+                }
+            }
+        }
+
+        return clockUpdated;
+    }
+
+    function DynamicConeprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var coneData = packet.cone;
+        if (!defined(coneData)) {
+            return false;
+        }
+
+        var interval = coneData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var cone = dynamicObject.cone;
+        var coneUpdated = !defined(cone);
+        if (coneUpdated) {
+            dynamicObject.cone = cone = new DynamicCone();
+        }
+
+        coneUpdated = processPacketData(Boolean, cone, 'show', coneData.show, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'radius', coneData.radius, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Boolean, cone, 'showIntersection', coneData.showIntersection, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Color, cone, 'intersectionColor', coneData.intersectionColor, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'intersectionWidth', coneData.intersectionWidth, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'innerHalfAngle', coneData.innerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'outerHalfAngle', coneData.outerHalfAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'minimumClockAngle', coneData.minimumClockAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData(Number, cone, 'maximumClockAngle', coneData.maximumClockAngle, interval, sourceUri) || coneUpdated;
+        coneUpdated = processPacketData.material(cone, 'capMaterial', coneData.capMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'innerMaterial', coneData.innerMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'outerMaterial', coneData.outerMaterial, interval, sourceUri);
+        coneUpdated = processPacketData.material(cone, 'silhouetteMaterial', coneData.silhouetteMaterial, interval, sourceUri);
+        return coneUpdated;
+    }
+
+    function DynamicEllipseprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var ellipseData = packet.ellipse;
+        if (!defined(ellipseData)) {
+            return false;
+        }
+
+        var interval = ellipseData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var ellipse = dynamicObject.ellipse;
+        var ellipseUpdated = !defined(ellipse);
+        if (ellipseUpdated) {
+            dynamicObject.ellipse = ellipse = new DynamicEllipse();
+        }
+
+        ellipseUpdated = processPacketData(Number, ellipse, 'bearing', ellipseData.bearing, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri) || ellipseUpdated;
+        ellipseUpdated = processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri) || ellipseUpdated;
+
+        return ellipseUpdated;
+    }
+
+    function DynamicEllipsoidprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var ellipsoidData = packet.ellipsoid;
+        if (!defined(ellipsoidData)) {
+            return false;
+        }
+
+        var interval = ellipsoidData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var ellipsoid = dynamicObject.ellipsoid;
+        var ellipsoidUpdated = !defined(ellipsoid);
+        if (ellipsoidUpdated) {
+            dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
+        }
+
+        ellipsoidUpdated = processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri) || ellipsoidUpdated;
+        ellipsoidUpdated = processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri) || ellipsoidUpdated;
+        ellipsoidUpdated = processPacketData.material(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri);
+        return ellipsoidUpdated;
+    }
+
+    function DynamicLabelprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var labelData = packet.label;
+        if (!defined(labelData)) {
+            return false;
+        }
+
+        var interval = labelData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var label = dynamicObject.label;
+        var labelUpdated = !defined(label);
+        if (labelUpdated) {
+            dynamicObject.label = label = new DynamicLabel();
+        }
+
+        labelUpdated = processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(String, label, 'text', labelData.text, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(String, label, 'font', labelData.font, interval, sourceUri) || labelUpdated;
+        labelUpdated = processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri) || labelUpdated;
+
+        return labelUpdated;
+    }
+
+    function DynamicPathprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var pathData = packet.path;
+        if (!defined(pathData)) {
+            return false;
+        }
+
+        var interval = pathData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var path = dynamicObject.path;
+        var pathUpdated = !defined(path);
+        if (pathUpdated) {
+            dynamicObject.path = path = new DynamicPath();
+        }
+
+        pathUpdated = processPacketData(Color, path, 'color', pathData.color, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Number, path, 'width', pathData.width, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Color, path, 'outlineColor', pathData.outlineColor, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Number, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri) || pathUpdated;
+        pathUpdated = processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri) || pathUpdated;
+        return pathUpdated;
+    }
+
+    function DynamicPointprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var pointData = packet.point;
+        if (!defined(pointData)) {
+            return false;
+        }
+
+        var interval = pointData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var point = dynamicObject.point;
+        var pointUpdated = !defined(point);
+        if (pointUpdated) {
+            dynamicObject.point = point = new DynamicPoint();
+        }
+
+        pointUpdated = processPacketData(Color, point, 'color', pointData.color, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri) || pointUpdated;
+        pointUpdated = processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri) || pointUpdated;
+
+        return pointUpdated;
+    }
+
+    function DynamicPolygonprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var polygonData = packet.polygon;
+        if (!defined(polygonData)) {
+            return false;
+        }
+
+        var interval = polygonData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var polygon = dynamicObject.polygon;
+        var polygonUpdated = !defined(polygon);
+        if (polygonUpdated) {
+            dynamicObject.polygon = polygon = new DynamicPolygon();
+        }
+
+        polygonUpdated = processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri) || polygonUpdated;
+        polygonUpdated = processPacketData.material(polygon, 'material', polygonData.material, interval, sourceUri);
+        return polygonUpdated;
+    }
+
+    function DynamicPolylineprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var polylineData = packet.polyline;
+        if (!defined(polylineData)) {
+            return false;
+        }
+
+        var interval = polylineData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var polyline = dynamicObject.polyline;
+        var polylineUpdated = !defined(polyline);
+        if (polylineUpdated) {
+            dynamicObject.polyline = polyline = new DynamicPolyline();
+        }
+
+        polylineUpdated = processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
+        polylineUpdated = processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
+        return polylineUpdated;
+    }
+
+    function DynamicPyramidprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var pyramidData = packet.pyramid;
+        if (!defined(pyramidData)) {
+            return false;
+        }
+
+        var interval = pyramidData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var pyramid = dynamicObject.pyramid;
+        var pyramidUpdated = !defined(pyramid);
+        if (pyramidUpdated) {
+            dynamicObject.pyramid = pyramid = new DynamicPyramid();
+        }
+
+        pyramidUpdated = processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
+        pyramidUpdated = processPacketData.material(pyramid, 'material', pyramidData.material, interval, sourceUri);
+
+        if (defined(pyramidData.directions)) {
+            var directions = pyramid.directions;
+            if (!defined(directions)) {
+                pyramid.directions = directions = new DynamicDirectionsProperty();
+                pyramidUpdated = true;
+            }
+            directions.processCzmlIntervals(pyramidData.directions, interval);
+        }
+
+        return pyramidUpdated;
+    }
+
+    function DynamicVectorprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var vectorData = packet.vector;
+        if (!defined(vectorData)) {
+            return false;
+        }
+
+        var interval = vectorData.interval;
+        if (defined(interval)) {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        var vector = dynamicObject.vector;
+        var vectorUpdated = !defined(vector);
+        if (vectorUpdated) {
+            dynamicObject.vector = vector = new DynamicVector();
+        }
+
+        vectorUpdated = processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
+        vectorUpdated = processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
+
+        return vectorUpdated;
+    }
+
+    var updaters = [DynamicClockprocessCzmlPacket,
+                DynamicBillboardprocessCzmlPacket,
+                DynamicEllipseprocessCzmlPacket,
+                DynamicEllipsoidprocessCzmlPacket,
+                DynamicConeprocessCzmlPacket,
+                DynamicLabelprocessCzmlPacket,
+                DynamicPathprocessCzmlPacket,
+                DynamicPointprocessCzmlPacket,
+                DynamicPolygonprocessCzmlPacket,
+                DynamicPolylineprocessCzmlPacket,
+                DynamicPyramidprocessCzmlPacket,
+                DynamicVectorprocessCzmlPacket,
+                DynamicObjectprocessCzmlPacketPosition,
+                DynamicObjectprocessCzmlPacketViewFrom,
+                DynamicObjectprocessCzmlPacketOrientation,
+                DynamicObjectprocessCzmlPacketVertexPositions,
+                DynamicObjectprocessCzmlPacketAvailability];
 
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
@@ -253,7 +1237,7 @@ define([
 
         var updatedObjects = [];
         var updatedObjectsHash = {};
-        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDefaults.updaters;
+        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {

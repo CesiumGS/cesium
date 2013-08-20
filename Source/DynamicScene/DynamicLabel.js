@@ -8,8 +8,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
         '../Scene/LabelStyle',
-        '../Core/Color',
-        './processPacketData'
+        '../Core/Color'
        ], function(
         TimeInterval,
         defaultValue,
@@ -19,8 +18,7 @@ define([
         HorizontalOrigin,
         VerticalOrigin,
         LabelStyle,
-        Color,
-        processPacketData) {
+        Color) {
     "use strict";
 
     /**
@@ -112,54 +110,6 @@ define([
          * @default undefined
          */
         this.show = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's label.
-     * If the DynamicObject does not have a label, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the label data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicLabel.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var labelData = packet.label;
-        if (!defined(labelData)) {
-            return false;
-        }
-
-        var interval = labelData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var label = dynamicObject.label;
-        var labelUpdated = !defined(label);
-        if (labelUpdated) {
-            dynamicObject.label = label = new DynamicLabel();
-        }
-
-        labelUpdated = processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(String, label, 'text', labelData.text, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Cartesian2, label, 'pixelOffset', labelData.pixelOffset, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Number, label, 'scale', labelData.scale, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(Boolean, label, 'show', labelData.show, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(String, label, 'font', labelData.font, interval, sourceUri) || labelUpdated;
-        labelUpdated = processPacketData(LabelStyle, label, 'style', labelData.style, interval, sourceUri) || labelUpdated;
-
-        return labelUpdated;
     };
 
     /**

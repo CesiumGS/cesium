@@ -7,8 +7,7 @@ define([
         '../Core/Cartesian3',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
-        '../Core/Color',
-        './processPacketData'
+        '../Core/Color'
     ], function(
         TimeInterval,
         defaultValue,
@@ -17,8 +16,7 @@ define([
         Cartesian3,
         HorizontalOrigin,
         VerticalOrigin,
-        Color,
-        processPacketData) {
+        Color) {
     "use strict";
 
     /**
@@ -98,55 +96,6 @@ define([
          * @default undefined
          */
         this.show = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's billboard.
-     * If the DynamicObject does not have a billboard, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     * @memberof DynamicBillboard
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the billboard data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
-     * @param {String} [sourceUri] The originating url of the CZML being processed.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicBillboard.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var billboardData = packet.billboard;
-        if (!defined(billboardData)) {
-            return false;
-        }
-
-        var interval = billboardData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var billboard = dynamicObject.billboard;
-        var billboardUpdated = !defined(billboard);
-        if (billboardUpdated) {
-            dynamicObject.billboard = billboard = new DynamicBillboard();
-        }
-
-        billboardUpdated = processPacketData(Color, billboard, 'color', billboardData.color, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian3, billboard, 'eyeOffset', billboardData.eyeOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(HorizontalOrigin, billboard, 'horizontalOrigin', billboardData.horizontalOrigin, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Image, billboard, 'image', billboardData.image, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian2, billboard, 'pixelOffset', billboardData.pixelOffset, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Number, billboard, 'scale', billboardData.scale, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Number, billboard, 'rotation', billboardData.rotation, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Cartesian3, billboard, 'alignedAxis', billboardData.alignedAxis, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(Boolean, billboard, 'show', billboardData.show, interval, sourceUri) || billboardUpdated;
-        billboardUpdated = processPacketData(VerticalOrigin, billboard, 'verticalOrigin', billboardData.verticalOrigin, interval, sourceUri) || billboardUpdated;
-
-        return billboardUpdated;
     };
 
     /**

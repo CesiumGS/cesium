@@ -7,7 +7,6 @@ define([
         '../Core/JulianDate',
         '../Core/Quaternion',
         '../Core/TimeInterval',
-        './processPacketData',
         './DynamicVertexPositionsProperty',
         '../Core/Cartesian3'
     ], function(
@@ -18,7 +17,6 @@ define([
         JulianDate,
         Quaternion,
         TimeInterval,
-        processPacketData,
         DynamicVertexPositionsProperty,
         Cartesian3) {
     "use strict";
@@ -222,125 +220,6 @@ define([
                 this[property] = defaultValue(this[property], other[property]);
             }
         }
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's position
-     * property. This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the position data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
-     *
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var positionData = packet.position;
-        if (!defined(positionData)) {
-            return false;
-        }
-        return processPacketData.position(dynamicObject, 'position', positionData, undefined, sourceUri);
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's viewFrom
-     * property. This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the viewFrom data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
-     *
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var viewFromData = packet.viewFrom;
-        if (!defined(viewFromData)) {
-            return false;
-        }
-        return processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's orientation
-     * property. This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the orientation data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
-     *
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var orientationData = packet.orientation;
-        if (!defined(orientationData)) {
-            return false;
-        }
-
-        return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's vertexPositions
-     * property. This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the vertexPositions data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to use to resolve any CZML properly links.
-     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
-     *
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
-        var vertexPositionsData = packet.vertexPositions;
-        if (!defined(vertexPositionsData)) {
-            return false;
-        }
-
-        var vertexPositions = dynamicObject.vertexPositions;
-        var propertyCreated = !defined(dynamicObject.vertexPositions);
-        if (propertyCreated) {
-            dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
-        }
-        vertexPositions.processCzmlIntervals(vertexPositionsData, undefined, dynamicObjectCollection);
-        return propertyCreated;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's availability
-     * property. This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the availability data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if the property was newly created while processing the packet, false otherwise.
-     *
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
-        var availability = packet.availability;
-        if (!defined(availability)) {
-            return false;
-        }
-
-        var propertyChanged = false;
-        var interval = TimeInterval.fromIso8601(availability);
-        if (defined(interval)) {
-            propertyChanged = dynamicObject._setAvailability(interval);
-        }
-        return propertyChanged;
     };
 
     /**

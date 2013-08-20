@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Color',
-        './processPacketData'],
+        '../Core/Color'],
 function(
         TimeInterval,
         defaultValue,
         defined,
-        Color,
-        processPacketData) {
+        Color) {
     "use strict";
 
     /**
@@ -77,49 +75,6 @@ function(
          * @default undefined
          */
         this.trailTime = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's path.
-     * If the DynamicObject does not have a path, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the path data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicPath.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var pathData = packet.path;
-        if (!defined(pathData)) {
-            return false;
-        }
-
-        var interval = pathData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var path = dynamicObject.path;
-        var pathUpdated = !defined(path);
-        if (pathUpdated) {
-            dynamicObject.path = path = new DynamicPath();
-        }
-
-        pathUpdated = processPacketData(Color, path, 'color', pathData.color, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'width', pathData.width, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Color, path, 'outlineColor', pathData.outlineColor, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'outlineWidth', pathData.outlineWidth, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri) || pathUpdated;
-        pathUpdated = processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri) || pathUpdated;
-        return pathUpdated;
     };
 
     /**

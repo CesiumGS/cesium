@@ -4,14 +4,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Color',
-        './processPacketData',
         './DynamicDirectionsProperty'
     ], function(
         TimeInterval,
         defaultValue,
         defined,
         Color,
-        processPacketData,
         DynamicDirectionsProperty) {
     "use strict";
 
@@ -73,59 +71,6 @@ define([
          * @default undefined
          */
         this.material = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's pyramid.
-     * If the DynamicObject does not have a pyramid, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the pyramid data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
-     *
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicPyramid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var pyramidData = packet.pyramid;
-        if (!defined(pyramidData)) {
-            return false;
-        }
-
-        var interval = pyramidData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var pyramid = dynamicObject.pyramid;
-        var pyramidUpdated = !defined(pyramid);
-        if (pyramidUpdated) {
-            dynamicObject.pyramid = pyramid = new DynamicPyramid();
-        }
-
-        pyramidUpdated = processPacketData(Boolean, pyramid, 'show', pyramidData.show, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Number, pyramid, 'radius', pyramidData.radius, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Boolean, pyramid, 'showIntersection', pyramidData.showIntersection, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Color, pyramid, 'intersectionColor', pyramidData.intersectionColor, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData(Number, pyramid, 'intersectionWidth', pyramidData.intersectionWidth, interval, sourceUri) || pyramidUpdated;
-        pyramidUpdated = processPacketData.material(pyramid, 'material', pyramidData.material, interval, sourceUri);
-
-        if (defined(pyramidData.directions)) {
-            var directions = pyramid.directions;
-            if (!defined(directions)) {
-                pyramid.directions = directions = new DynamicDirectionsProperty();
-                pyramidUpdated = true;
-            }
-            directions.processCzmlIntervals(pyramidData.directions, interval);
-        }
-
-        return pyramidUpdated;
     };
 
     /**

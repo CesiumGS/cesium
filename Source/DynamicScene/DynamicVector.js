@@ -4,15 +4,13 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Cartesian3',
-        '../Core/Color',
-        './processPacketData'],
+        '../Core/Color'],
 function(
         TimeInterval,
         defaultValue,
         defined,
         Cartesian3,
-        Color,
-        processPacketData) {
+        Color) {
     "use strict";
 
     /**
@@ -60,47 +58,6 @@ function(
          * @default undefined
          */
         this.length = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's vector.
-     * If the DynamicObject does not have a vector, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the vector data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicVector.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var vectorData = packet.vector;
-        if (!defined(vectorData)) {
-            return false;
-        }
-
-        var interval = vectorData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var vector = dynamicObject.vector;
-        var vectorUpdated = !defined(vector);
-        if (vectorUpdated) {
-            dynamicObject.vector = vector = new DynamicVector();
-        }
-
-        vectorUpdated = processPacketData(Color, vector, 'color', vectorData.color, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Boolean, vector, 'show', vectorData.show, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Number, vector, 'width', vectorData.width, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Cartesian3, vector, 'direction', vectorData.direction, interval, sourceUri) || vectorUpdated;
-        vectorUpdated = processPacketData(Number, vector, 'length', vectorData.length, interval, sourceUri) || vectorUpdated;
-
-        return vectorUpdated;
     };
 
     /**

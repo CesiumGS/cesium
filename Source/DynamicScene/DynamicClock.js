@@ -89,58 +89,6 @@ define([
     };
 
     /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's clock.
-     * @memberof DynamicClock
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the clock data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObjectCollection} [dynamicObjectCollection] The collection into which objects are being loaded.
-     * @param {String} [sourceUri] The originating url of the CZML being processed.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicClock.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var clockUpdated = false;
-        var clockPacket = packet.clock;
-        if (defined(clockPacket)) {
-            if (dynamicObject.id === 'document') {
-                var clock = dynamicObject.clock;
-                if (!defined(clock)) {
-                    clock = new DynamicClock();
-                    dynamicObject.clock = clock;
-                    clockUpdated = true;
-                }
-
-                if (defined(clockPacket.interval)) {
-                    var interval = TimeInterval.fromIso8601(clockPacket.interval);
-                    if (defined(interval)) {
-                        clock.startTime = interval.start;
-                        clock.stopTime = interval.stop;
-                    }
-                }
-                if (defined(clockPacket.currentTime)) {
-                    clock.currentTime = JulianDate.fromIso8601(clockPacket.currentTime);
-                }
-                if (defined(clockPacket.range)) {
-                    clock.clockRange = ClockRange[clockPacket.range];
-                }
-                if (defined(clockPacket.step)) {
-                    clock.clockStep = ClockStep[clockPacket.step];
-                }
-                if (defined(clockPacket.multiplier)) {
-                    clock.multiplier = clockPacket.multiplier;
-                }
-            }
-        }
-
-        return clockUpdated;
-    };
-
-    /**
      * Given two DynamicObjects, takes the clock properties from the second
      * and assigns them to the first.
      * @memberof DynamicClock

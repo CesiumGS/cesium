@@ -3,14 +3,12 @@ define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Color',
-        './processPacketData'],
+        '../Core/Color'],
 function(
         TimeInterval,
         defaultValue,
         defined,
-        Color,
-        processPacketData) {
+        Color) {
     "use strict";
 
     /**
@@ -59,46 +57,6 @@ function(
          * @default undefined
          */
         this.width = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's polyline.
-     * If the DynamicObject does not have a polyline, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the polyline data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicPolyline.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var polylineData = packet.polyline;
-        if (!defined(polylineData)) {
-            return false;
-        }
-
-        var interval = polylineData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var polyline = dynamicObject.polyline;
-        var polylineUpdated = !defined(polyline);
-        if (polylineUpdated) {
-            dynamicObject.polyline = polyline = new DynamicPolyline();
-        }
-
-        polylineUpdated = processPacketData(Color, polyline, 'color', polylineData.color, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Number, polyline, 'width', polylineData.width, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Color, polyline, 'outlineColor', polylineData.outlineColor, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Number, polyline, 'outlineWidth', polylineData.outlineWidth, interval, sourceUri) || polylineUpdated;
-        polylineUpdated = processPacketData(Boolean, polyline, 'show', polylineData.show, interval, sourceUri) || polylineUpdated;
-        return polylineUpdated;
     };
 
     /**

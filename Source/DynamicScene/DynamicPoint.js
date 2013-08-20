@@ -3,14 +3,12 @@ define([
         '../Core/defined',
         '../Core/TimeInterval',
         '../Core/defaultValue',
-        '../Core/Color',
-        './processPacketData'
+        '../Core/Color'
     ], function(
          defined,
          TimeInterval,
          defaultValue,
-         Color,
-         processPacketData) {
+         Color) {
     "use strict";
 
     /**
@@ -55,47 +53,6 @@ define([
          * @type DynamicProperty
          */
         this.show = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's point.
-     * If the DynamicObject does not have a point, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the point data.
-     * @param {Object} packet The CZML packet to process.
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicPoint.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var pointData = packet.point;
-        if (!defined(pointData)) {
-            return false;
-        }
-
-        var interval = pointData.interval;
-        if (defined(interval)) {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        var point = dynamicObject.point;
-        var pointUpdated = !defined(point);
-        if (pointUpdated) {
-            dynamicObject.point = point = new DynamicPoint();
-        }
-
-        pointUpdated = processPacketData(Color, point, 'color', pointData.color, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Number, point, 'pixelSize', pointData.pixelSize, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Color, point, 'outlineColor', pointData.outlineColor, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Number, point, 'outlineWidth', pointData.outlineWidth, interval, sourceUri) || pointUpdated;
-        pointUpdated = processPacketData(Boolean, point, 'show', pointData.show, interval, sourceUri) || pointUpdated;
-
-        return pointUpdated;
     };
 
     /**
