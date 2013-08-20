@@ -363,8 +363,12 @@ defineSuite(['DynamicScene/KmlDataSource',
         var polygon = objects[0].polygon;
         var time = new JulianDate();
         var material = polygon.material.getValue(time);
+        var generatedColor = material.uniforms.color;
         expect(objects.length).toEqual(1);
-        expect(material).toBeDefined();
+        expect(generatedColor.red).toEqual(color.red);
+        expect(generatedColor.green).toEqual(color.green);
+        expect(generatedColor.blue).toEqual(color.blue);
+        expect(generatedColor.alpha).toEqual(color.alpha);
     });
 
     it('handles Color in normal mode', function() {
