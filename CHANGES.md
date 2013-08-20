@@ -8,7 +8,7 @@ Beta Releases
 
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
-### b20 - 2013-09-01
+### b20 - 2013-09-03
 
 * Breaking changes:
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
@@ -37,6 +37,7 @@ var geometry = BoxGeometry.createGeometry(box);
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
+    * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
