@@ -3,14 +3,14 @@ define([
         '../Core/Cartesian3',
         '../Core/CircleOutlineGeometry',
         '../Core/Ellipsoid',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         Cartesian3,
         CircleOutlineGeometry,
         Ellipsoid,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createCircleOutlineGeometry(parameters, transferableObjects) {
@@ -19,7 +19,7 @@ define([
         circleGeometry._ellipseGeometry._ellipsoid = Ellipsoid.clone(circleGeometry._ellipseGeometry._ellipsoid);
 
         var geometry = CircleOutlineGeometry.createGeometry(circleGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,
