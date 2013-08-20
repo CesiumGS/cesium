@@ -4,7 +4,7 @@ define([
         '../Core/defined',
         '../Renderer/BlendingState',
         '../Renderer/CullFace',
-        '../Renderer/createShaderSource',
+        '../Renderer/createShaderSource'
     ], function(
         defaultValue,
         defined,

@@ -33,7 +33,17 @@ define([
      * @exception {DeveloperError} options.pickColorQualifier must be 'uniform' or 'varying'.
      *
      * @example
-     * // TODO
+     * // 1. Prepend #defines to a shader
+     * var source = createShaderSource({
+     *   defines : ['WHITE'],
+     *   sources : ['void main() { \n#ifdef WHITE\n gl_FragColor = vec4(1.0); \n#else\n gl_FragColor = vec4(0.0); \n#endif\n }']
+     * });
+     *
+     * // 2. Modify a fragment shader for picking
+     * var source = createShaderSource({
+     *   sources : ['void main() { gl_FragColor = vec4(1.0); }'],
+     *   pickColorQualifier : 'uniform'
+     * });
      */
     function createShaderSource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
