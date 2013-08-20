@@ -24,56 +24,6 @@ defineSuite([
 
     var position = new Cartesian3(1234, 5678, 9101112);
 
-    var ellipsePacket = {
-            ellipse : {
-                semiMajorAxis : 10,
-                semiMinorAxis : 20,
-                bearing : 1.0
-            }
-        };
-
-    var ellipsePacketInterval = {
-        ellipse : {
-            interval : '2000-01-01/2001-01-01',
-            semiMajorAxis : 10,
-            semiMinorAxis : 20,
-            bearing : 1.0
-        }
-    };
-
-    it('processCzmlPacket adds data for infinite ellipse.', function() {
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicEllipse.processCzmlPacket(dynamicObject, ellipsePacket)).toEqual(true);
-        expect(dynamicObject.ellipse).toBeDefined();
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMajorAxis);
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.bearing.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsePacket.ellipse.bearing);
-    });
-
-    it('processCzmlPacket adds data for constrained ellipse.', function() {
-        var validTime = TimeInterval.fromIso8601(ellipsePacketInterval.ellipse.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicEllipse.processCzmlPacket(dynamicObject, ellipsePacketInterval)).toEqual(true);
-
-        expect(dynamicObject.ellipse).toBeDefined();
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMajorAxis);
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.semiMinorAxis);
-        expect(dynamicObject.ellipse.bearing.getValue(validTime)).toEqual(ellipsePacketInterval.ellipse.bearing);
-
-        expect(dynamicObject.ellipse.semiMajorAxis.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipse.semiMinorAxis.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.ellipse.bearing.getValue(invalidTime)).toBeUndefined();
-    });
-
-    it('processCzmlPacket returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicEllipse.processCzmlPacket(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.ellipse).toBeUndefined();
-    });
-
     it('mergeProperties does not change a fully configured ellipse', function() {
         var expectedSemiMajorAxis = new MockProperty();
         var expectedSemiMinorAxis = new MockProperty();
