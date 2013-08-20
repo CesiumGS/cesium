@@ -11,6 +11,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
+        '../Renderer/createShaderSource',
         '../Scene/SceneMode',
         '../Shaders/SkyAtmosphereVS',
         '../Shaders/SkyAtmosphereFS'
@@ -26,6 +27,7 @@ define([
         DrawCommand,
         CullFace,
         BlendingState,
+        createShaderSource,
         SceneMode,
         SkyAtmosphereVS,
         SkyAtmosphereFS) {
@@ -154,15 +156,16 @@ define([
             });
 
             var shaderCache = context.getShaderCache();
-            var vs =
-                '#define SKY_FROM_SPACE\n' +
-                '#line 0\n' +
-                SkyAtmosphereVS;
+            var vs = createShaderSource({
+                defines : ['SKY_FROM_SPACE'],
+                sources : [SkyAtmosphereVS]
+            });
             this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
 
-            vs = '#define SKY_FROM_ATMOSPHERE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
+            vs = createShaderSource({
+                defines : ['SKY_FROM_ATMOSPHERE'],
+                sources : [SkyAtmosphereVS]
+            });
             this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
         }
 
