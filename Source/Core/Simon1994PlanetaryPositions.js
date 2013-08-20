@@ -1,5 +1,7 @@
 /*global define*/
-define(['./Cartesian3',
+define([
+        './Cartesian3',
+        './defined',
         './DeveloperError',
         './JulianDate',
         './Math',
@@ -8,6 +10,7 @@ define(['./Cartesian3',
         './TimeStandard'
     ], function(
         Cartesian3,
+        defined,
         DeveloperError,
         JulianDate,
         CesiumMath,
@@ -98,7 +101,7 @@ define(['./Cartesian3',
         }
 
         var radius = semilatus / denom;
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Cartesian3(radius * costheta, radius * sintheta, 0.0);
         } else {
             result.x = radius * costheta;
@@ -217,7 +220,7 @@ define(['./Cartesian3',
 
         var cosraan = Math.cos(rightAscension);
         var sinraan = Math.sin(rightAscension);
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Matrix3(
                     cosraan * cosap - sinraan * sinap * cosi,
                     -cosraan * sinap - sinraan * cosap * cosi,
@@ -481,7 +484,7 @@ define(['./Cartesian3',
      * @returns {Cartesian3} Calculated sun position
      */
     Simon1994PlanetaryPositions.ComputeSunPositionInEarthInertialFrame= function(date, result){
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             date = new JulianDate();
         }
         //first forward transformation
@@ -505,7 +508,7 @@ define(['./Cartesian3',
      * @returns {Cartesian3} Calculated moon position
      */
     Simon1994PlanetaryPositions.ComputeMoonPositionInEarthInertialFrame = function(date, result){
-        if (typeof date === 'undefined') {
+        if (!defined(date)) {
             date = new JulianDate();
         }
         result = computeSimonMoon(date, result);

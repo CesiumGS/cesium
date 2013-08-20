@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defineProperties',
+        '../../Core/defined',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
         '../getElement',
@@ -8,6 +9,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         defineProperties,
+        defined,
         destroyObject,
         DeveloperError,
         getElement,
@@ -39,15 +41,15 @@ define([
      * // and in the body, include: &lt;div id="sceneModePickerContainer"&gt;&lt;/div&gt;
      * // Note: This code assumed you already have a Scene instance.
      *
-     * var transitioner = new SceneTransitioner(scene);
-     * var sceneModePicker = new SceneModePicker('sceneModePickerContainer', transitioner);
+     * var transitioner = new Cesium.SceneTransitioner(scene);
+     * var sceneModePicker = new Cesium.SceneModePicker('sceneModePickerContainer', transitioner);
      */
     var SceneModePicker = function(container, transitioner) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof transitioner === 'undefined') {
+        if (!defined(transitioner)) {
             throw new DeveloperError('transitioner is required.');
         }
 

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HeightmapTessellator',
         '../Core/Math',
@@ -11,6 +12,7 @@ define([
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         HeightmapTessellator,
         CesiumMath,
@@ -85,13 +87,13 @@ define([
      * });
      */
     var HeightmapTerrainData = function HeightmapTerrainData(description) {
-        if (typeof description === 'undefined' || typeof description.buffer === 'undefined') {
+        if (!defined(description) || !defined(description.buffer)) {
             throw new DeveloperError('description.buffer is required.');
         }
-        if (typeof description.width === 'undefined') {
+        if (!defined(description.width)) {
             throw new DeveloperError('description.width is required.');
         }
-        if (typeof description.height === 'undefined') {
+        if (!defined(description.height)) {
             throw new DeveloperError('description.height is required.');
         }
 
@@ -102,7 +104,7 @@ define([
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         var structure = description.structure;
-        if (typeof structure === 'undefined') {
+        if (!defined(structure)) {
             structure = defaultStructure;
         } else if (structure !== defaultStructure) {
             structure.heightScale = defaultValue(structure.heightScale, defaultStructure.heightScale);
@@ -134,16 +136,16 @@ define([
      *          be retried later.
      */
     HeightmapTerrainData.prototype.createMesh = function(tilingScheme, x, y, level) {
-        if (typeof tilingScheme === 'undefined') {
+        if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
-        if (typeof x === 'undefined') {
+        if (!defined(x)) {
             throw new DeveloperError('x is required.');
         }
-        if (typeof y === 'undefined') {
+        if (!defined(y)) {
             throw new DeveloperError('y is required.');
         }
-        if (typeof level === 'undefined') {
+        if (!defined(level)) {
             throw new DeveloperError('level is required.');
         }
 
@@ -172,7 +174,7 @@ define([
             isGeographic : tilingScheme instanceof GeographicTilingScheme
         });
 
-        if (typeof verticesPromise === 'undefined') {
+        if (!defined(verticesPromise)) {
             // Postponed
             return undefined;
         }
@@ -241,25 +243,25 @@ define([
      *          deferred.
      */
     HeightmapTerrainData.prototype.upsample = function(tilingScheme, thisX, thisY, thisLevel, descendantX, descendantY, descendantLevel) {
-        if (typeof tilingScheme === 'undefined') {
+        if (!defined(tilingScheme)) {
             throw new DeveloperError('tilingScheme is required.');
         }
-        if (typeof thisX === 'undefined') {
+        if (!defined(thisX)) {
             throw new DeveloperError('thisX is required.');
         }
-        if (typeof thisY === 'undefined') {
+        if (!defined(thisY)) {
             throw new DeveloperError('thisY is required.');
         }
-        if (typeof thisLevel === 'undefined') {
+        if (!defined(thisLevel)) {
             throw new DeveloperError('thisLevel is required.');
         }
-        if (typeof descendantX === 'undefined') {
+        if (!defined(descendantX)) {
             throw new DeveloperError('descendantX is required.');
         }
-        if (typeof descendantY === 'undefined') {
+        if (!defined(descendantY)) {
             throw new DeveloperError('descendantY is required.');
         }
-        if (typeof descendantLevel === 'undefined') {
+        if (!defined(descendantLevel)) {
             throw new DeveloperError('descendantLevel is required.');
         }
 
@@ -298,16 +300,16 @@ define([
      * @returns {Boolean} True if the child tile is available; otherwise, false.
      */
     HeightmapTerrainData.prototype.isChildAvailable = function(thisX, thisY, childX, childY) {
-        if (typeof thisX === 'undefined') {
+        if (!defined(thisX)) {
             throw new DeveloperError('thisX is required.');
         }
-        if (typeof thisY === 'undefined') {
+        if (!defined(thisY)) {
             throw new DeveloperError('thisY is required.');
         }
-        if (typeof childX === 'undefined') {
+        if (!defined(childX)) {
             throw new DeveloperError('childX is required.');
         }
-        if (typeof childY === 'undefined') {
+        if (!defined(childY)) {
             throw new DeveloperError('childY is required.');
         }
 

@@ -1,5 +1,5 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     /**
@@ -34,30 +34,21 @@ define(function() {
          */
         this.message = message;
 
-        /**
-         * The Error object containing the stack trace.
-         * @type {Error}
-         * @constant
-         *
-         * @see <a href='https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Error'>Error object on Mozilla Developer Network</a>.
-         */
-        this.error = new Error();
+        var e = new Error();
 
         /**
-         * The stack trace of this exception.
+         * The stack trace of this exception, if available.
          * @type {String}
          * @constant
          */
-        this.stack = this.error.stack;
+        this.stack = e.stack;
     };
 
     DeveloperError.prototype.toString = function() {
         var str = this.name + ': ' + this.message;
 
-        if (typeof this.stack !== 'undefined') {
+        if (defined(this.stack)) {
             str += '\n' + this.stack.toString();
-        } else {
-            str += '\n' + this.error.toString();
         }
 
         return str;

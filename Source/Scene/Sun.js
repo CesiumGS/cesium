@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/PrimitiveType',
@@ -16,6 +17,7 @@ define([
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
+        defined,
         destroyObject,
         CesiumMath,
         PrimitiveType,
@@ -76,7 +78,7 @@ define([
 
         var command = this._command;
 
-        if (typeof command.vertexArray === 'undefined') {
+        if (!defined(command.vertexArray)) {
             var attributeIndices = {
                 direction : 0
             };

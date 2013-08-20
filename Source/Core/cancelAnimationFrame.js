@@ -1,17 +1,17 @@
 /*global define*/
-define(function() {
+define(['./defined'], function(defined) {
     "use strict";
 
     var implementation = window.cancelAnimationFrame;
     (function() {
         // look for vendor prefixed function
-        if (typeof implementation === 'undefined') {
+        if (!defined(implementation)) {
             var vendors = ['webkit', 'moz', 'ms', 'o'];
             var i = 0;
             var len = vendors.length;
-            while (i < len && typeof implementation === 'undefined') {
+            while (i < len && !defined(implementation)) {
                 implementation = window[vendors[i] + 'CancelAnimationFrame'];
-                if (typeof implementation === 'undefined') {
+                if (!defined(implementation)) {
                     implementation = window[vendors[i] + 'CancelRequestAnimationFrame'];
                 }
                 ++i;
@@ -19,7 +19,7 @@ define(function() {
         }
 
         // otherwise, assume requestAnimationFrame is based on setTimeout, so use clearTimeout
-        if (typeof implementation === 'undefined') {
+        if (!defined(implementation)) {
             implementation = clearTimeout;
         }
     })();

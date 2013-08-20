@@ -1,8 +1,10 @@
 /*global define*/
 define([
-        '../Core/Color'
-       ], function(
-         Color) {
+        '../Core/Color',
+        '../Core/defined'
+    ], function(
+        Color,
+        defined) {
     "use strict";
 
     var doublesPerValue = 4;
@@ -47,12 +49,12 @@ define([
          */
         unwrapInterval : function(czmlInterval) {
             var rgbaf = czmlInterval.rgbaf;
-            if (typeof rgbaf !== 'undefined') {
+            if (defined(rgbaf)) {
                 return rgbaf;
             }
 
             var rgba = czmlInterval.rgba;
-            if (typeof rgba === 'undefined') {
+            if (!defined(rgba)) {
                 return undefined;
             }
 
@@ -93,7 +95,7 @@ define([
          * @returns The modified result parameter or a new Color instance if result was not defined.
          */
         getValue : function(unwrappedInterval, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Color();
             }
             result.red = unwrappedInterval[0];
@@ -113,7 +115,7 @@ define([
          * @returns The modified result parameter or a new Color instance if result was not defined.
          */
         getValueFromArray : function(array, startingIndex, result) {
-            if (typeof result === 'undefined') {
+            if (!defined(result)) {
                 result = new Color();
             }
             result.red = array[startingIndex];

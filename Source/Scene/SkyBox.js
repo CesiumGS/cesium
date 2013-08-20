@@ -2,6 +2,7 @@
 define([
         '../Core/BoxGeometry',
         '../Core/Cartesian3',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
@@ -18,6 +19,7 @@ define([
     ], function(
         BoxGeometry,
         Cartesian3,
+        defined,
         destroyObject,
         DeveloperError,
         Matrix4,
@@ -61,13 +63,13 @@ define([
      * @see Transforms.computeTemeToPseudoFixedMatrix
      */
     var SkyBox = function(sources) {
-        if ((typeof sources === 'undefined') ||
-            (typeof sources.positiveX === 'undefined') ||
-            (typeof sources.negativeX === 'undefined') ||
-            (typeof sources.positiveY === 'undefined') ||
-            (typeof sources.negativeY === 'undefined') ||
-            (typeof sources.positiveZ === 'undefined') ||
-            (typeof sources.negativeZ === 'undefined')) {
+        if ((!defined(sources)) ||
+            (!defined(sources.positiveX)) ||
+            (!defined(sources.negativeX)) ||
+            (!defined(sources.positiveY)) ||
+            (!defined(sources.negativeY)) ||
+            (!defined(sources.positiveZ)) ||
+            (!defined(sources.negativeZ))) {
             throw new DeveloperError('sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.');
         }
 
@@ -128,7 +130,7 @@ define([
 
         var command = this._command;
 
-        if (typeof command.vertexArray === 'undefined') {
+        if (!defined(command.vertexArray)) {
             var sources = this._sources;
             var that = this;
 
@@ -149,10 +151,10 @@ define([
                 }
             };
 
-            var geometry = BoxGeometry.fromDimensions({
+            var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
-            });
+            }));
             var attributeIndices = GeometryPipeline.createAttributeIndices(geometry);
 
             command.primitiveType = PrimitiveType.TRIANGLES;
@@ -168,7 +170,7 @@ define([
             });
         }
 
-        if (typeof this._cubeMap === 'undefined') {
+        if (!defined(this._cubeMap)) {
             return undefined;
         }
 

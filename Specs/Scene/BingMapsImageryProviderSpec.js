@@ -2,6 +2,7 @@
 defineSuite([
          'Scene/BingMapsImageryProvider',
          'Core/DefaultProxy',
+         'Core/defined',
          'Core/FeatureDetection',
          'Core/jsonp',
          'Core/loadImage',
@@ -18,6 +19,7 @@ defineSuite([
      ], function(
          BingMapsImageryProvider,
          DefaultProxy,
+         defined,
          FeatureDetection,
          jsonp,
          loadImage,
@@ -145,7 +147,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof provider.getCredit() !== 'undefined';
+            return defined(provider.getCredit());
         }, 'logo to become ready');
 
         runs(function() {
@@ -173,7 +175,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {
@@ -254,7 +256,7 @@ defineSuite([
         });
 
         waitsFor(function() {
-            return typeof tile000Image !== 'undefined';
+            return defined(tile000Image);
         }, 'requested tile to be loaded');
 
         runs(function() {

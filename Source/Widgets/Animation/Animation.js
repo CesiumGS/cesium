@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -9,6 +10,7 @@ define([
         '../../ThirdParty/knockout'
     ], function(
         defaultValue,
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -324,10 +326,10 @@ define([
      * // In HTML head, include a link to Animation.css stylesheet,
      * // and in the body, include: &lt;div id="animationContainer"&gt;&lt;/div&gt;
      *
-     * var clock = new Clock();
-     * var clockViewModel = new ClockViewModel(clock);
-     * var viewModel = new AnimationViewModel(clockViewModel);
-     * var widget = new Animation('animationContainer', viewModel);
+     * var clock = new Cesium.Clock();
+     * var clockViewModel = new Cesium.ClockViewModel(clock);
+     * var viewModel = new Cesium.AnimationViewModel(clockViewModel);
+     * var widget = new Cesium.Animation('animationContainer', viewModel);
      *
      * function tick() {
      *     clock.tick();
@@ -336,11 +338,11 @@ define([
      * Cesium.requestAnimationFrame(tick);
      */
     var Animation = function(container, viewModel) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof viewModel === 'undefined') {
+        if (!defined(viewModel)) {
             throw new DeveloperError('viewModel is required.');
         }
 
@@ -995,7 +997,7 @@ define([
             }]
         });
 
-        if (typeof this._defsElement === 'undefined') {
+        if (!defined(this._defsElement)) {
             this._svgNode.appendChild(defsElement);
         } else {
             this._svgNode.replaceChild(defsElement, this._defsElement);

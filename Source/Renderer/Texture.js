@@ -2,6 +2,7 @@
 define([
         '../Core/Cartesian2',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -14,6 +15,7 @@ define([
     ], function(
         Cartesian2,
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -78,7 +80,7 @@ define([
      * });
      */
     Texture.prototype.copyFrom = function(source, xOffset, yOffset) {
-        if (typeof source === 'undefined') {
+        if (!defined(source)) {
             throw new DeveloperError('source is required.');
         }
 
@@ -264,7 +266,7 @@ define([
     * @see Context#createSampler
     */
     Texture.prototype.setSampler = function(sampler) {
-        if (typeof sampler === 'undefined') {
+        if (!defined(sampler)) {
             var minFilter = TextureMinificationFilter.LINEAR;
             var magFilter = TextureMagnificationFilter.LINEAR;
             if (this._pixelDatatype === PixelDatatype.FLOAT) {

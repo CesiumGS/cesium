@@ -1,10 +1,19 @@
 /*global define*/
-define(['./Enumeration'], function(Enumeration) {
+define([
+        './defined',
+        './DeveloperError',
+        './FeatureDetection',
+        './Enumeration'
+    ], function(
+        defined,
+        DeveloperError,
+        FeatureDetection,
+        Enumeration) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
-    if (typeof Int8Array === 'undefined') {
+    if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
 
@@ -25,15 +34,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x1400
          */
         BYTE : new Enumeration(0x1400, 'BYTE', {
-            sizeInBytes : Int8Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Int8Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Int8Array(buffer, byteOffset);
-            }
+            sizeInBytes : Int8Array.BYTES_PER_ELEMENT
         }),
 
         /**
@@ -45,15 +46,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x1401
          */
         UNSIGNED_BYTE : new Enumeration(0x1401, 'UNSIGNED_BYTE', {
-            sizeInBytes : Uint8Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Uint8Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Uint8Array(buffer, byteOffset);
-            }
+            sizeInBytes : Uint8Array.BYTES_PER_ELEMENT
         }),
 
         /**
@@ -65,15 +58,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x1402
          */
         SHORT : new Enumeration(0x1402, 'SHORT', {
-            sizeInBytes : Int16Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Int16Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Int16Array(buffer, byteOffset);
-            }
+            sizeInBytes : Int16Array.BYTES_PER_ELEMENT
         }),
 
         /**
@@ -85,15 +70,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x1403
          */
         UNSIGNED_SHORT : new Enumeration(0x1403, 'UNSIGNED_SHORT', {
-            sizeInBytes : Uint16Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Uint16Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Uint16Array(buffer, byteOffset);
-            }
+            sizeInBytes : Uint16Array.BYTES_PER_ELEMENT
         }),
 
         /**
@@ -105,15 +82,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x1406
          */
         FLOAT : new Enumeration(0x1406, 'FLOAT', {
-            sizeInBytes : Float32Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Float32Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Float32Array(buffer, byteOffset);
-            }
+            sizeInBytes : Float32Array.BYTES_PER_ELEMENT
         }),
 
         /**
@@ -128,15 +97,7 @@ define(['./Enumeration'], function(Enumeration) {
          * @default 0x140A
          */
         DOUBLE : new Enumeration(0x140A, 'DOUBLE', {
-            sizeInBytes : Float64Array.BYTES_PER_ELEMENT,
-
-            createTypedArray : function(valuesOrLength) {
-                return new Float64Array(valuesOrLength);
-            },
-
-            createArrayBufferView : function(buffer, byteOffset) {
-                return new Float64Array(buffer, byteOffset);
-            }
+            sizeInBytes : Float64Array.BYTES_PER_ELEMENT
         })
     };
 
@@ -153,12 +114,98 @@ define(['./Enumeration'], function(Enumeration) {
      * }
      */
     ComponentDatatype.validate = function(componentDatatype) {
-        return componentDatatype === ComponentDatatype.BYTE ||
-               componentDatatype === ComponentDatatype.UNSIGNED_BYTE ||
-               componentDatatype === ComponentDatatype.SHORT ||
-               componentDatatype === ComponentDatatype.UNSIGNED_SHORT ||
-               componentDatatype === ComponentDatatype.FLOAT ||
-               componentDatatype === ComponentDatatype.DOUBLE;
+        return componentDatatype.value === ComponentDatatype.BYTE.value ||
+               componentDatatype.value === ComponentDatatype.UNSIGNED_BYTE.value ||
+               componentDatatype.value === ComponentDatatype.SHORT.value ||
+               componentDatatype.value === ComponentDatatype.UNSIGNED_SHORT.value ||
+               componentDatatype.value === ComponentDatatype.FLOAT.value ||
+               componentDatatype.value === ComponentDatatype.DOUBLE.value;
+    };
+
+    /**
+     * Creates a typed array corresponding to component data type.
+     * @memberof ComponentDatatype
+     *
+     * @param {ComponentDatatype} componentDatatype The component data type.
+     * @param {Number|Array} valuesOrLength The length of the array to create or an array.
+     *
+     * @return {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
+     *
+     * @exception {DeveloperError} componentDatatype is required.
+     * @exception {DeveloperError} valuesOrLength is required.
+     * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
+     *
+     * @example
+     * // creates a Float32Array with length of 100
+     * var typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, 100);
+     */
+    ComponentDatatype.createTypedArray = function(componentDatatype, valuesOrLength) {
+        if (!defined(componentDatatype)) {
+            throw new DeveloperError('componentDatatype is required.');
+        }
+
+        if (!defined(valuesOrLength)) {
+            throw new DeveloperError('valuesOrLength is required.');
+        }
+
+        switch (componentDatatype.value) {
+        case ComponentDatatype.BYTE.value:
+            return new Int8Array(valuesOrLength);
+        case ComponentDatatype.UNSIGNED_BYTE.value:
+            return new Uint8Array(valuesOrLength);
+        case ComponentDatatype.SHORT.value:
+            return new Int16Array(valuesOrLength);
+        case ComponentDatatype.UNSIGNED_SHORT.value:
+            return new Uint16Array(valuesOrLength);
+        case ComponentDatatype.FLOAT.value:
+            return new Float32Array(valuesOrLength);
+        case ComponentDatatype.DOUBLE.value:
+            return new Float64Array(valuesOrLength);
+        default:
+            throw new DeveloperError('componentDatatype is not a valid enumeration value.');
+        }
+    };
+
+    /**
+     * Creates a typed view of an array of bytes.
+     * @memberof ComponentDatatype
+     *
+     * @param {ComponentDatatype} componentDatatype The type of the view to create.
+     * @param {ArrayBuffer} buffer The buffer storage to use for the view.
+     * @param {Number} [byteOffset] The offset, in bytes, to the first element in the view.
+     * @param {Number} [length] The number of elements in the view.
+     *
+     * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array view of the buffer.
+     *
+     * @exception {DeveloperError} componentDatatype is required.
+     * @exception {DeveloperError} buffer is required.
+     * @exception {DeveloperError} componentDatatype is not a valid enumeration value.
+     */
+    ComponentDatatype.createArrayBufferView = function(componentDatatype, buffer, byteOffset, length) {
+        if (!defined(componentDatatype)) {
+            throw new DeveloperError('componentDatatype is required.');
+        }
+
+        if (!defined(buffer)) {
+            throw new DeveloperError('buffer is required.');
+        }
+
+        switch (componentDatatype.value) {
+        case ComponentDatatype.BYTE.value:
+            return new Int8Array(buffer, byteOffset);
+        case ComponentDatatype.UNSIGNED_BYTE.value:
+            return new Uint8Array(buffer, byteOffset);
+        case ComponentDatatype.SHORT.value:
+            return new Int16Array(buffer, byteOffset);
+        case ComponentDatatype.UNSIGNED_SHORT.value:
+            return new Uint16Array(buffer, byteOffset);
+        case ComponentDatatype.FLOAT.value:
+            return new Float32Array(buffer, byteOffset);
+        case ComponentDatatype.DOUBLE.value:
+            return new Float64Array(buffer, byteOffset);
+        default:
+            throw new DeveloperError('componentDatatype is not a valid enumeration value.');
+        }
     };
 
     return ComponentDatatype;

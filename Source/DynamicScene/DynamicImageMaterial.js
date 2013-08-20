@@ -3,11 +3,13 @@ define([
         './DynamicProperty',
         './CzmlImage',
         './CzmlNumber',
+        '../Core/defined',
         '../Scene/Material'
     ], function(
          DynamicProperty,
          CzmlImage,
          CzmlNumber,
+         defined,
          Material) {
     "use strict";
 
@@ -44,7 +46,7 @@ define([
      * @returns {Boolean} true if the interval contains CZML image material data, false otherwise.
      */
     DynamicImageMaterial.isMaterial = function(czmlInterval) {
-        return typeof czmlInterval.image !== 'undefined';
+        return defined(czmlInterval.image);
     };
 
     /**
@@ -64,29 +66,29 @@ define([
      */
     DynamicImageMaterial.prototype.processCzmlIntervals = function(czmlInterval, sourceUri) {
         var materialData = czmlInterval.image;
-        if (typeof materialData === 'undefined') {
+        if (!defined(materialData)) {
             return;
         }
 
-        if (typeof materialData.image !== 'undefined') {
+        if (defined(materialData.image)) {
             var image = this.image;
-            if (typeof image === 'undefined') {
+            if (!defined(image)) {
                 this.image = image = new DynamicProperty(CzmlImage);
             }
             image.processCzmlIntervals(materialData.image, undefined, sourceUri);
         }
 
-        if (typeof materialData.verticalRepeat !== 'undefined') {
+        if (defined(materialData.verticalRepeat)) {
             var verticalRepeat = this.verticalRepeat;
-            if (typeof verticalRepeat === 'undefined') {
+            if (!defined(verticalRepeat)) {
                 this.verticalRepeat = verticalRepeat = new DynamicProperty(CzmlNumber);
             }
             verticalRepeat.processCzmlIntervals(materialData.verticalRepeat);
         }
 
-        if (typeof materialData.horizontalRepeat !== 'undefined') {
+        if (defined(materialData.horizontalRepeat)) {
             var horizontalRepeat = this.horizontalRepeat;
-            if (typeof horizontalRepeat === 'undefined') {
+            if (!defined(horizontalRepeat)) {
                 this.horizontalRepeat = horizontalRepeat = new DynamicProperty(CzmlNumber);
             }
             horizontalRepeat.processCzmlIntervals(materialData.horizontalRepeat);
@@ -102,32 +104,32 @@ define([
      * @returns The modified existingMaterial parameter or a new Image Material instance if existingMaterial was undefined or not a Image Material.
      */
     DynamicImageMaterial.prototype.getValue = function(time, context, existingMaterial) {
-        if (typeof existingMaterial === 'undefined' || (existingMaterial.type !== Material.ImageType)) {
+        if (!defined(existingMaterial) || (existingMaterial.type !== Material.ImageType)) {
             existingMaterial = Material.fromType(context, Material.ImageType);
         }
 
         var xRepeat;
         var property = this.verticalRepeat;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             xRepeat = property.getValue(time);
-            if (typeof xRepeat !== 'undefined') {
+            if (defined(xRepeat)) {
                 existingMaterial.uniforms.repeat.x = xRepeat;
             }
         }
 
         var yRepeat;
         property = this.horizontalRepeat;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             yRepeat = property.getValue(time);
-            if (typeof yRepeat !== 'undefined') {
+            if (defined(yRepeat)) {
                 existingMaterial.uniforms.repeat.y = yRepeat;
             }
         }
 
         property = this.image;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var url = this.image.getValue(time);
-            if (typeof url !== 'undefined' && existingMaterial.currentUrl !== url) {
+            if (defined(url) && existingMaterial.currentUrl !== url) {
                 existingMaterial.currentUrl = url;
                 existingMaterial.uniforms.image = url;
             }

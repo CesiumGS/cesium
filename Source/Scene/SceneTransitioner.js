@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -18,6 +19,7 @@ define([
         './SceneMode'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -50,7 +52,7 @@ define([
      * @see SceneMode
      */
     var SceneTransitioner = function(scene, ellipsoid) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
 
@@ -171,7 +173,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.to2D = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -187,7 +189,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.toColumbusView = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -205,7 +207,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.to3D = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -225,7 +227,7 @@ define([
      * @exception {DeveloperError} completeMorph can only be called during a transition.
      */
     SceneTransitioner.prototype.completeMorph = function() {
-        if (typeof this._completeMorph === 'undefined') {
+        if (!defined(this._completeMorph)) {
             throw new DeveloperError('completeMorph can only be called while morphing');
         }
         this._completeMorph();
@@ -236,7 +238,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.morphTo2D = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -264,7 +266,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.morphToColumbusView = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -292,7 +294,7 @@ define([
      * @memberof SceneTransitioner
      */
     SceneTransitioner.prototype.morphTo3D = function() {
-        if (typeof this._completeMorph !== 'undefined') {
+        if (defined(this._completeMorph)) {
             this._completeMorph();
         }
 
@@ -700,7 +702,7 @@ define([
             easingFunction : Tween.Easing.Quartic.Out
         };
 
-        if (typeof onComplete !== 'undefined') {
+        if (defined(onComplete)) {
             template.onComplete = function() {
                 onComplete(transitioner);
             };
@@ -762,7 +764,7 @@ define([
             camera.up = transitioner._camera3D.up.clone();
         }
 
-        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
+        var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
         transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE3D, wasMorphing);
     }
@@ -784,7 +786,7 @@ define([
         camera.direction = transitioner._camera2D.direction.clone();
         camera.up = transitioner._camera2D.up.clone();
 
-        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
+        var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
         transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.SCENE2D, wasMorphing);
     }
@@ -810,7 +812,7 @@ define([
             camera.right = camera.direction.cross(camera.up);
         }
 
-        var wasMorphing = typeof transitioner._completeMorph !== 'undefined';
+        var wasMorphing = defined(transitioner._completeMorph);
         transitioner._completeMorph = undefined;
         transitioner.onTransitionComplete.raiseEvent(transitioner, transitioner._previousMode, SceneMode.COLUMBUS_VIEW, wasMorphing);
     }

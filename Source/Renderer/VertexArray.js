@@ -1,11 +1,13 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/ComponentDatatype'
     ], function(
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         ComponentDatatype) {
@@ -62,7 +64,7 @@ define([
             // Common case: vertex buffer for per-vertex data
             attr.vertexAttrib = function(gl) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexBuffer._getBuffer());
-                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype, this.normalize, this.strideInBytes, this.offsetInBytes);
+                gl.vertexAttribPointer(this.index, this.componentsPerAttribute, this.componentDatatype.value, this.normalize, this.strideInBytes, this.offsetInBytes);
                 gl.enableVertexAttribArray(this.index);
             };
 
@@ -109,7 +111,7 @@ define([
             }
         }
 
-        if (typeof indexBuffer !== 'undefined') {
+        if (defined(indexBuffer)) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer._getBuffer());
         }
     }
@@ -127,7 +129,7 @@ define([
     var VertexArray = function(gl, vertexArrayObject, attributes, indexBuffer) {
         var vaAttributes = [];
 
-        if (typeof attributes !== 'undefined') {
+        if (defined(attributes)) {
             for ( var i = 0; i < attributes.length; ++i) {
                 addAttribute(vaAttributes, attributes[i], i);
             }
@@ -172,7 +174,7 @@ define([
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getAttribute = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 
@@ -203,7 +205,7 @@ define([
     };
 
     VertexArray.prototype._bind = function() {
-        if (typeof this._vao !== 'undefined') {
+        if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(this._vao);
         } else {
             bind(this._gl, this._attributes, this._indexBuffer);
@@ -211,7 +213,7 @@ define([
     };
 
     VertexArray.prototype._unBind = function() {
-        if (typeof this._vao !== 'undefined') {
+        if (defined(this._vao)) {
             this._vaoExtension.bindVertexArrayOES(null);
         } else {
             var attributes = this._attributes;
@@ -311,7 +313,7 @@ define([
             indexBuffer.destroy();
         }
 
-        if (typeof this._vao !== 'undefined') {
+        if (defined(this._vao)) {
             this._vaoExtension.deleteVertexArrayOES(this._vao);
         }
 

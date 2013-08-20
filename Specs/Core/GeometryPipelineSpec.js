@@ -3,6 +3,7 @@ defineSuite([
          'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Core/ComponentDatatype',
+         'Core/BoxGeometry',
          'Core/EllipsoidGeometry',
          'Core/Ellipsoid',
          'Core/Cartesian3',
@@ -20,6 +21,7 @@ defineSuite([
          GeometryPipeline,
          PrimitiveType,
          ComponentDatatype,
+         BoxGeometry,
          EllipsoidGeometry,
          Ellipsoid,
          Cartesian3,
@@ -316,7 +318,7 @@ defineSuite([
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
-        var geometry = new EllipsoidGeometry();
+        var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
         var acmrBefore = Tipsify.calculateACMR({
             indices : geometry.indices,
             cacheSize : 24
@@ -1437,31 +1439,32 @@ defineSuite([
                                                         -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON7);
     });
 
-    it ('computeBinormalAndTangent computes tangent and binormal for an EllipsoidGeometry', function() {
-        var numberOfPartitions = 10;
-        var geometry = new EllipsoidGeometry({
+    it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
                 st : true
             }),
-            numberOfPartitions : numberOfPartitions
-        });
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
-        var expectedGeometry = new EllipsoidGeometry({
+        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
-            numberOfPartitions : numberOfPartitions
-        });
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
 
         expect(actualTangents.length).toEqual(expectedTangents.length);
         expect(actualBinormals.length).toEqual(expectedBinormals.length);
 
-        for (var i = 300; i < 500; i += 3) {
+        for (var i = 0; i < actualTangents.length; i += 3) {
             var actual = Cartesian3.fromArray(actualTangents, i);
             var expected = Cartesian3.fromArray(expectedTangents, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);

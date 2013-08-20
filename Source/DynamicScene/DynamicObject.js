@@ -2,6 +2,7 @@
 define([
         '../Core/createGuid',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/JulianDate',
         '../Core/TimeInterval',
@@ -13,6 +14,7 @@ define([
     ], function(
         createGuid,
         defaultValue,
+        defined,
         DeveloperError,
         JulianDate,
         TimeInterval,
@@ -49,7 +51,7 @@ define([
         this._cachedAvailabilityDate = undefined;
         this._cachedAvailabilityValue = undefined;
 
-        if (typeof id === 'undefined') {
+        if (!defined(id)) {
             id = createGuid();
         }
 
@@ -188,12 +190,12 @@ define([
      * @returns true if the object should have data during the provided time, false otherwise.
      */
     DynamicObject.prototype.isAvailable = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
 
         var availability = this.availability;
-        if (typeof availability === 'undefined') {
+        if (!defined(availability)) {
             return true;
         }
 
@@ -215,7 +217,7 @@ define([
      * @private
      */
     DynamicObject.prototype.merge = function(other) {
-        if (typeof other === 'undefined') {
+        if (!defined(other)) {
             throw new DeveloperError('other is required');
         }
         for ( var property in other) {
@@ -240,12 +242,12 @@ define([
      */
     DynamicObject.processCzmlPacketPosition = function(dynamicObject, packet) {
         var positionData = packet.position;
-        if (typeof positionData === 'undefined') {
+        if (!defined(positionData)) {
             return false;
         }
 
         var position = dynamicObject.position;
-        var propertyCreated = typeof position === 'undefined';
+        var propertyCreated = !defined(position);
         if (propertyCreated) {
             dynamicObject.position = position = new DynamicPositionProperty();
         }
@@ -268,12 +270,12 @@ define([
      */
     DynamicObject.processCzmlPacketViewFrom = function(dynamicObject, packet) {
         var viewFromData = packet.viewFrom;
-        if (typeof viewFromData === 'undefined') {
+        if (!defined(viewFromData)) {
             return false;
         }
 
         var viewFrom = dynamicObject.viewFrom;
-        var propertyCreated = typeof viewFrom === 'undefined';
+        var propertyCreated = !defined(viewFrom);
         if (propertyCreated) {
             dynamicObject.viewFrom = viewFrom = new DynamicProperty(CzmlCartesian3);
         }
@@ -296,12 +298,12 @@ define([
      */
     DynamicObject.processCzmlPacketOrientation = function(dynamicObject, packet) {
         var orientationData = packet.orientation;
-        if (typeof orientationData === 'undefined') {
+        if (!defined(orientationData)) {
             return false;
         }
 
         var orientation = dynamicObject.orientation;
-        var propertyCreated = typeof orientation === 'undefined';
+        var propertyCreated = !defined(orientation);
         if (propertyCreated) {
             dynamicObject.orientation = orientation = new DynamicProperty(CzmlUnitQuaternion);
         }
@@ -325,12 +327,12 @@ define([
      */
     DynamicObject.processCzmlPacketVertexPositions = function(dynamicObject, packet, dynamicObjectCollection) {
         var vertexPositionsData = packet.vertexPositions;
-        if (typeof vertexPositionsData === 'undefined') {
+        if (!defined(vertexPositionsData)) {
             return false;
         }
 
         var vertexPositions = dynamicObject.vertexPositions;
-        var propertyCreated = typeof dynamicObject.vertexPositions === 'undefined';
+        var propertyCreated = !defined(dynamicObject.vertexPositions);
         if (propertyCreated) {
             dynamicObject.vertexPositions = vertexPositions = new DynamicVertexPositionsProperty();
         }
@@ -353,13 +355,13 @@ define([
      */
     DynamicObject.processCzmlPacketAvailability = function(dynamicObject, packet) {
         var availability = packet.availability;
-        if (typeof availability === 'undefined') {
+        if (!defined(availability)) {
             return false;
         }
 
         var propertyChanged = false;
         var interval = TimeInterval.fromIso8601(availability);
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             propertyChanged = dynamicObject._setAvailability(interval);
         }
         return propertyChanged;
@@ -382,7 +384,7 @@ define([
         targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
         targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
         var availability = objectToMerge.availability;
-        if (typeof availability !== 'undefined') {
+        if (defined(availability)) {
             targetObject._setAvailability(availability);
         }
     };

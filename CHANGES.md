@@ -7,8 +7,43 @@ Beta Releases
 ### b20 - 2013-09-01
 
 * Breaking changes:
-    * ...
+    * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
+      * `options.extrudedOptions.height` -> `options.extrudedHeight`
+      * `options.extrudedOptions.closeTop` -> `options.closeBottom`
+      * `options.extrudedOptions.closeBottom` -> `options.closeTop`
+    * Geometry constructors no longer compute vertices or indices. Use the type's `createGeometry` method. For example, code that looked like:
+```javascript
+var boxGeometry = new BoxGeometry({
+  minimumCorner : min,
+  maximumCorner : max,
+  vertexFormat : VertexFormat.POSITION_ONLY
+});
+```
+
+      should now look like:
+```javascript
+var box = new BoxGeometry({
+    minimumCorner : min,
+    maximumCorner : max,
+    vertexFormat : VertexFormat.POSITION_ONLY
+});
+var geometry = BoxGeometry.createGeometry(box);
+```
+
+    * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
+    * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
+    * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
+* Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
+* Added `EllipsoidGeodesic`.
+* Added `PolylinePipeline.scaleToSurface`.
+* Added `PolylinePipeline.scaleToGeodeticHeight`.
+* Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
+* Improved geometry batching performance by moving work to a web worker.
+* Improved `WallGeometry` to follow the curvature of the earth.
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
+* `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
 
 ### b19 - 2013-08-01
 

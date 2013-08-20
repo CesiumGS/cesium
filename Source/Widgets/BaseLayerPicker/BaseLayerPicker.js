@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -7,6 +8,7 @@ define([
         './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -44,30 +46,31 @@ define([
      *
      * @example
      * // In HTML head, include a link to the BaseLayerPicker.css stylesheet,
-     * // and in the body, include: &lt;div id="baseLayerPickerContainer"&gt;&lt;/div&gt;
+     * // and in the body, include: &lt;div id="baseLayerPickerContainer"
+     * //   style="position:absolute;top:24px;right:24px;width:38px;height:38px;"&gt;&lt;/div&gt;
      *
      * //Create the list of available providers we would like the user to select from.
      * //This example uses 3, OpenStreetMap, The Black Marble, and a single, non-streaming world image.
      * var providerViewModels = [];
-     * providerViewModels.push(new ImageryProviderViewModel({
+     * providerViewModels.push(new Cesium.ImageryProviderViewModel({
      *      name : 'Open\u00adStreet\u00adMap',
-     *      iconUrl : require.toUrl('../Images/ImageryProviders/openStreetMap.png'),
+     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      *map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return new OpenStreetMapImageryProvider({
+     *          return new Cesium.OpenStreetMapImageryProvider({
      *              url : 'http://tile.openstreetmap.org/'
      *          });
      *      }
      *  }));
      *
-     *  providerViewModels.push(new ImageryProviderViewModel({
+     *  providerViewModels.push(new Cesium.ImageryProviderViewModel({
      *      name : 'Black Marble',
-     *      iconUrl : require.toUrl('../Images/ImageryProviders/blackMarble.png'),
+     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
      *      tooltip : 'The lights of cities and villages trace the outlines of civilization \
      *in this global view of the Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
      *      creationFunction : function() {
-     *          return new TileMapServiceImageryProvider({
+     *          return new Cesium.TileMapServiceImageryProvider({
      *              url : 'http://cesium.agi.com/blackmarble',
      *              maximumLevel : 8,
      *              credit : 'Black Marble imagery courtesy NASA Earth Observatory'
@@ -75,30 +78,33 @@ define([
      *      }
      *  }));
      *
-     *  providerViewModels.push(new ImageryProviderViewModel({
+     *  providerViewModels.push(new Cesium.ImageryProviderViewModel({
      *      name : 'Natural Earth\u00a0II',
-     *      iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
+     *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return new TileMapServiceImageryProvider({
-     *              url : buildModuleUrl('Assets/Textures/NaturalEarthII')
+     *          return new Cesium.TileMapServiceImageryProvider({
+     *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
      *  }));
      *
-     * //Finally, create the actual widget using our view models.
-     * var layers = centralBody.getImageryLayers();
-     * var baseLayerPicker = new BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
+     * //Create a CesiumWidget without imagery, if you haven't already done so.
+     * var cesiumWidget = new Cesium.CesiumWidget('cesiumContainer', { imageryProvider: false });
+     *
+     * //Finally, create the baseLayerPicker widget using our view models.
+     * var layers = cesiumWidget.centralBody.getImageryLayers();
+     * var baseLayerPicker = new Cesium.BaseLayerPicker('baseLayerPickerContainer', layers, providerViewModels);
      *
      * //Use the first item in the list as the current selection.
      * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof imageryLayers === 'undefined') {
+        if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required.');
         }
 

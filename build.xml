@@ -18,7 +18,7 @@
 			<demos dir="${galleryDirectory}" includes="**/*.html" />
 		</createGalleryList>
 
-		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptions="${jsHintEclipseSettings.options}" />
+		<createSandcastleJsHintOptions output="${sandcastleDirectory}/jsHintOptions.js" jshintoptionspath="${jsHintOptionsPath}" />
 	</target>
 
 	<target name="combine" depends="build,combineJavaScript" description="Combines all source files into a single stand-alone script.">
@@ -128,6 +128,7 @@
 	<property name="jsdoc3Directory" location="${toolsDirectory}/jsdoc3" />
 	<property name="webProxyDirectory" location="${toolsDirectory}/proxy" />
 	<property name="jsHintPath" location="${thirdPartyDirectory}/jshint-2.1.2/jshint-2.1.2.js" />
+	<property name="jsHintOptionsPath" location=".jshintrc" />
 
 	<!-- properties controlling documentation source-->
 	<property name="githubRepoLink" value="https://github.com/AnalyticalGraphicsInc/cesium/" />
@@ -184,21 +185,19 @@
 
 	<scriptdef name="createSandcastleJsHintOptions" language="javascript" src="${tasksDirectory}/createSandcastleJsHintOptions.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="output" />
-		<attribute name="jshintoptions" />
+		<attribute name="jshintoptionspath" />
 	</scriptdef>
 
 	<scriptdef name="runJsHint" language="javascript" src="${tasksDirectory}/runJsHint.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="jshintpath" />
-		<attribute name="jshintoptions" />
+		<attribute name="jshintoptionspath" />
 		<attribute name="sandcastlejshintoptionspath" />
 		<attribute name="failureproperty" />
 		<element name="sourcefiles" type="fileset" />
 	</scriptdef>
 
-	<property file="${basedir}/.settings/com.eclipsesource.jshint.ui.prefs" prefix="jsHintEclipseSettings" />
-
 	<target name="jsHint" depends="build" description="Runs JSHint on the entire source tree.">
-		<runJsHint jshintpath="${jsHintPath}" jshintoptions="${jsHintEclipseSettings.options}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
+		<runJsHint jshintpath="${jsHintPath}" jshintoptionspath="${jsHintOptionsPath}" sandcastlejshintoptionspath="${sandcastleDirectory}/jsHintOptions.js" failureproperty="jsHint.failure">
 			<sourcefiles dir="${basedir}">
 				<include name="Source/**/*.js" />
 				<exclude name="Source/Shaders/**" />
@@ -269,9 +268,30 @@
 		</exec>
 
 		<!-- create each combined worker layer -->
-		<antcall target="combineJavaScript.combineWorker">
-			<param name="worker" value="createVerticesFromHeightmap" />
-		</antcall>
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+
+			<srcfile prefix="name=Workers/" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/Workers">
+					<include name="*.js" />
+					<exclude name="*.profile.js" />
+					<exclude name="cesiumWorkerBootstrapper.js" />
+					<exclude name="transferGeometry.js" />
+					<exclude name="createTaskProcessorWorker.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
 
 		<!-- copy to build folder with copyright header added at the top -->
 		<copy todir="${outputDirectory}">
@@ -312,18 +332,6 @@
 		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
 			<srcfiles refid="cesiumJsFileSet" />
 		</uptodate>
-	</target>
-
-	<target name="combineJavaScript.combineWorker">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg value="${rjsPath}" />
-			<arg value="-o" />
-			<arg value="${rjsOptions}" />
-			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
-			<arg value="name=Workers/${worker}" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
-		</exec>
 	</target>
 
 	<target name="combineJavaScript.createUnminified">
@@ -411,7 +419,7 @@
 		 upstreamProxyPort: the port number of the upstream proxy, default 80
 		 noUpstreamProxyHostList: A comma-separated list of hosts that will not use the upstreamProxy
 		-->
-		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" />
+		<server listenOnAllAddresses="${runServer.public}" allowedHostList="${runServer.allowedHosts}" port="${runServer.port}" baseDir="${basedir}" proxyContextPath="/proxy" terrainTranscodingContextPath="/terrain" mimeTypesPath="${webProxyDirectory}/mime.properties" />
 	</target>
 
 	<target name="runPublicServer" description="Runs a public web server.">
