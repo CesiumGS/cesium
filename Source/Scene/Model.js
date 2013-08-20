@@ -25,7 +25,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/DrawCommand',
         '../Renderer/CommandLists',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './SceneMode'
     ], function(
         combine,
@@ -53,7 +53,7 @@ define([
         BlendingState,
         DrawCommand,
         CommandLists,
-        createPickFragmentShaderSource,
+        createShaderSource,
         SceneMode) {
     "use strict";
 
@@ -375,7 +375,10 @@ define([
             var vs = shaders[program.vertexShader];
             var fs = shaders[program.fragmentShader];
 // TODO: glTF needs translucent flag so we know if we need its fragment shader.
-            var pickFS = createPickFragmentShaderSource(fs, 'uniform');
+            var pickFS = createShaderSource({
+                sources : [fs],
+                pickColorQualifier : 'uniform'
+            });
 
             program.extra = defaultValue(program.extra, {});
             program.extra.czmProgram = context.getShaderCache().getShaderProgram(vs, fs);
