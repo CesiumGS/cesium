@@ -32,6 +32,7 @@ var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
+    * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.

@@ -78,7 +78,7 @@ define([
         }
 
         this._url = description.url;
-        this._key = defaultValue(description.key, 'Auc5O1omLRY_ub2safz0m2vJbzhYhSfTkO9eRDtLOauonIVoAiy6BV8c-L4jl1MT');
+        this._key = defaultValue(description.key, 'AkMnCOd4RF1U7D7qgdBz3Fk1aJB3rgCCI_DO841suDGxqOg0SMICTE8Ivy5HhAf5');
         this._mapStyle = defaultValue(description.mapStyle, BingMapsStyle.AERIAL);
         this._tileDiscardPolicy = description.tileDiscardPolicy;
         this._proxy = description.proxy;
