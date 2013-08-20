@@ -396,10 +396,12 @@ define([
         for (var name in attributes) {
             if (attributes.hasOwnProperty(name) &&
                     defined(attributes[name]) &&
-                    defined(attributes[name].values) &&
-                    transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
+                    defined(attributes[name].values)) {
                 typedArray = attributes[name].values;
-                transferableObjects.push(typedArray.buffer);
+
+                if (transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
+                    transferableObjects.push(typedArray.buffer);
+                }
 
                 if (!defined(typedArray.type)) {
                     attributes[name].values = stupefyTypedArray(typedArray);
