@@ -95,7 +95,7 @@ define([
     var rotMatrix = new Matrix3();
     function computeRoundCorner(cornerPoint, startPoint, endPoint, beveled, leftIsOutside) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratchCartesian), endPoint.subtract(cornerPoint, scratchCartesian20));
-        var granularity = (beveled) ? 0 : Math.floor(angle/CesiumMath.toRadians(2));
+        var granularity = (beveled) ? 0 : Math.floor(angle/CesiumMath.toRadians(5));
         var size = (granularity+1)*3;
         var array = new Array(size);
         array[size-3] = endPoint.x;
@@ -186,10 +186,12 @@ define([
             }
         }
         var addEndPositions = defined(endPositions);
+        var endPositionLength;
         if (addEndPositions) {
-            length = endPositions[0].rightPositions.length - 3;
-            leftCount += length;
-            rightCount += length;
+            endPositionLength = endPositions[0].rightPositions.length - 3;
+            leftCount += endPositionLength;
+            rightCount += endPositionLength;
+            endPositionLength /= 3;
         }
         var size = leftCount + rightCount;
         var finalPositions = new Array(size);
@@ -220,7 +222,7 @@ define([
             rightPos = scratchCartesian4;
 
             var firstEndPositions = endPositions[0].rightPositions;
-            length = (firstEndPositions.length/3) - 1;
+            length = endPositionLength;
             halfLength = length/2;
             normal = Cartesian3.fromArray(computedNormals, 0, normal);
             left = Cartesian3.fromArray(computedLefts, 0, left);
@@ -355,7 +357,7 @@ define([
             rightPos = scratchCartesian4;
 
             var lastEndPositions = endPositions[1].leftPositions;
-            length = (lastEndPositions.length/3) - 1;
+            length = endPositionLength;
             halfLength = length/2;
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(lastEndPositions, i * 3, leftPos);
@@ -383,22 +385,62 @@ define([
         });
 
         if (vertexFormat.st) {
-            leftCount /= 3;
-            rightCount /= 3;
             var st = new Float32Array(size/3*2);
-            var leftSt = 1 / (leftCount-1);
-            var rightSt = 1 / (rightCount-1);
-
+            var rightSt;
+            var leftSt;
             var stIndex = 0;
+            if (addEndPositions) {
+                leftCount /= 3;
+                rightCount /= 3;
+                var theta = Math.PI / (endPositionLength + 1);
+                leftSt = 1 / (leftCount - endPositionLength + 1);
+                rightSt = 1 / (rightCount - endPositionLength + 1);
+                var a;
+                for (i = endPositionLength/2; i > 0 ; i--) {
+                    a = CesiumMath.PI_OVER_TWO + theta * i;
+                    st[stIndex++] = leftSt + leftSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
+                }
+                for (i = 1; i < leftCount - endPositionLength + 1; i++) {
+                    st[stIndex++] = i*leftSt;
+                    st[stIndex++] = 1;
+                }
+                for (i = 1; i < endPositionLength/2 +1; i++) {
+                    a = CesiumMath.PI_OVER_TWO - theta * i;
+                    st[stIndex++] = (1 - leftSt) + leftSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
+                }
+                for (i = 1; i < endPositionLength/2 + 1; i++) {
+                    a = CesiumMath.PI_OVER_TWO - (i * theta + endPositionLength/2 * theta);
+                    st[stIndex++] = (1 - rightSt) + rightSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
+                }
+                for (i = rightCount- endPositionLength + 1; i > 1; i--) {
+                    st[stIndex++] = (i-1)*rightSt;
+                    st[stIndex++] = 0;
+                }
+                for (i = endPositionLength/2; i > 0 ; i--) {
+                    a = CesiumMath.PI_OVER_TWO + (i * theta + endPositionLength/2 * theta);
+                    st[stIndex++] = rightSt + rightSt * Math.cos(a);
+                    st[stIndex++] = 0.5 + 0.5 * Math.sin(a);
+                }
+            } else {
+                leftCount /= 3;
+                rightCount /= 3;
 
-            for (i = 0; i < leftCount; i++) {
-                st[stIndex++] = i*leftSt;
-                st[stIndex++] = 1;
+                leftSt = 1 / (leftCount-1);
+                rightSt = 1 / (rightCount-1);
+
+                for (i = 0; i < leftCount; i++) {
+                    st[stIndex++] = i*leftSt;
+                    st[stIndex++] = 1;
+                }
+                for (i = rightCount; i > 0; i--) {
+                    st[stIndex++] = (i-1)*rightSt;
+                    st[stIndex++] = 0;
+                }
             }
-            for (i = rightCount; i > 0; i--) {
-                st[stIndex++] = (i-1)*rightSt;
-                st[stIndex++] = 0;
-            }
+
 
             attributes.st = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.FLOAT,
