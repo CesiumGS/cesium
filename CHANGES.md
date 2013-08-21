@@ -6,6 +6,8 @@ Beta Releases
 
 ### b20 - 2013-09-01
 
+_This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
+
 * Breaking changes:
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
@@ -32,6 +34,7 @@ var geometry = BoxGeometry.createGeometry(box);
 
     * Removed `createTypedArray` and `createArrayBufferView` from each of the `ComponentDatatype` enumerations. Instead, use `ComponentDatatype.createTypedArray` and `ComponentDatatype.createArrayBufferView`.
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
+    * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.

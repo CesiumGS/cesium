@@ -5,7 +5,6 @@ define([
         '../Core/destroyObject',
         '../Core/Color',
         '../Core/BoundingRectangle',
-        './ClearCommand',
         './PassState',
         './RenderbufferFormat'
     ], function(
@@ -14,7 +13,6 @@ define([
         destroyObject,
         Color,
         BoundingRectangle,
-        ClearCommand,
         PassState,
         RenderbufferFormat) {
     "use strict";
@@ -31,18 +29,11 @@ define([
             rectangle : new BoundingRectangle()
         };
 
-        // Clear to black.  Since this is the background color, no objects will be black
-        var command = new ClearCommand();
-        command.color = new Color(0.0, 0.0, 0.0, 0.0);
-        command.depth = 1.0;
-        command.stencil = 0;
-
         this._context = context;
         this._fb = undefined;
         this._passState = passState;
         this._width = 0;
         this._height = 0;
-        this._clearCommand = command;
     };
 
     PickFramebuffer.prototype.begin = function(screenSpaceRectangle) {
@@ -69,8 +60,6 @@ define([
             });
             this._passState.framebuffer = this._fb;
         }
-
-        this._clearCommand.execute(context, this._passState);
 
         return this._passState;
     };
