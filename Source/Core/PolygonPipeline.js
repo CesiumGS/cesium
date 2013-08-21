@@ -371,16 +371,19 @@ define([
      *
      * @private
      */
+    var BEFORE = -1;
+    var AFTER = 1;
     function internalCut(a1i, a2i, pArray) {
+        /* Make sure vertex is valid */
+        validateVertex(a1i, pArray);
+
         /* Get the nodes from the array */
         var a1 = pArray[a1i];
         var a2 = pArray[a2i];
 
         /* Define side and cut vectors */
-        var before = a1i-1;
-        var after = a1i+1;
-        if (before < 0) { before = pArray.length-1; }
-        if (after === pArray.length) { after = 0; }
+        var before = getNextVertex(a1i, pArray, BEFORE);
+        var after = getNextVertex(a1i, pArray, AFTER);
 
         var s1 = pArray[before].position.subtract(a1.position);
         var s2 = pArray[after].position.subtract(a1.position);
@@ -392,24 +395,201 @@ define([
         cut = new Cartesian3(cut.x, cut.y, 0);
 
         /* Do the vector math */
-        if (s1.equals(cut) || s2.equals(cut)) {
-            return false;
-        } else if (s1.cross(s2).z < 0) {
-            if (s1.cross(cut).z <= 0 && cut.cross(s2).z <= 0) {
+        if (isParallel(s1, cut)) { // Cut is parallel to s1
+            return isInternalToParallelSide(s1, cut);
+        } else if (isParallel(s2, cut)) { // Cut is parallel to s2
+            return isInternalToParallelSide(s2, cut);
+        } else if (angleLessThan180(s1, s2)) { // Angle at point is less than 180
+            if (isInsideSmallAngle(s1, s2, cut)) { // Cut is in-between sides
                 return true;
             } else {
                 return false;
             }
-        } else if (s1.cross(s2).z > 0) {
-            if (s1.cross(cut).z >= 0 && cut.cross(s2).z >= 0) {
+        } else if (angleGreaterThan180(s1, s2)) { // Angle at point is greater than 180
+            if (isInsideBigAngle(s1, s2, cut)) { // Cut is in-between sides
                 return false;
             } else {
                 return true;
             }
+        }
+    }
+
+    /**
+     * Checks whether cut parallel to side is "internal"
+     *
+     *  e.g.
+     *
+     *  7_________6
+     *  |         |
+     *  | 4 ______|
+     *  |  |       5
+     *  |  |______2     Is cut from 1 to 6 internal? No.
+     *  | 3       |
+     *  |_________|
+     * 0           1
+     *
+     * Note that this method simply checks whether the cut is longer or shorter
+     *
+     * An important valid cut:
+     *
+     * Polygon:
+     *
+     * 0 ___2__4
+     *  |  /\  |
+     *  | /  \ |   Is cut 0 to 2 or 2 to 4 internal? Yes.
+     *  |/    \|
+     * 1       3
+     *
+     * This situation can occur and the only solution is a cut along a parallel
+     * side.
+     *
+     * This method is technically incomplete, however, for the following case:
+     *
+     *
+     *  7_________6
+     *  |         |
+     *  |         |______4
+     *  |          5     |    Now is 1 to 6 internal? Yes, but we'll never need it.
+     *  |         2______|
+     *  |         |      5
+     *  |_________|
+     * 0           1
+     *
+     * In this case, although the cut from 1 to 6 is valid, the side 1-2 is
+     * shorter and thus this cut will be called invalid. Assuming there are no
+     * superfluous vertices (a requirement for this method to work), however,
+     * we'll never need this cut because we can always find cut 2-5 as a substitute.
+     *
+     * @param {type} side
+     * @param {type} cut
+     * @returns {Boolean}
+     */
+    function isInternalToParallelSide(side, cut) {
+        var sideMag = side.magnitude();
+        var cutMag = cut.magnitude();
+        if (cutMag < sideMag) { // The cut is shorter than the side and thus internal
+            return true;
         } else {
+            /* The cut is longer than or equal to the side and thus external unless
+             * side is formed by a superfluous vertex
+             */
             return false;
         }
     }
+
+    /**
+     * Provides next vertex is some direction and also validates that vertex
+     *
+     * @param {type} index - index of original vertex
+     * @param {type} pArray - array of vertices
+     * @param {type} direction - direction of traversal
+     * @returns {Number} - index of vertex
+     */
+    function getNextVertex(index, pArray, direction) {
+        var next = index + direction;
+        if (next < 0) { next = pArray.length-1; }
+        if (next === pArray.length) { next = 0; }
+
+        validateVertex(next, pArray);
+
+        return next;
+    }
+
+    /**
+     * Checks to make sure vertex is not superfluous
+     *
+     * @exception {DeveloperError} - Superfluous vertex found!
+     *
+     * @param {type} index - Index of vertex
+     * @param {type} pArray - Array of vertices
+     * @returns {undefined}
+     */
+    function validateVertex(index, pArray) {
+        var before = index-1;
+        var after = index+1;
+        if (before < 0) { before = pArray.length-1; }
+        if (after === pArray.length) { after = 0; }
+
+        var s1 = pArray[before].position.subtract(pArray[index].position);
+        var s2 = pArray[after].position.subtract(pArray[index].position);
+
+        /* Convert to 3-dimensional so we can use cross product */
+        s1 = new Cartesian3(s1.x, s1.y, 0);
+        s2 = new Cartesian3(s2.x, s2.y, 0);
+
+        if (s1.cross(s2).z === 0) {
+            var e = new DeveloperError("Superfluous vertex found!");
+            e.vertexIndex = index;
+            throw e;
+        }
+    }
+
+    /**
+     * Determine whether s1 and s2 are parallel
+     *
+     * @param {Cartesian3} s1
+     * @param {Cartesian3} s2
+     * @returns {Boolean}
+     */
+    function isParallel(s1, s2) {
+        return s1.cross(s2).z === 0;
+    }
+
+    /**
+     * Assuming s1 is to the left of s2, determine whether
+     * the angle between them is less than 180 degrees
+     *
+     * @param {Cartesian3} s1
+     * @param {Cartesian3} s2
+     * @returns {Boolean}
+     */
+    function angleLessThan180(s1, s2) {
+        return s1.cross(s2).z < 0;
+    }
+
+    /**
+     * Assuming s1 is to the left of s2, determine whether
+     * the angle between them is greater than 180 degrees
+     *
+     * @param {Cartesian3} s1
+     * @param {Cartesian3} s2
+     * @returns {Boolean}
+     */
+    function angleGreaterThan180(s1, s2) {
+        return s1.cross(s2).z > 0;
+    }
+
+    /**
+     * Determines whether s3 is inside the greater-than-180-degree angle
+     * between s1 and s2
+     *
+     * Important: s1 must be to the left of s2
+     *
+     * @param {Cartesian3} s1
+     * @param {Cartesian3} s2
+     * @param {Cartesian3} s3
+     * @returns {Boolean}
+     */
+    function isInsideBigAngle(s1, s2, s3) {
+        return s1.cross(s3).z > 0 && s3.cross(s2).z > 0;
+    }
+
+    /**
+     * Determines whether s3 is inside the less-than-180-degree angle
+     * between s1 and s2
+     *
+     * Important: s1 must be to the left of s2
+     *
+     * @param {Cartesian3} s1
+     * @param {Cartesian3} s2
+     * @param {Cartesian3} s3
+     * @returns {Boolean}
+     */
+    function isInsideSmallAngle(s1, s2, s3) {
+        return s1.cross(s3).z < 0 && s3.cross(s2).z < 0;
+    }
+
+
 
     /**
      * Determine whether this segment intersects any other polygon sides.
@@ -429,7 +609,7 @@ define([
             if (i < pArray.length-1) {
                 b2 = pArray[i+1].position;
             } else {
-                b2 = pArray[0];
+                b2 = pArray[0].position;
             }
 
             /* If there's a duplicate point, there's no intersection here. */
@@ -437,13 +617,34 @@ define([
                 continue;
             }
 
-            /* Slopes */
+            /* Slopes (NaN means vertical) */
             var slopeA = (a2.y-a1.y)/(a2.x-a1.x);
             var slopeB = (b2.y-b1.y)/(b2.x-b1.x);
 
+            /* If parallel, no intersection */
+            if ( slopeA === slopeB || (isNaN(slopeA) && isNaN(slopeB)) ) {
+                continue;
+            }
+
             /* Calculate intersection point */
-            var intX = (a1.y - b1.y - slopeA*a1.x + slopeB*b1.x)/(slopeB - slopeA);
+            var intX;
+            if (isNaN(slopeA)) {
+                intX = a1.x;
+            } else if (isNaN(slopeB)) {
+                intX = b1.x;
+            } else {
+                intX = (a1.y - b1.y - slopeA*a1.x + slopeB*b1.x)/(slopeB - slopeA);
+            }
             var intY = slopeA*intX + a1.y - slopeA*a1.x;
+
+            var intersection = new Cartesian2(intX, intY);
+
+            /* If intersection is on an endpoint, count no intersection */
+            if (intersection.equals(a1) || intersection.equals(a2) ||
+                intersection.equals(b1) || intersection.equals(b2) )
+            {
+                continue;
+            }
 
             /* Is intersection point between segments? */
             var intersects =
@@ -479,13 +680,14 @@ define([
         side1 = new Cartesian3(side1.x, side1.y, 0);
         side2 = new Cartesian3(side2.x, side2.y, 0);
 
-        /* If they're parallel or perpendicular, so is the last */
+        /* If they're parallel, so is the last */
         return side1.cross(side2).z === 0;
     }
 
     /**
      * Determine whether number is between n1 and n2.
      * Do not include number === n1 or number === n2.
+     * Do include n1 === n2 === number.
      *
      * @param {number} number - The number tested
      * @param {number} n1 - First bound
@@ -495,7 +697,8 @@ define([
      * @private
      */
     function isBetween(number, n1, n2) {
-        return (number > n1 || number > n2) && (number < n1 || number < n2);
+        return ((number > n1 || number > n2) && (number < n1 || number < n2)) ||
+               (n1 === n2 && n1 === number);
     }
 
     /**
@@ -553,14 +756,23 @@ define([
                 index1 = index2;
                 index2 = index;
             }
+            try {
+                /* Check for a clean cut */
+                if (cleanCut(index1, index2, nodeArray)) {
+                    /* Divide polygon */
+                    var nodeArray2 = nodeArray.splice(index1, (index2-index1+1), nodeArray[index1], nodeArray[index2]);
 
-            /* Check for a clean cut */
-            if (cleanCut(index1, index2, nodeArray)) {
-                /* Divide polygon */
-                var nodeArray2 = nodeArray.splice(index1, (index2-index1+1), nodeArray[index1], nodeArray[index2]);
-
-                /* Chop up resulting polygons */
-                return randomChop(nodeArray).concat(randomChop(nodeArray2));
+                    /* Chop up resulting polygons */
+                    return randomChop(nodeArray).concat(randomChop(nodeArray2));
+                }
+            } catch (exception) {
+                /* Eliminate superfluous vertex and start over */
+                if (exception.hasOwnProperty("vertexIndex")) {
+                    nodeArray.splice(exception.vertexIndex, 1);
+                    return randomChop(nodeArray);
+                } else {
+                    throw exception;
+                }
             }
         }
     }
