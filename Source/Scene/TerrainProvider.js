@@ -39,8 +39,6 @@ define([
         textureCoordinates : 1
     };
 
-    TerrainProvider.wireframe = false;
-
     var regularGridIndexArrays = [];
 
     TerrainProvider.getRegularGridIndices = function(width, height) {
@@ -134,9 +132,6 @@ define([
         var indexBuffer = indexBuffers[context.getId()];
         if (!defined(indexBuffer) || indexBuffer.isDestroyed()) {
             var indices = buffers.indices;
-            if (TerrainProvider.wireframe) {
-                indices = trianglesToLines(buffers.indices);
-            }
             indexBuffer = context.createIndexBuffer(indices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
             indexBuffer.setVertexArrayDestroyable(false);
             indexBuffer.referenceCount = 1;
@@ -147,6 +142,21 @@ define([
         }
 
         tileTerrain.vertexArray = context.createVertexArray(attributes, indexBuffer);
+    };
+
+    /**
+     * Creates a vertex array for wireframe rendering of a terrain tile.
+     *
+     * @param {Context} context The context in which to create the vertex array.
+     * @param {VertexArray} vertexArray The existing, non-wireframe vertex array.  The new vertex array
+     *                      will share vertex buffers with this existing one.
+     * @param {TerrainMesh} terrainMesh The terrain mesh containing non-wireframe indices.
+     * @returns {VertexArray} The vertex array for wireframe rendering.
+     */
+    TerrainProvider.createWireframeVertexArray = function(context, vertexArray, terrainMesh) {
+        var wireframeIndices = trianglesToLines(terrainMesh.indices);
+        var wireframeIndexBuffer = context.createIndexBuffer(wireframeIndices, BufferUsage.STATIC_DRAW, IndexDatatype.UNSIGNED_SHORT);
+        return context.createVertexArray(vertexArray._attributes, wireframeIndexBuffer);
     };
 
     /**
