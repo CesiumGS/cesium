@@ -265,6 +265,7 @@ define(['../Core/createGuid',
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
         var geometryObject = dynamicObject;
+        var styleObject = dynamicObject;
         // I want to iterate over every placemark
         for(var i = 0, len = node.childNodes.length; i < len; i++){
             var innerNode = node.childNodes.item(i);
@@ -280,6 +281,12 @@ define(['../Core/createGuid',
                 if (!defined(geometryObject)){
                     var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
                     geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
+                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
+                    DynamicLabel.mergeProperties(geometryObject, styleObject);
+                    DynamicPoint.mergeProperties(geometryObject, styleObject);
+                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
+                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
+                    DynamicObject.mergeProperties(geometryObject, styleObject);
                 }
                 geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
                 geometryObject = undefined;

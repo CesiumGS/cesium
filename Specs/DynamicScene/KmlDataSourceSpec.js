@@ -342,6 +342,50 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[1].vertexPositions._value[1]).toEqual(cartesianPosition4);
     });
 
+    it('handles MultiGeometry with style', function() {
+        var multiKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="randomColorIcon">\
+                <IconStyle>\
+                    <color>ff00ff00</color>\
+                    <colorMode>normal</colorMode>\
+                    <scale>1.1</scale>\
+                    <Icon>\
+                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
+                    </Icon>\
+                </IconStyle>\
+            </Style>\
+            <Placemark>\
+            <name>IconStyle.kml</name>\
+            <styleUrl>#randomColorIcon</styleUrl>\
+                <MultiGeometry>\
+                <Point>\
+                    <coordinates>-9.171441666666666,38.67883055555556,0</coordinates>\
+                </Point>\
+                <Point>\
+                    <coordinates>-122.367375,37.829192,0</coordinates>\
+                </Point>\
+                </MultiGeometry>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(multiKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var object1 = objects[0];
+        var object2 = objects[1];
+        expect(objects.length).toEqual(2);
+        expect(object1.billboard.scale.getValue()).toEqual(object2.billboard.scale.getValue());
+        expect(object1.billboard.image.getValue()).toEqual(object2.billboard.image.getValue());
+        expect(object1.billboard.color.red).toEqual(object2.billboard.color.red);
+        expect(object1.billboard.color.green).toEqual(object2.billboard.color.green);
+        expect(object1.billboard.color.blue).toEqual(object2.billboard.color.blue);
+        expect(object1.billboard.color.alpha).toEqual(object2.billboard.color.alpha);
+    });
+
     it('handles LineStyle', function() {
         var width = new ConstantProperty(4);
         var outerWidth = new ConstantProperty(0);
