@@ -65,11 +65,4 @@ defineSuite([
             return new ConstantProperty({}, undefined);
         }).toThrow();
     });
-
-    it('getValue throws with no time parameter', function() {
-        var property = new ConstantProperty(5);
-        expect(function() {
-            property.getValue(undefined);
-        }).toThrow();
-    });
 });
