@@ -104,21 +104,17 @@ define([
      */
     var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
-        var creditDisplay;
-        if (defined(creditContainer)) {
-            creditDisplay = new CreditDisplay(creditContainer);
-        } else {
-            var creditDiv = document.createElement('div');
-            creditDiv.style.position = 'absolute';
-            creditDiv.style.bottom = '0';
-            creditDiv.style['text-shadow'] = '0px 0px 2px #000000';
-            creditDiv.style.color = '#ffffff';
-            creditDiv.style['font-size'] = '10pt';
-            creditDiv.style['padding-right'] = '5px';
-            canvas.parentNode.appendChild(creditDiv);
-            creditDisplay = new CreditDisplay(creditDiv);
+        if (!defined(creditContainer)) {
+            creditContainer = document.createElement('div');
+            creditContainer.style.position = 'absolute';
+            creditContainer.style.bottom = '0';
+            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style.color = '#ffffff';
+            creditContainer.style['font-size'] = '10pt';
+            creditContainer.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(creditContainer);
         }
-        this._frameState = new FrameState(creditDisplay);
+        this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
