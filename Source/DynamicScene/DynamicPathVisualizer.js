@@ -10,6 +10,8 @@ define([
         '../Core/Transforms',
         '../Core/ReferenceFrame',
         './SampledPositionProperty',
+        './CompositePositionProperty',
+        './TimeIntervalCollectionPositionProperty',
         '../Scene/Material',
         '../Scene/SceneMode',
         '../Scene/PolylineCollection'
@@ -24,18 +26,20 @@ define([
          Transforms,
          ReferenceFrame,
          SampledPositionProperty,
+         CompositePositionProperty,
+         TimeIntervalCollectionPositionProperty,
          Material,
          SceneMode,
          PolylineCollection) {
     "use strict";
 
-    function subSampleSampledProperty(positionProperty, start, stop, updateTime, referenceFrame, maximumStep, result) {
-        var times = positionProperty._property._times;
+    function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var times = property._property._times;
 
-        var r = 0;
+        var r = startingIndex;
         //Always step exactly on start (but only use it if it exists.)
         var tmp;
-        tmp = positionProperty.getValueInReferenceFrame(start, referenceFrame, result[r]);
+        tmp = property.getValueInReferenceFrame(start, referenceFrame, result[r]);
         if (defined(tmp)) {
             result[r++] = tmp;
         }
@@ -56,14 +60,14 @@ define([
 
         while (t < len) {
             if (!steppedOnNow && current.greaterThanOrEquals(updateTime)) {
-                tmp = positionProperty.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
+                tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
                 }
                 steppedOnNow = true;
             }
             if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(updateTime)) {
-                tmp = positionProperty.getValueInReferenceFrame(current, referenceFrame, result[r]);
+                tmp = property.getValueInReferenceFrame(current, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
                 }
@@ -95,28 +99,18 @@ define([
         }
 
         //Always step exactly on stop (but only use it if it exists.)
-        tmp = positionProperty.getValueInReferenceFrame(stop, referenceFrame, result[r]);
+        tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[r]);
         if (defined(tmp)) {
             result[r++] = tmp;
         }
 
-        result.length = r;
-        return result;
+        return r;
     }
 
-    function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
-        if (!defined(result)) {
-            result = [];
-        }
-
-        if (property instanceof SampledPositionProperty) {
-            return subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, result);
-        }
-
-        //Fallback to generic sampling.
+    function subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
         var tmp;
         var i = 0;
-        var index = 0;
+        var index = startingIndex;
         var time = start;
         var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
         while (time.lessThan(stop)) {
@@ -142,8 +136,64 @@ define([
             result[index] = tmp;
             index++;
         }
+        return index;
+    }
 
-        result.length = index;
+    function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var index = startingIndex;
+        var intervals = property.getIntervals();
+        for ( var i = 0; i < intervals.getLength(); i++) {
+            var interval = intervals.get(0);
+            if (interval.start.lessThanOrEquals(stop)) {
+                var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+                if (defined(tmp)) {
+                    result[index] = tmp;
+                    index++;
+                }
+            }
+        }
+        return index;
+    }
+
+    function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var index = startingIndex;
+        var intervals = property.getIntervals();
+        for ( var i = 0; i < intervals.getLength(); i++) {
+            var interval = intervals.get(0);
+            if (interval.start.lessThanOrEquals(stop)) {
+                var intervalProperty = interval.data;
+                if (intervalProperty instanceof SampledPositionProperty) {
+                    index = subSampleSampledProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof CompositePositionProperty) {
+                    index = subSampleCompositeProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
+                    index = subSampleIntervalProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else {
+                    //Fallback to generic sampling.
+                    index = subSampleGenericProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                }
+            }
+        }
+        return index;
+    }
+
+    function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var length = 0;
+        if (property instanceof SampledPositionProperty) {
+            length = subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof CompositePositionProperty) {
+            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
+            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else {
+            //Fallback to generic sampling.
+            length = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        }
+        result.length = length;
         return result;
     }
 
