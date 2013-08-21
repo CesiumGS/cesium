@@ -12,6 +12,11 @@ body {
     overflow: hidden;
 }
 
+option {
+    background-color: #fff;
+    color: #000;
+}
+
 .fullSize {
     display: block;
     position: absolute;
@@ -84,7 +89,7 @@ body {
     top: 50%;
 }
 
-.button {
+.btn {
     -moz-box-shadow:inset 0px 1px 0px 0px #ffffff;
     -webkit-box-shadow:inset 0px 1px 0px 0px #ffffff;
     box-shadow:inset 0px 1px 0px 0px #ffffff;
@@ -105,7 +110,7 @@ body {
     text-shadow:0px 1px 0px #ffffff;   
 }
 
-.button:hover {
+.btn:hover {
     background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #dedede), color-stop(1, #f9f9f9));
     background:-moz-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
     background:-webkit-linear-gradient(top, #dedede 5%, #f9f9f9 100%);
