@@ -2350,7 +2350,7 @@ define([
     };
 
     function getBuiltinFunctions(source) {
-        // This expects well-behaved shaders, e.g., the automatic uniform is not commented out or redeclared.
+        // This expects well-behaved shaders, e.g., the built-in functions are not commented out or redeclared.
         var definitions = '';
         var functions = builtInFunctions;
         for (var f in functions) {
