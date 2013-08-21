@@ -55,7 +55,7 @@ define([
             }
         },
         /**
-         * Gets the reference frame that the position is defined in.
+         * Gets the reference frame that the positions are defined in.
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
@@ -96,7 +96,7 @@ define([
         var interval = this._intervals.findIntervalContainingDate(time);
         if (defined(interval)) {
             var value = interval.data;
-            if (defined(value) && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
+            if (defined(value)) {
                 return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, result);
             }
             return value;
