@@ -222,7 +222,7 @@ define([
             var attribute = attributes[name];
 
             var componentDatatype = attribute.componentDatatype;
-            if (componentDatatype === ComponentDatatype.DOUBLE) {
+            if (componentDatatype.value === ComponentDatatype.DOUBLE.value) {
                 componentDatatype = ComponentDatatype.FLOAT;
             }
 
@@ -356,6 +356,157 @@ define([
             vaAttributes : perInstanceAttributes,
             vaAttributeIndices : indices
         };
+    };
+
+    /*
+     * The below functions are needed when transferring typed arrays to/from web
+     * workers. This is a workaround for:
+     *
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=841904
+     */
+
+    function stupefyTypedArray(typedArray) {
+        return {
+            type : typedArray.constructor.name,
+            buffer : typedArray.buffer
+        };
+    }
+
+    var typedArrayMap = {
+        Int8Array : Int8Array,
+        Uint8Array : Uint8Array,
+        Int16Array : Int16Array,
+        Uint16Array : Uint16Array,
+        Int32Array : Int32Array,
+        Uint32Array : Uint32Array,
+        Float32Array : Float32Array,
+        Float64Array : Float64Array
+    };
+
+    function unStupefyTypedArray(typedArray) {
+        return new typedArrayMap[typedArray.type](typedArray.buffer);
+    }
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.transferGeometry = function(geometry, transferableObjects) {
+        var typedArray;
+        var attributes = geometry.attributes;
+        for (var name in attributes) {
+            if (attributes.hasOwnProperty(name) &&
+                    defined(attributes[name]) &&
+                    defined(attributes[name].values)) {
+                typedArray = attributes[name].values;
+
+                if (transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
+                    transferableObjects.push(typedArray.buffer);
+                }
+
+                if (!defined(typedArray.type)) {
+                    attributes[name].values = stupefyTypedArray(typedArray);
+                }
+            }
+        }
+
+        if (defined(geometry.indices)) {
+            typedArray = geometry.indices;
+            transferableObjects.push(typedArray.buffer);
+
+            if (!defined(typedArray.type)) {
+                geometry.indices = stupefyTypedArray(geometry.indices);
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.transferGeometries = function(geometries, transferableObjects) {
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            PrimitivePipeline.transferGeometry(geometries[i], transferableObjects);
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.transferPerInstanceAttributes = function(perInstanceAttributes, transferableObjects) {
+        var length = perInstanceAttributes.length;
+        for (var i = 0; i < length; ++i) {
+            var vaAttributes = perInstanceAttributes[i];
+            var vaLength = vaAttributes.length;
+            for (var j = 0; j < vaLength; ++j) {
+                var typedArray = vaAttributes[j].values;
+                transferableObjects.push(typedArray.buffer);
+                vaAttributes[j].values = stupefyTypedArray(typedArray);
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.transferInstances = function(instances, transferableObjects) {
+        var length = instances.length;
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            PrimitivePipeline.transferGeometry(instance.geometry, transferableObjects);
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.receiveGeometry = function(geometry) {
+        var attributes = geometry.attributes;
+        for (var name in attributes) {
+            if (attributes.hasOwnProperty(name) &&
+                    defined(attributes[name]) &&
+                    defined(attributes[name].values)) {
+                attributes[name].values = unStupefyTypedArray(attributes[name].values);
+            }
+        }
+
+        if (defined(geometry.indices)) {
+            geometry.indices = unStupefyTypedArray(geometry.indices);
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.receiveGeometries = function(geometries) {
+        var length = geometries.length;
+        for (var i = 0; i < length; ++i) {
+            PrimitivePipeline.receiveGeometry(geometries[i]);
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.receivePerInstanceAttributes = function(perInstanceAttributes) {
+        var length = perInstanceAttributes.length;
+        for (var i = 0; i < length; ++i) {
+            var vaAttributes = perInstanceAttributes[i];
+            var vaLength = vaAttributes.length;
+            for (var j = 0; j < vaLength; ++j) {
+                vaAttributes[j].values = unStupefyTypedArray(vaAttributes[j].values);
+            }
+        }
+    };
+
+    /**
+     * @private
+     */
+    PrimitivePipeline.receiveInstances = function(instances) {
+        var length = instances.length;
+        for (var i = 0; i < length; ++i) {
+            var instance = instances[i];
+            PrimitivePipeline.receiveGeometry(instance.geometry);
+        }
     };
 
     return PrimitivePipeline;

@@ -114,12 +114,13 @@ define([
      * }
      */
     ComponentDatatype.validate = function(componentDatatype) {
-        return componentDatatype.value === ComponentDatatype.BYTE.value ||
-               componentDatatype.value === ComponentDatatype.UNSIGNED_BYTE.value ||
-               componentDatatype.value === ComponentDatatype.SHORT.value ||
-               componentDatatype.value === ComponentDatatype.UNSIGNED_SHORT.value ||
-               componentDatatype.value === ComponentDatatype.FLOAT.value ||
-               componentDatatype.value === ComponentDatatype.DOUBLE.value;
+        return defined(componentDatatype) && defined(componentDatatype.value) &&
+               (componentDatatype.value === ComponentDatatype.BYTE.value ||
+                componentDatatype.value === ComponentDatatype.UNSIGNED_BYTE.value ||
+                componentDatatype.value === ComponentDatatype.SHORT.value ||
+                componentDatatype.value === ComponentDatatype.UNSIGNED_SHORT.value ||
+                componentDatatype.value === ComponentDatatype.FLOAT.value ||
+                componentDatatype.value === ComponentDatatype.DOUBLE.value);
     };
 
     /**
