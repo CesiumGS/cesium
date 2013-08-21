@@ -122,6 +122,10 @@ define([
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
      *        by the WebGL stack will be used.  Larger values make the imagery look better in horizon
      *        views.
+     * @param {Number} [description.minimumTerrainLevel] The minimum terrain level-of-detail at which to show this imagery layer,
+     *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Number} [description.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
+     *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      */
     var ImageryLayer = function ImageryLayer(imageryProvider, description) {
         this._imageryProvider = imageryProvider;
@@ -220,6 +224,9 @@ define([
          * @default true
          */
         this.show = defaultValue(description.show, true);
+
+        this._minimumTerrainLevel = description.minimumTerrainLevel;
+        this._maximumTerrainLevel = description.maximumTerrainLevel;
 
         this._extent = defaultValue(description.extent, Extent.MAX_VALUE);
         this._maximumAnisotropy = description.maximumAnisotropy;
@@ -369,6 +376,13 @@ define([
      * @returns {Boolean} true if this layer overlaps any portion of the terrain tile; otherwise, false.
      */
     ImageryLayer.prototype._createTileImagerySkeletons = function(tile, terrainProvider, insertionPoint) {
+        if (defined(this._minimumTerrainLevel) && tile.level < this._minimumTerrainLevel) {
+            return false;
+        }
+        if (defined(this._maximumTerrainLevel) && tile.level > this._maximumTerrainLevel) {
+            return false;
+        }
+
         var imageryProvider = this._imageryProvider;
 
         if (!defined(insertionPoint)) {

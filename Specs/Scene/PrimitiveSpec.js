@@ -123,13 +123,15 @@ defineSuite([
         expect(primitive.appearance).not.toBeDefined();
         expect(primitive.modelMatrix).toEqual(Matrix4.IDENTITY);
         expect(primitive.show).toEqual(true);
+        expect(primitive.asynchronous).toEqual(true);
     });
 
     it('releases geometry instances when releaseGeometryInstances is true', function() {
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            releaseGeometryInstances : true
+            releaseGeometryInstances : true,
+            asynchronous : false
         });
 
         expect(primitive.geometryInstances).toBeDefined();
@@ -143,7 +145,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            releaseGeometryInstances : false
+            releaseGeometryInstances : false,
+            asynchronous : false
         });
 
         expect(primitive.geometryInstances).toBeDefined();
@@ -157,7 +160,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         var commands = [];
@@ -176,7 +180,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.passes.color = false;
@@ -196,7 +201,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.mode = SceneMode.SCENE2D;
@@ -213,7 +219,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
@@ -230,7 +237,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : false
+            allow3DOnly : false,
+            asynchronous : false
         });
 
         frameState.mode = SceneMode.COLUMBUS_VIEW;
@@ -267,7 +275,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : false
+            allow3DOnly : false,
+            asynchronous : false
         });
 
         frameState.mode = SceneMode.SCENE2D;
@@ -310,7 +319,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -341,7 +351,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -377,7 +388,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
         primitive.update(context, frameState, []);
 
@@ -397,7 +409,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -429,7 +442,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -458,7 +472,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : [extentInstance1, extentInstance2],
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent1);
@@ -502,7 +517,8 @@ defineSuite([
                     })
                 })
             ],
-            appearance : new PerInstanceColorAppearance()
+            appearance : new PerInstanceColorAppearance(),
+            asynchronous : false
         });
 
         expect(function() {
@@ -516,7 +532,8 @@ defineSuite([
             allow3DOnly : true,
             appearance : new MaterialAppearance({
                 materialSupport : MaterialAppearance.MaterialSupport.ALL
-            })
+            }),
+            asynchronous : false
         });
 
         expect(function() {
@@ -528,7 +545,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         primitive.update(context, frameState, []);
@@ -545,7 +563,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         primitive.update(context, frameState, []);
@@ -561,7 +580,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         expect(function() {
@@ -575,7 +595,8 @@ defineSuite([
         var primitive = new Primitive({
             geometryInstances : extentInstance1,
             appearance : new PerInstanceColorAppearance(),
-            allow3DOnly : true
+            allow3DOnly : true,
+            asynchronous : false
         });
 
         primitive.update(context, frameState, []);
@@ -590,6 +611,44 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(false);
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
+    });
+
+    it('renders when using asynchronous pipeline', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance1,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        frameState.camera.controller.viewExtent(extent1);
+        us.update(frameState);
+
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
+
+        runs(function() {
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, primitive);
+            var pixels = context.readPixels();
+            expect(pixels).not.toEqual([0, 0, 0, 0]);
+
+            primitive = primitive && primitive.destroy();
+        });
+    });
+
+    it('destroy before asynchonous pipeline is complete', function() {
+        var primitive = new Primitive({
+            geometryInstances : extentInstance1,
+            appearance : new PerInstanceColorAppearance(),
+            allow3DOnly : true
+        });
+
+        primitive.update(context, frameState, []);
+
+        primitive.destroy();
+        expect(primitive.isDestroyed()).toEqual(true);
     });
 
 });

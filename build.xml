@@ -268,9 +268,29 @@
 		</exec>
 
 		<!-- create each combined worker layer -->
-		<antcall target="combineJavaScript.combineWorker">
-			<param name="worker" value="createVerticesFromHeightmap" />
-		</antcall>
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+
+			<srcfile prefix="name=Workers/" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/Workers">
+					<include name="*.js" />
+					<exclude name="*.profile.js" />
+					<exclude name="cesiumWorkerBootstrapper.js" />
+					<exclude name="createTaskProcessorWorker.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
 
 		<!-- copy to build folder with copyright header added at the top -->
 		<copy todir="${outputDirectory}">
@@ -311,18 +331,6 @@
 		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
 			<srcfiles refid="cesiumJsFileSet" />
 		</uptodate>
-	</target>
-
-	<target name="combineJavaScript.combineWorker">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg value="${rjsPath}" />
-			<arg value="-o" />
-			<arg value="${rjsOptions}" />
-			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
-			<arg value="name=Workers/${worker}" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/${worker}.js" />
-		</exec>
 	</target>
 
 	<target name="combineJavaScript.createUnminified">
