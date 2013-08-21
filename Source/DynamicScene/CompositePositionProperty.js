@@ -18,9 +18,9 @@ define([
     "use strict";
 
     /**
-     * A {@link Property} which is defined by a TimeIntervalCollection, where the
-     * data property of the interval is another Property instance which is evaluated
-     * at the provided time.
+     * A {@link PositionProperty} which is defined by a TimeIntervalCollection, where the
+     * data property of the interval is another PositionProperty instance which is
+     * evaluated at the provided time.
      *
      * @alias CompositePositionProperty
      * @constructor
@@ -33,7 +33,7 @@ define([
     defineProperties(CompositePositionProperty.prototype, {
         /**
          * Always returns true, since this property always varies with simulation time.
-         * @memberof SampledProperty
+         * @memberof CompositePositionProperty.prototype
          *
          * @type {Boolean}
          */
@@ -54,7 +54,11 @@ define([
             }
         },
         /**
-         * Gets or sets the reference frame that the position is defined in.
+         * Gets or sets the reference frame that the position presents itself as.
+         * Each PositionProperty making up this object has it's own reference frame,
+         * so this property merely exposes a "preferred" reference frame for clients.
+         * @memberof CompositePositionProperty.prototype
+         *
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
@@ -69,7 +73,7 @@ define([
 
     /**
      * Returns the value of the property at the specified simulation time.
-     * @memberof Property
+     * @memberof CompositePositionProperty
      *
      * @param {JulianDate} time The simulation time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -83,7 +87,7 @@ define([
 
     /**
      * Returns the value of the property at the specified simulation time in the specified reference frame.
-     * @memberof PositionProperty
+     * @memberof CompositePositionProperty
      *
      * @param {JulianDate} time The simulation time for which to retrieve the value.
      * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The desired referenceFrame of the result.
@@ -99,8 +103,7 @@ define([
         if (defined(interval)) {
             var data = interval.data;
             if (defined(data)) {
-                var value = data.getValue(time, result);
-                return PositionProperty.convertToReferenceFrame(time, value, data.referenceFrame, referenceFrame, value);
+                return data.getValueInReferenceFrame(time, referenceFrame, result);
             }
         }
         return undefined;
