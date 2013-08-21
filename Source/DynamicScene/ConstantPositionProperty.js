@@ -4,6 +4,7 @@ define([
         './PositionProperty',
         '../Core/Cartesian3',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/ReferenceFrame'
@@ -12,6 +13,7 @@ define([
         PositionProperty,
         Cartesian3,
         defaultValue,
+        defined,
         defineProperties,
         DeveloperError,
         ReferenceFrame) {
@@ -75,6 +77,9 @@ define([
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
         var value = this._property.getValue(time, result);
         return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, value);
     };

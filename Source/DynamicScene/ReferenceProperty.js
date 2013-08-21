@@ -126,6 +126,10 @@ define([
      * @returns The result parameter or a new instance if the parameter was omitted.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+
         var targetProperty = resolve(this);
         return defined(targetProperty) && this._targetObject.isAvailable(time) ? targetProperty.getValue(time, result) : undefined;
     };

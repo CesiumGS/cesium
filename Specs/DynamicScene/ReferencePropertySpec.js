@@ -70,7 +70,7 @@ defineSuite([
 
     it('getValue returned undefined for unresolved property', function() {
         var property = ReferenceProperty.fromString(new DynamicObjectCollection(), 'object.property');
-        expect(property.getValue()).toBeUndefined();
+        expect(property.getValue(new JulianDate())).toBeUndefined();
     });
 
     it('Resolves getValue property on direct collection', function() {

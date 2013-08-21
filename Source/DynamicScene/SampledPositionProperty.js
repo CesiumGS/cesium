@@ -4,6 +4,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/ReferenceFrame',
         './PositionProperty',
         './SampledProperty'
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         ReferenceFrame,
         PositionProperty,
         SampledProperty) {
@@ -80,6 +82,10 @@ define([
     };
 
     SampledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+
         result = this._property.getValue(time, result);
         if (defined(result)) {
             return PositionProperty.convertToReferenceFrame(time, result, this._referenceFrame, referenceFrame, result);

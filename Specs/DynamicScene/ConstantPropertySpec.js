@@ -1,18 +1,22 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/ConstantProperty',
-             'Core/Cartesian3'
+             'Core/Cartesian3',
+             'Core/JulianDate'
      ], function(
              ConstantProperty,
-             Cartesian3) {
+             Cartesian3,
+             JulianDate) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
+
+    var time = new JulianDate();
 
     it('works with basic types', function() {
         var expected = 5;
         var property = new ConstantProperty(expected);
         expect(property.isTimeVarying).toEqual(false);
-        expect(property.getValue()).toBe(expected);
+        expect(property.getValue(time)).toBe(expected);
     });
 
     it('works with clone function', function() {
@@ -24,7 +28,7 @@ defineSuite([
         };
         var property = new ConstantProperty(expected, cloneFunction);
         expect(property.isTimeVarying).toEqual(false);
-        expect(property.getValue()).toBe(expected);
+        expect(property.getValue(time)).toBe(expected);
         expect(cloneCalled).toEqual(true);
     });
 
@@ -33,7 +37,7 @@ defineSuite([
         var property = new ConstantProperty(value);
         expect(property.isTimeVarying).toEqual(false);
 
-        var result = property.getValue();
+        var result = property.getValue(time);
         expect(result).not.toBe(value);
         expect(result).toEqual(value);
     });
@@ -44,7 +48,7 @@ defineSuite([
         expect(property.isTimeVarying).toEqual(false);
 
         var expected = new Cartesian3();
-        var result = property.getValue(undefined, expected);
+        var result = property.getValue(time, expected);
         expect(result).toBe(expected);
         expect(expected).toEqual(value);
     });
@@ -59,6 +63,13 @@ defineSuite([
     it('constructor throws with undefined clone function on non-basic type', function() {
         expect(function() {
             return new ConstantProperty({}, undefined);
+        }).toThrow();
+    });
+
+    it('getValue throws with no time parameter', function() {
+        var property = new ConstantProperty(5);
+        expect(function() {
+            property.getValue(undefined);
         }).toThrow();
     });
 });

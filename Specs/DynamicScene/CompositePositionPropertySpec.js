@@ -49,12 +49,12 @@ defineSuite([
         property.intervals.addInterval(interval2);
 
         var result1 = property.getValue(interval1.start);
-        expect(result1).not.toBe(interval1.data.getValue());
-        expect(result1).toEqual(interval1.data.getValue());
+        expect(result1).not.toBe(interval1.data.getValue(interval1.start));
+        expect(result1).toEqual(interval1.data.getValue(interval1.start));
 
         var result2 = property.getValue(interval2.stop);
-        expect(result2).not.toBe(interval2.data.getValue());
-        expect(result2).toEqual(interval2.data.getValue());
+        expect(result2).not.toBe(interval2.data.getValue(interval2.stop));
+        expect(result2).toEqual(interval2.data.getValue(interval2.stop));
     });
 
     it('getValue works with a result parameter', function() {
@@ -68,11 +68,11 @@ defineSuite([
         var expected = new Cartesian3();
         var result1 = property.getValue(interval1.start, expected);
         expect(result1).toBe(expected);
-        expect(result1).toEqual(interval1.data.getValue());
+        expect(result1).toEqual(interval1.data.getValue(interval1.start));
 
         var result2 = property.getValue(interval2.stop, expected);
         expect(result2).toBe(expected);
-        expect(result2).toEqual(interval2.data.getValue());
+        expect(result2).toEqual(interval2.data.getValue(interval2.stop));
     });
 
     it('getValue works without a result parameter', function() {
@@ -84,10 +84,10 @@ defineSuite([
         property.intervals.addInterval(interval2);
 
         var result1 = property.getValue(interval1.start);
-        expect(result1).toEqual(interval1.data.getValue());
+        expect(result1).toEqual(interval1.data.getValue(interval1.start));
 
         var result2 = property.getValue(interval2.stop);
-        expect(result2).toEqual(interval2.data.getValue());
+        expect(result2).toEqual(interval2.data.getValue(interval2.stop));
     });
 
     it('getValue returns in fixed frame', function() {
@@ -105,7 +105,7 @@ defineSuite([
         expect(result1).toEqual(valueFixed);
 
         var result2 = property.getValue(interval2.stop);
-        expect(result2).toEqual(interval2.data.getValue());
+        expect(result2).toEqual(interval2.data.getValue(interval2.stop));
     });
 
     it('getValueInReferenceFrame works with a result parameter', function() {

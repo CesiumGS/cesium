@@ -30,7 +30,7 @@ defineSuite([
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantPositionProperty(value);
 
-        var result = property.getValue();
+        var result = property.getValue(time);
         expect(result).not.toBe(value);
         expect(result).toEqual(value);
     });
@@ -76,6 +76,13 @@ defineSuite([
     it('constructor throws with undefined value', function() {
         expect(function() {
             return new ConstantPositionProperty(undefined);
+        }).toThrow();
+    });
+
+    it('getValue throws without time parameter', function() {
+        var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
+        expect(function() {
+            property.getValue(undefined);
         }).toThrow();
     });
 });

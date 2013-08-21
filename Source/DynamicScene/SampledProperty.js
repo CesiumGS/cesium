@@ -178,6 +178,10 @@ define([
      * @exception {DeveloperError} time is required.
      */
     SampledProperty.prototype.getValue = function(time, result) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+
         var innerType = this._innerType;
         var times = this._times;
         var values = this._values;
