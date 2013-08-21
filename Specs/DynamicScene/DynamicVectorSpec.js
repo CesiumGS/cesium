@@ -7,7 +7,7 @@ defineSuite([
              'Core/Color',
              'Core/Iso8601',
              'Core/TimeInterval',
-             'Specs/MockProperty'
+             'DynamicScene/ConstantProperty'
             ], function(
                     DynamicVector,
                     DynamicObject,
@@ -16,24 +16,24 @@ defineSuite([
                     Color,
                     Iso8601,
                     TimeInterval,
-                    MockProperty) {
+                    ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('mergeProperties does not change a fully configured vector', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.vector = new DynamicVector();
-        objectToMerge.vector.color = new MockProperty();
-        objectToMerge.vector.width = new MockProperty();
-        objectToMerge.vector.length = new MockProperty();
-        objectToMerge.vector.direction = new MockProperty();
-        objectToMerge.vector.show = new MockProperty();
+        objectToMerge.vector.color = new ConstantProperty(Color.WHITE);
+        objectToMerge.vector.width = new ConstantProperty(1);
+        objectToMerge.vector.length = new ConstantProperty(2);
+        objectToMerge.vector.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
+        objectToMerge.vector.show = new ConstantProperty(true);
 
-        var color = new MockProperty();
-        var width = new MockProperty();
-        var length = new MockProperty();
-        var direction = new MockProperty();
-        var show = new MockProperty();
+        var color = new ConstantProperty(Color.RED);
+        var width = new ConstantProperty(2);
+        var length = new ConstantProperty(10);
+        var direction = new ConstantProperty(new Cartesian3(0, 0, 1));
+        var show = new ConstantProperty(false);
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.vector = new DynamicVector();
@@ -55,11 +55,11 @@ defineSuite([
     it('mergeProperties creates and configures an undefined vector', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.vector = new DynamicVector();
-        objectToMerge.vector.color = new MockProperty();
-        objectToMerge.vector.width = new MockProperty();
-        objectToMerge.vector.length = new MockProperty();
-        objectToMerge.vector.direction = new MockProperty();
-        objectToMerge.vector.show = new MockProperty();
+        objectToMerge.vector.color = new ConstantProperty(Color.WHITE);
+        objectToMerge.vector.width = new ConstantProperty(1);
+        objectToMerge.vector.length = new ConstantProperty(10);
+        objectToMerge.vector.direction = new ConstantProperty(new Cartesian3(0, 0, 1));
+        objectToMerge.vector.show = new ConstantProperty(true);
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -75,11 +75,11 @@ defineSuite([
     it('mergeProperties does not change when used with an undefined vector', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
 
-        var color = new MockProperty();
-        var width = new MockProperty();
-        var length = new MockProperty();
-        var direction = new MockProperty();
-        var show = new MockProperty();
+        var color = new ConstantProperty(Color.WHITE);
+        var width = new ConstantProperty(1);
+        var length = new ConstantProperty(10);
+        var direction = new ConstantProperty(new Cartesian3(0, 0, 1));
+        var show = new ConstantProperty(true);
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.vector = new DynamicVector();

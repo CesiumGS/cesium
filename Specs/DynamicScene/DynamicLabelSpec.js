@@ -11,7 +11,7 @@ defineSuite([
              'Scene/HorizontalOrigin',
              'Scene/VerticalOrigin',
              'Scene/LabelStyle',
-             'Specs/MockProperty'
+             'DynamicScene/ConstantProperty'
             ], function(
               DynamicLabel,
               DynamicObject,
@@ -24,38 +24,38 @@ defineSuite([
               HorizontalOrigin,
               VerticalOrigin,
               LabelStyle,
-              MockProperty) {
+              ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
     it('mergeProperties does not change a fully configured label', function() {
-        var expectedText = new MockProperty();
-        var expectedFont = new MockProperty();
-        var expectedStyle = new MockProperty();
-        var expectedFillColor = new MockProperty();
-        var expectedOutlineColor = new MockProperty();
-        var expectedOutlineWidth = new MockProperty();
-        var expectedHorizontalOrigin = new MockProperty();
-        var expectedVerticalOrigin = new MockProperty();
-        var expectedEyeOffset = new MockProperty();
-        var expectedPixelOffset = new MockProperty();
-        var expectedScale = new MockProperty();
-        var expectedShow = new MockProperty();
+        var expectedText = new ConstantProperty('my text');
+        var expectedFont = new ConstantProperty('10px serif');
+        var expectedStyle = new ConstantProperty(LabelStyle.OUTLINE);
+        var expectedFillColor = new ConstantProperty(Color.RED);
+        var expectedOutlineColor = new ConstantProperty(Color.WHITE);
+        var expectedOutlineWidth = new ConstantProperty(4);
+        var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+        var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+        var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIY_Y);
+        var expectedScale = new ConstantProperty(2);
+        var expectedShow = new ConstantProperty(true);
 
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.label.text = new MockProperty();
-        objectToMerge.label.font = new MockProperty();
-        objectToMerge.label.style = new MockProperty();
-        objectToMerge.label.fillColor = new MockProperty();
-        objectToMerge.label.outlineColor = new MockProperty();
-        objectToMerge.label.outlineWidth = new MockProperty();
-        objectToMerge.label.horizontalOrigin = new MockProperty();
-        objectToMerge.label.verticalOrigin = new MockProperty();
-        objectToMerge.label.eyeOffset = new MockProperty();
-        objectToMerge.label.pixelOffset = new MockProperty();
-        objectToMerge.label.scale = new MockProperty();
-        objectToMerge.label.show = new MockProperty();
+        objectToMerge.label.text = new ConstantProperty('not it');
+        objectToMerge.label.font = new ConstantProperty('arial');
+        objectToMerge.label.style = new ConstantProperty(LabelStyle.FILL);
+        objectToMerge.label.fillColor = new ConstantProperty(Color.BLACK);
+        objectToMerge.label.outlineColor = new ConstantProperty(Color.BLUE);
+        objectToMerge.label.outlineWidth = new ConstantProperty(5);
+        objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIY_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIY_X);
+        objectToMerge.label.scale = new ConstantProperty(1);
+        objectToMerge.label.show = new ConstantProperty(false);
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.label = new DynamicLabel();
@@ -91,18 +91,18 @@ defineSuite([
     it('mergeProperties creates and configures an undefined label', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.label.text = new MockProperty();
-        objectToMerge.label.font = new MockProperty();
-        objectToMerge.label.style = new MockProperty();
-        objectToMerge.label.fillColor = new MockProperty();
-        objectToMerge.label.outlineColor = new MockProperty();
-        objectToMerge.label.outlineWidth = new MockProperty();
-        objectToMerge.label.horizontalOrigin = new MockProperty();
-        objectToMerge.label.verticalOrigin = new MockProperty();
-        objectToMerge.label.eyeOffset = new MockProperty();
-        objectToMerge.label.pixelOffset = new MockProperty();
-        objectToMerge.label.scale = new MockProperty();
-        objectToMerge.label.show = new MockProperty();
+        objectToMerge.label.text = new ConstantProperty('not it');
+        objectToMerge.label.font = new ConstantProperty('arial');
+        objectToMerge.label.style = new ConstantProperty(LabelStyle.FILL);
+        objectToMerge.label.fillColor = new ConstantProperty(Color.BLACK);
+        objectToMerge.label.outlineColor = new ConstantProperty(Color.BLUE);
+        objectToMerge.label.outlineWidth = new ConstantProperty(5);
+        objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIY_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIY_X);
+        objectToMerge.label.scale = new ConstantProperty(1);
+        objectToMerge.label.show = new ConstantProperty(false);
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -123,18 +123,18 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined label', function() {
-        var expectedText = new MockProperty();
-        var expectedFont = new MockProperty();
-        var expectedStyle = new MockProperty();
-        var expectedFillColor = new MockProperty();
-        var expectedOutlineColor = new MockProperty();
-        var expectedOutlineWidth = new MockProperty();
-        var expectedHorizontalOrigin = new MockProperty();
-        var expectedVerticalOrigin = new MockProperty();
-        var expectedEyeOffset = new MockProperty();
-        var expectedPixelOffset = new MockProperty();
-        var expectedScale = new MockProperty();
-        var expectedShow = new MockProperty();
+        var expectedText = new ConstantProperty('my text');
+        var expectedFont = new ConstantProperty('10px serif');
+        var expectedStyle = new ConstantProperty(LabelStyle.OUTLINE);
+        var expectedFillColor = new ConstantProperty(Color.RED);
+        var expectedOutlineColor = new ConstantProperty(Color.WHITE);
+        var expectedOutlineWidth = new ConstantProperty(4);
+        var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+        var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+        var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIY_Y);
+        var expectedScale = new ConstantProperty(2);
+        var expectedShow = new ConstantProperty(true);
 
         var objectToMerge = new DynamicObject('objectToMerge');
 
