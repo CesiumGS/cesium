@@ -29,20 +29,8 @@ define([
          PolylineCollection) {
     "use strict";
 
-    function getValueRangeInReferenceFrame(positionProperty, start, stop, currentTime, referenceFrame, maximumStep, result) {
+    function subSampleSampledProperty(positionProperty, start, stop, updateTime, referenceFrame, maximumStep, result) {
         var times = positionProperty._property._times;
-
-        if (!defined(start)) {
-            throw new DeveloperError('start is required');
-        }
-
-        if (!defined(stop)) {
-            throw new DeveloperError('stop is required');
-        }
-
-        if (!defined(result)) {
-            result = [];
-        }
 
         var r = 0;
         //Always step exactly on start (but only use it if it exists.)
@@ -52,7 +40,7 @@ define([
             result[r++] = tmp;
         }
 
-        var steppedOnNow = !defined(currentTime) || currentTime.lessThan(start) || currentTime.greaterThan(stop);
+        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
 
         //Iterate over all interval times and add the ones that fall in our
         //time range.  Note that times can contain data outside of
@@ -67,14 +55,14 @@ define([
         var sampleStepSize;
 
         while (t < len) {
-            if (!steppedOnNow && current.greaterThanOrEquals(currentTime)) {
-                tmp = positionProperty.getValueInReferenceFrame(currentTime, referenceFrame, result[r]);
+            if (!steppedOnNow && current.greaterThanOrEquals(updateTime)) {
+                tmp = positionProperty.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
                 }
                 steppedOnNow = true;
             }
-            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(currentTime)) {
+            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(updateTime)) {
                 tmp = positionProperty.getValueInReferenceFrame(current, referenceFrame, result[r]);
                 if (defined(tmp)) {
                     result[r++] = tmp;
@@ -116,6 +104,49 @@ define([
         return result;
     }
 
+    function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
+        if (!defined(result)) {
+            result = [];
+        }
+
+        if (property instanceof SampledPositionProperty) {
+            return subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, result);
+        }
+
+        //Fallback to generic sampling.
+        var tmp;
+        var i = 0;
+        var index = 0;
+        var time = start;
+        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
+        while (time.lessThan(stop)) {
+            if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
+                steppedOnNow = true;
+                tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[index]);
+                if (defined(tmp)) {
+                    result[index] = tmp;
+                    index++;
+                }
+            }
+            tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
+            if (defined(tmp)) {
+                result[index] = tmp;
+                index++;
+            }
+            i++;
+            time = start.addSeconds(maximumStep * i);
+        }
+        //Always sample stop.
+        tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+        if (defined(tmp)) {
+            result[index] = tmp;
+            index++;
+        }
+
+        result.length = index;
+        return result;
+    }
+
     var toFixedScratch = new Matrix3();
     var PolylineUpdater = function(scene, referenceFrame) {
         this._unusedIndexes = [];
@@ -142,7 +173,7 @@ define([
         }
 
         var positionProperty = dynamicObject.position;
-        if (!(positionProperty instanceof SampledPositionProperty)) {
+        if (!defined(positionProperty)) {
             return;
         }
 
@@ -249,7 +280,7 @@ define([
             resolution = property.getValue(time);
         }
 
-        polyline.setPositions(getValueRangeInReferenceFrame(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
+        polyline.setPositions(subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (defined(property)) {
