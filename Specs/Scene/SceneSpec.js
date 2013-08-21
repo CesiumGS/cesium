@@ -44,8 +44,9 @@ defineSuite([
         expect(scene.getAnimations()).toBeInstanceOf(AnimationCollection);
 
         var contextAttributes = scene.getContext()._gl.getContextAttributes();
-        // Do not check depth, stencil, and antialias since they are requests not requirements
+        // Do not check depth and antialias since they are requests not requirements
         expect(contextAttributes.alpha).toEqual(false);
+        expect(contextAttributes.stencil).toEqual(false);
         expect(contextAttributes.premultipliedAlpha).toEqual(true);
         expect(contextAttributes.preserveDrawingBuffer).toEqual(false);
 
