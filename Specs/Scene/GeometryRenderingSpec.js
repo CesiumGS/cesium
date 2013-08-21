@@ -677,7 +677,7 @@ defineSuite([
         var extrudedHeight;
         var geometryHeight;
         beforeAll(function() {
-            extent = Extent.fromDegrees(0, 0, 1, 1);
+            extent = Extent.fromDegrees(-1, -1, 1, 1);
             extrudedHeight = 200000.0;
             geometryHeight = 100000.0;
             instance = new GeometryInstance({
@@ -878,10 +878,10 @@ defineSuite([
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(0.0, 45.0),
-                        Cartographic.fromDegrees(10.0, 45.0),
-                        Cartographic.fromDegrees(10.0, 55.0),
-                        Cartographic.fromDegrees(0.0, 55.0)
+                        Cartographic.fromDegrees(-1.0, -1.0),
+                        Cartographic.fromDegrees(1.0, -1.0),
+                        Cartographic.fromDegrees(1.0, 1.0),
+                        Cartographic.fromDegrees(-1.0, 1.0)
                     ]),
                     height: geometryHeight,
                     extrudedHeight: extrudedHeight
@@ -926,8 +926,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateRight(CesiumMath.PI, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateUp(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -938,7 +937,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -949,8 +948,7 @@ defineSuite([
                 var transform = Matrix4.multiplyByTranslation(
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateLeft(CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -962,7 +960,6 @@ defineSuite([
                         Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
                         new Cartesian3(0.0, 0.0, height));
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
