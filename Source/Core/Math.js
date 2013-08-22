@@ -580,18 +580,18 @@ define([
     };
 
     /**
-     * Generates a random number in the range of [0.0, 1.0]
+     * Generates a random number in the range of [0.0, 1.0)
      * using a Mersenne twister.
      *
      * @memberof CesiumMath
      *
-     * @returns A random number in the range of [0.0, 1.0].
+     * @returns A random number in the range of [0.0, 1.0).
      *
      * @see CesiumMath#setRandomNumberSeed
      * @see http://en.wikipedia.org/wiki/Mersenne_twister
      */
     CesiumMath.nextRandomNumber = function() {
-        return randomNumberGenerator.genrand_real1();
+        return randomNumberGenerator.random();
     };
 
     return CesiumMath;
