@@ -66,7 +66,8 @@ defineSuite([
         var e = new ExtentPrimitive({
             ellipsoid : ellipsoid,
             granularity : CesiumMath.toRadians(20.0),
-            extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0)
+            extent : Extent.fromDegrees(-50.0, -50.0, 50.0, 50.0),
+            asynchronous : false
         });
 
         return e;

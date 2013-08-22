@@ -318,7 +318,7 @@ defineSuite([
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
-        var geometry = new EllipsoidGeometry();
+        var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
         var acmrBefore = Tipsify.calculateACMR({
             indices : geometry.indices,
             cacheSize : 24
@@ -1440,7 +1440,7 @@ defineSuite([
     });
 
     it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
-        var geometry = new BoxGeometry({
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
@@ -1448,16 +1448,16 @@ defineSuite([
             }),
             maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
             minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        });
+        }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
-        var expectedGeometry = new BoxGeometry({
+        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
             maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
             minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
-        });
+        }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
 

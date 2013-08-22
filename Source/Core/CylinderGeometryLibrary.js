@@ -1,30 +1,16 @@
 /*global define*/
-define([
-        './Cartesian3',
-        './DeveloperError',
-        './Ellipsoid',
-        './Math',
-        './Matrix3',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        DeveloperError,
-        Ellipsoid,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
+define(['./Math'], function(CesiumMath) {
     "use strict";
 
+    /**
+     * @private
+     */
     var CylinderGeometryLibrary = {};
 
     /**
-     * Finds the positions of a cylinder
      * @private
      */
-    CylinderGeometryLibrary.computePositions = function(options, slices, fill){
-        var length = options.length;
-        var topRadius = options.topRadius;
-        var bottomRadius = options.bottomRadius;
+    CylinderGeometryLibrary.computePositions = function(length, topRadius, bottomRadius, slices, fill){
         var topZ = length * 0.5;
         var bottomZ = -topZ;
 

@@ -3,12 +3,14 @@ define([
         'Core/clone',
         'Core/defaultValue',
         'Renderer/Context',
-        'Specs/createCanvas'
+        'Specs/createCanvas',
+        'Specs/createFrameState'
     ], function(
         clone,
         defaultValue,
         Context,
-        createCanvas) {
+        createCanvas,
+        createFrameState) {
     "use strict";
 
     function createContext(options) {
@@ -22,6 +24,10 @@ define([
         context.setValidateFramebuffer(true);
         context.setLogShaderCompilation(true);
         context.setThrowOnWebGLError(true);
+
+        var us = context.getUniformState();
+        us.update(createFrameState());
+
         return context;
     }
 
