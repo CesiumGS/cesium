@@ -19,7 +19,7 @@ define([
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -44,7 +44,7 @@ define([
         VertexLayout,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -682,12 +682,10 @@ define([
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
+            var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
-                createPickVertexShaderSource(vs),
-                createPickFragmentShaderSource(fs, 'varying'),
-                this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, this._attributeIndices);
 
             validateShaderMatching(this._sp, this._attributeIndices);
             validateShaderMatching(this._pickSP, this._attributeIndices);

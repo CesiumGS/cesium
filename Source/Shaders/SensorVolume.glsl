@@ -21,8 +21,6 @@ bool inSensorShadow(vec3 coneVertexWC, czm_ellipsoid ellipsoidEC, vec3 pointWC)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef RENDER_FOR_PICK
-
 vec4 getIntersectionColor()
 {
     return u_intersectionColor;
@@ -42,5 +40,3 @@ vec2 sensor2dTextureCoordinates(float sensorRadius, vec3 pointMC)
     
     return vec2(s, t);
 }
-
-#endif
