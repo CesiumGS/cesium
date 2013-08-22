@@ -1,10 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError'
+        './defined',
+        './DeveloperError',
+        '../ThirdParty/mersenne-twister'
        ], function(
          defaultValue,
-         DeveloperError) {
+         defined,
+         DeveloperError,
+         MersenneTwister) {
     "use strict";
 
     /**
@@ -556,26 +560,38 @@ define([
         return value < min ? min : value > max ? max : value;
     };
 
+    var randomNumberGenerator = new MersenneTwister();
+
     /**
-     * Generates a random number from a custom seed.
+     * Sets the seed used by the random number generator
+     * in {@link CesiumMath#nextRandomNumber}.
      *
      * @memberof CesiumMath
      *
-     * @param {Number} seed The value to be used as seed.
-     * @returns A random number generated from given seed.
+     * @param {Number} seed An integer used as the seed.
+     *
+     * @exception {DeveloperError} seed is required.
      */
-    CesiumMath.getSeededRandom = function(seed) {
-        //http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom_23.html
-        var constant = Math.pow(2, 13) + 1;
-        var prime = 1987;
-        var precision = 1000;
+    CesiumMath.setRandomNumberSeed = function(seed) {
+        if (!defined(seed)) {
+            throw new DeveloperError('seed is required.');
+        }
+        randomNumberGenerator = new MersenneTwister(seed);
+    };
 
-        return function() {
-            seed *= constant;
-            seed += prime;
-            seed %= 1e15;
-            return 0.2 + seed % precision / precision * 0.8;
-        };
+    /**
+     * Generates a random number in the range of [0.0, 1.0]
+     * using a Mersenne twister.
+     *
+     * @memberof CesiumMath
+     *
+     * @returns A random number in the range of [0.0, 1.0].
+     *
+     * @see CesiumMath#setRandomNumberSeed
+     * @see http://en.wikipedia.org/wiki/Mersenne_twister
+     */
+    CesiumMath.nextRandomNumber = function() {
+        return randomNumberGenerator.genrand_real1();
     };
 
     return CesiumMath;
