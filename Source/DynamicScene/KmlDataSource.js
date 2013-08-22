@@ -2,6 +2,7 @@
 define(['../Core/createGuid',
         '../Core/defined',
         '../Core/Cartographic',
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/ClockRange',
         '../Core/ClockStep',
@@ -28,6 +29,7 @@ define(['../Core/createGuid',
         createGuid,
         defined,
         Cartographic,
+        Cartesian2,
         Color,
         ClockRange,
         ClockStep,
@@ -330,7 +332,13 @@ define(['../Core/createGuid',
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : undefined;
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : undefined;
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
+                label.pixelOffset = new ConstantProperty(new Cartesian2(1, 5));
                 dynamicObject.label = label;
+                //default billboard image
+                if(!defined(dynamicObject.billboard)){
+                    dynamicObject.billboard = new DynamicBillboard();
+                    dynamicObject.billboard.image = new ConstantProperty("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+                }
             }
             else if(node.nodeName ===  "LineStyle")   {
                 //Map style to line properties
