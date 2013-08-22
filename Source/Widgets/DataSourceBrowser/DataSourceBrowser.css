@@ -24,6 +24,11 @@
     box-shadow: 0 0 5px #fff;
 }
 
+.cesium-dataSourceBrowser-dataSourcePanelContainer-header {
+    text-align: center;
+    margin-bottom: 5px;
+}
+
 .cesium-dataSourceBrowser-dataSourcePanelContainer-footer {
     margin-top: 5px;
     text-align: right;
@@ -41,7 +46,7 @@
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
     padding: 0;
-    margin: 0;
+    margin: 2px 0;
     list-style: none;
 }
 

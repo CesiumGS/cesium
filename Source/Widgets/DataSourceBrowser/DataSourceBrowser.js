@@ -61,6 +61,7 @@ define([
         dataSourcesToolbar.className = 'cesium-dataSourceBrowser-dataSourcesToolbar';
         dataSourcesContainer.appendChild(dataSourcesToolbar);
 
+/*
         var addDataSourceButton = document.createElement('span');
         addDataSourceButton.className = 'cesium-dataSourceBrowser-button';
         addDataSourceButton.textContent = '+ Add';
@@ -68,6 +69,7 @@ define([
 attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
         dataSourcesToolbar.appendChild(addDataSourceButton);
+*/
 
         var dataSourcesRootElement = document.createElement('ul');
         dataSourcesRootElement.className = 'cesium-dataSourceBrowser-dataSources';
@@ -88,18 +90,18 @@ css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-visible" : dataSourceP
         dataSourcePanelHeader.textContent = 'Add Data Source';
         dataSourcePanelContainer.appendChild(dataSourcePanelHeader);
 
-        var dataSourceOptions = document.createElement('div');
+        var dataSourceOptions = document.createElement('span');
         dataSourceOptions.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceOptions';
         dataSourceOptions.setAttribute('data-bind', '\
-foreach: dataSourcePanels');
-        dataSourcePanelContainer.appendChild(dataSourceOptions);
+foreach: dataSourcePanelViewModel.dataSourcePanels');
+        dataSourcesToolbar.appendChild(dataSourceOptions);
 
         var dataSourceOption = document.createElement('div');
         dataSourceOption.setAttribute('data-bind', '\
 text : "+ " + description,\
 css: { "cesium-dataSourceBrowser-button" : true, \
-       "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
-click: function($data) { $parent.activeDataSourcePanel = $data }');
+       "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.dataSourcePanelViewModel.activeDataSourcePanel },\
+click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $parent.dataSourcePanelViewModel.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
 
         var activeDataSourcePanelContainer = document.createElement('div');
