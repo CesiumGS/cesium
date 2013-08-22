@@ -26,6 +26,20 @@ varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec2 v_textureCoordinates;
 
+// TODO: use built-in function when shader pipeline is ready
+float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
+{
+    return max(dot(lightDirectionEC, normalEC), 0.0);
+}
+
+// TODO: use built-in function when shader pipeline is ready
+float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
+{
+    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
+    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
+    return pow(specular, shininess);
+}
+
 vec3 sampleAndBlend(
     vec3 previousColor,
     sampler2D texture,

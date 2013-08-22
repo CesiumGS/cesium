@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../Core/SphereOutlineGeometry',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         SphereOutlineGeometry,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createSphereOutlineGeometry(parameters, transferableObjects) {
         var sphereGeometry = parameters.geometry;
         var geometry = SphereOutlineGeometry.createGeometry(sphereGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,

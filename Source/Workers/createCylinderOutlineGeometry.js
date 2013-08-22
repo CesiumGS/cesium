@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../Core/CylinderOutlineGeometry',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         CylinderOutlineGeometry,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createCylinderOutlineGeometry(parameters, transferableObjects) {
         var cylinderGeometry = parameters.geometry;
         var geometry = CylinderOutlineGeometry.createGeometry(cylinderGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,

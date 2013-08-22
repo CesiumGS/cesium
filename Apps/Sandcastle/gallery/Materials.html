@@ -505,7 +505,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Common materials';
         title.value = -1;
         title.disabled = true;
-        commonMaterialMenu.className = 'button';
+        title.selected = "selected";
+        commonMaterialMenu.className = 'cesium-button';
         commonMaterialMenu.appendChild(title);
         commonMaterialMenu.onchange = function() {
             if (this.selectedIndex === 1) {
@@ -526,7 +527,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Procedural textures';
         title.value = -1;
         title.disabled = true;
-        proceduralTextureMenu.className = 'button';
+        title.selected = "selected";
+        proceduralTextureMenu.className = 'cesium-button';
         proceduralTextureMenu.appendChild(title);
         proceduralTextureMenu.onchange = function() {
             if (this.selectedIndex === 1) {
@@ -588,7 +590,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Base materials';
         title.value = -1;
         title.disabled = true;
-        baseMaterialMenu.className = 'button';
+        title.selected = "selected";
+        baseMaterialMenu.className = 'cesium-button';
         baseMaterialMenu.appendChild(title);
         baseMaterialMenu.onchange = function(){
             if (this.selectedIndex === 1){
@@ -638,7 +641,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Misc materials';
         title.value = -1;
         title.disabled = true;
-        miscMaterialMenu.className = 'button';
+        title.selected = "selected";
+        miscMaterialMenu.className = 'cesium-button';
         miscMaterialMenu.appendChild(title);
         miscMaterialMenu.onchange = function(){
             if (this.selectedIndex === 1) {
@@ -663,7 +667,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Example composite materials';
         title.value = -1;
         title.disabled = true;
-        compositeMaterialMenu.className = 'button';
+        title.selected = "selected";
+        compositeMaterialMenu.className = 'cesium-button';
         compositeMaterialMenu.appendChild(title);
         compositeMaterialMenu.onchange = function(){
             if (this.selectedIndex === 1){
@@ -684,7 +689,8 @@ require(['Cesium'], function(Cesium) {
         title.textContent = 'Polyline materials';
         title.value = -1;
         title.disabled = true;
-        polylineMaterialMenu.className = 'button';
+        title.selected = "selected";
+        polylineMaterialMenu.className = 'cesium-button';
         polylineMaterialMenu.appendChild(title);
         polylineMaterialMenu.onchange = function(){
             if (this.selectedIndex === 1){
