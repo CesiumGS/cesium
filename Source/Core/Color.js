@@ -4,13 +4,15 @@ define([
         './defined',
         './freezeObject',
         './DeveloperError',
-        './FeatureDetection'
+        './FeatureDetection',
+        './Math'
     ], function(
         defaultValue,
         defined,
         freezeObject,
         DeveloperError,
-        FeatureDetection) {
+        FeatureDetection,
+        CesiumMath) {
     "use strict";
 
     function hue2rgb(m1, m2, h) {
@@ -155,6 +157,50 @@ define([
         }
 
         return new Color(red, green, blue, alpha);
+    };
+
+    /**
+     * Creates a random Color instance from red, green, blue and alpha string parameters, using
+     * the semantics defined in the KML reference
+     * @memberof Color
+     *
+     */
+    Color.fromRandom = function(options, result){
+        var random = defined(options.seed) ? new CesiumMath.getSeededRandom(options.seed) : Math.random;
+
+        var minimumRed = defined(options.minimumRed) ? options.minimumRed : 0;
+        var maximumRed = defined(options.maximumRed) ? options.maximumRed : 1.0;
+        if(minimumRed > maximumRed){
+            throw new DeveloperError("minimumRed must be lower or equal to maximumRed");
+        }
+        var red = defined(options.red) ? options.red : minimumRed + (random() * (maximumRed - minimumRed));
+
+        var minimumGreen = defined(options.minimumGreen) ? options.minimumGreen : 0;
+        var maximumGreen = defined(options.maximumGreen) ? options.maximumGreen : 1.0;
+        if(minimumGreen > maximumGreen){
+            throw new DeveloperError("minimumGreen must be lower or equal to maximumGreen");
+        }
+        var green = defined(options.green) ? options.green : minimumGreen + (random() * (maximumGreen - minimumGreen));
+
+        var minimumBlue = defined(options.minimumBlue) ? options.minimumBlue : 0;
+        var maximumBlue = defined(options.maximumBlue) ? options.maximumBlue : 1.0;
+        if(minimumRed > maximumRed){
+            throw new DeveloperError("minimumBlue must be lower or equal to maximumBlue");
+        }
+        var blue = defined(options.blue) ? options.blue : minimumBlue + (random() * (maximumBlue - minimumBlue));
+
+        var minimumAlpha = defined(options.minimumAlpha) ? options.minimumAlpha : 0;
+        var maximumAlpha = defined(options.maximumAlpha) ? options.maximumAlpha : 0;
+        var alpha = defined(options.alpha) ? options.alpha : minimumAlpha + (random() * (maximumAlpha - minimumAlpha));
+
+        if(!defined(result)) {
+            return new Color(red, green, blue, alpha);
+          }
+          result.red = red;
+          result.green = green;
+          result.blue = blue;
+          result.alpha = alpha;
+          return result;
     };
 
     //#rgb

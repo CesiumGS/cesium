@@ -556,5 +556,27 @@ define([
         return value < min ? min : value > max ? max : value;
     };
 
+    /**
+     * Generates a random number from a custom seed.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} seed The value to be used as seed.
+     * @returns A random number generated from given seed.
+     */
+    CesiumMath.getSeededRandom = function(seed) {
+        //http://michalbe.blogspot.com/2011/02/javascript-random-numbers-with-custom_23.html
+        var constant = Math.pow(2, 13) + 1;
+        var prime = 1987;
+        var precision = 1000;
+
+        return function() {
+            seed *= constant;
+            seed += prime;
+            seed %= 1e15;
+            return 0.2 + seed % precision / precision * 0.8;
+        };
+    };
+
     return CesiumMath;
 });
