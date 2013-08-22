@@ -329,7 +329,6 @@
 					<include name="*.js" />
 					<exclude name="*.profile.js" />
 					<exclude name="cesiumWorkerBootstrapper.js" />
-					<exclude name="transferGeometry.js" />
 					<exclude name="createTaskProcessorWorker.js" />
 				</fileset>
 				<chainedmapper>
