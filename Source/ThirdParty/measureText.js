@@ -1,11 +1,6 @@
-/**
-  @license
-  fontmetrics.js - https://github.com/Pomax/fontmetrics.js
-
+/*
   This library rewrites the Canvas2D "measureText" function
   so that it returns a more complete metrics object.
-  This library is licensed under the MIT (Expat) license,
-  the text for which is included below.
 
 ** -----------------------------------------------------------------------------
 
@@ -15,6 +10,10 @@
                  (https://github.com/oampo)
 
 ** -----------------------------------------------------------------------------
+*/
+/**
+  @license
+  fontmetrics.js - https://github.com/Pomax/fontmetrics.js
 
   Copyright (C) 2011 by Mike "Pomax" Kamermans
 
