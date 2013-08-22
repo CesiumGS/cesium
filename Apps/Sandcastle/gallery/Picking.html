@@ -260,6 +260,7 @@ require(['Cesium'], function(Cesium) {
             this._finishHandler = handler;
             this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
             this._extentPrimitive = new Cesium.ExtentPrimitive();
+            this._extentPrimitive.asynchronous = false;
             this._scene.getPrimitives().add(this._extentPrimitive);
         };
         
