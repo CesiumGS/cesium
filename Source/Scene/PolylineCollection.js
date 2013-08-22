@@ -19,7 +19,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './Material',
         './SceneMode',
         './Polyline',
@@ -45,7 +45,7 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         Material,
         SceneMode,
         Polyline,
@@ -1037,14 +1037,10 @@ define([
             return;
         }
 
-        var fsSource =
-            '#line 0\n' +
-            this.material.shaderSource +
-            '#line 0\n' +
-            PolylineFS;
-
+        var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
+        var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
         this.shaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsSource, attributeIndices);
-        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, createPickFragmentShaderSource(fsSource, 'varying'), attributeIndices);
+        this.pickShaderProgram = context.getShaderCache().getShaderProgram(PolylineVS, fsPick, attributeIndices);
     };
 
     function intersectsIDL(polyline) {
