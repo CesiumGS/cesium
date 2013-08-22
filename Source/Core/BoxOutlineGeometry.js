@@ -7,6 +7,7 @@ define([
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes'
     ], function(
@@ -17,6 +18,7 @@ define([
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes) {
     "use strict";
@@ -24,9 +26,9 @@ define([
     var diffScratch = new Cartesian3();
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the edges of a cube centered at the origin.
+     * A description of the outline of a cube centered at the origin.
      *
-     * @alias BoxGeometryOutline
+     * @alias BoxOutlineGeometry
      * @constructor
      *
      * @param {Cartesian3} options.minimumCorner The minimum x, y, and z coordinates of the box.
@@ -35,13 +37,17 @@ define([
      * @exception {DeveloperError} options.minimumCorner is required.
      * @exception {DeveloperError} options.maximumCorner is required.
      *
+     * @see BoxOutlineGeometry#fromDimensions
+     * @see BoxOutlineGeometry#createGeometry
+     *
      * @example
-     * var box = new BoxGeometryOutline({
+     * var box = new BoxOutlineGeometry({
      *   maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
      *   minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
+     * var geometry = BoxOutlineGeometry.createGeometry(box);
      */
-    var BoxGeometryOutline = function(options) {
+    var BoxOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var min = options.minimumCorner;
@@ -54,6 +60,62 @@ define([
         if (!defined(max)) {
             throw new DeveloperError('options.maximumCorner is required');
         }
+
+        this._min = min;
+        this._max = max;
+        this._workerName = 'createBoxOutlineGeometry';
+    };
+
+    /**
+     * Creates an outline of a cube centered at the origin given its dimensions.
+     * @memberof BoxOutlineGeometry
+     *
+     * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     *
+     * @exception {DeveloperError} options.dimensions is required.
+     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
+     *
+     * @see BoxOutlineGeometry#createGeometry
+     *
+     * @example
+     * var box = BoxOutlineGeometry.fromDimensions({
+     *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
+     * });
+     * var geometry = BoxOutlineGeometry.createGeometry(box);
+     */
+    BoxOutlineGeometry.fromDimensions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var dimensions = options.dimensions;
+        if (!defined(dimensions)) {
+            throw new DeveloperError('options.dimensions is required.');
+        }
+
+        if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
+            throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
+        }
+
+        var corner = dimensions.multiplyByScalar(0.5);
+        var min = corner.negate();
+        var max = corner;
+
+        var newOptions = {
+            minimumCorner : min,
+            maximumCorner : max
+        };
+        return new BoxOutlineGeometry(newOptions);
+    };
+
+    /**
+     * Computes the geometric representation of an outline of a box, including its vertices, indices, and a bounding sphere.
+     * @memberof BoxOutlineGeometry
+     *
+     * @param {BoxOutlineGeometry} boxGeometry A description of the box outline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    BoxOutlineGeometry.createGeometry = function(boxGeometry) {
+        var min = boxGeometry._min;
+        var max = boxGeometry._max;
 
         var attributes = new GeometryAttributes();
         var indices = new Uint16Array(12 * 2);
@@ -126,73 +188,13 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = diff.magnitude() * 0.5;
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = new BoundingSphere(Cartesian3.ZERO, radius);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+        });
     };
 
-    /**
-     * Creates vertices and indices for the edges of a cube centered at the origin given its dimensions.
-     * @memberof BoxGeometryOutline
-     *
-     * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
-     *
-     * @exception {DeveloperError} options.dimensions is required.
-     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
-     *
-     * @example
-     * var box = BoxGeometryOutline.fromDimensions({
-     *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
-     * });
-     */
-    BoxGeometryOutline.fromDimensions = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var dimensions = options.dimensions;
-        if (!defined(dimensions)) {
-            throw new DeveloperError('options.dimensions is required.');
-        }
-
-        if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
-            throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
-        }
-
-        var corner = dimensions.multiplyByScalar(0.5);
-        var min = corner.negate();
-        var max = corner;
-
-        var newOptions = {
-            minimumCorner : min,
-            maximumCorner : max
-        };
-        return new BoxGeometryOutline(newOptions);
-    };
-
-    return BoxGeometryOutline;
+    return BoxOutlineGeometry;
 });

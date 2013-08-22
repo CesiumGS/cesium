@@ -12,7 +12,7 @@ define([
     "use strict";
 
     /**
-     * A {@link Geometry} that represents vertices and indices for the outline of a circle on the ellipsoid.
+     * A description of the outline of a circle on the ellipsoid.
      *
      * @alias CircleOutlineGeometry
      * @constructor
@@ -30,6 +30,8 @@ define([
      * @exception {DeveloperError} radius must be greater than zero.
      * @exception {DeveloperError} granularity must be greater than zero.
      *
+     * @see CircleOutlineGoemetry.createGeometry
+     *
      * @example
      * // Create a circle.
      * var ellipsoid = Ellipsoid.WGS84;
@@ -38,6 +40,7 @@ define([
      *   center : ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(-75.59777, 40.03883)),
      *   radius : 100000.0
      * });
+     * var geometry = CircleOutlineGeometry.createGeometry(circle);
      */
     var CircleOutlineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -61,37 +64,19 @@ define([
             granularity : options.granularity,
             numberOfVerticalLines : options.numberOfVerticalLines
         };
-        var ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
+        this._ellipseGeometry = new EllipseOutlineGeometry(ellipseGeometryOptions);
+        this._workerName = 'createCircleOutlineGeometry';
+    };
 
-        /**
-         * An object containing {@link GeometryAttribute} position property.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = ellipseGeometry.attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = ellipseGeometry.indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = ellipseGeometry.primitiveType;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = ellipseGeometry.boundingSphere;
+    /**
+     * Computes the geometric representation of an outline of a circle on an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof CircleOutlineGeometry
+     *
+     * @param {CircleOutlineGeometry} circleGeometry A description of the circle.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    CircleOutlineGeometry.createGeometry = function(circleGeometry) {
+        return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
 
     return CircleOutlineGeometry;

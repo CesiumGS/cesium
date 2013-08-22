@@ -32,7 +32,7 @@ defineSuite([
 
     it('throws with less than three positions', function() {
         expect(function() {
-            return PolygonOutlineGeometry.fromPositions({ positions : [new Cartesian3()] });
+            return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({ positions : [new Cartesian3()] }));
         }).toThrow();
     });
 
@@ -44,7 +44,7 @@ defineSuite([
         };
 
         expect(function() {
-            return new PolygonOutlineGeometry({ polygonHierarchy : hierarchy });
+            return PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy }));
         }).toThrow();
     });
 
@@ -52,14 +52,14 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         expect(function() {
-            return PolygonOutlineGeometry.fromPositions({
+            return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
                 positions : [
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0))
                 ],
                 ellipsoid : ellipsoid
-            });
+            }));
         }).toThrow();
     });
 
@@ -68,7 +68,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
 
         expect(function() {
-            return PolygonOutlineGeometry.fromPositions({
+            return PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
                 positions : [
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
                     ellipsoid.cartographicToCartesian(Cartographic.fromDegrees(0.0, 0.0, 0.0)),
@@ -76,7 +76,7 @@ defineSuite([
                 ],
                 ellipsoid : ellipsoid,
                 extrudedeHeight: 2
-            });
+            }));
         }).toThrow();
     });
 
@@ -98,15 +98,15 @@ defineSuite([
         };
 
         expect(function() {
-            return new PolygonOutlineGeometry({
+            return PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
                 polygonHierarchy : hierarchy,
                 ellipsoid : ellipsoid
-            });
+            }));
         }).toThrow();
     });
 
     it('computes positions', function() {
-        var p = PolygonOutlineGeometry.fromPositions({
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
                 Cartographic.fromDegrees(50.0, -50.0, 0.0),
@@ -114,7 +114,7 @@ defineSuite([
                 Cartographic.fromDegrees(-50.0, 50.0, 0.0)
             ]),
             granularity : CesiumMath.PI_OVER_THREE
-        });
+        }));
 
         expect(p.attributes.position.values.length).toEqual(3 * 6);
         expect(p.indices.length).toEqual(2 * 6);
@@ -146,10 +146,10 @@ defineSuite([
             }]
         };
 
-        var p = new PolygonOutlineGeometry({
+        var p = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE
-        });
+        }));
 
         expect(p.attributes.position.values.length).toEqual(3 * 12);
         expect(p.indices.length).toEqual(2 * 12);
@@ -181,10 +181,10 @@ defineSuite([
             }]
         };
 
-        var p = new PolygonOutlineGeometry({
+        var p = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE
-        });
+        }));
 
         expect(p.attributes.position.values.length).toEqual(3 * 12);
         expect(p.indices.length).toEqual(2 * 12);
@@ -195,16 +195,16 @@ defineSuite([
         var center = new Cartographic(0.2930215893394521, 0.818292397338644, 1880.6159971414636);
         var positions = Shapes.computeCircleBoundary(ellipsoid, ellipsoid.cartographicToCartesian(center), 10000);
 
-        var p = PolygonOutlineGeometry.fromPositions({
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             granularity : CesiumMath.PI_OVER_THREE
-        });
+        }));
 
         expect(p.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
     });
 
     it('computes positions extruded', function() {
-        var p = PolygonOutlineGeometry.fromPositions({
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Ellipsoid.WGS84.cartographicArrayToCartesianArray([
                 Cartographic.fromDegrees(-50.0, -50.0, 0.0),
                 Cartographic.fromDegrees(50.0, -50.0, 0.0),
@@ -213,7 +213,7 @@ defineSuite([
             ]),
             granularity : CesiumMath.PI_OVER_THREE,
             extrudedHeight: 30000
-        });
+        }));
 
         expect(p.attributes.position.values.length).toEqual(3 * 6 * 2);
         expect(p.indices.length).toEqual(2 * 6 * 2 + 4*2);
@@ -245,11 +245,11 @@ defineSuite([
             }]
         };
 
-        var p = new PolygonOutlineGeometry({
+        var p = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE,
             extrudedHeight: 30000
-        });
+        }));
 
         expect(p.attributes.position.values.length).toEqual(3 * 12 * 2);
         expect(p.indices.length).toEqual(2 * 12 * 2 + 12*2);

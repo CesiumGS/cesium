@@ -70,13 +70,13 @@ defineSuite([
 
     it('computes positions', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var m = new EllipseOutlineGeometry({
+        var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : ellipsoid,
             center : ellipsoid.cartographicToCartesian(new Cartographic()),
             granularity : 0.75,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 10);
         expect(m.indices.length).toEqual(2 * 10);
@@ -85,14 +85,14 @@ defineSuite([
 
     it('computes positions extruded', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var m = new EllipseOutlineGeometry({
+        var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : ellipsoid,
             center : ellipsoid.cartographicToCartesian(new Cartographic()),
             granularity : 0.75,
             semiMajorAxis : 1.0,
             semiMinorAxis : 1.0,
             extrudedHeight : 50000
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);
         expect(m.indices.length).toEqual(2 * 10 * 2 + (16 *2));
@@ -100,7 +100,7 @@ defineSuite([
 
     it('computes positions extruded, no lines drawn between top and bottom', function() {
         var ellipsoid = Ellipsoid.WGS84;
-        var m = new EllipseOutlineGeometry({
+        var m = EllipseOutlineGeometry.createGeometry(new EllipseOutlineGeometry({
             ellipsoid : ellipsoid,
             center : ellipsoid.cartographicToCartesian(new Cartographic()),
             granularity : 0.75,
@@ -108,7 +108,7 @@ defineSuite([
             semiMinorAxis : 1.0,
             extrudedHeight : 50000,
             numberOfVerticalLines : 0
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 10 * 2);
         expect(m.indices.length).toEqual(2 * 10 * 2);
