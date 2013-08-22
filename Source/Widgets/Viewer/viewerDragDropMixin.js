@@ -8,6 +8,7 @@ define([
         '../../Core/wrapFunction',
         '../../DynamicScene/CzmlDataSource',
         '../../DynamicScene/GeoJsonDataSource',
+        '../../DynamicScene/KmlDataSource',
         '../../ThirdParty/when',
         '../getElement'
     ], function(
@@ -19,6 +20,7 @@ define([
         wrapFunction,
         CzmlDataSource,
         GeoJsonDataSource,
+        KmlDataSource,
         when,
         getElement) {
     "use strict";
@@ -213,6 +215,8 @@ define([
         endsWith(sourceUpperCase, ".JSON") || //
         endsWith(sourceUpperCase, ".TOPOJSON")) {
             DataSource = GeoJsonDataSource;
+        } else if (endsWith(sourceUpperCase, ".KML")){
+            DataSource = KmlDataSource;
         } else {
             viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
         }
