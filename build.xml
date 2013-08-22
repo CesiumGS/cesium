@@ -156,6 +156,12 @@
 		<exclude name="**/*.profile.js" />
 	</fileset>
 
+	<fileset dir="${sourceDirectory}" id="cesiumWorkersJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
+
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
 		<attribute name="minifystatefile" />
@@ -254,43 +260,8 @@
 		<!-- create combined Cesium.js	-->
 		<antcall target="combineJavaScript.combineCesium" />
 
-		<!-- create cesiumWorkerBootstrapper -->
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg value="${rjsPath}" />
-			<arg value="-o" />
-			<arg value="${rjsOptions}" />
-			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
-			<arg value="skipModuleInsertion=true" />
-			<arg value="wrap=false" />
-			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
-			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
-		</exec>
-
-		<!-- create each combined worker layer -->
-		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
-			<arg value="${rjsPath}" />
-			<arg value="-o" />
-			<arg value="${rjsOptions}" />
-			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
-
-			<srcfile prefix="name=Workers/" />
-			<targetfile prefix="out=" />
-			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
-			<mappedresources>
-				<fileset dir="${sourceDirectory}/Workers">
-					<include name="*.js" />
-					<exclude name="*.profile.js" />
-					<exclude name="cesiumWorkerBootstrapper.js" />
-					<exclude name="createTaskProcessorWorker.js" />
-				</fileset>
-				<chainedmapper>
-					<flattenmapper />
-					<globmapper from="*.js" to="*" />
-				</chainedmapper>
-			</mappedresources>
-		</apply>
+		<!-- create combined Cesium.js workers -->
+		<antcall target="combineJavaScript.combineCesiumWorkers" />
 
 		<!-- copy to build folder with copyright header added at the top -->
 		<copy todir="${outputDirectory}">
@@ -327,9 +298,57 @@
 		</exec>
 	</target>
 
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check"
+			unless="no.combineCesiumWorkers.create">
+		<!-- create cesiumWorkerBootstrapper -->
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
+			<arg value="wrap=false" />
+			<arg value="include=Workers/cesiumWorkerBootstrapper.js" />
+			<arg value="out=${relativeCombineOutputDirectory}/Workers/cesiumWorkerBootstrapper.js" />
+		</exec>
+
+		<!-- create each combined worker layer -->
+		<apply executable="${nodePath}" dir="${sourceDirectory}" relative="true" force="true">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+
+			<srcfile prefix="name=Workers/" />
+			<targetfile prefix="out=" />
+			<globmapper from="*" to="${relativeCombineOutputDirectory}/Workers/*.js" />
+			<mappedresources>
+				<fileset dir="${sourceDirectory}/Workers">
+					<include name="*.js" />
+					<exclude name="*.profile.js" />
+					<exclude name="cesiumWorkerBootstrapper.js" />
+					<exclude name="transferGeometry.js" />
+					<exclude name="createTaskProcessorWorker.js" />
+				</fileset>
+				<chainedmapper>
+					<flattenmapper />
+					<globmapper from="*.js" to="*" />
+				</chainedmapper>
+			</mappedresources>
+		</apply>
+	</target>
+
 	<target name="combineJavaScript.combineCesium.check">
 		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
 			<srcfiles refid="cesiumJsFileSet" />
+		</uptodate>
+	</target>
+
+	<target name="combineJavaScript.combineCesiumWorkers.check">
+		<uptodate property="no.combineCesiumWorkers.create" targetfile="${outputDirectory}/Cesium.js">
+			<srcfiles refid="cesiumWorkersJsFileSet" />
 		</uptodate>
 	</target>
 
