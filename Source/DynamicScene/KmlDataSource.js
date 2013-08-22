@@ -332,7 +332,7 @@ define(['../Core/createGuid',
                 label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : undefined;
                 label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : undefined;
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
-                label.pixelOffset = new ConstantProperty(new Cartesian2(1, 5));
+                label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
                 dynamicObject.label = label;
                 //default billboard image
                 if(!defined(dynamicObject.billboard)){
