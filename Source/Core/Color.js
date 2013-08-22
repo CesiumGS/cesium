@@ -167,16 +167,16 @@ define([
      * @param {Object} [options] Object containing the options.
      * @param {Number} [options.red] If specified, the red component to use instead of a randomized value.
      * @param {Number} [options.minimumRed=0.0] The maximum red value to generate if none was specified.
-     * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified..
+     * @param {Number} [options.maximumRed=1.0] The minimum red value to generate if none was specified.
      * @param {Number} [options.green] If specified, the green component to use instead of a randomized value.
      * @param {Number} [options.minimumGreen=0.0] The maximum green value to generate if none was specified.
-     * @param {Number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified..
+     * @param {Number} [options.maximumGreen=1.0] The minimum green value to generate if none was specified.
      * @param {Number} [options.blue] If specified, the blue component to use instead of a randomized value.
      * @param {Number} [options.minimumBlue=0.0] The maximum blue value to generate if none was specified.
-     * @param {Number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified..
+     * @param {Number} [options.maximumBlue=1.0] The minimum blue value to generate if none was specified.
      * @param {Number} [options.alpha] If specified, the alpha component to use instead of a randomized value.
      * @param {Number} [options.minimumAlpha=0.0] The maximum alpha value to generate if none was specified.
-     * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified..
+     * @param {Number} [options.maximumAlpha=1.0] The minimum alpha value to generate if none was specified.
      * @param {Color} [result] The object to store the result in, if undefined a new instance will be created.
      *
      * @return {Color} The modified result parameter or a new instance if result was undefined.
