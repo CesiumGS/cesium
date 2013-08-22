@@ -697,8 +697,7 @@ define([
             for (i = 0; i < polygons.length; i++) {
                 geometry = createGeometryFromPositions(ellipsoid, polygons[i], granularity);
                 if (defined(geometry)) {
-                    var positions = geometry.geometry.attributes.position.values;
-                    positions = PolygonPipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+                    geometry.geometry = PolygonPipeline.scaleToGeodeticHeight(geometry.geometry, height, ellipsoid);
                     geometry.geometry = computeAttributes(vertexFormat, geometry.geometry, outerPositions, ellipsoid, stRotation, false, false);
                     geometries.push(geometry);
                 }

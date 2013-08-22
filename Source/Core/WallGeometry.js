@@ -226,7 +226,6 @@ define([
         var tangentIndex = 0;
         var stIndex = 0;
 
-
         // add lower and upper points one after the other, lower
         // points being even and upper points being odd
         var normal = scratchNormal;
