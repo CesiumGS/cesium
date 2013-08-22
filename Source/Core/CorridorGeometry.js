@@ -2,9 +2,11 @@
 define([
         './defined',
         './DeveloperError',
+        './Cartesian2',
         './Cartesian3',
         './ComponentDatatype',
         './Ellipsoid',
+        './EllipsoidTangentPlane',
         './Geometry',
         './IndexDatatype',
         './Math',
@@ -20,9 +22,11 @@ define([
     ], function(
         defined,
         DeveloperError,
+        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         Ellipsoid,
+        EllipsoidTangentPlane,
         Geometry,
         IndexDatatype,
         CesiumMath,
@@ -51,12 +55,19 @@ define([
     var scratch1= new Cartesian3();
     var scratch2 = new Cartesian3();
 
-    var scratchPosition = new Cartesian3();
-    var scratchNextPosition = new Cartesian3();
+    var originScratch = new Cartesian2();
+    var nextScratch = new Cartesian2();
+    var prevScratch = new Cartesian2();
+    function angleIsGreaterThanPi (nextPos, previousPos, position, ellipsoid) { //if cross product is opposite of the normal, then true
+        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
+        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
+        var next = tangentPlane.projectPointOntoPlane(nextPos, nextScratch);
+        var prev = tangentPlane.projectPointOntoPlane(previousPos, prevScratch);
 
-    function angleIsGreaterThanPi (first, second) {
-        scratch1 = first.cross(second, scratch1);
-        return scratch1.z < 0;
+        prev = prev.subtract(origin, prev);
+        next = next.subtract(origin, next);
+
+        return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
     }
     function addAttribute(attribute, value, front, back) {
         var x = value.x;
@@ -523,15 +534,12 @@ define([
         var rightPos = cartesian9;
         var leftPos = cartesian10;
 
-        var position = scratchPosition;
-        var nextPosition = scratchNextPosition;
-
         var calculatedPositions = [];
         var calculatedLefts = [];
         var calculatedNormals = [];
 
-        position = positions[0]; //add first point
-        nextPosition = positions[1];
+        var position = positions[0]; //add first point
+        var nextPosition = positions[1];
         forward = nextPosition.subtract(position, forward).normalize(forward);
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
         left = normal.cross(forward, left).normalize(left);
@@ -541,6 +549,7 @@ define([
         calculatedLefts.push(left.x, left.y, left.z);
         calculatedNormals.push(normal.x, normal.y, normal.z);
 
+        var previousPosition = position;
         position = nextPosition;
         backward = forward.negate(backward);
         var corners = [];
@@ -559,7 +568,7 @@ define([
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = angleIsGreaterThanPi(forward, backward);
+                var leftIsOutside = angleIsGreaterThanPi(nextPosition, previousPosition, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
 
                 if (leftIsOutside) {
@@ -599,7 +608,7 @@ define([
                 }
                 backward = forward.negate(backward);
             }
-
+            previousPosition = position;
             position = nextPosition;
         }
 
@@ -798,7 +807,7 @@ define([
         var attributes = attr.attributes;
         var indices = attr.indices;
         var boundingSphere = attr.boundingSphere;
-        var positions = attributes.position.values;
+        var positions = Array.apply([], attributes.position.values);
         var extrudedPositions = positions.slice(0);
         var length = positions.length/3;
         var wallPositions = new Array(length * 12);
