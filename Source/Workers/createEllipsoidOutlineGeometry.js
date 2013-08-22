@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../Core/EllipsoidOutlineGeometry',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         EllipsoidOutlineGeometry,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createEllipsoidOutlineGeometry(parameters, transferableObjects) {
         var ellipsoidGeometry = parameters.geometry;
         var geometry = EllipsoidOutlineGeometry.createGeometry(ellipsoidGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,

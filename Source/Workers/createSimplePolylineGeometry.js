@@ -1,18 +1,18 @@
 /*global define*/
 define([
         '../Core/SimplePolylineGeometry',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         SimplePolylineGeometry,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createSimplePolylineGeometry(parameters, transferableObjects) {
         var polylineGeometry = parameters.geometry;
         var geometry = SimplePolylineGeometry.createGeometry(polylineGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,

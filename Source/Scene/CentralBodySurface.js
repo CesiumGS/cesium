@@ -22,7 +22,8 @@ define([
         './SceneMode',
         './TerrainProvider',
         './TileReplacementQueue',
-        './TileState'
+        './TileState',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
@@ -46,7 +47,8 @@ define([
         SceneMode,
         TerrainProvider,
         TileReplacementQueue,
-        TileState) {
+        TileState,
+        when) {
     "use strict";
 
     /**
@@ -98,6 +100,7 @@ define([
 
         this._debug = {
             enableDebugOutput : false,
+            wireframe : false,
             boundingSphereTile : undefined,
 
             maxDepth : 0,
@@ -985,9 +988,17 @@ define([
 
                     command.shaderProgram = shaderSet.getShaderProgram(context, tileSetIndex, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha);
                     command.renderState = renderState;
-                    command.primitiveType = TerrainProvider.wireframe ? PrimitiveType.LINES : PrimitiveType.TRIANGLES;
+                    command.primitiveType = PrimitiveType.TRIANGLES;
                     command.vertexArray = tile.vertexArray;
                     command.uniformMap = uniformMap;
+
+                    if (surface._debug.wireframe) {
+                        createWireframeVertexArrayIfNecessary(context, surface, tile);
+                        if (defined(tile.wireframeVertexArray)) {
+                            command.vertexArray = tile.wireframeVertexArray;
+                            command.primitiveType = PrimitiveType.LINES;
+                        }
+                    }
 
                     var boundingVolume = tile.boundingSphere3D;
 
@@ -1008,6 +1019,31 @@ define([
 
         // trim command list to the number actually needed
         tileCommands.length = Math.max(0, tileCommandIndex + 1);
+    }
+
+    function createWireframeVertexArrayIfNecessary(context, surface, tile) {
+        if (defined(tile.wireframeVertexArray)) {
+            return;
+        }
+
+        if (defined(tile.meshForWireframePromise)) {
+            return;
+        }
+
+        tile.meshForWireframePromise = tile.terrainData.createMesh(surface._terrainProvider.getTilingScheme(), tile.x, tile.y, tile.level);
+        if (!defined(tile.meshForWireframePromise)) {
+            // deferrred
+            return;
+        }
+
+        var vertexArray = tile.vertexArray;
+
+        when(tile.meshForWireframePromise, function(mesh) {
+            if (tile.vertexArray === vertexArray) {
+                tile.wireframeVertexArray = TerrainProvider.createWireframeVertexArray(context, tile.vertexArray, mesh);
+            }
+            tile.meshForWireframePromise = undefined;
+        });
     }
 
     return CentralBodySurface;
