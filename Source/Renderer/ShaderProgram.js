@@ -5,24 +5,90 @@ define([
         '../Core/FeatureDetection',
         '../Core/RuntimeError',
         '../Core/destroyObject',
-        '../Core/Math',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
         './UniformDatatype',
-        '../Shaders/BuiltinFunctions'
+        '../Shaders/Builtin/Structs',
+        '../Shaders/Builtin/Constants',
+        '../Shaders/Builtin/Functions/RGBToXYZ',
+        '../Shaders/Builtin/Functions/XYZToRGB',
+        '../Shaders/Builtin/Functions/antialias',
+        '../Shaders/Builtin/Functions/cellular',
+        '../Shaders/Builtin/Functions/columbusViewMorph',
+        '../Shaders/Builtin/Functions/computePosition',
+        '../Shaders/Builtin/Functions/eastNorthUpToEyeCoordinates',
+        '../Shaders/Builtin/Functions/ellipsoidContainsPoint',
+        '../Shaders/Builtin/Functions/ellipsoidNew',
+        '../Shaders/Builtin/Functions/ellipsoidWgs84TextureCoordinates',
+        '../Shaders/Builtin/Functions/equalsEpsilon',
+        '../Shaders/Builtin/Functions/eyeOffset',
+        '../Shaders/Builtin/Functions/eyeToWindowCoordinates',
+        '../Shaders/Builtin/Functions/geodeticSurfaceNormal',
+        '../Shaders/Builtin/Functions/getDefaultMaterial',
+        '../Shaders/Builtin/Functions/getWaterNoise',
+        '../Shaders/Builtin/Functions/getWgs84EllipsoidEC',
+        '../Shaders/Builtin/Functions/hue',
+        '../Shaders/Builtin/Functions/isEmpty',
+        '../Shaders/Builtin/Functions/isFull',
+        '../Shaders/Builtin/Functions/latitudeToWebMercatorFraction',
+        '../Shaders/Builtin/Functions/luminance',
+        '../Shaders/Builtin/Functions/modelToWindowCoordinates',
+        '../Shaders/Builtin/Functions/multiplyWithColorBalance',
+        '../Shaders/Builtin/Functions/phong',
+        '../Shaders/Builtin/Functions/pointAlongRay',
+        '../Shaders/Builtin/Functions/rayEllipsoidIntersectionInterval',
+        '../Shaders/Builtin/Functions/saturation',
+        '../Shaders/Builtin/Functions/snoise',
+        '../Shaders/Builtin/Functions/tangentToEyeSpaceMatrix',
+        '../Shaders/Builtin/Functions/translateRelativeToEye',
+        '../Shaders/Builtin/Functions/transpose',
+        '../Shaders/Builtin/Functions/windowToEyeCoordinates'
     ], function(
         defined,
         DeveloperError,
         FeatureDetection,
         RuntimeError,
         destroyObject,
-        CesiumMath,
         Matrix2,
         Matrix3,
         Matrix4,
         UniformDatatype,
-        ShadersBuiltinFunctions) {
+        ShadersBuiltinStructs,
+        ShadersBuiltinConstants,
+        czm_RGBToXYZ,
+        czm_XYZToRGB,
+        czm_antialias,
+        czm_cellular,
+        czm_columbusViewMorph,
+        czm_computePosition,
+        czm_eastNorthUpToEyeCoordinates,
+        czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidNew,
+        czm_ellipsoidWgs84TextureCoordinates,
+        czm_equalsEpsilon,
+        czm_eyeOffset,
+        czm_eyeToWindowCoordinates,
+        czm_geodeticSurfaceNormal,
+        czm_getDefaultMaterial,
+        czm_getWaterNoise,
+        czm_getWgs84EllipsoidEC,
+        czm_hue,
+        czm_isEmpty,
+        czm_isFull,
+        czm_latitudeToWebMercatorFraction,
+        czm_luminance,
+        czm_modelToWindowCoordinates,
+        czm_multiplyWithColorBalance,
+        czm_phong,
+        czm_pointAlongRay,
+        czm_rayEllipsoidIntersectionInterval,
+        czm_saturation,
+        czm_snoise,
+        czm_tangentToEyeSpaceMatrix,
+        czm_translateRelativeToEye,
+        czm_transpose,
+        czm_windowToEyeCoordinates) {
     "use strict";
     /*global console*/
 
@@ -2235,16 +2301,75 @@ define([
                 var modified = source.substring(0, index) + '//' + source.substring(index);
 
                 return {
-                    versionDirective : version,
-                    modifiedSource : modified
+                    version : version,
+                    source : modified
                 };
             }
         }
 
         return {
-            versionDirective : '', // defaults to #version 100
-            modifiedSource : source // no modifications required
+            version : '', // defaults to #version 100
+            source : source // no modifications required
         };
+    }
+
+    var builtInFunctions = {
+        czm_RGBToXYZ : czm_RGBToXYZ,
+        czm_XYZToRGB : czm_XYZToRGB,
+        czm_antialias : czm_antialias,
+        czm_cellular : czm_cellular,
+        czm_columbusViewMorph : czm_columbusViewMorph,
+        czm_computePosition : czm_computePosition,
+        czm_eastNorthUpToEyeCoordinates : czm_eastNorthUpToEyeCoordinates,
+        czm_czm_ellipsoidContainsPoint : czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidNew : czm_ellipsoidNew,
+        czm_ellipsoidWgs84TextureCoordinates : czm_ellipsoidWgs84TextureCoordinates,
+        czm_equalsEpsilon : czm_equalsEpsilon,
+        czm_eyeOffset : czm_eyeOffset,
+        czm_eyeToWindowCoordinates : czm_eyeToWindowCoordinates,
+        czm_geodeticSurfaceNormal : czm_geodeticSurfaceNormal,
+        czm_getDefaultMaterial : czm_getDefaultMaterial,
+        czm_getWaterNoise : czm_getWaterNoise,
+        czm_getWgs84EllipsoidEC : czm_getWgs84EllipsoidEC,
+        czm_hue : czm_hue,
+        czm_isEmpty : czm_isEmpty,
+        czm_isFull : czm_isFull,
+        czm_latitudeToWebMercatorFraction : czm_latitudeToWebMercatorFraction,
+        czm_luminance : czm_luminance,
+        czm_modelToWindowCoordinates : czm_modelToWindowCoordinates,
+        czm_multiplyWithColorBalance : czm_multiplyWithColorBalance,
+        czm_phong : czm_phong,
+        czm_pointAlongRay : czm_pointAlongRay,
+        czm_rayEllipsoidIntersectionInterval : czm_rayEllipsoidIntersectionInterval,
+        czm_saturation : czm_saturation,
+        czm_snoise : czm_snoise,
+        czm_tangentToEyeSpaceMatrix : czm_tangentToEyeSpaceMatrix,
+        czm_translateRelativeToEye : czm_translateRelativeToEye,
+        czm_transpose : czm_transpose,
+        czm_windowToEyeCoordinates : czm_windowToEyeCoordinates
+    };
+
+    function getBuiltinFunctions(source) {
+        // This expects well-behaved shaders, e.g., the built-in functions are not commented out or redeclared.
+        var definitions = '';
+        var functions = builtInFunctions;
+        for (var f in functions) {
+            if (functions.hasOwnProperty(f)) {
+                if (source.indexOf(f) !== -1) {
+                    definitions += functions[f] + ' \n';
+                }
+            }
+        }
+
+        return definitions;
+    }
+
+    function getFragmentShaderPrecision() {
+        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
+               '  precision highp float; \n' +
+               '#else \n' +
+               '  precision mediump float; \n' +
+               '#endif \n\n';
     }
 
     function getAutomaticUniformDeclaration(uniforms, uniform) {
@@ -2261,306 +2386,43 @@ define([
         return declaration;
     }
 
-    function commentOutAutomaticUniforms(source) {
-        // Comment out automatic uniforms that the user may have declared, perhaps
-        // because the shader was authored in a third-party tool like RenderMonkey.
-        // At runtime, all automatic uniforms are declared by the engine itself.
-
-        // This function has problems if the automatic uniform was declared with the
-        // wrong datatype or with extra whitespace or comments in the declaration.
-
-        var modifiedSource = source;
+    function getAutomaticUniforms(source) {
+        // This expects well-behaved shaders, e.g., the automatic uniform is not commented out or redeclared.
+        var declarations = '';
         var uniforms = allAutomaticUniforms;
-        for ( var uniform in uniforms) {
+        for (var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
-                var declaration = getAutomaticUniformDeclaration(uniforms, uniform);
-                var index = modifiedSource.indexOf(declaration);
-                if (index !== -1) {
-                    modifiedSource =
-                        modifiedSource.substring(0, index) +
-                        '/*' +
-                        modifiedSource.substring(index, declaration.length) +
-                        '*/' +
-                        modifiedSource.substring(index + declaration.length);
+                if (source.indexOf(uniform) !== -1) {
+                    declarations += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
                 }
             }
         }
 
-        return modifiedSource;
+        return declarations;
     }
-
-    function getFragmentShaderPrecision() {
-        // TODO: Performance?
-        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
-               '  precision highp float; \n' +
-               '#else \n' +
-               '  precision mediump float; \n' +
-               '#endif \n\n';
-    }
-
-    function getBuiltinConstants() {
-        // use toExponential instead of toString to prevent a number like 1.2e2 from expanding to 120
-        // and have a shader fail to compile because it thinks it should be an int.
-        var constants = {
-            /**
-             * A built-in GLSL floating-point constant for <code>Math.PI</code>.
-             *
-             * @alias czm_pi
-             * @glslConstant
-             *
-             * @see CesiumMath.PI
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_pi = ...;
-             *
-             * // Example
-             * float twoPi = 2.0 * czm_pi;
-             */
-            czm_pi : Math.PI.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>1/pi</code>.
-             *
-             * @alias czm_oneOverPi
-             * @glslConstant
-             *
-             * @see CesiumMath.ONE_OVER_PI
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_oneOverPi = ...;
-             *
-             * // Example
-             * float pi = 1.0 / czm_oneOverPi;
-             */
-            czm_oneOverPi : CesiumMath.ONE_OVER_PI.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>pi/2</code>.
-             *
-             * @alias czm_piOverTwo
-             * @glslConstant
-             *
-             * @see CesiumMath.PI_OVER_TWO
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_piOverTwo = ...;
-             *
-             * // Example
-             * float pi = 2.0 * czm_piOverTwo;
-             */
-            czm_piOverTwo : CesiumMath.PI_OVER_TWO.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>pi/3</code>.
-             *
-             * @alias czm_piOverThree
-             * @glslConstant
-             *
-             * @see CesiumMath.PI_OVER_THREE
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_piOverThree = ...;
-             *
-             * // Example
-             * float pi = 3.0 * czm_piOverThree;
-             */
-            czm_piOverThree : CesiumMath.PI_OVER_THREE.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>pi/4</code>.
-             *
-             * @alias czm_piOverFour
-             * @glslConstant
-             *
-             * @see CesiumMath.PI_OVER_FOUR
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_piOverFour = ...;
-             *
-             * // Example
-             * float pi = 4.0 * czm_piOverFour;
-             */
-            czm_piOverFour : CesiumMath.PI_OVER_FOUR.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>pi/6</code>.
-             *
-             * @alias czm_piOverSix
-             * @glslConstant
-             *
-             * @see CesiumMath.PI_OVER_SIX
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_piOverSix = ...;
-             *
-             * // Example
-             * float pi = 6.0 * czm_piOverSix;
-             */
-            czm_piOverSix : CesiumMath.PI_OVER_SIX.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>3pi/2</code>.
-             *
-             * @alias czm_threePiOver2
-             * @glslConstant
-             *
-             * @see CesiumMath.THREE_PI_OVER_TWO
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_threePiOver2 = ...;
-             *
-             * // Example
-             * float pi = (2.0 / 3.0) * czm_threePiOver2;
-             */
-            czm_threePiOver2 : CesiumMath.THREE_PI_OVER_TWO.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>2pi</code>.
-             *
-             * @alias czm_twoPi
-             * @glslConstant
-             *
-             * @see CesiumMath.TWO_PI
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_twoPi = ...;
-             *
-             * // Example
-             * float pi = czm_twoPi / 2.0;
-             */
-            czm_twoPi : CesiumMath.TWO_PI.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for <code>1/2pi</code>.
-             *
-             * @alias czm_oneOverTwoPi
-             * @glslConstant
-             *
-             * @see CesiumMath.ONE_OVER_TWO_PI
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_oneOverTwoPi = ...;
-             *
-             * // Example
-             * float pi = 2.0 * czm_oneOverTwoPi;
-             */
-            czm_oneOverTwoPi : CesiumMath.ONE_OVER_TWO_PI.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for converting degrees to radians.
-             *
-             * @alias czm_radiansPerDegree
-             * @glslConstant
-             *
-             * @see CesiumMath.RADIANS_PER_DEGREE
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_radiansPerDegree = ...;
-             *
-             * // Example
-             * float rad = czm_radiansPerDegree * deg;
-             */
-            czm_radiansPerDegree : CesiumMath.RADIANS_PER_DEGREE.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for converting radians to degrees.
-             *
-             * @alias czm_degreesPerRadian
-             * @glslConstant
-             *
-             * @see CesiumMath.DEGREES_PER_RADIAN
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_degreesPerRadian = ...;
-             *
-             * // Example
-             * float deg = czm_degreesPerRadian * rad;
-             */
-            czm_degreesPerRadian : CesiumMath.DEGREES_PER_RADIAN.toExponential(),
-
-            /**
-             * A built-in GLSL floating-point constant for one solar radius.
-             *
-             * @alias czm_solarRadius
-             * @glslConstant
-             *
-             * @see CesiumMath.SOLAR_RADIUS
-             *
-             * @example
-             * // GLSL declaration
-             * const float czm_solarRadius = ...;
-             */
-            czm_solarRadius : CesiumMath.SOLAR_RADIUS.toExponential()
-        };
-
-        var glslConstants = '';
-        for ( var name in constants) {
-            if (constants.hasOwnProperty(name)) {
-                glslConstants += 'const float ' + name + ' = ' + constants[name] + '; \n';
-            }
-        }
-        glslConstants += ' \n';
-
-        return glslConstants;
-    }
-
-    function getAutomaticUniforms() {
-        var automatics = '';
-
-        var uniforms = allAutomaticUniforms;
-        for ( var uniform in uniforms) {
-            if (uniforms.hasOwnProperty(uniform)) {
-                automatics += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
-            }
-        }
-        automatics += '\n';
-
-        return automatics;
-    }
-
-    var getShaderDefinitions = function() {
-        // I think this should be #line 1 given what the GL ES spec says:
-        //
-        //   After processing this directive (including its new-line), the implementation will
-        //   behave as if the following line has line number line...
-        //
-        // But this works, at least on NVIDIA hardware.
-
-        // Functions after constants and uniforms because functions depend on them.
-        var definitions = getBuiltinConstants() +
-                          getAutomaticUniforms() +
-                          ShadersBuiltinFunctions + '\n\n' +
-                          '#line 0 \n';
-
-        getShaderDefinitions = function() {
-            return definitions;
-        };
-
-        return definitions;
-    };
 
     function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsSource = vsSourceVersioned.versionDirective +
-                       getShaderDefinitions() +
-                       commentOutAutomaticUniforms(vsSourceVersioned.modifiedSource);
-        var fsSource = fsSourceVersioned.versionDirective +
+        var vsAndBuiltinFunctions = getBuiltinFunctions(vsSourceVersioned.source) +
+                                    '\n#line 0\n' +
+                                    vsSourceVersioned.source;
+        var vsSource = vsSourceVersioned.version +
+                       ShadersBuiltinConstants +
+                       ShadersBuiltinStructs +
+                       getAutomaticUniforms(vsAndBuiltinFunctions) +
+                       vsAndBuiltinFunctions;
+
+        var fsAndBuiltinFunctions = getBuiltinFunctions(fsSourceVersioned.source) +
+                                    '\n#line 0\n' +
+                                    fsSourceVersioned.source;
+        var fsSource = fsSourceVersioned.version +
                        getFragmentShaderPrecision() +
-                       getShaderDefinitions() +
-                       commentOutAutomaticUniforms(fsSourceVersioned.modifiedSource);
+                       ShadersBuiltinConstants +
+                       ShadersBuiltinStructs +
+                       getAutomaticUniforms(fsAndBuiltinFunctions) +
+                       fsAndBuiltinFunctions;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
