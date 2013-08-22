@@ -15,7 +15,7 @@ define([
         './DynamicPoint',
         './DynamicPolyline',
         './DynamicPolygon',
-        './DynamicColorMaterial',
+        './ColorMaterialProperty',
         './DynamicObjectCollection',
         '../ThirdParty/when',
         '../ThirdParty/topojson'
@@ -35,7 +35,7 @@ define([
         DynamicPoint,
         DynamicPolyline,
         DynamicPolygon,
-        DynamicColorMaterial,
+        ColorMaterialProperty,
         DynamicObjectCollection,
         when,
         topojson) {
@@ -243,7 +243,7 @@ define([
         var polygon = new DynamicPolygon();
         defaultPolygon.polygon = polygon;
 
-        var material = new DynamicColorMaterial();
+        var material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 0.0, 0.1));
         polygon.material = material;
 

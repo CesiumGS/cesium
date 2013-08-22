@@ -8,7 +8,7 @@ define([
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
         '../Scene/Material',
-        './processMaterial'
+        './MaterialProperty'
     ], function(
         defaultValue,
         defined,
@@ -18,7 +18,7 @@ define([
         Matrix4,
         EllipsoidPrimitive,
         Material,
-        processMaterial) {
+        MaterialProperty) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -254,10 +254,7 @@ define([
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        var material = dynamicEllipsoid.material;
-        if (defined(material)) {
-            ellipsoid.material = processMaterial(time, material, context, ellipsoid.material);
-        }
+        ellipsoid.material = MaterialProperty.evaluateMaterial(time, context, dynamicEllipsoid.material, ellipsoid.material);
     }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

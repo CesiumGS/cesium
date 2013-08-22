@@ -6,7 +6,7 @@ define([
         '../Core/destroyObject',
         '../Scene/Polygon',
         '../Scene/Material',
-        './processMaterial'
+        './MaterialProperty'
        ], function(
          Cartesian3,
          defined,
@@ -14,7 +14,7 @@ define([
          destroyObject,
          Polygon,
          Material,
-         processMaterial) {
+         MaterialProperty) {
     "use strict";
 
     /**
@@ -238,10 +238,7 @@ define([
             polygon._visualizerPositions = vertexPositions;
         }
 
-        var material = dynamicPolygon.material;
-        if (defined(material)) {
-            polygon.material = processMaterial(time, material, context, polygon.material);
-        }
+        polygon.material = MaterialProperty.evaluateMaterial(time, context, dynamicPolygon.material, polygon.material);
     }
 
     DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

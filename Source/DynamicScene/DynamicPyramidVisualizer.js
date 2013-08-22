@@ -9,7 +9,7 @@ define([
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
         '../Scene/Material',
-        './processMaterial'
+        './MaterialProperty'
        ], function(
          defaultValue,
          defined,
@@ -20,7 +20,7 @@ define([
          Matrix4,
          CustomSensorVolume,
          Material,
-         processMaterial) {
+         MaterialProperty) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -266,10 +266,7 @@ define([
             orientation.clone(pyramid._visualizerOrientation);
         }
 
-        var material = dynamicPyramid.material;
-        if (defined(material)) {
-            pyramid.material = processMaterial(time, material, context, pyramid.material);
-        }
+        pyramid.material = MaterialProperty.evaluateMaterial(time, context, dynamicPyramid.material, pyramid.material);
 
         var property = dynamicPyramid.intersectionColor;
         if (defined(property)) {
