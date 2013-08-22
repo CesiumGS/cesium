@@ -22,7 +22,6 @@ define([
      * @see DynamicPolygonVisualizer
      * @see VisualizerCollection
      * @see Polygon
-     * @see CzmlDefaults
      */
     var DynamicPolygon = function() {
         /**
@@ -47,8 +46,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
         var polygonToMerge = objectToMerge.polygon;
@@ -70,8 +67,6 @@ define([
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
-     *
-     * @see CzmlDefaults
      */
     DynamicPolygon.undefineProperties = function(dynamicObject) {
         dynamicObject.polygon = undefined;

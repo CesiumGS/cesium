@@ -24,7 +24,6 @@ define([
      * @see DynamicEllipsoidVisualizer
      * @see VisualizerCollection
      * @see CustomSensor
-     * @see CzmlDefaults
      */
     var DynamicEllipsoid = function() {
         /**
@@ -55,8 +54,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicEllipsoid.mergeProperties = function(targetObject, objectToMerge) {
         var ellipsoidToMerge = objectToMerge.ellipsoid;
@@ -79,8 +76,6 @@ define([
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipsoid from.
-     *
-     * @see CzmlDefaults
      */
     DynamicEllipsoid.undefineProperties = function(dynamicObject) {
         dynamicObject.ellipsoid = undefined;

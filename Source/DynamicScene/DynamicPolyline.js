@@ -24,7 +24,6 @@ function(
      * @see DynamicPolylineVisualizer
      * @see VisualizerCollection
      * @see Polyline
-     * @see CzmlDefaults
      */
     var DynamicPolyline = function() {
         /**
@@ -67,8 +66,6 @@ function(
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
         var polylineToMerge = objectToMerge.polyline;
@@ -93,8 +90,6 @@ function(
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polyline from.
-     *
-     * @see CzmlDefaults
      */
     DynamicPolyline.undefineProperties = function(dynamicObject) {
         dynamicObject.polyline = undefined;

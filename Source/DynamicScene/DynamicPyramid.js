@@ -26,7 +26,6 @@ define([
      * @see DynamicPyramidVisualizer
      * @see VisualizerCollection
      * @see CustomSensor
-     * @see CzmlDefaults
      */
     var DynamicPyramid = function() {
         /**
@@ -81,8 +80,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
         var pyramidToMerge = objectToMerge.pyramid;
@@ -109,8 +106,6 @@ define([
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the pyramid from.
-     *
-     * @see CzmlDefaults
      */
     DynamicPyramid.undefineProperties = function(dynamicObject) {
         dynamicObject.pyramid = undefined;

@@ -30,7 +30,6 @@ define([
         './CompositeProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
-        './CzmlDefaults',
         './DynamicBillboard',
         './DynamicClock',
         './DynamicColorMaterial',
@@ -86,7 +85,6 @@ define([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        CzmlDefaults,
         DynamicBillboard,
         DynamicClock,
         DynamicColorMaterial,
@@ -691,7 +689,7 @@ define([
         return updated;
     }
 
-    function DynamicObjectprocessCzmlPacketPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPosition(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var positionData = packet.position;
         if (!defined(positionData)) {
             return false;
@@ -699,7 +697,7 @@ define([
         return processPositionPacketData(dynamicObject, 'position', positionData, undefined, sourceUri);
     }
 
-    function DynamicObjectprocessCzmlPacketViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processViewFrom(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var viewFromData = packet.viewFrom;
         if (!defined(viewFromData)) {
             return false;
@@ -707,7 +705,7 @@ define([
         return processPacketData(Cartesian3, dynamicObject, 'viewFrom', viewFromData, undefined, sourceUri);
     }
 
-    function DynamicObjectprocessCzmlPacketOrientation(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processOrientation(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var orientationData = packet.orientation;
         if (!defined(orientationData)) {
             return false;
@@ -716,7 +714,7 @@ define([
         return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
     }
 
-    function DynamicObjectprocessCzmlPacketVertexPositions(dynamicObject, packet, dynamicObjectCollection) {
+    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection) {
         var vertexPositionsData = packet.vertexPositions;
         if (!defined(vertexPositionsData)) {
             return false;
@@ -731,7 +729,7 @@ define([
         return propertyCreated;
     }
 
-    function DynamicObjectprocessCzmlPacketAvailability(dynamicObject, packet) {
+    function processAvailability(dynamicObject, packet) {
         var availability = packet.availability;
         if (!defined(availability)) {
             return false;
@@ -745,7 +743,7 @@ define([
         return propertyChanged;
     }
 
-    function DynamicBillboardprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processBillboard(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var billboardData = packet.billboard;
         if (!defined(billboardData)) {
             return false;
@@ -776,7 +774,7 @@ define([
         return billboardUpdated;
     }
 
-    function DynamicClockprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processClock(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var clockUpdated = false;
         var clockPacket = packet.clock;
         if (defined(clockPacket)) {
@@ -813,7 +811,7 @@ define([
         return clockUpdated;
     }
 
-    function DynamicConeprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processCone(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var coneData = packet.cone;
         if (!defined(coneData)) {
             return false;
@@ -846,7 +844,7 @@ define([
         return coneUpdated;
     }
 
-    function DynamicEllipseprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processEllipse(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipseData = packet.ellipse;
         if (!defined(ellipseData)) {
             return false;
@@ -870,7 +868,7 @@ define([
         return ellipseUpdated;
     }
 
-    function DynamicEllipsoidprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processEllipsoid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var ellipsoidData = packet.ellipsoid;
         if (!defined(ellipsoidData)) {
             return false;
@@ -893,7 +891,7 @@ define([
         return ellipsoidUpdated;
     }
 
-    function DynamicLabelprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processLabel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var labelData = packet.label;
         if (!defined(labelData)) {
             return false;
@@ -926,7 +924,7 @@ define([
         return labelUpdated;
     }
 
-    function DynamicPathprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
             return false;
@@ -954,7 +952,7 @@ define([
         return pathUpdated;
     }
 
-    function DynamicPointprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPoint(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pointData = packet.point;
         if (!defined(pointData)) {
             return false;
@@ -980,7 +978,7 @@ define([
         return pointUpdated;
     }
 
-    function DynamicPolygonprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPolygon(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polygonData = packet.polygon;
         if (!defined(polygonData)) {
             return false;
@@ -1002,7 +1000,7 @@ define([
         return polygonUpdated;
     }
 
-    function DynamicPolylineprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPolyline(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
             return false;
@@ -1027,7 +1025,7 @@ define([
         return polylineUpdated;
     }
 
-    function DynamicPyramidprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processPyramid(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pyramidData = packet.pyramid;
         if (!defined(pyramidData)) {
             return false;
@@ -1063,7 +1061,7 @@ define([
         return pyramidUpdated;
     }
 
-    function DynamicVectorprocessCzmlPacket(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+    function processVector(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vectorData = packet.vector;
         if (!defined(vectorData)) {
             return false;
@@ -1089,23 +1087,23 @@ define([
         return vectorUpdated;
     }
 
-    var updaters = [DynamicClockprocessCzmlPacket,
-                DynamicBillboardprocessCzmlPacket,
-                DynamicEllipseprocessCzmlPacket,
-                DynamicEllipsoidprocessCzmlPacket,
-                DynamicConeprocessCzmlPacket,
-                DynamicLabelprocessCzmlPacket,
-                DynamicPathprocessCzmlPacket,
-                DynamicPointprocessCzmlPacket,
-                DynamicPolygonprocessCzmlPacket,
-                DynamicPolylineprocessCzmlPacket,
-                DynamicPyramidprocessCzmlPacket,
-                DynamicVectorprocessCzmlPacket,
-                DynamicObjectprocessCzmlPacketPosition,
-                DynamicObjectprocessCzmlPacketViewFrom,
-                DynamicObjectprocessCzmlPacketOrientation,
-                DynamicObjectprocessCzmlPacketVertexPositions,
-                DynamicObjectprocessCzmlPacketAvailability];
+    var updaters = [processClock,//
+                    processBillboard, //
+                    processEllipse, //
+                    processEllipsoid, //
+                    processCone, //
+                    processLabel, //
+                    processPath, //
+                    processPoint, //
+                    processPolygon, //
+                    processPolyline, //
+                    processPyramid, //
+                    processVector, //
+                    processPosition, //
+                    processViewFrom, //
+                    processOrientation, //
+                    processVertexPositions, //
+                    processAvailability];
 
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
@@ -1309,7 +1307,7 @@ define([
      * @param {Object} czml The parsed CZML object to be processed.
      * @param {DynamicObjectCollection} dynamicObjectCollection The collection to create or updated objects within.
      * @param {String} [sourceUri] The uri of the file where the CZML originated from.  If provided, relative uri look-ups will use this as their base.
-     * @param {Array} [updaterFunctions=CzmlDefaults.updaters] The array of updated functions to use for processing.  If left undefined, all standard CZML data is processed.
+     * @param {Array} [updaterFunctions=CzmlDataSource.updaters] The array of updated functions to use for processing.  If left undefined, all standard CZML data is processed.
      *
      * @exception {DeveloperError} czml is required.
      * @exception {DeveloperError} dynamicObjectCollection is required.

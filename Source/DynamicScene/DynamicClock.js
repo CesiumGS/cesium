@@ -95,8 +95,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicClock.mergeProperties = function(targetObject, objectToMerge) {
         var clockToMerge = objectToMerge.clock;
@@ -124,8 +122,6 @@ define([
      * @memberof DynamicClock
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the clock from.
-     *
-     * @see CzmlDefaults
      */
     DynamicClock.undefineProperties = function(dynamicObject) {
         dynamicObject.clock = undefined;

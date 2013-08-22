@@ -6,7 +6,6 @@ defineSuite([
          'Core/Iso8601',
          'Core/TimeInterval',
          'DynamicScene/CzmlDataSource',
-         'DynamicScene/CzmlDefaults',
          'Scene/HorizontalOrigin'
      ], function(
          CompositeDynamicObjectCollection,
@@ -15,7 +14,6 @@ defineSuite([
          Iso8601,
          TimeInterval,
          CzmlDataSource,
-         CzmlDefaults,
          HorizontalOrigin) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -38,8 +36,8 @@ defineSuite([
 
     it('default constructor sets expected properties.', function() {
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CzmlDefaults.mergers);
-        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CzmlDefaults.cleaners);
+        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CompositeDynamicObjectCollection.mergers);
+        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CompositeDynamicObjectCollection.cleaners);
         expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);

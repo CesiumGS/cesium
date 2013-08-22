@@ -33,7 +33,6 @@ define([
      * @see VisualizerCollection
      * @see Billboard
      * @see BillboardCollection
-     * @see CzmlDefaults
      */
     var DynamicBillboard = function() {
         /**
@@ -107,8 +106,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
         var billboardToMerge = objectToMerge.billboard;
@@ -139,8 +136,6 @@ define([
      * @memberof DynamicBillboard
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
-     *
-     * @see CzmlDefaults
      */
     DynamicBillboard.undefineProperties = function(dynamicObject) {
         dynamicObject.billboard = undefined;

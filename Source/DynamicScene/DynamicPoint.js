@@ -25,7 +25,6 @@ define([
      * @see VisualizerCollection
      * @see Billboard
      * @see BillboardCollection
-     * @see CzmlDefaults
      */
     var DynamicPoint = function() {
         /**
@@ -63,8 +62,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
         var pointToMerge = objectToMerge.point;
@@ -89,8 +86,6 @@ define([
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the point from.
-     *
-     * @see CzmlDefaults
      */
     DynamicPoint.undefineProperties = function(dynamicObject) {
         dynamicObject.point = undefined;

@@ -27,7 +27,6 @@ define([
      * @see DynamicObjectCollection
      * @see DynamicEllipseVisualizer
      * @see VisualizerCollection
-     * @see CzmlDefaults
      */
     var DynamicEllipse = function() {
         /**
@@ -65,8 +64,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
         var ellipseToMerge = objectToMerge.ellipse;
@@ -89,8 +86,6 @@ define([
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipse from.
-     *
-     * @see CzmlDefaults
      */
     DynamicEllipse.undefineProperties = function(dynamicObject) {
         dynamicObject.ellipse = undefined;

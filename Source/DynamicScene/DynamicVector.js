@@ -25,7 +25,6 @@ function(
      * @see DynamicObjectCollection
      * @see DynamicVectorVisualizer
      * @see VisualizerCollection
-     * @see CzmlDefaults
      */
     var DynamicVector = function() {
         /**
@@ -68,8 +67,6 @@ function(
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicVector.mergeProperties = function(targetObject, objectToMerge) {
         var vectorToMerge = objectToMerge.vector;
@@ -94,8 +91,6 @@ function(
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the vector from.
-     *
-     * @see CzmlDefaults
      */
     DynamicVector.undefineProperties = function(dynamicObject) {
         dynamicObject.vector = undefined;

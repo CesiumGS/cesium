@@ -3,14 +3,12 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        './CzmlDefaults'
+        '../Core/DeveloperError'
     ], function(
         defaultValue,
         defined,
         destroyObject,
-        DeveloperError,
-        CzmlDefaults) {
+        DeveloperError) {
     "use strict";
 
     /**
@@ -21,32 +19,11 @@ define([
      *
      * @param {Object} The array of visualizers to use.
      * @param {DynamicObjectCollection} The objects to be visualized.
-     *
-     * @see CzmlDefaults#createVisualizers
      */
     var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
         this._visualizers = defined(visualizers) ? visualizers : [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Creates a new VisualizerCollection which includes all standard visualizers.
-     *
-     * @memberof VisualizerCollection
-     *
-     * @param {Scene} The scene where visualization will take place.
-     * @param {DynamicObjectCollection} The objects to be visualized.
-     *
-     * @exception {DeveloperError} scene is required.
-     *
-     * @see CzmlDefaults#createVisualizers
-     */
-    VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
     };
 
     /**

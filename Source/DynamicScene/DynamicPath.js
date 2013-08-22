@@ -24,7 +24,6 @@ function(
      * @see DynamicPathVisualizer
      * @see VisualizerCollection
      * @see Polyline
-     * @see CzmlDefaults
      */
     var DynamicPath = function() {
         /**
@@ -85,8 +84,6 @@ function(
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicPath.mergeProperties = function(targetObject, objectToMerge) {
         var pathToMerge = objectToMerge.path;
@@ -114,8 +111,6 @@ function(
      * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the path from.
-     *
-     * @see CzmlDefaults
      */
     DynamicPath.undefineProperties = function(dynamicObject) {
         dynamicObject.path = undefined;

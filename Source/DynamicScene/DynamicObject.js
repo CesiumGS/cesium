@@ -55,11 +55,6 @@ define([
          */
         this.id = id;
 
-        //Add standard CZML properties.  Even though they won't all be used
-        //for each object, having the superset explicitly listed here will allow the
-        //compiler to optimize this class.  It also allows us to document them.
-        //Any changes to this list should coincide with changes to CzmlDefaults.updaters
-
         /**
          * The availability TimeInterval, if any, associated with this object.
          * If availability is undefined, it is assumed that this object's
@@ -230,8 +225,6 @@ define([
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     *
-     * @see CzmlDefaults
      */
     DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
         targetObject.position = defaultValue(targetObject.position, objectToMerge.position);
@@ -250,8 +243,6 @@ define([
      * CZML processing functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
-     *
-     * @see CzmlDefaults
      */
     DynamicObject.undefineProperties = function(dynamicObject) {
         dynamicObject.position = undefined;
