@@ -28,6 +28,7 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
+        '../Renderer/createShaderSource',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './CreditDisplay',
@@ -73,6 +74,7 @@ define([
         CommandLists,
         DepthFunction,
         DrawCommand,
+        createShaderSource,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         CreditDisplay,
@@ -575,11 +577,10 @@ define([
 
         if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
-                    CentralBodyVSDepth,
-                    '#line 0\n' +
-                    CentralBodyFSDepth, {
-                        position : 0
-                    });
+                CentralBodyVSDepth,
+                CentralBodyFSDepth, {
+                    position : 0
+                });
         }
 
         if (this._surface._terrainProvider.hasWaterMask() &&
@@ -642,19 +643,20 @@ define([
                 get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
             }
 
-            this._surfaceShaderSet.baseVertexShaderString =
-                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                 CentralBodyVS + '\n' +
-                 getPositionMode + '\n' +
-                 get2DYPositionFraction;
+            this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
+                defines : [hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''],
+                sources : [CentralBodyVS, getPositionMode, get2DYPositionFraction]
+            });
 
             var showPrettyOcean = hasWaterMask && defined(this._oceanNormalMap);
 
-            this._surfaceShaderSet.baseFragmentShaderString =
-                (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
-                '#line 0\n' +
-                CentralBodyFS;
+            this._surfaceShaderSet.baseFragmentShaderString = createShaderSource({
+                defines : [
+                    (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
+                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : '')
+                ],
+                sources : [CentralBodyFS]
+            });
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,
