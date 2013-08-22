@@ -78,7 +78,9 @@ define([
                 widget._renderLoopRunning = false;
                 widget._onRenderLoopError.raiseEvent(widget, e);
                 if (widget._showRenderLoopErrors) {
+                    /*global console*/
                     widget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                    console.error(e);
                 }
             }
         }

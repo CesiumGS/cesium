@@ -71,11 +71,6 @@ define([
             console.error(error);
         };
 
-        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
-            // error panel will be shown automatically
-            console.error(error);
-        });
-
         viewer.onDropError.addEventListener(function(viewerArg, name, error) {
             showLoadError(name, error);
         });

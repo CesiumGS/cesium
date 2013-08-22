@@ -78,7 +78,9 @@ define([
                 viewer._renderLoopRunning = false;
                 viewer._onRenderLoopError.raiseEvent(viewer, e);
                 if (viewer._showRenderLoopErrors) {
+                    /*global console*/
                     viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                    console.error(e);
                 }
             }
         }
