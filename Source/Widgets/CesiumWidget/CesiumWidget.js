@@ -76,7 +76,10 @@ define([
             } catch (e) {
                 widget._useDefaultRenderLoop = false;
                 widget._renderLoopRunning = false;
-                widget.onRenderLoopError.raiseEvent(widget, e);
+                widget._onRenderLoopError.raiseEvent(widget, e);
+                if (widget._showRenderLoopErrors) {
+                    widget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                }
             }
         }
 
@@ -97,7 +100,8 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
-     * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      *
      * @exception {DeveloperError} container is required.
@@ -203,6 +207,7 @@ define([
         this._renderLoopRunning = false;
         this._creditContainer = creditContainer;
         this._canRender = false;
+        this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._onRenderLoopError = new Event();
 
         if (options.sceneMode) {
@@ -353,6 +358,53 @@ define([
             }
         }
     });
+
+    /**
+     * Show an error panel to the user containing a title and a longer error message,
+     * which can be dismissed using an OK button.  This panel is displayed automatically
+     * when a render loop error occurs, if showRenderLoopErrors was not false when the
+     * widget was constructed.
+     *
+     * @memberof CesiumWidget
+     *
+     * @param {String} title The title to be displayed on the error panel.
+     * @param {String} error The error to be displayed on the error panel.
+     */
+    CesiumWidget.prototype.showErrorPanel = function(title, error) {
+        var element = this._element;
+        var overlay = document.createElement('div');
+        overlay.className = 'cesium-widget-errorPanel';
+
+        var content = document.createElement('div');
+        content.className = 'cesium-widget-errorPanel-content';
+        overlay.appendChild(content);
+
+        var errorHeader = document.createElement('div');
+        errorHeader.className = 'cesium-widget-errorPanel-header';
+        errorHeader.textContent = title;
+        content.appendChild(errorHeader);
+
+        var errorMessage = document.createElement('pre');
+        errorMessage.className = 'cesium-widget-errorPanel-message';
+        errorMessage.textContent = error;
+        content.appendChild(errorMessage);
+
+        var buttonPanel = document.createElement('div');
+        buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
+        content.appendChild(buttonPanel);
+
+        var okButton = document.createElement('button');
+        okButton.type = 'button';
+        okButton.className = 'cesium-widget-errorPanel-button';
+        okButton.textContent = 'OK';
+        okButton.onclick = function() {
+            element.removeChild(overlay);
+        };
+
+        buttonPanel.appendChild(okButton);
+
+        element.appendChild(overlay);
+    };
 
     /**
      * @memberof CesiumWidget

@@ -66,13 +66,13 @@ define([
         viewer.extend(viewerDynamicObjectMixin);
 
         viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
-            console.log(error);
-            window.alert(error);
+            console.error(error);
         });
 
         viewer.onDropError.addEventListener(function(viewerArg, name, error) {
-            console.log(error);
-            window.alert(error);
+            var title = 'An error occurred while loading the dropped file: ' + name;
+            viewer.cesiumWidget.showErrorPanel(title, error);
+            console.error(error);
         });
 
         var scene = viewer.scene;

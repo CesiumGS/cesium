@@ -45,6 +45,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
+* `CesiumWidget` and `Viewer` now display an HTML error panel if an error occurs while rendering, which can be disabled with a constructor option.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 
 ### b19 - 2013-08-01
@@ -62,7 +63,7 @@ var geometry = BoxGeometry.createGeometry(box);
    * Renamed `ComponentDatatype.*.toTypedArray` to `ComponentDatatype.*.createTypedArray`.
    * Removed `Polygon.configureExtent`.  Use `ExtentPrimitive` instead.
    * Removed `Polygon.bufferUsage`.  It is no longer needed.
-   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties. 
+   * Removed `height` and `textureRotationAngle` arguments from `Polygon` `setPositions` and `configureFromPolygonHierarchy` functions.  Use `Polygon` `height` and `textureRotationAngle` properties.
    * Renamed `PolygonPipeline.cleanUp` to `PolygonPipeline.removeDuplicates`.
    * Removed `PolygonPipeline.wrapLongitude`. Use `GeometryPipeline.wrapLongitude` instead.
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
@@ -124,7 +125,7 @@ var geometry = BoxGeometry.createGeometry(box);
       * `FullscreenWidget` -> `FullscreenButton`
       * `FullscreenViewModel` -> `FullscreenButtonViewModel`
    * Removed `addAttribute`, `removeAttribute`, and `setIndexBuffer` from `VertexArray`.  They were not used.
-* Added support for approximating local vertical, local horizontal (LVLH) reference frames when using `DynamicObjectView` in 3D.  The object automatically selects LVLH or EastNorthUp based on the object's velocity. 
+* Added support for approximating local vertical, local horizontal (LVLH) reference frames when using `DynamicObjectView` in 3D.  The object automatically selects LVLH or EastNorthUp based on the object's velocity.
 * Added support for CZML defined vectors via new `CzmlDirection`, `DynamicVector`, and `DynamicVectorVisualizer` objects.
 * Added `SceneTransforms.wgs84ToWindowCoordinates`. [#746](https://github.com/AnalyticalGraphicsInc/cesium/issues/746).
 * Added `fromElements` to `Cartesian2`, `Cartesian3`, and `Cartesian4`.

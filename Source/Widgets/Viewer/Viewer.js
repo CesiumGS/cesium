@@ -76,7 +76,10 @@ define([
             } catch (e) {
                 viewer._useDefaultRenderLoop = false;
                 viewer._renderLoopRunning = false;
-                viewer.onRenderLoopError.raiseEvent(viewer, e);
+                viewer._onRenderLoopError.raiseEvent(viewer, e);
+                if (viewer._showRenderLoopErrors) {
+                    viewer.cesiumWidget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                }
             }
         }
 
@@ -103,7 +106,8 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to use.  This value is only valid if options.baseLayerPicker is set to false.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider()] The terrain provider to use
      * @param {Element} [options.fullscreenElement=container] The element to make full screen when the full screen button is pressed.
-     * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
      *
@@ -304,7 +308,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         eventHelper.add(dataSourceCollection.dataSourceAdded, setClockFromDataSource);
 
         this._container = container;
-        this._viewerContainer = viewerContainer;
+        this._element = viewerContainer;
         this._cesiumWidget = cesiumWidget;
         this._dataSourceCollection = dataSourceCollection;
         this._dataSourceDisplay = dataSourceDisplay;
@@ -321,6 +325,7 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         this._lastHeight = 0;
         this._useDefaultRenderLoop = undefined;
         this._renderLoopRunning = false;
+        this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
         this._onRenderLoopError = new Event();
 
         //Start the render loop if not explicitly disabled in options.
@@ -678,8 +683,8 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
      * @memberof Viewer
      */
     Viewer.prototype.destroy = function() {
-        this._container.removeChild(this._viewerContainer);
-        this._viewerContainer.removeChild(this._toolbar);
+        this._container.removeChild(this._element);
+        this._element.removeChild(this._toolbar);
 
         this._eventHelper.removeAll();
 
@@ -696,19 +701,19 @@ Either specify options.imageryProvider instead or set options.baseLayerPicker to
         }
 
         if (defined(this._animation)) {
-            this._viewerContainer.removeChild(this._animation.container);
+            this._element.removeChild(this._animation.container);
             this._animation = this._animation.destroy();
         }
 
         if (defined(this._timeline)) {
             this._timeline.removeEventListener('settime', onTimelineScrubfunction, false);
-            this._viewerContainer.removeChild(this._timeline.container);
+            this._element.removeChild(this._timeline.container);
             this._timeline = this._timeline.destroy();
         }
 
         if (defined(this._fullscreenButton)) {
             this._fullscreenSubscription.dispose();
-            this._viewerContainer.removeChild(this._fullscreenButton.container);
+            this._element.removeChild(this._fullscreenButton.container);
             this._fullscreenButton = this._fullscreenButton.destroy();
         }
 
