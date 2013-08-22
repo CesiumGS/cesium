@@ -390,7 +390,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('toolbar');
         
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             pickCartographicPosition(scene, ellipsoid);
@@ -400,7 +400,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             pickBillboard(scene, ellipsoid);
@@ -410,7 +410,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             animateBillboardOnPick(scene, ellipsoid);
@@ -420,7 +420,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             erodeSensorOnClick(scene, ellipsoid);
@@ -430,7 +430,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             layerCompositePrimitive(scene, ellipsoid);
@@ -440,7 +440,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             drawExtent(scene, ellipsoid);
