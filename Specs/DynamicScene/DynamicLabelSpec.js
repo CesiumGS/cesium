@@ -38,7 +38,7 @@ defineSuite([
         var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
         var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
         var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
-        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIY_Y);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
         var expectedScale = new ConstantProperty(2);
         var expectedShow = new ConstantProperty(true);
 
@@ -52,8 +52,8 @@ defineSuite([
         objectToMerge.label.outlineWidth = new ConstantProperty(5);
         objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIY_Y);
-        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIY_X);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         objectToMerge.label.scale = new ConstantProperty(1);
         objectToMerge.label.show = new ConstantProperty(false);
 
@@ -99,8 +99,8 @@ defineSuite([
         objectToMerge.label.outlineWidth = new ConstantProperty(5);
         objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
         objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
-        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIY_Y);
-        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIY_X);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
         objectToMerge.label.scale = new ConstantProperty(1);
         objectToMerge.label.show = new ConstantProperty(false);
 
@@ -132,7 +132,7 @@ defineSuite([
         var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
         var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
         var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
-        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIY_Y);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
         var expectedScale = new ConstantProperty(2);
         var expectedShow = new ConstantProperty(true);
 

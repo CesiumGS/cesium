@@ -8,7 +8,8 @@ defineSuite([
              'Core/Cartesian3',
              'Core/Iso8601',
              'Core/TimeInterval',
-             'DynamicScene/ConstantProperty'
+             'DynamicScene/ConstantProperty',
+             'Specs/UndefinedProperty'
             ], function(
               DynamicEllipse,
               DynamicObject,
@@ -18,7 +19,8 @@ defineSuite([
               Cartesian3,
               Iso8601,
               TimeInterval,
-              ConstantProperty) {
+              ConstantProperty,
+              UndefinedProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -103,7 +105,7 @@ defineSuite([
         ellipse.semiMajorAxis = undefined;
         expect(ellipse.getValue(new JulianDate(), position)).toBeUndefined();
 
-        ellipse.semiMajorAxis = new ConstantProperty(undefined);
+        ellipse.semiMajorAxis = new UndefinedProperty();
         expect(ellipse.getValue(new JulianDate(), position)).toBeUndefined();
     });
 
@@ -115,7 +117,7 @@ defineSuite([
         ellipse.semiMajorAxis = new ConstantProperty(10);
         expect(ellipse.getValue(new JulianDate(), position)).toBeUndefined();
 
-        ellipse.semiMinorAxis = new ConstantProperty(undefined);
+        ellipse.semiMinorAxis = new UndefinedProperty();
         expect(ellipse.getValue(new JulianDate(), position)).toBeUndefined();
     });
 
@@ -134,7 +136,7 @@ defineSuite([
         var result = ellipse.getValue(new JulianDate(), position);
         expect(result).toEqual(expected);
 
-        ellipse.bearing = new ConstantProperty(undefined);
+        ellipse.bearing = new UndefinedProperty();
         result = ellipse.getValue(new JulianDate(), position);
         expect(result).toEqual(expected);
     });
