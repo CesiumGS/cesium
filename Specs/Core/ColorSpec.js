@@ -227,28 +227,20 @@ defineSuite(['Core/Color',
 
     it('fromRandom generates a random color with no options', function() {
         var color = Color.fromRandom();
-        expect(color.red).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.red).toBeLessThanOrEqualTo(1.0);
-        expect(color.green).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.green).toBeLessThanOrEqualTo(1.0);
-        expect(color.blue).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.blue).toBeLessThanOrEqualTo(1.0);
-        expect(color.alpha).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.alpha).toBeLessThanOrEqualTo(1.0);
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
     });
 
     it('fromRandom generates a random color with no options', function() {
         var result = new Color();
         var color = Color.fromRandom({}, result);
         expect(result).toBe(color);
-        expect(color.red).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.red).toBeLessThanOrEqualTo(1.0);
-        expect(color.green).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.green).toBeLessThanOrEqualTo(1.0);
-        expect(color.blue).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.blue).toBeLessThanOrEqualTo(1.0);
-        expect(color.alpha).toBeGreaterThanOrEqualTo(0.0);
-        expect(color.alpha).toBeLessThanOrEqualTo(1.0);
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
     });
 
     it('fromRandom uses specified exact values', function() {
@@ -280,14 +272,10 @@ defineSuite(['Core/Color',
 
         for ( var i = 0; i < 100; i++) {
             var color = Color.fromRandom(options);
-            expect(color.red).toBeGreaterThanOrEqualTo(options.minimumRed);
-            expect(color.red).toBeLessThanOrEqualTo(options.maximumRed);
-            expect(color.green).toBeGreaterThanOrEqualTo(options.minimumGreen);
-            expect(color.green).toBeLessThanOrEqualTo(options.maximumGreen);
-            expect(color.blue).toBeGreaterThanOrEqualTo(options.minimumBlue);
-            expect(color.blue).toBeLessThanOrEqualTo(options.maximumBlue);
-            expect(color.alpha).toBeGreaterThanOrEqualTo(options.minimumAlpha);
-            expect(color.alpha).toBeLessThanOrEqualTo(options.maximumAlpha);
+            expect(color.red).toBeBetween(options.minimumRed, options.maximumRed);
+            expect(color.green).toBeBetween(options.minimumGreen, options.maximumGreen);
+            expect(color.blue).toBeBetween(options.minimumBlue, options.maximumBlue);
+            expect(color.alpha).toBeBetween(options.minimumAlpha, options.maximumAlpha);
         }
     });
 
