@@ -1,12 +1,33 @@
 .cesium-dataSourceBrowser {
     font-family: sans-serif;
-    font-size: 11px;
+    font-size: 15px;
     color: #edffff;
-    -moz-user-select: none;
+/*    -moz-user-select: none;
     -webkit-user-select: none;
-    user-select: none;
+    user-select: none;*/
 }
 
+.cesium-dataSourceBrowser-button {
+    display: inline-block;
+    background: #303336;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 4px 12px;
+    margin: 5px 3px;
+    cursor: pointer;
+}
+
+.cesium-dataSourceBrowser-button:hover {
+    color: #fff;
+    background: #777;
+    border-color: #ccc;
+    box-shadow: 0 0 5px #fff;
+}
+
+.cesium-dataSourceBrowser-dataSourcePanelContainer-footer {
+    margin-top: 5px;
+    text-align: right;
+}
 .cesium-dataSourceBrowser-dataSourcesContainer,.cesium-dataSourceBrowser-dataSourcePanelContainer {
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
@@ -15,6 +36,7 @@
     width: 300px;
     max-height: 500px;
     float: left;
+    margin-right: 10px;
 }
 
 .cesium-dataSourceBrowser-dataSources ul,ul.cesium-dataSourceBrowser-dataSources,.cesium-dataSourceBrowser-dataSources li {
@@ -73,8 +95,10 @@
 .cesium-dataSourceBrowser-dataSourcePanelContainer {
 }
 
-.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected {
-    color: #ffeb00;
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected,
+.cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected:hover {
+    color: #2e2;
+    border-color: #2e2;
 }
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-visible {

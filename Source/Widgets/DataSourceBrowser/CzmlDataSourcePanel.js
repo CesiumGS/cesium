@@ -45,7 +45,7 @@ define([
          * @type {String}
          */
         description : {
-            value : 'CZML file',
+            value : 'CZML',
             writable : false
         },
 

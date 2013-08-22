@@ -62,8 +62,8 @@ define([
         dataSourcesContainer.appendChild(dataSourcesToolbar);
 
         var addDataSourceButton = document.createElement('span');
-        addDataSourceButton.className = 'cesium-dataSourceBrowser-addDataSource';
-        addDataSourceButton.textContent = 'Add';
+        addDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        addDataSourceButton.textContent = '+ Add';
         addDataSourceButton.setAttribute('data-bind', '\
 attr: { title: addDataSourceTooltip },\
 click: addDataSourceCommand');
@@ -96,8 +96,9 @@ foreach: dataSourcePanels');
 
         var dataSourceOption = document.createElement('div');
         dataSourceOption.setAttribute('data-bind', '\
-text : description,\
-css: { "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
+text : "+ " + description,\
+css: { "cesium-dataSourceBrowser-button" : true, \
+       "cesium-dataSourceBrowser-dataSourcePanelContainer-dataSourceSelected" : $data === $parent.activeDataSourcePanel },\
 click: function($data) { $parent.activeDataSourcePanel = $data }');
         dataSourceOptions.appendChild(dataSourceOption);
 
@@ -112,13 +113,21 @@ template : { if: activeDataSourcePanel,\
         dataSourcePanelFooter.className = 'cesium-dataSourceBrowser-dataSourcePanelContainer-footer';
         dataSourcePanelContainer.appendChild(dataSourcePanelFooter);
 
-        var finishAddDataSourceButton = document.createElement('button');
-        finishAddDataSourceButton.type = 'button';
-        finishAddDataSourceButton.textContent = 'Finish';
+        var finishAddDataSourceButton = document.createElement('span');
+        finishAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        finishAddDataSourceButton.textContent = 'OK';
         finishAddDataSourceButton.setAttribute('data-bind', '\
 click: finishCommand,\
 enable: finishCommand.canExecute');
         dataSourcePanelFooter.appendChild(finishAddDataSourceButton);
+
+        var cancelAddDataSourceButton = document.createElement('span');
+        cancelAddDataSourceButton.className = 'cesium-dataSourceBrowser-button';
+        cancelAddDataSourceButton.textContent = 'Cancel';
+        cancelAddDataSourceButton.setAttribute('data-bind', '\
+click: cancelCommand,\
+enable: cancelCommand.canExecute');
+        dataSourcePanelFooter.appendChild(cancelAddDataSourceButton);
 
         var finishAddDataSourceError = document.createElement('span');
         finishAddDataSourceError.setAttribute('data-bind', '\
