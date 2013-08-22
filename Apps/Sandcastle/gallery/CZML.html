@@ -185,6 +185,8 @@ require(['Cesium'], function(Cesium) {
     }
 
     var viewer = new Cesium.Viewer('cesiumContainer');
+    viewer.extend(Cesium.viewerDynamicObjectMixin);
+
     czmlSatellites();
     createButtons();
 
