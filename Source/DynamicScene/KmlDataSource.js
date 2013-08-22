@@ -71,22 +71,6 @@ define(['../Core/createGuid',
         this._value = value;
     };
 
-    function createObject(kml, dynamicObjectCollection) {
-        var id = kml.id;
-        if (!defined(id)) {
-            id = createGuid();
-        } else {
-            var finalId = id;
-            while (defined(dynamicObjectCollection.getObject(finalId))) {
-                finalId = createGuid();
-            }
-            id = finalId;
-        }
-        var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
-        dynamicObject.kml = kml;
-        return dynamicObject;
-    }
-
     //Helper functions
     function readCoordinates(el) {
         var text = "", coords = [], i;
@@ -124,32 +108,17 @@ define(['../Core/createGuid',
         return finalCoords;
     }
 
-    function crsFunction(coordinates) {
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-    }
-
     function coordinatesArrayToCartesianArray(coordinates) {
         var positions = new Array(coordinates.length);
         for ( var i = 0; i < coordinates.length; i++) {
-            positions[i] = crsFunction(coordinates[i]);
+            var cartographic = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1], coordinates[i][2]);
+            positions[i] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
         }
         return positions;
     }
 
     function equalCoordinateTuples(tuple1, tuple2){
         return tuple1[0] === tuple2[0] && tuple1[1] === tuple2[1] && tuple1[2] === tuple2[2];
-    }
-
-    function getId(node){
-        var id;
-        var idNode = node.attributes.id;
-        if(defined(idNode)) {
-            id = idNode.value;
-        } else {
-            id = createGuid();
-        }
-        return id;
     }
 
     function getNumericValue(node, tagName){
@@ -220,7 +189,9 @@ define(['../Core/createGuid',
         for (var j = 0; j < el.length; j++) {
             coordinates = coordinates.concat(readCoordinates(el[j]));
         }
-        var cartesian3 = crsFunction(coordinates);
+        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
+        var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
