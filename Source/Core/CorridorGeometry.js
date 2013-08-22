@@ -111,7 +111,7 @@ define([
     var rotMatrix = new Matrix3();
     function computeRoundCorner(cornerPoint, startPoint, endPoint, beveled, leftIsOutside) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
-        var granularity = (beveled) ? 0 : Math.floor(angle/CesiumMath.toRadians(5));
+        var granularity = (beveled) ? 0 : Math.floor(Math.PI/CesiumMath.toRadians(5));
         var size = (granularity + 1)*3;
         var array = new Array(size);
 
@@ -149,18 +149,19 @@ define([
         var startPoint = cartesian2;
         var endPoint = cartesian3;
 
+        var leftEdge = calculatedPositions[1];
+        startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
+        endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
         cornerPoint = originalPositions[0];
-        startPoint = Cartesian3.fromArray(calculatedPositions[0], 0, startPoint);
-        endPoint = Cartesian3.fromArray(calculatedPositions[1], 0, endPoint);
 
-        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, true);
+        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
 
         var length = calculatedPositions.length - 1;
-        cornerPoint = originalPositions[originalPositions.length-1];
-        var leftEdge = calculatedPositions[length - 1];
-        startPoint = Cartesian3.fromArray(leftEdge, leftEdge.length - 3, startPoint);
-        var rightEdge = calculatedPositions[length];
-        endPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, endPoint);
+        var rightEdge = calculatedPositions[length - 1];
+        leftEdge = calculatedPositions[length];
+        startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
+        endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
+        cornerPoint = originalPositions[originalPositions.length - 1];
 
         var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
 
@@ -190,7 +191,7 @@ define([
         var rightCount = 0;
         var i;
         for (i = 0; i < length; i+=2) {
-            leftCount += positions[i].length - 3; //accounts for duplicate points at corners
+            leftCount += positions[i].length - 3; //subtracting 3 to account for duplicate points at corners
             rightCount += positions[i+1].length - 3;
         }
         leftCount += 3; //add back count for end positions
@@ -388,15 +389,17 @@ define([
         }
 
         if (addEndPositions) {  // add rounded end
+            front += 3;
+            back -= 3;
             leftPos = cartesian3;
             rightPos = cartesian4;
 
-            var lastEndPositions = endPositions[1].leftPositions;
+            var lastEndPositions = endPositions[1].rightPositions;
             length = endPositionLength;
             halfLength = length/2;
             for (i = 0; i < halfLength; i++) {
-                leftPos = Cartesian3.fromArray(lastEndPositions, i * 3, leftPos);
-                rightPos = Cartesian3.fromArray(lastEndPositions, (length - i - 1) * 3, rightPos);
+                leftPos = Cartesian3.fromArray(lastEndPositions, (length - i - 1) * 3, leftPos);
+                rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
 
                 finalPositions = addAttribute(finalPositions, leftPos, undefined, back);
                 finalPositions = addAttribute(finalPositions, rightPos, front);
