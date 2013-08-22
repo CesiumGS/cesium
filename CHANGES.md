@@ -40,6 +40,8 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
+* Added `Math.setRandomNumberSeed` and `Math.getNextRandomNumber` for generating repeatable random numbers.
+* Added `Color.fromRandom` to generate random and partially random colors.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
