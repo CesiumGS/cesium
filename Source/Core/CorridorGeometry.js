@@ -843,6 +843,14 @@ define([
         this._workerName = 'createCorridorGeometry';
     };
 
+    /**
+     * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
+     * @memberof CorridorGeometry
+     *
+     * @param {CorridorGeometry} corridorGeometry A description of the corridor.
+     *
+     * @exception {DeveloperError} Count of unique positions must be greater than 1.
+     */
     CorridorGeometry.createGeometry = function(corridorGeometry) {
         var positions = corridorGeometry._positions;
         var height = corridorGeometry._height;
@@ -850,7 +858,7 @@ define([
         var extrude = (height !== extrudedHeight);
         var cleanPositions = PolylinePipeline.removeDuplicates(positions);
         if (cleanPositions.length < 2) {
-            throw new DeveloperError('There must be more than two unique positions.');
+            throw new DeveloperError('Count of unique positions must be greater than 1.');
         }
         var ellipsoid = corridorGeometry._ellipsoid;
         var vertexFormat = corridorGeometry._vertexFormat;
