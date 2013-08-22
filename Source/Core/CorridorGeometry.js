@@ -491,7 +491,7 @@ define([
     function computePositions(params) {
         var granularity = params.granularity;
         var positions = params.positions;
-        var width = params.width;
+        var width = params.width/2;
         var ellipsoid = params.ellipsoid;
         var roundCorners = params.roundCorners;
         var beveledCorners = (!roundCorners && params.beveledCorners);
@@ -796,19 +796,18 @@ define([
      * @alias CorridorGeometry
      * @constructor
      *
-     * @param {Array} options.positions An array of {Cartesain3} positions that define the center of the airspace.
-     * @param {Number} options.width The distance from the positions to the walls of the airspace.
+     * @param {Array} options.positions An array of {Cartesain3} positions that define the center of the corridor.
+     * @param {Number} options.width The distance between the edges of the corridor.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.roundCorners = true] If true, the corners and end caps of the airspace are rounded.
-     * @param {Booleen} [options.beveledCorners = false] Determines whether to bevel or miter the airspace corners.  Only applicable if options.roundCorners is false.
+     * @param {Boolean} [options.roundCorners = true] If true, the corners and end caps of the corridor are rounded.
+     * @param {Booleen} [options.beveledCorners = false] Determines whether to bevel or miter the corridor corners.  Only applicable if options.roundCorners is false.
      *
      * @exception {DeveloperError} options.positions is required.
      * @exception {DeveloperError} options.width is required.
-     * @exception {DeveloperError} options.normals.length must equal options.positions.length.
      *
      * @example
      * var corridor = new CorridorGeometry({
