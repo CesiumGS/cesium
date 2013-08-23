@@ -110,7 +110,8 @@ define([
     var rotMatrix = new Matrix3();
     function computeRoundCorner(cornerPoint, startPoint, endPoint, beveled, leftIsOutside) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
-        var granularity = (beveled) ? 0 : Math.ceil(angle/CesiumMath.toRadians(10));
+        var granularity = (beveled) ? 0 : Math.ceil(angle/CesiumMath.toRadians(5));
+
         var size = (granularity + 1)*3;
         var array = new Array(size);
 
@@ -127,7 +128,7 @@ define([
 
         var index = 0;
         startPoint = startPoint.clone(scratch1);
-        for (var i = 0; i < granularity; i++) {
+        for (var i = 0; i < granularity + 1; i++) {
             startPoint = m.multiplyByVector(startPoint, startPoint);
             array[index++] = startPoint.x;
             array[index++] = startPoint.y;
@@ -144,7 +145,7 @@ define([
         };
     }
 
-    function addEndCaps(originalPositions, calculatedPositions, width) {
+    function addEndCaps(calculatedPositions, width) {
         var cornerPoint = cartesian1;
         var startPoint = cartesian2;
         var endPoint = cartesian3;
@@ -152,7 +153,7 @@ define([
         var leftEdge = calculatedPositions[1];
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
-        cornerPoint = originalPositions[0];
+        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
         var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
 
         var length = calculatedPositions.length - 1;
@@ -160,7 +161,7 @@ define([
         leftEdge = calculatedPositions[length];
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
-        cornerPoint = originalPositions[originalPositions.length - 1];
+        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
         var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
 
         return [firstEndCap, lastEndCap];
@@ -267,7 +268,7 @@ define([
         var length = leftEdge.length - 3;
         for(i = 0; i < length; i+=3) {
             rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, i, scratch1), scratch1);
-            leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, i, scratch2), scratch2);
+            leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - i, scratch2), scratch2);
             normal = rightNormal.add(leftNormal, normal).normalize(normal);
             attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
@@ -323,7 +324,7 @@ define([
                 start = LR;
                 for (j = 0; j < r.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j*3, outsidePoint);
-                    indices.push(pivot, start + j + 1, start + j);
+                    indices.push(pivot, start + j, start + j + 1);
                     finalPositions = addAttribute(finalPositions, outsidePoint, front);
                     previousPoint = Cartesian3.fromArray(finalPositions, pivot*3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, (start + j)*3, nextPoint);
@@ -364,6 +365,7 @@ define([
             front -= 3;
             back += 3;
         }
+        attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
         if (addEndPositions) {  // add rounded end
             front += 3;
@@ -587,7 +589,7 @@ define([
 
         var endPositions;
         if (roundCorners) {
-            endPositions = addEndCaps(positions, calculatedPositions, width);
+            endPositions = addEndCaps(calculatedPositions, width);
         }
 
         return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, ellipsoid);
@@ -671,6 +673,8 @@ define([
                     normals[i + threeSize + 2] = -topNormals[i + 2];
                 }
                 attributes.normal.values = normals;
+            } else {
+                attributes.normal = undefined;
             }
             if (vertexFormat.binormal) {
                 var topBinormals = attributes.binormal.values;
@@ -682,6 +686,8 @@ define([
                 tangents.set(topTangents); //top
                 tangents.set(topTangents, threeSize); //bottom
                 attributes.tangent.values = tangents;
+            } else {
+                attributes.tangent = undefined;
             }
         }
         if (vertexFormat.st) {
