@@ -1,10 +1,14 @@
 /*global define*/
 define([
         './defaultValue',
-        './DeveloperError'
+        './defined',
+        './DeveloperError',
+        '../ThirdParty/mersenne-twister'
        ], function(
          defaultValue,
-         DeveloperError) {
+         defined,
+         DeveloperError,
+         MersenneTwister) {
     "use strict";
 
     /**
@@ -554,6 +558,40 @@ define([
      */
     CesiumMath.clamp = function(value, min, max) {
         return value < min ? min : value > max ? max : value;
+    };
+
+    var randomNumberGenerator = new MersenneTwister();
+
+    /**
+     * Sets the seed used by the random number generator
+     * in {@link CesiumMath#nextRandomNumber}.
+     *
+     * @memberof CesiumMath
+     *
+     * @param {Number} seed An integer used as the seed.
+     *
+     * @exception {DeveloperError} seed is required.
+     */
+    CesiumMath.setRandomNumberSeed = function(seed) {
+        if (!defined(seed)) {
+            throw new DeveloperError('seed is required.');
+        }
+        randomNumberGenerator = new MersenneTwister(seed);
+    };
+
+    /**
+     * Generates a random number in the range of [0.0, 1.0)
+     * using a Mersenne twister.
+     *
+     * @memberof CesiumMath
+     *
+     * @returns A random number in the range of [0.0, 1.0).
+     *
+     * @see CesiumMath#setRandomNumberSeed
+     * @see http://en.wikipedia.org/wiki/Mersenne_twister
+     */
+    CesiumMath.nextRandomNumber = function() {
+        return randomNumberGenerator.random();
     };
 
     return CesiumMath;

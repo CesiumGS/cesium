@@ -19,7 +19,7 @@ define([
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -44,7 +44,7 @@ define([
         VertexLayout,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -496,22 +496,7 @@ define([
 
                     length = clonedInstances.length;
                     var transferableObjects = [];
-                    for (i = 0; i < length; ++i) {
-                        geometry = clonedInstances[i].geometry;
-                        attributes = geometry.attributes;
-                        for (var name in attributes) {
-                            if (attributes.hasOwnProperty(name) &&
-                                    defined(attributes[name]) &&
-                                    defined(attributes[name].values) &&
-                                    transferableObjects.indexOf(attributes[name].values.buffer) < 0) {
-                                transferableObjects.push(attributes[name].values.buffer);
-                            }
-                        }
-
-                        if (defined(geometry.indices)) {
-                            transferableObjects.push(geometry.indices.buffer);
-                        }
-                    }
+                    PrimitivePipeline.transferInstances(clonedInstances, transferableObjects);
 
                     pickColors = [];
                     for (i = 0; i < length; ++i) {
@@ -535,6 +520,9 @@ define([
                     this.state = PrimitiveState.COMBINING;
 
                     when(promise, function(result) {
+                        PrimitivePipeline.receiveGeometries(result.geometries);
+                        PrimitivePipeline.receivePerInstanceAttributes(result.vaAttributes);
+
                         that._geometries = result.geometries;
                         that._attributeIndices = result.attributeIndices;
                         that._vaAttributes = result.vaAttributes;
@@ -694,12 +682,10 @@ define([
             var vs = createColumbusViewShader(this, appearance.vertexShaderSource);
             vs = appendShow(this, vs);
             var fs = appearance.getFragmentShaderSource();
+            var pickFS = createShaderSource({ sources : [fs], pickColorQualifier : 'varying' });
 
             this._sp = shaderCache.replaceShaderProgram(this._sp, vs, fs, this._attributeIndices);
-            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP,
-                createPickVertexShaderSource(vs),
-                createPickFragmentShaderSource(fs, 'varying'),
-                this._attributeIndices);
+            this._pickSP = shaderCache.replaceShaderProgram(this._pickSP, createPickVertexShaderSource(vs), pickFS, this._attributeIndices);
 
             validateShaderMatching(this._sp, this._attributeIndices);
             validateShaderMatching(this._pickSP, this._attributeIndices);
