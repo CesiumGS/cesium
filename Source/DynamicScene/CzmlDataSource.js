@@ -27,6 +27,7 @@ define([
         '../Scene/HorizontalOrigin',
         '../Scene/LabelStyle',
         '../Scene/VerticalOrigin',
+        './CompositeMaterialProperty',
         './CompositePositionProperty',
         './CompositeProperty',
         './ConstantPositionProperty',
@@ -83,6 +84,7 @@ define([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
+        CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
         ConstantPositionProperty,
@@ -632,7 +634,7 @@ define([
         var propertyCreated = false;
         var property = object[propertyName];
         if (!defined(property)) {
-            property = new CompositeProperty();
+            property = new CompositeMaterialProperty();
             object[propertyName] = property;
             propertyCreated = true;
         }

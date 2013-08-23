@@ -69,15 +69,9 @@ define([
      */
     MaterialProperty.GetValue = function(time, context, materialProperty, material) {
         if (defined(materialProperty)) {
-            if (!defined(materialProperty.type) && defined(materialProperty.intervals)) {
-                var interval = materialProperty.intervals.findIntervalContainingDate(time);
-                if (!defined(interval) || !defined(interval.data)) {
-                    return material;
-                }
-                materialProperty = interval.data;
-            }
-            if (!defined(material) || (material.type !== materialProperty.type)) {
-                material = Material.fromType(context, materialProperty.type);
+            var type = materialProperty.getType(time);
+            if (!defined(material) || (material.type !== type)) {
+                material = Material.fromType(context, type);
             }
             materialProperty.getValue(time, material.uniforms);
         }

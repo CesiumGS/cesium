@@ -1,10 +1,14 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        './ConstantProperty'
     ], function(
+        Cartesian2,
         defined,
-        defineProperties) {
+        defineProperties,
+        ConstantProperty) {
     "use strict";
 
     /**
@@ -24,14 +28,7 @@ define([
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.verticalRepeat = undefined;
-        /**
-         * A DynamicProperty of type Number which determines the material's horizontal repeat.
-         *
-         * @type {DynamicProperty}
-         * @default undefined
-         */
-        this.horizontalRepeat = undefined;
+        this.repeat = new ConstantProperty(new Cartesian2(1, 1));
     };
 
 
@@ -47,33 +44,20 @@ define([
                 return (defined(this.image) ? this.image.isTimeVarying : false) || //
                        (defined(this.repeat) ? this.repeat.isTimeVarying : false);
             }
-        },
-        /**
-         * Gets the Material type.
-         * @type {String}
-         */
-        type : {
-            get : function() {
-                return 'Image';
-            }
         }
     });
+
+    ImageMaterialProperty.prototype.getType = function(time) {
+        return 'Image';
+    };
 
     ImageMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
         }
 
-        var property = this.image;
-        if (defined(property)) {
-            result.image = property.getValue(time, result.image);
-        }
-
-        property = this.repeat;
-        if (defined(property)) {
-            result.repeat = property.getValue(time, result.repeat);
-        }
-
+        result.image = defined(this.image) ? this.image.getValue(time) : undefined;
+        result.repeat = defined(this.repeat) ? this.repeat.getValue(time, result.repeat) : undefined;
         return result;
     };
 

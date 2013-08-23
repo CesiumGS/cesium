@@ -1,10 +1,14 @@
 /*global define*/
 define([
+        '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        './ConstantProperty'
     ], function(
+        Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        ConstantProperty) {
     "use strict";
 
     /**
@@ -18,7 +22,7 @@ define([
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.color = undefined;
+        this.color = new ConstantProperty(Color.WHITE);
     };
 
     defineProperties(ColorMaterialProperty.prototype, {
@@ -32,29 +36,18 @@ define([
             get : function() {
                 return defined(this.color) ? this.color.isTimeVarying : false;
             }
-        },
-        /**
-         * Gets the Material type.
-         * @type {String}
-         */
-        type : {
-            get : function() {
-                return 'Color';
-            }
         }
     });
+
+    ColorMaterialProperty.prototype.getType = function(time) {
+        return 'Color';
+    };
 
     ColorMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
         }
-
-        if (defined(this.color)) {
-            var color = this.color.getValue(time, result.color);
-            if (defined(color)) {
-                result.color = color;
-            }
-        }
+        result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
         return result;
     };
 

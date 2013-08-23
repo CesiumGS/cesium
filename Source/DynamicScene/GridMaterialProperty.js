@@ -1,10 +1,16 @@
 /*global define*/
 define([
+        '../Core/Cartesian2',
+        '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties'
+        '../Core/defineProperties',
+        './ConstantProperty'
     ], function(
+        Cartesian2,
+        Color,
         defined,
-        defineProperties) {
+        defineProperties,
+        ConstantProperty) {
     "use strict";
 
     /**
@@ -18,28 +24,28 @@ define([
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.color = undefined;
+        this.color = new ConstantProperty(Color.WHITE);
 
         /**
          * A DynamicProperty of type Number which determines the grid cells alpha value, when combined with the color alpha.
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.cellAlpha = undefined;
+        this.cellAlpha = new ConstantProperty(0.1);
 
         /**
          * A DynamicProperty of type Number which determines the number of horizontal rows.
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.lineCount = undefined;
+        this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
 
         /**
          * A DynamicProperty of type Number which determines the width of each horizontal line, in pixels.
          * @type {DynamicProperty}
          * @default undefined
          */
-        this.lineThickness = undefined;
+        this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
     };
 
     defineProperties(GridMaterialProperty.prototype, {
@@ -56,49 +62,21 @@ define([
                        (defined(this.lineCount) ? this.lineCount.isTimeVarying : false) || //
                        (defined(this.lineThickness) ? this.lineThickness.isTimeVarying : false);
             }
-        },
-        /**
-         * Gets the Material type.
-         * @type {String}
-         */
-        type : {
-            get : function() {
-                return 'Grid';
-            }
         }
     });
+
+    GridMaterialProperty.prototype.getType = function(time) {
+        return 'Grid';
+    };
 
     GridMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};
         }
-
-        var property = this.color;
-        if (defined(property)) {
-            var color = property.getValue(time, result.color);
-            if (defined(color)) {
-                result.color = color;
-            }
-        }
-
-        property = this.cellAlpha;
-        if (defined(property)) {
-            var cellAlpha = property.getValue(time);
-            if (defined(cellAlpha)) {
-                result.cellAlpha = cellAlpha;
-            }
-        }
-
-        property = this.lineCount;
-        if (defined(property)) {
-            result.lineCount = property.getValue(time, result.lineCount);
-        }
-
-        property = this.lineThickness;
-        if (defined(property)) {
-            result.lineThickness = property.getValue(time, result.lineThickness);
-        }
-
+        result.color = defined(this.color) ? this.color.getValue(time, result.color) : undefined;
+        result.cellAlpha = defined(this.cellAlpha) ? this.cellAlpha.getValue(time) : undefined;
+        result.lineCount = defined(this.lineCount) ? this.lineCount.getValue(time, result.lineCount) : undefined;
+        result.lineThickness = defined(this.lineThickness) ? this.lineThickness.getValue(time, result.lineThickness) : undefined;
         return result;
     };
 
