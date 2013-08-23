@@ -11,6 +11,7 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
+        '../Renderer/createShaderSource',
         '../Scene/SceneMode',
         '../Shaders/SkyAtmosphereVS',
         '../Shaders/SkyAtmosphereFS'
@@ -26,6 +27,7 @@ define([
         DrawCommand,
         CullFace,
         BlendingState,
+        createShaderSource,
         SceneMode,
         SkyAtmosphereVS,
         SkyAtmosphereFS) {
@@ -153,21 +155,18 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var vs;
-            var fs;
             var shaderCache = context.getShaderCache();
+            var vs = createShaderSource({
+                defines : ['SKY_FROM_SPACE'],
+                sources : [SkyAtmosphereVS]
+            });
+            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
 
-            vs = '#define SKY_FROM_SPACE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-            fs = '#line 0\n' +
-                 SkyAtmosphereFS;
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, fs);
-
-            vs = '#define SKY_FROM_ATMOSPHERE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, fs);
+            vs = createShaderSource({
+                defines : ['SKY_FROM_ATMOSPHERE'],
+                sources : [SkyAtmosphereVS]
+            });
+            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
         }
 
         var cameraPosition = frameState.camera.getPositionWC();
