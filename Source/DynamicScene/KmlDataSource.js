@@ -129,12 +129,27 @@ define(['../Core/createGuid',
         var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
         if(colorMode === 'random'){
             var options = {};
-            options.blue = parseInt(value.substring(2,4), 16)  / 255.0;
-            options.green = parseInt(value.substring(4,6), 16) / 255.0;
-            options.red = parseInt(value.substring(6,8), 16) / 255.0;
-            var color = Color.fromRandom(options);
-            color.alpha = parseInt(value.substring(0,2), 16) / 255.0;
-            return color;
+            alpha = parseInt(value.substring(0,2), 16) / 255.0;
+            blue = parseInt(value.substring(2,4), 16)  / 255.0;
+            green = parseInt(value.substring(4,6), 16) / 255.0;
+            red = parseInt(value.substring(6,8), 16) / 255.0;
+            if(red > 0){
+                options.maximumRed = red;
+            } else {
+                options.red = 0;
+            }
+            if(green > 0){
+                options.maximumGreen = green;
+            } else {
+                options.green = 0;
+            }
+            if(blue > 0){
+                options.maximumBlue = blue;
+            } else {
+                options.blue = 0;
+            }
+            options.alpha = alpha;
+            return Color.fromRandom(options);
         }
         //normal mode as default
         alpha = parseInt(value.substring(0,2), 16) / 255.0;
