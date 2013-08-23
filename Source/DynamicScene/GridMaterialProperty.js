@@ -75,7 +75,10 @@ define([
 
         var property = this.color;
         if (defined(property)) {
-            result.color = property.getValue(time, result.color);
+            var color = property.getValue(time, result.color);
+            if (defined(color)) {
+                result.color = color;
+            }
         }
 
         property = this.cellAlpha;

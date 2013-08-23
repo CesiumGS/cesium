@@ -46,12 +46,15 @@ define([
 
     ColorMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
-            return {
-                color : this.color.getValue(time)
-            };
+            result = {};
         }
 
-        result.color = this.color.getValue(time, result.color);
+        if (defined(this.color)) {
+            var color = this.color.getValue(time, result.color);
+            if (defined(color)) {
+                result.color = color;
+            }
+        }
         return result;
     };
 
