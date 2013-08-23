@@ -109,8 +109,7 @@ define(['../Core/createGuid',
 
     function getNumericValue(node, tagName){
         var element = node.getElementsByTagName(tagName)[0];
-        var value = defined(element) ? element.firstChild.data : undefined;
-        return parseFloat(value);
+        return defined(element) ? parseFloat(element.firstChild.data) : undefined;
     }
 
     function getStringValue(node, tagName){
@@ -179,8 +178,7 @@ define(['../Core/createGuid',
     function processLineString(dataSource, dynamicObject, kml, node){
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
-        var coordinates = [];
-        coordinates = readCoordinates(el[0]);
+        var coordinates = readCoordinates(el[0]);
 
         dynamicObject.vertexPositions = new ConstantPositionProperty(coordinates);
     }
@@ -188,8 +186,7 @@ define(['../Core/createGuid',
     function processLinearRing(dataSource, dynamicObject, kml, node){
       //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
         var el = node.getElementsByTagName('coordinates');
-        var coordinates = [];
-        coordinates = readCoordinates(el[0]);
+        var coordinates = readCoordinates(el[0]);
 
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length -1])){
             throw new DeveloperError("The first and last coordinate tuples must be the same.");
@@ -256,7 +253,7 @@ define(['../Core/createGuid',
             //TODO Model, gxTrack, gxMultitrack
     };
 
-    function processStyle(styleNode, dynamicObject) {
+    function processStyle(styleNode, dynamicObject, sourceUri) {
         for(var i = 0, len = styleNode.childNodes.length; i < len; i++){
             var node = styleNode.childNodes.item(i);
 
@@ -265,8 +262,14 @@ define(['../Core/createGuid',
                 //TODO heading, hotSpot
                 var billboard = defined(dynamicObject.billboard) ? dynamicObject.billboard : new DynamicBillboard();
                 var scale = getNumericValue(node, 'scale');
-                var icon = getStringValue(node,'href');
                 var color = getColorValue(node, 'color');
+                var icon = getStringValue(node,'href');
+                if (defined(sourceUri)) {
+                    var baseUri = new Uri(document.location.href);
+                    sourceUri = new Uri(sourceUri);
+                    icon = new Uri(icon).resolve(sourceUri.resolve(baseUri)).toString();
+                }
+
 
                 billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
                 billboard.scale = defined(scale) ? new ConstantProperty(scale) : undefined;
@@ -323,13 +326,13 @@ define(['../Core/createGuid',
     }
 
     //Processes and merges any inline styles for the provided node into the provided dynamic object.
-    function processInlineStyles(dynamicObject, node, styleCollection) {
+    function processInlineStyles(dynamicObject, node, styleCollection, sourceUri) {
         //KML_TODO Validate the behavior for multiple/conflicting styles.
         var inlineStyles = node.getElementsByTagName('Style');
         var inlineStylesLength = inlineStyles.length;
         if (inlineStylesLength > 0) {
             //Google earth seems to always use the last inline style only.
-            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject);
+            processStyle(inlineStyles.item(inlineStylesLength - 1), dynamicObject, sourceUri);
         }
 
         var externalStyles = node.getElementsByTagName('styleUrl');
@@ -374,7 +377,7 @@ define(['../Core/createGuid',
                 }
                 if (!defined(styleCollection.getObject(id))) {
                     var styleObject = styleCollection.getOrCreateObject(id);
-                    processStyle(node, styleObject);
+                    processStyle(node, styleObject, sourceUri);
                 }
             }
         }
@@ -397,7 +400,7 @@ define(['../Core/createGuid',
                         sourceUri = new Uri(sourceUri);
                         uri = new Uri(uri).resolve(sourceUri.resolve(baseUri)).toString();
                     }
-                    promises.push(processExternalStyles(uri, styleCollection));
+                    promises.push(processExternalStyles(uri, styleCollection, sourceUri));
                 }
             }
         }
