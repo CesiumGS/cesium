@@ -176,7 +176,7 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of positions.  Each element is usually a {@see Cartesian3}, but all that is required is that the object have an <code>equals</code> function.
+     * @param {Array} positions The array of {Cartesian3} positions.
      *
      * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
@@ -207,7 +207,7 @@ define([
             var v0 = positions[i - 1];
             var v1 = positions[i];
 
-            if (!v0.equals(v1)) {
+            if (!Cartesian3.equals(v0, v1)) {
                 cleanedPositions.push(v1); // Shallow copy!
             }
         }
