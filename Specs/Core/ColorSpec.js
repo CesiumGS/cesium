@@ -226,87 +226,93 @@ defineSuite(['Core/Color',
     });
 
     it('fromRandom generates a random color with no options', function() {
-        var options = {
-                red: undefined,
-                green: undefined,
-                blue: undefined,
-                alpha: undefined
-        };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red).toEqual(0);
-        expect(randomColor.green).toEqual(0);
-        expect(randomColor.blue).toEqual(0);
-        expect(randomColor.alpha).toEqual(0);
+        var color = Color.fromRandom();
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
     });
 
-    it('fromRandom generates a random color with all options', function() {
+    it('fromRandom generates a random color with no options', function() {
+        var result = new Color();
+        var color = Color.fromRandom({}, result);
+        expect(result).toBe(color);
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
+    });
+
+    it('fromRandom uses specified exact values', function() {
         var options = {
-                red: 1,
-                green: 1,
-                blue: 1,
-                alpha: 1
+            red : 0.1,
+            green : 0.2,
+            blue : 0.3,
+            alpha : 0.4
         };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red <= 1.0 && randomColor. red >= 0.0).toBe(true);
-        expect(randomColor.green <= 1.0 && randomColor.green >= 0.0).toBe(true);
-        expect(randomColor.blue <= 1.0 && randomColor.blue >= 0.0).toBe(true);
-        expect(randomColor.alpha <= 1.0 && randomColor.alpha >= 0.0).toBe(true);
+        var color = Color.fromRandom(options);
+        expect(color.red).toEqual(options.red);
+        expect(color.green).toEqual(options.green);
+        expect(color.blue).toEqual(options.blue);
+        expect(color.alpha).toEqual(options.alpha);
     });
 
     it('fromRandom generates a random kind of Red color within intervals', function() {
         var options = {
-                red: 0.5,
-                green: 0,
-                blue: 0,
-                alpha: 0
+            red : undefined,
+            minimumRed : 0.1,
+            maximumRed : 0.2,
+            minimumGreen : 0.3,
+            maximumGreen : 0.4,
+            minimumBlue : 0.5,
+            maximumBlue : 0.6,
+            minimumAlpha : 0.7,
+            maximumAlpha : 0.8
         };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red <= 0.5 && randomColor.red >= 0.0).toBe(true);
-        expect(randomColor.green).toEqual(0);
-        expect(randomColor.blue).toEqual(0);
-        expect(randomColor.alpha).toEqual(0);
+
+        for ( var i = 0; i < 100; i++) {
+            var color = Color.fromRandom(options);
+            expect(color.red).toBeBetween(options.minimumRed, options.maximumRed);
+            expect(color.green).toBeBetween(options.minimumGreen, options.maximumGreen);
+            expect(color.blue).toBeBetween(options.minimumBlue, options.maximumBlue);
+            expect(color.alpha).toBeBetween(options.minimumAlpha, options.maximumAlpha);
+        }
     });
 
-    it('fromRandom generates a random kind of Green color within intervals', function() {
-        var options = {
-                red: 0,
-                green: 0.5,
-                blue: 0,
-                alpha: 0
-        };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red).toEqual(0);
-        expect(randomColor.green <= 0.5 && randomColor.green >= 0.0).toBe(true);
-        expect(randomColor.blue).toEqual(0);
-        expect(randomColor.alpha).toEqual(0);
+    it('fromRandom throws with invalid minimum-maximum red values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumRed : 1,
+                maximumRed : 0
+            });
+        }).toThrow();
     });
 
-    it('fromRandom generates a random kind of Blue color within intervals', function() {
-        var options = {
-                red: 0,
-                green: 0,
-                blue: 0.5,
-                alpha: 0
-        };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red).toEqual(0);
-        expect(randomColor.green).toEqual(0);
-        expect(randomColor.blue <= 0.5 && randomColor.blue >= 0.0).toBe(true);
-        expect(randomColor.alpha).toEqual(0);
+    it('fromRandom throws with invalid minimum-maximum green values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumGreen : 1,
+                maximumGreen : 0
+            });
+        }).toThrow();
     });
 
-    it('fromRandom generates a random kind of Alpha component within intervals', function() {
-        var options = {
-                red: 0,
-                green: 0,
-                blue: 0,
-                alpha: 0.5
-        };
-        var randomColor = Color.fromRandom(options);
-        expect(randomColor.red).toEqual(0);
-        expect(randomColor.green).toEqual(0);
-        expect(randomColor.blue).toEqual(0);
-        expect(randomColor.alpha <= 0.5 && randomColor.alpha >= 0.0).toBe(true);
+    it('fromRandom throws with invalid minimum-maximum blue values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumBlue : 1,
+                maximumBlue : 0
+            });
+        }).toThrow();
+    });
+
+    it('fromRandom throws with invalid minimum-maximum alpha values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumAlpha : 1,
+                maximumAlpha : 0
+            });
+        }).toThrow();
     });
 
     it('toString produces correct results', function() {
