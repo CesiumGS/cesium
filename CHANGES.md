@@ -44,6 +44,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Added `Billboard.scaleByDistance` to control Billboard min/max scale based on Camera distance to Billboard.
 
 ### b19 - 2013-08-01
 

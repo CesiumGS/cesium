@@ -75,6 +75,8 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
         this._width = description.width;
         this._height = description.height;
+        // eyeDistance_min, scale_min, eyeDistance_max, scale_max
+        this._scaleByDistance = defaultValue(description.scaleByDistance, [5.0e6, 1.0, 2.0e7, 0.0]);
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -94,7 +96,8 @@ define([
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
     var ROTATION_INDEX = Billboard.ROTATION_INDEX = 9;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
-    Billboard.NUMBER_OF_PROPERTIES = 11;
+    var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
+    Billboard.NUMBER_OF_PROPERTIES = 12;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -263,6 +266,55 @@ define([
             Cartesian2.clone(value, pixelOffset);
             makeDirty(this, PIXEL_OFFSET_INDEX);
         }
+    };
+
+    /**
+     * Returns the min and max scaling properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @return {float[]} The scaling values based on range packed into an array of floats as follows,
+     *                   [minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance].
+     *
+     * @see Billboard#setScaleByDistance
+     */
+    Billboard.prototype.getScaleByDistance = function() {
+        return this._scaleByDistance;
+    };
+
+    /**
+     * Sets min and max scaling properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's scale will interpolate between the min and max scales while the camera distance falls
+     * within the upper and lower bounds of the specified camera distance cutoffs.  Outside of these ranges
+     * the billboard's scale remains clamped to the nearest scale.
+     *
+     * @memberof Billboard
+     *
+     * @param {float} minDistance The lower bound of the camera distance threshold (min range of camera to billboard)
+     * @param {float} scaleAtMinDistance The scale of the billboard at the lower bound of the camera distance threshold.
+     * @param {float} maxDistance The upper bound of the camera distance threshold (max range of camera to billboard)
+     * @param {float} scaleAtMaxDistance The scale of the billboard at the upper bound of the camera distance threshold.
+     *
+     * @see Billboard#getScaleByDistance
+     *
+     * @example
+     * // Example 1. Set a billboard's scaleByDistance to
+     * // scale by 3.0 when the camera is 1.0e6 meters from the billboard
+     * // and disappear as the camera distance approaches 1e7 meters
+     * b.setScaleByDistance(1.0e6, 3.0, 1e7, 0.0);
+     *
+     */
+    Billboard.prototype.setScaleByDistance = function(minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance) {
+        if (!defined(minDistance) || !defined(scaleAtMinDistance) || !defined(maxDistance) || !defined(scaleAtMaxDistance)) {
+            throw new DeveloperError('Requires minScale, maxScale and minRange, maxRange ranges to be specified.');
+        }
+
+        if (maxDistance < minDistance) {
+            throw new DeveloperError('maxDistance must be greater than minDistance.');
+        }
+
+        this._scaleByDistance = [minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance];
+        makeDirty(this, SCALE_BY_DISTANCE_INDEX);
     };
 
     /**

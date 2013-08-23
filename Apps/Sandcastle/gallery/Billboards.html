@@ -142,6 +142,26 @@ require(['Cesium'], function(Cesium) {
         });
     }
 
+    function scaleBillboardByDistance(scene, ellipsoid) {
+        Sandcastle.declare(scaleBillboardByDistance); // For highlighting in Sandcastle.
+        var image = new Image();
+        image.onload = function() {
+            var billboards = new Cesium.BillboardCollection();
+            var textureAtlas = scene.getContext().createTextureAtlas({
+                image : image
+            });
+            billboards.setTextureAtlas(textureAtlas);
+
+            billboards.add({
+                position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
+                imageIndex : 0,
+                scaleByDistance : [1e5, 3.0, 1e7, 0.5]
+            });
+            scene.getPrimitives().add(billboards);
+        };
+        image.src = '../images/Cesium_Logo_overlay.png';
+    }
+
     function addPointBillboards(scene, ellipsoid) {
         Sandcastle.declare(addPointBillboards); // For highlighting in Sandcastle.
         // A white circle is drawn into a 2D canvas.  The canvas is used as
@@ -399,6 +419,16 @@ require(['Cesium'], function(Cesium) {
             Sandcastle.highlight(addBillboardsInReferenceframe);
         };
         button.textContent = 'Add billboards in reference frame';
+        toolbar.appendChild(button);
+
+        button = document.createElement('button');
+        button.className = 'button';
+        button.onclick = function() {
+            primitives.removeAll();
+            scaleBillboardByDistance(scene, ellipsoid);
+            Sandcastle.highlight(scaleBillboardByDistance);
+        };
+        button.textContent = 'Scale Billboards based on distance to camera';
         toolbar.appendChild(button);
     }
 

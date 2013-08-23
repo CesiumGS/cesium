@@ -121,6 +121,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(1.0);
         expect(b.getRotation()).toEqual(0.0);
         expect(b.getAlignedAxis()).toEqual(Cartesian3.ZERO);
+        expect(b.getScaleByDistance()).toEqual([5.0e6, 1.0, 2.0e7, 0.0]);
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
     });
@@ -143,6 +144,7 @@ defineSuite([
             },
             rotation : 1.0,
             alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
+            scaleByDistance : [1.0, 3.0, 1.0e6, 0.0],
             width : 300.0,
             height : 200.0
         });
@@ -161,6 +163,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
         expect(b.getRotation()).toEqual(1.0);
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getScaleByDistance()).toEqual([1.0, 3.0, 1.0e6, 0.0]);
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
     });
@@ -185,6 +188,7 @@ defineSuite([
         b.setAlignedAxis(new Cartesian3(1.0, 2.0, 3.0));
         b.setWidth(300.0);
         b.setHeight(200.0);
+        b.setScaleByDistance(1.0e6, 3.0, 1.0e8, 0.0);
 
         expect(b.getShow()).toEqual(false);
         expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -200,8 +204,26 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
         expect(b.getRotation()).toEqual(1.0);
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getScaleByDistance()).toEqual([1.0e6, 3.0, 1.0e8, 0.0]);
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
+    });
+
+    it('disable scale by distance', function() {
+        var b = billboards.add();
+        b.setScaleByDistance(1.0e6, 1.0, 1.0e8, 1.0);
+        render(context, frameState, billboards);
+        expect(billboards._shaderScaleByDistance).toEqual(false);
+        expect(billboards._compiledShaderScaleByDistance).toEqual(false);
+    });
+
+    it('throws setScaleByDistance with minRange > maxRange', function() {
+        var b = billboards.add();
+
+        expect(function() {
+            b.setScaleByDistance(1.0e9, 1.0, 1.0e5, 1.0);
+        }).toThrow();
+
     });
 
     it('throws with non number Index', function() {

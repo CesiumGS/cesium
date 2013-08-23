@@ -6,6 +6,7 @@ attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (t
 attribute vec2 pixelOffset;
 attribute vec4 eyeOffsetAndScale;               // eye offset in meters
 attribute vec4 rotationAndAlignedAxis;
+attribute vec4 scaleByDistance;                 // minRangeFromEye, scaleAtMinRange, maxRangeFromEye, scaleAtMaxRange
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -44,6 +45,25 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
     
+#ifdef EYE_DISTANCE_SCALING  // scale based on eye distance
+    // transform into 3d eye coordinates.  This methodology will even translate for
+    // 2D mode into a 3D position, but is only valid for the distance calculations below
+    vec4 position3dInEC = czm_view3D * (vec4(positionHigh, 1) + vec4(positionLow,0));
+    float lengthSq = dot(position3dInEC.xyz, position3dInEC.xyz);
+    float scaleAtMin = scaleByDistance.y;
+    float scaleAtMax = scaleByDistance.w;
+    float minDistanceFromEyeSq = scaleByDistance.x*scaleByDistance.x;
+    float maxDistanceFromEyeSq = scaleByDistance.z*scaleByDistance.z;
+    // ensure that t will fall within the range of [0.0, 1.0]
+    lengthSq = clamp(lengthSq, minDistanceFromEyeSq, maxDistanceFromEyeSq);
+    float t = (lengthSq-minDistanceFromEyeSq)/(maxDistanceFromEyeSq-minDistanceFromEyeSq);
+    // dampen the exponential distance traveled by the camera
+    // could be interesting to assign this exponent to a uniform for advanced control of interpolation
+    t = pow(t, 0.5);
+
+    scale *= mix(scaleAtMin, scaleAtMax, t);
+#endif
+
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
     
     vec2 halfSize = imageSize * scale * czm_highResolutionSnapScale;

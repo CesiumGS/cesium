@@ -178,6 +178,9 @@ define([
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
+                    // until text billboard scaling is fixed, disable the scaleByDistance
+                    // (scaling from 1.0 to 1.0)
+                    billboard.setScaleByDistance(1.0, 1.0, 1.0e10, 1.0);
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
