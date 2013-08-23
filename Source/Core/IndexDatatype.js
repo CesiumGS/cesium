@@ -1,17 +1,21 @@
 /*global define*/
 define([
         './Enumeration',
+        './defined',
         './DeveloperError',
+        './FeatureDetection',
         './Math'
     ], function(
         Enumeration,
+        defined,
         DeveloperError,
+        FeatureDetection,
         CesiumMath) {
     "use strict";
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
     // from failing, since we won't be able to create a WebGL context anyway.
-    if (typeof Int8Array === 'undefined') {
+    if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
 
@@ -51,10 +55,9 @@ define([
          * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
          * of an element in <code>Uint32Array</code>.
          *
-         * @memberOf ComponentDatatype
-         *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1405
          */
         UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
             sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
@@ -62,7 +65,7 @@ define([
     };
 
     /**
-     * Validates that the provided index datatype is a valid {@link IndexDatatype}
+     * Validates that the provided index datatype is a valid {@link IndexDatatype}.
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
      *
@@ -74,9 +77,10 @@ define([
      * }
      */
     IndexDatatype.validate = function(indexDatatype) {
-        return indexDatatype === IndexDatatype.UNSIGNED_BYTE ||
-               indexDatatype === IndexDatatype.UNSIGNED_SHORT ||
-               indexDatatype === IndexDatatype.UNSIGNED_INT;
+        return defined(indexDatatype) && defined(indexDatatype.value) &&
+               (indexDatatype.value === IndexDatatype.UNSIGNED_BYTE.value ||
+                indexDatatype.value === IndexDatatype.UNSIGNED_SHORT.value ||
+                indexDatatype.value === IndexDatatype.UNSIGNED_INT.value);
     };
 
     /**
@@ -94,7 +98,7 @@ define([
      * this.indices = IndexDatatype.createTypedArray(positions.length / 3, numberOfIndices);
      */
     IndexDatatype.createTypedArray = function(numberOfVertices, indicesLengthOrArray) {
-        if (typeof numberOfVertices === 'undefined') {
+        if (!defined(numberOfVertices)) {
             throw new DeveloperError('numberOfVertices is required.');
         }
 

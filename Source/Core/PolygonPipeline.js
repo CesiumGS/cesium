@@ -4,6 +4,7 @@ define([
         './Math',
         './Cartesian2',
         './Cartesian3',
+        './defined',
         './Geometry',
         './GeometryAttribute',
         './Ellipsoid',
@@ -19,6 +20,7 @@ define([
         CesiumMath,
         Cartesian2,
         Cartesian3,
+        defined,
         Geometry,
         GeometryAttribute,
         Ellipsoid,
@@ -38,14 +40,14 @@ define([
     }
 
     DoublyLinkedList.prototype.add = function(item) {
-        if (typeof item !== 'undefined') {
+        if (defined(item)) {
             var node = {
                 item : item,
                 previous : this.tail,
                 next : undefined
             };
 
-            if (typeof this.tail !== 'undefined') {
+            if (defined(this.tail)) {
                 this.tail.next = node;
                 this.tail = node;
             } else {
@@ -59,15 +61,15 @@ define([
     };
 
     DoublyLinkedList.prototype.remove = function(item) {
-        if (typeof item !== 'undefined') {
-            if (typeof item.previous !== 'undefined' && typeof item.next  !== 'undefined') {
+        if (defined(item)) {
+            if (defined(item.previous) && defined(item.next)) {
                 item.previous.next = item.next;
                 item.next.previous = item.previous;
-            } else if (typeof item.previous  !== 'undefined') {
+            } else if (defined(item.previous )) {
                 // Remove last node.
                 item.previous.next = undefined;
                 this.tail = item.previous;
-            } else if (typeof item.next !== 'undefined') {
+            } else if (defined(item.next)) {
                 // Remove first node.
                 item.next.previous = undefined;
                 this.head = item.next;
@@ -392,7 +394,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         removeDuplicates : function(positions) {
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -407,7 +409,7 @@ define([
                 var v0 = positions[i0];
                 var v1 = positions[i1];
 
-                if (!v0.equals(v1)) {
+                if (!Cartesian3.equals(v0, v1)) {
                     cleanedPositions.push(v1); // Shallow copy!
                 }
             }
@@ -422,7 +424,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -468,7 +470,7 @@ define([
             //   * http://cgm.cs.mcgill.ca/~godfried/publications/triangulation.held.ps.gz
             //   * http://blogs.agi.com/insight3d/index.php/2008/03/20/triangulation-rhymes-with-strangulation/
 
-            if (typeof positions  === 'undefined') {
+            if (!defined(positions )) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -555,11 +557,11 @@ define([
          * @exception {DeveloperError} Granularity must be greater than zero.
          */
         computeSubdivision : function(positions, indices, granularity) {
-            if (typeof positions === 'undefined') {
+            if (!defined(positions)) {
                 throw new DeveloperError('positions is required.');
             }
 
-            if (typeof indices === 'undefined') {
+            if (!defined(indices)) {
                 throw new DeveloperError('indices is required.');
             }
 
@@ -603,12 +605,13 @@ define([
                 var v1 = subdividedPositions[triangle.i1];
                 var v2 = subdividedPositions[triangle.i2];
 
-                var g0 = v0.angleBetween(v1);
-                var g1 = v1.angleBetween(v2);
-                var g2 = v2.angleBetween(v0);
+                var g0 = Cartesian3.angleBetween(v0, v1);
+                var g1 = Cartesian3.angleBetween(v1, v2);
+                var g2 = Cartesian3.angleBetween(v2, v0);
 
                 var max = Math.max(g0, Math.max(g1, g2));
                 var edge;
+                var mid;
 
                 if (max > granularity) {
                     if (g0 === max) {
@@ -616,7 +619,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v0.add(v1).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v0, v1);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -636,7 +641,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v1.add(v2).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v1, v2);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -656,7 +663,9 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            subdividedPositions.push(v2.add(v0).multiplyByScalar(0.5));
+                            mid = Cartesian3.add(v2, v0);
+                            Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                            subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
                             edges[edge] = i;
                         }
@@ -718,7 +727,7 @@ define([
 
             height = defaultValue(height, 0.0);
 
-            if (typeof geometry !== 'undefined' && typeof geometry.attributes !== 'undefined' && typeof geometry.attributes.position !== 'undefined') {
+            if (defined(geometry) && defined(geometry.attributes) && defined(geometry.attributes.position)) {
                 var positions = geometry.attributes.position.values;
                 var length = positions.length;
 
@@ -758,13 +767,13 @@ define([
          * polygon.setPositions(outerRing);
          */
         eliminateHoles : function(outerRing, innerRings, ellipsoid) {
-            if (typeof outerRing === 'undefined') {
+            if (!defined(outerRing)) {
                 throw new DeveloperError('outerRing is required.');
             }
             if (outerRing.length === 0) {
                 throw new DeveloperError('outerRing must not be empty.');
             }
-            if (typeof innerRings === 'undefined') {
+            if (!defined(innerRings)) {
                 throw new DeveloperError('innerRings is required.');
             }
             ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);

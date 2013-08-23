@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -36,6 +37,7 @@ define([
         './PassState'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         destroyObject,
         Color,
@@ -166,16 +168,16 @@ define([
             throw new RuntimeError('The browser does not support WebGL.  Visit http://get.webgl.org.');
         }
 
-        if (typeof canvas === 'undefined') {
+        if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
 
         this._canvas = canvas;
 
-        if (typeof options === 'undefined') {
+        if (!defined(options)) {
             options = {};
         }
-        if (typeof options.alpha === 'undefined') {
+        if (!defined(options.alpha)) {
             options.alpha = false;
         }
 
@@ -1009,7 +1011,7 @@ define([
 
         if (typeof typedArrayOrSizeInBytes === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes;
-        } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength !== 'undefined') {
+        } else if (typeof typedArrayOrSizeInBytes === 'object' && typeof typedArrayOrSizeInBytes.byteLength === 'number') {
             sizeInBytes = typedArrayOrSizeInBytes.byteLength;
         } else {
             throw new DeveloperError('typedArrayOrSizeInBytes must be either a typed array or a number.');
@@ -1114,7 +1116,7 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
+        if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
         }
 
@@ -1262,10 +1264,10 @@ define([
         }
 
         var source = description.source;
-        var width = typeof source !== 'undefined' ? source.width : description.width;
-        var height = typeof source !== 'undefined' ? source.height : description.height;
+        var width = defined(source) ? source.width : description.width;
+        var height = defined(source) ? source.height : description.height;
 
-        if (typeof width === 'undefined' || typeof height === 'undefined') {
+        if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
 
@@ -1497,7 +1499,7 @@ define([
             height = description.height;
         }
 
-        if (typeof width === 'undefined' || typeof height === 'undefined') {
+        if (!defined(width) || !defined(height)) {
             throw new DeveloperError('description requires a source field to create an initialized cube map or width and height fields to create a blank cube map.');
         }
 
@@ -1654,8 +1656,8 @@ define([
     Context.prototype.createRenderbuffer = function(description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var format = defaultValue(description.format, RenderbufferFormat.RGBA4);
-        var width = typeof description.width !== 'undefined' ? description.width : this._canvas.clientWidth;
-        var height = typeof description.height !== 'undefined' ? description.height : this._canvas.clientHeight;
+        var width = defined(description.width) ? description.width : this._canvas.clientWidth;
+        var height = defined(description.height) ? description.height : this._canvas.clientHeight;
 
         var gl = this._gl;
         if (!RenderbufferFormat.validate(format)) {
@@ -1808,7 +1810,7 @@ define([
     Context.prototype.createRenderState = function(renderState) {
         var partialKey = JSON.stringify(renderState);
         var cachedState = renderStateCache[partialKey];
-        if (typeof cachedState !== 'undefined') {
+        if (defined(cachedState)) {
             return cachedState;
         }
 
@@ -1816,7 +1818,7 @@ define([
         var states = new RenderState(this, renderState);
         var fullKey = JSON.stringify(states);
         cachedState = renderStateCache[fullKey];
-        if (typeof cachedState === 'undefined') {
+        if (!defined(cachedState)) {
             states.id = nextRenderStateId++;
 
             cachedState = states;
@@ -1850,7 +1852,7 @@ define([
             wrapT : sampler.wrapT || TextureWrap.CLAMP,
             minificationFilter : sampler.minificationFilter || TextureMinificationFilter.LINEAR,
             magnificationFilter : sampler.magnificationFilter || TextureMagnificationFilter.LINEAR,
-            maximumAnisotropy : (typeof sampler.maximumAnisotropy !== 'undefined') ? sampler.maximumAnisotropy : 1.0
+            maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
         };
 
         if (!TextureWrap.validate(s.wrapS)) {
@@ -1938,7 +1940,7 @@ define([
         var d = clearCommand.depth;
         var s = clearCommand.stencil;
 
-        if (typeof c !== 'undefined') {
+        if (defined(c)) {
             if (!Color.equals(this._clearColor, c)) {
                 Color.clone(c, this._clearColor);
                 gl.clearColor(c.red, c.green, c.blue, c.alpha);
@@ -1946,7 +1948,7 @@ define([
             bitmask |= gl.COLOR_BUFFER_BIT;
         }
 
-        if (typeof d !== 'undefined') {
+        if (defined(d)) {
             if (d !== this._clearDepth) {
                 this._clearDepth = d;
                 gl.clearDepth(d);
@@ -1954,7 +1956,7 @@ define([
             bitmask |= gl.DEPTH_BUFFER_BIT;
         }
 
-        if (typeof s !== 'undefined') {
+        if (defined(s)) {
             if (s !== this._clearStencil) {
                 this._clearStencil = s;
                 gl.clearStencil(s);
@@ -1968,14 +1970,14 @@ define([
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(clearCommand.framebuffer, passState.framebuffer);
 
-        if (typeof framebuffer !== 'undefined') {
+        if (defined(framebuffer)) {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
 
         gl.clear(bitmask);
 
-        if (typeof framebuffer !== 'undefined') {
+        if (defined(framebuffer)) {
             framebuffer._unBind();
         }
     };
@@ -2037,20 +2039,20 @@ define([
      * @memberof Context
      */
     Context.prototype.beginDraw = function(command, passState) {
-        if (typeof command === 'undefined') {
+        if (!defined(command)) {
             throw new DeveloperError('command is required.');
         }
 
-        if (typeof command.shaderProgram === 'undefined') {
+        if (!defined(command.shaderProgram)) {
             throw new DeveloperError('command.shaderProgram is required.');
         }
 
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(command.framebuffer, passState.framebuffer);
         var sp = command.shaderProgram;
-        var rs = (typeof command.renderState !== 'undefined') ? command.renderState : this._defaultRenderState;
+        var rs = (defined(command.renderState)) ? command.renderState : this._defaultRenderState;
 
-        if ((typeof framebuffer !== 'undefined') && rs.depthTest) {
+        if ((defined(framebuffer)) && rs.depthTest) {
             if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment()) {
                 throw new DeveloperError('The depth test can not be enabled (command.renderState.depthTest.enabled) because the framebuffer (command.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
@@ -2060,7 +2062,7 @@ define([
 
         applyRenderState(this, rs, passState);
 
-        if (typeof framebuffer !== 'undefined') {
+        if (defined(framebuffer)) {
             framebuffer._bind();
             this._validateFramebuffer(framebuffer);
         }
@@ -2077,11 +2079,11 @@ define([
      */
     Context.prototype.continueDraw = function(command) {
         var sp = this._currentSp;
-        if (typeof sp === 'undefined') {
+        if (!defined(sp)) {
             throw new DeveloperError('beginDraw must be called before continueDraw.');
         }
 
-        if (typeof command === 'undefined') {
+        if (!defined(command)) {
             throw new DeveloperError('command is required.');
         }
 
@@ -2090,7 +2092,7 @@ define([
             throw new DeveloperError('command.primitiveType is required and must be valid.');
         }
 
-        if (typeof command.vertexArray === 'undefined') {
+        if (!defined(command.vertexArray)) {
             throw new DeveloperError('command.vertexArray is required.');
         }
 
@@ -2099,7 +2101,7 @@ define([
 
         var offset = command.offset;
         var count = command.count;
-        var hasIndexBuffer = (typeof indexBuffer !== 'undefined');
+        var hasIndexBuffer = (defined(indexBuffer));
 
         if (hasIndexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
@@ -2120,9 +2122,9 @@ define([
             va._bind();
 
             if (hasIndexBuffer) {
-                this._gl.drawElements(primitiveType, count, indexBuffer.getIndexDatatype().value, offset);
+                this._gl.drawElements(primitiveType.value, count, indexBuffer.getIndexDatatype().value, offset);
             } else {
-                this._gl.drawArrays(primitiveType, offset, count);
+                this._gl.drawArrays(primitiveType.value, offset, count);
             }
 
             va._unBind();
@@ -2135,7 +2137,7 @@ define([
      * @memberof Context
      */
     Context.prototype.endDraw = function() {
-        if (typeof this._currentFramebuffer !== 'undefined') {
+        if (defined(this._currentFramebuffer)) {
             this._currentFramebuffer._unBind();
             this._currentFramebuffer = undefined;
         }
@@ -2204,13 +2206,13 @@ define([
         for (name in attributes) {
             // Attribute needs to have per-vertex values; not a constant value for all vertices.
             if (attributes.hasOwnProperty(name) &&
-                    typeof attributes[name] !== 'undefined' &&
-                    typeof attributes[name].values !== 'undefined') {
+                    defined(attributes[name]) &&
+                    defined(attributes[name].values)) {
                 names.push(name);
 
-                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
+                if (attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
                     attributes[name].componentDatatype = ComponentDatatype.FLOAT;
-                    attributes[name].values = ComponentDatatype.FLOAT.createTypedArray(attributes[name].values);
+                    attributes[name].values = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, attributes[name].values);
                 }
             }
         }
@@ -2274,7 +2276,7 @@ define([
                 var sizeInBytes = attributes[name].componentDatatype.sizeInBytes;
 
                 views[name] = {
-                    pointer : attributes[name].componentDatatype.createTypedArray(buffer),
+                    pointer : ComponentDatatype.createTypedArray(attributes[name].componentDatatype, buffer),
                     index : offsetsInBytes[name] / sizeInBytes, // Offset in ComponentType
                     strideInComponentType : vertexSizeInBytes / sizeInBytes
                 };
@@ -2375,28 +2377,28 @@ define([
         var bufferUsage = defaultValue(ca.bufferUsage, BufferUsage.DYNAMIC_DRAW);
 
         var attributeIndices = defaultValue(ca.attributeIndices, defaultValue.EMPTY_OBJECT);
-        var interleave = (typeof ca.vertexLayout !== 'undefined') && (ca.vertexLayout === VertexLayout.INTERLEAVED);
+        var interleave = (defined(ca.vertexLayout)) && (ca.vertexLayout === VertexLayout.INTERLEAVED);
         var createdVAAttributes = ca.vertexArrayAttributes;
 
         var name;
         var attribute;
         var vertexBuffer;
-        var vaAttributes = (typeof createdVAAttributes !== 'undefined') ? createdVAAttributes : [];
+        var vaAttributes = (defined(createdVAAttributes)) ? createdVAAttributes : [];
         var attributes = geometry.attributes;
 
         if (interleave) {
             // Use a single vertex buffer with interleaved vertices.
             var interleavedAttributes = interleaveAttributes(attributes);
-            if (typeof interleavedAttributes !== 'undefined') {
+            if (defined(interleavedAttributes)) {
                 vertexBuffer = this.createVertexBuffer(interleavedAttributes.buffer, bufferUsage);
                 var offsetsInBytes = interleavedAttributes.offsetsInBytes;
                 var strideInBytes = interleavedAttributes.vertexSizeInBytes;
 
                 for (name in attributes) {
-                    if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
+                    if (attributes.hasOwnProperty(name) && defined(attributes[name])) {
                         attribute = attributes[name];
 
-                        if (typeof attribute.values !== 'undefined') {
+                        if (defined(attribute.values)) {
                             // Common case: per-vertex attributes
                             vaAttributes.push({
                                 index : attributeIndices[name],
@@ -2422,17 +2424,17 @@ define([
         } else {
             // One vertex buffer per attribute.
             for (name in attributes) {
-                if (attributes.hasOwnProperty(name) && typeof attributes[name] !== 'undefined') {
+                if (attributes.hasOwnProperty(name) && defined(attributes[name])) {
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;
-                    if (componentDatatype === ComponentDatatype.DOUBLE) {
+                    if (componentDatatype.value === ComponentDatatype.DOUBLE.value) {
                         componentDatatype = ComponentDatatype.FLOAT;
                     }
 
                     vertexBuffer = undefined;
-                    if (typeof attribute.values !== 'undefined') {
-                        vertexBuffer = this.createVertexBuffer(componentDatatype.createTypedArray(attribute.values), bufferUsage);
+                    if (defined(attribute.values)) {
+                        vertexBuffer = this.createVertexBuffer(ComponentDatatype.createTypedArray(componentDatatype, attribute.values), bufferUsage);
                     }
 
                     vaAttributes.push({
@@ -2449,7 +2451,7 @@ define([
 
         var indexBuffer;
         var indices = geometry.indices;
-        if (typeof indices !== 'undefined') {
+        if (defined(indices)) {
             if ((Geometry.computeNumberOfVertices(geometry) > CesiumMath.SIXTY_FOUR_KILOBYTES) && this.getElementIndexUint()) {
                 indexBuffer = this.createIndexBuffer(new Uint32Array(indices), bufferUsage, IndexDatatype.UNSIGNED_INT);
             } else{
@@ -2488,7 +2490,7 @@ define([
      * @see Context#createPickId
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
-        if (typeof pickColor === 'undefined') {
+        if (!defined(pickColor)) {
             throw new DeveloperError('pickColor is required.');
         }
 
@@ -2526,7 +2528,7 @@ define([
      * this._pickId = context.createPickId(this);
      */
     Context.prototype.createPickId = function(object) {
-        if (typeof object === 'undefined') {
+        if (!defined(object)) {
             throw new DeveloperError('object is required.');
         }
 
@@ -2553,7 +2555,7 @@ define([
         for (var property in cache) {
             if (cache.hasOwnProperty(property)) {
                 var propertyValue = cache[property];
-                if (typeof propertyValue.destroy !== 'undefined') {
+                if (defined(propertyValue.destroy)) {
                     propertyValue.destroy();
                 }
             }

@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/combine',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -14,7 +15,7 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         './Material',
         './SceneMode',
         '../Shaders/EllipsoidVS',
@@ -24,6 +25,7 @@ define([
         Cartesian3,
         Cartesian4,
         combine,
+        defined,
         DeveloperError,
         destroyObject,
         Matrix4,
@@ -34,7 +36,7 @@ define([
         BufferUsage,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         Material,
         SceneMode,
         EllipsoidVS,
@@ -195,13 +197,13 @@ define([
     function getVertexArray(context) {
         var vertexArray = context.cache.ellipsoidPrimitive_vertexArray;
 
-        if (typeof vertexArray !== 'undefined') {
+        if (defined(vertexArray)) {
             return vertexArray;
         }
 
-        var geometry = BoxGeometry.fromDimensions({
+        var geometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
             dimensions : new Cartesian3(2.0, 2.0, 2.0)
-        });
+        }));
 
         vertexArray = context.createVertexArrayFromGeometry({
             geometry: geometry,
@@ -221,16 +223,16 @@ define([
     EllipsoidPrimitive.prototype.update = function(context, frameState, commandList) {
         if (!this.show ||
             (frameState.mode !== SceneMode.SCENE3D) ||
-            (typeof this.center === 'undefined') ||
-            (typeof this.radii === 'undefined')) {
+            (!defined(this.center)) ||
+            (!defined(this.radii))) {
             return;
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
-        if (typeof this._rs === 'undefined') {
+        if (!defined(this._rs)) {
             this._rs = context.createRenderState({
                 // Cull front faces - not back faces - so the ellipsoid doesn't
                 // disappear if the viewer enters the bounding box.
@@ -251,7 +253,7 @@ define([
             });
         }
 
-        if (typeof this._va === 'undefined') {
+        if (!defined(this._va)) {
             this._va = getVertexArray(context);
         }
 
@@ -281,11 +283,7 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged) {
-                var colorFS =
-                    '#line 0\n' +
-                    this.material.shaderSource +
-                    '#line 0\n' +
-                    EllipsoidFS;
+                var colorFS = createShaderSource({ sources : [this.material.shaderSource, EllipsoidFS] });
 
                 this._sp = context.getShaderCache().replaceShaderProgram(this._sp, EllipsoidVS, colorFS, attributeIndices);
 
@@ -306,17 +304,16 @@ define([
         if (frameState.passes.pick) {
             var pickCommand = this._pickCommand;
 
-            if (typeof this._pickId === 'undefined') {
+            if (!defined(this._pickId)) {
                 this._pickId = context.createPickId(this);
             }
 
             // Recompile shader when material changes
-            if (materialChanged || typeof this._pickSP === 'undefined') {
-                var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
-                    this.material.shaderSource +
-                    '#line 0\n' +
-                    EllipsoidFS, 'uniform');
+            if (materialChanged || !defined(this._pickSP)) {
+                var pickFS = createShaderSource({
+                    sources : [this.material.shaderSource, EllipsoidFS],
+                    pickColorQualifier : 'uniform'
+                });
 
                 this._pickSP = context.getShaderCache().replaceShaderProgram(this._pickSP, EllipsoidVS, pickFS, attributeIndices);
 

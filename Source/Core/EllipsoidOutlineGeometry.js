@@ -1,0 +1,213 @@
+/*global define*/
+define([
+        './defaultValue',
+        './DeveloperError',
+        './Cartesian3',
+        './Math',
+        './Ellipsoid',
+        './ComponentDatatype',
+        './IndexDatatype',
+        './PrimitiveType',
+        './BoundingSphere',
+        './Geometry',
+        './GeometryAttribute',
+        './GeometryAttributes'
+    ], function(
+        defaultValue,
+        DeveloperError,
+        Cartesian3,
+        CesiumMath,
+        Ellipsoid,
+        ComponentDatatype,
+        IndexDatatype,
+        PrimitiveType,
+        BoundingSphere,
+        Geometry,
+        GeometryAttribute,
+        GeometryAttributes) {
+    "use strict";
+
+    var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
+    var cos = Math.cos;
+    var sin = Math.sin;
+
+    /**
+     * A description of the outline of an ellipsoid centered at the origin.
+     *
+     * @alias EllipsoidOutlineGeometry
+     * @constructor
+     *
+     * @param {Cartesian3} [options.radii=Cartesian3(1.0, 1.0, 1.0)] The radii of the ellipsoid in the x, y, and z directions.
+     * @param {Number} [options.stackPartitions=10] The count of stacks for the ellipsoid (1 greater than the number of parallel lines).
+     * @param {Number} [options.slicePartitions=8] The count of slices for the ellipsoid (Equal to the number of radial lines).
+     * @param {Number} [options.subdivisions=128] The number of points per line, determining the granularity of the curvature .
+     *
+     * @exception {DeveloperError} options.stackPartitions must be greater than or equal to one.
+     * @exception {DeveloperError} options.slicePartitions must be greater than or equal to zero.
+     * @exception {DeveloperError} options.subdivisions must be greater than or equal to zero.
+     *
+     * @example
+     * var ellipsoid = new EllipsoidOutlineGeometry({
+     *   radii : new Cartesian3(1000000.0, 500000.0, 500000.0),
+     *   stackPartitions: 6,
+     *   slicePartitions: 5
+     * });
+     * var geometry = EllipsoidOutlineGeometry.createGeometry(ellipsoid);
+     */
+    var EllipsoidOutlineGeometry = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var radii = defaultValue(options.radii, defaultRadii);
+        var stackPartitions = defaultValue(options.stackPartitions, 10);
+        var slicePartitions = defaultValue(options.slicePartitions, 8);
+        var subdivisions = defaultValue(options.subdivisions, 128);
+
+        if (stackPartitions < 1) {
+            throw new DeveloperError('options.stackPartitions cannot be less than 1');
+        }
+
+        if (slicePartitions < 0) {
+            throw new DeveloperError('options.slicePartitions cannot be less than 0');
+        }
+
+        if (subdivisions < 0) {
+            throw new DeveloperError('options.subdivisions must be greater than or equal to zero.');
+        }
+
+        this._radii = Cartesian3.clone(radii);
+        this._stackPartitions = stackPartitions;
+        this._slicePartitions = slicePartitions;
+        this._subdivisions = subdivisions;
+        this._workerName = 'createEllipsoidOutlineGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of an outline of an ellipsoid, including its vertices, indices, and a bounding sphere.
+     * @memberof EllipsoidOutlineGeometry
+     *
+     * @param {EllipsoidOutlineGeometry} ellipsoidGeometry A description of the ellipsoid outline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    EllipsoidOutlineGeometry.createGeometry = function(ellipsoidGeometry) {
+        var radii = ellipsoidGeometry._radii;
+        var ellipsoid = Ellipsoid.fromCartesian3(radii);
+        var stackPartitions = ellipsoidGeometry._stackPartitions;
+        var slicePartitions = ellipsoidGeometry._slicePartitions;
+        var subdivisions = ellipsoidGeometry._subdivisions;
+
+        var indicesSize = subdivisions * (stackPartitions + slicePartitions - 1);
+        var positionSize = indicesSize - slicePartitions + 2;
+        var positions = new Float64Array(positionSize * 3);
+        var indices = IndexDatatype.createTypedArray(positionSize, indicesSize * 2);
+
+        var i;
+        var j;
+        var theta;
+        var phi;
+        var cosPhi;
+        var sinPhi;
+        var index = 0;
+
+        var cosTheta = new Array(subdivisions);
+        var sinTheta = new Array(subdivisions);
+        for (i = 0; i < subdivisions; i++) {
+            theta = CesiumMath.TWO_PI * i / subdivisions;
+            cosTheta[i] = cos(theta);
+            sinTheta[i] = sin(theta);
+        }
+
+        for (i = 1; i < stackPartitions; i++) {
+            phi = Math.PI * i / stackPartitions;
+            cosPhi = cos(phi);
+            sinPhi = sin(phi);
+
+            for (j = 0; j < subdivisions; j++) {
+                positions[index++] = radii.x * cosTheta[j] * sinPhi;
+                positions[index++] = radii.y * sinTheta[j] * sinPhi;
+                positions[index++] = radii.z * cosPhi;
+            }
+        }
+
+        cosTheta.length = slicePartitions;
+        sinTheta.length = slicePartitions;
+        for (i = 0; i < slicePartitions; i++) {
+            theta = CesiumMath.TWO_PI * i / slicePartitions;
+            cosTheta[i] = cos(theta);
+            sinTheta[i] = sin(theta);
+        }
+
+        positions[index++] = 0;
+        positions[index++] = 0;
+        positions[index++] = radii.z;
+
+        for (i = 1; i < subdivisions; i++) {
+            phi = Math.PI * i / subdivisions;
+            cosPhi = cos(phi);
+            sinPhi = sin(phi);
+
+            for (j = 0; j < slicePartitions; j++) {
+                positions[index++] = radii.x * cosTheta[j] * sinPhi;
+                positions[index++] = radii.y * sinTheta[j] * sinPhi;
+                positions[index++] = radii.z * cosPhi;
+            }
+        }
+
+        positions[index++] = 0;
+        positions[index++] = 0;
+        positions[index++] = -radii.z;
+
+        index = 0;
+        for (i = 0; i < stackPartitions - 1; ++i) {
+            var topRowOffset = (i * subdivisions);
+            for (j = 0; j < subdivisions - 1; ++j) {
+                indices[index++] = topRowOffset + j;
+                indices[index++] = topRowOffset + j + 1;
+            }
+
+            indices[index++] = topRowOffset + subdivisions - 1;
+            indices[index++] = topRowOffset;
+        }
+
+        var sliceOffset = subdivisions * (stackPartitions - 1);
+        for (j = 1; j < slicePartitions + 1; ++j) {
+            indices[index++] = sliceOffset;
+            indices[index++] = sliceOffset + j;
+        }
+
+        for (i = 0; i < subdivisions - 2; ++i) {
+            var topOffset = (i * slicePartitions) + 1 + sliceOffset;
+            var bottomOffset = ((i + 1) * slicePartitions) + 1 + sliceOffset;
+
+            for (j = 0; j < slicePartitions - 1; ++j) {
+                indices[index++] = bottomOffset + j;
+                indices[index++] = topOffset + j;
+            }
+
+            indices[index++] = bottomOffset + slicePartitions - 1;
+            indices[index++] = topOffset + slicePartitions - 1;
+        }
+
+        var lastPosition = positions.length / 3 - 1;
+        for (j = lastPosition - 1; j > lastPosition - slicePartitions - 1; --j) {
+            indices[index++] = lastPosition;
+            indices[index++] = j;
+        }
+
+        var attributes = new GeometryAttributes({
+            position: new GeometryAttribute({
+                componentDatatype : ComponentDatatype.DOUBLE,
+                componentsPerAttribute : 3,
+                values : positions
+            })
+        });
+
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : BoundingSphere.fromEllipsoid(ellipsoid)
+        });
+    };
+
+    return EllipsoidOutlineGeometry;
+});

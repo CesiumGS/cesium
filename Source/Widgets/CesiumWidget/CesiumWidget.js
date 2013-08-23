@@ -6,6 +6,7 @@ define([
         '../../Core/Clock',
         '../../Core/DefaultProxy',
         '../../Core/defaultValue',
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -31,6 +32,7 @@ define([
         Clock,
         DefaultProxy,
         defaultValue,
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -120,7 +122,7 @@ define([
      * });
      */
     var CesiumWidget = function(container, options) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
@@ -174,7 +176,7 @@ define([
 
         //Set the base imagery layer
         var imageryProvider = options.imageryProvider;
-        if (typeof imageryProvider === 'undefined') {
+        if (!defined(imageryProvider)) {
             imageryProvider = new BingMapsImageryProvider({
                 url : 'http://dev.virtualearth.net',
                 // Some versions of Safari support WebGL, but don't correctly implement
@@ -188,7 +190,7 @@ define([
         }
 
         //Set the terrain provider if one is provided.
-        if (typeof options.terrainProvider !== 'undefined') {
+        if (defined(options.terrainProvider)) {
             centralBody.terrainProvider = options.terrainProvider;
         }
 
@@ -397,7 +399,7 @@ define([
 
         if (canRender) {
             var frustum = this._scene.getCamera().frustum;
-            if (typeof frustum.aspectRatio !== 'undefined') {
+            if (defined(frustum.aspectRatio)) {
                 frustum.aspectRatio = width / height;
             } else {
                 frustum.top = frustum.right * (height / width);

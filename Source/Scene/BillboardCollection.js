@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/defaultValue',
@@ -17,12 +18,14 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/VertexArrayFacade',
+        '../Renderer/createShaderSource',
         './SceneMode',
         './Billboard',
         './HorizontalOrigin',
         '../Shaders/BillboardCollectionVS',
         '../Shaders/BillboardCollectionFS'
     ], function(
+        defined,
         DeveloperError,
         Color,
         defaultValue,
@@ -40,6 +43,7 @@ define([
         CommandLists,
         DrawCommand,
         VertexArrayFacade,
+        createShaderSource,
         SceneMode,
         Billboard,
         HorizontalOrigin,
@@ -370,7 +374,7 @@ define([
      * @see BillboardCollection#get
      */
     BillboardCollection.prototype.contains = function(billboard) {
-        return typeof billboard !== 'undefined' && billboard._billboardCollection === this;
+        return defined(billboard) && billboard._billboardCollection === this;
     };
 
     /**
@@ -404,7 +408,7 @@ define([
      * }
      */
     BillboardCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 
@@ -540,7 +544,7 @@ define([
         var sixteenK = 16 * 1024;
 
         var directionsVertexBuffer = context.cache.billboardCollection_directionsVertexBuffer;
-        if (typeof directionsVertexBuffer !== 'undefined') {
+        if (defined(directionsVertexBuffer)) {
             return directionsVertexBuffer;
         }
 
@@ -571,7 +575,7 @@ define([
         var sixteenK = 16 * 1024;
 
         var indexBuffer = context.cache.billboardCollection_indexBuffer;
-        if (typeof indexBuffer !== 'undefined') {
+        if (defined(indexBuffer)) {
             return indexBuffer;
         }
 
@@ -801,7 +805,7 @@ define([
         var index = billboard.getImageIndex();
         if (index !== -1) {
             var imageRectangle = textureAtlasCoordinates[index];
-            if (typeof imageRectangle === 'undefined') {
+            if (!defined(imageRectangle)) {
                 throw new DeveloperError('Invalid billboard image index: ' + index);
             }
             bottomLeftX = imageRectangle.x;
@@ -871,7 +875,7 @@ define([
             var billboard = billboards[i];
             var position = billboard.getPosition();
             var actualPosition = Billboard._computeActualPosition(position, frameState, modelMatrix);
-            if (typeof actualPosition !== 'undefined') {
+            if (defined(actualPosition)) {
                 billboard._setActualPosition(actualPosition);
 
                 if (recomputeBoundingVolume) {
@@ -950,7 +954,7 @@ define([
      */
     BillboardCollection.prototype.update = function(context, frameState, commandList) {
         var textureAtlas = this._textureAtlas;
-        if (typeof textureAtlas === 'undefined') {
+        if (!defined(textureAtlas)) {
             // Can't write billboard vertices until we have texture coordinates
             // provided by a texture atlas
             return;
@@ -1081,7 +1085,7 @@ define([
             billboardsToUpdate.length = billboardsLength;
         }
 
-        if (typeof this._vaf === 'undefined' || typeof this._vaf.vaByPurpose === 'undefined') {
+        if (!defined(this._vaf) || !defined(this._vaf.vaByPurpose)) {
             return;
         }
 
@@ -1106,7 +1110,7 @@ define([
             var colorList = this._colorCommands;
             commandLists.colorList = colorList;
 
-            if (typeof this._rs === 'undefined') {
+            if (!defined(this._rs)) {
                 this._rs = context.createRenderState({
                     depthTest : {
                         enabled : true
@@ -1115,12 +1119,15 @@ define([
                 });
             }
 
-            if (typeof this._sp === 'undefined' || (this._shaderRotation && !this._compiledShaderRotation)) {
+            if (!defined(this._sp) || (this._shaderRotation && !this._compiledShaderRotation)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
-                        this._sp,
-                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + BillboardCollectionVS,
-                        BillboardCollectionFS,
-                        attributeIndices);
+                    this._sp,
+                    createShaderSource({
+                        defines : [this._shaderRotation ? 'ROTATION' : ''],
+                        sources : [BillboardCollectionVS]
+                    }),
+                    BillboardCollectionFS,
+                    attributeIndices);
                 this._compiledShaderRotation = this._shaderRotation;
             }
 
@@ -1130,7 +1137,7 @@ define([
             colorList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
                 command = colorList[j];
-                if (typeof command === 'undefined') {
+                if (!defined(command)) {
                     command = colorList[j] = new DrawCommand();
                 }
 
@@ -1149,11 +1156,17 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            if (typeof this._spPick === 'undefined' || (this._shaderRotation && !this._compiledShaderRotationPick)) {
+            if (!defined(this._spPick) || (this._shaderRotation && !this._compiledShaderRotationPick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
                         this._spPick,
-                        (this._shaderRotation ? '#define ROTATION 1\n' : '') + '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
-                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                        createShaderSource({
+                            defines : ['RENDER_FOR_PICK', this._shaderRotation ? 'ROTATION' : ''],
+                            sources : [BillboardCollectionVS]
+                        }),
+                        createShaderSource({
+                            defines : ['RENDER_FOR_PICK'],
+                            sources : [BillboardCollectionFS]
+                        }),
                         attributeIndices);
                 this._compiledShaderRotation = this._shaderRotationPick;
             }
@@ -1164,7 +1177,7 @@ define([
             pickList.length = vaLength;
             for (j = 0; j < vaLength; ++j) {
                 command = pickList[j];
-                if (typeof command === 'undefined') {
+                if (!defined(command)) {
                     command = pickList[j] = new DrawCommand();
                 }
 

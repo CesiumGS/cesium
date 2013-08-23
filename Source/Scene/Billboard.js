@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Color',
         '../Core/Cartesian2',
@@ -12,6 +13,7 @@ define([
         './SceneTransforms'
     ], function(
         defaultValue,
+        defined,
         DeveloperError,
         Color,
         Cartesian2,
@@ -96,14 +98,14 @@ define([
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
-        if (typeof billboardCollection !== 'undefined') {
+        if (defined(billboardCollection)) {
             billboardCollection._updateBillboard(billboard, propertyChanged);
             billboard._dirty = true;
         }
     }
 
     Billboard.prototype.getPickId = function(context) {
-        if (typeof this._pickId === 'undefined') {
+        if (!defined(this._pickId)) {
             this._pickId = context.createPickId(defaultValue(this._pickIdThis, this));
         }
 
@@ -137,7 +139,7 @@ define([
      * @see Billboard#getShow
      */
     Billboard.prototype.setShow = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -188,7 +190,7 @@ define([
      * });
      */
     Billboard.prototype.setPosition = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -252,7 +254,7 @@ define([
      * @see Label#setPixelOffset
      */
     Billboard.prototype.setPixelOffset = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -310,7 +312,7 @@ define([
      * @see Billboard#getEyeOffset
      */
     Billboard.prototype.setEyeOffset = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -357,7 +359,7 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setHorizontalOrigin = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -403,7 +405,7 @@ define([
      * b.setVerticalOrigin(VerticalOrigin.BOTTOM);
      */
     Billboard.prototype.setVerticalOrigin = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -448,7 +450,7 @@ define([
      * @see Billboard#setImageIndex
      */
     Billboard.prototype.setScale = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -547,7 +549,7 @@ define([
      * });
      */
     Billboard.prototype.setColor = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -587,7 +589,7 @@ define([
      * @see Billboard#setAlignedAxis
      */
     Billboard.prototype.setRotation = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -642,7 +644,7 @@ define([
      * billboard.setAlignedAxis(Cartesian3.ZERO);
      */
     Billboard.prototype.setAlignedAxis = function(value) {
-        if (typeof value === 'undefined') {
+        if (!defined(value)) {
             throw new DeveloperError('value is required.');
         }
 
@@ -781,15 +783,15 @@ define([
      */
     Billboard.prototype.computeScreenSpacePosition = function(context, frameState) {
         var billboardCollection = this._billboardCollection;
-        if (typeof billboardCollection === 'undefined') {
+        if (!defined(billboardCollection)) {
             throw new DeveloperError('Billboard must be in a collection.  Was it removed?');
         }
 
-        if (typeof context === 'undefined') {
+        if (!defined(context)) {
             throw new DeveloperError('context is required.');
         }
 
-        if (typeof frameState === 'undefined') {
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
 
@@ -809,7 +811,7 @@ define([
      */
     Billboard.prototype.equals = function(other) {
         return this === other ||
-               typeof other !== 'undefined' &&
+               defined(other) &&
                this._show === other._show &&
                this._imageIndex === other._imageIndex &&
                this._scale === other._scale &&

@@ -3,6 +3,7 @@ define([
         '../Core/Math',
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/GeographicProjection',
         '../Core/Ellipsoid',
@@ -40,6 +41,7 @@ define([
         CesiumMath,
         Color,
         defaultValue,
+        defined,
         destroyObject,
         GeographicProjection,
         Ellipsoid,
@@ -102,21 +104,17 @@ define([
      */
     var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
-        var creditDisplay;
-        if (typeof creditContainer !== 'undefined') {
-            creditDisplay = new CreditDisplay(creditContainer);
-        } else {
-            var creditDiv = document.createElement('div');
-            creditDiv.style.position = 'absolute';
-            creditDiv.style.bottom = '0';
-            creditDiv.style['text-shadow'] = '0px 0px 2px #000000';
-            creditDiv.style.color = '#ffffff';
-            creditDiv.style['font-size'] = '10pt';
-            creditDiv.style['padding-right'] = '5px';
-            canvas.parentNode.appendChild(creditDiv);
-            creditDisplay = new CreditDisplay(creditDiv);
+        if (!defined(creditContainer)) {
+            creditContainer = document.createElement('div');
+            creditContainer.style.position = 'absolute';
+            creditContainer.style.bottom = '0';
+            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style.color = '#ffffff';
+            creditContainer.style['font-size'] = '10pt';
+            creditContainer.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(creditContainer);
         }
-        this._frameState = new FrameState(creditDisplay);
+        this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
@@ -348,7 +346,7 @@ define([
         // TODO: The occluder is the top-level central body. When we add
         //       support for multiple central bodies, this should be the closest one.
         var cb = scene._primitives.getCentralBody();
-        if (scene.mode === SceneMode.SCENE3D && typeof cb !== 'undefined') {
+        if (scene.mode === SceneMode.SCENE3D && defined(cb)) {
             var ellipsoid = cb.getEllipsoid();
             var occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, ellipsoid.getMinimumRadius()), camera.getPositionWC());
             frameState.occluder = occluder;
@@ -369,7 +367,7 @@ define([
             }
 
             var frustumCommands = frustumCommandsList[m];
-            if (typeof frustumCommands === 'undefined') {
+            if (!defined(frustumCommands)) {
                 frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
             } else {
                 frustumCommands.near = curNear;
@@ -458,12 +456,12 @@ define([
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
-                if (typeof boundingVolume !== 'undefined') {
+                if (defined(boundingVolume)) {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);               //TODO: Remove this allocation.
                     if (command.cull &&
                             ((cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE) ||
-                             (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV)))) {
+                             (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV)))) {
                         continue;
                     }
 
@@ -505,22 +503,22 @@ define([
     }
 
     function executeCommand(command, scene, context, passState) {
-        if ((typeof scene.debugCommandFilter !== 'undefined') && !scene.debugCommandFilter(command)) {
+        if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
 
         command.execute(context, passState);
 
-        if (command.debugShowBoundingVolume && (typeof command.boundingVolume !== 'undefined')) {
+        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
             // Debug code to draw bounding volume for command.  Not optimized!
             // Assumes bounding volume is a bounding sphere.
 
-            if (typeof scene._debugSphere === 'undefined') {
-                var geometry = new EllipsoidGeometry({
+            if (!defined(scene._debugSphere)) {
+                var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                     ellipsoid : Ellipsoid.UNIT_SPHERE,
                     numberOfPartitions : 20,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                });
+                }));
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : GeometryPipeline.toWireframe(geometry),
@@ -531,7 +529,8 @@ define([
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
                         translucent : false
-                    })
+                    }),
+                    asynchronous : false
                 });
             }
 
@@ -555,23 +554,23 @@ define([
         }
         cullingVolume = scratchCullingVolume;
 
-        return ((typeof command !== 'undefined') &&
-                 ((typeof command.boundingVolume === 'undefined') ||
+        return ((defined(command)) &&
+                 ((!defined(command.boundingVolume)) ||
                   !command.cull ||
                   ((cullingVolume.getVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                   (typeof occluder === 'undefined' || occluder.isBoundingSphereVisible(command.boundingVolume)))));
+                   (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
     }
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
         var context = scene._context;
         var us = context.getUniformState();
 
-        var skyBoxCommand = (frameState.passes.color && typeof scene.skyBox !== 'undefined') ? scene.skyBox.update(context, frameState) : undefined;
-        var skyAtmosphereCommand = (frameState.passes.color && typeof scene.skyAtmosphere !== 'undefined') ? scene.skyAtmosphere.update(context, frameState) : undefined;
-        var sunCommand = (frameState.passes.color && typeof scene.sun !== 'undefined') ? scene.sun.update(context, frameState) : undefined;
+        var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
+        var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
+        var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
         if (sunVisible) {
@@ -579,7 +578,7 @@ define([
         }
 
         var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
+        Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
         if (sunVisible) {
@@ -592,15 +591,15 @@ define([
         frustum.far = camera.frustum.far;
         us.updateFrustum(frustum);
 
-        if (typeof skyBoxCommand !== 'undefined') {
+        if (defined(skyBoxCommand)) {
             executeCommand(skyBoxCommand, scene, context, passState);
         }
 
-        if (typeof skyAtmosphereCommand !== 'undefined') {
+        if (defined(skyAtmosphereCommand)) {
             executeCommand(skyAtmosphereCommand, scene, context, passState);
         }
 
-        if (typeof sunCommand !== 'undefined' && sunVisible) {
+        if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
             scene._sunPostProcess.execute(context);
             passState.framebuffer = undefined;
@@ -662,7 +661,7 @@ define([
      * @memberof Scene
      */
     Scene.prototype.render = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             time = new JulianDate();
         }
 
@@ -685,7 +684,8 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
-        executeCommands(this, passState);
+
+        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
     };
@@ -768,6 +768,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
      * DOC_TBA
@@ -778,7 +779,7 @@ define([
         var primitives = this._primitives;
         var frameState = this._frameState;
 
-        if (typeof this._pickFramebuffer === 'undefined') {
+        if (!defined(this._pickFramebuffer)) {
             this._pickFramebuffer = context.createPickFramebuffer();
         }
 
@@ -795,7 +796,7 @@ define([
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
+        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         return this._pickFramebuffer.end(scratchRectangle);
     };
 

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
         '../Core/GeometryPipeline',
@@ -10,11 +11,13 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/CullFace',
         '../Renderer/BlendingState',
+        '../Renderer/createShaderSource',
         '../Scene/SceneMode',
         '../Shaders/SkyAtmosphereVS',
         '../Shaders/SkyAtmosphereFS'
     ], function(
         defaultValue,
+        defined,
         EllipsoidGeometry,
         destroyObject,
         GeometryPipeline,
@@ -24,6 +27,7 @@ define([
         DrawCommand,
         CullFace,
         BlendingState,
+        createShaderSource,
         SceneMode,
         SkyAtmosphereVS,
         SkyAtmosphereFS) {
@@ -131,11 +135,12 @@ define([
 
         var command = this._command;
 
-        if (typeof command.vertexArray === 'undefined') {
-            var geometry = new EllipsoidGeometry({
+        if (!defined(command.vertexArray)) {
+            var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : this._ellipsoid.getRadii().multiplyByScalar(1.025),
-                numberOfPartitions : 60
-            });
+                slicePartitions : 256,
+                stackPartitions : 256
+            }));
             command.vertexArray = context.createVertexArrayFromGeometry({
                 geometry : geometry,
                 attributeIndices : GeometryPipeline.createAttributeIndices(geometry),
@@ -150,21 +155,18 @@ define([
                 blending : BlendingState.ALPHA_BLEND
             });
 
-            var vs;
-            var fs;
             var shaderCache = context.getShaderCache();
+            var vs = createShaderSource({
+                defines : ['SKY_FROM_SPACE'],
+                sources : [SkyAtmosphereVS]
+            });
+            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
 
-            vs = '#define SKY_FROM_SPACE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-            fs = '#line 0\n' +
-                 SkyAtmosphereFS;
-            this._spSkyFromSpace = shaderCache.getShaderProgram(vs, fs);
-
-            vs = '#define SKY_FROM_ATMOSPHERE\n' +
-                 '#line 0\n' +
-                 SkyAtmosphereVS;
-            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, fs);
+            vs = createShaderSource({
+                defines : ['SKY_FROM_ATMOSPHERE'],
+                sources : [SkyAtmosphereVS]
+            });
+            this._spSkyFromAtmosphere = shaderCache.getShaderProgram(vs, SkyAtmosphereFS);
         }
 
         var cameraPosition = frameState.camera.getPositionWC();

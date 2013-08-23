@@ -3,11 +3,13 @@ defineSuite([
          'Scene/HeightmapTerrainData',
          'Scene/GeographicTilingScheme',
          'Scene/TerrainData',
+         'Core/defined',
          'ThirdParty/when'
      ], function(
          HeightmapTerrainData,
          GeographicTilingScheme,
          TerrainData,
+         defined,
          when) {
      "use strict";
      /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -156,7 +158,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -181,7 +183,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -210,7 +212,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -239,7 +241,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -269,7 +271,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -294,7 +296,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {
@@ -323,7 +325,7 @@ defineSuite([
              });
 
              waitsFor(function() {
-                 return typeof upsampled !== 'undefined';
+                 return defined(upsampled);
              }, 'data to be upsampled');
 
              runs(function() {

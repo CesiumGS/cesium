@@ -1,11 +1,13 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         './CustomSensorVolume',
         './RectangularPyramidSensorVolume',
         './SceneMode'
     ], function(
+        defined,
         destroyObject,
         DeveloperError,
         CustomSensorVolume,
@@ -111,7 +113,7 @@ define([
      * @see SensorVolumeCollection#getLength
      */
     SensorVolumeCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 

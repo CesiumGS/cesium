@@ -1,15 +1,9 @@
 /*global defineSuite*/
 defineSuite([
          'Core/CylinderGeometry',
-         'Core/Cartesian3',
-         'Core/Ellipsoid',
-         'Core/Math',
          'Core/VertexFormat'
      ], function(
          CylinderGeometry,
-         Cartesian3,
-         Ellipsoid,
-         CesiumMath,
          VertexFormat) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -86,58 +80,58 @@ defineSuite([
     });
 
     it('computes positions', function() {
-        var m = new CylinderGeometry({
+        var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             length: 1,
             topRadius: 1,
             bottomRadius: 1,
             slices: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('compute all vertex attributes', function() {
-        var m = new CylinderGeometry({
+        var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.ALL,
             length: 1,
             topRadius: 1,
             bottomRadius: 1,
             slices: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.st.values.length).toEqual(2 * 3 * 4);
         expect(m.attributes.normal.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.tangent.values.length).toEqual(3 * 3 * 4);
         expect(m.attributes.binormal.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with topRadius equals 0', function() {
-        var m = new CylinderGeometry({
+        var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             length: 1,
             topRadius: 0,
             bottomRadius: 1,
             slices: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 
     it('computes positions with bottomRadius equals 0', function() {
-        var m = new CylinderGeometry({
+        var m = CylinderGeometry.createGeometry(new CylinderGeometry({
             vertexFormat : VertexFormat.POSITION_ONLY,
             length: 1,
             topRadius: 1,
             bottomRadius: 0,
             slices: 3
-        });
+        }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 3 * 4);
-        expect(m.indices.length).toEqual(10 * 3);
+        expect(m.indices.length).toEqual(8 * 3);
     });
 });

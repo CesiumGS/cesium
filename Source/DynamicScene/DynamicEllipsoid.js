@@ -2,6 +2,7 @@
 define([
         '../Core/TimeInterval',
         '../Core/defaultValue',
+        '../Core/defined',
         './CzmlBoolean',
         './CzmlCartesian3',
         './DynamicProperty',
@@ -9,6 +10,7 @@ define([
     ], function(
         TimeInterval,
         defaultValue,
+        defined,
         CzmlBoolean,
         CzmlCartesian3,
         DynamicProperty,
@@ -70,43 +72,43 @@ define([
      */
     DynamicEllipsoid.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection) {
         var ellipsoidData = packet.ellipsoid;
-        if (typeof ellipsoidData === 'undefined') {
+        if (!defined(ellipsoidData)) {
             return false;
         }
 
         var ellipsoidUpdated = false;
         var ellipsoid = dynamicObject.ellipsoid;
-        ellipsoidUpdated = typeof ellipsoid === 'undefined';
+        ellipsoidUpdated = !defined(ellipsoid);
         if (ellipsoidUpdated) {
             dynamicObject.ellipsoid = ellipsoid = new DynamicEllipsoid();
         }
 
         var interval = ellipsoidData.interval;
-        if (typeof interval !== 'undefined') {
+        if (defined(interval)) {
             interval = TimeInterval.fromIso8601(interval);
         }
 
-        if (typeof ellipsoidData.show !== 'undefined') {
+        if (defined(ellipsoidData.show)) {
             var show = ellipsoid.show;
-            if (typeof show === 'undefined') {
+            if (!defined(show)) {
                 ellipsoid.show = show = new DynamicProperty(CzmlBoolean);
                 ellipsoidUpdated = true;
             }
             show.processCzmlIntervals(ellipsoidData.show, interval);
         }
 
-        if (typeof ellipsoidData.radii !== 'undefined') {
+        if (defined(ellipsoidData.radii)) {
             var radii = ellipsoid.radii;
-            if (typeof radii === 'undefined') {
+            if (!defined(radii)) {
                 ellipsoid.radii = radii = new DynamicProperty(CzmlCartesian3);
                 ellipsoidUpdated = true;
             }
             radii.processCzmlIntervals(ellipsoidData.radii, interval);
         }
 
-        if (typeof ellipsoidData.material !== 'undefined') {
+        if (defined(ellipsoidData.material)) {
             var material = ellipsoid.material;
-            if (typeof material === 'undefined') {
+            if (!defined(material)) {
                 ellipsoid.material = material = new DynamicMaterialProperty();
                 ellipsoidUpdated = true;
             }
@@ -129,10 +131,10 @@ define([
      */
     DynamicEllipsoid.mergeProperties = function(targetObject, objectToMerge) {
         var ellipsoidToMerge = objectToMerge.ellipsoid;
-        if (typeof ellipsoidToMerge !== 'undefined') {
+        if (defined(ellipsoidToMerge)) {
 
             var targetEllipsoid = targetObject.ellipsoid;
-            if (typeof targetEllipsoid === 'undefined') {
+            if (!defined(targetEllipsoid)) {
                 targetObject.ellipsoid = targetEllipsoid = new DynamicEllipsoid();
             }
 

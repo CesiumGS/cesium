@@ -2,6 +2,7 @@
 define([
         '../Core/DeveloperError',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/Color',
         '../Core/destroyObject',
         '../Core/Math',
@@ -16,6 +17,7 @@ define([
     ], function(
         DeveloperError,
         defaultValue,
+        defined,
         Color,
         destroyObject,
         CesiumMath,
@@ -129,6 +131,18 @@ define([
          */
         this.material = defaultValue(options.material, material);
 
+        /**
+         * Determines if the geometry instances will be created and batched on
+         * a web worker.
+         *
+         * @type Boolean
+         *
+         * @default true
+         *
+         * @private
+         */
+        this.asynchronous = defaultValue(options.asynchronous, true);
+
         this._positions = options.positions;
         this._polygonHierarchy = options.polygonHierarchy;
         this._createPrimitive = false;
@@ -171,7 +185,7 @@ define([
      */
     Polygon.prototype.setPositions = function(positions) {
         // positions can be undefined
-        if (typeof positions !== 'undefined' && (positions.length < 3)) {
+        if (defined(positions) && (positions.length < 3)) {
             throw new DeveloperError('At least three positions are required.');
         }
         this._positions = positions;
@@ -237,11 +251,11 @@ define([
      * @private
      */
     Polygon.prototype.update = function(context, frameState, commandList) {
-        if (typeof this.ellipsoid === 'undefined') {
+        if (!defined(this.ellipsoid)) {
             throw new DeveloperError('this.ellipsoid must be defined.');
         }
 
-        if (typeof this.material === 'undefined') {
+        if (!defined(this.material)) {
             throw new DeveloperError('this.material must be defined.');
         }
 
@@ -253,7 +267,7 @@ define([
             return;
         }
 
-        if (!this._createPrimitive && (typeof this._primitive === 'undefined')) {
+        if (!this._createPrimitive && (!defined(this._primitive))) {
             // No positions/hierarchy to draw
             return;
         }
@@ -272,12 +286,12 @@ define([
 
             this._primitive = this._primitive && this._primitive.destroy();
 
-            if ((typeof this._positions === 'undefined') && (typeof this._polygonHierarchy === 'undefined')) {
+            if (!defined(this._positions) && !defined(this._polygonHierarchy)) {
                 return;
             }
 
             var instance;
-            if (typeof this._positions !== 'undefined') {
+            if (defined(this._positions)) {
                 instance = new GeometryInstance({
                     geometry : PolygonGeometry.fromPositions({
                         positions : this._positions,
@@ -307,7 +321,8 @@ define([
                 geometryInstances : instance,
                 appearance : new EllipsoidSurfaceAppearance({
                     aboveGround : (this.height > 0.0)
-                })
+                }),
+                asynchronous : this.asynchronous
             });
         }
 

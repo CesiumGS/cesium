@@ -2,6 +2,7 @@
 define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Math',
@@ -9,6 +10,7 @@ define([
     ], function(
         ComponentDatatype,
         defaultValue,
+        defined,
         destroyObject,
         DeveloperError,
         CesiumMath,
@@ -64,13 +66,13 @@ define([
 
             purpose = attribute.purpose;
             attributesByUsage = attributesByPurposeAndUsage[purpose];
-            if (typeof attributesByUsage === 'undefined') {
+            if (!defined(attributesByUsage)) {
                 attributesByUsage = attributesByPurposeAndUsage[purpose] = {};
             }
 
             usage = attribute.usage.toString();
             attributesForUsage = attributesByUsage[usage];
-            if (typeof attributesForUsage === 'undefined') {
+            if (!defined(attributesForUsage)) {
                 attributesForUsage = attributesByUsage[usage] = [];
             }
 
@@ -92,7 +94,7 @@ define([
                 attributesByUsage = attributesByPurposeAndUsage[purpose];
 
                 var buffersByUsage = this._buffersByPurposeAndUsage[purpose];
-                if (typeof buffersByUsage === 'undefined') {
+                if (!defined(buffersByUsage)) {
                     buffersByUsage = this._buffersByPurposeAndUsage[purpose] = {};
                 }
 
@@ -201,7 +203,7 @@ define([
                 if (uniqueIndex === true) {
                     throw new DeveloperError('Index ' + index + ' is used by more than one attribute.');
                 }
-                if (typeof uniqueIndex !== 'undefined') {
+                if (defined(uniqueIndex)) {
                     if (uniqueIndex[purpose]) {
                         throw new DeveloperError('Index ' + index + ' is used by more than one attribute with the same purpose.');
                     }
@@ -283,7 +285,7 @@ define([
             VertexArrayFacade._resize(buffer, this._size);
 
             var writersForPurpose = this.writers[buffer.purpose];
-            if (typeof writersForPurpose === 'undefined') {
+            if (!defined(writersForPurpose)) {
                 writersForPurpose = this.writers[buffer.purpose] = [];
             }
 
@@ -315,7 +317,7 @@ define([
             var length = views.length;
             for ( var i = 0; i < length; ++i) {
                 var view = views[i];
-                view.view = view.componentDatatype.createArrayBufferView(arrayBuffer, view.offsetInBytes);
+                view.view = ComponentDatatype.createArrayBufferView(view.componentDatatype, arrayBuffer, view.offsetInBytes);
             }
 
             buffer.arrayBuffer = arrayBuffer;
@@ -391,7 +393,7 @@ define([
 
         ///////////////////////////////////////////////////////////////////////
 
-        if (recreateVA || typeof this.vaByPurpose === 'undefined') {
+        if (recreateVA || !defined(this.vaByPurpose)) {
             var buffersByPurposeAndUsage = this._buffersByPurposeAndUsage;
 
             destroyVA(this);
@@ -446,7 +448,7 @@ define([
 
             var vertexBuffer = buffer.vertexBuffer;
             var vertexBufferSizeInBytes = vertexArrayFacade._size * buffer.vertexSizeInBytes;
-            var vertexBufferDefined = typeof vertexBuffer !== 'undefined';
+            var vertexBufferDefined = defined(vertexBuffer);
             if (!vertexBufferDefined || (vertexBuffer.getSizeInBytes() < vertexBufferSizeInBytes)) {
                 if (vertexBufferDefined) {
                     vertexBuffer.destroy();
@@ -529,7 +531,7 @@ define([
 
     function destroyVA(vertexArrayFacade) {
         var vaByPurpose = vertexArrayFacade.vaByPurpose;
-        if (typeof vaByPurpose === 'undefined') {
+        if (!defined(vaByPurpose)) {
             return;
         }
 

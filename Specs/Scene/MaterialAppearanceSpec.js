@@ -42,7 +42,7 @@ defineSuite([
         context = createContext();
         frameState = createFrameState();
 
-        var extent = Extent.fromDegrees(-80.0, 20.0, -70.0, 40.0);
+        var extent = Extent.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new ExtentGeometry({
@@ -52,7 +52,8 @@ defineSuite([
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
-            })
+            }),
+            asynchronous : false
         });
 
         frameState.camera.controller.viewExtent(extent);
