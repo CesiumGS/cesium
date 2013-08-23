@@ -50,6 +50,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Fixed triangulation for polygons that cross the international date line.
+* Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
 
 ### b19 - 2013-08-01
 
