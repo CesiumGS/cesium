@@ -156,6 +156,12 @@
 		<exclude name="**/*.profile.js" />
 	</fileset>
 
+	<fileset dir="${sourceDirectory}" id="cesiumWorkersJsFileSet">
+		<include name="**/*.js" />
+		<exclude name="*.js" />
+		<exclude name="**/*.profile.js" />
+	</fileset>
+
 	<scriptdef name="glslToJavascript" language="javascript" src="${tasksDirectory}/glslToJavaScript.js" manager="bsf" classpathref="javascriptClassPath" loaderref="javascript.loader">
 		<attribute name="minify" />
 		<attribute name="minifystatefile" />
@@ -254,6 +260,46 @@
 		<!-- create combined Cesium.js	-->
 		<antcall target="combineJavaScript.combineCesium" />
 
+		<!-- create combined Cesium.js workers -->
+		<antcall target="combineJavaScript.combineCesiumWorkers" />
+
+		<!-- copy to build folder with copyright header added at the top -->
+		<copy todir="${outputDirectory}">
+			<fileset dir="${combineOutputDirectory}" />
+			<filterchain>
+				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
+			</filterchain>
+		</copy>
+
+		<delete dir="${combineOutputDirectory}" />
+
+		<!-- copy other resources -->
+		<copy todir="${outputDirectory}" includeEmptyDirs="false">
+			<fileset dir="${sourceDirectory}">
+				<exclude name="**/*.js" />
+				<exclude name="**/*.glsl" />
+				<exclude name="**/.gitignore" />
+				<exclude name="**/package.json" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
+		<exec executable="${nodePath}" dir="${sourceDirectory}">
+			<arg value="${rjsPath}" />
+			<arg value="-o" />
+			<arg value="${rjsOptions}" />
+			<arg value="optimize=${optimize}" />
+			<arg value="baseUrl=." />
+			<arg value="skipModuleInsertion=true" />
+			<arg value="name=${relativeAlmondPath}" />
+			<arg value="include=main" />
+			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
+		</exec>
+	</target>
+
+	<target name="combineJavaScript.combineCesiumWorkers" depends="combineJavaScript.combineCesiumWorkers.check"
+			unless="no.combineCesiumWorkers.create">
 		<!-- create cesiumWorkerBootstrapper -->
 		<exec executable="${nodePath}" dir="${sourceDirectory}">
 			<arg value="${rjsPath}" />
@@ -291,45 +337,17 @@
 				</chainedmapper>
 			</mappedresources>
 		</apply>
-
-		<!-- copy to build folder with copyright header added at the top -->
-		<copy todir="${outputDirectory}">
-			<fileset dir="${combineOutputDirectory}" />
-			<filterchain>
-				<concatfilter prepend="${sourceDirectory}/copyrightHeader.js" />
-			</filterchain>
-		</copy>
-
-		<delete dir="${combineOutputDirectory}" />
-
-		<!-- copy other resources -->
-		<copy todir="${outputDirectory}" includeEmptyDirs="false">
-			<fileset dir="${sourceDirectory}">
-				<exclude name="**/*.js" />
-				<exclude name="**/*.glsl" />
-				<exclude name="**/.gitignore" />
-				<exclude name="**/package.json" />
-			</fileset>
-		</copy>
-	</target>
-
-	<target name="combineJavaScript.combineCesium" depends="combineJavaScript.combineCesium.check" unless="no.combineCesium.create">
-		<exec executable="${nodePath}" dir="${sourceDirectory}">
-			<arg value="${rjsPath}" />
-			<arg value="-o" />
-			<arg value="${rjsOptions}" />
-			<arg value="optimize=${optimize}" />
-			<arg value="baseUrl=." />
-			<arg value="skipModuleInsertion=true" />
-			<arg value="name=${relativeAlmondPath}" />
-			<arg value="include=main" />
-			<arg value="out=${relativeCombineOutputDirectory}/Cesium.js" />
-		</exec>
 	</target>
 
 	<target name="combineJavaScript.combineCesium.check">
 		<uptodate property="no.combineCesium.create" targetfile="${outputDirectory}/Cesium.js">
 			<srcfiles refid="cesiumJsFileSet" />
+		</uptodate>
+	</target>
+
+	<target name="combineJavaScript.combineCesiumWorkers.check">
+		<uptodate property="no.combineCesiumWorkers.create" targetfile="${outputDirectory}/Cesium.js">
+			<srcfiles refid="cesiumWorkersJsFileSet" />
 		</uptodate>
 	</target>
 
