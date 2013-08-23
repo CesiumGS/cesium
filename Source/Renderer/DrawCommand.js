@@ -167,7 +167,7 @@ define(function() {
         /**
          * @private
          *
-         * Used for counting the number of frustums a command overlaps.
+         * Used for to implement {@see Scene.debugShowFrustums}.
          */
         this.debugOverlappingFrustums = 0;
     };

@@ -245,14 +245,8 @@ define([
         /**
          * DOC_TBA
          */
-        this.debugShowFrustums = true;
-//        this.debugShowFrustums = false;
-
-        /**
-         * DOC_TBA
-         */
-        this.debugComputeFrustumsPerCommand = true;
-//        this.debugShowFrustumsPerCommand = false;
+//        this.debugShowFrustums = true;
+        this.debugShowFrustums = false;
 
         this._debugFrustumsPerCommand = {
             totalCommands : 0,
@@ -420,34 +414,17 @@ define([
 
             if (scene.debugShowFrustums) {
                 command.debugOverlappingFrustums |= (1 << i);
+                ++frustumCount;
             }
-
-            ++frustumCount;
 
             if (command.executeInClosestFrustum) {
                 break;
             }
         }
 
-        if (scene.debugComputeFrustumsPerCommand) {
+        if (scene.debugShowFrustums) {
             ++scene._debugFrustumsPerCommand.totalCommands;
             ++scene._debugFrustumsPerCommand.commandsInFrustums[frustumCount];
-        }
-    }
-
-// TODO: remove this function?
-    function insertIntoAllBins(scene, command) {
-        var frustumCommandsList = scene._frustumCommandsList;
-        var length = frustumCommandsList.length;
-        for (var i = 0; i < length; ++i) {
-            var frustumCommands = frustumCommandsList[i];
-
-            // PERFORMANCE_IDEA: sort bins
-            frustumCommands.commands[frustumCommands.index++] = command;
-
-            if (command.executeInClosestFrustum) {
-                break;
-            }
         }
     }
 
@@ -462,7 +439,7 @@ define([
         var direction = camera.getDirectionWC();
         var position = camera.getPositionWC();
 
-        if (scene.debugComputeFrustumsPerCommand) {
+        if (scene.debugShowFrustums) {
             scene._debugFrustumsPerCommand.totalCommands = 0;
             scene._debugFrustumsPerCommand.commandsInFrustums = [0, 0, 0, 0];
         }
@@ -508,15 +485,16 @@ define([
                     distances = transformedBV.getPlaneDistances(position, direction, distances);
                     near = Math.min(near, distances.start);
                     far = Math.max(far, distances.stop);
-
-                    insertIntoBin(scene, command, distances);
                 } else {
                     // Clear commands don't need a bounding volume - just add the clear to all frustums.
                     // If another command has no bounding volume, though, we need to use the camera's
                     // worst-case near and far planes to avoid clipping something important.
+                    distances.start = camera.frustum.near;
+                    distances.stop = camera.frustum.far;
                     undefBV = !(command instanceof ClearCommand);
-                    insertIntoAllBins(scene, command);
                 }
+
+                insertIntoBin(scene, command, distances);
             }
         }
 
@@ -562,6 +540,28 @@ define([
         return renamedFS + '\n' + pickMain;
     }
 
+    function executeFrustumDebugCommand(command, context, passState) {
+        if (defined(command.shaderProgram)) {
+            // Replace shader for frustum visualization
+            var sp = command.shaderProgram;
+            var attributeLocations = {};
+            var attributes = sp.getVertexAttributes();
+            for (var a in attributes) {
+                if (attributes.hasOwnProperty(a)) {
+                    attributeLocations[a] = attributes[a].index;
+                }
+            }
+
+            command.shaderProgram = context.getShaderCache().getShaderProgram(
+                sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), attributeLocations);
+
+            command.execute(context, passState);
+
+            command.shaderProgram.release();
+            command.shaderProgram = sp;
+        }
+    }
+
     function executeCommand(command, scene, context, passState) {
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
@@ -570,25 +570,7 @@ define([
         if (!scene.debugShowFrustums) {
             command.execute(context, passState);
         } else {
-            if (defined(command.shaderProgram)) {
-                // Replace shader for frustum visualization
-                var sp = command.shaderProgram;
-                var attributeLocations = {};
-                var attributes = sp.getVertexAttributes();
-                for (var a in attributes) {
-                    if (attributes.hasOwnProperty(a)) {
-                        attributeLocations[a] = attributes[a].index;
-                    }
-                }
-
-                command.shaderProgram = context.getShaderCache().getShaderProgram(
-                    sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), sp.attributeLocations);
-
-                command.execute(context, passState);
-
-                command.shaderProgram.release();
-                command.shaderProgram = sp;
-            }
+            executeFrustumDebugCommand(command, context, passState);
         }
 
         if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
