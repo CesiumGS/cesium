@@ -33,15 +33,11 @@ defineSuite(['DynamicScene/KmlDataSource',
 
     var parser = new DOMParser();
 
-    function crsFunction(coordinates) {
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-    }
-
     function coordinatesArrayToCartesianArray(coordinates) {
         var positions = new Array(coordinates.length);
         for ( var i = 0; i < coordinates.length; i++) {
-            positions[i] = crsFunction(coordinates[i]);
+            var cartographic = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1], coordinates[i][2]);
+            positions[i] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
         }
         return positions;
     }
@@ -134,6 +130,44 @@ defineSuite(['DynamicScene/KmlDataSource',
         var billboard = objects[0].billboard;
         expect(billboard.scale.getValue()).toEqual(2.0);
         expect(billboard.image.getValue()).toEqual('http://test.invalid');
+    });
+
+    it('processPlacemark throws error with invalid geometry', function() {
+        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Invalid>\
+                <coordinates> </coordinates>\
+              </Invalid>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(placemarkKml);
+        }).toThrow();
+    });
+
+    it('processMultiGeometry throws error with invalid geometry', function() {
+        var placemarkKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <MultiGeometry>\
+              <Invalid>\
+                <coordinates> </coordinates>\
+              </Invalid>\
+            </MultiGeometry>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(placemarkKml);
+        }).toThrow();
     });
 
     it('handles Point Geometry', function() {
