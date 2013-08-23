@@ -96,7 +96,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('toolbar');
         
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             primitives.removeAll();
             addLabel(scene, ellipsoid);
@@ -106,7 +106,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             primitives.removeAll();
             setLabelFont(scene, ellipsoid);
@@ -116,7 +116,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             primitives.removeAll();
             setLabelProperties(scene, ellipsoid);
@@ -126,7 +126,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             primitives.removeAll();
             addLabelsInReferenceFrame(scene, ellipsoid);
