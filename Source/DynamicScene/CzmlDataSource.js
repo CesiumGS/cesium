@@ -9,6 +9,7 @@ define([
         '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
@@ -64,6 +65,7 @@ define([
         createGuid,
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         Event,
@@ -194,7 +196,7 @@ define([
         var tmp = scratchCartesian;
         var cartographic = czmlInterval.cartographicRadians;
         if (defined(cartographic)) {
-            if (cartographic.length > 3) {
+            if (cartographic.length === 3) {
                 scratchCartographic.longitude = cartographic[0];
                 scratchCartographic.latitude = cartographic[1];
                 scratchCartographic.height = cartographic[2];
@@ -204,9 +206,9 @@ define([
                 len = cartographic.length;
                 result = new Array(len);
                 for (i = 0; i < len; i += 4) {
-                    scratchCartographic.longitude = cartographic[i + 1];
-                    scratchCartographic.latitude = cartographic[i + 2];
-                    scratchCartographic.height = cartographic[i + 3];
+                    scratchCartographic.longitude = cartographic[i + 0];
+                    scratchCartographic.latitude = cartographic[i + 1];
+                    scratchCartographic.height = cartographic[i + 2];
                     Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
 
                     result[i] = cartographic[i];
@@ -215,34 +217,37 @@ define([
                     result[i + 3] = tmp.z;
                 }
             }
+            return result;
+        }
+
+        var cartographicDegrees = czmlInterval.cartographicDegrees;
+        if (!defined(cartographicDegrees)) {
+            return undefined;
+        }
+
+        if (cartographicDegrees.length > 3) {
+            scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
+            scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
+            scratchCartographic.height = cartographicDegrees[2];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+            result = [tmp.x, tmp.y, tmp.z];
         } else {
-            var cartographicDegrees = czmlInterval.cartographicDegrees;
-            if (!defined(cartographicDegrees)) {
-                return undefined;
-            }
-
-            if (cartographicDegrees.length > 3) {
-                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
-                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
-                scratchCartographic.height = cartographicDegrees[2];
+            len = cartographicDegrees.length;
+            result = new Array(len);
+            for (i = 0; i < len; i += 4) {
+                scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
+                scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
+                scratchCartographic.height = cartographicDegrees[i + 3];
                 Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
-                result = [tmp.x, tmp.y, tmp.z];
-            } else {
-                len = cartographicDegrees.length;
-                result = new Array(len);
-                for (i = 0; i < len; i += 4) {
-                    scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
-                    scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
-                    scratchCartographic.height = cartographicDegrees[i + 3];
-                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
 
-                    result[i] = cartographicDegrees[i];
-                    result[i + 1] = tmp.x;
-                    result[i + 2] = tmp.y;
-                    result[i + 3] = tmp.z;
-                }
+                result[i] = cartographicDegrees[i];
+                result[i + 1] = tmp.x;
+                result[i + 2] = tmp.y;
+                result[i + 3] = tmp.z;
             }
         }
+
+        return result;
     }
 
     function unwrapInterval(type, czmlInterval, sourceUri) {
@@ -362,7 +367,7 @@ define([
             } else if (property instanceof CompositeProperty) {
                 //If the collection was already a CompositeProperty, use it.
                 combinedInterval.data = new ConstantProperty(combinedInterval.data);
-                property.intervals.add(combinedInterval);
+                property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositeProperty but preserve the existing data.
 
@@ -376,11 +381,11 @@ define([
                 object[propertyName] = property;
 
                 //add the old property interval
-                property.intervals.add(interval);
+                property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantProperty and add it.
                 combinedInterval.data = new ConstantProperty(combinedInterval.data);
-                property.intervals.add(combinedInterval);
+                property.intervals.addInterval(combinedInterval);
             }
 
             return propertyCreated;
@@ -394,7 +399,7 @@ define([
         }
 
         //create a CompositeProperty but preserve the existing data.
-        if (!property instanceof CompositeProperty) {
+        if (!(property instanceof CompositeProperty)) {
             //Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
             interval.data = property;
@@ -405,11 +410,7 @@ define([
             object[propertyName] = property;
 
             //add the old property interval
-            property.intervals.add(interval);
-
-            //Change the new data to a ConstantProperty and add it.
-            combinedInterval.data = new ConstantProperty(combinedInterval.data);
-            property.intervals.add(combinedInterval);
+            property.intervals.addInterval(interval);
         }
 
         //Check if the interval already exists in the composite
@@ -506,7 +507,7 @@ define([
             } else if (property instanceof CompositePositionProperty) {
                 //If the collection was already a CompositeProperty, use it.
                 combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
-                property.intervals.add(combinedInterval);
+                property.intervals.addInterval(combinedInterval);
             } else {
                 //Otherwise, create a CompositeProperty but preserve the existing data.
 
@@ -520,11 +521,11 @@ define([
                 object[propertyName] = property;
 
                 //add the old property interval
-                property.intervals.add(interval);
+                property.intervals.addInterval(interval);
 
                 //Change the new data to a ConstantProperty and add it.
                 combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
-                property.intervals.add(combinedInterval);
+                property.intervals.addInterval(combinedInterval);
             }
 
             return propertyCreated;
@@ -535,7 +536,7 @@ define([
             propertyCreated = true;
             property = new CompositePositionProperty(referenceFrame);
             object[propertyName] = property;
-        } else if (!property instanceof CompositePositionProperty) {
+        } else if (!(property instanceof CompositePositionProperty)) {
             //create a CompositeProperty but preserve the existing data.
             //Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
@@ -547,11 +548,7 @@ define([
             object[propertyName] = property;
 
             //add the old property interval
-            property.intervals.add(interval);
-
-            //Change the new data to a ConstantProperty and add it.
-            combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
-            property.intervals.add(combinedInterval);
+            property.intervals.addInterval(interval);
         }
 
         //Check if the interval already exists in the composite
@@ -582,6 +579,40 @@ define([
             updated = processPositionProperty(object, propertyName, packetData, interval, sourceUri) || updated;
         }
         return updated;
+    }
+
+    var Cartesian2WrapperProperty = function() {
+        this._x = new ConstantProperty(0);
+        this._y = new ConstantProperty(0);
+    };
+
+    defineProperties(Cartesian2WrapperProperty.prototype, {
+        isTimeVarying : {
+            get : function() {
+                return this._x.isTimeVarying || this._y.isTimeVarying;
+            }
+        }
+    });
+
+    Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+        result.x = this._x.getValue(time);
+        result.y = this._y.getValue(time);
+        return result;
+    };
+
+    function combineIntoCartesian2(object, packetDataX, packetDataY) {
+        if (!defined(packetDataX) && !defined(packetDataY)) {
+            return object;
+        }
+        if (!(object instanceof Cartesian2WrapperProperty)) {
+            object = new Cartesian2WrapperProperty();
+        }
+        processPacketData(Number, object, '_x', packetDataX);
+        processPacketData(Number, object, '_y', packetDataY);
+        return object;
     }
 
     function processMaterialProperty(object, propertyName, packetData, constrainedInterval, sourceUri) {
@@ -635,18 +666,15 @@ define([
             materialData = packetData.grid;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri);
             processPacketData(Number, existingMaterial, 'cellAlpha', materialData.cellAlpha, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'rowCount', materialData.rowCount, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'columnCount', materialData.columnCount, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'rowThickness', materialData.rowThickness, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'columnThickness', materialData.columnThickness, undefined, sourceUri);
+            existingMaterial.lineThickness = combineIntoCartesian2(existingMaterial.lineThickness, materialData.rowThickness, materialData.columnThickness);
+            existingMaterial.lineCount = combineIntoCartesian2(existingMaterial.lineCount, materialData.rowCount, materialData.columnCount);
         } else if (defined(packetData.image)) {
             if (!(existingMaterial instanceof ImageMaterialProperty)) {
                 existingMaterial = new ImageMaterialProperty();
             }
             materialData = packetData.image;
             processPacketData(Image, existingMaterial, 'image', materialData.image, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'verticalRepeat', materialData.verticalRepeat, undefined, sourceUri);
-            processPacketData(Number, existingMaterial, 'horizontalRepeat', materialData.horizontalRepeat, undefined, sourceUri);
+            existingMaterial.repeat = combineIntoCartesian2(existingMaterial.repeat, materialData.horizontalRepeat, materialData.verticalRepeat);
         }
         existingInterval.data = existingMaterial;
 

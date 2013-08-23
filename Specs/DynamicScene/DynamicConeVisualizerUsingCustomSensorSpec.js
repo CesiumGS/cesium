@@ -143,7 +143,7 @@ defineSuite([
         cone.show = new ConstantProperty(true);
 
         var blueMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        blueMaterial.uniforms.color = Color.BLUE;
+        blueMaterial.uniforms.color = Color.BLUE.clone();
         cone.outerMaterial = new ConstantProperty(blueMaterial);
         visualizer.update(time);
 

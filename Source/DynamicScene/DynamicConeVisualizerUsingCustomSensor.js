@@ -364,7 +364,7 @@ define([
             cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
         }
 
-        cone.material = MaterialProperty.evaluateMaterial(time, context, dynamicCone.material, cone.material);
+        cone.material = MaterialProperty.evaluateMaterial(time, context, dynamicCone.outerMaterial, cone.material);
 
         property = dynamicCone.intersectionColor;
         if (defined(property)) {
