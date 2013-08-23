@@ -1,6 +1,7 @@
 /*global defineSuite*/
 defineSuite([
          'Core/CorridorGeometry',
+         'Core/CornerType',
          'Core/Cartesian3',
          'Core/Cartographic',
          'Core/Ellipsoid',
@@ -8,6 +9,7 @@ defineSuite([
          'Core/VertexFormat'
      ], function(
          CorridorGeometry,
+         CornerType,
          Cartesian3,
          Cartographic,
          Ellipsoid,
@@ -51,7 +53,7 @@ defineSuite([
                 Cartographic.fromDegrees(90.0, -30.0),
                 Cartographic.fromDegrees(90.0, -35.0)
             ]),
-            roundCorners: false,
+            cornerType: CornerType.MITERED,
             width : 30000
         }));
 
@@ -67,8 +69,8 @@ defineSuite([
                  Cartographic.fromDegrees(90.0, -30.0),
                  Cartographic.fromDegrees(90.0, -35.0)
             ]),
-            width : 30000,
-            roundCorners: false
+            cornerType: CornerType.MITERED,
+            width : 30000
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 12);
@@ -87,9 +89,9 @@ defineSuite([
                  Cartographic.fromDegrees(90.0, -30.0),
                  Cartographic.fromDegrees(90.0, -35.0)
             ]),
+            cornerType: CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            roundCorners: false
+            extrudedHeight: 30000
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 24 * 3);
@@ -104,9 +106,9 @@ defineSuite([
                  Cartographic.fromDegrees(90.0, -30.0),
                  Cartographic.fromDegrees(90.0, -35.0)
             ]),
+            cornerType: CornerType.MITERED,
             width : 30000,
-            extrudedHeight: 30000,
-            roundCorners: false
+            extrudedHeight: 30000
         }));
 
         expect(m.attributes.position.values.length).toEqual(3 * 24 * 3);
@@ -126,7 +128,7 @@ defineSuite([
                 Cartographic.fromDegrees(90.0, -31.0),
                 Cartographic.fromDegrees(91.0, -31.0)
             ]),
-            roundCorners: false,
+            cornerType: CornerType.MITERED,
             width : 30000
         }));
 
@@ -143,7 +145,7 @@ defineSuite([
                 Cartographic.fromDegrees(90.0, -31.0),
                 Cartographic.fromDegrees(89.0, -31.0)
             ]),
-            roundCorners: false,
+            cornerType: CornerType.MITERED,
             width : 30000
         }));
 
@@ -161,11 +163,12 @@ defineSuite([
                 Cartographic.fromDegrees(89.0, -31.0),
                 Cartographic.fromDegrees(89.0, -32.0)
             ]),
+            cornerType: CornerType.ROUNDED,
             width : 30000
         }));
 
-        var endCaps = 180/10*2;
-        var corners = 90/10*2;
+        var endCaps = 180/5*2;
+        var corners = 90/5*2;
         expect(m.attributes.position.values.length).toEqual(3 * (11 + endCaps + corners));
         expect(m.attributes.st.values.length).toEqual(2 * (11 + endCaps + corners));
         expect(m.indices.length).toEqual(3 * (9 + endCaps + corners));
@@ -181,8 +184,7 @@ defineSuite([
                  Cartographic.fromDegrees(89.0, -31.0),
                  Cartographic.fromDegrees(89.0, -32.0)
             ]),
-            roundCorners: false,
-            beveledCorners: true,
+            cornerType: CornerType.BEVELED,
             width : 30000
         }));
 

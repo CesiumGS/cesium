@@ -4,6 +4,7 @@ define([
         './DeveloperError',
         './Cartesian2',
         './Cartesian3',
+        './CornerType',
         './ComponentDatatype',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -24,6 +25,7 @@ define([
         DeveloperError,
         Cartesian2,
         Cartesian3,
+        CornerType,
         ComponentDatatype,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -108,9 +110,9 @@ define([
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
-    function computeRoundCorner(cornerPoint, startPoint, endPoint, beveled, leftIsOutside) {
+    function computeRoundCorner(cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
-        var granularity = (beveled) ? 0 : Math.ceil(angle/CesiumMath.toRadians(5));
+        var granularity = (cornerType === CornerType.BEVELED) ? 0 : Math.ceil(angle/CesiumMath.toRadians(5));
 
         var size = (granularity + 1)*3;
         var array = new Array(size);
@@ -495,8 +497,7 @@ define([
         var positions = params.positions;
         var width = params.width/2;
         var ellipsoid = params.ellipsoid;
-        var roundCorners = params.roundCorners;
-        var beveledCorners = (!roundCorners && params.beveledCorners);
+        var cornerType = params.cornerType;
         var normal = cartesian1;
         var forward = cartesian2;
         var backward = cartesian3;
@@ -549,8 +550,8 @@ define([
                     startPoint = leftPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
-                    if (roundCorners || beveledCorners) {
-                        corners.push(computeRoundCorner(rightPos, startPoint, leftPos, beveledCorners, leftIsOutside));
+                    if (cornerType === CornerType.ROUNDED  || cornerType === CornerType.BEVELED) {
+                        corners.push(computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside));
                     } else {
                         corners.push(computeMiteredCorner(position, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside));
                     }
@@ -566,8 +567,8 @@ define([
                     startPoint = rightPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
                     rightPos = leftPos.add(left.multiplyByScalar(width*2, rightPos).negate(rightPos), rightPos);
-                    if (roundCorners || beveledCorners) {
-                        corners.push(computeRoundCorner(leftPos, startPoint, rightPos, beveledCorners, leftIsOutside));
+                    if (cornerType === CornerType.ROUNDED  || cornerType === CornerType.BEVELED) {
+                        corners.push(computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside));
                     } else {
                         corners.push(computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside));
                     }
@@ -588,7 +589,7 @@ define([
         calculatedNormals.push(normal.x, normal.y, normal.z);
 
         var endPositions;
-        if (roundCorners) {
+        if (cornerType === CornerType.ROUNDED) {
             endPositions = addEndCaps(calculatedPositions, width);
         }
 
@@ -797,7 +798,7 @@ define([
     }
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cube centered at the origin.
+     * A description of a corridor.
      *
      * @alias CorridorGeometry
      * @constructor
@@ -809,11 +810,12 @@ define([
      * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {Number} [options.extrudedHeight] The distance between the ellipsoid surface and the extrusion.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     * @param {Boolean} [options.roundCorners = true] If true, the corners and end caps of the corridor are rounded.
-     * @param {Booleen} [options.beveledCorners = false] Determines whether to bevel or miter the corridor corners.  Only applicable if options.roundCorners is false.
+     * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
      * @exception {DeveloperError} options.positions is required.
      * @exception {DeveloperError} options.width is required.
+     *
+     * @see CorridorGeometry#createGeometry
      *
      * @example
      * var corridor = new CorridorGeometry({
@@ -841,8 +843,7 @@ define([
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._height = defaultValue(options.height, 0);
         this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
-        this._roundCorners = defaultValue(options.roundCorners, true);
-        this._beveledCorners = defaultValue(options.beveledCorners, false);
+        this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createCorridorGeometry';
@@ -853,6 +854,8 @@ define([
      * @memberof CorridorGeometry
      *
      * @param {CorridorGeometry} corridorGeometry A description of the corridor.
+     *
+     * @returns {Geometry} The computed vertices and indices.
      *
      * @exception {DeveloperError} Count of unique positions must be greater than 1.
      */
@@ -872,8 +875,7 @@ define([
                 vertexFormat: vertexFormat,
                 positions: cleanPositions,
                 width: corridorGeometry._width,
-                roundCorners: corridorGeometry._roundCorners,
-                beveledCorners: corridorGeometry._beveledCorners,
+                cornerType: corridorGeometry._cornerType,
                 granularity: corridorGeometry._granularity
         };
         var attr;
