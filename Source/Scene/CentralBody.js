@@ -28,6 +28,7 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/DepthFunction',
         '../Renderer/DrawCommand',
+        '../Renderer/createShaderSource',
         './CentralBodySurface',
         './CentralBodySurfaceShaderSet',
         './CreditDisplay',
@@ -73,6 +74,7 @@ define([
         CommandLists,
         DepthFunction,
         DrawCommand,
+        createShaderSource,
         CentralBodySurface,
         CentralBodySurfaceShaderSet,
         CreditDisplay,
@@ -337,7 +339,7 @@ define([
         var frustumCull;
         var occludeePoint;
         var occluded;
-        var datatype;
+        var typedArray;
         var geometry;
         var rect;
         var positions;
@@ -385,8 +387,8 @@ define([
                         bufferUsage : BufferUsage.STREAM_DRAW
                     });
                 } else {
-                    datatype = ComponentDatatype.FLOAT;
-                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
+                    typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, positions);
+                    centralBody._northPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
                 }
             }
         }
@@ -433,8 +435,8 @@ define([
                          bufferUsage : BufferUsage.STREAM_DRAW
                      });
                  } else {
-                     datatype = ComponentDatatype.FLOAT;
-                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(positions));
+                     typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, positions);
+                     centralBody._southPoleCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
                  }
             }
         }
@@ -567,19 +569,18 @@ define([
                 bufferUsage : BufferUsage.DYNAMIC_DRAW
             });
         } else {
-            var datatype = ComponentDatatype.FLOAT;
-            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(datatype.createTypedArray(depthQuad));
+            var typedArray = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, depthQuad);
+            this._depthCommand.vertexArray.getAttribute(0).vertexBuffer.copyFromArrayView(typedArray);
         }
 
         var shaderCache = context.getShaderCache();
 
         if (!defined(this._depthCommand.shaderProgram)) {
             this._depthCommand.shaderProgram = shaderCache.getShaderProgram(
-                    CentralBodyVSDepth,
-                    '#line 0\n' +
-                    CentralBodyFSDepth, {
-                        position : 0
-                    });
+                CentralBodyVSDepth,
+                CentralBodyFSDepth, {
+                    position : 0
+                });
         }
 
         if (this._surface._terrainProvider.hasWaterMask() &&
@@ -642,19 +643,20 @@ define([
                 get2DYPositionFraction = get2DYPositionFractionMercatorProjection;
             }
 
-            this._surfaceShaderSet.baseVertexShaderString =
-                 (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                 CentralBodyVS + '\n' +
-                 getPositionMode + '\n' +
-                 get2DYPositionFraction;
+            this._surfaceShaderSet.baseVertexShaderString = createShaderSource({
+                defines : [hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''],
+                sources : [CentralBodyVS, getPositionMode, get2DYPositionFraction]
+            });
 
             var showPrettyOcean = hasWaterMask && defined(this._oceanNormalMap);
 
-            this._surfaceShaderSet.baseFragmentShaderString =
-                (hasWaterMask ? '#define SHOW_REFLECTIVE_OCEAN\n' : '') +
-                (showPrettyOcean ? '#define SHOW_OCEAN_WAVES\n' : '') +
-                '#line 0\n' +
-                CentralBodyFS;
+            this._surfaceShaderSet.baseFragmentShaderString = createShaderSource({
+                defines : [
+                    (hasWaterMask ? 'SHOW_REFLECTIVE_OCEAN' : ''),
+                    (showPrettyOcean ? 'SHOW_OCEAN_WAVES' : '')
+                ],
+                sources : [CentralBodyFS]
+            });
             this._surfaceShaderSet.invalidateShaders();
 
             var poleShaderProgram = shaderCache.replaceShaderProgram(this._northPoleCommand.shaderProgram,

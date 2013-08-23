@@ -104,21 +104,17 @@ define([
      */
     var Scene = function(canvas, contextOptions, creditContainer) {
         var context = new Context(canvas, contextOptions);
-        var creditDisplay;
-        if (defined(creditContainer)) {
-            creditDisplay = new CreditDisplay(creditContainer);
-        } else {
-            var creditDiv = document.createElement('div');
-            creditDiv.style.position = 'absolute';
-            creditDiv.style.bottom = '0';
-            creditDiv.style['text-shadow'] = '0px 0px 2px #000000';
-            creditDiv.style.color = '#ffffff';
-            creditDiv.style['font-size'] = '10pt';
-            creditDiv.style['padding-right'] = '5px';
-            canvas.parentNode.appendChild(creditDiv);
-            creditDisplay = new CreditDisplay(creditDiv);
+        if (!defined(creditContainer)) {
+            creditContainer = document.createElement('div');
+            creditContainer.style.position = 'absolute';
+            creditContainer.style.bottom = '0';
+            creditContainer.style['text-shadow'] = '0px 0px 2px #000000';
+            creditContainer.style.color = '#ffffff';
+            creditContainer.style['font-size'] = '10pt';
+            creditContainer.style['padding-right'] = '5px';
+            canvas.parentNode.appendChild(creditContainer);
         }
-        this._frameState = new FrameState(creditDisplay);
+        this._frameState = new FrameState(new CreditDisplay(creditContainer));
         this._passState = new PassState(context);
         this._canvas = canvas;
         this._context = context;
@@ -592,11 +588,11 @@ define([
             // Assumes bounding volume is a bounding sphere.
 
             if (!defined(scene._debugSphere)) {
-                var geometry = new EllipsoidGeometry({
+                var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                     ellipsoid : Ellipsoid.UNIT_SPHERE,
                     numberOfPartitions : 20,
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-                });
+                }));
                 scene._debugSphere = new Primitive({
                     geometryInstances : new GeometryInstance({
                         geometry : GeometryPipeline.toWireframe(geometry),
@@ -607,7 +603,8 @@ define([
                     appearance : new PerInstanceColorAppearance({
                         flat : true,
                         translucent : false
-                    })
+                    }),
+                    asynchronous : false
                 });
             }
 
@@ -638,7 +635,7 @@ define([
                    (!defined(occluder) || occluder.isBoundingSphereVisible(command.boundingVolume)))));
     }
 
-    function executeCommands(scene, passState) {
+    function executeCommands(scene, passState, clearColor) {
         var frameState = scene._frameState;
         var camera = scene._camera;
         var frustum = camera.frustum.clone();
@@ -655,7 +652,7 @@ define([
         }
 
         var clear = scene._clearColorCommand;
-        Color.clone(defaultValue(scene.backgroundColor, Color.BLACK), clear.color);
+        Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
         if (sunVisible) {
@@ -761,7 +758,8 @@ define([
         createPotentiallyVisibleSet(this, 'colorList');
 
         var passState = this._passState;
-        executeCommands(this, passState);
+
+        executeCommands(this, passState, defaultValue(this.backgroundColor, Color.BLACK));
         executeOverlayCommands(this, passState);
         frameState.creditDisplay.endFrame();
     };
@@ -844,6 +842,7 @@ define([
     var rectangleWidth = 3.0;
     var rectangleHeight = 3.0;
     var scratchRectangle = new BoundingRectangle(0.0, 0.0, rectangleWidth, rectangleHeight);
+    var scratchColorZero = new Color(0.0, 0.0, 0.0, 0.0);
 
     /**
      * DOC_TBA
@@ -871,7 +870,7 @@ define([
         scratchRectangle.x = windowPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this._canvas.clientHeight - windowPosition.y) - ((rectangleHeight - 1.0) * 0.5);
 
-        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle));
+        executeCommands(this, this._pickFramebuffer.begin(scratchRectangle), scratchColorZero);
         return this._pickFramebuffer.end(scratchRectangle);
     };
 

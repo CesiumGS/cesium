@@ -1,8 +1,13 @@
 /*global define*/
-define(['Workers/createTaskProcessorWorker'], function(createTaskProcessorWorker) {
+define([
+        'Core/RuntimeError',
+        'Workers/createTaskProcessorWorker'
+    ], function(
+        RuntimeError,
+        createTaskProcessorWorker) {
     "use strict";
 
     return createTaskProcessorWorker(function(parameters, transferableObjects) {
-        throw parameters.message;
+        throw new RuntimeError(parameters.message);
     });
 });
