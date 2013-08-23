@@ -266,7 +266,7 @@ define([
             orientation.clone(pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.evaluateMaterial(time, context, dynamicPyramid.material, pyramid.material);
+        pyramid.material = MaterialProperty.GetValue(time, context, dynamicPyramid.material, pyramid.material);
 
         var property = dynamicPyramid.intersectionColor;
         if (defined(property)) {

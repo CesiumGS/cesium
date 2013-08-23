@@ -13,8 +13,6 @@ define([
      * @constructor
      */
     var ColorMaterialProperty = function() {
-        this.type = 'Color';
-
         /**
          * A DynamicProperty of type Color which determines the material's color.
          * @type {DynamicProperty}
@@ -33,6 +31,15 @@ define([
         isTimeVarying : {
             get : function() {
                 return defined(this.color) ? this.color.isTimeVarying : false;
+            }
+        },
+        /**
+         * Gets the Material type.
+         * @type {String}
+         */
+        type : {
+            get : function() {
+                return 'Color';
             }
         }
     });

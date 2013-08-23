@@ -13,9 +13,7 @@ define([
      * @constructor
      */
     var ImageMaterialProperty = function() {
-        this.type = 'Image';
-
-        /**
+         /**
          * A DynamicProperty of type Number which determines the material's image.
          * @type {DynamicProperty}
          * @default undefined
@@ -49,10 +47,23 @@ define([
                 return (defined(this.image) ? this.image.isTimeVarying : false) || //
                        (defined(this.repeat) ? this.repeat.isTimeVarying : false);
             }
+        },
+        /**
+         * Gets the Material type.
+         * @type {String}
+         */
+        type : {
+            get : function() {
+                return 'Image';
+            }
         }
     });
 
     ImageMaterialProperty.prototype.getValue = function(time, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
         var property = this.image;
         if (defined(property)) {
             result.image = property.getValue(time, result.image);

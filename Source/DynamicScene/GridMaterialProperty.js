@@ -13,8 +13,6 @@ define([
      * @constructor
      */
     var GridMaterialProperty = function() {
-        this.type = 'Grid';
-
         /**
          * A DynamicProperty of type Color which determines the grid's color.
          * @type {DynamicProperty}
@@ -58,10 +56,23 @@ define([
                        (defined(this.lineCount) ? this.lineCount.isTimeVarying : false) || //
                        (defined(this.lineThickness) ? this.lineThickness.isTimeVarying : false);
             }
+        },
+        /**
+         * Gets the Material type.
+         * @type {String}
+         */
+        type : {
+            get : function() {
+                return 'Grid';
+            }
         }
     });
 
     GridMaterialProperty.prototype.getValue = function(time, result) {
+        if (!defined(result)) {
+            result = {};
+        }
+
         var property = this.color;
         if (defined(property)) {
             result.color = property.getValue(time, result.color);

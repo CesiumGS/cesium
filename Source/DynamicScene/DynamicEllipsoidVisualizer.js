@@ -254,7 +254,7 @@ define([
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        ellipsoid.material = MaterialProperty.evaluateMaterial(time, context, dynamicEllipsoid.material, ellipsoid.material);
+        ellipsoid.material = MaterialProperty.GetValue(time, context, dynamicEllipsoid.material, ellipsoid.material);
     }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

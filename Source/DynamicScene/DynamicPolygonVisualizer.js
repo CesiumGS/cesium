@@ -238,7 +238,7 @@ define([
             polygon._visualizerPositions = vertexPositions;
         }
 
-        polygon.material = MaterialProperty.evaluateMaterial(time, context, dynamicPolygon.material, polygon.material);
+        polygon.material = MaterialProperty.GetValue(time, context, dynamicPolygon.material, polygon.material);
     }
 
     DynamicPolygonVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {
