@@ -225,6 +225,96 @@ defineSuite(['Core/Color',
         expect(Color.fromHsl(5, 1.0, 0.5, 1.0)).toEqual(Color.RED);
     });
 
+    it('fromRandom generates a random color with no options', function() {
+        var color = Color.fromRandom();
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
+    });
+
+    it('fromRandom generates a random color with no options', function() {
+        var result = new Color();
+        var color = Color.fromRandom({}, result);
+        expect(result).toBe(color);
+        expect(color.red).toBeBetween(0.0, 1.0);
+        expect(color.green).toBeBetween(0.0, 1.0);
+        expect(color.blue).toBeBetween(0.0, 1.0);
+        expect(color.alpha).toBeBetween(0.0, 1.0);
+    });
+
+    it('fromRandom uses specified exact values', function() {
+        var options = {
+            red : 0.1,
+            green : 0.2,
+            blue : 0.3,
+            alpha : 0.4
+        };
+        var color = Color.fromRandom(options);
+        expect(color.red).toEqual(options.red);
+        expect(color.green).toEqual(options.green);
+        expect(color.blue).toEqual(options.blue);
+        expect(color.alpha).toEqual(options.alpha);
+    });
+
+    it('fromRandom generates a random kind of Red color within intervals', function() {
+        var options = {
+            red : undefined,
+            minimumRed : 0.1,
+            maximumRed : 0.2,
+            minimumGreen : 0.3,
+            maximumGreen : 0.4,
+            minimumBlue : 0.5,
+            maximumBlue : 0.6,
+            minimumAlpha : 0.7,
+            maximumAlpha : 0.8
+        };
+
+        for ( var i = 0; i < 100; i++) {
+            var color = Color.fromRandom(options);
+            expect(color.red).toBeBetween(options.minimumRed, options.maximumRed);
+            expect(color.green).toBeBetween(options.minimumGreen, options.maximumGreen);
+            expect(color.blue).toBeBetween(options.minimumBlue, options.maximumBlue);
+            expect(color.alpha).toBeBetween(options.minimumAlpha, options.maximumAlpha);
+        }
+    });
+
+    it('fromRandom throws with invalid minimum-maximum red values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumRed : 1,
+                maximumRed : 0
+            });
+        }).toThrow();
+    });
+
+    it('fromRandom throws with invalid minimum-maximum green values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumGreen : 1,
+                maximumGreen : 0
+            });
+        }).toThrow();
+    });
+
+    it('fromRandom throws with invalid minimum-maximum blue values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumBlue : 1,
+                maximumBlue : 0
+            });
+        }).toThrow();
+    });
+
+    it('fromRandom throws with invalid minimum-maximum alpha values', function() {
+        expect(function() {
+            Color.fromRandom({
+                minimumAlpha : 1,
+                maximumAlpha : 0
+            });
+        }).toThrow();
+    });
+
     it('toString produces correct results', function() {
         expect(new Color(0.1, 0.2, 0.3, 0.4).toString()).toEqual('(0.1, 0.2, 0.3, 0.4)');
     });

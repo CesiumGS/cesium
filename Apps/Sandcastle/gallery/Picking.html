@@ -260,6 +260,7 @@ require(['Cesium'], function(Cesium) {
             this._finishHandler = handler;
             this._mouseHandler = new Cesium.ScreenSpaceEventHandler(this._canvas);
             this._extentPrimitive = new Cesium.ExtentPrimitive();
+            this._extentPrimitive.asynchronous = false;
             this._scene.getPrimitives().add(this._extentPrimitive);
         };
         
@@ -390,7 +391,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('toolbar');
         
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             pickCartographicPosition(scene, ellipsoid);
@@ -400,7 +401,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             pickBillboard(scene, ellipsoid);
@@ -410,7 +411,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             animateBillboardOnPick(scene, ellipsoid);
@@ -420,7 +421,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             erodeSensorOnClick(scene, ellipsoid);
@@ -430,7 +431,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             layerCompositePrimitive(scene, ellipsoid);
@@ -440,7 +441,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             cleanup();
             drawExtent(scene, ellipsoid);
