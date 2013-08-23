@@ -243,17 +243,39 @@ define([
         this.debugCommandFilter = undefined;
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When <code>true</code>, commands are shaded based on the frustums they
+         * overlap.  Commands in the closest frustum are tinted red, commands in
+         * the next closest are green, and commands in the farthest frustum are
+         * blue.  If a command overlaps more than one frustum, the color components
+         * are combined, e.g., a command overlapping the first two frustums is tinted
+         * yellow.
+         * </p>
+         *
+         * @type Boolean
+         *
+         * @default false
          */
         this.debugShowFrustums = false;
 
         /**
-         * DOC_TBA
+         * This property is for debugging only; it is not for production use.
+         * <p>
+         * When {@see Scene.debugShowFrustums} is <code>true</code>, this contains
+         * properties with statistics about the number of command execute per frustum.
+         * <code>totalCommands</code> is the total number of commands executed, ignoring
+         * overlap. <code>commandsInFrustums</code> is an array with the number of commands
+         * executed in each frustum.
+         * </p>
+         *
+         * @type Object
+         *
+         * @default undefined
+         *
+         * @readonly
          */
-        this.debugFrustumStatistics = {
-            totalCommands : 0,
-            commandsInFrustums : [0, 0, 0, 0]
-        };
+        this.debugFrustumStatistics = undefined;
 
         this._debugSphere = undefined;
 
@@ -440,8 +462,10 @@ define([
         var position = camera.getPositionWC();
 
         if (scene.debugShowFrustums) {
-            scene.debugFrustumStatistics.totalCommands = 0;
-            scene.debugFrustumStatistics.commandsInFrustums = [0, 0, 0, 0];
+            scene.debugFrustumStatistics = {
+                totalCommands : 0,
+                commandsInFrustums : [0, 0, 0, 0]
+            };
         }
 
         var frustumCommandsList = scene._frustumCommandsList;
