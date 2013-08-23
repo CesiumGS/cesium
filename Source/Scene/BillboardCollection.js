@@ -18,6 +18,7 @@ define([
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/VertexArrayFacade',
+        '../Renderer/createShaderSource',
         './SceneMode',
         './Billboard',
         './HorizontalOrigin',
@@ -42,6 +43,7 @@ define([
         CommandLists,
         DrawCommand,
         VertexArrayFacade,
+        createShaderSource,
         SceneMode,
         Billboard,
         HorizontalOrigin,
@@ -1162,9 +1164,11 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                         this._sp,
-                        (this._shaderRotation ? '#define ROTATION 1\n' : '') +
-                        (this._shaderScaleByDistance ? '#define EYE_DISTANCE_SCALING 1\n' : '') +
-                        BillboardCollectionVS,
+                    createShaderSource({
+                        defines : [this._shaderRotation ? 'ROTATION' : '',
+                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
+                        sources : [BillboardCollectionVS]
+                    }),
                         BillboardCollectionFS,
                         attributeIndices);
                 this._compiledShaderRotation = this._shaderRotation;
@@ -1201,10 +1205,16 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
                         this._spPick,
-                        (this._shaderRotation ? '#define ROTATION 1\n' : '') +
-                        (this._shaderScaleByDistance ? '#define EYE_DISTANCE_SCALING 1\n' : '') +
-                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionVS,
-                        '#define RENDER_FOR_PICK 1\n' + BillboardCollectionFS,
+                        createShaderSource({
+                            defines : ['RENDER_FOR_PICK',
+                                       this._shaderRotation ? 'ROTATION' : '',
+                                       this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
+                            sources : [BillboardCollectionVS]
+                        }),
+                        createShaderSource({
+                            defines : ['RENDER_FOR_PICK'],
+                            sources : [BillboardCollectionFS]
+                        }),
                         attributeIndices);
                 this._compiledShaderRotationPick = this._shaderRotation;
                 this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;

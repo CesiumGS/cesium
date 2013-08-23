@@ -16,7 +16,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
-        '../Renderer/createPickFragmentShaderSource',
+        '../Renderer/createShaderSource',
         '../Renderer/CullFace',
         './Material',
         '../Shaders/SensorVolume',
@@ -40,7 +40,7 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
-        createPickFragmentShaderSource,
+        createShaderSource,
         CullFace,
         Material,
         ShadersSensorVolume,
@@ -447,13 +447,7 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || !defined(frontFaceColorCommand.shaderProgram)) {
-                var fsSource =
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    CustomSensorVolumeFS;
+                var fsSource = createShaderSource({ sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS] });
 
                 frontFaceColorCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                         frontFaceColorCommand.shaderProgram, CustomSensorVolumeVS, fsSource, attributeIndices);
@@ -479,13 +473,10 @@ define([
 
             // Recompile shader when material changes
             if (materialChanged || !defined(pickCommand.shaderProgram)) {
-                var pickFS = createPickFragmentShaderSource(
-                    '#line 0\n' +
-                    ShadersSensorVolume +
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    CustomSensorVolumeFS, 'uniform');
+                var pickFS = createShaderSource({
+                    sources : [ShadersSensorVolume, this._material.shaderSource, CustomSensorVolumeFS],
+                    pickColorQualifier : 'uniform'
+                });
 
                 pickCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                     pickCommand.shaderProgram, CustomSensorVolumeVS, pickFS, attributeIndices);

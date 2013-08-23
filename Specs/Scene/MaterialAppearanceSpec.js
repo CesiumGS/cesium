@@ -42,7 +42,7 @@ defineSuite([
         context = createContext();
         frameState = createFrameState();
 
-        var extent = Extent.fromDegrees(-80.0, 20.0, -70.0, 40.0);
+        var extent = Extent.fromDegrees(-10.0, -10.0, 10.0, 10.0);
         primitive = new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new ExtentGeometry({
