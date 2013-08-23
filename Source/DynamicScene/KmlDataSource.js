@@ -71,41 +71,27 @@ define(['../Core/createGuid',
         this._value = value;
     };
 
+    var scratch = new Cartographic();
+
     //Helper functions
-    function readCoordinates(el) {
-        var text = "", coords = [], i;
-        for (i = 0; i < el.childNodes.length; i++) {
-            text = text + el.childNodes[i].nodeValue;
+    function readCoordinate(element) {
+        var digits = element.textContent.trim().split(/[\s,\n]+/g);
+        var cartographic = Cartographic.fromDegrees(digits[0], digits[1], parseFloat(digits[2]), scratch);
+        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+    }
+
+    function readCoordinates(element) {
+        var digits = element.textContent.trim().split(/[\s,\n]+/g);
+        var numberOfCoordinates = digits.length / 3;
+        var result = new Array(numberOfCoordinates);
+        var resultIndex = 0;
+        var cartographic;
+        for ( var i = 0; i < digits.length; i += 3) {
+            cartographic = Cartographic.fromDegrees(parseFloat(digits[i]), parseFloat(digits[i+1]), parseFloat(digits[i+2]), scratch);
+            result[resultIndex] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+            resultIndex++;
         }
-        var coordsArray = text.split(/[\s\n]+/);
-        var len = coordsArray.length;
-        for (i = 0; i < len; i++){
-            var string = coordsArray.shift();
-            if (string.length > 0){ //empty string?
-                coordsArray.push(string);
-            }
-        }
-        var finalCoords = [];
-        for (var j = 0; coordsArray[j]; j++){
-            var regExp = /(\-?\+?[0-9]+\.?[0-9]*)(,\-?\+?[0-9]+\.?[0-9]*)(,[0-9]+\.?[0-9]?)?$/;
-            coords[j] = regExp.exec(coordsArray[j]);
-            coords[j].shift(); //the first element is not needed, remove it
-            finalCoords.push([]); //new inner array
-            finalCoords[j][0] = parseFloat(coords[j][0], 10);
-            finalCoords[j][1] = parseFloat(coords[j][1].substring(1), 10);
-            if (defined(coords[j][2])){ // altitude given?
-                finalCoords[j][2] = parseFloat(coords[j][2].substring(1), 10);
-            }
-        }
-        for (var k = 0; k < finalCoords.length; k++){
-            if (isNaN(finalCoords[k][0]) || isNaN(finalCoords[k][1])) {
-                throw new DeveloperError('Longitude and latitude are required.');
-            }
-        }
-        if (finalCoords.length === 1){
-            return finalCoords[0]; //single tuple
-        }
-        return finalCoords;
+        return result;
     }
 
     function coordinatesArrayToCartesianArray(coordinates) {
@@ -124,7 +110,7 @@ define(['../Core/createGuid',
     function getNumericValue(node, tagName){
         var element = node.getElementsByTagName(tagName)[0];
         var value = defined(element) ? element.firstChild.data : undefined;
-        return parseFloat(value, 10);
+        return parseFloat(value);
     }
 
     function getStringValue(node, tagName){
@@ -185,13 +171,8 @@ define(['../Core/createGuid',
     function processPoint(dataSource, dynamicObject, kml, node) {
         //TODO extrude, altitudeMode, gx:altitudeMode
         var el = node.getElementsByTagName('coordinates');
-        var coordinates = [];
-        for (var j = 0; j < el.length; j++) {
-            coordinates = coordinates.concat(readCoordinates(el[j]));
-        }
-        var cartographic = Cartographic.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
-        var cartesian3 = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
 
+        var cartesian3 = readCoordinate(el[0]);
         dynamicObject.position = new ConstantPositionProperty(cartesian3);
     }
 
@@ -199,23 +180,21 @@ define(['../Core/createGuid',
         //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, gx:altitudeMode, gx:drawOrder
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
-        for (var j = 0; j < el.length; j++) {
-            coordinates = coordinates.concat(readCoordinates(el[j]));
-        }
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
+        coordinates = readCoordinates(el[0]);
+
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinates);
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node){
       //TODO gx:altitudeOffset, extrude, tessellate, altitudeMode, altitudeModeEnum
         var el = node.getElementsByTagName('coordinates');
         var coordinates = [];
-        for (var j = 0; j < el.length; j++) {
-            coordinates = coordinates.concat(readCoordinates(el[j]));
-        }
+        coordinates = readCoordinates(el[0]);
+
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length -1])){
             throw new DeveloperError("The first and last coordinate tuples must be the same.");
         }
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinatesArrayToCartesianArray(coordinates));
+        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinates);
     }
 
     function processPolygon(dataSource, dynamicObject, kml, node){
