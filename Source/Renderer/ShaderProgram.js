@@ -2282,22 +2282,26 @@ define([
         this._manualUniforms = partitionedUniforms.manualUniforms;
 
         /**
-         * DOC_TBA
+         * GLSL source for the shader program's vertex shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
          * @readonly
          */
         this.vertexShaderSource = vertexShaderSource;
 
         /**
-         * DOC_TBA
+         * GLSL source for the shader program's fragment shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
          * @readonly
          */
         this.fragmentShaderSource = fragmentShaderSource;
-
-        /**
-         * DOC_TBA
-         * @readonly
-         */
-        this.attributeLocations = findVertexAttributeLocations(gl, program, numberOfVertexAttributes);
     };
 
     function extractShaderVersion(source) {
@@ -2518,16 +2522,6 @@ define([
         }
 
         return attributes;
-    }
-
-    function findVertexAttributeLocations(gl, program, numberOfAttributes) {
-        var attributeLocations = {};
-        for ( var i = 0; i < numberOfAttributes; ++i) {
-            var attr = gl.getActiveAttrib(program, i);
-            attributeLocations[attr.name] = gl.getAttribLocation(program, attr.name);
-        }
-
-        return attributeLocations;
     }
 
     function findUniforms(gl, program) {

@@ -573,6 +573,14 @@ define([
             if (defined(command.shaderProgram)) {
                 // Replace shader for frustum visualization
                 var sp = command.shaderProgram;
+                var attributeLocations = {};
+                var attributes = sp.getVertexAttributes();
+                for (var a in attributes) {
+                    if (attributes.hasOwnProperty(a)) {
+                        attributeLocations[a] = attributes[a].index;
+                    }
+                }
+
                 command.shaderProgram = context.getShaderCache().getShaderProgram(
                     sp.vertexShaderSource, createFrustumDebugFragmentShaderSource(command), sp.attributeLocations);
 

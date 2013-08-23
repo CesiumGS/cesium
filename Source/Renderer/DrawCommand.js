@@ -166,6 +166,8 @@ define(function() {
 
         /**
          * @private
+         *
+         * Used for counting the number of frustums a command overlaps.
          */
         this.debugOverlappingFrustums = 0;
     };
