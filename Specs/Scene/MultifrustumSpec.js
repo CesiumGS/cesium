@@ -192,6 +192,8 @@ defineSuite([
         scene.initializeFrame();
         scene.render();
         expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.debugFrustumStatistics.totalCommands).toEqual(3);
+        expect(scene.debugFrustumStatistics.commandsInFrustums).toEqual([1, 1, 1, 0]);
     });
 
     function createPrimitive(bounded, closestFrustum) {
