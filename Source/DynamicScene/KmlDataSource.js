@@ -321,6 +321,7 @@ define(['../Core/createGuid',
                 //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
                 var polygonColor = getColorValue(node, 'color');
+                polygonColor = defined(polygonColor) ? polygonColor : new ConstantProperty(new Color(1, 1, 1, 1));
                 dynamicObject.polygon.material = new DynamicMaterialProperty();
                 dynamicObject.polygon.material.processCzmlIntervals({
                     solidColor : {

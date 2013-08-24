@@ -273,7 +273,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
     });
 
-    it('LineString throws error with invalid coordinates', function() {
+    it('processLineString throws error with invalid coordinates', function() {
         var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -529,6 +529,31 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(generatedColor.green).toEqual(color.green);
         expect(generatedColor.blue).toEqual(color.blue);
         expect(generatedColor.alpha).toEqual(color.alpha);
+    });
+
+    it('handles empty PolyStyle element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Style>\
+                <PolyStyle>\
+                </PolyStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        var polygon = objects[0].polygon;
+        var time = new JulianDate();
+        var material = polygon.material.getValue(time);
+        var generatedColor = material.uniforms.color;
+        expect(generatedColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
     });
 
     it('handles Color in normal mode', function() {
