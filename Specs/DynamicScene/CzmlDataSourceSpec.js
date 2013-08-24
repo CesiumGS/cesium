@@ -486,10 +486,10 @@ defineSuite([
         expect(dynamicObject.cone.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.radius);
         expect(dynamicObject.cone.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.show);
         expect(dynamicObject.cone.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(dynamicObject.cone.capMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.cone.innerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.cone.outerMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(dynamicObject.cone.silhouetteMaterial.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
         expect(dynamicObject.cone.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.cone.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(conePacket.cone.intersectionWidth);
     });
@@ -555,10 +555,10 @@ defineSuite([
         expect(dynamicObject.cone.radius.getValue(validTime)).toEqual(conePacket.cone.radius);
         expect(dynamicObject.cone.show.getValue(validTime)).toEqual(conePacket.cone.show);
         expect(dynamicObject.cone.showIntersection.getValue(validTime)).toEqual(conePacket.cone.showIntersection);
-        expect(dynamicObject.cone.capMaterial.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.cone.innerMaterial.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.cone.outerMaterial.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
-        expect(dynamicObject.cone.silhouetteMaterial.getValue(validTime).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
+        expect(dynamicObject.cone.capMaterial.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.cone.innerMaterial.getValue(validTime).color).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
+        expect(dynamicObject.cone.outerMaterial.getValue(validTime).color).toEqual(new Color(0.3, 0.3, 0.3, 0.3));
+        expect(dynamicObject.cone.silhouetteMaterial.getValue(validTime).color).toEqual(new Color(0.4, 0.4, 0.4, 0.4));
         expect(dynamicObject.cone.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.cone.intersectionWidth.getValue(validTime)).toEqual(conePacket.cone.intersectionWidth);
 
@@ -649,7 +649,7 @@ defineSuite([
         expect(dynamicObject.ellipsoid).toBeDefined();
         expect(dynamicObject.ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRadii);
         expect(dynamicObject.ellipsoid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ellipsoidPacket.ellipsoid.show);
-        expect(dynamicObject.ellipsoid.material.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.ellipsoid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
     });
 
     it('CZML adds data for constrained ellipsoid.', function() {
@@ -682,7 +682,7 @@ defineSuite([
         expect(dynamicObject.ellipsoid).toBeDefined();
         expect(dynamicObject.ellipsoid.radii.getValue(validTime)).toEqual(expectedRadii);
         expect(dynamicObject.ellipsoid.show.getValue(validTime)).toEqual(ellipsoidPacketInterval.ellipsoid.show);
-        expect(dynamicObject.ellipsoid.material.getValue(validTime).color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.ellipsoid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
 
         expect(dynamicObject.ellipsoid.radii.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.ellipsoid.show.getValue(invalidTime)).toBeUndefined();
@@ -1023,7 +1023,7 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
     });
 
@@ -1050,7 +1050,7 @@ defineSuite([
         var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
 
         expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(validTime).color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.polygon.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.polygon.show.getValue(validTime)).toEqual(true);
 
         expect(dynamicObject.polygon.material.getValue(invalidTime)).toBeUndefined();
@@ -1155,7 +1155,7 @@ defineSuite([
         expect(dynamicObject.pyramid.radius.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(Iso8601.MINIMUM_VALUE)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.pyramid.material.getValue(Iso8601.MINIMUM_VALUE).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.pyramid.intersectionWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(7.0);
     });
@@ -1198,7 +1198,7 @@ defineSuite([
         expect(dynamicObject.pyramid.radius.getValue(validTime)).toEqual(pyramidPacket.pyramid.radius);
         expect(dynamicObject.pyramid.show.getValue(validTime)).toEqual(pyramidPacket.pyramid.show);
         expect(dynamicObject.pyramid.showIntersection.getValue(validTime)).toEqual(pyramidPacket.pyramid.showIntersection);
-        expect(dynamicObject.pyramid.material.getValue(validTime).color.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
+        expect(dynamicObject.pyramid.material.getValue(validTime).color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
         expect(dynamicObject.pyramid.intersectionColor.getValue(validTime)).toEqual(new Color(0.5, 0.5, 0.5, 0.5));
         expect(dynamicObject.pyramid.intersectionWidth.getValue(validTime)).toEqual(8.0);
 

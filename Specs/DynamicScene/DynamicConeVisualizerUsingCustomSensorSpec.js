@@ -9,7 +9,7 @@ defineSuite([
              'DynamicScene/DynamicCone',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
-             'Scene/Material',
+             'DynamicScene/ColorMaterialProperty',
              'Core/JulianDate',
              'Core/Quaternion',
              'Core/Cartesian3',
@@ -26,7 +26,7 @@ defineSuite([
               DynamicCone,
               DynamicObjectCollection,
               DynamicObject,
-              Material,
+              ColorMaterialProperty,
               JulianDate,
               Quaternion,
               Cartesian3,
@@ -142,9 +142,7 @@ defineSuite([
         cone.radius = new ConstantProperty(123.5);
         cone.show = new ConstantProperty(true);
 
-        var blueMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        blueMaterial.uniforms.color = Color.BLUE.clone();
-        cone.outerMaterial = new ConstantProperty(blueMaterial);
+        cone.outerMaterial = new ColorMaterialProperty();
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -158,7 +156,7 @@ defineSuite([
         expect(c.showIntersection).toEqual(testObject.cone.showIntersection.getValue(time));
         expect(c.radius).toEqual(testObject.cone.radius.getValue(time));
         expect(c.show).toEqual(testObject.cone.show.getValue(time));
-        expect(c.material).toEqual(testObject.cone.outerMaterial.getValue(time));
+        expect(c.material.uniforms).toEqual(testObject.cone.outerMaterial.getValue(time));
         expect(c.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         cone.show.value = false;

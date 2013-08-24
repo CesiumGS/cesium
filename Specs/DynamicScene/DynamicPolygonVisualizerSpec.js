@@ -10,7 +10,7 @@ defineSuite([
          'DynamicScene/DynamicEllipse',
          'DynamicScene/DynamicPolygon',
          'DynamicScene/DynamicObjectCollection',
-         'Scene/Material'
+         'DynamicScene/ColorMaterialProperty'
      ], function(
          DynamicPolygonVisualizer,
          createScene,
@@ -22,7 +22,7 @@ defineSuite([
          DynamicEllipse,
          DynamicPolygon,
          DynamicObjectCollection,
-         Material) {
+         ColorMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -138,9 +138,7 @@ defineSuite([
         testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var polygon = testObject.polygon = new DynamicPolygon();
         polygon.show = new ConstantProperty(true);
-        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
-        polygon.material = new ConstantProperty(colorMaterial);
+        polygon.material = new ColorMaterialProperty();
 
         var ellipse = testObject.ellipse = new DynamicEllipse();
         ellipse.bearing = new ConstantProperty(0);
@@ -154,7 +152,7 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
         expect(primitive.getPositions().length > 0);
 
     });
@@ -172,9 +170,7 @@ defineSuite([
 
         var polygon = testObject.polygon = new DynamicPolygon();
         polygon.show = new ConstantProperty(true);
-        var colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.7, 0.6, 0.5, 0.4);
-        polygon.material = new ConstantProperty(colorMaterial);
+        polygon.material = new ColorMaterialProperty();
 
         visualizer.update(time);
 
@@ -184,16 +180,14 @@ defineSuite([
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
 
         testObject.vertexPositions = new ConstantProperty([new Cartesian3(5678, 1234, 1101112), new Cartesian3(1234, 5678, 9101112), new Cartesian3(1234, 5678, 910111)]);
-        colorMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        colorMaterial.uniforms.color = new Color(0.1, 0.2, 0.4, 0.3);
-        polygon.material = new ConstantProperty(colorMaterial);
+        polygon.material = new ColorMaterialProperty();
 
         visualizer.update(time);
         expect(primitive.show).toEqual(testObject.polygon.show.getValue(time));
-        expect(primitive.material).toEqual(testObject.polygon.material.getValue(time));
+        expect(primitive.material.uniforms).toEqual(testObject.polygon.material.getValue(time));
 
         polygon.show = new ConstantProperty(false);
         visualizer.update(time);

@@ -13,7 +13,7 @@ defineSuite([
          'Core/Spherical',
          'DynamicScene/DynamicPyramid',
          'DynamicScene/DynamicObjectCollection',
-         'Scene/Material'
+         'DynamicScene/ColorMaterialProperty'
      ], function(
          DynamicPyramidVisualizer,
          createScene,
@@ -28,7 +28,7 @@ defineSuite([
          Spherical,
          DynamicPyramid,
          DynamicObjectCollection,
-         Material) {
+         ColorMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -132,9 +132,7 @@ defineSuite([
         pyramid.showIntersection = new ConstantProperty(true);
         pyramid.radius = new ConstantProperty(123.5);
         pyramid.show = new ConstantProperty(true);
-        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        redMaterial.uniforms.color = Color.RED;
-        pyramid.material = new ConstantProperty(redMaterial);
+        pyramid.material = new ColorMaterialProperty();
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -144,7 +142,7 @@ defineSuite([
         expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
-        expect(p.material).toEqual(testObject.pyramid.material.getValue(time));
+        expect(p.material.uniforms).toEqual(testObject.pyramid.material.getValue(time));
         expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         pyramid.show.value = false;
