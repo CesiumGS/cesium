@@ -287,8 +287,8 @@ define(['../Core/createGuid',
                 var labelScale = getNumericValue(node, 'scale');
                 var labelColor = getColorValue(node, 'color');
 
-                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : undefined;
-                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : undefined;
+                label.scale = defined(labelScale) ? new ConstantProperty(labelScale) : new ConstantProperty(1.0);
+                label.fillColor = defined(labelColor) ? new ConstantProperty(labelColor) : new ConstantProperty(new Color(1, 1, 1, 1));
                 label.text = defined(dynamicObject.name) ? new ConstantProperty(dynamicObject.name) : undefined;
                 label.pixelOffset = new ConstantProperty(new Cartesian2(120, 1)); //arbitrary
                 dynamicObject.label = label;

@@ -474,6 +474,59 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(billboard.scale.getValue()).toEqual(1.0);
     });
 
+    it('handles LabelStyle', function() {
+        var scale = new ConstantProperty(1.5);
+        var color = new ConstantProperty(new Color(0, 0, 0, 0));
+        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+                <LabelStyle>\
+                    <color>00000000</color>\
+                    <colorMode>normal</colorMode>\
+                    <scale>1.5</scale>\
+                </LabelStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].label.scale.getValue()).toEqual(scale.getValue());
+        expect(objects[0].label.fillColor).toEqual(color);
+        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+    });
+
+    it('handles empty LabelStyle element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Style>\
+                <LabelStyle>\
+                </LabelStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        var label = objects[0].label;
+        expect(label.fillColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
+        expect(label.scale.getValue()).toEqual(1.0);
+        expect(objects[0].billboard.image.getValue()).toEqual("http://maps.google.com/mapfiles/kml/pushpin/ylw-pushpin.png");
+    });
+
     it('handles LineStyle', function() {
         var width = new ConstantProperty(4);
         var outerWidth = new ConstantProperty(0);
