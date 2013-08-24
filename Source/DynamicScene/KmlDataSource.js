@@ -76,8 +76,8 @@ define(['../Core/createGuid',
     //Helper functions
     function readCoordinate(element) {
         var digits = element.textContent.trim().split(/[\s,\n]+/g);
-        var cartographic = Cartographic.fromDegrees(digits[0], digits[1], parseFloat(digits[2]), scratch);
-        return Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        scratch = Cartographic.fromDegrees(digits[0], digits[1], parseFloat(digits[2]), scratch);
+        return Ellipsoid.WGS84.cartographicToCartesian(scratch);
     }
 
     function readCoordinates(element) {
@@ -85,22 +85,12 @@ define(['../Core/createGuid',
         var numberOfCoordinates = digits.length / 3;
         var result = new Array(numberOfCoordinates);
         var resultIndex = 0;
-        var cartographic;
         for ( var i = 0; i < digits.length; i += 3) {
-            cartographic = Cartographic.fromDegrees(parseFloat(digits[i]), parseFloat(digits[i+1]), parseFloat(digits[i+2]), scratch);
-            result[resultIndex] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+            scratch = Cartographic.fromDegrees(parseFloat(digits[i]), parseFloat(digits[i+1]), parseFloat(digits[i+2]), scratch);
+            result[resultIndex] = Ellipsoid.WGS84.cartographicToCartesian(scratch);
             resultIndex++;
         }
         return result;
-    }
-
-    function coordinatesArrayToCartesianArray(coordinates) {
-        var positions = new Array(coordinates.length);
-        for ( var i = 0; i < coordinates.length; i++) {
-            var cartographic = Cartographic.fromDegrees(coordinates[i][0], coordinates[i][1], coordinates[i][2]);
-            positions[i] = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
-        }
-        return positions;
     }
 
     function equalCoordinateTuples(tuple1, tuple2){
@@ -310,12 +300,15 @@ define(['../Core/createGuid',
             }
             else if(node.nodeName ===  "LineStyle")   {
                 //Map style to line properties
-                //TODO PhysicalWidth, Visibility
+                //TODO PhysicalWidth, labelVisibility
                 var polyline = defined(dynamicObject.polyline) ? dynamicObject.polyline : new DynamicPolyline();
                 var lineColor = getColorValue(node, 'color');
                 var lineWidth = getNumericValue(node,'width');
                 var lineOuterColor = getColorValue(node,'outerColor');
                 var lineOuterWidth = getNumericValue(node,'outerWidth');
+                if(defined(lineOuterWidth) && (lineOuterWidth < 0 || lineOuterWidth > 1.0)){
+                    throw new DeveloperError('gx:outerWidth must be a value between 0 and 1.0');
+                }
 
                 polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : undefined;
                 polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : undefined;
