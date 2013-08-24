@@ -1546,8 +1546,8 @@ define([
                 indices[4] = 2;
                 indices[6] = 1;
             } else if (p1Behind) {
-                getXZIntersectionOffsetPoints(p1, p0, u1, q1);
-                getXZIntersectionOffsetPoints(p1, p2, u2, q2);
+                getXZIntersectionOffsetPoints(p1, p2, u1, q1);
+                getXZIntersectionOffsetPoints(p1, p0, u2, q2);
 
                 indices[0] = 1;
                 indices[3] = 2;
