@@ -192,7 +192,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
     });
 
-    it('Point throws error with invalid coordinates', function() {
+    it('processPoint throws error with invalid coordinates', function() {
         var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -450,6 +450,51 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects.length).toEqual(1);
         expect(objects[0].polyline.width.getValue()).toEqual(width.getValue());
         expect(objects[0].polyline.outlineWidth.getValue()).toEqual(outerWidth.getValue());
+    });
+
+    it('handles empty LineStyle element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Style>\
+                <LineStyle>\
+                </LineStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        var polyline = objects[0].polyline;
+        expect(polyline.color).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
+        expect(polyline.width.getValue()).toEqual(1.0);
+        expect(polyline.outlineColor).toBe(undefined);
+        expect(polyline.outlineWidth).toBe(undefined);
+    });
+
+    it('LineStyle throws with invalid input', function() {
+        var lineKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Style>\
+                <LineStyle>\
+            <gx:outerWidth>1.1</gx:outerWidth>\
+            </LineStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(lineKml);
+        }).toThrow();
     });
 
     it('handles PolyStyle', function() {

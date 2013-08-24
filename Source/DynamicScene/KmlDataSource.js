@@ -114,7 +114,7 @@ define(['../Core/createGuid',
         var colorModeNode = node.getElementsByTagName('colorMode')[0];
         var value = defined(element)  ? element.firstChild.data : undefined;
         if (!defined(value)){
-            return new Color(1.0, 1.0, 1.0, 1.0); //white as default?
+            return undefined;
         }
         var colorMode = defined(colorModeNode) ? colorModeNode.firstChild.data : undefined;
         if(colorMode === 'random'){
@@ -310,8 +310,8 @@ define(['../Core/createGuid',
                     throw new DeveloperError('gx:outerWidth must be a value between 0 and 1.0');
                 }
 
-                polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : undefined;
-                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : undefined;
+                polyline.color = defined(lineColor) ? new ConstantProperty(lineColor) : new ConstantProperty(new Color(1, 1, 1, 1));
+                polyline.width = defined(lineWidth) ? new ConstantProperty(lineWidth) : new ConstantProperty(1.0);
                 polyline.outlineColor = defined(lineOuterColor) ? new ConstantProperty(lineOuterColor) : undefined;
                 polyline.outlineWidth = defined(lineOuterWidth) ? new ConstantProperty(lineOuterWidth) : undefined;
                 dynamicObject.polyline = polyline;
