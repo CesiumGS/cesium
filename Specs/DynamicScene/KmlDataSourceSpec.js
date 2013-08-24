@@ -420,6 +420,60 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(object1.billboard.color.alpha).toEqual(object2.billboard.color.alpha);
     });
 
+    it('handles IconStyle', function() {
+        var scale = new ConstantProperty(1.1);
+        var color = new ConstantProperty(new Color(0, 0, 0, 0));
+        var iconKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Style id="testStyle">\
+            <IconStyle>\
+                <color>00000000</color>\
+                <colorMode>normal</colorMode>\
+                <scale>1.1</scale>\
+                <Icon>\
+                    <href>http://maps.google.com/mapfiles/kml/pal3/icon21.png</href>\
+                </Icon>\
+               </IconStyle>\
+            </Style>\
+            <Placemark>\
+            <styleUrl>#testStyle</styleUrl>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(iconKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        expect(objects[0].billboard.scale.getValue()).toEqual(scale.getValue());
+        expect(objects[0].billboard.color).toEqual(color);
+    });
+
+    it('handles empty IconStyle element', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+              <Style>\
+                <IconStyle>\
+                </IconStyle>\
+              </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(kml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        expect(objects.length).toEqual(1);
+        var billboard = objects[0].billboard;
+        expect(billboard.color).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
+        expect(billboard.scale.getValue()).toEqual(1.0);
+    });
+
     it('handles LineStyle', function() {
         var width = new ConstantProperty(4);
         var outerWidth = new ConstantProperty(0);

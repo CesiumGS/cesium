@@ -277,8 +277,8 @@ define(['../Core/createGuid',
 
 
                 billboard.image = defined(icon) ? new ConstantProperty(icon) : undefined;
-                billboard.scale = defined(scale) ? new ConstantProperty(scale) : undefined;
-                billboard.color = defined(color) ? new ConstantProperty(color) : undefined;
+                billboard.scale = defined(scale) ? new ConstantProperty(scale) : new ConstantProperty(1.0);
+                billboard.color = defined(color) ? new ConstantProperty(color) : new ConstantProperty(new Color(1, 1, 1, 1));
                 dynamicObject.billboard = billboard;
             }
             else if(node.nodeName ===  "LabelStyle")   {
