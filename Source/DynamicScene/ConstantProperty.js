@@ -51,20 +51,6 @@ define([
         this._clone = defaultValue(clone, noClone);
     };
 
-    defineProperties(ConstantProperty.prototype, {
-        /**
-         * Always returns false, since this property always varies with simulation time.
-         * @memberof ConstantProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return false;
-            }
-        }
-    });
-
     /**
      * Returns the value of the property at the specified simulation time.
      * @memberof ConstantProperty

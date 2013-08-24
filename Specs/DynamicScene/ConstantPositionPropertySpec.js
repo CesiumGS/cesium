@@ -18,11 +18,9 @@ defineSuite([
 
     it('Constructor sets expected defaults', function() {
         var property = new ConstantPositionProperty(new Cartesian3(1, 2, 3));
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.referenceFrame).toBe(ReferenceFrame.FIXED);
 
         property = new ConstantPositionProperty(new Cartesian3(1, 2, 3), ReferenceFrame.INERTIAL);
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.referenceFrame).toBe(ReferenceFrame.INERTIAL);
     });
 

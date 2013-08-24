@@ -48,23 +48,6 @@ define([
         this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
     };
 
-    defineProperties(GridMaterialProperty.prototype, {
-        /**
-         * Always returns false, since this property always varies with simulation time.
-         * @memberof ConstantProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return (defined(this.color) ? this.color.isTimeVarying : false) || //
-                       (defined(this.cellAlpha) ? this.cellAlpha.isTimeVarying : false) || //
-                       (defined(this.lineCount) ? this.lineCount.isTimeVarying : false) || //
-                       (defined(this.lineThickness) ? this.lineThickness.isTimeVarying : false);
-            }
-        }
-    });
-
     GridMaterialProperty.prototype.getType = function(time) {
         return 'Grid';
     };

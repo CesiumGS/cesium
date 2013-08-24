@@ -25,17 +25,6 @@ define([
 
     defineProperties(CompositeMaterialProperty.prototype, {
         /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof SampledProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return true;
-            }
-        },
-        /**
          * Gets the interval collection.
          * @memberof CompositeMaterialProperty.prototype
          *

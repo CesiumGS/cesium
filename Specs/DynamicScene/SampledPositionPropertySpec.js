@@ -20,7 +20,6 @@ defineSuite([
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();
-        expect(property.isTimeVarying).toEqual(true);
         expect(property.referenceFrame).toEqual(ReferenceFrame.FIXED);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
@@ -28,7 +27,6 @@ defineSuite([
 
     it('constructor sets expected values', function() {
         var property = new SampledPositionProperty(ReferenceFrame.INERTIAL);
-        expect(property.isTimeVarying).toEqual(true);
         expect(property.referenceFrame).toEqual(ReferenceFrame.INERTIAL);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);

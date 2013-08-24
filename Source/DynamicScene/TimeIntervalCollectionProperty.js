@@ -31,17 +31,6 @@ define([
 
     defineProperties(TimeIntervalCollectionProperty.prototype, {
         /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof TimeIntervalCollectionProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return true;
-            }
-        },
-        /**
          * Gets the interval collection.
          * @memberof TimeIntervalCollectionProperty
          *

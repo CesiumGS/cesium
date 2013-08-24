@@ -16,7 +16,6 @@ defineSuite([
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionProperty();
-        expect(property.isTimeVarying).toEqual(true);
         expect(property.intervals).toBeInstanceOf(TimeIntervalCollection);
         expect(property.getValue(new JulianDate())).toBeUndefined();
     });

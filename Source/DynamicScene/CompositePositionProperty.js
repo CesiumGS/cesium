@@ -32,17 +32,6 @@ define([
 
     defineProperties(CompositePositionProperty.prototype, {
         /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof CompositePositionProperty.prototype
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return true;
-            }
-        },
-        /**
          * Gets the interval collection.
          * @memberof CompositePositionProperty.prototype
          *

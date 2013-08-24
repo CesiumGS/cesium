@@ -25,20 +25,6 @@ define([
         this.color = new ConstantProperty(Color.WHITE);
     };
 
-    defineProperties(ColorMaterialProperty.prototype, {
-        /**
-         * Always returns false, since this property always varies with simulation time.
-         * @memberof ConstantProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return defined(this.color) ? this.color.isTimeVarying : false;
-            }
-        }
-    });
-
     ColorMaterialProperty.prototype.getType = function(time) {
         return 'Color';
     };

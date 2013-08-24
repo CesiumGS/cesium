@@ -136,17 +136,6 @@ define([
     };
 
     defineProperties(SampledProperty.prototype, {
-        /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof SampledProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return true;
-            }
-        },
         interpolationDegree : {
             get : function() {
                 return this._interpolationDegree;

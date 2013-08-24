@@ -31,22 +31,6 @@ define([
         this.repeat = new ConstantProperty(new Cartesian2(1, 1));
     };
 
-
-    defineProperties(ImageMaterialProperty.prototype, {
-        /**
-         * Always returns false, since this property always varies with simulation time.
-         * @memberof ConstantProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return (defined(this.image) ? this.image.isTimeVarying : false) || //
-                       (defined(this.repeat) ? this.repeat.isTimeVarying : false);
-            }
-        }
-    });
-
     ImageMaterialProperty.prototype.getType = function(time) {
         return 'Image';
     };

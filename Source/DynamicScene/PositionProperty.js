@@ -35,13 +35,6 @@ define([
     var PositionProperty = throwInstantiationError;
 
     /**
-     * Gets a value indicating if the property varies with simulation time or is constant.
-     * @memberof PositionProperty
-     * @Type {Boolean}
-     */
-    PositionProperty.prototype.isTimeVarying = undefined;
-
-    /**
      * Gets the reference frame that the position is defined in.
      * @memberof PositionProperty
      * @Type {ReferenceFrame}

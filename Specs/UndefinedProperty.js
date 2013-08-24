@@ -7,14 +7,6 @@ define(['../Core/defineProperties'], function(defineProperties) {
     var UndefinedProperty = function() {
     };
 
-    defineProperties(UndefinedProperty.prototype, {
-        isTimeVarying : {
-            get : function() {
-                return false;
-            }
-        }
-    });
-
     UndefinedProperty.prototype.getValue = function(time, result) {
         return undefined;
     };

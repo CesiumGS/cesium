@@ -9,8 +9,8 @@ define(['../Core/DeveloperError'
     }
 
     /**
-     * The base class for all properties, which represent a value that can optionally
-     * vary over time.
+     * The base class for all properties, which represent a value that can
+     * optionally vary over time.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias Property
@@ -18,18 +18,13 @@ define(['../Core/DeveloperError'
      *
      * @see CompositeProperty
      * @see ConstantProperty
-     * @see PositionProperty
-     * @see RefereenceProperty
      * @see SampledProperty
      * @see TimeIntervalCollectionProperty
+     * @see MaterialProperty
+     * @see PositionProperty
+     * @see RefereenceProperty
      */
     var Property = throwInstantiationError;
-
-    /**
-     * Gets a value indicating if the property varies with simulation time or is constant.
-     * @memberof Property
-     */
-    Property.prototype.isTimeVarying = undefined;
 
     /**
      * Returns the value of the property at the specified simulation time.

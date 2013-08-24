@@ -33,17 +33,6 @@ define([
     };
 
     defineProperties(SampledPositionProperty.prototype, {
-        /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof SampledPositionProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return this._property.isTimeVarying;
-            }
-        },
         referenceFrame : {
             get : function() {
                 return this._referenceFrame;

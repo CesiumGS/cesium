@@ -22,7 +22,6 @@ defineSuite([
 
     it('works with basic types', function() {
         var property = new GridMaterialProperty();
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.color).toBeDefined();
         expect(property.cellAlpha).toBeDefined();
         expect(property.lineCount).toBeDefined();
@@ -43,7 +42,6 @@ defineSuite([
         property.cellAlpha = new ConstantProperty(1.0);
         property.lineCount = new ConstantProperty(new Cartesian2(3.4, 5.0));
         property.lineThickness = new ConstantProperty(new Cartesian2(2, 3));
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = property.getValue(new JulianDate());
         expect(result.color).toEqual(Color.RED);
@@ -58,7 +56,6 @@ defineSuite([
         property.cellAlpha = new UndefinedProperty();
         property.lineCount = new UndefinedProperty();
         property.lineThickness = new UndefinedProperty();
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = property.getValue();
         expect(result.hasOwnProperty('color')).toEqual(true);
@@ -84,7 +81,6 @@ defineSuite([
         property.cellAlpha.intervals.addInterval(new TimeInterval(start, stop, true, true, 1.0));
         property.lineCount.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(3.4, 5.0)));
         property.lineThickness.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
-        expect(property.isTimeVarying).toEqual(true);
 
         var result = property.getValue(start);
         expect(result.color).toEqual(Color.BLUE);
@@ -99,7 +95,6 @@ defineSuite([
         property.cellAlpha = new ConstantProperty(1.0);
         property.lineCount = new ConstantProperty(new Cartesian2(3.4, 5.0));
         property.lineThickness = new ConstantProperty(new Cartesian2(2, 3));
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = {};
         var returnedResult = property.getValue(new JulianDate(), result);

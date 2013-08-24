@@ -34,17 +34,6 @@ define([
 
     defineProperties(ConstantPositionProperty.prototype, {
         /**
-         * Always returns true, since this property always varies with simulation time.
-         * @memberof SampledProperty
-         *
-         * @type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                return this._property.isTimeVarying;
-            }
-        },
-        /**
          * Gets the reference frame that the position is defined in.
          * @Type {ReferenceFrame}
          */

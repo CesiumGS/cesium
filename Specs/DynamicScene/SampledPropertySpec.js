@@ -14,7 +14,6 @@ defineSuite([
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Number);
-        expect(property.isTimeVarying).toEqual(true);
         expect(property.interpolationDegree).toEqual(1);
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
     });

@@ -588,14 +588,6 @@ define([
         this._y = new ConstantProperty(0);
     };
 
-    defineProperties(Cartesian2WrapperProperty.prototype, {
-        isTimeVarying : {
-            get : function() {
-                return this._x.isTimeVarying || this._y.isTimeVarying;
-            }
-        }
-    });
-
     Cartesian2WrapperProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = new Cartesian2();

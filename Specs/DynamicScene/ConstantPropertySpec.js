@@ -15,7 +15,6 @@ defineSuite([
     it('works with basic types', function() {
         var expected = 5;
         var property = new ConstantProperty(expected);
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.getValue(time)).toBe(expected);
     });
 
@@ -27,7 +26,6 @@ defineSuite([
             return expected;
         };
         var property = new ConstantProperty(expected, cloneFunction);
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.getValue(time)).toBe(expected);
         expect(cloneCalled).toEqual(true);
     });
@@ -35,7 +33,6 @@ defineSuite([
     it('works with clonable objects', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = property.getValue(time);
         expect(result).not.toBe(value);
@@ -45,7 +42,6 @@ defineSuite([
     it('works with clonable objects with result parameter', function() {
         var value = new Cartesian3(1, 2, 3);
         var property = new ConstantProperty(value);
-        expect(property.isTimeVarying).toEqual(false);
 
         var expected = new Cartesian3();
         var result = property.getValue(time, expected);

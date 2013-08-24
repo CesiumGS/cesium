@@ -20,7 +20,6 @@ defineSuite([
 
     it('works with basic types', function() {
         var property = new ImageMaterialProperty();
-        expect(property.isTimeVarying).toEqual(false);
         expect(property.image).toBeUndefined();
         expect(property.repeat).toBeDefined();
 
@@ -35,7 +34,6 @@ defineSuite([
         var property = new ImageMaterialProperty();
         property.image = new ConstantProperty('http://test.invalid/image.png');
         property.repeat = new ConstantProperty(new Cartesian2(2, 3));
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = property.getValue(new JulianDate());
         expect(result.image).toEqual('http://test.invalid/image.png');
@@ -46,7 +44,6 @@ defineSuite([
         var property = new ImageMaterialProperty();
         property.image = new UndefinedProperty();
         property.repeat = new UndefinedProperty();
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = property.getValue();
         expect(result.hasOwnProperty('image')).toEqual(true);
@@ -64,7 +61,6 @@ defineSuite([
         var stop = new JulianDate(2, 0);
         property.image.intervals.addInterval(new TimeInterval(start, stop, true, true, 'http://test.invalid/image.png'));
         property.repeat.intervals.addInterval(new TimeInterval(start, stop, true, true, new Cartesian2(2, 3)));
-        expect(property.isTimeVarying).toEqual(true);
 
         var result = property.getValue(start);
         expect(result.image).toEqual('http://test.invalid/image.png');
@@ -75,7 +71,6 @@ defineSuite([
         var property = new ImageMaterialProperty();
         property.image = new ConstantProperty('http://test.invalid/image.png');
         property.repeat = new ConstantProperty(new Cartesian2(2, 3));
-        expect(property.isTimeVarying).toEqual(false);
 
         var result = {};
         var returnedResult = property.getValue(new JulianDate(), result);

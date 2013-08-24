@@ -104,20 +104,6 @@ define([
         return new ReferenceProperty(dynamicObjectCollection, parts[0], parts[1]);
     };
 
-    defineProperties(ReferenceProperty.prototype, {
-        /**
-         * True if the property varies with simulation time, false otherwise.
-         * @memberof ReferenceProperty
-         * Type {Boolean}
-         */
-        isTimeVarying : {
-            get : function() {
-                var targetProperty = resolve(this);
-                return defined(targetProperty) ? targetProperty.isTimeVarying() : undefined;
-            }
-        }
-    });
-
     /**
      * Retrieves the value of the property at the specified time.
      *
