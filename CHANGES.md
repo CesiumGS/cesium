@@ -7,9 +7,9 @@ Beta Releases
 ### b21 - 2013-10-01
 * Breaking changes:
     * Removed `processCzml`, use `CzmlDataSource` instead.
-    * Completely refactored the `DynamicScene` property system. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
+    * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
        * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
-       * Removed `DynamicProperty', `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
+       * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
           * `Property` - base interface for all properties. 
           * `CompositeProperty` - a property composed of other properties.
           * `ConstantProperty` - a property whose value never changes.
@@ -26,7 +26,7 @@ Beta Releases
           * `SampledPositionProperty` - a `SampledProperty` for positions.
           * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
-* Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation, `LinearApproximation`, and `HermitePolynomialApproximation`.
+* Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 
 ### b20 - 2013-09-03
 
