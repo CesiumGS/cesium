@@ -111,6 +111,8 @@ define([
      *
      * @exception {DeveloperError} type is required.
      *
+     * @see SampledPositionProperty
+     *
      * @example
      * //Create a linearly interpolated Cartesian2
      * var property = new SampledProperty(Cartesian2);
@@ -172,8 +174,7 @@ define([
     defineProperties(SampledProperty.prototype, {
         /**
          * Gets the type of property.
-         * @memberof SampledProperty
-         *
+         * @memberof SampledProperty.prototype
          * @type {Object}
          */
         type : {
@@ -183,8 +184,7 @@ define([
         },
         /**
          * Gets or sets the degree of interpolation to perform when retrieving a value.
-         * @memberof SampledProperty
-         *
+         * @memberof SampledProperty.prototype
          * @type {Object}
          * @default 1
          */
@@ -199,8 +199,7 @@ define([
         },
         /**
          * Gets or sets the interpolation algorithm to use when retrieving a value.
-         * @memberof SampledProperty
-         *
+         * @memberof SampledProperty.prototype
          * @type {InterpolationAlgorithm}
          * @default LinearApproximation
          */
@@ -376,10 +375,10 @@ define([
     };
 
     /**
-     * Adds samples as a single packed array where each index
+     * Adds samples as a single packed array where each new sample is represented as a date, followed by the packed representation of the corresponding value.
      * @memberof SampledProperty
      *
-     * @param {Array} packedSamples The array of packed samples where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * @param {Array} packedSamples The array of packed samples.
      * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch.
      *
      * @exception {DeveloperError} packedSamples is required.

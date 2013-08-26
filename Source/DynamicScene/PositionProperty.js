@@ -40,7 +40,7 @@ define([
     defineProperties(PositionProperty.prototype, {
         /**
          * Gets the reference frame that the position is defined in.
-         * @memberof PositionProperty
+         * @memberof PositionProperty.prototype
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
@@ -52,7 +52,7 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof Property
+     * @memberof PositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -64,7 +64,7 @@ define([
 
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
-     * @memberof Property
+     * @memberof PositionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.

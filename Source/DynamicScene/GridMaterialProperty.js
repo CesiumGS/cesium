@@ -12,44 +12,61 @@ define([
     "use strict";
 
     /**
-     * A utility class for processing CZML grid materials.
+     * A {@link MaterialProperty} that maps to grid {@link Material} uniforms.
      * @alias GridMaterialProperty
      * @constructor
      */
     var GridMaterialProperty = function() {
         /**
-         * A DynamicProperty of type Color which determines the grid's color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * A {@link Color} {@link Property} which determines the grid's color.
+         * @type {Property}
+         * @default new ConstantProperty(Color.WHITE)
          */
         this.color = new ConstantProperty(Color.WHITE);
 
         /**
-         * A DynamicProperty of type Number which determines the grid cells alpha value, when combined with the color alpha.
-         * @type {DynamicProperty}
-         * @default undefined
+         * A numeric {@link Property} which determines the grid cells alpha value, when combined with the color alpha.
+         * @type {Property}
+         * @default new ConstantProperty(0.1)
          */
         this.cellAlpha = new ConstantProperty(0.1);
 
         /**
-         * A DynamicProperty of type Number which determines the number of horizontal rows.
-         * @type {DynamicProperty}
-         * @default undefined
+         * A {@link Cartesian2} {@link Property} which determines the number of rows and columns in the grid.
+         * @type {Property}
+         * @default new ConstantProperty(new Cartesian2(8, 8))
          */
         this.lineCount = new ConstantProperty(new Cartesian2(8, 8));
 
         /**
-         * A DynamicProperty of type Number which determines the width of each horizontal line, in pixels.
-         * @type {DynamicProperty}
-         * @default undefined
+         * A {@link Cartesian2} {@link Property} which determines the thickness of rows and columns in the grid.
+         * @type {Property}
+         * @default new ConstantProperty(new Cartesian2(1.0, 1.0))
          */
         this.lineThickness = new ConstantProperty(new Cartesian2(1.0, 1.0));
     };
 
+    /**
+     * Gets the {@link Material} type at the provided time.
+     * @memberof MaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the type.
+     * @type {String} The type of material.
+     */
     GridMaterialProperty.prototype.getType = function(time) {
         return 'Grid';
     };
 
+    /**
+     * Gets the value of the property at the provided time.
+     * @memberof MaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     */
     GridMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};

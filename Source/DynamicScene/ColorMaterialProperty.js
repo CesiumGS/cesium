@@ -10,23 +10,40 @@ define([
     "use strict";
 
     /**
-     * A utility class for processing CZML color materials.
+     * A {@link MaterialProperty} that maps to solid color {@link Material} uniforms.
      * @alias ColorMaterialProperty
      * @constructor
      */
     var ColorMaterialProperty = function() {
         /**
-         * A DynamicProperty of type Color which determines the material's color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * A {@link Color} {@link Property} which determines the material's color.
+         * @type {Property}
+         * @default new ConstantProperty(Color.WHITE)
          */
         this.color = new ConstantProperty(Color.WHITE);
     };
 
+    /**
+     * Gets the {@link Material} type at the provided time.
+     * @memberof MaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the type.
+     * @type {String} The type of material.
+     */
     ColorMaterialProperty.prototype.getType = function(time) {
         return 'Color';
     };
 
+    /**
+     * Gets the value of the property at the provided time.
+     * @memberof MaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     */
     ColorMaterialProperty.prototype.getValue = function(time, result) {
         if (!defined(result)) {
             result = {};

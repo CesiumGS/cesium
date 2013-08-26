@@ -15,10 +15,9 @@ define([
         ReferenceFrame) {
     "use strict";
 
+
     /**
-     * A {@link PositionProperty} which is defined by a TimeIntervalCollection, where the
-     * data property of the interval is another PositionProperty instance which is
-     * evaluated at the provided time.
+     * A {@link CompositeProperty} which is also a {@link PositionProperty}.
      *
      * @alias CompositePositionProperty
      * @constructor
@@ -41,12 +40,13 @@ define([
             }
         },
         /**
-         * Gets or sets the reference frame that the position presents itself as.
+         * Gets or sets the reference frame which this position presents itself as.
          * Each PositionProperty making up this object has it's own reference frame,
-         * so this property merely exposes a "preferred" reference frame for clients.
+         * so this property merely exposes a "preferred" reference frame for clients
+         * to use.
          * @memberof CompositePositionProperty.prototype
          *
-         * @Type {ReferenceFrame}
+         * @Type {ReferenceFrame} The preferred reference frame.
          */
         referenceFrame : {
             get : function() {
@@ -59,10 +59,10 @@ define([
     });
 
     /**
-     * Returns the value of the property at the specified simulation time.
+     * Gets the value of the property at the provided time in the fixed frame.
      * @memberof CompositePositionProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *
@@ -73,17 +73,23 @@ define([
     };
 
     /**
-     * Returns the value of the property at the specified simulation time in the specified reference frame.
+     * Gets the value of the property at the provided time and in the provided reference frame.
      * @memberof CompositePositionProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
-     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The desired referenceFrame of the result.
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} referenceFrame is required.
      */
     CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         if (!defined(time)) {
-            throw new DeveloperError('time is required');
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(referenceFrame)) {
+            throw new DeveloperError('referenceFrame is required.');
         }
 
         var interval = this._intervals.findIntervalContainingDate(time);

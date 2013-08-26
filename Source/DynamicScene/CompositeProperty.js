@@ -19,6 +19,9 @@ define([
      * @alias CompositeProperty
      * @constructor
      *
+     * @see CompositeMaterialProperty
+     * @see CompositePositionProperty
+     *
      * @example
      * var constantProperty = ...;
      * var sampledProperty = ...;

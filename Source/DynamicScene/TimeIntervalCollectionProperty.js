@@ -60,7 +60,7 @@ define([
     defineProperties(TimeIntervalCollectionProperty.prototype, {
         /**
          * Gets the interval collection.
-         * @memberof TimeIntervalCollectionProperty
+         * @memberof TimeIntervalCollectionProperty.prototype
          *
          * @type {TimeIntervalCollection}
          */
@@ -73,7 +73,7 @@ define([
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof Property
+     * @memberof TimeIntervalCollectionProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.

@@ -1,12 +1,10 @@
 /*global define*/
 define([
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Scene/Material'
     ], function(
         defined,
-        defineProperties,
         DeveloperError,
         Material) {
     "use strict";
@@ -23,26 +21,26 @@ define([
      * @constructor
      *
      * @see ColorMaterialProperty
+     * @see CompositeMaterialProperty
      * @see GridMaterialProperty
      * @see ImageMaterialProperty
      */
     var MaterialProperty = throwInstantiationError;
 
-    defineProperties(MaterialProperty.prototype, {
-        /**
-         * Gets the Material type.
-         * @type {String}
-         */
-        type : {
-            get : function() {
-                throwInstantiationError();
-            }
-        }
-    });
+    /**
+     * Gets the {@link Material} type at the provided time.
+     * @memberof MaterialProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the type.
+     * @type {String} The type of material.
+     */
+    MaterialProperty.prototype.getType = function(time) {
+        throwInstantiationError();
+    };
 
     /**
      * Gets the value of the property at the provided time.
-     * @memberof Property
+     * @memberof MaterialProperty
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.

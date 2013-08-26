@@ -18,11 +18,12 @@ define([
     "use strict";
 
     /**
-     * A {@link Property} which is defined by an TimeIntervalCollection, where the
-     * data property of the interval represents the value at simulation time.
+     * A {@link TimeIntervalCollectionProperty} which is also a {@link PositionProperty}.
      *
      * @alias TimeIntervalCollectionPositionProperty
      * @constructor
+     *
+     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
      */
     var TimeIntervalCollectionPositionProperty = function(referenceFrame) {
         this._intervals = new TimeIntervalCollection();
@@ -32,8 +33,7 @@ define([
     defineProperties(TimeIntervalCollectionPositionProperty.prototype, {
         /**
          * Gets the interval collection.
-         * @memberof TimeIntervalCollectionPositionProperty
-         *
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
          * @type {TimeIntervalCollection}
          */
         intervals : {
@@ -42,8 +42,10 @@ define([
             }
         },
         /**
-         * Gets the reference frame that the positions are defined in.
+         * Gets the reference frame in which the position is defined.
+         * @memberof TimeIntervalCollectionPositionProperty.prototype
          * @Type {ReferenceFrame}
+         * @default ReferenceFrame.FIXED;
          */
         referenceFrame : {
             get : function() {
@@ -53,10 +55,10 @@ define([
     });
 
     /**
-     * Returns the value of the property at the specified simulation time.
-     * @memberof TimeIntervalCollectionPositionProperty
+     * Gets the value of the property at the provided time in the fixed frame.
+     * @memberof CompositePositionProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *
@@ -67,17 +69,23 @@ define([
     };
 
     /**
-     * Returns the value of the property at the specified simulation time in the specified reference frame.
-     * @memberof PositionProperty
+     * Gets the value of the property at the provided time and in the provided reference frame.
+     * @memberof CompositePositionProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
-     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The desired referenceFrame of the result.
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} referenceFrame is required.
      */
-    TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+    CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         if (!defined(time)) {
-            throw new DeveloperError('time is required');
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(referenceFrame)) {
+            throw new DeveloperError('referenceFrame is required.');
         }
 
         var interval = this._intervals.findIntervalContainingDate(time);

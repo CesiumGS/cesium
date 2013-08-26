@@ -32,6 +32,8 @@ define([
      * @exception {DeveloperError} value is required.
      * @exception {DeveloperError} clone is a required function.
      *
+     * @see ConstantPositionProperty
+     *
      * @example
      * //Create a constant value from a Cartesian2 instance.
      * var constantProperty = new ConstantProperty(new Cartesian2(10, 12));
