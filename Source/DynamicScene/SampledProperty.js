@@ -5,7 +5,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/PackableNumber',
         '../Core/JulianDate',
         '../Core/LinearApproximation'
        ], function(
@@ -14,10 +13,21 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        PackableNumber,
         JulianDate,
         LinearApproximation) {
     "use strict";
+
+    var PackableNumber = {
+        packedLength : 1,
+        pack : function(value, array, startingIndex) {
+            startingIndex = defaultValue(startingIndex, 0);
+            array[startingIndex] = value;
+        },
+        unpack : function(array, startingIndex, result) {
+            startingIndex = defaultValue(startingIndex, 0);
+            return array[startingIndex];
+        }
+    };
 
     //We can't use splice for inserting new elements because function apply can't handle
     //a huge number of arguments.  See https://code.google.com/p/chromium/issues/detail?id=56588

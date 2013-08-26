@@ -4,6 +4,30 @@ Change Log
 Beta Releases
 -------------
 
+### b21 - 2013-10-01
+* Breaking changes:
+    * Removed `processCzml`, use `CzmlDataSource` instead.
+    * Completely refactored the `DynamicScene` property system. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
+       * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
+       * Removed `DynamicProperty', `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
+          * `Property` - base interface for all properties. 
+          * `CompositeProperty` - a property composed of other properties.
+          * `ConstantProperty` - a property whose value never changes.
+          * `SampledProperty` - a property whose value is interpolated from a set of samples.
+          * `TimeIntervalCollectionProperty` - a property whose value changes based on time interval.
+          * `MaterialProperty` - base interface for all material properties.
+          * `CompositeMaterialProperty` - a `CompositeProperty` for materials.
+          * `ColorMaterialProperty` - a property that maps to a color material. (replaces `DynamicColorMaterial`)
+          * `GridMaterialProperty` - a property that maps to a grid material. (replaces `DynamicGridMaterial`)
+          * `ImageMaterialProperty` - a property that maps to an image material. (replaces `DynamicImageMaterial`)
+          * `PositionProperty`- base interface for all position properties.
+          * `CompositePositionProperty` - a `CompositeProperty` for positions.
+          * `ConstantPositionProperty` - a  whose value does not change in respect to the `ReferenceFrame` in which is it defined.
+          * `SampledPositionProperty` - a `SampledProperty` for positions.
+          * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
+* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
+* Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation, `LinearApproximation`, and `HermitePolynomialApproximation`.
+
 ### b20 - 2013-09-03
 
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
