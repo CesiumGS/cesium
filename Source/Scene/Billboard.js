@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/NearFarScalar',
         './HorizontalOrigin',
         './VerticalOrigin',
         './SceneMode',
@@ -19,6 +20,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        NearFarScalar,
         HorizontalOrigin,
         VerticalOrigin,
         SceneMode,
@@ -75,8 +77,12 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
         this._width = description.width;
         this._height = description.height;
-        // eyeDistance_min, scale_min, eyeDistance_max, scale_max
-        this._scaleByDistance = defaultValue(description.scaleByDistance, [5.0e6, 1.0, 2.0e7, 0.0]);
+        this._scaleByDistance = new NearFarScalar();
+        // disable scaleByDistance by default (scaling from 1.0 to 1.0)
+        //this.setScaleByDistance(defaultValue(description.scaleByDistance, new NearFarScalar(1.0, 1.0, 1.0e10, 1.0)));
+        // for initial testing with simple.czml and SandCastle CZML demo, using more interesting default value
+        // TODO: remove before final pull request into master
+        this.setScaleByDistance(defaultValue(description.scaleByDistance, new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0)));
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -269,12 +275,11 @@ define([
     };
 
     /**
-     * Returns the min and max scaling properties of a Billboard based on the billboard's distance from the camera.
+     * Returns the near and far scaling properties of a Billboard based on the billboard's distance from the camera.
      *
      * @memberof Billboard
      *
-     * @return {float[]} The scaling values based on range packed into an array of floats as follows,
-     *                   [minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance].
+     * @return {NearFarScalar} The near/far scaling values based on camera distance to the billboard
      *
      * @see Billboard#setScaleByDistance
      */
@@ -283,37 +288,35 @@ define([
     };
 
     /**
-     * Sets min and max scaling properties of a Billboard based on the billboard's distance from the camera.
-     * A billboard's scale will interpolate between the min and max scales while the camera distance falls
-     * within the upper and lower bounds of the specified camera distance cutoffs.  Outside of these ranges
-     * the billboard's scale remains clamped to the nearest scale.
+     * Sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#nearDistance} and {@link NearFarScalar#farDistance}.
+     * Outside of these ranges the billboard's scale remains clamped to the nearest bound.
      *
      * @memberof Billboard
      *
-     * @param {float} minDistance The lower bound of the camera distance threshold (min range of camera to billboard)
-     * @param {float} scaleAtMinDistance The scale of the billboard at the lower bound of the camera distance threshold.
-     * @param {float} maxDistance The upper bound of the camera distance threshold (max range of camera to billboard)
-     * @param {float} scaleAtMaxDistance The scale of the billboard at the upper bound of the camera distance threshold.
+     * @param {NearFarScalar} scale The configuration of near and far distances and their respective scale values
      *
      * @see Billboard#getScaleByDistance
      *
      * @example
-     * // Example 1. Set a billboard's scaleByDistance to
-     * // scale by 3.0 when the camera is 1.0e6 meters from the billboard
-     * // and disappear as the camera distance approaches 1e7 meters
-     * b.setScaleByDistance(1.0e6, 3.0, 1e7, 0.0);
-     *
+     * // Set a billboard's scaleByDistance to scale by 1.5 when the
+     * // camera is 1500 meters from the billboard and disappear as
+     * // the camera distance approaches 8.0e6 meters.
+     * b.setScaleByDistance(new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
      */
-    Billboard.prototype.setScaleByDistance = function(minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance) {
-        if (!defined(minDistance) || !defined(scaleAtMinDistance) || !defined(maxDistance) || !defined(scaleAtMaxDistance)) {
-            throw new DeveloperError('Requires minScale, maxScale and minRange, maxRange ranges to be specified.');
+    Billboard.prototype.setScaleByDistance = function(scale) {
+        if (!defined(scale)) {
+            throw new DeveloperError('Requires NearFarScalar to configure the Billboard scale at near and far distances.');
         }
 
-        if (maxDistance < minDistance) {
-            throw new DeveloperError('maxDistance must be greater than minDistance.');
+        if (scale.farDistance <= scale.nearDistance) {
+            throw new DeveloperError('farDistance must be greater than nearDistance and these distances cannot be equal.');
         }
 
-        this._scaleByDistance = [minDistance, scaleAtMinDistance, maxDistance, scaleAtMaxDistance];
+        NearFarScalar.clone(scale, this._scaleByDistance);
+
         makeDirty(this, SCALE_BY_DISTANCE_INDEX);
     };
 

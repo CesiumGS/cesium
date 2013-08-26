@@ -917,6 +917,22 @@ define([
     };
 
     /**
+     * Returns the altitude of the camera for 2D <code>SceneMode</code>.  In Scene2D, the height (z) is fixed; camera
+     * zoom is achieved by altering the frustum width.  The height of the camera above the 2D plane can be
+     * determined by taking half of the frustum width.  This uniform is only valid when the scene mode is
+     * 2D.
+     *
+     * @memberof UniformState
+     *
+     * @return {double} Returns the altitude above the 2D world plane in 2D mode, 0.0 otherwise.
+     *
+     * @see czm_eyeAltitude2D
+     */
+    UniformState.prototype.getEyeAltitude2D = function() {
+        return this._frustum2DWidth*0.5;
+    };
+
+    /**
      * Returns the size of a pixel in meters at a distance of one meter from the camera.
      *
      * @memberof UniformState

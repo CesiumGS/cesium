@@ -1295,6 +1295,32 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform containing altitude of the eye (camera) in the 2D scene.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_eyeAltitude2D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_eyeAltitude2D
+         * @glslUniform
+         *
+         * @see UniformState#getEyeAltitude2D
+         */
+        czm_eyeAltitude2D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEyeAltitude2D();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
          * of the frustum defined by the camera.  This is the individual
          * frustum used for multi-frustum rendering.
@@ -1683,6 +1709,41 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getFrameState().morphTime;
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the current {@link SceneMode} enumeration, expressed
+         * as a float.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sceneMode</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sceneMode
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_sceneMode;
+         *
+         * // Example
+         * if (czm_sceneMode == czm_sceneMode2D)
+         * {
+         *     heightAboveTerrain = czm_eyeAltitude2D;
+         * }
+         */
+        czm_sceneMode : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getFrameState().mode.value;
             }
         },
 

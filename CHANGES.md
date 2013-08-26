@@ -51,6 +51,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Fixed triangulation for polygons that cross the international date line.
 * Added `Billboard.scaleByDistance` to control Billboard min/max scale based on Camera distance to Billboard.
+* Added new type, `NearFarScalar` to represent a scalar value's lower and upper bound at a near distance and far distance in eye space.
 
 ### b19 - 2013-08-01
 

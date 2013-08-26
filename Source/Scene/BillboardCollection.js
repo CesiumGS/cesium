@@ -865,26 +865,20 @@ define([
     }
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
-
         var i = billboard._index * 4;
-        var scaleByViewerDistance = billboard.getScaleByDistance();
+        var scale = billboard.getScaleByDistance();
 
         // if both scales are 1.0 and 1.0, then scaling by distance computation is not necessary
-        if (scaleByViewerDistance[1] !== 1.0 || scaleByViewerDistance[3] !== 1.0) {
+        if (scale.nearValue !== 1.0 || scale.farValue !== 1.0) {
             billboardCollection._shaderScaleByDistance = true;
         }
 
-        var minDistance = scaleByViewerDistance[0];
-        var scaleAtMinDist = scaleByViewerDistance[1];
-        var maxDistance = scaleByViewerDistance[2];
-        var scaleAtMaxDist = scaleByViewerDistance[3];
-
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.scaleByDistance];
-        writer(i + 0, minDistance, scaleAtMinDist, maxDistance, scaleAtMaxDist);
-        writer(i + 1, minDistance, scaleAtMinDist, maxDistance, scaleAtMaxDist);
-        writer(i + 2, minDistance, scaleAtMinDist, maxDistance, scaleAtMaxDist);
-        writer(i + 3, minDistance, scaleAtMinDist, maxDistance, scaleAtMaxDist);
+        writer(i + 0, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
+        writer(i + 1, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
+        writer(i + 2, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
+        writer(i + 3, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {

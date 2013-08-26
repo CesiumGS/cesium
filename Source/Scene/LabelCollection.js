@@ -5,6 +5,7 @@ define([
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Matrix4',
+        '../Core/NearFarScalar',
         '../Core/writeTextToCanvas',
         './BillboardCollection',
         './Label',
@@ -17,6 +18,7 @@ define([
         destroyObject,
         Cartesian2,
         Matrix4,
+        NearFarScalar,
         writeTextToCanvas,
         BillboardCollection,
         Label,
@@ -180,7 +182,7 @@ define([
                     billboard._pickIdThis = label;
                     // until text billboard scaling is fixed, disable the scaleByDistance
                     // (scaling from 1.0 to 1.0)
-                    billboard.setScaleByDistance(1.0, 1.0, 1.0e10, 1.0);
+                    billboard.setScaleByDistance(new NearFarScalar(1.0, 1.0, 1.0e10, 1.0));
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
