@@ -7,7 +7,6 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/EllipsoidGeometry',
         '../Core/FeatureDetection',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -33,7 +32,6 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
-        EllipsoidGeometry,
         FeatureDetection,
         DeveloperError,
         Ellipsoid,
@@ -996,7 +994,7 @@ define([
 
                     if (surface._debug.wireframe) {
                         createWireframeVertexArrayIfNecessary(context, surface, tile);
-                        if (typeof tile.wireframeVertexArray !== 'undefined') {
+                        if (defined(tile.wireframeVertexArray)) {
                             command.vertexArray = tile.wireframeVertexArray;
                             command.primitiveType = PrimitiveType.LINES;
                         }
@@ -1024,16 +1022,16 @@ define([
     }
 
     function createWireframeVertexArrayIfNecessary(context, surface, tile) {
-        if (typeof tile.wireframeVertexArray !== 'undefined') {
+        if (defined(tile.wireframeVertexArray)) {
             return;
         }
 
-        if (typeof tile.meshForWireframePromise !== 'undefined') {
+        if (defined(tile.meshForWireframePromise)) {
             return;
         }
 
         tile.meshForWireframePromise = tile.terrainData.createMesh(surface._terrainProvider.getTilingScheme(), tile.x, tile.y, tile.level);
-        if (typeof tile.meshForWireframePromise === 'undefined') {
+        if (!defined(tile.meshForWireframePromise)) {
             // deferrred
             return;
         }

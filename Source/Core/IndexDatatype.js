@@ -55,10 +55,9 @@ define([
          * 32-bit unsigned int enumeration corresponding to <code>UNSIGNED_INT</code> and the type
          * of an element in <code>Uint32Array</code>.
          *
-         * @memberOf ComponentDatatype
-         *
-         * @constant
          * @type {Enumeration}
+         * @constant
+         * @default 0x1405
          */
         UNSIGNED_INT : new Enumeration(0x1405, 'UNSIGNED_INT', {
             sizeInBytes : Uint32Array.BYTES_PER_ELEMENT
@@ -66,7 +65,7 @@ define([
     };
 
     /**
-     * Validates that the provided index datatype is a valid {@link IndexDatatype}
+     * Validates that the provided index datatype is a valid {@link IndexDatatype}.
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
      *
@@ -78,9 +77,10 @@ define([
      * }
      */
     IndexDatatype.validate = function(indexDatatype) {
-        return indexDatatype === IndexDatatype.UNSIGNED_BYTE ||
-               indexDatatype === IndexDatatype.UNSIGNED_SHORT ||
-               indexDatatype === IndexDatatype.UNSIGNED_INT;
+        return defined(indexDatatype) && defined(indexDatatype.value) &&
+               (indexDatatype.value === IndexDatatype.UNSIGNED_BYTE.value ||
+                indexDatatype.value === IndexDatatype.UNSIGNED_SHORT.value ||
+                indexDatatype.value === IndexDatatype.UNSIGNED_INT.value);
     };
 
     /**

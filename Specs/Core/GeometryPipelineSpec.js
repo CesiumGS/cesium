@@ -3,6 +3,7 @@ defineSuite([
          'Core/GeometryPipeline',
          'Core/PrimitiveType',
          'Core/ComponentDatatype',
+         'Core/BoxGeometry',
          'Core/EllipsoidGeometry',
          'Core/Ellipsoid',
          'Core/Cartesian3',
@@ -20,6 +21,7 @@ defineSuite([
          GeometryPipeline,
          PrimitiveType,
          ComponentDatatype,
+         BoxGeometry,
          EllipsoidGeometry,
          Ellipsoid,
          Cartesian3,
@@ -316,7 +318,7 @@ defineSuite([
     });
 
     it('reorderForPostVertexCache reorders indices for the post vertex cache', function() {
-        var geometry = new EllipsoidGeometry();
+        var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry());
         var acmrBefore = Tipsify.calculateACMR({
             indices : geometry.indices,
             cacheSize : 24
@@ -1437,31 +1439,32 @@ defineSuite([
                                                         -0.4082482904638631, -0.8164965809277261, 0.4082482904638631], CesiumMath.EPSILON7);
     });
 
-    it ('computeBinormalAndTangent computes tangent and binormal for an EllipsoidGeometry', function() {
-        var numberOfPartitions = 10;
-        var geometry = new EllipsoidGeometry({
+    it ('computeBinormalAndTangent computes tangent and binormal for an BoxGeometry', function() {
+        var geometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat : new VertexFormat({
                 position : true,
                 normal : true,
                 st : true
             }),
-            numberOfPartitions : numberOfPartitions
-        });
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
         geometry = GeometryPipeline.computeBinormalAndTangent(geometry);
         var actualTangents = geometry.attributes.tangent.values;
         var actualBinormals = geometry.attributes.binormal.values;
 
-        var expectedGeometry = new EllipsoidGeometry({
+        var expectedGeometry = BoxGeometry.createGeometry(new BoxGeometry({
             vertexFormat: VertexFormat.ALL,
-            numberOfPartitions : numberOfPartitions
-        });
+            maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
+            minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
+        }));
         var expectedTangents = expectedGeometry.attributes.tangent.values;
         var expectedBinormals = expectedGeometry.attributes.binormal.values;
 
         expect(actualTangents.length).toEqual(expectedTangents.length);
         expect(actualBinormals.length).toEqual(expectedBinormals.length);
 
-        for (var i = 300; i < 500; i += 3) {
+        for (var i = 0; i < actualTangents.length; i += 3) {
             var actual = Cartesian3.fromArray(actualTangents, i);
             var expected = Cartesian3.fromArray(expectedTangents, i);
             expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON1);
@@ -1765,7 +1768,15 @@ defineSuite([
         expect(geometry.indices).toEqual([0, 3, 4, 1, 2, 6, 1, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1785,7 +1796,15 @@ defineSuite([
         expect(geometry.indices).toEqual([1, 3, 4, 2, 0, 6, 2, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 1.0, 2.0, -1.0, -1.0, 0.0, -1.0, 2.0, 2.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 2.0, -1.0, -1.0, 0.0, -1.0, 2.0, 2.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1805,7 +1824,16 @@ defineSuite([
         expect(geometry.indices).toEqual([2, 3, 4, 0, 1, 6, 0, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 1.0, 2.0, -1.0, 2.0, 2.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 2.0, -1.0, 2.0, 2.0, -1.0, -1.0, 0.0);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
+
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1815,7 +1843,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, 2.0, 0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0])
+                    values : new Float64Array([-1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1825,7 +1853,15 @@ defineSuite([
         expect(geometry.indices).toEqual([1, 2, 4, 1, 4, 3, 0, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 2.0, 0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1835,7 +1871,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, 2.0, 0.0, -1.0, -1.0, 0.0])
+                    values : new Float64Array([-2.0, -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, -1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1845,7 +1881,15 @@ defineSuite([
         expect(geometry.indices).toEqual([2, 0, 4, 2, 4, 3, 1, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, 2.0, 0.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-2.0, -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, -1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1855,7 +1899,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 2.0, 0.0])
+                    values : new Float64Array([-1.0, -1.0, 0.0, -2.0, -1.0, 0.0, -1.0, 1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1865,7 +1909,15 @@ defineSuite([
         expect(geometry.indices).toEqual([0, 1, 4, 0, 4, 3, 2, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 2.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, -1.0, 0.0, -2.0, -1.0, 0.0, -1.0, 1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 

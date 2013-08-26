@@ -89,7 +89,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('toolbar');
         
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             scene.getAnimations().removeAll();
             resetExtentPropeties(extent);
@@ -100,7 +100,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             scene.getAnimations().removeAll();
             resetExtentPropeties(extent);
@@ -111,7 +111,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             scene.getAnimations().removeAll();
             addStripeAnimation(rectangularSensor, scene);
