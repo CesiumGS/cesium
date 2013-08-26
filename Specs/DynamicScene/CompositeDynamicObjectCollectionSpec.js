@@ -118,10 +118,10 @@ defineSuite([
 
     it('setCollections works with existing dynamicObjectCollections', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
-        CzmlDataSource.processCzml(czml1, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml1, dynamicObjectCollection1);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
-        CzmlDataSource.processCzml(czml2, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
@@ -140,10 +140,10 @@ defineSuite([
 
     it('Constructing with existing dynamicObjectCollections merges expected objects', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
-        CzmlDataSource.processCzml(czml1, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml1, dynamicObjectCollection1);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
-        CzmlDataSource.processCzml(czml2, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([dynamicObjectCollection1, dynamicObjectCollection2]);
 
@@ -173,7 +173,7 @@ defineSuite([
                 'horizontalOrigin' : 'CENTER'
             }
         };
-        CzmlDataSource.processCzml(czml3, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml3, dynamicObjectCollection1);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -193,7 +193,7 @@ defineSuite([
                 'scale' : 3.0
             }
         };
-        CzmlDataSource.processCzml(czml4, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml4, dynamicObjectCollection2);
 
         objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);

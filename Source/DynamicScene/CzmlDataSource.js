@@ -1126,7 +1126,7 @@ define([
 
     function loadCzml(dataSource, czml, sourceUri) {
         var dynamicObjectCollection = dataSource._dynamicObjectCollection;
-        CzmlDataSource.processCzml(czml, dynamicObjectCollection, sourceUri);
+        CzmlDataSource._processCzml(czml, dynamicObjectCollection, sourceUri);
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
@@ -1299,36 +1299,7 @@ define([
         });
     };
 
-    /**
-     * Processes the provided CZML, creating or updating DynamicObject instances for each
-     * corresponding CZML identifier.
-     * @exports processCzml
-     *
-     * @param {Object} czml The parsed CZML object to be processed.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The collection to create or updated objects within.
-     * @param {String} [sourceUri] The uri of the file where the CZML originated from.  If provided, relative uri look-ups will use this as their base.
-     * @param {Array} [updaterFunctions=CzmlDataSource.updaters] The array of updated functions to use for processing.  If left undefined, all standard CZML data is processed.
-     *
-     * @exception {DeveloperError} czml is required.
-     * @exception {DeveloperError} dynamicObjectCollection is required.
-     *
-     * @returns An array containing all DynamicObject instances that were created or updated.
-     *
-     * @example
-     * var url = 'http://someUrl.com/myCzmlFile.czml';
-     * var dynamicObjectCollection = new DynamicObjectCollection();
-     * loadJson(url).then(function(czml) {
-     *     CzmlDataSource.processCzml(czml, dynamicObjectCollection, url);
-     * });
-     */
-    CzmlDataSource.processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
-        if (!defined(czml)) {
-            throw new DeveloperError('czml is required.');
-        }
-        if (!defined(dynamicObjectCollection)) {
-            throw new DeveloperError('dynamicObjectCollection is required.');
-        }
-
+    CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
         var updatedObjects = [];
         var updatedObjectsHash = {};
         updaterFunctions = defined(updaterFunctions) ? updaterFunctions : updaters;
