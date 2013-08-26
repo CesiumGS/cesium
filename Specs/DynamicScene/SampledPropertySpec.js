@@ -18,12 +18,12 @@ defineSuite([
         expect(property.interpolationAlgorithm).toEqual(LinearApproximation);
     });
 
-    it('addSamplesFlatArray works', function() {
+    it('addSamplesPackedArray works', function() {
         var data = [0, 7, 1, 8, 2, 9];
         var epoch = new JulianDate(0, 0);
 
         var property = new SampledProperty(Number);
-        property.addSamplesFlatArray(data, epoch);
+        property.addSamplesPackedArray(data, epoch);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(7.5);
     });
@@ -134,7 +134,7 @@ defineSuite([
         };
 
         var property = new SampledProperty(Number);
-        property.addSamplesFlatArray(data, epoch);
+        property.addSamplesPackedArray(data, epoch);
         expect(property.getValue(epoch)).toEqual(7);
         expect(property.getValue(new JulianDate(0, 1))).toEqual(8);
 

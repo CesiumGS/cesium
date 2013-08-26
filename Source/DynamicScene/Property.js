@@ -9,7 +9,7 @@ define(['../Core/DeveloperError'
     }
 
     /**
-     * The base class for all properties, which represent a value that can
+     * The interface for all properties, which represent a value that can
      * optionally vary over time.
      * This type defines an interface and cannot be instantiated directly.
      *
@@ -27,10 +27,10 @@ define(['../Core/DeveloperError'
     var Property = throwInstantiationError;
 
     /**
-     * Returns the value of the property at the specified simulation time.
+     * Gets the value of the property at the provided time.
      * @memberof Property
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *

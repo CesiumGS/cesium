@@ -29,8 +29,8 @@ define([
          */
         this.show = undefined;
         /**
-         * A DynamicDirectionsProperty which determines the projection of the pyramid.
-         * @type {DynamicDirectionsProperty}
+         * A Property which determines the projection of the pyramid.
+         * @type {Property}
          * @default undefined
          */
         this.directions = undefined;

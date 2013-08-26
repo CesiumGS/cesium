@@ -12,12 +12,24 @@ define([
     "use strict";
 
     /**
-     * A {@link Property} which is defined by a TimeIntervalCollection, where the
-     * data property of the interval is another Property instance which is evaluated
-     * at the provided time.
+     * A {@link Property} which is defined by a {@link TimeIntervalCollection}, where the
+     * data property of each {@link TimeInterval} is another Property instance which is
+     * evaluated at the provided time.
      *
      * @alias CompositeProperty
      * @constructor
+     *
+     * @example
+     * var constantProperty = ...;
+     * var sampledProperty = ...;
+     *
+     * //Create a composite property from two previously defined properties
+     * //where the property is valid on August 1st, 2012 and uses a constant
+     * //property for the first half of the day and a sampled property for the
+     * //remaining half.
+     * var composite = new CompositeProperty();
+     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T00:00:00.00Z/2012-08-01T12:00:00.00Z', true, true, constantProperty));
+     * composite.intervals.addInterval(TimeInterval.fromIso8601('2012-08-01T12:00:00.00Z/2012-08-02T00:00:00.00Z', false, false, sampledProperty));
      */
     var CompositeProperty = function() {
         this._intervals = new TimeIntervalCollection();
@@ -38,10 +50,10 @@ define([
     });
 
     /**
-     * Returns the value of the property at the specified simulation time.
-     * @memberof Property
+     * Gets the value of the property at the provided time.
+     * @memberof CompositeProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *

@@ -26,11 +26,27 @@ define([
      * @constructor
      *
      * @param {Object|Number|String} value The property value.
-     * @param {Function} [clone=value.clone] A function which takes the value and result parameter and clones it.
+     * @param {Function} [clone=value.clone] A function which takes the value and a result parameter and clones it.
      * This parameter is only required if the value is not a number or string and does not have a clone function.
      *
      * @exception {DeveloperError} value is required.
      * @exception {DeveloperError} clone is a required function.
+     *
+     * @example
+     * //Create a constant value from a Cartesian2 instance.
+     * var constantProperty = new ConstantProperty(new Cartesian2(10, 12));
+     *
+     * @example
+     * //Create a ConstantPropety from a user-defined object.
+     * var myObject = {
+     *     value : 6
+     * };
+     * function cloneMyObject(value, result) {
+     *     return {
+     *         value : value.value
+     *     };
+     * }
+     * var constantProperty = new ConstantProperty(myObject, cloneMyObject);
      */
     var ConstantProperty = function(value, clone) {
         if (!defined(value)) {
@@ -50,10 +66,10 @@ define([
     };
 
     /**
-     * Returns the value of the property at the specified simulation time.
-     * @memberof ConstantProperty
+     * Gets the value of the property at the provided time.
+     * @memberof CompositeProperty
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
+     * @param {JulianDate} time The time for which to retrieve the value.  This parameter is unused since the value never changes.
      * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      */

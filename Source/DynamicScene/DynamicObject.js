@@ -146,7 +146,7 @@ define([
 
         /**
          * Gets or sets the vertex positions.
-         * @type {DynamicVertexPositionsProperty}
+         * @type {Property}
          * @default undefined
          */
         this.vertexPositions = undefined;

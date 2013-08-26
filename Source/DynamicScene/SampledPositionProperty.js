@@ -90,8 +90,8 @@ define([
         this._property.addSamples(times, values);
     };
 
-    SampledPositionProperty.prototype.addSamplesFlatArray = function(data, epoch) {
-        this._property.addSamplesFlatArray(data, epoch);
+    SampledPositionProperty.prototype.addSamplesPackedArray = function(data, epoch) {
+        this._property.addSamplesPackedArray(data, epoch);
     };
 
     return SampledPositionProperty;

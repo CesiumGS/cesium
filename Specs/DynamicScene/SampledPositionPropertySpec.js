@@ -89,12 +89,12 @@ defineSuite([
         expect(expected).toEqual(PositionProperty.convertToReferenceFrame(time, value, ReferenceFrame.INERTIAL, ReferenceFrame.FIXED));
     });
 
-    it('addSamplesFlatArray works', function() {
+    it('addSamplesPackedArray works', function() {
         var data = [0, 7, 8, 9, 1, 8, 9, 10, 2, 9, 10, 11];
         var epoch = new JulianDate(0, 0);
 
         var property = new SampledPositionProperty();
-        property.addSamplesFlatArray(data, epoch);
+        property.addSamplesPackedArray(data, epoch);
         expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));
         expect(property.getValue(new JulianDate(0, 0.5))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
     });
@@ -169,7 +169,7 @@ defineSuite([
         };
 
         var property = new SampledPositionProperty();
-        property.addSamplesFlatArray(data, epoch);
+        property.addSamplesPackedArray(data, epoch);
         property.interpolationDegree = 2;
         property.interpolationAlgorithm = MockInterpolation;
         expect(property.getValue(epoch)).toEqual(new Cartesian3(7, 8, 9));

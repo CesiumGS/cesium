@@ -16,8 +16,7 @@ define([
     }
 
     /**
-     * The base class for {@link Material} properties, which are {@link Property} objects
-     * that represent a Material whose uniforms change over time.
+     * The interface for all {@link Property} objects that represent {@link Material} uniforms.
      * This type defines an interface and cannot be instantiated directly.
      *
      * @alias MaterialProperty
@@ -42,12 +41,14 @@ define([
     });
 
     /**
-     * Returns the value of the property at the specified simulation time in the fixed frame.
-     * @memberof MaterialProperty
+     * Gets the value of the property at the provided time.
+     * @memberof Property
      *
-     * @param {JulianDate} time The simulation time for which to retrieve the value.
-     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
      */
     MaterialProperty.prototype.getValue = throwInstantiationError;
 

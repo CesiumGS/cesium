@@ -335,7 +335,7 @@ define([
                 object[propertyName] = property;
                 propertyCreated = true;
             }
-            property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+            property.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
             updateInterpolationSettings(packetData, property);
             return propertyCreated;
         }
@@ -422,7 +422,7 @@ define([
             interval.data = new SampledProperty(type);
             intervals.addInterval(interval);
         }
-        interval.data.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+        interval.data.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
         updateInterpolationSettings(packetData, interval.data);
         return propertyCreated;
     }
@@ -479,7 +479,7 @@ define([
                 object[propertyName] = property;
                 propertyCreated = true;
             }
-            property.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+            property.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
             updateInterpolationSettings(packetData, property);
             return propertyCreated;
         }
@@ -560,7 +560,7 @@ define([
             interval.data = new SampledPositionProperty(referenceFrame);
             intervals.addInterval(interval);
         }
-        interval.data.addSamplesFlatArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
+        interval.data.addSamplesPackedArray(unwrappedInterval, JulianDate.fromIso8601(packetData.epoch));
         updateInterpolationSettings(packetData, interval.data);
         return propertyCreated;
     }

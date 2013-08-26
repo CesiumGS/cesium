@@ -24,9 +24,7 @@ define([
     }
 
     /**
-     * A dynamic property which transparently links to another property, which may
-     * or may not exist yet.  It is up to the caller to know which kind of property
-     * is being linked to.
+     * A {@link Property} which transparently links to another property on a provided object.
      *
      * @alias ReferenceProperty
      * @constructor
@@ -38,13 +36,6 @@ define([
      * @exception {DeveloperError} dynamicObjectCollection is required.
      * @exception {DeveloperError} targetObjectId is required.
      * @exception {DeveloperError} targetPropertyName is required.
-     *
-     * @see ReferenceProperty#fromString
-     * @see DynamicProperty
-     * @see DynamicDirectionsProperty
-     * @see DynamicVertexPositionsProperty
-     * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
      */
     var ReferenceProperty = function(dynamicObjectCollection, targetObjectId, targetPropertyName) {
         if (!defined(dynamicObjectCollection)) {
@@ -72,18 +63,11 @@ define([
      * @param {DynamicObject} dynamicObjectCollection
      * @param referenceString
      *
+     * @returns A new instance of ReferenceProperty.
+     *
      * @exception {DeveloperError} dynamicObjectCollection is required.
      * @exception {DeveloperError} referenceString is required.
-     * @exception {DeveloperError} referenceString must contain a single . delineating the target object ID and property name.
-     *
-     * @see ReferenceProperty#fromString
-     * @see DynamicProperty
-     * @see DynamicDirectionsProperty
-     * @see DynamicVertexPositionsProperty
-     * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
-     *
-     * @returns A new instance of ReferenceProperty.
+     * @exception {DeveloperError} referenceString must contain a single period delineating the target object ID and property name.
      */
     ReferenceProperty.fromString = function(dynamicObjectCollection, referenceString) {
         if (!defined(dynamicObjectCollection)) {
@@ -103,11 +87,15 @@ define([
     };
 
     /**
-     * Retrieves the value of the property at the specified time.
+     * Gets the value of the property at the provided time.
+     * @memberof Property
      *
-     * @param time The time to evaluate the property.
-     * @param [result] The object to store the result in, if undefined a new instance will be created.
-     * @returns The result parameter or a new instance if the parameter was omitted.
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     *
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
      */
     ReferenceProperty.prototype.getValue = function(time, result) {
         if (!defined(time)) {

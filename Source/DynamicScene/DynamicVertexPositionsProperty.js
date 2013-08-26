@@ -57,35 +57,12 @@ define([
     };
 
     /**
-     * A dynamic property which maintains an array of positions that can change over time.
-     * The positions can be represented as both Cartesian and Cartographic coordinates.
-     * Rather than creating instances of this object directly, it's typically
-     * created and managed via loading CZML data into a DynamicObjectCollection.
-     * Instances of this type are exposed via DynamicObject and it's sub-objects
-     * and are responsible for interpreting and interpolating the data for visualization.
-     *
-     * @alias DynamicVertexPositionsProperty
-     * @internalconstructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see ReferenceProperty
-     * @see DynamicMaterialProperty
-     * @see DynamicDirectionsProperty
+     * @private
      */
     var DynamicVertexPositionsProperty = function() {
         this._propertyIntervals = new TimeIntervalCollection();
     };
 
-    /**
-     * Processes the provided CZML interval or intervals into this property.
-     *
-     * @memberof DynamicVertexPositionsProperty
-     *
-     * @param {Object} czmlIntervals The CZML data to process.
-     * @param {TimeInterval} [constrainedInterval] Constrains the processing so that any times outside of this interval are ignored.
-     * @param {DynamicObjectCollection} dynamicObjectCollection The DynamicObjectCollection to be used as a target for resolving links within this property.
-     */
     DynamicVertexPositionsProperty.prototype.processCzmlIntervals = function(czmlIntervals, constrainedInterval, dynamicObjectCollection) {
         if (Array.isArray(czmlIntervals)) {
             for ( var i = 0, len = czmlIntervals.length; i < len; i++) {
@@ -96,13 +73,6 @@ define([
         }
     };
 
-    /**
-     * Retrieves the values at the supplied time as Cartesian coordinates.
-     * @memberof DynamicVertexPositionsProperty
-     *
-     * @param {JulianDate} time The time for which to retrieve the value.
-     * @returns An array of Cartesian coordinates for the provided time.
-     */
     DynamicVertexPositionsProperty.prototype.getValue = function(time) {
         var interval = this._propertyIntervals.findIntervalContainingDate(time);
         if (!defined(interval)) {

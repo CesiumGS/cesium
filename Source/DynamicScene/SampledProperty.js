@@ -102,27 +102,61 @@ define([
     };
 
     /**
-     * A {@link Property} whose value never changes.
-     *
+     * A {@link Property} whose value is interpolated for a given time from the
+     * provided set of samples and specified interpolation algorithm and degree.
      * @alias SampledProperty
      * @constructor
      *
-     * @exception {DeveloperError} value is required.
+     * @param {Object} type The type of property, which must be Number, String or implement {@link Packable}.
+     *
+     * @exception {DeveloperError} type is required.
+     *
+     * @example
+     * //Create a linearly interpolated Cartesian2
+     * var property = new SampledProperty(Cartesian2);
+     * property.interpolationDegree = 1;
+     * property.interpolationAlgorithm = LinearApproximation;
+     *
+     * //Populate it with data
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), new Cartesian2(0, 0));
+     * property.addSample(JulianDate.fromIso8601(`2012-08-02T00:00:00.00Z`), new Cartesian2(4, 7));
+     *
+     * //Retrieve an interpolated value
+     * var result = property.getValue(JulianDate.fromIso8601(`2012-08-01T12:00:00.00Z`));
+     *
+     * @example
+     * //Create a simple numeric SampledProperty that uses third degree Hermite Polynomial Approximation
+     * var property = new SampledProperty(Number);
+     * property.interpolationDegree = 3;
+     * property.interpolationAlgorithm = HermitePolynomialApproximation;
+     *
+     * //Populate it with data
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:00.00Z`), 1.0);
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:01:00.00Z`), 6.0);
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:02:00.00Z`), 12.0);
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:03:30.00Z`), 5.0);
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:06:30.00Z`), 2.0);
+     *
+     * //Samples can be added in any order.
+     * property.addSample(JulianDate.fromIso8601(`2012-08-01T00:00:30.00Z`), 6.2);
+     *
+     * //Retrieve an interpolated value
+     * var result = property.getValue(JulianDate.fromIso8601(`2012-08-01T00:02:34.00Z`));
      */
     var SampledProperty = function(type) {
         if (!defined(type)) {
             throw new DeveloperError('type is required.');
         }
 
-        this.type = type;
-
-        if (type === Number) {
-            type = PackableNumber;
+        var innerType = type;
+        if (innerType === Number) {
+            innerType = PackableNumber;
         }
 
-        var packedInterpolationLength = defaultValue(type.packedInterpolationLength, type.packedLength);
+        var packedInterpolationLength = defaultValue(innerType.packedInterpolationLength, innerType.packedLength);
 
-        this._innerType = type;
+        this._type = type;
+        this._innerType = innerType;
         this._interpolationDegree = 1;
         this._interpolationAlgorithm = LinearApproximation;
         this._numberOfPoints = 0;
@@ -136,6 +170,24 @@ define([
     };
 
     defineProperties(SampledProperty.prototype, {
+        /**
+         * Gets the type of property.
+         * @memberof SampledProperty
+         *
+         * @type {Object}
+         */
+        type : {
+            get : function() {
+                return this._type;
+            }
+        },
+        /**
+         * Gets or sets the degree of interpolation to perform when retrieving a value.
+         * @memberof SampledProperty
+         *
+         * @type {Object}
+         * @default 1
+         */
         interpolationDegree : {
             get : function() {
                 return this._interpolationDegree;
@@ -145,6 +197,13 @@ define([
                 this._updateTables = true;
             }
         },
+        /**
+         * Gets or sets the interpolation algorithm to use when retrieving a value.
+         * @memberof SampledProperty
+         *
+         * @type {InterpolationAlgorithm}
+         * @default LinearApproximation
+         */
         interpolationAlgorithm : {
             get : function() {
                 return this._interpolationAlgorithm;
@@ -157,12 +216,12 @@ define([
     });
 
     /**
-     * Gets the value of the property, optionally cloning it.
+     * Gets the value of the property at the provided time.
      * @memberof SampledProperty
      *
-     * @param {JulianDate} time The time for which to retrieve the value.  This parameter is unused.
-     * @param {Object} [result] The object to store the value into if the value is clonable.  If the result is omitted or the value does not implement clone, the actual value is returned.
-     * @returns The modified result parameter or the actual value instance if the value is not clonable.
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
      *
      * @exception {DeveloperError} time is required.
      */
@@ -258,7 +317,24 @@ define([
         return innerType.unpack(this._values, index * innerType.packedLength, result);
     };
 
+    /**
+     * Adds a new sample
+     * @memberof SampledProperty
+     *
+     * @param {JulianDate} time The sample time.
+     * @param {Object} value The value at the provided time.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} value is required.
+     */
     SampledProperty.prototype.addSample = function(time, value) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(value)) {
+            throw new DeveloperError('value is required.');
+        }
+
         var innerType = this._innerType;
         var data = [time];
         innerType.pack(value, data, 1);
@@ -266,7 +342,28 @@ define([
         this._updateTables = true;
     };
 
+    /**
+     * Adds an array of samples
+     * @memberof SampledProperty
+     *
+     * @param {Array} times An array of JulianDate instances where each index is a sample time.
+     * @param {Array} values The array of values, where each value corresponds to the provided times index.
+     *
+     * @exception {DeveloperError} times is required.
+     * @exception {DeveloperError} values is required.
+     * @exception {DeveloperError} times and values must be the same length..
+     */
     SampledProperty.prototype.addSamples = function(times, values) {
+        if (!defined(times)) {
+            throw new DeveloperError('times is required.');
+        }
+        if (!defined(values)) {
+            throw new DeveloperError('values is required.');
+        }
+        if (times.length !== values.length) {
+            throw new DeveloperError('times and values must be the same length.');
+        }
+
         var innerType = this._innerType;
         var length = times.length;
         var data = [];
@@ -278,8 +375,20 @@ define([
         this._updateTables = true;
     };
 
-    SampledProperty.prototype.addSamplesFlatArray = function(data, epoch) {
-        _mergeNewSamples(epoch, this._times, this._values, data, this._innerType.packedLength);
+    /**
+     * Adds samples as a single packed array where each index
+     * @memberof SampledProperty
+     *
+     * @param {Array} packedSamples The array of packed samples where each new sample is represented as a date, followed by the packed representation of the corresponding value.
+     * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch.
+     *
+     * @exception {DeveloperError} packedSamples is required.
+     */
+    SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
+        if (!defined(packedSamples)) {
+            throw new DeveloperError('packedSamples is required.');
+        }
+        _mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
         this._updateTables = true;
     };
 
