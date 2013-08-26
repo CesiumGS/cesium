@@ -27,15 +27,26 @@ void main()
     float glow = 1.0 - smoothstep(0.0, glowLengthTS + v_radiusTS, radius);
     color.ba += mix(vec2(0.0), vec2(1.0), glow) * 0.75;
 
-    for (float i = 0.4; i < 3.2; i += 1.047) {
-        vec2 direction = vec2(sin(i), cos(i));
-        color += 0.4 * addBurst(position, direction);
+    // The following loop has been manually unrolled for speed, to
+    // avoid sin() and cos().
+    //
+    //for (float i = 0.4; i < 3.2; i += 1.047) {
+    //    vec2 direction = vec2(sin(i), cos(i));
+    //    color += 0.4 * addBurst(position, direction);
+    //
+    //    direction = vec2(sin(i - 0.08), cos(i - 0.08));
+    //    color += 0.3 * addBurst(position, direction);
+    //}
 
-        direction = vec2(sin(i - 0.08), cos(i - 0.08));
-        color += 0.3 * addBurst(position, direction);
-    }
+    color += 0.4 * addBurst(position, vec2(0.38942,  0.92106));  // angle == 0.4
+    color += 0.4 * addBurst(position, vec2(0.99235,  0.12348));  // angle == 0.4 + 1.047
+    color += 0.4 * addBurst(position, vec2(0.60327, -0.79754));  // angle == 0.4 + 1.047 * 2.0
 
-    color = clamp(color, vec4(0.0), vec4(1.0));
+    color += 0.3 * addBurst(position, vec2(0.31457,  0.94924));  // angle == 0.4 - 0.08
+    color += 0.3 * addBurst(position, vec2(0.97931,  0.20239));  // angle == 0.4 + 1.047 - 0.08
+    color += 0.3 * addBurst(position, vec2(0.66507, -0.74678));  // angle == 0.4 + 1.047 * 2.0 - 0.08
 
-    gl_FragColor = color;
+    // End of manual loop unrolling.
+
+    gl_FragColor = clamp(color, vec4(0.0), vec4(1.0));
 }
