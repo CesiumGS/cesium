@@ -50,7 +50,7 @@ define([
          */
         this.show = true;
 
-        this._sizeMultiplier = 20.0;
+        this._sizeMultiplier = 30.0;
 
         this._command = new DrawCommand();
 
