@@ -1,18 +1,14 @@
 /*global define*/
 define([
-        '../Core/TimeInterval',
         '../Core/Iso8601',
         '../Core/ClockRange',
         '../Core/ClockStep',
-        '../Core/defined',
-        '../Core/JulianDate'
+        '../Core/defined'
     ], function(
-        TimeInterval,
         Iso8601,
         ClockRange,
         ClockStep,
-        defined,
-        JulianDate) {
+        defined) {
     "use strict";
 
     /**

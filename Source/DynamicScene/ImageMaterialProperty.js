@@ -2,12 +2,10 @@
 define([
         '../Core/Cartesian2',
         '../Core/defined',
-        '../Core/defineProperties',
         './ConstantProperty'
     ], function(
         Cartesian2,
         defined,
-        defineProperties,
         ConstantProperty) {
     "use strict";
 

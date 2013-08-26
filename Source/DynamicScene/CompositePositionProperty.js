@@ -5,16 +5,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/TimeIntervalCollection',
-        '../Core/ReferenceFrame',
-        './PositionProperty'
+        '../Core/ReferenceFrame'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         TimeIntervalCollection,
-        ReferenceFrame,
-        PositionProperty) {
+        ReferenceFrame) {
     "use strict";
 
     /**

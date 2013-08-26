@@ -2,13 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Enumeration'
     ], function(
         defaultValue,
         defined,
-        defineProperties,
         DeveloperError,
         Enumeration) {
     "use strict";

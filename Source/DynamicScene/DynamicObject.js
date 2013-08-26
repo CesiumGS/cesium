@@ -5,20 +5,14 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/JulianDate',
-        '../Core/Quaternion',
-        '../Core/TimeInterval',
-        './DynamicVertexPositionsProperty',
-        '../Core/Cartesian3'
+        '../Core/TimeInterval'
     ], function(
         createGuid,
         defaultValue,
         defined,
         DeveloperError,
         JulianDate,
-        Quaternion,
-        TimeInterval,
-        DynamicVertexPositionsProperty,
-        Cartesian3) {
+        TimeInterval) {
     "use strict";
 
     /**

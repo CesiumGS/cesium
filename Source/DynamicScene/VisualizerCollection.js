@@ -2,13 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError'
+        '../Core/destroyObject'
     ], function(
         defaultValue,
         defined,
-        destroyObject,
-        DeveloperError) {
+        destroyObject) {
     "use strict";
 
     /**

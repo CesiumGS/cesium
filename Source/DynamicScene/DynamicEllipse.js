@@ -1,13 +1,11 @@
 /*global define*/
 define([
-        '../Core/TimeInterval',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/Cartesian3',
         '../Core/Ellipsoid',
         '../Core/Shapes'
         ], function (
-            TimeInterval,
             defaultValue,
             defined,
             Cartesian3,

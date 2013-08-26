@@ -4,7 +4,6 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Enumeration',
         '../Core/ReferenceFrame',
         '../Core/TimeIntervalCollection',
         './PositionProperty'
@@ -13,7 +12,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Enumeration,
         ReferenceFrame,
         TimeIntervalCollection,
         PositionProperty) {

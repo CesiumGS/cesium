@@ -1,14 +1,10 @@
 /*global define*/
 define([
-        '../Core/TimeInterval',
         '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/Color'
+        '../Core/defined'
        ], function(
-         TimeInterval,
          defaultValue,
-         defined,
-         Color) {
+         defined) {
     "use strict";
 
     /**

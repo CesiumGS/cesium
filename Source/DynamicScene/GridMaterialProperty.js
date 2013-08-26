@@ -3,13 +3,11 @@ define([
         '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
-        '../Core/defineProperties',
         './ConstantProperty'
     ], function(
         Cartesian2,
         Color,
         defined,
-        defineProperties,
         ConstantProperty) {
     "use strict";
 
