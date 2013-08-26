@@ -1,6 +1,22 @@
 /*global define*/
 define([
+        'Core/CorridorGeometry',
+        'Core/CorridorOutlineGeometry',
+        'Core/Cartographic',
+        'Core/ColorGeometryInstanceAttribute',
+        'Core/Color',
+        'Core/CornerType',
+        'Core/Extent',
+        'Core/ExtentGeometry',
+        'Core/EllipseGeometry',
+        'Core/GeometryInstance',
+        'Core/VertexFormat',
+        'Scene/createTangentSpaceDebugPrimitive',
+        'Scene/DebugAppearance',
+        'Scene/PerInstanceColorAppearance',
+        'Scene/Primitive',
         'Core/defined',
+        'Core/Math',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -10,7 +26,23 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
+        CorridorGeometry,
+        CorridorOutlineGeometry,
+        Cartographic,
+        ColorGeometryInstanceAttribute,
+        Color,
+        CornerType,
+        Extent,
+        ExtentGeometry,
+        EllipseGeometry,
+        GeometryInstance,
+        VertexFormat,
+        createTangentSpaceDebugPrimitive,
+        DebugAppearance,
+        PerInstanceColorAppearance,
+        Primitive,
         defined,
+        CesiumMath,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -132,5 +164,89 @@ define([
                 window.alert('Unknown theme: ' + theme);
             }
         }
+
+        var primitives = scene.getPrimitives();
+        var ellipsoid = viewer.centralBody.getEllipsoid();
+
+        var solidWhite = new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0);
+
+     /*   var positions = ellipsoid.cartographicArrayToCartesianArray([
+                                                                     Cartographic.fromDegrees(-89.0, -3.0),
+                                                                     Cartographic.fromDegrees(-89.0, -2.0),
+                                                                     Cartographic.fromDegrees(-90.0, -2.0),
+                                                                     Cartographic.fromDegrees(-90.0, -1.0),
+                                                                     Cartographic.fromDegrees(-90.0, 0.0)
+
+                                                                 ]);
+       */
+//        var positions = ellipsoid.cartographicArrayToCartesianArray([
+  //                                                                   Cartographic.fromDegrees(-120.0, 40.0),
+    //                                                                 Cartographic.fromDegrees(-120.0, 50.0)
+      //                                                           ]);
+
+        var positions = ellipsoid.cartographicArrayToCartesianArray([
+                                   //                                  Cartographic.fromDegrees(-120.0, -50.0),
+                                     //                                Cartographic.fromDegrees(-120.0, -40.0),
+                                                                     Cartographic.fromDegrees(-120.0, -30.0),
+                                                                     Cartographic.fromDegrees(-120.0, -20.0),
+//                                                                     Cartographic.fromDegrees(-120.0, -10.0),
+                                                                     Cartographic.fromDegrees(-120.0, 70.0),
+                                                                     Cartographic.fromDegrees(-120.0, 80.0),
+                                                                     Cartographic.fromDegrees(-120.0, 90.0)//,
+                                                  //                   Cartographic.fromDegrees(-110.0, 60.0)
+                                                                ]);
+
+        var airspaceGeo = new CorridorGeometry({
+            positions : positions,
+//              extrudedHeight: 500000,
+//               cornerType: CornerType.MITERED,
+                width : 500000,
+                height: 50000
+        });
+
+   /*     var airspaceOutlineGeo = new CorridorOutlineGeometry({
+            positions : positions,
+//              extrudedHeight: 500000,
+                width : 300000,
+                height: 100000
+            });*/
+
+ /*       var airspaceOutline = new GeometryInstance({
+            geometry: CorridorOutlineGeometry.createGeometry(airspaceOutlineGeo),
+            attributes : {
+                color : solidWhite
+            }
+        });*/
+        var airspace = new GeometryInstance({
+            geometry: airspaceGeo,
+            attributes: {
+                color : ColorGeometryInstanceAttribute.fromColor(Color.fromRandom({alpha : 1.0}))
+            }
+        });
+
+        primitives.add(new Primitive({
+            geometryInstances: [airspace],
+            appearance : new PerInstanceColorAppearance({
+                translucent : false,
+                closed : true
+            })
+        }));
+
+    /*    primitives.add(new Primitive({
+            geometryInstances: [airspaceOutline],
+            appearance : new PerInstanceColorAppearance({
+                flat : true,
+                renderState : {
+                    depthTest : {
+                        enabled : true
+                    },
+                    lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+                }
+            })
+        }));*/
+
+        primitives.add(createTangentSpaceDebugPrimitive({
+            geometry: airspaceGeo
+        }));
     }
 });

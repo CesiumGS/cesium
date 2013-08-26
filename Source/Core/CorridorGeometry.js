@@ -347,12 +347,13 @@ define([
             leftEdge.splice(leftEdge.length - 3, 3);
             finalPositions.set(rightEdge, front);
             finalPositions.set(leftEdge, back - leftEdge.length + 1);
+            length = leftEdge.length - 3;
 
             compIndex += 3;
             left = Cartesian3.fromArray(computedLefts, compIndex, left);
             for(j = 0; j < leftEdge.length; j+=3) {
                 rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, j, scratch1), scratch1);
-                leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, j, scratch2), scratch2);
+                leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - j, scratch2), scratch2);
                 normal = rightNormal.add(leftNormal, normal).normalize(normal);
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
@@ -367,6 +368,7 @@ define([
             front -= 3;
             back += 3;
         }
+        normal = Cartesian3.fromArray(computedNormals, computedNormals.length-3, normal);
         attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
         if (addEndPositions) {  // add rounded end
@@ -531,10 +533,9 @@ define([
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
             nextPosition = positions[i+1];
             forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-            var angle = Cartesian3.angleBetween(forward, backward);
-            var doCorner = !(CesiumMath.equalsEpsilon(angle, Math.PI, 0.02)) && !(CesiumMath.equalsEpsilon(angle, 0, 0.02));
+            cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
+            var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), normal, CesiumMath.EPSILON2);
             if (doCorner) {
-                cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
