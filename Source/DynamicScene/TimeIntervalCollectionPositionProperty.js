@@ -80,7 +80,7 @@ define([
      * @exception {DeveloperError} time is required.
      * @exception {DeveloperError} referenceFrame is required.
      */
-    CompositePositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+    TimeIntervalCollectionPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         if (!defined(time)) {
             throw new DeveloperError('time is required.');
         }
