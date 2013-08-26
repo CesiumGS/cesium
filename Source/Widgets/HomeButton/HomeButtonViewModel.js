@@ -62,7 +62,7 @@ define([
                 destination : Extent.MAX_VALUE,
                 duration : flightDuration
             };
-            flight = CameraFlightPath.createAnimationExtent(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimationExtent(scene, description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.SCENE3D) {
             Cartesian3.add(camera.position, Matrix4.getTranslation(camera.transform), camera.position);
@@ -78,7 +78,7 @@ define([
                 up : defaultCamera.up,
                 direction : defaultCamera.direction
             };
-            flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimation(scene, description);
             scene.getAnimations().add(flight);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
@@ -98,7 +98,7 @@ define([
                 direction : direction
             };
 
-            flight = CameraFlightPath.createAnimation(scene.getFrameState(), description);
+            flight = CameraFlightPath.createAnimation(scene, description);
             scene.getAnimations().add(flight);
         }
     }

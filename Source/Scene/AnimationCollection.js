@@ -43,6 +43,9 @@ define([
 
             var value = clone(options.startValue);
             var tween = new Tween.Tween(value);
+            // set the callback on the instance to avoid extra bookkeeping
+            // or patching Tween.js
+            tween.onCancel = options.onCancel;
             tween.to(options.stopValue, options.duration);
             tween.delay(delayDuration);
             tween.easing(easingFunction);
@@ -233,6 +236,15 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.removeAll = function() {
+        var tweens = Tween.getAll(),
+            n = tweens.length,
+            i = -1;
+        while (++i < n) {
+            var t = tweens[i];
+            if (typeof t.onCancel === 'function') {
+                t.onCancel();
+            }
+        }
         Tween.removeAll();
     };
 
