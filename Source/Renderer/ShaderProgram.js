@@ -654,8 +654,8 @@ define([
                     // remove the entry from the dictionary so we can't recurse indefinitely
                     delete builtinDictionary[b];
                 }
+                }
             }
-        }
 
         // recurse incase a found builtin calls other builtin functions/structs/constants
         if(definitions !== '') {
