@@ -333,7 +333,7 @@ define([
 
     var viewportScratch = new BoundingRectangle();
     var vpTransformScratch = new Matrix4();
-    var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(4) : [];
+    var polePositionsScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(8) : [];
 
     function fillPoles(centralBody, context, frameState) {
         var terrainProvider = centralBody._surface._terrainProvider;
@@ -358,7 +358,6 @@ define([
         var frustumCull;
         var occludeePoint;
         var occluded;
-        var typedArray;
         var geometry;
         var rect;
         var occluder = centralBody._occluder;
@@ -379,10 +378,14 @@ define([
             centralBody._drawNorthPole = !frustumCull && !occluded;
             if (centralBody._drawNorthPole) {
                 rect = computePoleQuad(centralBody, frameState, extent.north, extent.south - latitudeExtension, viewProjMatrix, viewportTransformation);
-                polePositionsScratch[0] = rect.x, rect.y;
-                polePositionsScratch[1] = rect.x + rect.width, rect.y;
-                polePositionsScratch[2] = rect.x + rect.width, rect.y + rect.height;
-                polePositionsScratch[3] = rect.x, rect.y + rect.height;
+                polePositionsScratch[0] = rect.x;
+                polePositionsScratch[1] = rect.y;
+                polePositionsScratch[2] = rect.x + rect.width;
+                polePositionsScratch[3] = rect.y;
+                polePositionsScratch[4] = rect.x + rect.width;
+                polePositionsScratch[5] = rect.y + rect.height;
+                polePositionsScratch[6] = rect.x;
+                polePositionsScratch[7] = rect.y + rect.height;
 
                 if (!defined(centralBody._northPoleCommand.vertexArray)) {
                     centralBody._northPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
@@ -424,10 +427,14 @@ define([
             centralBody._drawSouthPole = !frustumCull && !occluded;
             if (centralBody._drawSouthPole) {
                 rect = computePoleQuad(centralBody, frameState, extent.south, extent.north + latitudeExtension, viewProjMatrix, viewportTransformation);
-                polePositionsScratch[0] = rect.x, rect.y;
-                polePositionsScratch[1] = rect.x + rect.width, rect.y;
-                polePositionsScratch[2] = rect.x + rect.width, rect.y + rect.height;
-                polePositionsScratch[3] = rect.x, rect.y + rect.height;
+                polePositionsScratch[0] = rect.x;
+                polePositionsScratch[1] = rect.y;
+                polePositionsScratch[2] = rect.x + rect.width;
+                polePositionsScratch[3] = rect.y;
+                polePositionsScratch[4] = rect.x + rect.width;
+                polePositionsScratch[5] = rect.y + rect.height;
+                polePositionsScratch[6] = rect.x;
+                polePositionsScratch[7] = rect.y + rect.height;
 
                  if (!defined(centralBody._southPoleCommand.vertexArray)) {
                      centralBody._southPoleCommand.boundingVolume = BoundingSphere.fromExtent3D(extent, centralBody._ellipsoid);
@@ -436,7 +443,7 @@ define([
                              position : new GeometryAttribute({
                                  componentDatatype : ComponentDatatype.FLOAT,
                                  componentsPerAttribute : 2,
-                                 values : positions
+                                 values : polePositionsScratch
                              })
                          }
                      });
