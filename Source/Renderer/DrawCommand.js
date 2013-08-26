@@ -167,7 +167,7 @@ define(function() {
         /**
          * @private
          *
-         * Used for to implement {@see Scene.debugShowFrustums}.
+         * Used to implement {@see Scene.debugShowFrustums}.
          */
         this.debugOverlappingFrustums = 0;
     };

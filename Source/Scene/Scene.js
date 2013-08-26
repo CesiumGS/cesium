@@ -265,8 +265,9 @@ define([
          * When {@see Scene.debugShowFrustums} is <code>true</code>, this contains
          * properties with statistics about the number of command execute per frustum.
          * <code>totalCommands</code> is the total number of commands executed, ignoring
-         * overlap. <code>commandsInFrustums</code> is an array with the number of commands
-         * executed in each frustum.
+         * overlap. <code>commandsInFrustums</code> is an array with the number of times
+         * commands are executed redundantly, e.g., how many commands overlap two or
+         * three frustums.
          * </p>
          *
          * @type Object
@@ -437,7 +438,6 @@ define([
 
             if (scene.debugShowFrustums) {
                 command.debugOverlappingFrustums |= (1 << i);
-                ++scene.debugFrustumStatistics.commandsInFrustums[i];
             }
 
             if (command.executeInClosestFrustum) {
@@ -446,6 +446,8 @@ define([
         }
 
         if (scene.debugShowFrustums) {
+            var cf = scene.debugFrustumStatistics.commandsInFrustums;
+            cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
             ++scene.debugFrustumStatistics.totalCommands;
         }
     }
@@ -464,13 +466,13 @@ define([
         if (scene.debugShowFrustums) {
             scene.debugFrustumStatistics = {
                 totalCommands : 0,
-                commandsInFrustums : [0, 0, 0, 0]
+                commandsInFrustums : {}
             };
         }
 
         var frustumCommandsList = scene._frustumCommandsList;
-        var frustumsLength = frustumCommandsList.length;
-        for (var n = 0; n < frustumsLength; ++n) {
+        var numberOfFrustums = frustumCommandsList.length;
+        for (var n = 0; n < numberOfFrustums; ++n) {
             frustumCommandsList[n].index = 0;
         }
 
@@ -537,8 +539,8 @@ define([
         // last frame, else compute the new frustums and sort them by frustum again.
         var farToNearRatio = scene.farToNearRatio;
         var numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
-        if (near !== Number.MAX_VALUE && (numFrustums !== frustumsLength || (frustumCommandsList.length !== 0 &&
-                (near < frustumCommandsList[0].near || far > frustumCommandsList[frustumsLength - 1].far)))) {
+        if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
+                (near < frustumCommandsList[0].near || far > frustumCommandsList[numberOfFrustums - 1].far)))) {
             updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList);
             createPotentiallyVisibleSet(scene, listName);
         }
