@@ -8,66 +8,49 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic path, typically used in conjunction with DynamicPathVisualizer and
-     * DynamicObjectCollection to visualize CZML.
-     *
+     * A time-dynamic path representing the visualization of a moving object.
      * @alias DynamicPath
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicPathVisualizer
-     * @see VisualizerCollection
-     * @see Polyline
      */
     var DynamicPath = function() {
         /**
-         * A DynamicProperty of type Color which determines the line's color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the path's color.
+         * @type {Property}
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type Color which determines the line's outline color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the path's outline color.
+         * @type {Property}
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type Number which determines the line's outline width.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the path's outline width.
+         * @type {Property}
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the lines's visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the path's visibility.
+         * @type {Property}
          */
         this.show = undefined;
         /**
-         * A DynamicProperty of type Number which determines the line's width.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the path's width.
+         * @type {Property}
          */
         this.width = undefined;
         /**
-         * A DynamicProperty of type Number which determines the maximum step size, in seconds, to take when sampling the position.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
+         * @type {Property}
          */
         this.resolution = undefined;
         /**
-         * A DynamicProperty of type Number which determines the number of seconds in front of the object to show.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
+         * @type {Property}
          */
         this.leadTime = undefined;
         /**
-         * A DynamicProperty of type Number which determines the the number of seconds behind the object to show.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
+         * @type {Property}
          */
         this.trailTime = undefined;
     };
@@ -75,8 +58,6 @@ define([
     /**
      * Given two DynamicObjects, takes the path properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -103,8 +84,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the path associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the path from.
      */

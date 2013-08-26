@@ -18,17 +18,7 @@ define([
         './DynamicPolygon',
         './DynamicPolyline',
         './DynamicPyramid',
-        './DynamicVector',
-        './DynamicBillboardVisualizer',
-        './DynamicEllipsoidVisualizer',
-        './DynamicConeVisualizerUsingCustomSensor', //CZML_TODO Replace with './DynamicConeVisualizer', once ComplexConicSensor works.
-        './DynamicLabelVisualizer',
-        './DynamicPathVisualizer',
-        './DynamicPointVisualizer',
-        './DynamicPolygonVisualizer',
-        './DynamicPolylineVisualizer',
-        './DynamicPyramidVisualizer',
-        './DynamicVectorVisualizer'
+        './DynamicVector'
     ], function(
         defaultValue,
         defined,
@@ -48,17 +38,7 @@ define([
         DynamicPolygon,
         DynamicPolyline,
         DynamicPyramid,
-        DynamicVector,
-        DynamicBillboardVisualizer,
-        DynamicEllipsoidVisualizer,
-        DynamicConeVisualizer,
-        DynamicLabelVisualizer,
-        DynamicPathVisualizer,
-        DynamicPointVisualizer,
-        DynamicPolygonVisualizer,
-        DynamicPolylineVisualizer,
-        DynamicPyramidVisualizer,
-        DynamicVectorVisualizer) {
+        DynamicVector) {
     "use strict";
 
     /**

@@ -8,48 +8,34 @@ function(
     "use strict";
 
     /**
-     * Represents a time-dynamic polyline, typically used in conjunction with DynamicPolylineVisualizer and
-     * DynamicObjectCollection to visualize CZML.
-     *
+     * An optionally time-dynamic polyline.
      * @alias DynamicPolyline
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicPolylineVisualizer
-     * @see VisualizerCollection
-     * @see Polyline
      */
     var DynamicPolyline = function() {
         /**
-         * A DynamicProperty of type Color which determines the line's color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the line's color.
+         * @type {Property}
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type Color which determines the line's outline color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the line's outline color.
+         * @type {Property}
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type Number which determines the line's outline width.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the line's outline width.
+         * @type {Property}
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the lines's visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the line's visibility.
+         * @type {Property}
          */
         this.show = undefined;
         /**
-         * A DynamicProperty of type Number which determines the line's width.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the line's width.
+         * @type {Property}
          */
         this.width = undefined;
     };
@@ -57,8 +43,6 @@ function(
     /**
      * Given two DynamicObjects, takes the polyline properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -82,8 +66,6 @@ function(
 
     /**
      * Given a DynamicObject, undefines the polyline associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the polyline from.
      */

@@ -8,96 +8,75 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic cone, typically used in conjunction with DynamicConeVisualizer and
-     * DynamicObjectCollection to visualize CZML.
+     * An optionally time-dynamic cone.
      *
      * @alias DynamicCone
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicConeVisualizer
-     * @see VisualizerCollection
-     * @see ComplexConicSensor
      */
     var DynamicCone = function() {
         /**
-         * A DynamicProperty of type Number which determines the cone's minimum clock-angle.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the cone's minimum clock angle.
+         * @type {Property}
          */
         this.minimumClockAngle = undefined;
         /**
-         * A DynamicProperty of type Number which determines the cone's maximum clock-angle.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the cone's maximum clock angle.
+         * @type {Property}
          */
         this.maximumClockAngle = undefined;
         /**
-         * A DynamicProperty of type Number which determines the cone's inner half-angle.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the cone's inner half-angle.
+         * @type {Property}
          */
         this.innerHalfAngle = undefined;
         /**
-         * A DynamicProperty of type Number which determines the cone's outer half-angle.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the cone's outer half-angle.
+         * @type {Property}
          */
         this.outerHalfAngle = undefined;
         /**
-         * A DynamicMaterialProperty which determines the cone's cap material.
-         * @type {DynamicMaterialProperty}
-         * @default undefined
+         * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
+         * @type {MaterialProperty}
          */
         this.capMaterial = undefined;
         /**
-         * A DynamicMaterialProperty which determines the cone's inner material.
-         * @type {DynamicMaterialProperty}
-         * @default undefined
+         * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
+         * @type {MaterialProperty}
          */
         this.innerMaterial = undefined;
         /**
-         * A DynamicMaterialProperty which determines the cone's outer material.
-         * @type {DynamicMaterialProperty}
-         * @default undefined
+         * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
+         * @type {MaterialProperty}
          */
         this.outerMaterial = undefined;
         /**
-         * A DynamicMaterialProperty which determines the cone's silhouette material.
-         * @type {DynamicMaterialProperty}
-         * @default undefined
+         * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
+         * @type {MaterialProperty}
          */
         this.silhouetteMaterial = undefined;
         /**
-         * A DynamicProperty of type Color which determines the color of the line formed by the intersection of the cone and other central bodies.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
+         * @type {Property}
          */
         this.intersectionColor = undefined;
         /**
-         * A DynamicProperty of type Number which determines the approximate pixel width of the line formed by the intersection of the cone and other central bodies.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the cone and other central bodies.
+         * @type {Property}
          */
         this.intersectionWidth = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the cone's intersection visibility
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the cone and other central bodies.
+         * @type {Property}
          */
         this.showIntersection = undefined;
         /**
-         * A DynamicProperty of type Number which determines the cone's radius.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the radius of the cone's projection.
+         * @type {Property}
          */
         this.radius = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the cone's visibility
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the visibility of the cone.
+         * @type {Property}
          */
         this.show = undefined;
     };
@@ -105,8 +84,6 @@ define([
     /**
      * Given two DynamicObjects, takes the cone properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -138,8 +115,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the cone associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the cone from.
      */

@@ -8,79 +8,60 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic billboard, typically used in conjunction with DynamicBillboardVisualizer and
-     * DynamicObjectCollection to visualize CZML.
+     * An optionally time-dynamic billboard.
      *
      * @alias DynamicBillboard
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicBillboardVisualizer
-     * @see VisualizerCollection
-     * @see Billboard
-     * @see BillboardCollection
      */
     var DynamicBillboard = function() {
         /**
-         * A DynamicProperty of type Image which determines the billboard's texture.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
+         * @type {Property}
          */
         this.image = undefined;
         /**
-         * A DynamicProperty of type Number which determines the billboard's scale.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the billboard's scale.
+         * @type {Property}
          */
         this.scale = undefined;
         /**
-         * A DynamicProperty of type Number which determines the billboard's rotation.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
+         * @type {Property}
          */
         this.rotation = undefined;
         /**
-         * A DynamicProperty of type Cartesian3 which determines the billboard's aligned axis.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
+         * @type {Property}
          */
         this.alignedAxis = undefined;
         /**
-         * A DynamicProperty of type HorizontalOrigin which determines the billboard's horizontal origin.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
+         * @type {Property}
          */
         this.horizontalOrigin = undefined;
         /**
-         * A DynamicProperty of type VerticalOrigin which determines the billboard's vertical origin.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
+         * @type {Property}
          */
         this.verticalOrigin = undefined;
         /**
-         * A DynamicProperty of type Color which determines the billboard's color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
+         * @type {Property}
          */
         this.color = undefined;
         /**
-         * A DynamicProperty of type Cartesian3 which determines the billboard's eye offset.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
+         * @type {Property}
          */
         this.eyeOffset = undefined;
         /**
-         * A DynamicProperty of type Cartesian2 which determines the billboard's pixel offset.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
+         * @type {Property}
          */
         this.pixelOffset = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the billboard's visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
+         * @type {Property}
          */
         this.show = undefined;
     };
@@ -88,8 +69,6 @@ define([
     /**
      * Given two DynamicObjects, takes the billboard properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      * @memberof DynamicBillboard
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
@@ -119,8 +98,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the billboard associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      * @memberof DynamicBillboard
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.

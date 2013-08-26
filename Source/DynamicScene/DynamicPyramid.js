@@ -8,60 +8,46 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic pyramid, typically used in conjunction with DynamicPyramidVisualizer and
-     * DynamicObjectCollection to visualize CZML.
+     * An optionally time-dynamic pyramid.
      *
      * @alias DynamicPyramid
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicPyramidVisualizer
-     * @see VisualizerCollection
-     * @see CustomSensor
      */
     var DynamicPyramid = function() {
         /**
-         * A DynamicProperty of type Boolean which determines the pyramid's visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the visibility of the pyramid.
+         * @type {Property}
          */
         this.show = undefined;
         /**
-         * A Property which determines the projection of the pyramid.
+         * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
          * @type {Property}
          * @default undefined
          */
         this.directions = undefined;
         /**
-         * A DynamicProperty of type Number which determines the pyramid's radius.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
+         * @type {Property}
          */
         this.radius = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the pyramid's intersection visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
+         * @type {Property}
          */
         this.showIntersection = undefined;
         /**
-         * A DynamicProperty of type Color which determines the color of the line formed by the intersection of the pyramid and other central bodies.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
+         * @type {Property}
          */
         this.intersectionColor = undefined;
         /**
-         * A DynamicProperty of type Number which determines the approximate pixel width of the line formed by the intersection of the pyramid and other central bodies.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the pyramid and other central bodies.
+         * @type {Property}
          */
         this.intersectionWidth = undefined;
         /**
-         * A DynamicMaterialProperty which determines the material.
-         * @type {DynamicMaterialProperty}
-         * @default undefined
+         * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
+         * @type {MaterialProperty}
          */
         this.material = undefined;
     };
@@ -69,8 +55,6 @@ define([
     /**
      * Given two DynamicObjects, takes the pyramid properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -96,8 +80,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the pyramid associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the pyramid from.
      */

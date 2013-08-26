@@ -8,91 +8,69 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic label, typically used in conjunction with DynamicLabelVisualizer and
-     * DynamicObjectCollection to visualize CZML.
-     *
+     * An optionally time-dynamic label.
      * @alias DynamicLabel
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicLabelVisualizer
-     * @see VisualizerCollection
-     * @see Label
-     * @see LabelCollection
      */
     var DynamicLabel = function() {
         /**
-         * A DynamicProperty of type String which determines the label's text.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the string {@link Property} specifying the the label's text.
+         * @type {Property}
          */
         this.text = undefined;
         /**
-         * A DynamicProperty of type String which determines the label's font.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the string {@link Property} specifying the the label's font.
+         * @type {Property}
          */
         this.font = undefined;
         /**
-         * A DynamicProperty of type LabelStyle which determines the label's style.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link LabelStyle} {@link Property} specifying the the label's style.
+         * @type {Property}
          */
         this.style = undefined;
         /**
-         * A DynamicProperty of type Color which determines the label's fill color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the label's fill color.
+         * @type {Property}
          */
         this.fillColor = undefined;
         /**
-         * A DynamicProperty of type Color which determines the label's outline color.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Color} {@link Property} specifying the the label's outline color.
+         * @type {Property}
          */
         this.outlineColor = undefined;
         /**
-         * A DynamicProperty of type Number which determines the label's outline width.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the the label outline's width.
+         * @type {Property}
          */
         this.outlineWidth = undefined;
         /**
-         * A DynamicProperty of type HorizontalOrigin which determines the label's horizontal origin.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the label's horizontal origin.
+         * @type {Property}
          */
         this.horizontalOrigin = undefined;
         /**
-         * A DynamicProperty of type VerticalOrigin which determines the label's vertical origin.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the label's vertical origin.
+         * @type {Property}
          */
         this.verticalOrigin = undefined;
         /**
-         * A DynamicProperty of type Cartesian3 which determines the label's eye offset.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Cartesian3} {@link Property} specifying the label's eye offset.
+         * @type {Property}
          */
         this.eyeOffset = undefined;
         /**
-         * A DynamicProperty of type Cartesian2 which determines the label's pixel offset.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the {@link Cartesian2} {@link Property} specifying the label's pixel offset.
+         * @type {Property}
          */
         this.pixelOffset = undefined;
         /**
-         * A DynamicProperty of type Number which determines the label's scale.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the label's scale.
+         * @type {Property}
          */
         this.scale = undefined;
         /**
-         * A DynamicProperty of type Boolean which determines the label's visibility.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the boolean {@link Property} specifying the label's visibility.
+         * @type {Property}
          */
         this.show = undefined;
     };
@@ -100,8 +78,6 @@ define([
     /**
      * Given two DynamicObjects, takes the label properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -132,8 +108,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the label associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the label from.
      */

@@ -14,36 +14,26 @@ define([
     "use strict";
 
     /**
-     * Represents a time-dynamic ellipse, typically used in conjunction with DynamicEllipseVisualizer and
-     * DynamicObjectCollection to visualize CZML.
+     * An optionally time-dynamic ellipse.
      *
      * @alias DynamicEllipse
      * @constructor
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see DynamicEllipseVisualizer
-     * @see VisualizerCollection
      */
     var DynamicEllipse = function() {
         /**
-         * A DynamicProperty of type Number which determines the ellipse's semiMajorAxis.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
+         * @type {Property}
          */
         this.semiMajorAxis = undefined;
         /**
-         * A DynamicProperty of type Number which determines the ellipse's semiMinorAxis.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
+         * @type {Property}
          */
         this.semiMinorAxis = undefined;
 
         /**
-         * A DynamicProperty of type Number which determines the bearing of the ellipse.
-         * @type {DynamicProperty}
-         * @default undefined
+         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
+         * @type {Property}
          */
         this.bearing = undefined;
 
@@ -57,8 +47,6 @@ define([
     /**
      * Given two DynamicObjects, takes the ellipse properties from the second
      * and assigns them to the first, assuming such a property did not already exist.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
@@ -80,8 +68,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the ellipse associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipse from.
      */

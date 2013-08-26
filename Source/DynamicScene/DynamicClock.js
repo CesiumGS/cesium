@@ -113,8 +113,6 @@ define([
 
     /**
      * Given a DynamicObject, undefines the clock associated with it.
-     * This method is not normally called directly, but is part of the array of CZML processing
-     * functions that is passed into the CompositeDynamicObjectCollection constructor.
      * @memberof DynamicClock
      *
      * @param {DynamicObject} dynamicObject The DynamicObject to remove the clock from.

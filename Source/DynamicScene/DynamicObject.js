@@ -16,7 +16,7 @@ define([
     "use strict";
 
     /**
-     * DynamicObject instances are the primary data store for processed CZML data.
+     * DynamicObject instances are the primary data store for processed data.
      * They are used primarily by the visualizers to create and maintain graphic
      * primitives that represent the DynamicObject's properties at a specific time.
      * @alias DynamicObject
@@ -24,17 +24,8 @@ define([
      *
      * @param {Object} [id] A unique identifier for this object.  If no id is provided, a GUID is generated.
      *
-     * @see DynamicProperty
-     * @see DynamicVertexiPositionsProperty
+     * @see Property
      * @see DynamicObjectCollection
-     * @see CompositeDynamicObjectCollection
-     * @see DynamicBillboard
-     * @see DynamicCone
-     * @see DynamicLabel
-     * @see DynamicPoint
-     * @see DynamicPolygon
-     * @see DynamicPolyline
-     * @see DynamicPyramid
      */
     var DynamicObject = function(id) {
         this._cachedAvailabilityDate = undefined;
@@ -69,7 +60,7 @@ define([
 
         /**
          * Gets or sets the orientation.
-         * @type {DynamicProperty}
+         * @type {Property}
          * @default undefined
          */
         this.orientation = undefined;
@@ -214,8 +205,7 @@ define([
     /**
      * Given two DynamicObjects, takes the position, orientation, vertexPositions and availability
      * properties from the second and assigns them to the first, assuming such properties did not
-     * already exist. This method is not normally called directly, but is part of the array of CZML
-     * processing functions that is passed into the CompositeDynamicObjectCollection constructor.
+     * already exist.
      *
      * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
      * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
