@@ -5,6 +5,7 @@ define([
         './Cartesian2',
         './Cartesian3',
         './CornerType',
+        './CorridorGeometryLibrary',
         './ComponentDatatype',
         './Ellipsoid',
         './EllipsoidTangentPlane',
@@ -26,6 +27,7 @@ define([
         Cartesian2,
         Cartesian3,
         CornerType,
+        CorridorGeometryLibrary,
         ComponentDatatype,
         Ellipsoid,
         EllipsoidTangentPlane,
@@ -57,133 +59,22 @@ define([
     var scratch1= new Cartesian3();
     var scratch2 = new Cartesian3();
 
-    var originScratch = new Cartesian2();
-    var nextScratch = new Cartesian2();
-    var prevScratch = new Cartesian2();
-    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
-        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
-        var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
-        var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
-
-        prev = prev.subtract(origin, prev);
-        next = next.subtract(origin, next);
-
-        return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    }
-
-    function addAttribute(attribute, value, front, back) {
-        var x = value.x;
-        var y = value.y;
-        var z = value.z;
-        if (defined(front)) {
-            attribute[front] = x;
-            attribute[front+1] = y;
-            attribute[front+2] = z;
-        }
-        if (defined(back)) {
-            attribute[back] = z;
-            attribute[back-1] = y;
-            attribute[back-2] = x;
-        }
-
-        return attribute;
-    }
-
     function addNormals(attr, normal, left, front, back, vertexFormat) {
         var normals = attr.normals;
         var tangents = attr.tangents;
         var binormals = attr.binormals;
         var forward = Cartesian3.cross(left, normal, scratch1).normalize(scratch1);
         if (vertexFormat.normal) {
-            normals = addAttribute(normals, normal, front, back);
+            normals = CorridorGeometryLibrary.addAttribute(normals, normal, front, back);
         }
         if (vertexFormat.tangent) {
-            tangents = addAttribute(tangents, left, front, back);
+            tangents = CorridorGeometryLibrary.addAttribute(tangents, left, front, back);
         }
         if (vertexFormat.binormal) {
-            binormals = addAttribute(binormals, forward, front, back);
+            binormals = CorridorGeometryLibrary.addAttribute(binormals, forward, front, back);
         }
 
         return attr;
-    }
-
-    var quaterion = new Quaternion();
-    var rotMatrix = new Matrix3();
-    function computeRoundCorner(cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
-        var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
-        var granularity = (cornerType.value === CornerType.BEVELED.value) ? 0 : Math.ceil(angle/CesiumMath.toRadians(5));
-
-        var size = (granularity + 1)*3;
-        var array = new Array(size);
-
-        array[size - 3] = endPoint.x;
-        array[size - 2] = endPoint.y;
-        array[size - 1] = endPoint.z;
-
-        var m;
-        if (leftIsOutside) {
-            m =  Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle/(granularity+1), quaterion), rotMatrix);
-        } else {
-            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint.negate(scratch1), angle/(granularity+1), quaterion), rotMatrix);
-        }
-
-        var index = 0;
-        startPoint = startPoint.clone(scratch1);
-        for (var i = 0; i < granularity + 1; i++) {
-            startPoint = m.multiplyByVector(startPoint, startPoint);
-            array[index++] = startPoint.x;
-            array[index++] = startPoint.y;
-            array[index++] = startPoint.z;
-        }
-
-        if (leftIsOutside) {
-            return {
-                leftPositions: array
-            };
-        }
-        return {
-            rightPositions: array
-        };
-    }
-
-    function addEndCaps(calculatedPositions, width) {
-        var cornerPoint = cartesian1;
-        var startPoint = cartesian2;
-        var endPoint = cartesian3;
-
-        var leftEdge = calculatedPositions[1];
-        startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
-        endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
-        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
-
-        var length = calculatedPositions.length - 1;
-        var rightEdge = calculatedPositions[length - 1];
-        leftEdge = calculatedPositions[length];
-        startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
-        endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
-        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false);
-
-        return [firstEndCap, lastEndCap];
-    }
-
-    function computeMiteredCorner(position, leftCornerDirection, lastPoint, leftIsOutside) {
-        if (leftIsOutside) {
-            var leftPos = Cartesian3.add(position, leftCornerDirection);
-            var leftArray = [leftPos.x, leftPos.y, leftPos.z, lastPoint.x, lastPoint.y, lastPoint.z];
-            return {
-                leftPositions: leftArray
-            };
-        }
-
-        leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
-        var rightPos = Cartesian3.add(position, leftCornerDirection);
-        var rightArray = [rightPos.x, rightPos.y, rightPos.z, lastPoint.x, lastPoint.y, lastPoint.z];
-        return {
-            rightPositions: rightArray
-        };
     }
 
     function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions, ellipsoid) {
@@ -243,8 +134,8 @@ define([
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(firstEndPositions, (halfLength - 1 - i) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(firstEndPositions, (halfLength + i) * 3, rightPos);
-                finalPositions = addAttribute(finalPositions, rightPos, front);
-                finalPositions = addAttribute(finalPositions, leftPos, undefined, back);
+                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
+                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
                 LL = front/3;
@@ -306,7 +197,7 @@ define([
                 for (j = 0; j < l.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(l, j*3, outsidePoint);
                     indices.push(pivot, start - j - 1, start - j);
-                    finalPositions = addAttribute(finalPositions, outsidePoint, undefined, back);
+                    finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
                     previousPoint = Cartesian3.fromArray(finalPositions, (start - j - 1)*3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, pivot*3, nextPoint);
                     left = previousPoint.subtract(nextPoint, left).normalize(left);
@@ -327,7 +218,7 @@ define([
                 for (j = 0; j < r.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j*3, outsidePoint);
                     indices.push(pivot, start + j, start + j + 1);
-                    finalPositions = addAttribute(finalPositions, outsidePoint, front);
+                    finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
                     previousPoint = Cartesian3.fromArray(finalPositions, pivot*3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, (start + j)*3, nextPoint);
                     left = previousPoint.subtract(nextPoint, left).normalize(left);
@@ -380,8 +271,8 @@ define([
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(lastEndPositions, (endPositionLength - i - 1) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
-                finalPositions = addAttribute(finalPositions, leftPos, undefined, back);
-                finalPositions = addAttribute(finalPositions, rightPos, front);
+                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
+                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
                 attr = addNormals(attr, normal, left, front, back, vertexFormat);
 
                 LR = front/3;
@@ -539,7 +430,7 @@ define([
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
+                var leftIsOutside = CorridorGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
@@ -552,9 +443,9 @@ define([
                     left = normal.cross(forward, left).normalize(left);
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
                     if (cornerType.value === CornerType.ROUNDED.value  || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside));
+                        corners.push(CorridorGeometryLibrary.computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid));
                     } else {
-                        corners.push(computeMiteredCorner(position, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside));
+                        corners.push(CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid));
                     }
                     previousRightPos = rightPos.clone(previousRightPos);
                     previousLeftPos = leftPos.clone(previousLeftPos);
@@ -569,9 +460,9 @@ define([
                     left = normal.cross(forward, left).normalize(left);
                     rightPos = leftPos.add(left.multiplyByScalar(width*2, rightPos).negate(rightPos), rightPos);
                     if (cornerType.value === CornerType.ROUNDED.value  || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside));
+                        corners.push(CorridorGeometryLibrary.computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid));
                     } else {
-                        corners.push(computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside));
+                        corners.push(CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid));
                     }
                     previousRightPos = rightPos.clone(previousRightPos);
                     previousLeftPos = leftPos.clone(previousLeftPos);
@@ -591,7 +482,7 @@ define([
 
         var endPositions;
         if (cornerType.value === CornerType.ROUNDED.value) {
-            endPositions = addEndCaps(calculatedPositions, width);
+            endPositions = CorridorGeometryLibrary.addEndCaps(calculatedPositions, width, ellipsoid);
         }
 
         return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, ellipsoid);
@@ -642,26 +533,26 @@ define([
                 previousPosition = previousPosition.subtract(topPosition, previousPosition);
                 normal = bottomPosition.cross(previousPosition, normal).normalize(normal);
                 if (vertexFormat.normal) {
-                    normals = addAttribute(normals, normal, attrIndexOffset);
-                    normals = addAttribute(normals, normal, attrIndexOffset + 3);
-                    normals = addAttribute(normals, normal, attrIndex);
-                    normals = addAttribute(normals, normal, attrIndex + 3);
+                    normals = CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset);
+                    normals = CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset + 3);
+                    normals = CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex);
+                    normals = CorridorGeometryLibrary.addAttribute(normals, normal, attrIndex + 3);
                 }
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     tangent = Cartesian3.fromArray(topNormals, i, tangent);
                     if (vertexFormat.tangent) {
-                        tangents = addAttribute(tangents, tangent, attrIndexOffset);
-                        tangents = addAttribute(tangents, tangent, attrIndexOffset + 3);
-                        tangents = addAttribute(tangents, tangent, attrIndex);
-                        tangents = addAttribute(tangents, tangent, attrIndex + 3);
+                        tangents = CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset);
+                        tangents = CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset + 3);
+                        tangents = CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex);
+                        tangents = CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex + 3);
                     }
 
                     if (vertexFormat.binormal) {
                         binormal = tangent.cross(normal, binormal).normalize(binormal);
-                        binormals = addAttribute(binormals, binormal, attrIndexOffset);
-                        binormals = addAttribute(binormals, binormal, attrIndexOffset + 3);
-                        binormals = addAttribute(binormals, binormal, attrIndex);
-                        binormals = addAttribute(binormals, binormal, attrIndex + 3);
+                        binormals = CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset);
+                        binormals = CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndexOffset + 3);
+                        binormals = CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex);
+                        binormals = CorridorGeometryLibrary.addAttribute(binormals, binormal, attrIndex + 3);
                     }
                 }
                 attrIndex += 6;
