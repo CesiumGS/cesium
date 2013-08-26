@@ -60,7 +60,7 @@ define([
     var originScratch = new Cartesian2();
     var nextScratch = new Cartesian2();
     var prevScratch = new Cartesian2();
-    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) { //if cross product is opposite of the normal, then true
+    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
