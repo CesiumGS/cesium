@@ -177,7 +177,7 @@ define([
         this._xTable = [];
         this._yTable = [];
         this._packedInterpolationLength = packedInterpolationLength;
-        this._updateTables = true;
+        this._updateTableLength = true;
         this._interpolationResult = new Array(packedInterpolationLength);
     };
 
@@ -204,7 +204,7 @@ define([
             },
             set : function(value) {
                 this._interpolationDegree = value;
-                this._updateTables = true;
+                this._updateTableLength = true;
             }
         },
         /**
@@ -219,7 +219,7 @@ define([
             },
             set : function(value) {
                 this._interpolationAlgorithm = value;
-                this._updateTables = true;
+                this._updateTableLength = true;
             }
         }
     });
@@ -249,8 +249,8 @@ define([
             var interpolationAlgorithm = this._interpolationAlgorithm;
             var packedInterpolationLength = this._packedInterpolationLength;
 
-            if (this._updateTables) {
-                this._updateTables = false;
+            if (this._updateTableLength) {
+                this._updateTableLength = false;
                 var numberOfPoints = Math.min(interpolationAlgorithm.getRequiredDataPoints(this._interpolationDegree), times.length);
                 if (numberOfPoints !== this._numberOfPoints) {
                     this._numberOfPoints = numberOfPoints;
@@ -348,7 +348,7 @@ define([
         var data = [time];
         innerType.pack(value, data, 1);
         mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
-        this._updateTables = true;
+        this._updateTableLength = true;
     };
 
     /**
@@ -381,7 +381,7 @@ define([
             innerType.pack(values[i], data, data.length);
         }
         mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
-        this._updateTables = true;
+        this._updateTableLength = true;
     };
 
     /**
@@ -398,7 +398,7 @@ define([
             throw new DeveloperError('packedSamples is required.');
         }
         mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
-        this._updateTables = true;
+        this._updateTableLength = true;
     };
 
     //Exposed for testing.
