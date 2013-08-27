@@ -15,7 +15,6 @@ define([
         ReferenceFrame) {
     "use strict";
 
-
     /**
      * A {@link CompositeProperty} which is also a {@link PositionProperty}.
      *

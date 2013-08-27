@@ -292,7 +292,6 @@ define([
         if (defined(packetData.interpolationDegree)) {
             property.interpolationDegree = packetData.interpolationDegree;
         }
-
     }
 
     function processProperty(type, object, propertyName, packetData, constrainedInterval, sourceUri) {
