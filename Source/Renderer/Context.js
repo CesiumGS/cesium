@@ -2101,7 +2101,7 @@ define([
 
         var offset = command.offset;
         var count = command.count;
-        var hasIndexBuffer = (defined(indexBuffer));
+        var hasIndexBuffer = defined(indexBuffer);
 
         if (hasIndexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
