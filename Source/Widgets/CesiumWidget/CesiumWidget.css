@@ -18,15 +18,47 @@
     padding-right: 5px;
 }
 
+.cesium-widget-button {
+    display: inline-block;
+    background: #303336;
+    border: 1px solid #444;
+    border-radius: 5px;
+    padding: 4px 12px;
+    margin: 0 3px;
+    cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.cesium-widget-button:focus {
+    color: #fff;
+    border-color: #ea4;
+}
+
+.cesium-widget-button:hover {
+    color: #fff;
+    background: #48b;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
+}
+
+.cesium-widget-button:active {
+    color: #000;
+    background: #adf;
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff;
+}
+
 .cesium-widget-errorPanel {
     position: absolute;
     top: 0;
     right: 0;
     bottom: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
     text-align: center;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 99999;
 }
 
 .cesium-widget-errorPanel:before {
@@ -42,15 +74,23 @@
     text-align: left;
     vertical-align: middle;
     border: 1px solid #526F82;
+    border-radius: 7px;
     background-color: black;
     color: white;
     font-size: 10pt;
     padding: 1em;
 }
 
+.cesium-widget-errorPanel-header {
+    font-size: 120%;
+    color: #fe4;
+}
+
 .cesium-widget-errorPanel-message {
     overflow: auto;
     resize: vertical;
+    padding: 0;
+    margin: 10px 0;
 }
 
 .cesium-widget-errorPanel-buttonPanel {

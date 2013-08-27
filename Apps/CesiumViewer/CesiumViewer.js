@@ -133,7 +133,7 @@ define([
                 viewer.animation.applyThemeChanges();
             } else {
                 var error = 'Unknown theme: ' + theme;
-                viewer.cesiumWidget.showErrorPanel('', error);
+                viewer.cesiumWidget.showErrorPanel(error);
                 console.error(error);
             }
         }

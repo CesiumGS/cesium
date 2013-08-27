@@ -370,7 +370,7 @@ define([
      * @memberof CesiumWidget
      *
      * @param {String} title The title to be displayed on the error panel.
-     * @param {String} error The error to be displayed on the error panel.
+     * @param {String} error The error to be displayed on the error panel.  Optional.
      */
     CesiumWidget.prototype.showErrorPanel = function(title, error) {
         var element = this._element;
@@ -386,19 +386,21 @@ define([
         errorHeader.textContent = title;
         content.appendChild(errorHeader);
 
-        var errorMessage = document.createElement('pre');
-        errorMessage.className = 'cesium-widget-errorPanel-message';
-        errorMessage.textContent = error;
-        content.appendChild(errorMessage);
+        if (defined(error)) {
+            var errorMessage = document.createElement('pre');
+            errorMessage.className = 'cesium-widget-errorPanel-message';
+            errorMessage.textContent = error;
+            content.appendChild(errorMessage);
+        }
 
         var buttonPanel = document.createElement('div');
         buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
         content.appendChild(buttonPanel);
 
-        var okButton = document.createElement('button');
-        okButton.type = 'button';
-        okButton.className = 'cesium-widget-errorPanel-button';
+        var okButton = document.createElement('span');
+        okButton.className = 'cesium-widget-button';
         okButton.textContent = 'OK';
+        okButton.tabIndex = 100;
         okButton.onclick = function() {
             element.removeChild(overlay);
         };
