@@ -43,12 +43,14 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
+* Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
+* Fixed triangulation for polygons that cross the international date line.
 
 ### b19 - 2013-08-01
 
