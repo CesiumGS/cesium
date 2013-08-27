@@ -22,7 +22,7 @@ Beta Releases
           * `ImageMaterialProperty` - a property that maps to an image material. (replaces `DynamicImageMaterial`)
           * `PositionProperty`- base interface for all position properties.
           * `CompositePositionProperty` - a `CompositeProperty` for positions.
-          * `ConstantPositionProperty` - a  whose value does not change in respect to the `ReferenceFrame` in which is it defined.
+          * `ConstantPositionProperty` - a `PositionProperty` whose value does not change in respect to the `ReferenceFrame` in which is it defined.
           * `SampledPositionProperty` - a `SampledProperty` for positions.
           * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 

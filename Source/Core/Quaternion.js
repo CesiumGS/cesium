@@ -256,7 +256,7 @@ define([
      * @param {Array} packedArray The packed array.
      * @param {Number} [startingIndex=0] The index of the first element to be converted.
      * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-     * @param {Quaternion} [result] The object into which to store the result.
+     * @param {Array} [result] The object into which to store the result.
      *
      * @exception {DeveloperError} packedArray is required.
      */
@@ -307,9 +307,7 @@ define([
         Quaternion.unpack(sourceArray, lastIndex * 4, sampledQuaternionQuaternion0);
 
         if (magnitude === 0) {
-            //Can't just use Quaternion.IDENTITY here because sampledQuaternionTempQuaternion may be modified in the future.
-            sampledQuaternionTempQuaternion.x = sampledQuaternionTempQuaternion.y = sampledQuaternionTempQuaternion.z = 0.0;
-            sampledQuaternionTempQuaternion.w = 1.0;
+            Quaternion.clone(Quaternion.IDENTITY, sampledQuaternionTempQuaternion);
         } else {
             Quaternion.fromAxisAngle(sampledQuaternionRotation, magnitude, sampledQuaternionTempQuaternion);
         }

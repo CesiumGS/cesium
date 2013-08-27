@@ -92,12 +92,9 @@ define([
             throw new DeveloperError('referenceFrame is required.');
         }
 
-        var interval = this._intervals.findIntervalContainingDate(time);
-        if (defined(interval)) {
-            var data = interval.data;
-            if (defined(data)) {
-                return data.getValueInReferenceFrame(time, referenceFrame, result);
-            }
+        var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+        if (defined(innerProperty)) {
+            return innerProperty.getValueInReferenceFrame(time, referenceFrame, result);
         }
         return undefined;
     };

@@ -47,12 +47,9 @@ define([
             throw new DeveloperError('time is required');
         }
 
-        var interval = this._intervals.findIntervalContainingDate(time);
-        if (defined(interval)) {
-            var data = interval.data;
-            if (defined(data)) {
-                return data.getType(time);
-            }
+        var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+        if (defined(innerProperty)) {
+            return innerProperty.getType(time);
         }
         return undefined;
     };
@@ -72,12 +69,9 @@ define([
             throw new DeveloperError('time is required');
         }
 
-        var interval = this._intervals.findIntervalContainingDate(time);
-        if (defined(interval)) {
-            var data = interval.data;
-            if (defined(data)) {
-                return data.getValue(time, result);
-            }
+        var innerProperty = this._intervals.findDataForIntervalContainingDate(time);
+        if (defined(innerProperty)) {
+            return innerProperty.getValue(time, result);
         }
         return undefined;
     };

@@ -60,7 +60,7 @@ define([
         return epoch.addSeconds(date);
     }
 
-    var _mergeNewSamples = function(epoch, times, values, newData, packedLength) {
+    var mergeNewSamples = function(epoch, times, values, newData, packedLength) {
         var newDataIndex = 0;
         var i;
         var prevItem;
@@ -347,7 +347,7 @@ define([
         var innerType = this._innerType;
         var data = [time];
         innerType.pack(value, data, 1);
-        _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTables = true;
     };
 
@@ -380,7 +380,7 @@ define([
             data.push(times[i]);
             innerType.pack(values[i], data, data.length);
         }
-        _mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
+        mergeNewSamples(undefined, this._times, this._values, data, innerType.packedLength);
         this._updateTables = true;
     };
 
@@ -389,7 +389,7 @@ define([
      * @memberof SampledProperty
      *
      * @param {Array} packedSamples The array of packed samples.
-     * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch.
+     * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      *
      * @exception {DeveloperError} packedSamples is required.
      */
@@ -397,12 +397,12 @@ define([
         if (!defined(packedSamples)) {
             throw new DeveloperError('packedSamples is required.');
         }
-        _mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
+        mergeNewSamples(epoch, this._times, this._values, packedSamples, this._innerType.packedLength);
         this._updateTables = true;
     };
 
     //Exposed for testing.
-    SampledProperty._mergeNewSamples = _mergeNewSamples;
+    SampledProperty._mergeNewSamples = mergeNewSamples;
 
     return SampledProperty;
 });

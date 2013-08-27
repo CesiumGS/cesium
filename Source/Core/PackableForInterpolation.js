@@ -29,7 +29,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @param {Array} packedArray The packed array.
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
          * @param {Number} [lastIndex=packedArray.length] The index of the last element to be converted.
-         * @param {Object} [result] The object into which to store the result.
+         * @param {Array} [result] The object into which to store the result.
          *
          * @exception {DeveloperError} packedArray is required.
          */

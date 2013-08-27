@@ -193,15 +193,14 @@ define([
             return result;
         }
 
-        var tmp = scratchCartesian;
         var cartographic = czmlInterval.cartographicRadians;
         if (defined(cartographic)) {
             if (cartographic.length === 3) {
                 scratchCartographic.longitude = cartographic[0];
                 scratchCartographic.latitude = cartographic[1];
                 scratchCartographic.height = cartographic[2];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
-                result = [tmp.x, tmp.y, tmp.z];
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+                result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
             } else {
                 len = cartographic.length;
                 result = new Array(len);
@@ -209,12 +208,12 @@ define([
                     scratchCartographic.longitude = cartographic[i + 0];
                     scratchCartographic.latitude = cartographic[i + 1];
                     scratchCartographic.height = cartographic[i + 2];
-                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                    Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
                     result[i] = cartographic[i];
-                    result[i + 1] = tmp.x;
-                    result[i + 2] = tmp.y;
-                    result[i + 3] = tmp.z;
+                    result[i + 1] = scratchCartesian.x;
+                    result[i + 2] = scratchCartesian.y;
+                    result[i + 3] = scratchCartesian.z;
                 }
             }
             return result;
@@ -229,8 +228,8 @@ define([
             scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
             scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
             scratchCartographic.height = cartographicDegrees[2];
-            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
-            result = [tmp.x, tmp.y, tmp.z];
+            Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
+            result = [scratchCartesian.x, scratchCartesian.y, scratchCartesian.z];
         } else {
             len = cartographicDegrees.length;
             result = new Array(len);
@@ -238,12 +237,12 @@ define([
                 scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[i + 1]);
                 scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[i + 2]);
                 scratchCartographic.height = cartographicDegrees[i + 3];
-                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, tmp);
+                Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
                 result[i] = cartographicDegrees[i];
-                result[i + 1] = tmp.x;
-                result[i + 2] = tmp.y;
-                result[i + 3] = tmp.z;
+                result[i + 1] = scratchCartesian.x;
+                result[i + 2] = scratchCartesian.y;
+                result[i + 3] = scratchCartesian.z;
             }
         }
 
@@ -714,7 +713,7 @@ define([
         return processPacketData(Quaternion, dynamicObject, 'orientation', orientationData, undefined, sourceUri);
     }
 
-    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection) {
+    function processVertexPositions(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var vertexPositionsData = packet.vertexPositions;
         if (!defined(vertexPositionsData)) {
             return false;
@@ -729,7 +728,7 @@ define([
         return propertyCreated;
     }
 
-    function processAvailability(dynamicObject, packet) {
+    function processAvailability(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var availability = packet.availability;
         if (!defined(availability)) {
             return false;
@@ -1087,24 +1086,6 @@ define([
         return vectorUpdated;
     }
 
-    var updaters = [processClock,//
-                    processBillboard, //
-                    processEllipse, //
-                    processEllipsoid, //
-                    processCone, //
-                    processLabel, //
-                    processPath, //
-                    processPoint, //
-                    processPolygon, //
-                    processPolyline, //
-                    processPyramid, //
-                    processVector, //
-                    processPosition, //
-                    processViewFrom, //
-                    processOrientation, //
-                    processVertexPositions, //
-                    processAvailability];
-
     function processCzmlPacket(packet, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri) {
         var objectId = packet.id;
         if (!defined(objectId)) {
@@ -1165,6 +1146,29 @@ define([
         this._dynamicObjectCollection = new DynamicObjectCollection();
         this._timeVarying = true;
     };
+
+    /**
+     * Gets the array of CZML processing functions.
+     * @memberof CzmlDataSource
+     * @type Array
+     */
+    CzmlDataSource.updaters = [processClock,//
+                               processBillboard, //
+                               processEllipse, //
+                               processEllipsoid, //
+                               processCone, //
+                               processLabel, //
+                               processPath, //
+                               processPoint, //
+                               processPolygon, //
+                               processPolyline, //
+                               processPyramid, //
+                               processVector, //
+                               processPosition, //
+                               processViewFrom, //
+                               processOrientation, //
+                               processVertexPositions, //
+                               processAvailability];
 
     /**
      * Gets an event that will be raised when non-time-varying data changes
@@ -1302,7 +1306,7 @@ define([
     CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
         var updatedObjects = [];
         var updatedObjectsHash = {};
-        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : updaters;
+        updaterFunctions = defined(updaterFunctions) ? updaterFunctions : CzmlDataSource.updaters;
 
         if (Array.isArray(czml)) {
             for ( var i = 0, len = czml.length; i < len; i++) {

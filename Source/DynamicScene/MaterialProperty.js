@@ -34,9 +34,7 @@ define([
      * @param {JulianDate} time The time for which to retrieve the type.
      * @type {String} The type of material.
      */
-    MaterialProperty.prototype.getType = function(time) {
-        throwInstantiationError();
-    };
+    MaterialProperty.prototype.getType = throwInstantiationError;
 
     /**
      * Gets the value of the property at the provided time.
@@ -53,7 +51,7 @@ define([
     /**
      * @private
      */
-    MaterialProperty.GetValue = function(time, context, materialProperty, material) {
+    MaterialProperty.getValue = function(time, context, materialProperty, material) {
         if (defined(materialProperty)) {
             var type = materialProperty.getType(time);
             if (!defined(material) || (material.type !== type)) {

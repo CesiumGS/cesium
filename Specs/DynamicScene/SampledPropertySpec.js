@@ -157,7 +157,7 @@ defineSuite([
         expect(property.getValue(time.addSeconds(4))).toBeUndefined();
     });
 
-    it('_mergeNewSamples works with huge data sets.', function() {
+    it('mergeNewSamples works with huge data sets.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -179,7 +179,7 @@ defineSuite([
         expect(values).toEqual(expectedValues);
     });
 
-    it('_mergeNewSamples works for sorted non-intersecting data.', function() {
+    it('mergeNewSamples works for sorted non-intersecting data.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -197,7 +197,7 @@ defineSuite([
         expect(values).toEqual(expectedValues);
     });
 
-    it('_mergeNewSamples works for ISO8601 dates', function() {
+    it('mergeNewSamples works for ISO8601 dates', function() {
         var times = [];
         var values = [];
         var epoch = JulianDate.fromIso8601('2010-01-01T12:00:00');
@@ -215,7 +215,7 @@ defineSuite([
         expect(values).toEqual(expectedValues);
     });
 
-    it('_mergeNewSamples works for elements of size 2.', function() {
+    it('mergeNewSamples works for elements of size 2.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -233,7 +233,7 @@ defineSuite([
         expect(values).toEqual(expectedValues);
     });
 
-    it('_mergeNewSamples works for unsorted intersecting data.', function() {
+    it('mergeNewSamples works for unsorted intersecting data.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -251,7 +251,7 @@ defineSuite([
         expect(values).toEqual(expectedValues);
     });
 
-    it('_mergeNewSamples works for data with repeated values.', function() {
+    it('mergeNewSamples works for data with repeated values.', function() {
         var times = [];
         var values = [];
         var epoch = new JulianDate();
@@ -273,7 +273,7 @@ defineSuite([
         values : [0.0, 5, 120.0, 7, 240.0, 9, 360.0, 11, 480.0, 13, 600.0, 15, 720.0, 17, 840.0, 18, 960.0, 19, 1080.0, 20]
     }];
 
-    it('_mergeNewSamples works with interwoven data', function() {
+    it('mergeNewSamples works with interwoven data', function() {
         var times = [];
         var values = [];
         SampledProperty._mergeNewSamples(interwovenData[0].epoch, times, values, interwovenData[0].values, 1);

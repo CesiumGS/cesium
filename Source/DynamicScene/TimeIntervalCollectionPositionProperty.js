@@ -88,13 +88,9 @@ define([
             throw new DeveloperError('referenceFrame is required.');
         }
 
-        var interval = this._intervals.findIntervalContainingDate(time);
-        if (defined(interval)) {
-            var value = interval.data;
-            if (defined(value)) {
-                return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, result);
-            }
-            return value;
+        var position = this._intervals.findDataForIntervalContainingDate(time);
+        if (defined(position)) {
+            return PositionProperty.convertToReferenceFrame(time, position, this._referenceFrame, referenceFrame, result);
         }
         return undefined;
     };

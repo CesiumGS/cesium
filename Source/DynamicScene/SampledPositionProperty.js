@@ -151,7 +151,7 @@ define([
      * @memberof SampledPositionProperty
      *
      * @param {Array} packedSamples The array of packed samples.
-     * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch.
+     * @param {JulianDate} [epoch] If any of the dates in packedSamples are numbers, they are considered an offset from this epoch, in seconds.
      *
      * @exception {DeveloperError} packedSamples is required.
      */

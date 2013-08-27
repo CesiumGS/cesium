@@ -87,20 +87,16 @@ define([
             throw new DeveloperError('time is required');
         }
 
-        var interval = this._intervals.findIntervalContainingDate(time);
-        if (defined(interval)) {
-            var value = interval.data;
-            if (defined(value) && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
-                if (typeof value.clone === 'function') {
-                    return value.clone(result);
-                } else if (!defined(this._clone)) {
-                    throw new DeveloperError('This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.');
-                }
-                return this._clone(value, result);
+        var value = this._intervals.findDataForIntervalContainingDate(time);
+        if (defined(value) && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Enumeration)) {
+            if (typeof value.clone === 'function') {
+                return value.clone(result);
+            } else if (!defined(this._clone)) {
+                throw new DeveloperError('This value requires a clone function be specified for the TimeIntervalCollectionProperty constructor.');
             }
-            return value;
+            return this._clone(value, result);
         }
-        return undefined;
+        return value;
     };
 
     return TimeIntervalCollectionProperty;
