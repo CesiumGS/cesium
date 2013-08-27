@@ -11,39 +11,7 @@ define([
         './UniformDatatype',
         '../Shaders/Builtin/Structs',
         '../Shaders/Builtin/Constants',
-        '../Shaders/Builtin/Functions/RGBToXYZ',
-        '../Shaders/Builtin/Functions/XYZToRGB',
-        '../Shaders/Builtin/Functions/antialias',
-        '../Shaders/Builtin/Functions/cellular',
-        '../Shaders/Builtin/Functions/columbusViewMorph',
-        '../Shaders/Builtin/Functions/computePosition',
-        '../Shaders/Builtin/Functions/eastNorthUpToEyeCoordinates',
-        '../Shaders/Builtin/Functions/ellipsoidContainsPoint',
-        '../Shaders/Builtin/Functions/ellipsoidNew',
-        '../Shaders/Builtin/Functions/ellipsoidWgs84TextureCoordinates',
-        '../Shaders/Builtin/Functions/equalsEpsilon',
-        '../Shaders/Builtin/Functions/eyeOffset',
-        '../Shaders/Builtin/Functions/eyeToWindowCoordinates',
-        '../Shaders/Builtin/Functions/geodeticSurfaceNormal',
-        '../Shaders/Builtin/Functions/getDefaultMaterial',
-        '../Shaders/Builtin/Functions/getWaterNoise',
-        '../Shaders/Builtin/Functions/getWgs84EllipsoidEC',
-        '../Shaders/Builtin/Functions/hue',
-        '../Shaders/Builtin/Functions/isEmpty',
-        '../Shaders/Builtin/Functions/isFull',
-        '../Shaders/Builtin/Functions/latitudeToWebMercatorFraction',
-        '../Shaders/Builtin/Functions/luminance',
-        '../Shaders/Builtin/Functions/modelToWindowCoordinates',
-        '../Shaders/Builtin/Functions/multiplyWithColorBalance',
-        '../Shaders/Builtin/Functions/phong',
-        '../Shaders/Builtin/Functions/pointAlongRay',
-        '../Shaders/Builtin/Functions/rayEllipsoidIntersectionInterval',
-        '../Shaders/Builtin/Functions/saturation',
-        '../Shaders/Builtin/Functions/snoise',
-        '../Shaders/Builtin/Functions/tangentToEyeSpaceMatrix',
-        '../Shaders/Builtin/Functions/translateRelativeToEye',
-        '../Shaders/Builtin/Functions/transpose',
-        '../Shaders/Builtin/Functions/windowToEyeCoordinates'
+        '../Shaders/Builtin/Functions'
     ], function(
         defined,
         DeveloperError,
@@ -56,39 +24,7 @@ define([
         UniformDatatype,
         ShadersBuiltinStructs,
         ShadersBuiltinConstants,
-        czm_RGBToXYZ,
-        czm_XYZToRGB,
-        czm_antialias,
-        czm_cellular,
-        czm_columbusViewMorph,
-        czm_computePosition,
-        czm_eastNorthUpToEyeCoordinates,
-        czm_ellipsoidContainsPoint,
-        czm_ellipsoidNew,
-        czm_ellipsoidWgs84TextureCoordinates,
-        czm_equalsEpsilon,
-        czm_eyeOffset,
-        czm_eyeToWindowCoordinates,
-        czm_geodeticSurfaceNormal,
-        czm_getDefaultMaterial,
-        czm_getWaterNoise,
-        czm_getWgs84EllipsoidEC,
-        czm_hue,
-        czm_isEmpty,
-        czm_isFull,
-        czm_latitudeToWebMercatorFraction,
-        czm_luminance,
-        czm_modelToWindowCoordinates,
-        czm_multiplyWithColorBalance,
-        czm_phong,
-        czm_pointAlongRay,
-        czm_rayEllipsoidIntersectionInterval,
-        czm_saturation,
-        czm_snoise,
-        czm_tangentToEyeSpaceMatrix,
-        czm_translateRelativeToEye,
-        czm_transpose,
-        czm_windowToEyeCoordinates) {
+        ShadersBuiltinFunctions) {
     "use strict";
     /*global console*/
 
@@ -2402,55 +2338,43 @@ define([
         };
     }
 
-    var builtInFunctions = {
-        czm_RGBToXYZ : czm_RGBToXYZ,
-        czm_XYZToRGB : czm_XYZToRGB,
-        czm_antialias : czm_antialias,
-        czm_cellular : czm_cellular,
-        czm_columbusViewMorph : czm_columbusViewMorph,
-        czm_computePosition : czm_computePosition,
-        czm_eastNorthUpToEyeCoordinates : czm_eastNorthUpToEyeCoordinates,
-        czm_ellipsoidContainsPoint : czm_ellipsoidContainsPoint,
-        czm_ellipsoidNew : czm_ellipsoidNew,
-        czm_ellipsoidWgs84TextureCoordinates : czm_ellipsoidWgs84TextureCoordinates,
-        czm_equalsEpsilon : czm_equalsEpsilon,
-        czm_eyeOffset : czm_eyeOffset,
-        czm_eyeToWindowCoordinates : czm_eyeToWindowCoordinates,
-        czm_geodeticSurfaceNormal : czm_geodeticSurfaceNormal,
-        czm_getDefaultMaterial : czm_getDefaultMaterial,
-        czm_getWaterNoise : czm_getWaterNoise,
-        czm_getWgs84EllipsoidEC : czm_getWgs84EllipsoidEC,
-        czm_hue : czm_hue,
-        czm_isEmpty : czm_isEmpty,
-        czm_isFull : czm_isFull,
-        czm_latitudeToWebMercatorFraction : czm_latitudeToWebMercatorFraction,
-        czm_luminance : czm_luminance,
-        czm_modelToWindowCoordinates : czm_modelToWindowCoordinates,
-        czm_multiplyWithColorBalance : czm_multiplyWithColorBalance,
-        czm_phong : czm_phong,
-        czm_pointAlongRay : czm_pointAlongRay,
-        czm_rayEllipsoidIntersectionInterval : czm_rayEllipsoidIntersectionInterval,
-        czm_saturation : czm_saturation,
-        czm_snoise : czm_snoise,
-        czm_tangentToEyeSpaceMatrix : czm_tangentToEyeSpaceMatrix,
-        czm_translateRelativeToEye : czm_translateRelativeToEye,
-        czm_transpose : czm_transpose,
-        czm_windowToEyeCoordinates : czm_windowToEyeCoordinates
-    };
-
-    function getBuiltinFunctions(source) {
-        // This expects well-behaved shaders, e.g., the built-in functions are not commented out or redeclared.
+    function identifyBuiltins(source, builtinDictionary) {
+        // This expects well-behaved shaders, e.g., the built-ins are not commented out or redeclared.
         var definitions = '';
-        var functions = builtInFunctions;
-        for (var f in functions) {
-            if (functions.hasOwnProperty(f)) {
-                if (source.indexOf(f) !== -1) {
-                    definitions += functions[f] + ' \n';
+        for (var b in builtinDictionary) {
+            if (builtinDictionary.hasOwnProperty(b)) {
+                if (source.indexOf(b) !== -1) {
+                    definitions += builtinDictionary[b] + ' \n';
+
+                    // remove the entry from the dictionary so we can't recurse indefinitely
+                    delete builtinDictionary[b];
                 }
             }
         }
 
+        // recurse incase a found builtin calls other builtin functions/structs/constants
+        if(definitions !== '') {
+            definitions = definitions + '\n' + identifyBuiltins(definitions, builtinDictionary);
+        }
+
         return definitions;
+    }
+
+    function getBuiltins(source) {
+        var builtins = identifyBuiltins(source, cloneHashSet(ShadersBuiltinFunctions));
+        builtins = identifyBuiltins(builtins + source, cloneHashSet(ShadersBuiltinStructs)) + builtins;
+        builtins = identifyBuiltins(builtins + source, cloneHashSet(ShadersBuiltinConstants)) + builtins;
+        return builtins;
+    }
+
+    function cloneHashSet(originalHashSet) {
+        var copy = {};
+         for ( var property in originalHashSet ) {
+           if ( originalHashSet.hasOwnProperty( property ) ) {
+               copy[ property ] = originalHashSet[ property ];
+           }
+         }
+         return copy;
     }
 
     function getFragmentShaderPrecision() {
@@ -2494,24 +2418,20 @@ define([
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsAndBuiltinFunctions = getBuiltinFunctions(vsSourceVersioned.source) +
+        var vsAndBuiltins = getBuiltins(vsSourceVersioned.source) +
                                     '\n#line 0\n' +
                                     vsSourceVersioned.source;
         var vsSource = vsSourceVersioned.version +
-                       ShadersBuiltinConstants +
-                       ShadersBuiltinStructs +
-                       getAutomaticUniforms(vsAndBuiltinFunctions) +
-                       vsAndBuiltinFunctions;
+                       getAutomaticUniforms(vsAndBuiltins) +
+                       vsAndBuiltins;
 
-        var fsAndBuiltinFunctions = getBuiltinFunctions(fsSourceVersioned.source) +
+        var fsAndBuiltins = getBuiltins(fsSourceVersioned.source) +
                                     '\n#line 0\n' +
                                     fsSourceVersioned.source;
         var fsSource = fsSourceVersioned.version +
                        getFragmentShaderPrecision() +
-                       ShadersBuiltinConstants +
-                       ShadersBuiltinStructs +
-                       getAutomaticUniforms(fsAndBuiltinFunctions) +
-                       fsAndBuiltinFunctions;
+                       getAutomaticUniforms(fsAndBuiltins) +
+                       fsAndBuiltins;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
