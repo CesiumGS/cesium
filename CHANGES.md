@@ -9,6 +9,7 @@ Beta Releases
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
 
 * Breaking changes:
+    * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take the scene as their first parameter instead of the frame state.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
@@ -43,6 +44,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
+* Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
@@ -51,6 +53,8 @@ var geometry = BoxGeometry.createGeometry(box);
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Fixed triangulation for polygons that cross the international date line.
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
+* `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 
 ### b19 - 2013-08-01
 

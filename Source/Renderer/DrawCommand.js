@@ -163,6 +163,13 @@ define(function() {
          * @see DrawCommand#boundingVolume
          */
         this.debugShowBoundingVolume = false;
+
+        /**
+         * @private
+         *
+         * Used to implement {@see Scene.debugShowFrustums}.
+         */
+        this.debugOverlappingFrustums = 0;
     };
 
     /**
