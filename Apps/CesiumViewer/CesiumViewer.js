@@ -50,8 +50,11 @@ define([
             loadingIndicator.style.display = 'none';
         }
     }).otherwise(function(e) {
+        loadingIndicator.style.display = 'none';
         console.error(e);
-        window.alert(e);
+        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+            window.alert(e);
+        }
     });
 
     function endsWith(str, suffix) {
