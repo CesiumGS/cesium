@@ -83,7 +83,6 @@ for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {
     new File(it.next())['delete']();
 }
 
-
 var GenerateBuiltinFile = function(builtinType, builtins) {
     var builtinFile = new File(project.getProperty('shadersDirectory') + '/Builtin', builtinType + '.js');
 
