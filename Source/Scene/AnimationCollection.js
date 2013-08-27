@@ -236,9 +236,9 @@ define([
      * @memberof AnimationCollection
      */
     AnimationCollection.prototype.removeAll = function() {
-        var tweens = Tween.getAll(),
-            n = tweens.length,
-            i = -1;
+        var tweens = Tween.getAll();
+        var n = tweens.length;
+        var i = -1;
         while (++i < n) {
             var t = tweens[i];
             if (typeof t.onCancel === 'function') {
