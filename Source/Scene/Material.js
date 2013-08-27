@@ -668,13 +668,10 @@ define([
         'mat4' : Matrix4
     };
     function returnUniform(material, uniformId, originalUniformType) {
-        var uniformType;
         return function() {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
-            if (!defined(uniformType)) {
-                uniformType = getUniformType(uniformValue);
-            }
+            var uniformType = getUniformType(uniformValue);
 
             if (originalUniformType === 'sampler2D' && (uniformType === originalUniformType || uniformValue instanceof Texture)) {
                 if (uniformType === originalUniformType) {

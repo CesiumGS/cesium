@@ -1768,7 +1768,15 @@ defineSuite([
         expect(geometry.indices).toEqual([0, 3, 4, 1, 2, 6, 1, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, -1.0, 0.0, -1.0, 1.0, 2.0, -1.0, 2.0, 2.0);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1788,7 +1796,15 @@ defineSuite([
         expect(geometry.indices).toEqual([1, 3, 4, 2, 0, 6, 2, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 1.0, 2.0, -1.0, -1.0, 0.0, -1.0, 2.0, 2.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 2.0, -1.0, -1.0, 0.0, -1.0, 2.0, 2.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1808,7 +1824,16 @@ defineSuite([
         expect(geometry.indices).toEqual([2, 3, 4, 0, 1, 6, 0, 6, 5]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 1.0, 2.0, -1.0, 2.0, 2.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 2.0, -1.0, 2.0, 2.0, -1.0, -1.0, 0.0);
+        var midpoint2 = new Cartesian3(-1, -CesiumMath.EPSILON11, 2/3);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 1);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
+
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1818,7 +1843,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, 2.0, 0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0])
+                    values : new Float64Array([-1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1828,7 +1853,15 @@ defineSuite([
         expect(geometry.indices).toEqual([1, 2, 4, 1, 4, 3, 0, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, 2.0, 0.0, -1.0, -1.0, 0.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, 1.0, 0.0, -1.0, -1.0, 0.0, -2.0, -1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1838,7 +1871,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, 2.0, 0.0, -1.0, -1.0, 0.0])
+                    values : new Float64Array([-2.0, -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, -1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1848,7 +1881,15 @@ defineSuite([
         expect(geometry.indices).toEqual([2, 0, 4, 2, 4, 3, 1, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, 2.0, 0.0, -1.0, -1.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-2.0, -1.0, 0.0, -1.0, 1.0, 0.0, -1.0, -1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
@@ -1858,7 +1899,7 @@ defineSuite([
                 position : new GeometryAttribute({
                     componentDatatype : ComponentDatatype.DOUBLE,
                     componentsPerAttribute : 3,
-                    values : new Float64Array([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 2.0, 0.0])
+                    values : new Float64Array([-1.0, -1.0, 0.0, -2.0, -1.0, 0.0, -1.0, 1.0, 0.0])
                 })
             },
             indices : new Uint16Array([0, 1, 2]),
@@ -1868,7 +1909,15 @@ defineSuite([
         expect(geometry.indices).toEqual([0, 1, 4, 0, 4, 3, 2, 5, 6]);
 
         var positions = geometry.attributes.position.values;
-        expect(positions.subarray(0, 3 * 3)).toEqual([-1.0, -1.0, 0.0, -1.0, -1.0, 0.0, -1.0, 2.0, 0.0]);
+        var expectedPositions = [];
+        expectedPositions.push(-1.0, -1.0, 0.0, -2.0, -1.0, 0.0, -1.0, 1.0, 0.0);
+        var midpoint1 = new Cartesian3(-1, -CesiumMath.EPSILON11, 0);
+        var midpoint2 = new Cartesian3(-1.5, -CesiumMath.EPSILON11, 0);
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        midpoint1.y = -midpoint1.y;
+        midpoint2.y = -midpoint2.y;
+        expectedPositions.push(midpoint1.x, midpoint1.y, midpoint1.z, midpoint2.x, midpoint2.y, midpoint2.z);
+        expect(positions).toEqual(expectedPositions);
         expect(positions.length).toEqual(7 * 3);
     });
 
