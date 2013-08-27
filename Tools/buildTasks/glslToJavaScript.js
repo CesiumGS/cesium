@@ -83,119 +83,44 @@ for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {
     new File(it.next())['delete']();
 }
 
-// create BuiltinFunctions.js for runtime concatenation of builtin functions
-//var functionsFile = new File('D:/gbeatty_cesium/Source/Shaders/Builtin', 'Functions.js');
-var functionsFile = new File(project.getProperty('shadersDirectory') + '/Builtin', 'Functions.js');
 
-var amdPath = '';
-var amdClassName = '';
-var builtinLookup = '';
+var GenerateBuiltinFile = function(builtinType, builtins) {
+    var builtinFile = new File(project.getProperty('shadersDirectory') + '/Builtin', builtinType + '.js');
 
-for (var i = 0; i < builtinFunctions.length; i++) {
-    var builtinFunction = builtinFunctions[i];
+    var amdPath = '';
+    var amdClassName = '';
+    var builtinLookup = '';
 
-    if(i !== 0) {
-        amdPath = amdPath + ',\n';
-        amdClassName = amdClassName + ',\n';
-        builtinLookup = builtinLookup + ',\n';
+    for (var i = 0; i < builtins.length; i++) {
+        var builtin = builtins[i];
+
+        if(i !== 0) {
+            amdPath = amdPath + ',\n';
+            amdClassName = amdClassName + ',\n';
+            builtinLookup = builtinLookup + ',\n';
+        }
+
+        amdPath = amdPath + '        \'./' + builtinType + '/' + builtin + '\'';
+        amdClassName = amdClassName + '        ' + builtin;
+        builtinLookup = builtinLookup + '        ' + builtin + ' : ' + builtin;
     }
 
-    amdPath = amdPath + '        \'./Functions/' + builtinFunction + '\'';
-    amdClassName = amdClassName + '        ' + builtinFunction;
-    builtinLookup = builtinLookup + '        ' + builtinFunction + ' : ' + builtinFunction;
-}
+    contents = '\
+    //This file is automatically rebuilt by the Cesium build process.\n\
+    /*global define*/\n\
+    define([\n' +
+    amdPath +
+    '\n    ], function(\n' +
+    amdClassName +
+    ') {\n\
+        "use strict";\n\
+        return {\n' + builtinLookup + '};\n\
+    });';
 
-contents = '\
-//This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
-define([\n' +
-amdPath +
-'\n    ], function(\n' +
-amdClassName +
-') {\n\
-    "use strict";\n\
-    return {\n' + builtinLookup + '};\n\
-});';
+    writeFileContents(builtinFile.getAbsolutePath(), contents, true);
+};
 
-writeFileContents(functionsFile.getAbsolutePath(), contents, true);
-
-
-//create BuiltinConstants.js for runtime concatenation of built in constants
-var constantsFile = new File(project.getProperty('shadersDirectory') + '/Builtin', 'Constants.js');
-
-amdPath = '';
-amdClassName = '';
-builtinLookup = '';
-
-for (var i = 0; i < builtinConstants.length; i++) {
-    var builtinConstant = builtinConstants[i];
-
-    if(i !== 0) {
-        amdPath = amdPath + ',\n';
-        amdClassName = amdClassName + ',\n';
-        builtinLookup = builtinLookup + ',\n';
-    }
-
-    amdPath = amdPath + '        \'./Constants/' + builtinConstant + '\'';
-    amdClassName = amdClassName + '        ' + builtinConstant;
-    builtinLookup = builtinLookup + '        ' + builtinConstant + ' : ' + builtinConstant;
-}
-
-contents = '\
-//This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
-define([\n' +
-amdPath +
-'\n    ], function(\n' +
-amdClassName +
-') {\n\
-    "use strict";\n\
-    return {\n' + builtinLookup + '};\n\
-});';
-
-writeFileContents(constantsFile.getAbsolutePath(), contents, true);
-
-
-//create BuiltinStructs.js for runtime concatenation of built in constants
-var structsFile = new File(project.getProperty('shadersDirectory') + '/Builtin', 'Structs.js');
-
-amdPath = '';
-amdClassName = '';
-builtinLookup = '';
-
-for (var i = 0; i < builtinStructs.length; i++) {
-    var builtinStruct = builtinStructs[i];
-
-    if(i !== 0) {
-        amdPath = amdPath + ',\n';
-        amdClassName = amdClassName + ',\n';
-        builtinLookup = builtinLookup + ',\n';
-    }
-
-    amdPath = amdPath + '        \'./Structs/' + builtinStruct + '\'';
-    amdClassName = amdClassName + '        ' + builtinStruct;
-    builtinLookup = builtinLookup + '        ' + builtinStruct + ' : ' + builtinStruct;
-}
-
-contents = '\
-//This file is automatically rebuilt by the Cesium build process.\n\
-/*global define*/\n\
-define([\n' +
-amdPath +
-'\n    ], function(\n' +
-amdClassName +
-') {\n\
-    "use strict";\n\
-    return {\n' + builtinLookup + '};\n\
-});';
-
-writeFileContents(structsFile.getAbsolutePath(), contents, true);
-
-
-
-
-
-
-
-
-
+// generate the JS file for Built-in GLSL Functions, Structs, and Constants
+GenerateBuiltinFile('Functions', builtinFunctions);
+GenerateBuiltinFile('Structs', builtinStructs);
+GenerateBuiltinFile('Constants', builtinConstants);
