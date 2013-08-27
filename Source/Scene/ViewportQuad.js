@@ -16,6 +16,7 @@ define([
         '../Renderer/BlendingState',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
+        '../Renderer/createShaderSource',
         '../Shaders/ViewportQuadVS',
         '../Shaders/ViewportQuadFS'
     ], function(
@@ -35,6 +36,7 @@ define([
         BlendingState,
         CommandLists,
         DrawCommand,
+        createShaderSource,
         ViewportQuadVS,
         ViewportQuadFS) {
     "use strict";
@@ -201,12 +203,7 @@ define([
                 // Recompile shader when material changes
                 this._material = this.material;
 
-                var fsSource =
-                    '#line 0\n' +
-                    this._material.shaderSource +
-                    '#line 0\n' +
-                    ViewportQuadFS;
-
+                var fsSource = createShaderSource({ sources : [this._material.shaderSource, ViewportQuadFS] });
                 this._overlayCommand.shaderProgram = context.getShaderCache().replaceShaderProgram(
                     this._overlayCommand.shaderProgram, ViewportQuadVS, fsSource, attributeIndices);
             }
