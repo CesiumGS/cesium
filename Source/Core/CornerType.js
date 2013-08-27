@@ -7,10 +7,6 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var CornerType = {
         /**
-         *   .----
-         * .`
-         * |
-         *
          * @type {Enumeration}
          * @constant
          * @default 0
@@ -20,10 +16,6 @@ define(['../Core/Enumeration'], function(Enumeration) {
         }),
 
         /**
-         *  ____
-         * |
-         * |
-         *
          * @type {Enumeration}
          * @constant
          * @default 1
@@ -33,10 +25,6 @@ define(['../Core/Enumeration'], function(Enumeration) {
         }),
 
         /**
-         *   ____
-         *  /
-         * |
-         *
          * @type {Enumeration}
          * @constant
          * @default 2
