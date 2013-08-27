@@ -9,6 +9,7 @@ Beta Releases
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
 
 * Breaking changes:
+    * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take the scene as their first parameter instead of the frame state.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
@@ -51,6 +52,8 @@ var geometry = BoxGeometry.createGeometry(box);
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Fixed triangulation for polygons that cross the international date line.
+* `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 
 ### b19 - 2013-08-01
 
