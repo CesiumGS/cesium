@@ -35,13 +35,13 @@ forEachFile('glslfiles', function(relativePath, file) {
     var jsFile = new File(file.getParent(), file.getName().replace('.glsl', '.js'));
 
     // identify built in functions, structs, and constants
-    if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Functions') != -1) {
+    if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Functions') !== -1) {
         builtinFunctions.push(file.getName().replace('.glsl', ''));
     }
-    else if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Constants') != -1) {
+    else if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Constants') !== -1) {
         builtinConstants.push(file.getName().replace('.glsl', ''));
     }
-    else if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Structs') != -1) {
+    else if(glslFile.getPath().indexOf('Builtin' + File.separator + 'Structs') !== -1) {
         builtinStructs.push(file.getName().replace('.glsl', ''));
     }
 
@@ -83,7 +83,8 @@ for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {
     new File(it.next())['delete']();
 }
 
-var GenerateBuiltinFile = function(builtinType, builtins) {
+var generateBuiltinFile = function(builtinType, builtins) {
+    "use strict";
     var builtinFile = new File(project.getProperty('shadersDirectory') + '/Builtin', builtinType + '.js');
 
     var amdPath = '';
@@ -104,7 +105,7 @@ var GenerateBuiltinFile = function(builtinType, builtins) {
         builtinLookup = builtinLookup + '        ' + builtin + ' : ' + builtin;
     }
 
-    contents = '\
+    var fileContents = '\
     //This file is automatically rebuilt by the Cesium build process.\n\
     /*global define*/\n\
     define([\n' +
@@ -116,10 +117,10 @@ var GenerateBuiltinFile = function(builtinType, builtins) {
         return {\n' + builtinLookup + '};\n\
     });';
 
-    writeFileContents(builtinFile.getAbsolutePath(), contents, true);
+    writeFileContents(builtinFile.getAbsolutePath(), fileContents, true);
 };
 
 // generate the JS file for Built-in GLSL Functions, Structs, and Constants
-GenerateBuiltinFile('Functions', builtinFunctions);
-GenerateBuiltinFile('Structs', builtinStructs);
-GenerateBuiltinFile('Constants', builtinConstants);
+generateBuiltinFile('Functions', builtinFunctions);
+generateBuiltinFile('Structs', builtinStructs);
+generateBuiltinFile('Constants', builtinConstants);
