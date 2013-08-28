@@ -1730,7 +1730,7 @@ define([
          * // Example
          * if (czm_sceneMode == czm_sceneMode2D)
          * {
-         *     heightAboveTerrain = czm_eyeAltitude2D;
+         *     eyeHeightSq = czm_eyeHeight2D.y;
          * }
          */
         czm_sceneMode : {
