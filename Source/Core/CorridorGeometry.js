@@ -145,14 +145,7 @@ define([
         }
         scaleToSurface(array, ellipsoid);
 
-        if (leftIsOutside) {
-            return {
-                leftPositions : array
-            };
-        }
-        return {
-            rightPositions : array
-        };
+        return array;
     }
 
     function addEndCaps(calculatedPositions, width, ellipsoid) {
@@ -164,7 +157,7 @@ define([
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false, ellipsoid);
+        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         var length = calculatedPositions.length - 1;
         var rightEdge = calculatedPositions[length - 1];
@@ -172,7 +165,7 @@ define([
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, false, false, ellipsoid);
+        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         return [firstEndCap, lastEndCap];
     }
@@ -182,18 +175,14 @@ define([
             var leftPos = Cartesian3.add(position, leftCornerDirection);
             var leftArray = PolylinePipeline.scaleToSurface([startPoint, leftPos, lastPoint], granularity, ellipsoid);
             leftArray = leftArray.slice(3);
-            return {
-                leftPositions : leftArray
-            };
+            return leftArray;
         }
 
         leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
         var rightPos = Cartesian3.add(position, leftCornerDirection);
         var rightArray = PolylinePipeline.scaleToSurface([startPoint, rightPos, lastPoint], granularity, ellipsoid);
         rightArray = rightArray.slice(3);
-        return {
-            rightPositions : rightArray
-        };
+        return rightArray;
     }
 
     function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions, ellipsoid) {
@@ -221,7 +210,7 @@ define([
         var addEndPositions = defined(endPositions);
         var endPositionLength;
         if (addEndPositions) {
-            endPositionLength = endPositions[0].rightPositions.length - 3;
+            endPositionLength = endPositions[0].length - 3;
             leftCount += endPositionLength;
             rightCount += endPositionLength;
             endPositionLength /= 3;
@@ -247,7 +236,7 @@ define([
         if (addEndPositions) { // add rounded end
             leftPos = cartesian3;
             rightPos = cartesian4;
-            var firstEndPositions = endPositions[0].rightPositions;
+            var firstEndPositions = endPositions[0];
             normal = Cartesian3.fromArray(computedNormals, 0, normal);
             left = Cartesian3.fromArray(computedLefts, 0, left);
             for (i = 0; i < halfLength; i++) {
@@ -386,7 +375,7 @@ define([
             back -= 3;
             leftPos = cartesian3;
             rightPos = cartesian4;
-            var lastEndPositions = endPositions[1].rightPositions;
+            var lastEndPositions = endPositions[1];
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(lastEndPositions, (endPositionLength - i - 1) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
@@ -562,9 +551,9 @@ define([
                     left = normal.cross(forward, left).normalize(left);
                     leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid));
+                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push(computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid));
+                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
                     previousRightPos = rightPos.clone(previousRightPos);
                     previousLeftPos = leftPos.clone(previousLeftPos);
@@ -579,9 +568,9 @@ define([
                     left = normal.cross(forward, left).normalize(left);
                     rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid));
+                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push(computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid));
+                        corners.push({rightPositions : computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
                     }
                     previousRightPos = rightPos.clone(previousRightPos);
                     previousLeftPos = leftPos.clone(previousLeftPos);
