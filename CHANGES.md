@@ -10,6 +10,7 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 
 * Breaking changes:
     * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take the scene as their first parameter instead of the frame state.
+    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`

@@ -88,6 +88,8 @@
 
 .cesium-widget-errorPanel-message {
     overflow: auto;
+    font-family: monospace;
+    white-space: pre-wrap;
     resize: vertical;
     padding: 0;
     margin: 10px 0;

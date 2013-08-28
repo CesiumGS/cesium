@@ -394,7 +394,7 @@ define([
         content.appendChild(errorHeader);
 
         if (defined(error)) {
-            var errorMessage = document.createElement('pre');
+            var errorMessage = document.createElement('div');
             errorMessage.className = 'cesium-widget-errorPanel-message';
             errorMessage.textContent = error;
             content.appendChild(errorMessage);
