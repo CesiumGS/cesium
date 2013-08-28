@@ -54,9 +54,29 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
-        this.setGlowFactor(1.0);
-
         var that = this;
+        Object.defineProperty(this, 'glowFactor', {
+            get : function () { return that._glowFactor; },
+            set : function (glowFactor) {
+                glowFactor = Math.max(glowFactor, 0.0);
+                this._glowFactor = glowFactor;
+                this._glowLengthTS = Math.min(glowFactor * 2, 0.4);
+                this._sizeMultiplier = glowFactor * 18 + 5.0;
+                this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
+                this._boundingVolume2D.radius = this._boundingVolume.radius;
+            }
+        });
+
+        /**
+         * This number controls how "bright" the Sun's lens flare appears to be.
+         * Zero shows just the Sun's disc without any flare.  The default
+         * is 1.0.  Use larger values for a more pronounced flare around the Sun.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.glowFactor = 1.0;
+
         this._uniformMap = {
             u_sizeMultiplier : function() {
                 return that._sizeMultiplier;
@@ -65,40 +85,6 @@ define([
                 return that._glowLengthTS;
             }
         };
-    };
-
-    /**
-     * Returns the glow factor.
-     *
-     * @memberof Sun
-     *
-     * @returns {Number} The glow factor.
-     *
-     * @see Sun#setGlowFactor
-     */
-    Sun.prototype.getGlowFactor = function() {
-        return this._glowFactor;
-    };
-
-    /**
-     * Sets the glow factor, a number that controls how "bright" the Sun's lens flare
-     * appears to be.  Zero shows just the Sun's disc without any flare.  The default
-     * is 1.0.  Use larger values for a more pronounced flare around the Sun.
-     *
-     * @memberof Sun
-     *
-     * @type {Number}
-     * @default 1.0
-     *
-     * @see Sun#getGlowFactor
-     */
-    Sun.prototype.setGlowFactor = function(glowFactor) {
-        glowFactor = Math.max(glowFactor, 0.0);
-        this._glowFactor = glowFactor;
-        this._glowLengthTS = Math.min(glowFactor * 2, 0.4);
-        this._sizeMultiplier = glowFactor * 18 + 5.0;
-        this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
-        this._boundingVolume2D.radius = this._boundingVolume.radius;
     };
 
     /**
