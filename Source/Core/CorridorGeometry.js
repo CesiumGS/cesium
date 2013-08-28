@@ -170,19 +170,21 @@ define([
         return [firstEndCap, lastEndCap];
     }
 
+    var scaleArray = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
     function computeMiteredCorner(position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
+        var cornerPoint;
         if (leftIsOutside) {
-            var leftPos = Cartesian3.add(position, leftCornerDirection);
-            var leftArray = PolylinePipeline.scaleToSurface([startPoint, leftPos, lastPoint], granularity, ellipsoid);
-            leftArray = leftArray.slice(3);
-            return leftArray;
+            cornerPoint = Cartesian3.add(position, leftCornerDirection);
+        } else {
+            leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
+            cornerPoint = Cartesian3.add(position, leftCornerDirection);
         }
-
-        leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
-        var rightPos = Cartesian3.add(position, leftCornerDirection);
-        var rightArray = PolylinePipeline.scaleToSurface([startPoint, rightPos, lastPoint], granularity, ellipsoid);
-        rightArray = rightArray.slice(3);
-        return rightArray;
+        scaleArray[0] = startPoint.clone(scaleArray[0]);
+        scaleArray[1] = cornerPoint.clone(scaleArray[1]);
+        scaleArray[2] = lastPoint.clone(scaleArray[2]);
+        var array = PolylinePipeline.scaleToSurface(scaleArray, granularity, ellipsoid);
+        array = array.slice(3);
+        return array;
     }
 
     function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions, ellipsoid) {
