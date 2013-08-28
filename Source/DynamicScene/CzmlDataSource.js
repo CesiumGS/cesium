@@ -1110,7 +1110,7 @@ define([
         var availability = dynamicObjectCollection.computeAvailability();
 
         var clock;
-        var documentObject = dynamicObjectCollection.getObject('document');
+        var documentObject = dynamicObjectCollection.getById('document');
         if (defined(documentObject) && defined(documentObject.clock)) {
             clock = new DynamicClock();
             clock.startTime = documentObject.clock.startTime;
@@ -1252,7 +1252,7 @@ define([
             throw new DeveloperError('czml is required.');
         }
 
-        this._dynamicObjectCollection.clear();
+        this._dynamicObjectCollection.removeAll();
         this._clock = loadCzml(this, czml, source);
     };
 
@@ -1313,10 +1313,6 @@ define([
             }
         } else {
             processCzmlPacket(czml, dynamicObjectCollection, updatedObjects, updatedObjectsHash, updaterFunctions, sourceUri);
-        }
-
-        if (updatedObjects.length > 0) {
-            dynamicObjectCollection.objectPropertiesChanged.raiseEvent(dynamicObjectCollection, updatedObjects);
         }
 
         return updatedObjects;

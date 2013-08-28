@@ -1,10 +1,14 @@
 /*global define*/
 define([
         '../Core/defaultValue',
-        '../Core/defined'
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/Event'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        Event) {
     "use strict";
 
     /**
@@ -14,57 +18,183 @@ define([
      * @constructor
      */
     var DynamicBillboard = function() {
+        this._image = undefined;
+        this._scale = undefined;
+        this._rotation = undefined;
+        this._alignedAxis = undefined;
+        this._horizontalOrigin = undefined;
+        this._verticalOrigin = undefined;
+        this._color = undefined;
+        this._eyeOffset = undefined;
+        this._pixelOffset = undefined;
+        this._show = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicBillboard.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicBillboard.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the string {@link Property} specifying the URL of the billboard's texture.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.image = undefined;
+        image : {
+            get : function() {
+                return this._image;
+            },
+            set : function(value) {
+                var oldValue = this._image;
+                this._image = value;
+                this._propertyAssigned.raiseEvent(this, 'image', value, oldValue);
+            }
+        },
+
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's scale.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.scale = undefined;
+        scale : {
+            get : function() {
+                return this._scale;
+            },
+            set : function(value) {
+                var oldValue = this._scale;
+                this._scale = value;
+                this._propertyAssigned.raiseEvent(this, 'scale', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the numeric {@link Property} specifying the billboard's rotation.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.rotation = undefined;
+        rotation : {
+            get : function() {
+                return this._rotation;
+            },
+            set : function(value) {
+                var oldValue = this._rotation;
+                this._rotation = value;
+                this._propertyAssigned.raiseEvent(this, 'rotation', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard rotation's aligned axis.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.alignedAxis = undefined;
+        alignedAxis : {
+            get : function() {
+                return this._alignedAxis;
+            },
+            set : function(value) {
+                var oldValue = this._alignedAxis;
+                this._alignedAxis = value;
+                this._propertyAssigned.raiseEvent(this, 'alignedAxis', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the billboard's horizontal origin.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.horizontalOrigin = undefined;
+        horizontalOrigin : {
+            get : function() {
+                return this._horizontalOrigin;
+            },
+            set : function(value) {
+                var oldValue = this._horizontalOrigin;
+                this._horizontalOrigin = value;
+                this._propertyAssigned.raiseEvent(this, 'horizontalOrigin', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the billboard's vertical origin.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.verticalOrigin = undefined;
+        verticalOrigin : {
+            get : function() {
+                return this._verticalOrigin;
+            },
+            set : function(value) {
+                var oldValue = this._verticalOrigin;
+                this._verticalOrigin = value;
+                this._propertyAssigned.raiseEvent(this, 'verticalOrigin', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the billboard's color.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : {
+            get : function() {
+                return this._color;
+            },
+            set : function(value) {
+                var oldValue = this._color;
+                this._color = value;
+                this._propertyAssigned.raiseEvent(this, 'color', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the billboard's eye offset.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.eyeOffset = undefined;
+        eyeOffset : {
+            get : function() {
+                return this._eyeOffset;
+            },
+            set : function(value) {
+                var oldValue = this._eyeOffset;
+                this._eyeOffset = value;
+                this._propertyAssigned.raiseEvent(this, 'eyeOffset', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the billboard's pixel offset.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.pixelOffset = undefined;
+        pixelOffset : {
+            get : function() {
+                return this._pixelOffset;
+            },
+            set : function(value) {
+                var oldValue = this._pixelOffset;
+                this._pixelOffset = value;
+                this._propertyAssigned.raiseEvent(this, 'pixelOffset', value, oldValue);
+            }
+        },
         /**
          * Gets or sets the boolean {@link Property} specifying the billboard's visibility.
+         * @memberof DynamicBillboard.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : {
+            get : function() {
+                return this._show;
+            },
+            set : function(value) {
+                var oldValue = this._show;
+                this._show = value;
+                this._propertyAssigned.raiseEvent(this, 'show', value, oldValue);
+            }
+        }
+    });
 
     /**
      * Given two DynamicObjects, takes the billboard properties from the second

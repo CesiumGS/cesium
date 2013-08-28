@@ -187,7 +187,6 @@ define([
             //Unsubscribe from old collections.
             for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
                 collection = thisCollections[iCollection];
-                collection.compositeCollection = undefined;
                 collection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
             }
 
@@ -201,7 +200,6 @@ define([
                 collection = thisCollections[iCollection];
 
                 //Subscribe to the new collection.
-                collection.compositeCollection = this;
                 collection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
 
                 //Merge all of the existing objects.

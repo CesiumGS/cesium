@@ -412,7 +412,7 @@
 			<arg value="jsdoc.js" />
 			<arg value="-r" />
 			<arg line="-d ${relativeDocOutputDirectory}" />
-			<arg value="${relativeSourceFilesPath}" />
+			<arg value="${relativeSourceFilesPath}/DynamicScene" />
 			<arg value="${version}" />
 			<arg value="${githubRepoLink}" />
 			<arg value="${githubLinkExt}" />

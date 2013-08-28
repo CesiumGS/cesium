@@ -61,7 +61,7 @@ defineSuite([
         var collections = [new DynamicObjectCollection()];
         collections[0].getOrCreateObject('bob');
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections);
-        compositeDynamicObjectCollection.clear();
+        compositeDynamicObjectCollection.removeAll();
 
         expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
