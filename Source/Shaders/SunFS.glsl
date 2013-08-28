@@ -1,7 +1,7 @@
+uniform float u_glowLengthTS;
+
 varying vec2 v_textureCoordinates;
 varying float v_radiusTS;           // The radius in texture space
-
-uniform float u_glowLengthTS;
 
 vec2 rotate(vec2 p, vec2 direction)
 {
