@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Matrix4',
@@ -27,6 +28,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         DeveloperError,
         destroyObject,
         Matrix4,
@@ -828,14 +830,21 @@ define([
 
         var perInstanceAttributes = this._perInstanceAttributeIndices[index];
         var attributes = {};
+        var properties = {};
+        var hasProperties = false;
 
         for (var name in perInstanceAttributes) {
             if (perInstanceAttributes.hasOwnProperty(name)) {
-                Object.defineProperty(attributes, name, {
+                hasProperties = true;
+                properties[name] = {
                     get : createGetFunction(name, perInstanceAttributes),
                     set : createSetFunction(name, perInstanceAttributes, this._dirtyAttributes)
-                });
+                };
             }
+        }
+
+        if (hasProperties) {
+            defineProperties(attributes, properties);
         }
 
         this._lastPerInstanceAttributeIndex = index;

@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/PrimitiveType',
@@ -18,6 +19,7 @@ define([
         Cartesian3,
         ComponentDatatype,
         defined,
+        defineProperties,
         destroyObject,
         CesiumMath,
         PrimitiveType,
@@ -55,21 +57,23 @@ define([
         this._boundingVolume2D = new BoundingSphere();
 
         var that = this;
-        Object.defineProperty(this, 'glowFactor', {
-            get : function () { return that._glowFactor; },
-            set : function (glowFactor) {
-                glowFactor = Math.max(glowFactor, 0.0);
-                this._glowFactor = glowFactor;
-                this._glowLengthTS = Math.min(glowFactor * 2, 0.4);
-                this._sizeMultiplier = glowFactor * 18 + 5.0;
-                this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
-                this._boundingVolume2D.radius = this._boundingVolume.radius;
+        defineProperties(this, {
+            glowFactor : {
+                get : function () { return that._glowFactor; },
+                set : function (glowFactor) {
+                    glowFactor = Math.max(glowFactor, 0.0);
+                    this._glowFactor = glowFactor;
+                    this._glowLengthTS = Math.min(glowFactor * 2, 0.4);
+                    this._sizeMultiplier = glowFactor * 18 + 5.0;
+                    this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
+                    this._boundingVolume2D.radius = this._boundingVolume.radius;
+                }
             }
         });
 
         /**
-         * This number controls how "bright" the Sun's lens flare appears to be.
-         * Zero shows just the Sun's disc without any flare.  The default
+         * Gets or sets a number that controls how "bright" the Sun's lens flare appears
+         * to be.  Zero shows just the Sun's disc without any flare.  The default
          * is 1.0.  Use larger values for a more pronounced flare around the Sun.
          *
          * @type {Number}
