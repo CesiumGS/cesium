@@ -53,6 +53,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * `CesiumWidget` and `Viewer` now display an HTML error panel if an error occurs while rendering, which can be disabled with a constructor option.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Fixed triangulation for polygons that cross the international date line.
+* Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
 * `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 
