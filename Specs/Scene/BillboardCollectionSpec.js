@@ -123,9 +123,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(1.0);
         expect(b.getRotation()).toEqual(0.0);
         expect(b.getAlignedAxis()).toEqual(Cartesian3.ZERO);
-        //expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0, 1.0, 1.0e10, 1.0));
-        // TODO: replace with above before final pull request
-        expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
+        expect(b.getScaleByDistance()).not.toBeDefined();
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
     });
@@ -213,7 +211,13 @@ defineSuite([
         expect(b.getHeight()).toEqual(200.0);
     });
 
-    it('scale to 0', function() {
+    it('disable billboard setScaleByDistance', function() {
+        var b = billboards.add();
+        b.setScaleByDistance(undefined);
+        expect(b.getScaleByDistance()).not.toBeDefined();
+    });
+
+    it('set billboard scaleByDistance farValue to 0', function() {
         billboards.setTextureAtlas(createTextureAtlas([greenImage]));
         billboards.add({
             position : {
@@ -248,31 +252,28 @@ defineSuite([
         us.update(createFrameState(createCamera(context)));
     });
 
-    it('throws invalid scaleByDistance with nearDistance === farDistance', function() {
+    it('throws setScaleByDistance with nearDistance === farDistance', function() {
+        var b = billboards.add();
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            b.setScaleByDistance(scale);
+        }).toThrow();
+    });
+
+    it('throws new billboard with invalid scaleByDistance (nearDistance === farDistance)', function() {
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
         expect(function() {
             billboards.add({
-                position : {
-                    x : 0.0,
-                    y : 0.0,
-                    z : 0.0
-                },
-                scaleByDistance: new NearFarScalar(1.0, 1.0, 1.0, 0.0),
-                imageIndex : 0
+                scaleByDistance : scale
             });
         }).toThrow();
     });
 
     it('throws setScaleByDistance with nearDistance > farDistance', function() {
         var b = billboards.add();
+        var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
         expect(function() {
-            b.setScaleByDistance(new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0));
-        }).toThrow();
-    });
-
-    it('throws undefined setScaleByDistance', function() {
-        var b = billboards.add();
-        expect(function() {
-            b.setScaleByDistance(undefined);
+            b.setScaleByDistance(scale);
         }).toThrow();
     });
 

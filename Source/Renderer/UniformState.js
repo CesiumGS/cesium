@@ -128,6 +128,7 @@ define([
         this._cameraRight = new Cartesian3();
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
+        this._eyeHeight2D = new Cartesian2();
     };
 
     function setView(uniformState, matrix) {
@@ -244,8 +245,12 @@ define([
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
+            this._eyeHeight2D.x = this.frustum2DWidth*0.5;
+            this._eyeHeight2D.y = this._eyeHeight2D.x*this._eyeHeight2D.x;
         } else {
             this._frustum2DWidth = 0.0;
+            this._eyeHeight2D.x = 0.0;
+            this._eyeHeight2D.y = 0.0;
         }
 
         setSunAndMoonDirections(this, frameState);
@@ -917,19 +922,18 @@ define([
     };
 
     /**
-     * Returns the altitude of the camera for 2D <code>SceneMode</code>.  In Scene2D, the height (z) is fixed; camera
-     * zoom is achieved by altering the frustum width.  The height of the camera above the 2D plane can be
-     * determined by taking half of the frustum width.  This uniform is only valid when the scene mode is
-     * 2D.
+     * Returns the the height (<code>x</code>) and the height squared (<code>y</code>)
+     * in meters of the camera above the 2D world plane. This uniform is only valid
+     * when the {@link SceneMode} equal to <code>SCENE2D</code>.
      *
      * @memberof UniformState
      *
-     * @return {double} Returns the altitude above the 2D world plane in 2D mode, 0.0 otherwise.
+     * @return {Cartesian2} Returns the height and height squared above the 2D world plane for SCENE2D {@link SceneMode}.
      *
-     * @see czm_eyeAltitude2D
+     * @see czm_eyeHeight2D
      */
-    UniformState.prototype.getEyeAltitude2D = function() {
-        return this._frustum2DWidth*0.5;
+    UniformState.prototype.getEyeHeight2D = function() {
+        return this._eyeHeight2D;
     };
 
     /**

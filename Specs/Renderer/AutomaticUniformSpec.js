@@ -9,7 +9,9 @@ defineSuite([
          'Core/PrimitiveType',
          'Core/defaultValue',
          'Renderer/BufferUsage',
-         'Renderer/ClearCommand'
+         'Renderer/ClearCommand',
+         'Scene/FrameState',
+         'Scene/SceneMode'
      ], 'Renderer/AutomaticUniforms', function(
          createContext,
          destroyContext,
@@ -20,7 +22,9 @@ defineSuite([
          PrimitiveType,
          defaultValue,
          BufferUsage,
-         ClearCommand) {
+         ClearCommand,
+         FrameState,
+         SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -769,6 +773,67 @@ defineSuite([
             '    (czm_temeToPseudoFixed[0][1] != 0.0) && (czm_temeToPseudoFixed[1][1] != 0.0) && (czm_temeToPseudoFixed[2][1] == 0.0) && ' +
             '    (czm_temeToPseudoFixed[0][2] == 0.0) && (czm_temeToPseudoFixed[1][2] == 0.0) && (czm_temeToPseudoFixed[2][2] == 1.0) ' +
             '  ); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode == 2.0); ' +   // 3D
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode2D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode2D == 0.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneModeColumbusView', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneModeColumbusView == 1.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneMode3D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneMode3D == 2.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_sceneModeMorphing', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_sceneModeMorphing == 3.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_eyeHeight2D in Scene3D', function() {
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_eyeHeight2D.x == 0.0, czm_eyeHeight2D.y == 0.0, 1.0, 1.0); ' +
+            '}';
+        verifyDraw(fs);
+    });
+
+    it('has czm_eyeHeight2D in Scene2D', function() {
+        var us = context.getUniformState();
+        var frameState = createFrameState(createMockCamera(undefined, undefined, undefined, new Cartesian3(-1000.0, 0.0, 100000.0)));
+        frameState.mode = SceneMode.SCENE2D;
+        us.update(frameState);
+
+        var fs =
+            'void main() { ' +
+            '  gl_FragColor = vec4(czm_eyeHeight2D.x > 0.0, czm_eyeHeight2D.y > 0.0, 1.0, 1.0); ' +
             '}';
         verifyDraw(fs);
     });

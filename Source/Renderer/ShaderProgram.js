@@ -1295,28 +1295,28 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform containing altitude of the eye (camera) in the 2D scene.
+         * An automatic GLSL uniform containing height of the eye (camera) in the 2D scene in meters.
          * <br /><br />
-         * Like all automatic uniforms, <code>czm_eyeAltitude2D</code> does not need to be explicitly declared.
+         * Like all automatic uniforms, <code>czm_eyeHeight2D</code> does not need to be explicitly declared.
          * However, it can be explicitly declared when a shader is also used by other applications such
          * as a third-party authoring tool.
          *
-         * @alias czm_eyeAltitude2D
+         * @alias czm_eyeHeight2D
          * @glslUniform
          *
-         * @see UniformState#getEyeAltitude2D
+         * @see UniformState#getEyeHeight2D
          */
-        czm_eyeAltitude2D : {
+        czm_eyeHeight2D : {
             getSize : function() {
                 return 1;
             },
 
             getDatatype : function() {
-                return UniformDatatype.FLOAT;
+                return UniformDatatype.FLOAT_VECTOR2;
             },
 
             getValue : function(uniformState) {
-                return uniformState.getEyeAltitude2D();
+                return uniformState.getEyeHeight2D();
             }
         },
 

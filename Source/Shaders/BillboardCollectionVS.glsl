@@ -51,7 +51,7 @@ void main()
     {
         // 2D camera distance is a special case
         // treat all billboards as flattened to the z=0.0 plane
-        lengthSq = czm_eyeAltitude2D * czm_eyeAltitude2D;
+        lengthSq = czm_eyeHeight2D.y;
     }
     else
     {
@@ -62,13 +62,16 @@ void main()
     float scaleAtMax = scaleByDistance.w;
     float nearDistanceSq = scaleByDistance.x*scaleByDistance.x;
     float farDistanceSq = scaleByDistance.z*scaleByDistance.z;
+
     // ensure that t will fall within the range of [0.0, 1.0]
     lengthSq = clamp(lengthSq, nearDistanceSq, farDistanceSq);
 
     float t = (lengthSq-nearDistanceSq)/(farDistanceSq-nearDistanceSq);
+
     // our exponent used to dampen the interpolation is tied to distance, where greater distances
     // will yield smaller exponents, and thus more gradual interpolation
     float x = (farDistanceSq-lengthSq)/farDistanceSq;
+
     // dampen the exponential distance traveled by the camera
     // could be interesting to assign this exponent to a uniform for advanced control of interpolation
     t = pow(t, x);

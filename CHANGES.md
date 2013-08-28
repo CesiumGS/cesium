@@ -53,8 +53,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
 * `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
-* Added `Billboard.scaleByDistance` to control Billboard min/max scale based on Camera distance to Billboard.
-* Added new type, `NearFarScalar` to represent a scalar value's lower and upper bound at a near distance and far distance in eye space.
+* Added `Billboard.scaleByDistance` and `NearFarScalar` to control Billboard minimum/maximum scale based on Camera distance to Billboard.
 
 ### b19 - 2013-08-01
 

@@ -866,19 +866,26 @@ define([
 
     function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         var i = billboard._index * 4;
-        var scale = billboard.getScaleByDistance();
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.scaleByDistance];
 
-        // if both scales are 1.0 and 1.0, then scaling by distance computation is not necessary
-        if (scale.nearValue !== 1.0 || scale.farValue !== 1.0) {
+        var scale = billboard.getScaleByDistance();
+        if (!defined(scale)) {
+            writer(i + 0, 0.0, 0.0, 0.0, 0.0);
+            writer(i + 1, 0.0, 0.0, 0.0, 0.0);
+            writer(i + 2, 0.0, 0.0, 0.0, 0.0);
+            writer(i + 3, 0.0, 0.0, 0.0, 0.0);
+            return;
+        } else if (scale.nearValue !== 1.0 || scale.farValue !== 1.0) {
+            // scale by distance calculation in shader need not be enabled
+            // until a billboard with near and far !== 1.0 is found
             billboardCollection._shaderScaleByDistance = true;
         }
 
-        var allPurposeWriters = vafWriters[allPassPurpose];
-        var writer = allPurposeWriters[attributeIndices.scaleByDistance];
-        writer(i + 0, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
-        writer(i + 1, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
-        writer(i + 2, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
-        writer(i + 3, scale.nearDistance, scale.nearValue, scale.farDistance, scale.farValue);
+        writer(i + 0, scale.near, scale.nearValue, scale.far, scale.farValue);
+        writer(i + 1, scale.near, scale.nearValue, scale.far, scale.farValue);
+        writer(i + 2, scale.near, scale.nearValue, scale.far, scale.farValue);
+        writer(i + 3, scale.near, scale.nearValue, scale.far, scale.farValue);
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
