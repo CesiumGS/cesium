@@ -5,7 +5,7 @@ varying float v_radiusTS;           // The radius in texture space
 
 vec2 rotate(vec2 p, vec2 direction)
 {
-    return vec2(p.x*direction.x - p.y*direction.y, p.x*direction.y + p.y*direction.x);
+    return vec2(p.x * direction.x - p.y * direction.y, p.x * direction.y + p.y * direction.x);
 }
 
 vec4 addBurst(vec2 position, vec2 direction)
