@@ -11,27 +11,21 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @default 0
          */
-        ROUNDED : new Enumeration(0, 'ROUNDED', {
-            morphTime : 0.0
-        }),
+        ROUNDED : new Enumeration(0, 'ROUNDED'),
 
         /**
          * @type {Enumeration}
          * @constant
          * @default 1
          */
-        MITERED : new Enumeration(1, 'MITERED', {
-            morphTime : 0.0
-        }),
+        MITERED : new Enumeration(1, 'MITERED'),
 
         /**
          * @type {Enumeration}
          * @constant
          * @default 2
          */
-        BEVELED : new Enumeration(2, 'BEVELED', {
-            morphTime : 1.0
-        })
+        BEVELED : new Enumeration(2, 'BEVELED')
     };
 
     return CornerType;

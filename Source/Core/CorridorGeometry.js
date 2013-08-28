@@ -98,11 +98,11 @@ define([
         if (vertexFormat.normal) {
             normals = addAttribute(normals, normal, front, back);
         }
-        if (vertexFormat.tangent) {
-            tangents = addAttribute(tangents, left, front, back);
-        }
         if (vertexFormat.binormal) {
-            binormals = addAttribute(binormals, forward, front, back);
+            binormals = addAttribute(binormals, left, front, back);
+        }
+        if (vertexFormat.tangent) {
+            tangents = addAttribute(tangents, forward, front, back);
         }
 
         return attr;
@@ -619,20 +619,20 @@ define([
         }
         var positions = attributes.position.values;
         var topNormals;
-        var topTangents;
-        if (vertexFormat.normal || vertexFormat.tangent) {
+        var topBinormals;
+        if (vertexFormat.normal || vertexFormat.binormal) {
             topNormals = attributes.normal.values;
-            topTangents = attributes.tangent.values;
+            topBinormals = attributes.binormal.values;
         }
         var size;
         if (vertexFormat.normal) {
             size = topNormals.length/3;
         } else if (vertexFormat.st) {
             size = attributes.st.values.length/2;
-        } else if (vertexFormat.tangent) {
-            size = topTangents.length/3;
+        } else if (vertexFormat.binormal) {
+            size = topBinormals.length/3;
         } else {
-            size = attributes.binormal.values.length/3;
+            size = attributes.tangent.values.length/3;
         }
         var threeSize = size * 3;
         var twoSize = size * 2;
@@ -664,20 +664,20 @@ define([
                     normals = addAttribute(normals, normal, attrIndex + 3);
                 }
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    tangent = Cartesian3.fromArray(topNormals, i, tangent);
-                    if (vertexFormat.tangent) {
-                        tangents = addAttribute(tangents, tangent, attrIndexOffset);
-                        tangents = addAttribute(tangents, tangent, attrIndexOffset + 3);
-                        tangents = addAttribute(tangents, tangent, attrIndex);
-                        tangents = addAttribute(tangents, tangent, attrIndex + 3);
-                    }
-
+                    binormal = Cartesian3.fromArray(topNormals, i, binormal);
                     if (vertexFormat.binormal) {
-                        binormal = tangent.cross(normal, binormal).normalize(binormal);
                         binormals = addAttribute(binormals, binormal, attrIndexOffset);
                         binormals = addAttribute(binormals, binormal, attrIndexOffset + 3);
                         binormals = addAttribute(binormals, binormal, attrIndex);
                         binormals = addAttribute(binormals, binormal, attrIndex + 3);
+                    }
+
+                    if (vertexFormat.binormal) {
+                        tangent = binormal.cross(normal, tangent).normalize(tangent);
+                        tangents = addAttribute(tangents, tangent, attrIndexOffset);
+                        tangents = addAttribute(tangents, tangent, attrIndexOffset + 3);
+                        tangents = addAttribute(tangents, tangent, attrIndex);
+                        tangents = addAttribute(tangents, tangent, attrIndex + 3);
                     }
                 }
                 attrIndex += 6;
@@ -694,13 +694,17 @@ define([
             } else {
                 attributes.normal = undefined;
             }
+
             if (vertexFormat.binormal) {
-                var topBinormals = attributes.binormal.values;
                 binormals.set(topBinormals); //top
                 binormals.set(topBinormals, threeSize); //bottom
                 attributes.binormal.values = binormals;
+            } else {
+                attributes.binormal = undefined;
             }
+
             if (vertexFormat.tangent) {
+                var topTangents = attributes.tangent.values;
                 tangents.set(topTangents); //top
                 tangents.set(topTangents, threeSize); //bottom
                 attributes.tangent.values = tangents;
@@ -761,9 +765,9 @@ define([
         var vertexFormat = params.vertexFormat;
         params.vertexFormat = new VertexFormat({
             position: vertexFormat.positon,
-            normal:  (vertexFormat.normal || vertexFormat.tangent),
-            tangent: (vertexFormat.normal || vertexFormat.tangent),
-            binormal: vertexFormat.binormal,
+            normal:  (vertexFormat.normal || vertexFormat.binormal),
+            tangent: vertexFormat.tangent,
+            binormal: (vertexFormat.normal || vertexFormat.binormal),
             st: vertexFormat.st
         });
         var attr = computePositions(params);
