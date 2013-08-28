@@ -63,7 +63,7 @@ define([
         czm_columbusViewMorph,
         czm_computePosition,
         czm_eastNorthUpToEyeCoordinates,
-        czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidContainsPoint,
         czm_ellipsoidNew,
         czm_ellipsoidWgs84TextureCoordinates,
         czm_equalsEpsilon,
@@ -2341,6 +2341,28 @@ define([
         this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
+
+        /**
+         * GLSL source for the shader program's vertex shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
+         * @readonly
+         */
+        this.vertexShaderSource = vertexShaderSource;
+
+        /**
+         * GLSL source for the shader program's fragment shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
+         * @readonly
+         */
+        this.fragmentShaderSource = fragmentShaderSource;
     };
 
     function extractShaderVersion(source) {
@@ -2382,7 +2404,7 @@ define([
         czm_columbusViewMorph : czm_columbusViewMorph,
         czm_computePosition : czm_computePosition,
         czm_eastNorthUpToEyeCoordinates : czm_eastNorthUpToEyeCoordinates,
-        czm_czm_ellipsoidContainsPoint : czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidContainsPoint : czm_ellipsoidContainsPoint,
         czm_ellipsoidNew : czm_ellipsoidNew,
         czm_ellipsoidWgs84TextureCoordinates : czm_ellipsoidWgs84TextureCoordinates,
         czm_equalsEpsilon : czm_equalsEpsilon,
