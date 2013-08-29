@@ -412,8 +412,8 @@ define([
         dynamicObject.availability = undefined;
     };
 
-    DynamicObject.prototype._billboardListener = function() {
-
+    DynamicObject.prototype._billboardListener = function(billboard, propertyName, value, oldValue) {
+        this._propertyAssigned.raiseEvent(billboard, propertyName, value, oldValue);
     };
     return DynamicObject;
 });

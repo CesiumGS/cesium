@@ -1,103 +1,15 @@
 /*global define*/
 define([
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/EventHelper',
-        '../Core/Iso8601',
-        '../Core/TimeInterval',
-        '../Core/DeveloperError',
         './DynamicObject',
-        './DynamicBillboard',
-        './DynamicClock',
-        './DynamicEllipse',
-        './DynamicEllipsoid',
-        './DynamicCone',
-        './DynamicLabel',
-        './DynamicPath',
-        './DynamicPoint',
-        './DynamicPolygon',
-        './DynamicPolyline',
-        './DynamicPyramid',
-        './DynamicVector'
+        './DynamicObjectCollection'
     ], function(
-        defaultValue,
         defined,
         defineProperties,
-        Event,
-        EventHelper,
-        Iso8601,
-        TimeInterval,
-        DeveloperError,
         DynamicObject,
-        DynamicBillboard,
-        DynamicClock,
-        DynamicEllipse,
-        DynamicEllipsoid,
-        DynamicCone,
-        DynamicLabel,
-        DynamicPath,
-        DynamicPoint,
-        DynamicPolygon,
-        DynamicPolyline,
-        DynamicPyramid,
-        DynamicVector) {
+        DynamicObjectCollection) {
     "use strict";
-
-    function getOrCreateObject(compositeDynamicObjectCollection, id) {
-        var obj = compositeDynamicObjectCollection._hash[id];
-        if (!obj) {
-            obj = new DynamicObject(id);
-            compositeDynamicObjectCollection._hash[id] = obj;
-            compositeDynamicObjectCollection._array.push(obj);
-        }
-        return obj;
-    }
-
-//function clearObjects(compositeDynamicObjectCollection) {
-//  var removedObjects = compositeDynamicObjectCollection._array;
-//  compositeDynamicObjectCollection._hash = {};
-//  compositeDynamicObjectCollection._array = [];
-//  if (removedObjects.length > 0) {
-//      compositeDynamicObjectCollection.objectsRemoved.raiseEvent(compositeDynamicObjectCollection, removedObjects);
-//  }
-//}
-//
-//CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
-//  var thisMergeFunctions = this.mergeFunctions;
-//  var thisCleanFunctions = this.cleanFunctions;
-//  var thisCollections = this._collections;
-//
-//  var updatedObject, compositeObject, compositeObjects = [];
-//  for ( var i = updatedObjects.length - 1; i > -1; i--) {
-//      updatedObject = updatedObjects[i];
-//      compositeObject = this.getObject(updatedObject.id);
-//      if (defined(compositeObject)) {
-//          for ( var iDeleteFuncs = thisCleanFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
-//              var deleteFunc = thisCleanFunctions[iDeleteFuncs];
-//              deleteFunc(compositeObject);
-//          }
-//      } else {
-//          compositeObject = getOrCreateObject(this, updatedObject.id);
-//      }
-//
-//      compositeObjects.push(compositeObject);
-//      for ( var iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-//          var currentCollection = thisCollections[iCollection];
-//          var objectToUpdate = currentCollection.getObject(updatedObject.id);
-//          if (defined(objectToUpdate)) {
-//              for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-//                  var mergeFunc = thisMergeFunctions[iMergeFuncs];
-//                  mergeFunc(compositeObject, objectToUpdate);
-//              }
-//          }
-//      }
-//  }
-//  if (compositeObjects.length > 0) {
-//      this.objectPropertiesChanged.raiseEvent(this, compositeObjects);
-//  }
-//};
 
     /**
      * Non-destructively composites multiple DynamicObjectCollection instances into a single collection.
@@ -115,13 +27,7 @@ define([
      * @see DynamicObjectCollection
      */
     var CompositeDynamicObjectCollection = function(collections) {
-        this._added = [];
-        this._array = [];
-        this._collectionChanged = new Event();
-        this._eventHelper = new EventHelper();
-        this._removed = [];
-        this._hash = {};
-        this._suspectRefCount = 0;
+        this._composite = new DynamicObjectCollection();
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
     };
@@ -147,7 +53,7 @@ define([
          */
         collectionChanged : {
             get : function() {
-                return this._collectionChanged;
+                return this._composite._collectionChanged;
             }
         }
     });
@@ -163,30 +69,7 @@ define([
      */
     CompositeDynamicObjectCollection.prototype.computeAvailability = function() {
         mergeIfNeeded(this);
-
-        var startTime = Iso8601.MAXIMUM_VALUE;
-        var stopTime = Iso8601.MINIMUM_VALUE;
-        var collections = this._collections;
-        for ( var i = 0, len = collections.length; i < len; ++i) {
-            var collection = collections[i];
-            var availability = collection.computeAvailability();
-            var start = availability.start;
-            var stop = availability.stop;
-            if (start.lessThan(startTime) && !start.equals(Iso8601.MINIMUM_VALUE)) {
-                startTime = availability.start;
-            }
-            if (stop.greaterThan(stopTime) && !stop.equals(Iso8601.MAXIMUM_VALUE)) {
-                stopTime = availability.stop;
-            }
-        }
-
-        if (Iso8601.MAXIMUM_VALUE.equals(startTime)) {
-            startTime = Iso8601.MINIMUM_VALUE;
-        }
-        if (Iso8601.MINIMUM_VALUE.equals(stopTime)) {
-            stopTime = Iso8601.MAXIMUM_VALUE;
-        }
-        return new TimeInterval(startTime, stopTime, true, true);
+        return this._composite.computeAvailability();
     };
 
     /**
@@ -199,11 +82,8 @@ define([
      * @exception {DeveloperError} id is required.
      */
     CompositeDynamicObjectCollection.prototype.getById = function(id) {
-        if (!defined(id)) {
-            throw new DeveloperError('id is required.');
-        }
         mergeIfNeeded(this);
-        return this._hash[id];
+        return this._composite.getById(id);
     };
 
     /**
@@ -215,14 +95,14 @@ define([
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
         mergeIfNeeded(this);
-        return this._array;
+        return this._composite.getObjects();
     };
 
-    function mergeIfNeeded(collection) {
-        var collections = collection._collections;
+    function mergeIfNeeded(that) {
+        var collections = that._collections;
         var collectionsLength = collections.length;
 
-        var collectionsCopy = collection._collectionsCopy;
+        var collectionsCopy = that._collectionsCopy;
         var collectionsCopyLength = collectionsCopy.length;
 
         var i;
@@ -239,41 +119,49 @@ define([
             }
         }
 
-//        var eventHelper = collection._eventHelper;
-//        eventHelper.removeAll();
+        for (i = 0; i < collectionsCopyLength; i++) {
+            collectionsCopy[i].collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+        }
 
-//        for (i = collectionsLength - 1; i >= 0; i++) {
-//            var collection = collections[i];
-//        }
-//
-//        //Make a copy of the new collections.
-//        thisCollections = collection._collections = collections;
-//
-//        //Clear all existing objects and rebuild the collection.
-//        clearObjects(collection);
-//        var thisMergeFunctions = collection.mergeFunctions;
-//        for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-//            collection = thisCollections[iCollection];
-//
-//            //Subscribe to the new collection.
-//            collection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, collection);
-//
-//            //Merge all of the existing objects.
-//            var objects = collection.getObjects();
-//            for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-//                var object = objects[iObjects];
-//                var compositeObject = getOrCreateObject(collection, object.id);
-//                for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-//                    var mergeFunc = thisMergeFunctions[iMergeFuncs];
-//                    mergeFunc(compositeObject, object);
-//                }
-//            }
-//        }
-//
-//        collection._collectionsCopy = collectionsCopy.slice(0);
+        var composite = that._composite;
+        composite.suspendEvents();
+
+        var newObjects = new DynamicObjectCollection();
+
+        for (i = collectionsLength - 1; i >= 0; i--) {
+            var collection = collections[i];
+            collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+
+            //Merge all of the existing objects.
+            var objects = collection.getObjects();
+            for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                var object = objects[iObjects];
+
+                var compositeObject = newObjects.getById(object.id);
+                if (!defined(compositeObject)) {
+                    compositeObject = composite.getById(object.id);
+                    if (!defined(compositeObject)) {
+                        compositeObject = new DynamicObject(object.id);
+                    } else {
+                        compositeObject.clean();
+                    }
+                    newObjects.add(compositeObject);
+                }
+                compositeObject.merge(object);
+            }
+        }
+
+        var newObjectsArray = newObjects.getObjects();
+        composite.removeAll();
+        for (i = 0; i < newObjectsArray.length; i++) {
+            composite.add(newObjectsArray[i]);
+        }
+
+        that._collectionsCopy = collections.slice(0);
+        composite.resumeEvents();
     }
 
-    CompositeDynamicObjectCollection.prototype._collectionChanged = function(){
+    CompositeDynamicObjectCollection.prototype._onCollectionChanged = function() {
 
     };
 

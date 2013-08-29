@@ -65,7 +65,7 @@ defineSuite([
     it('throws if calling getObject without an id.', function() {
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         expect(function() {
-            compositeDynamicObjectCollection.getObject();
+            compositeDynamicObjectCollection.getById();
         }).toThrow();
     });
 
@@ -125,7 +125,7 @@ defineSuite([
         expect(objects.length).toEqual(1);
 
         var object = objects[0];
-        var sameObject = compositeDynamicObjectCollection.getObject(object.id);
+        var sameObject = compositeDynamicObjectCollection.getById(object.id);
         expect(object).toEqual(sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
@@ -146,7 +146,7 @@ defineSuite([
         expect(objects.length).toEqual(1);
 
         var object = objects[0];
-        var sameObject = compositeDynamicObjectCollection.getObject(object.id);
+        var sameObject = compositeDynamicObjectCollection.getById(object.id);
         expect(object).toEqual(sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
@@ -175,7 +175,7 @@ defineSuite([
         expect(objects.length).toEqual(1);
 
         var object = objects[0];
-        var sameObject = compositeDynamicObjectCollection.getObject(object.id);
+        var sameObject = compositeDynamicObjectCollection.getById(object.id);
         expect(object).toEqual(sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
@@ -195,7 +195,7 @@ defineSuite([
         expect(objects.length).toEqual(1);
 
         object = objects[0];
-        sameObject = compositeDynamicObjectCollection.getObject(object.id);
+        sameObject = compositeDynamicObjectCollection.getById(object.id);
         expect(object === sameObject);
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
