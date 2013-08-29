@@ -106,7 +106,7 @@ define([
             cleanedPositions.reverse();
         }
 
-        var indices = PolygonPipeline.earClip2D(positions2D);
+        var indices = PolygonPipeline.triangulate(positions2D);
         return new GeometryInstance({
             geometry : PolygonPipeline.computeSubdivision(cleanedPositions, indices, granularity)
         });
