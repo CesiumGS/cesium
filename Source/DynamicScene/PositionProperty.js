@@ -44,15 +44,14 @@ define([
          * @Type {ReferenceFrame}
          */
         referenceFrame : {
-            get : function() {
-                throwInstantiationError();
-            }
+            get : throwInstantiationError
         }
     });
 
     /**
      * Gets the value of the property at the provided time.
      * @memberof PositionProperty
+     * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
@@ -65,6 +64,7 @@ define([
     /**
      * Gets the value of the property at the provided time and in the provided reference frame.
      * @memberof PositionProperty
+     * @function
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.

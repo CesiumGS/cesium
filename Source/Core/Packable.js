@@ -25,6 +25,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         /**
          * Stores the provided instance into the provided array.
          * @memberof Packable
+         * @function
          *
          * @param {Object} value The value to pack.
          * @param {Array} array The array to pack into.
@@ -33,13 +34,12 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @exception {DeveloperError} value is required.
          * @exception {DeveloperError} array is required.
          */
-        pack : function(value, array, startingIndex) {
-            throwInstantiationError();
-        },
+        pack : throwInstantiationError,
 
         /**
          * Retrieves an instance from a packed array.
          * @memberof Packable
+         * @function
          *
          * @param {Array} array The packed array.
          * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
@@ -47,9 +47,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          *
          * @exception {DeveloperError} array is required.
          */
-        unpack : function(array, startingIndex, result) {
-            throwInstantiationError();
-        }
+        unpack : throwInstantiationError
     };
 
     return Packable;
