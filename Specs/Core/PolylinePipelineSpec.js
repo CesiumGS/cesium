@@ -119,11 +119,35 @@ defineSuite([
         }).toThrow();
     });
 
-    it('scaleToGeodeticHeight throws if positions.lenth is not equal to height.lenght', function() {
+    it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
         expect(function() {
             PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], []);
         }).toThrow();
     });
+
+    it('scaleToGeodeticHeight throws if positions.length is not equal to height.length', function() {
+        expect(function() {
+            PolylinePipeline.scaleToGeodeticHeight([new Cartesian3()], 0, undefined, []);
+        }).toThrow();
+    });
+
+    it('scaleToGeodeticHeight works with a result parameter', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var p1 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(0, 0));
+        var p2 = ellipsoid.cartographicToCartesian(new Cartographic.fromDegrees(90, 0));
+
+        var positions = [p1.x, p1.y, p1.z, p2.x, p2.y, p2.z];
+        var result = [0, 0, 0, 0, 0, 0];
+        var height = 200;
+
+        PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid, result);
+
+        var p1n = Cartesian3.fromArray(result, 0);
+        var p2n = Cartesian3.fromArray(result, 3);
+        expect(ellipsoid.cartesianToCartographic(p1n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+        expect(ellipsoid.cartesianToCartographic(p2n).height).toEqualEpsilon(200, CesiumMath.EPSILON8);
+    });
+
 
     it('scaleToGeodeticHeight scales all positions to number', function() {
         var ellipsoid = Ellipsoid.WGS84;

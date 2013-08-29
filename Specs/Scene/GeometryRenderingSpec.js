@@ -11,6 +11,8 @@ defineSuite([
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
          'Core/WallGeometry',
+         'Core/CorridorGeometry',
+         'Core/CornerType',
          'Core/defaultValue',
          'Core/Geometry',
          'Core/GeometryAttribute',
@@ -53,6 +55,8 @@ defineSuite([
          PolygonGeometry,
          SimplePolylineGeometry,
          WallGeometry,
+         CorridorGeometry,
+         CornerType,
          defaultValue,
          Geometry,
          GeometryAttribute,
@@ -987,6 +991,156 @@ defineSuite([
             pickGeometry(instance, afterView3D);
         });
     }, 'WebGL');
+
+    describe('CorridorGeometry', function() {
+        var instance;
+        var positions;
+        var width;
+        beforeAll(function() {
+            positions = ellipsoid.cartographicArrayToCartesianArray([
+                Cartographic.fromDegrees(0.0, -1.0),
+                Cartographic.fromDegrees(0.0, 1.0)
+            ]);
+            width = 100000;
+            instance = new GeometryInstance({
+                geometry : new CorridorGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions: positions,
+                    width: width,
+                    cornerType: CornerType.MITERED
+                }),
+                id : 'corridor',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('at height', function() {
+            var atHeight = new GeometryInstance({
+                geometry : new CorridorGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions: positions,
+                    width: width,
+                    cornerType: CornerType.MITERED,
+                    height: 100000
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            render3D(atHeight);
+        });
+    }, 'WebGL');
+
+    describe('Extruded CorridorGeometry', function() {
+        var instance;
+        var extrudedHeight;
+        var geometryHeight;
+        var width = 100000;
+        var positions;
+        beforeAll(function() {
+            positions = ellipsoid.cartographicArrayToCartesianArray([
+                 Cartographic.fromDegrees(0.0, -1.0),
+                 Cartographic.fromDegrees(0.0, 1.0)
+             ]);
+            extrudedHeight = 200000.0;
+            geometryHeight = 100000.0;
+            instance = new GeometryInstance({
+                geometry : new CorridorGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
+                    ellipsoid : ellipsoid,
+                    positions: positions,
+                    width: width,
+                    cornerType: CornerType.MITERED,
+                    height: geometryHeight,
+                    extrudedHeight: extrudedHeight
+                }),
+                id : 'extrudedCorridor',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('renders bottom', function() {
+            var afterView = function(frameState, primitive) {
+                var height = (extrudedHeight - geometryHeight) * 0.5;
+                var transform = Matrix4.multiplyByTranslation(
+                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
+                        new Cartesian3(0.0, 0.0, height));
+                frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders north wall', function() {
+            var afterView = function(frameState, primitive) {
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders south wall', function() {
+            var afterView = function(frameState, primitive) {
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders west wall', function() {
+            var afterView = function(frameState, primitive) {
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+
+        it('renders east wall', function() {
+            var afterView = function(frameState, primitive) {
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
+            };
+            render3D(instance, afterView);
+        });
+    }, 'WebGL');
+
 
     describe('SimplePolylineGeometry', function() {
         var instance;
