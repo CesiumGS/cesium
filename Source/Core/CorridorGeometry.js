@@ -661,16 +661,7 @@ define([
             topNormals = attributes.normal.values;
             topBinormals = attributes.binormal.values;
         }
-        var size;
-        if (vertexFormat.normal) {
-            size = topNormals.length / 3;
-        } else if (vertexFormat.st) {
-            size = attributes.st.values.length / 2;
-        } else if (vertexFormat.binormal) {
-            size = topBinormals.length / 3;
-        } else {
-            size = attributes.tangent.values.length / 3;
-        }
+        var size = attributes.position.values.length / 18;
         var threeSize = size * 3;
         var twoSize = size * 2;
         var sixSize = threeSize * 2;
@@ -709,7 +700,7 @@ define([
                         addAttribute(binormals, binormal, attrIndex + 3);
                     }
 
-                    if (vertexFormat.binormal) {
+                    if (vertexFormat.tangent) {
                         tangent = binormal.cross(normal, tangent).normalize(tangent);
                         addAttribute(tangents, tangent, attrIndexOffset);
                         addAttribute(tangents, tangent, attrIndexOffset + 3);
@@ -745,13 +736,11 @@ define([
                 tangents.set(topTangents); //top
                 tangents.set(topTangents, threeSize); //bottom
                 attributes.tangent.values = tangents;
-            } else {
-                attributes.tangent = undefined;
             }
         }
         if (vertexFormat.st) {
             var topSt = attributes.st.values;
-            var st = (vertexFormat.st) ? new Float32Array(twoSize * 6) : undefined;
+            var st = new Float32Array(twoSize * 6);
             st.set(topSt); //top
             st.set(topSt, twoSize); //bottom
             var index = twoSize * 2;
@@ -814,24 +803,28 @@ define([
         var attributes = attr.attributes;
         var indices = attr.indices;
         var boundingSphere = attr.boundingSphere;
-        var positions = Array.apply([], attributes.position.values);
-        var extrudedPositions = positions.slice(0);
-        var length = positions.length / 3;
-        var wallPositions = new Array(length * 12);
+        var positions = attributes.position.values;
+        var length = positions.length;
+        var newPositions = new Float64Array(length * 6);
+        var extrudedPositions = new Float64Array(length);
+        extrudedPositions.set(positions);
+        var wallPositions = new Float64Array(length * 4);
 
         positions = PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
         wallPositions = addWallPositions(positions, 0, wallPositions);
         extrudedPositions = PolylinePipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
-        wallPositions = addWallPositions(extrudedPositions, length * 6, wallPositions);
-        positions = positions.concat(extrudedPositions);
+        wallPositions = addWallPositions(extrudedPositions, length * 2, wallPositions);
+        newPositions.set(positions);
+        newPositions.set(extrudedPositions, length);
+        newPositions.set(wallPositions, length * 2);
         boundingSphere = BoundingSphere.fromVertices(positions, undefined, 3, boundingSphere);
-        positions = positions.concat(wallPositions);
-        attributes.position.values = new Float64Array(positions);
+        attributes.position.values = newPositions;
 
+        length /= 3;
         var i;
         var iLength = indices.length;
         var twoLength = length + length;
-        var newIndices = IndexDatatype.createTypedArray(positions.lenght/3, iLength * 2 + twoLength * 3);
+        var newIndices = IndexDatatype.createTypedArray(newPositions.length/3, iLength * 2 + twoLength * 3);
         newIndices.set(indices);
         var index = iLength;
         for (i = 0; i < iLength; i += 3) { // bottom indices
