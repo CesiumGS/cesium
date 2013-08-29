@@ -57,6 +57,7 @@ var geometry = BoxGeometry.createGeometry(box);
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
+    * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
@@ -69,6 +70,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
+* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Optimized polyline bounding spheres.
@@ -101,7 +103,6 @@ var geometry = BoxGeometry.createGeometry(box);
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
-   * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
    * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
 * Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
@@ -117,7 +118,6 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
 * Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
-* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 
 ### b18 - 2013-07-01
 
