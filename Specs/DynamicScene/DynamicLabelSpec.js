@@ -11,7 +11,7 @@ defineSuite([
              'Scene/HorizontalOrigin',
              'Scene/VerticalOrigin',
              'Scene/LabelStyle',
-             'Specs/MockProperty'
+             'DynamicScene/ConstantProperty'
             ], function(
               DynamicLabel,
               DynamicObject,
@@ -24,148 +24,38 @@ defineSuite([
               HorizontalOrigin,
               VerticalOrigin,
               LabelStyle,
-              MockProperty) {
+              ConstantProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('processCzmlPacket adds data for infinite label.', function() {
-        var labelPacket = {
-            label : {
-                text : 'TestFacility',
-                font : '10pt "Open Sans"',
-                style : 'FILL',
-                fillColor : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
-                },
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 3.14,
-                horizontalOrigin : 'LEFT',
-                verticalOrigin : 'CENTER',
-                eyeOffset : {
-                    cartesian : [1.0, 2.0, 3.0]
-                },
-                pixelOffset : {
-                    cartesian2 : [4.0, 5.0]
-                },
-                scale : 1.0,
-                show : true
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicLabel.processCzmlPacket(dynamicObject, labelPacket)).toEqual(true);
-        expect(dynamicObject.label).toBeDefined();
-        expect(dynamicObject.label.text.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.text);
-        expect(dynamicObject.label.font.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.font);
-        expect(dynamicObject.label.style.getValue(Iso8601.MINIMUM_VALUE)).toEqual(LabelStyle.FILL);
-        expect(dynamicObject.label.fillColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.label.outlineColor.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.label.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.outlineWidth);
-        expect(dynamicObject.label.horizontalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HorizontalOrigin.LEFT);
-        expect(dynamicObject.label.verticalOrigin.getValue(Iso8601.MINIMUM_VALUE)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.label.eyeOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(dynamicObject.label.pixelOffset.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian2(4.0, 5.0));
-        expect(dynamicObject.label.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.scale);
-        expect(dynamicObject.label.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(labelPacket.label.show);
-    });
-
-    it('processCzmlPacket adds data for constrained label.', function() {
-        var labelPacket = {
-            label : {
-                interval : '2000-01-01/2001-01-01',
-                text : 'TestFacility',
-                font : '10pt "Open Sans"',
-                style : 'FILL',
-                fillColor : {
-                    rgbaf : [0.1, 0.1, 0.1, 0.1]
-                },
-                outlineColor : {
-                    rgbaf : [0.2, 0.2, 0.2, 0.2]
-                },
-                outlineWidth : 2.78,
-                horizontalOrigin : 'LEFT',
-                verticalOrigin : 'CENTER',
-                eyeOffset : {
-                    cartesian : [1.0, 2.0, 3.0]
-                },
-                pixelOffset : {
-                    cartesian2 : [4.0, 5.0]
-                },
-                scale : 1.0,
-                show : true
-            }
-        };
-
-        var validTime = TimeInterval.fromIso8601(labelPacket.label.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicLabel.processCzmlPacket(dynamicObject, labelPacket)).toEqual(true);
-        expect(dynamicObject.label).toBeDefined();
-        expect(dynamicObject.label.text.getValue(validTime)).toEqual(labelPacket.label.text);
-        expect(dynamicObject.label.font.getValue(validTime)).toEqual(labelPacket.label.font);
-        expect(dynamicObject.label.style.getValue(validTime)).toEqual(LabelStyle.FILL);
-        expect(dynamicObject.label.fillColor.getValue(validTime)).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.label.outlineColor.getValue(validTime)).toEqual(new Color(0.2, 0.2, 0.2, 0.2));
-        expect(dynamicObject.label.outlineWidth.getValue(validTime)).toEqual(labelPacket.label.outlineWidth);
-        expect(dynamicObject.label.horizontalOrigin.getValue(validTime)).toEqual(HorizontalOrigin.LEFT);
-        expect(dynamicObject.label.verticalOrigin.getValue(validTime)).toEqual(VerticalOrigin.CENTER);
-        expect(dynamicObject.label.eyeOffset.getValue(validTime)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-        expect(dynamicObject.label.pixelOffset.getValue(validTime)).toEqual(new Cartesian2(4.0, 5.0));
-        expect(dynamicObject.label.scale.getValue(validTime)).toEqual(labelPacket.label.scale);
-        expect(dynamicObject.label.show.getValue(validTime)).toEqual(labelPacket.label.show);
-
-        expect(dynamicObject.label.text.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.font.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.style.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.fillColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.outlineColor.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.outlineWidth.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.horizontalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.verticalOrigin.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.eyeOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.pixelOffset.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.scale.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.label.show.getValue(invalidTime)).toBeUndefined();
-    });
-
-    it('processCzmlPacket returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicLabel.processCzmlPacket(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.label).toBeUndefined();
-    });
-
     it('mergeProperties does not change a fully configured label', function() {
-        var expectedText = new MockProperty();
-        var expectedFont = new MockProperty();
-        var expectedStyle = new MockProperty();
-        var expectedFillColor = new MockProperty();
-        var expectedOutlineColor = new MockProperty();
-        var expectedOutlineWidth = new MockProperty();
-        var expectedHorizontalOrigin = new MockProperty();
-        var expectedVerticalOrigin = new MockProperty();
-        var expectedEyeOffset = new MockProperty();
-        var expectedPixelOffset = new MockProperty();
-        var expectedScale = new MockProperty();
-        var expectedShow = new MockProperty();
+        var expectedText = new ConstantProperty('my text');
+        var expectedFont = new ConstantProperty('10px serif');
+        var expectedStyle = new ConstantProperty(LabelStyle.OUTLINE);
+        var expectedFillColor = new ConstantProperty(Color.RED);
+        var expectedOutlineColor = new ConstantProperty(Color.WHITE);
+        var expectedOutlineWidth = new ConstantProperty(4);
+        var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+        var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+        var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
+        var expectedScale = new ConstantProperty(2);
+        var expectedShow = new ConstantProperty(true);
 
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.label.text = new MockProperty();
-        objectToMerge.label.font = new MockProperty();
-        objectToMerge.label.style = new MockProperty();
-        objectToMerge.label.fillColor = new MockProperty();
-        objectToMerge.label.outlineColor = new MockProperty();
-        objectToMerge.label.outlineWidth = new MockProperty();
-        objectToMerge.label.horizontalOrigin = new MockProperty();
-        objectToMerge.label.verticalOrigin = new MockProperty();
-        objectToMerge.label.eyeOffset = new MockProperty();
-        objectToMerge.label.pixelOffset = new MockProperty();
-        objectToMerge.label.scale = new MockProperty();
-        objectToMerge.label.show = new MockProperty();
+        objectToMerge.label.text = new ConstantProperty('not it');
+        objectToMerge.label.font = new ConstantProperty('arial');
+        objectToMerge.label.style = new ConstantProperty(LabelStyle.FILL);
+        objectToMerge.label.fillColor = new ConstantProperty(Color.BLACK);
+        objectToMerge.label.outlineColor = new ConstantProperty(Color.BLUE);
+        objectToMerge.label.outlineWidth = new ConstantProperty(5);
+        objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        objectToMerge.label.scale = new ConstantProperty(1);
+        objectToMerge.label.show = new ConstantProperty(false);
 
         var targetObject = new DynamicObject('targetObject');
         targetObject.label = new DynamicLabel();
@@ -201,18 +91,18 @@ defineSuite([
     it('mergeProperties creates and configures an undefined label', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.label = new DynamicLabel();
-        objectToMerge.label.text = new MockProperty();
-        objectToMerge.label.font = new MockProperty();
-        objectToMerge.label.style = new MockProperty();
-        objectToMerge.label.fillColor = new MockProperty();
-        objectToMerge.label.outlineColor = new MockProperty();
-        objectToMerge.label.outlineWidth = new MockProperty();
-        objectToMerge.label.horizontalOrigin = new MockProperty();
-        objectToMerge.label.verticalOrigin = new MockProperty();
-        objectToMerge.label.eyeOffset = new MockProperty();
-        objectToMerge.label.pixelOffset = new MockProperty();
-        objectToMerge.label.scale = new MockProperty();
-        objectToMerge.label.show = new MockProperty();
+        objectToMerge.label.text = new ConstantProperty('not it');
+        objectToMerge.label.font = new ConstantProperty('arial');
+        objectToMerge.label.style = new ConstantProperty(LabelStyle.FILL);
+        objectToMerge.label.fillColor = new ConstantProperty(Color.BLACK);
+        objectToMerge.label.outlineColor = new ConstantProperty(Color.BLUE);
+        objectToMerge.label.outlineWidth = new ConstantProperty(5);
+        objectToMerge.label.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        objectToMerge.label.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        objectToMerge.label.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        objectToMerge.label.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        objectToMerge.label.scale = new ConstantProperty(1);
+        objectToMerge.label.show = new ConstantProperty(false);
 
         var targetObject = new DynamicObject('targetObject');
 
@@ -233,18 +123,18 @@ defineSuite([
     });
 
     it('mergeProperties does not change when used with an undefined label', function() {
-        var expectedText = new MockProperty();
-        var expectedFont = new MockProperty();
-        var expectedStyle = new MockProperty();
-        var expectedFillColor = new MockProperty();
-        var expectedOutlineColor = new MockProperty();
-        var expectedOutlineWidth = new MockProperty();
-        var expectedHorizontalOrigin = new MockProperty();
-        var expectedVerticalOrigin = new MockProperty();
-        var expectedEyeOffset = new MockProperty();
-        var expectedPixelOffset = new MockProperty();
-        var expectedScale = new MockProperty();
-        var expectedShow = new MockProperty();
+        var expectedText = new ConstantProperty('my text');
+        var expectedFont = new ConstantProperty('10px serif');
+        var expectedStyle = new ConstantProperty(LabelStyle.OUTLINE);
+        var expectedFillColor = new ConstantProperty(Color.RED);
+        var expectedOutlineColor = new ConstantProperty(Color.WHITE);
+        var expectedOutlineWidth = new ConstantProperty(4);
+        var expectedHorizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+        var expectedVerticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+        var expectedEyeOffset = new ConstantProperty(Cartesian3.UNIT_Z);
+        var expectedPixelOffset = new ConstantProperty(Cartesian2.UNIT_Y);
+        var expectedScale = new ConstantProperty(2);
+        var expectedShow = new ConstantProperty(true);
 
         var objectToMerge = new DynamicObject('objectToMerge');
 
