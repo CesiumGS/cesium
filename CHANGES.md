@@ -79,6 +79,7 @@ var geometry = BoxGeometry.createGeometry(box);
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
+   * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
    * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
 * Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
@@ -94,6 +95,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
 * Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
+* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 
 ### b18 - 2013-07-01
 
