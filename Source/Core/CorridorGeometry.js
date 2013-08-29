@@ -43,6 +43,9 @@ define([
         VertexFormat) {
     "use strict";
 
+    var scaleArray2 = [new Cartesian3(), new Cartesian3()];
+    var scaleArray3 = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
+
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
@@ -57,9 +60,9 @@ define([
     var scratch1 = new Cartesian3();
     var scratch2 = new Cartesian3();
 
-    var originScratch = new Cartesian2();
-    var nextScratch = new Cartesian2();
-    var prevScratch = new Cartesian2();
+    var originScratch = new Cartesian3();
+    var nextScratch = new Cartesian3();
+    var prevScratch = new Cartesian3();
     function angleIsGreaterThanPi(forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
@@ -170,19 +173,17 @@ define([
         return [firstEndCap, lastEndCap];
     }
 
-    var scaleArray = [new Cartesian3(), new Cartesian3(), new Cartesian3()];
     function computeMiteredCorner(position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
-        var cornerPoint;
+        var cornerPoint = scaleArray3[1];
+        scaleArray3[0] = startPoint.clone(scaleArray3[0]);
+        scaleArray3[2] = lastPoint.clone(scaleArray3[2]);
         if (leftIsOutside) {
-            cornerPoint = Cartesian3.add(position, leftCornerDirection);
+            cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
         } else {
             leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
-            cornerPoint = Cartesian3.add(position, leftCornerDirection);
+            cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
         }
-        scaleArray[0] = startPoint.clone(scaleArray[0]);
-        scaleArray[1] = cornerPoint.clone(scaleArray[1]);
-        scaleArray[2] = lastPoint.clone(scaleArray[2]);
-        var array = PolylinePipeline.scaleToSurface(scaleArray, granularity, ellipsoid);
+        var array = PolylinePipeline.scaleToSurface(scaleArray3, granularity, ellipsoid);
         array = array.slice(3);
         return array;
     }
@@ -193,8 +194,12 @@ define([
         var leftCount = 0;
         var rightCount = 0;
         var i;
+        var indicesLength = 0;
+        var length;
         for (i = 0; i < positions.length; i += 2) {
-            leftCount += positions[i].length - 3; //subtracting 3 to account for duplicate points at corners
+            length = positions[i].length - 3;
+            leftCount += length; //subtracting 3 to account for duplicate points at corners
+            indicesLength += length*2;
             rightCount += positions[i + 1].length - 3;
         }
         leftCount += 3; //add back count for end positions
@@ -203,9 +208,13 @@ define([
             corner = corners[i];
             var leftSide = corners[i].leftPositions;
             if (defined(leftSide)) {
-                leftCount += leftSide.length;
+                length = leftSide.length;
+                leftCount += length;
+                indicesLength += length;
             } else {
-                rightCount += corners[i].rightPositions.length;
+                length = corners[i].rightPositions.length;
+                rightCount += length;
+                indicesLength += length;
             }
         }
 
@@ -216,6 +225,7 @@ define([
             leftCount += endPositionLength;
             rightCount += endPositionLength;
             endPositionLength /= 3;
+            indicesLength += endPositionLength * 6;
         }
         var size = leftCount + rightCount;
         var finalPositions = new Float64Array(size);
@@ -229,12 +239,14 @@ define([
         };
         var front = 0;
         var back = size - 1;
-        var indices = [];
         var UL, LL, UR, LR;
         var normal = cartesian1;
         var left = cartesian2;
         var rightPos, leftPos;
         var halfLength = endPositionLength / 2;
+
+        var indices = IndexDatatype.createTypedArray(size/3, indicesLength);
+        var index = 0;
         if (addEndPositions) { // add rounded end
             leftPos = cartesian3;
             rightPos = cartesian4;
@@ -252,7 +264,13 @@ define([
                 LR = LL + 1;
                 UL = (back - 2) / 3;
                 UR = UL - 1;
-                indices.push(UL, LL, UR, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = LL;
+                indices[index++] = UR;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
+
                 front += 3;
                 back -= 3;
             }
@@ -268,7 +286,7 @@ define([
         left = Cartesian3.fromArray(computedLefts, compIndex, left);
         var rightNormal;
         var leftNormal;
-        var length = leftEdge.length - 3;
+        length = leftEdge.length - 3;
         for (i = 0; i < length; i += 3) {
             rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, i, scratch1), scratch1);
             leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - i, scratch2), scratch2);
@@ -279,7 +297,13 @@ define([
             LR = LL + 1;
             UL = (back - 2) / 3;
             UR = UL - 1;
-            indices.push(UL, LL, UR, UR, LL, LR);
+            indices[index++] = UL;
+            indices[index++] = LL;
+            indices[index++] = UR;
+            indices[index++] = UR;
+            indices[index++] = LL;
+            indices[index++] = LR;
+
             front += 3;
             back -= 3;
         }
@@ -306,7 +330,9 @@ define([
                 start = UR;
                 for (j = 0; j < l.length / 3; j++) {
                     outsidePoint = Cartesian3.fromArray(l, j * 3, outsidePoint);
-                    indices.push(pivot, start - j - 1, start - j);
+                    indices[index++] = pivot;
+                    indices[index++] = start - j - 1;
+                    indices[index++] = start - j;
                     addAttribute(finalPositions, outsidePoint, undefined, back);
                     previousPoint = Cartesian3.fromArray(finalPositions, (start - j - 1) * 3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, pivot * 3, nextPoint);
@@ -327,7 +353,9 @@ define([
                 start = LR;
                 for (j = 0; j < r.length / 3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j * 3, outsidePoint);
-                    indices.push(pivot, start + j, start + j + 1);
+                    indices[index++] = pivot;
+                    indices[index++] = start + j;
+                    indices[index++] = start + j + 1;
                     addAttribute(finalPositions, outsidePoint, front);
                     previousPoint = Cartesian3.fromArray(finalPositions, pivot * 3, previousPoint);
                     nextPoint = Cartesian3.fromArray(finalPositions, (start + j) * 3, nextPoint);
@@ -362,7 +390,13 @@ define([
                 LL = LR - 1;
                 UR = (back - 2) / 3;
                 UL = UR + 1;
-                indices.push(UL, LL, UR, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = LL;
+                indices[index++] = UR;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
+
                 front += 3;
                 back -= 3;
             }
@@ -389,7 +423,13 @@ define([
                 LL = LR - 1;
                 UR = (back - 2) / 3;
                 UL = UR + 1;
-                indices.push(UL, LL, UR, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = LL;
+                indices[index++] = UR;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
+
                 front += 3;
                 back -= 3;
             }
@@ -545,8 +585,12 @@ define([
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
                     leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+                    scaleArray2[0] = previousRightPos.clone(scaleArray2[0]);
+                    scaleArray2[1] = rightPos.clone(scaleArray2[1]);
+                    calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
+                    scaleArray2[0] = leftPos.clone(scaleArray2[0]);
+                    scaleArray2[1] = previousLeftPos.clone(scaleArray2[1]);
+                    calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
                     calculatedLefts.push(left.x, left.y, left.z);
                     calculatedNormals.push(normal.x, normal.y, normal.z);
                     startPoint = leftPos.clone(startPoint);
@@ -562,8 +606,12 @@ define([
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
                     rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+                    scaleArray2[0] = previousRightPos.clone(scaleArray2[0]);
+                    scaleArray2[1] = rightPos.clone(scaleArray2[1]);
+                    calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
+                    scaleArray2[0] = leftPos.clone(scaleArray2[0]);
+                    scaleArray2[1] = previousLeftPos.clone(scaleArray2[1]);
+                    calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
                     calculatedLefts.push(left.x, left.y, left.z);
                     calculatedNormals.push(normal.x, normal.y, normal.z);
                     startPoint = rightPos.clone(startPoint);
@@ -585,8 +633,12 @@ define([
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
         leftPos = Cartesian3.add(position, left.multiplyByScalar(width, leftPos), leftPos); // add last position
         rightPos = Cartesian3.add(position, left.multiplyByScalar(width, rightPos).negate(rightPos), rightPos);
-        calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-        calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+        scaleArray2[0] = previousRightPos.clone(scaleArray2[0]);
+        scaleArray2[1] = rightPos.clone(scaleArray2[1]);
+        calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
+        scaleArray2[0] = leftPos.clone(scaleArray2[0]);
+        scaleArray2[1] = previousLeftPos.clone(scaleArray2[1]);
+        calculatedPositions.push(PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid));
         calculatedLefts.push(left.x, left.y, left.z);
         calculatedNormals.push(normal.x, normal.y, normal.z);
 
@@ -778,27 +830,38 @@ define([
 
         var i;
         var iLength = indices.length;
+        var twoLength = length + length;
+        var newIndices = IndexDatatype.createTypedArray(positions.lenght/3, iLength * 2 + twoLength * 3);
+        newIndices.set(indices);
+        var index = iLength;
         for (i = 0; i < iLength; i += 3) { // bottom indices
             var v0 = indices[i];
             var v1 = indices[i + 1];
             var v2 = indices[i + 2];
-            indices.push(v2 + length, v1 + length, v0 + length);
+            newIndices[index++] = v2 + length;
+            newIndices[index++] = v1 + length;
+            newIndices[index++] = v0 + length;
         }
 
         attributes = extrudedAttributes(attributes, vertexFormat);
         var UL, LL, UR, LR;
-        var twoLength = length + length;
+
         for (i = 0; i < twoLength; i += 2) { //wall indices
             UL = i + twoLength;
             LL = UL + twoLength;
             UR = UL + 1;
             LR = LL + 1;
-            indices.push(UL, LL, UR, UR, LL, LR);
+            newIndices[index++] = UL;
+            newIndices[index++] = LL;
+            newIndices[index++] = UR;
+            newIndices[index++] = UR;
+            newIndices[index++] = LL;
+            newIndices[index++] = LR;
         }
 
         return {
             attributes : attributes,
-            indices : indices,
+            indices : newIndices,
             boundingSphere : boundingSphere
         };
     }
@@ -905,7 +968,7 @@ define([
 
         return new Geometry({
             attributes : attributes,
-            indices : IndexDatatype.createTypedArray(attributes.position.values.length / 3, attr.indices),
+            indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
             boundingSphere : attr.boundingSphere
         });
