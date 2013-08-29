@@ -56,6 +56,13 @@ define([
         return value;
     };
 
+    ConstantPositionProperty.prototype.getValueCartographic = function(time, result) {
+        if (Array.isArray(this._value)) {
+            return Ellipsoid.WGS84.cartesianArrayToCartographicArray(this._value, result);
+        }
+        return Ellipsoid.WGS84.cartesianToCartographic(this._value, result);
+    };
+
     //GeoJSON specifies only the Feature object has a usable id property
     //But since "multi" geometries create multiple dynamicObject,
     //we can't use it for them either.
@@ -72,8 +79,25 @@ define([
             }
             id = finalId;
         }
+
         var dynamicObject = dynamicObjectCollection.getOrCreateObject(id);
         dynamicObject.geoJson = geoJson;
+        dynamicObject.balloon = {
+            getValue : function() {
+                var html;
+                var properties = geoJson.properties;
+                if (typeof properties !== 'undefined') {
+                    html = '<table class="geoJsonDataSourceTable">';
+                    for ( var key in properties) {
+                        if (properties.hasOwnProperty(key)) {
+                            html += '<tr><td>' + key + '</td><td>' + properties[key] + '</td></tr>';
+                        }
+                    }
+                    html += '</table>';
+                }
+                return html;
+            }
+        };
         return dynamicObject;
     }
 
