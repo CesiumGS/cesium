@@ -165,9 +165,8 @@ define(function() {
         this.debugShowBoundingVolume = false;
 
         /**
+         * Used to implement Scene.debugShowFrustums.
          * @private
-         *
-         * Used to implement {@see Scene.debugShowFrustums}.
          */
         this.debugOverlappingFrustums = 0;
     };

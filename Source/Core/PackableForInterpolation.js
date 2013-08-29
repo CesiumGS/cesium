@@ -25,6 +25,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
         /**
          * Converts a packed array into a form suitable for interpolation.
          * @memberof PackableForInterpolation
+         * @function
          *
          * @param {Array} packedArray The packed array.
          * @param {Number} [startingIndex=0] The index of the first element to be converted.
@@ -33,13 +34,12 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          *
          * @exception {DeveloperError} packedArray is required.
          */
-        convertPackedArrayForInterpolation : function(packedArray, startingIndex, lastIndex, result) {
-            throwInstantiationError();
-        },
+        convertPackedArrayForInterpolation : throwInstantiationError,
 
         /**
          * Retrieves an instance from a packed array converted with {@link convertPackedArrayForInterpolation}.
          * @memberof PackableForInterpolation
+         * @function
          *
          * @param {Array} array The original packed array.
          * @param {Array} sourceArray The converted array.
@@ -50,9 +50,7 @@ define(['../Core/DeveloperError'], function(DeveloperError) {
          * @exception {DeveloperError} array is required.
          * @exception {DeveloperError} sourceArray is required.
          */
-        unpackInterpolationResult : function(array, sourceArray, startingIndex, lastIndex, result) {
-            throwInstantiationError();
-        }
+        unpackInterpolationResult : throwInstantiationError
     };
 
     return PackableForInterpolation;
