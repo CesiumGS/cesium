@@ -892,7 +892,7 @@ define([
                     }
                     command.owner = tile;
 
-                    command.debugShowBoundingVolume = tile === surface._debug.boundingSphereTile;
+                    command.debugShowBoundingVolume = (tile === surface._debug.boundingSphereTile);
 
                     var uniformMap = tileCommandUniformMaps[tileCommandIndex];
                     mergeUniformMap(uniformMap, centralBodyUniformMap);

@@ -2,7 +2,6 @@
 define([
         '../Core/Cartesian3',
         '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
@@ -12,11 +11,11 @@ define([
         '../Core/Matrix4',
         '../Core/Spherical',
         '../Scene/CustomSensorVolume',
-        '../Scene/Material'
+        '../Scene/Material',
+        './MaterialProperty'
     ], function(
         Cartesian3,
         Color,
-        defaultValue,
         defined,
         destroyObject,
         DeveloperError,
@@ -26,7 +25,8 @@ define([
         Matrix4,
         Spherical,
         CustomSensorVolume,
-        Material) {
+        Material,
+        MaterialProperty) {
     "use strict";
 
     //CZML_TODO DynamicConeVisualizerUsingCustomSensor is a temporary workaround
@@ -350,7 +350,7 @@ define([
             }
         }
 
-        var position = positionProperty.getValueCartesian(time, cachedPosition);
+        var position = positionProperty.getValue(time, cachedPosition);
         var orientation = orientationProperty.getValue(time, cachedOrientation);
 
         if (defined(position) &&
@@ -362,10 +362,7 @@ define([
             cone._visualizerOrientation = orientation.clone(cone._visualizerOrientation);
         }
 
-        var material = dynamicCone.outerMaterial;
-        if (defined(material)) {
-            cone.material = material.getValue(time, context, cone.material);
-        }
+        cone.material = MaterialProperty.getValue(time, context, dynamicCone.outerMaterial, cone.material);
 
         property = dynamicCone.intersectionColor;
         if (defined(property)) {

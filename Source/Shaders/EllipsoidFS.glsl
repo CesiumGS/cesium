@@ -29,11 +29,44 @@ vec4 computeEllipsoidColor(czm_ray ray, float intersection, float side)
 
 void main()
 {
-    czm_ellipsoid ellipsoid = czm_ellipsoidNew(czm_modelView[3].xyz, u_radii);
+    // PERFORMANCE_TODO: When dynamic branching is available, compute ratio of maximum and minimum radii
+    // in the vertex shader. Only when it is larger than some constant, march along the ray.
+    // Otherwise perform one intersection test which will be the common case.
+    
+    // Test if the ray intersects a sphere with the ellipsoid's maximum radius.
+    // For very oblate ellipsoids, using the ellipsoid's radii for an intersection test
+    // may cause false negatives. This will discard fragments before marching the ray forward.
+    float maxRadius = max(u_radii.x, max(u_radii.y, u_radii.z)) * 1.5;
     vec3 direction = normalize(v_positionEC);
-    czm_ray ray = czm_ray(vec3(0.0), direction);
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    vec3 ellipsoidCenter = czm_modelView[3].xyz;
+    
+    float t1 = -1.0;
+    float t2 = -1.0;
+    
+    float b = -2.0 * dot(direction, ellipsoidCenter);
+    float c = dot(ellipsoidCenter, ellipsoidCenter) - maxRadius * maxRadius;
 
+    float discriminant = b * b - 4.0 * c;
+    if (discriminant >= 0.0) {
+        t1 = (-b - sqrt(discriminant)) * 0.5;
+        t2 = (-b + sqrt(discriminant)) * 0.5;
+    }
+    
+    if (t1 < 0.0 && t2 < 0.0) {
+        discard;
+    }
+    
+    float t = min(t1, t2);
+    if (t < 0.0) {
+        t = 0.0;
+    }
+    
+    // March ray forward to intersection with larger sphere and find
+    // actual intersection point with ellipsoid.
+    czm_ellipsoid ellipsoid = czm_ellipsoidNew(ellipsoidCenter, u_radii);
+    czm_ray ray = czm_ray(t * direction, direction);
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    
     if (czm_isEmpty(intersection))
     {
         discard;

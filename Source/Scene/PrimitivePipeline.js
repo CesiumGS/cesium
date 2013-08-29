@@ -5,6 +5,7 @@ define([
         '../Core/Color',
         '../Core/ComponentDatatype',
         '../Core/DeveloperError',
+        '../Core/FeatureDetection',
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/GeometryPipeline',
@@ -15,11 +16,18 @@ define([
         Color,
         ComponentDatatype,
         DeveloperError,
+        FeatureDetection,
         Geometry,
         GeometryAttribute,
         GeometryPipeline,
         Matrix4) {
     "use strict";
+
+    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
+    // from failing, since we won't be able to create a WebGL context anyway.
+    if (!FeatureDetection.supportsTypedArrays()) {
+        return {};
+    }
 
     function transformToWorldCoordinates(instances, primitiveModelMatrix, allow3DOnly) {
         var toWorld = !allow3DOnly;
