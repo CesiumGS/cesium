@@ -50,8 +50,11 @@ define([
             loadingIndicator.style.display = 'none';
         }
     }).otherwise(function(e) {
+        loadingIndicator.style.display = 'none';
         console.error(e);
-        window.alert(e);
+        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+            window.alert(e);
+        }
     });
 
     function endsWith(str, suffix) {
@@ -65,14 +68,14 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
-        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
-            console.log(error);
-            window.alert(error);
-        });
+        var showLoadError = function(name, error) {
+            var title = 'An error occurred while loading the file: ' + name;
+            viewer.cesiumWidget.showErrorPanel(title, error);
+            console.error(error);
+        };
 
         viewer.onDropError.addEventListener(function(viewerArg, name, error) {
-            console.log(error);
-            window.alert(error);
+            showLoadError(name, error);
         });
 
         var scene = viewer.scene;
@@ -87,16 +90,18 @@ define([
         if (defined(endUserOptions.source)) {
             var source;
             var sourceUrl = endUserOptions.source.toUpperCase();
-            if (endsWith(sourceUrl, ".GEOJSON") || //
-            endsWith(sourceUrl, ".JSON") || //
-            endsWith(sourceUrl, ".TOPOJSON")) {
+            if (endsWith(sourceUrl, '.GEOJSON') || //
+                endsWith(sourceUrl, '.JSON') || //
+                endsWith(sourceUrl, '.TOPOJSON')) {
                 source = new GeoJsonDataSource();
-            } else if (endsWith(sourceUrl, ".CZML")) {
+            } else if (endsWith(sourceUrl, '.CZML')) {
                 source = new CzmlDataSource();
             } else {
                 loadingIndicator.style.display = 'none';
-                window.alert("Unknown format: " + endUserOptions.source);
+
+                showLoadError(endUserOptions.source, 'Unknown format.');
             }
+
             if (defined(source)) {
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
@@ -106,11 +111,12 @@ define([
                         if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
-                            window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
+                            var error = 'No object with id "' + endUserOptions.lookAt + '" exists in the provided source.';
+                            showLoadError(endUserOptions.source, error);
                         }
                     }
-                }, function(e) {
-                    window.alert(e);
+                }, function(error) {
+                    showLoadError(endUserOptions.source, error);
                 }).always(function() {
                     loadingIndicator.style.display = 'none';
                 });
@@ -129,7 +135,9 @@ define([
                 document.body.classList.add('cesium-lighter');
                 viewer.animation.applyThemeChanges();
             } else {
-                window.alert('Unknown theme: ' + theme);
+                var error = 'Unknown theme: ' + theme;
+                viewer.cesiumWidget.showErrorPanel(error);
+                console.error(error);
             }
         }
     }
