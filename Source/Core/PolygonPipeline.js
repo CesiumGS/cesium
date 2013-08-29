@@ -1,5 +1,36 @@
 /*global define*/
-define(['./DeveloperError', './Math', './Cartesian2', './Cartesian3', './defined', './Geometry', './GeometryAttribute', './Ellipsoid', './EllipsoidTangentPlane', './defaultValue', './pointInsideTriangle', './ComponentDatatype', './PrimitiveType', './Queue', './WindingOrder'], function(DeveloperError, CesiumMath, Cartesian2, Cartesian3, defined, Geometry, GeometryAttribute, Ellipsoid, EllipsoidTangentPlane, defaultValue, pointInsideTriangle, ComponentDatatype, PrimitiveType, Queue, WindingOrder) {
+define([
+        './DeveloperError',
+        './Math',
+        './Cartesian2',
+        './Cartesian3',
+        './defined',
+        './Geometry',
+        './GeometryAttribute',
+        './Ellipsoid',
+        './EllipsoidTangentPlane',
+        './defaultValue',
+        './pointInsideTriangle',
+        './ComponentDatatype',
+        './PrimitiveType',
+        './Queue',
+        './WindingOrder'
+    ], function(
+        DeveloperError,
+        CesiumMath,
+        Cartesian2,
+        Cartesian3,
+        defined,
+        Geometry,
+        GeometryAttribute,
+        Ellipsoid,
+        EllipsoidTangentPlane,
+        defaultValue,
+        pointInsideTriangle,
+        ComponentDatatype,
+        PrimitiveType,
+        Queue,
+        WindingOrder) {
     "use strict";
 
     function isTipConvex(p0, p1, p2) {
