@@ -42,6 +42,9 @@
     padding: 6px;
     overflow: auto;
     border-radius: 10px;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
 }
 
 .cesium-baseLayerPicker-item {
