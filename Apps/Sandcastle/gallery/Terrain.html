@@ -36,7 +36,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('terrainMenu');
         
         var menu = document.createElement('select');
-        menu.className = 'button';
+        menu.className = 'cesium-button';
         menu.onchange = function() {
             centralBody.terrainProvider = terrainProviders[this.selectedIndex].provider;
         };
@@ -50,7 +50,7 @@ require(['Cesium'], function(Cesium) {
         
         toolbar = document.getElementById('zoomButtons');
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             var eye, target, up;
 
@@ -72,7 +72,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             var eye, target, up;
 
@@ -94,7 +94,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             var eye, target, up;
 
@@ -166,7 +166,7 @@ require(['Cesium'], function(Cesium) {
         
         toolbar = document.getElementById('sampleButtons');
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             var gridWidth = 41;
             var gridHeight = 41;

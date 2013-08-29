@@ -40,6 +40,15 @@ defineSuite([
         destroyContext(context);
     });
 
+    it('has vertex and fragment shader source', function() {
+        var vs = 'void main() { gl_Position = vec4(1.0); }';
+        var fs = 'void main() { gl_FragColor = vec4(1.0); }';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(sp.vertexShaderSource).toEqual(vs);
+        expect(sp.fragmentShaderSource).toEqual(fs);
+    });
+
     it('has a position vertex attribute', function() {
         var vs = 'attribute vec4 position; void main() { gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(1.0); }';

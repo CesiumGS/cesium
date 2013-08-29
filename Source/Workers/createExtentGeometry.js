@@ -3,14 +3,14 @@ define([
         '../Core/ExtentGeometry',
         '../Core/Ellipsoid',
         '../Core/Extent',
-        './createTaskProcessorWorker',
-        './transferGeometry'
+        '../Scene/PrimitivePipeline',
+        './createTaskProcessorWorker'
     ], function(
         ExtentGeometry,
         Ellipsoid,
         Extent,
-        createTaskProcessorWorker,
-        transferGeometry) {
+        PrimitivePipeline,
+        createTaskProcessorWorker) {
     "use strict";
 
     function createExtentGeometry(parameters, transferableObjects) {
@@ -19,7 +19,7 @@ define([
         extentGeometry._extent = Extent.clone(extentGeometry._extent);
 
         var geometry = ExtentGeometry.createGeometry(extentGeometry);
-        transferGeometry(geometry, transferableObjects);
+        PrimitivePipeline.transferGeometry(geometry, transferableObjects);
 
         return {
             geometry : geometry,

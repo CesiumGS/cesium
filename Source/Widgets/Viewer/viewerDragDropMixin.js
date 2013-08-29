@@ -223,6 +223,7 @@ define([
             DataSource = GeoJsonDataSource;
         } else {
             viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+            return undefined;
         }
 
         return function(evt) {

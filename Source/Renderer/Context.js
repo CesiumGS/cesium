@@ -1116,7 +1116,7 @@ define([
             throw new DeveloperError('Invalid indexDatatype.');
         }
 
-        if ((indexDatatype === IndexDatatype.UNSIGNED_INT) && !this.getElementIndexUint()) {
+        if ((indexDatatype.value === IndexDatatype.UNSIGNED_INT.value) && !this.getElementIndexUint()) {
             throw new RuntimeError('IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.');
         }
 
@@ -2101,7 +2101,7 @@ define([
 
         var offset = command.offset;
         var count = command.count;
-        var hasIndexBuffer = (defined(indexBuffer));
+        var hasIndexBuffer = defined(indexBuffer);
 
         if (hasIndexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes
@@ -2210,7 +2210,7 @@ define([
                     defined(attributes[name].values)) {
                 names.push(name);
 
-                if (attributes[name].componentDatatype === ComponentDatatype.DOUBLE) {
+                if (attributes[name].componentDatatype.value === ComponentDatatype.DOUBLE.value) {
                     attributes[name].componentDatatype = ComponentDatatype.FLOAT;
                     attributes[name].values = ComponentDatatype.createTypedArray(ComponentDatatype.FLOAT, attributes[name].values);
                 }
@@ -2428,7 +2428,7 @@ define([
                     attribute = attributes[name];
 
                     var componentDatatype = attribute.componentDatatype;
-                    if (componentDatatype === ComponentDatatype.DOUBLE) {
+                    if (componentDatatype.value === ComponentDatatype.DOUBLE.value) {
                         componentDatatype = ComponentDatatype.FLOAT;
                     }
 

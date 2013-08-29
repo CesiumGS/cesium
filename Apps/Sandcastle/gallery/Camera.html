@@ -28,34 +28,12 @@ require(['Cesium'], function(Cesium) {
 
     var ellipsoid = Cesium.Ellipsoid.WGS84;
 
-    function disableInput(scene) {
-        var controller = scene.getScreenSpaceCameraController();
-        controller.enableTranslate = false;
-        controller.enableZoom = false;
-        controller.enableRotate = false;
-        controller.enableTilt = false;
-        controller.enableLook = false;
-    }
-
-    function enableInput(scene) {
-        var controller = scene.getScreenSpaceCameraController();
-        controller.enableTranslate = true;
-        controller.enableZoom = true;
-        controller.enableRotate = true;
-        controller.enableTilt = true;
-        controller.enableLook = true;
-    }
-
     function flyToSanDiego(scene) {
         Sandcastle.declare(flyToSanDiego); // For highlighting in Sandcastle.
         var destination = Cesium.Cartographic.fromDegrees(-117.16, 32.71, 15000.0);
 
-        disableInput(scene);
-        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene.getFrameState(), {
-            destination : destination,
-            onComplete : function() {
-                enableInput(scene);
-            }
+        var flight = Cesium.CameraFlightPath.createAnimationCartographic(scene, {
+            destination : destination
         });
         scene.getAnimations().add(flight);
     }
@@ -66,12 +44,8 @@ require(['Cesium'], function(Cesium) {
             var destination = Cesium.Cartographic.fromDegrees(position.coords.longitude, position.coords.latitude, 1000.0);
             destination = ellipsoid.cartographicToCartesian(destination);
 
-            disableInput(scene);
-            var flight = Cesium.CameraFlightPath.createAnimation(scene.getFrameState(), {
-                destination : destination,
-                onComplete : function() {
-                    enableInput(scene);
-                }
+            var flight = Cesium.CameraFlightPath.createAnimation(scene, {
+                destination : destination
             });
             scene.getAnimations().add(flight);
         }
@@ -113,12 +87,8 @@ require(['Cesium'], function(Cesium) {
 
         var extent = new Cesium.Extent(west, south, east, north);
 
-        disableInput(scene);
-        var flight = Cesium.CameraFlightPath.createAnimationExtent(scene.getFrameState(), {
-            destination : extent,
-            onComplete : function() {
-                enableInput(scene);
-            }
+        var flight = Cesium.CameraFlightPath.createAnimationExtent(scene, {
+            destination : extent
         });
         scene.getAnimations().add(flight);
         
@@ -195,7 +165,6 @@ require(['Cesium'], function(Cesium) {
     function reset(scene) {
         scene.getPrimitives().removeAll();
         scene.getAnimations().removeAll();
-        enableInput(scene);
 
         var camera = scene.getCamera();
         if (camera.transform.equals(Cesium.Matrix4.IDENTITY)) {
@@ -218,7 +187,7 @@ require(['Cesium'], function(Cesium) {
         var toolbar = document.getElementById('toolbar');
         
         var button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             reset(scene);
             flyToSanDiego(scene);
@@ -228,7 +197,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             reset(scene);
             flyToMyLocation(scene);
@@ -238,7 +207,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             reset(scene);
             flyToExtent(scene);
@@ -248,7 +217,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
 
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             reset(scene);
             viewAnExtent(scene);
@@ -258,7 +227,7 @@ require(['Cesium'], function(Cesium) {
         toolbar.appendChild(button);
         
         button = document.createElement('button');
-        button.className = 'button';
+        button.className = 'cesium-button';
         button.onclick = function() {
             reset(scene);
             eastNorthUp(scene);
