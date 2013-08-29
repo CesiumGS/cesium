@@ -1,4 +1,4 @@
-/*global define*/
+/*global define,console*/
 define([
         '../../Core/buildModuleUrl',
         '../../Core/Cartesian2',
@@ -76,7 +76,11 @@ define([
             } catch (e) {
                 widget._useDefaultRenderLoop = false;
                 widget._renderLoopRunning = false;
-                widget.onRenderLoopError.raiseEvent(widget, e);
+                widget._onRenderLoopError.raiseEvent(widget, e);
+                if (widget._showRenderLoopErrors) {
+                    widget.showErrorPanel('An error occurred while rendering.  Rendering has stopped.', e);
+                    console.error(e);
+                }
             }
         }
 
@@ -97,7 +101,8 @@ define([
      * @param {ImageryProvider} [options.imageryProvider=new BingMapsImageryProvider()] The imagery provider to serve as the base layer. If set to false, no imagery provider will be added.
      * @param {TerrainProvider} [options.terrainProvider=new EllipsoidTerrainProvider] The terrain provider.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
-     * @param {Object} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions=undefined] Properties corresponding to <a href='http://www.khronos.org/registry/webgl/specs/latest/#5.2'>WebGLContextAttributes</a> used to create the WebGL context.  This object will be passed to the {@link Scene} constructor.
      *
      * @exception {DeveloperError} container is required.
@@ -133,88 +138,97 @@ define([
         widgetNode.className = 'cesium-widget';
         container.appendChild(widgetNode);
 
-        var canvas = document.createElement('canvas');
-        canvas.oncontextmenu = function() {
-            return false;
-        };
-        canvas.onselectstart = function() {
-            return false;
-        };
-        widgetNode.appendChild(canvas);
-
-        var creditContainer = document.createElement('div');
-        creditContainer.className = 'cesium-widget-credits';
-        widgetNode.appendChild(creditContainer);
-
-        var scene = new Scene(canvas, options.contextOptions, creditContainer);
-        scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
-
-        var ellipsoid = Ellipsoid.WGS84;
-        var creditDisplay = scene.getFrameState().creditDisplay;
-
-        var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesium.agi.com/');
-        creditDisplay.addDefaultCredit(cesiumCredit);
-
-        var centralBody = new CentralBody(ellipsoid);
-        scene.getPrimitives().setCentralBody(centralBody);
-
-        scene.skyBox = new SkyBox({
-            positiveX : getDefaultSkyBoxUrl('px'),
-            negativeX : getDefaultSkyBoxUrl('mx'),
-            positiveY : getDefaultSkyBoxUrl('py'),
-            negativeY : getDefaultSkyBoxUrl('my'),
-            positiveZ : getDefaultSkyBoxUrl('pz'),
-            negativeZ : getDefaultSkyBoxUrl('mz')
-        });
-        scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
-        scene.sun = new Sun();
-
-        //Set the base imagery layer
-        var imageryProvider = options.imageryProvider;
-        if (!defined(imageryProvider)) {
-            imageryProvider = new BingMapsImageryProvider({
-                url : 'http://dev.virtualearth.net',
-                // Some versions of Safari support WebGL, but don't correctly implement
-                // cross-origin image loading, so we need to load Bing imagery using a proxy.
-                proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
-            });
-        }
-
-        if (imageryProvider !== false) {
-            centralBody.getImageryLayers().addImageryProvider(imageryProvider);
-        }
-
-        //Set the terrain provider if one is provided.
-        if (defined(options.terrainProvider)) {
-            centralBody.terrainProvider = options.terrainProvider;
-        }
-
         this._element = widgetNode;
-        this._container = container;
-        this._canvas = canvas;
-        this._canvasWidth = canvas.width;
-        this._canvasHeight = canvas.height;
-        this._scene = scene;
-        this._centralBody = centralBody;
-        this._clock = defaultValue(options.clock, new Clock());
-        this._transitioner = new SceneTransitioner(scene, ellipsoid);
-        this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
-        this._useDefaultRenderLoop = undefined;
-        this._renderLoopRunning = false;
-        this._creditContainer = creditContainer;
-        this._canRender = false;
-        this._onRenderLoopError = new Event();
 
-        if (options.sceneMode) {
-            if (options.sceneMode === SceneMode.SCENE2D) {
-                this._transitioner.to2D();
+        try {
+            var canvas = document.createElement('canvas');
+            canvas.oncontextmenu = function() {
+                return false;
+            };
+            canvas.onselectstart = function() {
+                return false;
+            };
+            widgetNode.appendChild(canvas);
+
+            var creditContainer = document.createElement('div');
+            creditContainer.className = 'cesium-widget-credits';
+            widgetNode.appendChild(creditContainer);
+
+            var scene = new Scene(canvas, options.contextOptions, creditContainer);
+            scene.getCamera().controller.constrainedAxis = Cartesian3.UNIT_Z;
+
+            var ellipsoid = Ellipsoid.WGS84;
+            var creditDisplay = scene.getFrameState().creditDisplay;
+
+            var cesiumCredit = new Credit('Cesium', cesiumLogoData, 'http://cesium.agi.com/');
+            creditDisplay.addDefaultCredit(cesiumCredit);
+
+            var centralBody = new CentralBody(ellipsoid);
+            scene.getPrimitives().setCentralBody(centralBody);
+
+            scene.skyBox = new SkyBox({
+                positiveX : getDefaultSkyBoxUrl('px'),
+                negativeX : getDefaultSkyBoxUrl('mx'),
+                positiveY : getDefaultSkyBoxUrl('py'),
+                negativeY : getDefaultSkyBoxUrl('my'),
+                positiveZ : getDefaultSkyBoxUrl('pz'),
+                negativeZ : getDefaultSkyBoxUrl('mz')
+            });
+            scene.skyAtmosphere = new SkyAtmosphere(ellipsoid);
+            scene.sun = new Sun();
+
+            //Set the base imagery layer
+            var imageryProvider = options.imageryProvider;
+            if (!defined(imageryProvider)) {
+                imageryProvider = new BingMapsImageryProvider({
+                    url : 'http://dev.virtualearth.net',
+                    // Some versions of Safari support WebGL, but don't correctly implement
+                    // cross-origin image loading, so we need to load Bing imagery using a proxy.
+                    proxy : FeatureDetection.supportsCrossOriginImagery() ? undefined : new DefaultProxy('http://cesium.agi.com/proxy/')
+                });
             }
-            if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
-                this._transitioner.toColumbusView();
+
+            if (imageryProvider !== false) {
+                centralBody.getImageryLayers().addImageryProvider(imageryProvider);
             }
+
+            //Set the terrain provider if one is provided.
+            if (defined(options.terrainProvider)) {
+                centralBody.terrainProvider = options.terrainProvider;
+            }
+
+            this._container = container;
+            this._canvas = canvas;
+            this._canvasWidth = canvas.width;
+            this._canvasHeight = canvas.height;
+            this._scene = scene;
+            this._centralBody = centralBody;
+            this._clock = defaultValue(options.clock, new Clock());
+            this._transitioner = new SceneTransitioner(scene, ellipsoid);
+            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
+            this._useDefaultRenderLoop = undefined;
+            this._renderLoopRunning = false;
+            this._creditContainer = creditContainer;
+            this._canRender = false;
+            this._showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
+            this._onRenderLoopError = new Event();
+
+            if (options.sceneMode) {
+                if (options.sceneMode === SceneMode.SCENE2D) {
+                    this._transitioner.to2D();
+                }
+                if (options.sceneMode === SceneMode.COLUMBUS_VIEW) {
+                    this._transitioner.toColumbusView();
+                }
+            }
+
+            this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
+
+        } catch (error) {
+            var title = 'Error constructing CesiumWidget.  Check if WebGL is enabled.';
+            this.showErrorPanel(title, error);
+            throw error;
         }
-
-        this.useDefaultRenderLoop = defaultValue(options.useDefaultRenderLoop, true);
     };
 
     defineProperties(CesiumWidget.prototype, {
@@ -353,6 +367,55 @@ define([
             }
         }
     });
+
+    /**
+     * Show an error panel to the user containing a title and a longer error message,
+     * which can be dismissed using an OK button.  This panel is displayed automatically
+     * when a render loop error occurs, if showRenderLoopErrors was not false when the
+     * widget was constructed.
+     *
+     * @memberof CesiumWidget
+     *
+     * @param {String} title The title to be displayed on the error panel.
+     * @param {String} error The error to be displayed on the error panel.  Optional.
+     */
+    CesiumWidget.prototype.showErrorPanel = function(title, error) {
+        var element = this._element;
+        var overlay = document.createElement('div');
+        overlay.className = 'cesium-widget-errorPanel';
+
+        var content = document.createElement('div');
+        content.className = 'cesium-widget-errorPanel-content';
+        overlay.appendChild(content);
+
+        var errorHeader = document.createElement('div');
+        errorHeader.className = 'cesium-widget-errorPanel-header';
+        errorHeader.textContent = title;
+        content.appendChild(errorHeader);
+
+        if (defined(error)) {
+            var errorMessage = document.createElement('div');
+            errorMessage.className = 'cesium-widget-errorPanel-message';
+            errorMessage.textContent = error;
+            content.appendChild(errorMessage);
+        }
+
+        var buttonPanel = document.createElement('div');
+        buttonPanel.className = 'cesium-widget-errorPanel-buttonPanel';
+        content.appendChild(buttonPanel);
+
+        var okButton = document.createElement('span');
+        okButton.className = 'cesium-widget-button';
+        okButton.textContent = 'OK';
+        okButton.tabIndex = 100;
+        okButton.onclick = function() {
+            element.removeChild(overlay);
+        };
+
+        buttonPanel.appendChild(okButton);
+
+        element.appendChild(overlay);
+    };
 
     /**
      * @memberof CesiumWidget
