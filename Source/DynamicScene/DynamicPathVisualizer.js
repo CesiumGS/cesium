@@ -9,6 +9,9 @@ define([
         '../Core/Color',
         '../Core/Transforms',
         '../Core/ReferenceFrame',
+        './SampledPositionProperty',
+        './CompositePositionProperty',
+        './TimeIntervalCollectionPositionProperty',
         '../Scene/Material',
         '../Scene/SceneMode',
         '../Scene/PolylineCollection'
@@ -22,10 +25,177 @@ define([
          Color,
          Transforms,
          ReferenceFrame,
+         SampledPositionProperty,
+         CompositePositionProperty,
+         TimeIntervalCollectionPositionProperty,
          Material,
          SceneMode,
          PolylineCollection) {
     "use strict";
+
+    function subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var times = property._property._times;
+
+        var r = startingIndex;
+        //Always step exactly on start (but only use it if it exists.)
+        var tmp;
+        tmp = property.getValueInReferenceFrame(start, referenceFrame, result[r]);
+        if (defined(tmp)) {
+            result[r++] = tmp;
+        }
+
+        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
+
+        //Iterate over all interval times and add the ones that fall in our
+        //time range.  Note that times can contain data outside of
+        //the intervals range.  This is by design for use with interpolation.
+        var t = 0;
+        var len = times.length;
+        var current = times[t];
+        var loopStop = stop;
+        var sampling = false;
+        var sampleStepsToTake;
+        var sampleStepsTaken;
+        var sampleStepSize;
+
+        while (t < len) {
+            if (!steppedOnNow && current.greaterThanOrEquals(updateTime)) {
+                tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[r]);
+                if (defined(tmp)) {
+                    result[r++] = tmp;
+                }
+                steppedOnNow = true;
+            }
+            if (current.greaterThan(start) && current.lessThan(loopStop) && !current.equals(updateTime)) {
+                tmp = property.getValueInReferenceFrame(current, referenceFrame, result[r]);
+                if (defined(tmp)) {
+                    result[r++] = tmp;
+                }
+            }
+
+            if (t < (len - 1)) {
+                if (!sampling) {
+                    var next = times[t + 1];
+                    var secondsUntilNext = current.getSecondsDifference(next);
+                    sampling = secondsUntilNext > maximumStep;
+
+                    if (sampling) {
+                        sampleStepsToTake = Math.floor(secondsUntilNext / maximumStep);
+                        sampleStepsTaken = 0;
+                        sampleStepSize = secondsUntilNext / Math.max(sampleStepsToTake, 2);
+                        sampleStepsToTake = Math.max(sampleStepsToTake - 2, 1);
+                    }
+                }
+
+                if (sampling && sampleStepsTaken < sampleStepsToTake) {
+                    current = current.addSeconds(sampleStepSize);
+                    sampleStepsTaken++;
+                    continue;
+                }
+            }
+            sampling = false;
+            t++;
+            current = times[t];
+        }
+
+        //Always step exactly on stop (but only use it if it exists.)
+        tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[r]);
+        if (defined(tmp)) {
+            result[r++] = tmp;
+        }
+
+        return r;
+    }
+
+    function subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var tmp;
+        var i = 0;
+        var index = startingIndex;
+        var time = start;
+        var steppedOnNow = !defined(updateTime) || updateTime.lessThanOrEquals(start) || updateTime.greaterThanOrEquals(stop);
+        while (time.lessThan(stop)) {
+            if (!steppedOnNow && time.greaterThanOrEquals(updateTime)) {
+                steppedOnNow = true;
+                tmp = property.getValueInReferenceFrame(updateTime, referenceFrame, result[index]);
+                if (defined(tmp)) {
+                    result[index] = tmp;
+                    index++;
+                }
+            }
+            tmp = property.getValueInReferenceFrame(time, referenceFrame, result[index]);
+            if (defined(tmp)) {
+                result[index] = tmp;
+                index++;
+            }
+            i++;
+            time = start.addSeconds(maximumStep * i);
+        }
+        //Always sample stop.
+        tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+        if (defined(tmp)) {
+            result[index] = tmp;
+            index++;
+        }
+        return index;
+    }
+
+    function subSampleIntervalProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var index = startingIndex;
+        var intervals = property.getIntervals();
+        for ( var i = 0; i < intervals.getLength(); i++) {
+            var interval = intervals.get(0);
+            if (interval.start.lessThanOrEquals(stop)) {
+                var tmp = property.getValueInReferenceFrame(stop, referenceFrame, result[index]);
+                if (defined(tmp)) {
+                    result[index] = tmp;
+                    index++;
+                }
+            }
+        }
+        return index;
+    }
+
+    function subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, startingIndex, result) {
+        var index = startingIndex;
+        var intervals = property.getIntervals();
+        for ( var i = 0; i < intervals.getLength(); i++) {
+            var interval = intervals.get(0);
+            if (interval.start.lessThanOrEquals(stop)) {
+                var intervalProperty = interval.data;
+                if (intervalProperty instanceof SampledPositionProperty) {
+                    index = subSampleSampledProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof CompositePositionProperty) {
+                    index = subSampleCompositeProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else if (intervalProperty instanceof TimeIntervalCollectionPositionProperty) {
+                    index = subSampleIntervalProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                } else {
+                    //Fallback to generic sampling.
+                    index = subSampleGenericProperty(intervalProperty, interval.start, interval.stop, updateTime, referenceFrame, maximumStep, index, result);
+                }
+            }
+        }
+        return index;
+    }
+
+    function subSample(property, start, stop, updateTime, referenceFrame, maximumStep, result) {
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var length = 0;
+        if (property instanceof SampledPositionProperty) {
+            length = subSampleSampledProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof CompositePositionProperty) {
+            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
+            length = subSampleCompositeProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        } else {
+            //Fallback to generic sampling.
+            length = subSampleGenericProperty(property, start, stop, updateTime, referenceFrame, maximumStep, 0, result);
+        }
+        result.length = length;
+        return result;
+    }
 
     var toFixedScratch = new Matrix3();
     var PolylineUpdater = function(scene, referenceFrame) {
@@ -160,7 +330,7 @@ define([
             resolution = property.getValue(time);
         }
 
-        polyline.setPositions(positionProperty._getValueRangeInReferenceFrame(sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
+        polyline.setPositions(subSample(positionProperty, sampleStart, sampleStop, time, this._referenceFrame, resolution, polyline.getPositions()));
 
         property = dynamicPath.color;
         if (defined(property)) {
@@ -313,7 +483,7 @@ define([
 
                 var frameToVisualize = ReferenceFrame.FIXED;
                 if (this._scene.mode === SceneMode.SCENE3D) {
-                    frameToVisualize = positionProperty._getReferenceFrame();
+                    frameToVisualize = positionProperty.referenceFrame;
                 }
 
                 var currentUpdater = this._updaters[frameToVisualize];

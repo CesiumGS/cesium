@@ -8,7 +8,8 @@ defineSuite([
          'Scene/Scene',
          'Scene/SceneMode',
          'Scene/SceneTransitioner',
-         'Scene/TileCoordinatesImageryProvider'
+         'Scene/TileCoordinatesImageryProvider',
+         'Specs/EventHelper'
      ], function(
          CesiumWidget,
          Clock,
@@ -18,7 +19,8 @@ defineSuite([
          Scene,
          SceneMode,
          SceneTransitioner,
-         TileCoordinatesImageryProvider) {
+         TileCoordinatesImageryProvider,
+         EventHelper) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -165,6 +167,48 @@ defineSuite([
         runs(function() {
             expect(spyListener).toHaveBeenCalledWith(widget, error);
             expect(widget.useDefaultRenderLoop).toEqual(false);
+        });
+    });
+
+    it('shows the error panel when render throws', function() {
+        widget = new CesiumWidget(container);
+
+        var error = 'foo';
+        widget.render = function() {
+            throw error;
+        };
+
+        waitsFor(function() {
+            return !widget.useDefaultRenderLoop;
+        });
+
+        runs(function() {
+            expect(widget._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
+            expect(widget._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            // click the OK button to dismiss the panel
+            EventHelper.fireClick(widget._element.querySelector('.cesium-widget-button'));
+
+            expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
+        });
+    });
+
+    it('does not show the error panel if disabled', function() {
+        widget = new CesiumWidget(container, {
+            showRenderLoopErrors : false
+        });
+
+        var error = 'foo';
+        widget.render = function() {
+            throw error;
+        };
+
+        waitsFor(function() {
+            return !widget.useDefaultRenderLoop;
+        });
+
+        runs(function() {
+            expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
 });
