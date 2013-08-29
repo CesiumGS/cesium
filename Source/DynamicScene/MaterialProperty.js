@@ -1,0 +1,68 @@
+/*global define*/
+define([
+        '../Core/defined',
+        '../Core/DeveloperError',
+        '../Scene/Material'
+    ], function(
+        defined,
+        DeveloperError,
+        Material) {
+    "use strict";
+
+    function throwInstantiationError() {
+        throw new DeveloperError('This type should not be instantiated directly.');
+    }
+
+    /**
+     * The interface for all {@link Property} objects that represent {@link Material} uniforms.
+     * This type defines an interface and cannot be instantiated directly.
+     *
+     * @alias MaterialProperty
+     * @constructor
+     *
+     * @see ColorMaterialProperty
+     * @see CompositeMaterialProperty
+     * @see GridMaterialProperty
+     * @see ImageMaterialProperty
+     */
+    var MaterialProperty = throwInstantiationError;
+
+    /**
+     * Gets the {@link Material} type at the provided time.
+     * @memberof MaterialProperty
+     * @function
+     *
+     * @param {JulianDate} time The time for which to retrieve the type.
+     * @type {String} The type of material.
+     */
+    MaterialProperty.prototype.getType = throwInstantiationError;
+
+    /**
+     * Gets the value of the property at the provided time.
+     * @memberof MaterialProperty
+     * @function
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     */
+    MaterialProperty.prototype.getValue = throwInstantiationError;
+
+    /**
+     * @private
+     */
+    MaterialProperty.getValue = function(time, context, materialProperty, material) {
+        if (defined(materialProperty)) {
+            var type = materialProperty.getType(time);
+            if (!defined(material) || (material.type !== type)) {
+                material = Material.fromType(context, type);
+            }
+            materialProperty.getValue(time, material.uniforms);
+        }
+        return material;
+    };
+
+    return MaterialProperty;
+});

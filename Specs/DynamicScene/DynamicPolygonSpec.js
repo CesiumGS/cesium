@@ -14,64 +14,6 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('processCzmlPacket adds data for infinite polygon.', function() {
-        var polygonPacket = {
-            polygon : {
-                material : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.1, 0.1, 0.1, 0.1]
-                        }
-                    }
-                },
-                show : true
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
-
-        expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(Iso8601.MINIMUM_VALUE).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polygon.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
-    });
-
-    it('processCzmlPacket adds data for constrained polygon.', function() {
-        var polygonPacket = {
-            polygon : {
-                interval : '2000-01-01/2001-01-01',
-                material : {
-                    solidColor : {
-                        color : {
-                            rgbaf : [0.1, 0.1, 0.1, 0.1]
-                        }
-                    }
-                },
-                show : true
-            }
-        };
-
-        var validTime = TimeInterval.fromIso8601(polygonPacket.polygon.interval).start;
-        var invalidTime = validTime.addSeconds(-1);
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicPolygon.processCzmlPacket(dynamicObject, polygonPacket)).toEqual(true);
-
-        expect(dynamicObject.polygon).toBeDefined();
-        expect(dynamicObject.polygon.material.getValue(validTime).uniforms.color).toEqual(new Color(0.1, 0.1, 0.1, 0.1));
-        expect(dynamicObject.polygon.show.getValue(validTime)).toEqual(true);
-
-        expect(dynamicObject.polygon.material.getValue(invalidTime)).toBeUndefined();
-        expect(dynamicObject.polygon.show.getValue(invalidTime)).toBeUndefined();
-    });
-
-    it('processCzmlPacket returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicPolygon.processCzmlPacket(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.polygon).toBeUndefined();
-    });
-
     it('mergeProperties does not change a fully configured polygon', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.polygon = new DynamicPolygon();

@@ -11,6 +11,25 @@ _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https
 * Breaking changes:
     * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take `scene` as their first parameter instead of `frameState`.
     * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
+    * Completely refactored the `DynamicScene` property system to vastly improve the API. See [#1080](https://github.com/AnalyticalGraphicsInc/cesium/pull/1080) for complete details.
+       * Removed `CzmlBoolean`, `CzmlCartesian2`, `CzmlCartesian3`, `CzmlColor`, `CzmlDefaults`, `CzmlDirection`, `CzmlHorizontalOrigin`, `CzmlImage`, `CzmlLabelStyle`, `CzmlNumber`, `CzmlPosition`, `CzmlString`, `CzmlUnitCartesian3`, `CzmlUnitQuaternion`, `CzmlUnitSpherical`, and `CzmlVerticalOrigin` since they are no longer needed.
+       * Removed `DynamicProperty`, `DynamicMaterialProperty`, `DynamicDirectionsProperty`, and `DynamicVertexPositionsProperty`; replacing them with an all new system of properties.
+          * `Property` - base interface for all properties. 
+          * `CompositeProperty` - a property composed of other properties.
+          * `ConstantProperty` - a property whose value never changes.
+          * `SampledProperty` - a property whose value is interpolated from a set of samples.
+          * `TimeIntervalCollectionProperty` - a property whose value changes based on time interval.
+          * `MaterialProperty` - base interface for all material properties.
+          * `CompositeMaterialProperty` - a `CompositeProperty` for materials.
+          * `ColorMaterialProperty` - a property that maps to a color material. (replaces `DynamicColorMaterial`)
+          * `GridMaterialProperty` - a property that maps to a grid material. (replaces `DynamicGridMaterial`)
+          * `ImageMaterialProperty` - a property that maps to an image material. (replaces `DynamicImageMaterial`)
+          * `PositionProperty`- base interface for all position properties.
+          * `CompositePositionProperty` - a `CompositeProperty` for positions.
+          * `ConstantPositionProperty` - a `PositionProperty` whose value does not change in respect to the `ReferenceFrame` in which is it defined.
+          * `SampledPositionProperty` - a `SampledProperty` for positions.
+          * `TimeIntervalCollectionPositionProperty` - A `TimeIntervalCollectionProperty` for positions.
+    * Removed `processCzml`, use `CzmlDataSource` instead.    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
@@ -48,6 +67,9 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Color.fromRandom` to generate random and partially random colors.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
+* Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
+* Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
