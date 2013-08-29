@@ -43,7 +43,7 @@ defineSuite([
     it('isAvailable works.', function() {
         var dynamicObject = new DynamicObject('dynamicObject');
         var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
-        dynamicObject._setAvailability(interval);
+        dynamicObject.availability = interval;
         expect(dynamicObject.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);

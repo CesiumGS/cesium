@@ -260,7 +260,7 @@ define(['../Core/defined',
 
     /**
      * Gets the array of DynamicObject instances in the collection.
-     * The array is a live reference that should not be modified directly.
+     * The array should not be modified directly.
      * @memberof DynamicObjectCollection
      *
      * @returns {Array} the array of DynamicObject instances in the collection.

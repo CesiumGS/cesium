@@ -36,9 +36,7 @@ defineSuite([
 
     it('default constructor sets expected properties.', function() {
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CompositeDynamicObjectCollection.mergers);
-        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CompositeDynamicObjectCollection.cleaners);
-        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
+        expect(compositeDynamicObjectCollection.collections.length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);
     });
@@ -46,13 +44,9 @@ defineSuite([
     it('constructor sets expected properties from parameters.', function() {
         var collections = [new DynamicObjectCollection()];
         collections[0].getOrCreateObject('bob');
-        var mergers = [];
-        var cleaners = [];
-        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections, mergers, cleaners);
-        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(mergers);
-        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(cleaners);
-        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(1);
-        expect(compositeDynamicObjectCollection.getCollections()[0]).toEqual(collections[0]);
+        var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections);
+        expect(compositeDynamicObjectCollection.collections.length).toEqual(1);
+        expect(compositeDynamicObjectCollection.collections[0]).toEqual(collections[0]);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
     });
@@ -61,9 +55,9 @@ defineSuite([
         var collections = [new DynamicObjectCollection()];
         collections[0].getOrCreateObject('bob');
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection(collections);
-        compositeDynamicObjectCollection.removeAll();
+        compositeDynamicObjectCollection.collections.length = 0;
 
-        expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
+        expect(compositeDynamicObjectCollection.collections.length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);
     });
@@ -85,12 +79,12 @@ defineSuite([
     it('computeAvailability returns intersction of collections.', function() {
         var collection1 = new DynamicObjectCollection();
         var dynamicObject = collection1.getOrCreateObject('1');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
+        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/2012-08-02');
         dynamicObject = collection1.getOrCreateObject('2');
 
         var collection2 = new DynamicObjectCollection();
         dynamicObject = collection2.getOrCreateObject('3');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
+        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-05/2012-08-06');
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([collection1, collection2]);
 
@@ -102,12 +96,12 @@ defineSuite([
     it('computeAvailability works if only start or stop time is infinite.', function() {
         var collection1 = new DynamicObjectCollection();
         var dynamicObject = collection1.getOrCreateObject('1');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
+        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z');
         dynamicObject = collection1.getOrCreateObject('2');
 
         var collection2 = new DynamicObjectCollection();
         dynamicObject = collection2.getOrCreateObject('3');
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
+        dynamicObject.availability = TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06');
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([collection1, collection2]);
 
@@ -124,7 +118,8 @@ defineSuite([
         CzmlDataSource._processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
+        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection1);
+        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection2);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -164,7 +159,8 @@ defineSuite([
         var dynamicObjectCollection2 = new DynamicObjectCollection();
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
+        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection1);
+        compositeDynamicObjectCollection.collections.push(dynamicObjectCollection2);
 
         var czml3 = {
             'id' : 'testBillboard',

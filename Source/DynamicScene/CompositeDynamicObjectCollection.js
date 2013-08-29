@@ -2,7 +2,9 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/Event',
+        '../Core/EventHelper',
         '../Core/Iso8601',
         '../Core/TimeInterval',
         '../Core/DeveloperError',
@@ -22,7 +24,9 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         Event,
+        EventHelper,
         Iso8601,
         TimeInterval,
         DeveloperError,
@@ -41,6 +45,60 @@ define([
         DynamicVector) {
     "use strict";
 
+    function getOrCreateObject(compositeDynamicObjectCollection, id) {
+        var obj = compositeDynamicObjectCollection._hash[id];
+        if (!obj) {
+            obj = new DynamicObject(id);
+            compositeDynamicObjectCollection._hash[id] = obj;
+            compositeDynamicObjectCollection._array.push(obj);
+        }
+        return obj;
+    }
+
+//function clearObjects(compositeDynamicObjectCollection) {
+//  var removedObjects = compositeDynamicObjectCollection._array;
+//  compositeDynamicObjectCollection._hash = {};
+//  compositeDynamicObjectCollection._array = [];
+//  if (removedObjects.length > 0) {
+//      compositeDynamicObjectCollection.objectsRemoved.raiseEvent(compositeDynamicObjectCollection, removedObjects);
+//  }
+//}
+//
+//CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
+//  var thisMergeFunctions = this.mergeFunctions;
+//  var thisCleanFunctions = this.cleanFunctions;
+//  var thisCollections = this._collections;
+//
+//  var updatedObject, compositeObject, compositeObjects = [];
+//  for ( var i = updatedObjects.length - 1; i > -1; i--) {
+//      updatedObject = updatedObjects[i];
+//      compositeObject = this.getObject(updatedObject.id);
+//      if (defined(compositeObject)) {
+//          for ( var iDeleteFuncs = thisCleanFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
+//              var deleteFunc = thisCleanFunctions[iDeleteFuncs];
+//              deleteFunc(compositeObject);
+//          }
+//      } else {
+//          compositeObject = getOrCreateObject(this, updatedObject.id);
+//      }
+//
+//      compositeObjects.push(compositeObject);
+//      for ( var iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
+//          var currentCollection = thisCollections[iCollection];
+//          var objectToUpdate = currentCollection.getObject(updatedObject.id);
+//          if (defined(objectToUpdate)) {
+//              for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
+//                  var mergeFunc = thisMergeFunctions[iMergeFuncs];
+//                  mergeFunc(compositeObject, objectToUpdate);
+//              }
+//          }
+//      }
+//  }
+//  if (compositeObjects.length > 0) {
+//      this.objectPropertiesChanged.raiseEvent(this, compositeObjects);
+//  }
+//};
+
     /**
      * Non-destructively composites multiple DynamicObjectCollection instances into a single collection.
      * If a DynamicObject with the same ID exists in multiple collections, it is non-destructively
@@ -53,75 +111,46 @@ define([
      * @constructor
      *
      * @param {Array} [collections] The initial list of DynamicObjectCollection instances to merge.
-     * @param {Array} [mergeFunctions] The list of CZML merge functions.
-     * @param {Array} [cleanFunctions] The list of CZML clean functions.
      *
      * @see DynamicObjectCollection
-     * @see DynamicObject
      */
-    var CompositeDynamicObjectCollection = function(collections, mergeFunctions, cleanFunctions) {
-        this._hash = {};
+    var CompositeDynamicObjectCollection = function(collections) {
+        this._added = [];
         this._array = [];
-        this._collections = [];
-
-        /**
-         * The array of functions which merge DynamicObject instances together.
-         */
-        this.mergeFunctions = defaultValue(mergeFunctions, CompositeDynamicObjectCollection.mergers);
-
-        /**
-         * The array of functions which remove data from a DynamicObject instance.
-         */
-        this.cleanFunctions = defaultValue(cleanFunctions, CompositeDynamicObjectCollection.cleaners);
-
-        /**
-         * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
-         */
-        this.objectPropertiesChanged = new Event();
-
-        /**
-         * An {@link Event} that is fired whenever DynamicObjects are removed from the collection.
-         */
-        this.objectsRemoved = new Event();
-
-        this.setCollections(collections);
+        this._collectionChanged = new Event();
+        this._eventHelper = new EventHelper();
+        this._removed = [];
+        this._hash = {};
+        this._suspectRefCount = 0;
+        this._collections = defined(collections) ? collections.slice() : [];
+        this._collectionsCopy = [];
     };
 
-    /**
-     * The standard set of mergers for processing CZML.  This array is the default
-     * set of updater methods used by CompositeDynamicObjectCollection.
-     */
-    CompositeDynamicObjectCollection.mergers = [DynamicClock.mergeProperties,
-               DynamicBillboard.mergeProperties,
-               DynamicEllipse.mergeProperties,
-               DynamicEllipsoid.mergeProperties,
-               DynamicCone.mergeProperties,
-               DynamicLabel.mergeProperties,
-               DynamicPath.mergeProperties,
-               DynamicPoint.mergeProperties,
-               DynamicPolygon.mergeProperties,
-               DynamicPolyline.mergeProperties,
-               DynamicPyramid.mergeProperties,
-               DynamicVector.mergeProperties,
-               DynamicObject.mergeProperties];
-
-    /**
-     * The standard set of cleaners for processing CZML.  This array is the default
-     * set of updater methods used by CompositeDynamicObjectCollection.
-     */
-    CompositeDynamicObjectCollection.cleaners = [DynamicBillboard.undefineProperties,
-                DynamicEllipse.undefineProperties,
-                DynamicEllipsoid.undefineProperties,
-                DynamicCone.undefineProperties,
-                DynamicLabel.undefineProperties,
-                DynamicPath.undefineProperties,
-                DynamicPoint.undefineProperties,
-                DynamicPolygon.undefineProperties,
-                DynamicPolyline.undefineProperties,
-                DynamicPyramid.undefineProperties,
-                DynamicVector.undefineProperties,
-                DynamicObject.undefineProperties,
-                DynamicClock.undefineProperties];
+    defineProperties(CompositeDynamicObjectCollection.prototype, {
+        /**
+         * Gets the array of collections.
+         * @memberof CompositeDynamicObjectCollection.prototype
+         *
+         * @type {Array}
+         */
+        collections : {
+            get : function() {
+                return this._collections;
+            }
+        },
+        /**
+         * Gets the event that is fired when objects are added or removed from the collection.
+         * The generated event is a {@link DynamicObjectCollection.collectionChangedEventCallback}.
+         * @memberof DynamicObjectCollection.prototype
+         *
+         * @type {Event}
+         */
+        collectionChanged : {
+            get : function() {
+                return this._collectionChanged;
+            }
+        }
+    });
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.
@@ -133,6 +162,8 @@ define([
      * @returns {TimeInterval} The availability of DynamicObjects in the collection.
      */
     CompositeDynamicObjectCollection.prototype.computeAvailability = function() {
+        mergeIfNeeded(this);
+
         var startTime = Iso8601.MAXIMUM_VALUE;
         var stopTime = Iso8601.MINIMUM_VALUE;
         var collections = this._collections;
@@ -159,149 +190,91 @@ define([
     };
 
     /**
-     * Returns a copy of the current array of collections being composited.  Changes to this
-     * array will have no affect, to change which collections are being used, call setCollections.
-     * @memberof CompositeDynamicObjectCollection
-     *
-     * @see CompositeDynamicObjectCollection#setCollections
-     */
-    CompositeDynamicObjectCollection.prototype.getCollections = function() {
-        return this._collections.slice(0);
-    };
-
-    /**
-     * Sets the array of collections to be composited.  Collections are composited
-     * last to first, so higher indices into the array take precedence over lower indices.
-     * @memberof CompositeDynamicObjectCollection
-     *
-     * @param {Array} collections The collections to be composited.
-     */
-    CompositeDynamicObjectCollection.prototype.setCollections = function(collections) {
-        collections = defined(collections) ? collections : [];
-
-        var thisCollections = this._collections;
-        if (collections !== thisCollections) {
-            var collection;
-            var iCollection;
-
-            //Unsubscribe from old collections.
-            for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-                collection = thisCollections[iCollection];
-                collection.objectPropertiesChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
-            }
-
-            //Make a copy of the new collections.
-            thisCollections = this._collections = collections;
-
-            //Clear all existing objects and rebuild the collection.
-            clearObjects(this);
-            var thisMergeFunctions = this.mergeFunctions;
-            for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-                collection = thisCollections[iCollection];
-
-                //Subscribe to the new collection.
-                collection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, this);
-
-                //Merge all of the existing objects.
-                var objects = collection.getObjects();
-                for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                    var object = objects[iObjects];
-                    var compositeObject = getOrCreateObject(this, object.id);
-                    for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-                        var mergeFunc = thisMergeFunctions[iMergeFuncs];
-                        mergeFunc(compositeObject, object);
-                    }
-                }
-            }
-        }
-    };
-
-    /**
      * Gets an object with the specified id.
-     * @memberof CompositeDynamicObjectCollection
+     * @memberof DynamicObjectCollection
      *
      * @param {Object} id The id of the object to retrieve.
-     * @returns The DynamicObject with the provided id, or undefined if no such object exists.
+     * @returns {DynamicObject} The object with the provided id or undefined if the id did not exist in the collection.
      *
      * @exception {DeveloperError} id is required.
      */
-    CompositeDynamicObjectCollection.prototype.getObject = function(id) {
+    CompositeDynamicObjectCollection.prototype.getById = function(id) {
         if (!defined(id)) {
             throw new DeveloperError('id is required.');
         }
+        mergeIfNeeded(this);
         return this._hash[id];
     };
 
     /**
-     * Gets the array of DynamicObject instances in this composite collection.
-     * @memberof CompositeDynamicObjectCollection
+     * Gets the array of DynamicObject instances in the collection.
+     * The array should not be modified directly.
+     * @memberof DynamicObjectCollection
      *
-     * @returns {Array} the array of DynamicObject instances in this composite collection.
+     * @returns {Array} the array of DynamicObject instances in the collection.
      */
     CompositeDynamicObjectCollection.prototype.getObjects = function() {
+        mergeIfNeeded(this);
         return this._array;
     };
 
-    /**
-     * Clears all collections and DynamicObjects from this collection.
-     * @memberof CompositeDynamicObjectCollection
-     */
-    CompositeDynamicObjectCollection.prototype.clear = function() {
-        this.setCollections([]);
-    };
+    function mergeIfNeeded(collection) {
+        var collections = collection._collections;
+        var collectionsLength = collections.length;
 
-    function getOrCreateObject(compositeDynamicObjectCollection, id) {
-        var obj = compositeDynamicObjectCollection._hash[id];
-        if (!obj) {
-            obj = new DynamicObject(id);
-            compositeDynamicObjectCollection._hash[id] = obj;
-            compositeDynamicObjectCollection._array.push(obj);
-        }
-        return obj;
-    }
+        var collectionsCopy = collection._collectionsCopy;
+        var collectionsCopyLength = collectionsCopy.length;
 
-    function clearObjects(compositeDynamicObjectCollection) {
-        var removedObjects = compositeDynamicObjectCollection._array;
-        compositeDynamicObjectCollection._hash = {};
-        compositeDynamicObjectCollection._array = [];
-        if (removedObjects.length > 0) {
-            compositeDynamicObjectCollection.objectsRemoved.raiseEvent(compositeDynamicObjectCollection, removedObjects);
-        }
-    }
-
-    CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged = function(dynamicObjectCollection, updatedObjects) {
-        var thisMergeFunctions = this.mergeFunctions;
-        var thisCleanFunctions = this.cleanFunctions;
-        var thisCollections = this._collections;
-
-        var updatedObject, compositeObject, compositeObjects = [];
-        for ( var i = updatedObjects.length - 1; i > -1; i--) {
-            updatedObject = updatedObjects[i];
-            compositeObject = this.getObject(updatedObject.id);
-            if (defined(compositeObject)) {
-                for ( var iDeleteFuncs = thisCleanFunctions.length - 1; iDeleteFuncs > -1; iDeleteFuncs--) {
-                    var deleteFunc = thisCleanFunctions[iDeleteFuncs];
-                    deleteFunc(compositeObject);
-                }
-            } else {
-                compositeObject = getOrCreateObject(this, updatedObject.id);
-            }
-
-            compositeObjects.push(compositeObject);
-            for ( var iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
-                var currentCollection = thisCollections[iCollection];
-                var objectToUpdate = currentCollection.getObject(updatedObject.id);
-                if (defined(objectToUpdate)) {
-                    for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
-                        var mergeFunc = thisMergeFunctions[iMergeFuncs];
-                        mergeFunc(compositeObject, objectToUpdate);
-                    }
+        var i;
+        if (collectionsLength === collectionsCopyLength) {
+            var identical = true;
+            for (i = 0; i < collectionsLength; i++) {
+                if (collections[i] !== collectionsCopy[i]) {
+                    identical = false;
+                    break;
                 }
             }
+            if (identical) {
+                return;
+            }
         }
-        if (compositeObjects.length > 0) {
-            this.objectPropertiesChanged.raiseEvent(this, compositeObjects);
-        }
+
+//        var eventHelper = collection._eventHelper;
+//        eventHelper.removeAll();
+
+//        for (i = collectionsLength - 1; i >= 0; i++) {
+//            var collection = collections[i];
+//        }
+//
+//        //Make a copy of the new collections.
+//        thisCollections = collection._collections = collections;
+//
+//        //Clear all existing objects and rebuild the collection.
+//        clearObjects(collection);
+//        var thisMergeFunctions = collection.mergeFunctions;
+//        for (iCollection = thisCollections.length - 1; iCollection > -1; iCollection--) {
+//            collection = thisCollections[iCollection];
+//
+//            //Subscribe to the new collection.
+//            collection.objectPropertiesChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onObjectPropertiesChanged, collection);
+//
+//            //Merge all of the existing objects.
+//            var objects = collection.getObjects();
+//            for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+//                var object = objects[iObjects];
+//                var compositeObject = getOrCreateObject(collection, object.id);
+//                for ( var iMergeFuncs = thisMergeFunctions.length - 1; iMergeFuncs > -1; iMergeFuncs--) {
+//                    var mergeFunc = thisMergeFunctions[iMergeFuncs];
+//                    mergeFunc(compositeObject, object);
+//                }
+//            }
+//        }
+//
+//        collection._collectionsCopy = collectionsCopy.slice(0);
+    }
+
+    CompositeDynamicObjectCollection.prototype._collectionChanged = function(){
+
     };
 
     return CompositeDynamicObjectCollection;

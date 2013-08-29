@@ -22,7 +22,7 @@ defineSuite([
     var testObjectLink = 'testObject.property';
     function createTestObject(dynamicObjectCollection, methodName) {
         var testObject = dynamicObjectCollection.getOrCreateObject('testObject');
-        testObject._setAvailability(TimeInterval.fromIso8601('2012/2013'));
+        testObject.availability = TimeInterval.fromIso8601('2012/2013');
         testObject.property = {};
         testObject.property[methodName] = function(time, result) {
             result.expectedTime = time;

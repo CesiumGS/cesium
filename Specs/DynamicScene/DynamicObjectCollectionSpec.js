@@ -244,9 +244,9 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/2012-08-02'));
-        dynamicObject2._setAvailability(TimeInterval.fromIso8601('2012-08-05/2012-08-06'));
-        dynamicObject3._setAvailability(undefined);
+        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/2012-08-02');
+        dynamicObject2.availability = TimeInterval.fromIso8601('2012-08-05/2012-08-06');
+        dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
@@ -260,9 +260,9 @@ defineSuite([
         var dynamicObject2 = dynamicObjectCollection.getOrCreateObject('2');
         var dynamicObject3 = dynamicObjectCollection.getOrCreateObject('3');
 
-        dynamicObject._setAvailability(TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z'));
-        dynamicObject2._setAvailability(TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06'));
-        dynamicObject3._setAvailability(undefined);
+        dynamicObject.availability = TimeInterval.fromIso8601('2012-08-01/9999-12-31T24:00:00Z');
+        dynamicObject2.availability = TimeInterval.fromIso8601('0000-01-01T00:00:00Z/2012-08-06');
+        dynamicObject3.availability = undefined;
 
         var availability = dynamicObjectCollection.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
