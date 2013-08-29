@@ -21,7 +21,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
 * [EU Edge](http://euedge.com/)
-   *  [Ákos Maróy](https://github.com/akosmaroy)
+   * [Ákos Maróy](https://github.com/akosmaroy)
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
    * [David Hudlow](https://github.com/DavidHudlow)
 * [Evax Software](http://www.evax.fr)
