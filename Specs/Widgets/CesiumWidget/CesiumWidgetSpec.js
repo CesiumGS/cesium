@@ -187,7 +187,7 @@ defineSuite([
             expect(widget._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
 
             // click the OK button to dismiss the panel
-            EventHelper.fireClick(widget._element.querySelector('.cesium-widget-errorPanel-button'));
+            EventHelper.fireClick(widget._element.querySelector('.cesium-widget-button'));
 
             expect(widget._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
