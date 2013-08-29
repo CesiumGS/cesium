@@ -477,7 +477,7 @@ defineSuite([
                     height : geometryHeight,
                     extrudedHeight : extrudedHeight
                 }),
-                id : 'ellipse',
+                id : 'extrudedEllipse',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
@@ -513,10 +513,7 @@ defineSuite([
 
         it('renders wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
