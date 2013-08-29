@@ -21,9 +21,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
 * [EU Edge](http://euedge.com/)
-   *  [Ákos Maróy](https://github.com/akosmaroy)
+   * [Ákos Maróy](https://github.com/akosmaroy)
 * [Evax Software](http://www.evax.fr)
-   *  [Evax Software](https://github.com/evax)
+   * [Evax Software](https://github.com/evax)
+* [Rathyeon](http://www.raytheon.com/)
+   * [David Hudlow](https://github.com/DavidHudlow)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
