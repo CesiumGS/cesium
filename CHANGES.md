@@ -38,6 +38,7 @@ var geometry = BoxGeometry.createGeometry(box);
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
+    * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
@@ -46,6 +47,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
+* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
@@ -79,7 +81,6 @@ var geometry = BoxGeometry.createGeometry(box);
    * Added `surfaceHeight` parameter to `BoundingSphere.fromExtent3D`.
    * Added `surfaceHeight` parameter to `Extent.subsample`.
    * Renamed `pointInsideTriangle2D` to `pointInsideTriangle`.
-   * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
    * Renamed `getLogo` to `getCredit` for `ImageryProvider` and `TerrainProvider`.
 * Added Geometry and Appearances [#911](https://github.com/AnalyticalGraphicsInc/cesium/pull/911).
 * Added property `intersectionWidth` to `DynamicCone`, `DynamicPyramid`, `CustomSensorVolume`, and `RectangularPyramidSensorVolume`.
@@ -95,7 +96,6 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Credit` and `CreditDisplay` for displaying credits on the screen.
 * Improved performance and visual quality of `CustomSensorVolume` and `RectangularPyramidSensorVolume`.
 * Improved the performance of drawing polygons created with `configureFromPolygonHierarchy`.
-* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 
 ### b18 - 2013-07-01
 
