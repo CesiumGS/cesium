@@ -60,34 +60,25 @@ define([
             var controlPoint1 = Cartesian3.clone(controlPoints[1].point);
             var controlPoint2 = Cartesian3.clone(controlPoints[2].point);
 
-            this._ti = controlPoint1
-                           .multiplyByScalar(2.0)
-                           .subtract(controlPoint2)
-                           .subtract(controlPoint0)
-                           .multiplyByScalar(0.5);
+            this._ti = controlPoint1.multiplyByScalar(2.0).subtract(controlPoint2).subtract(controlPoint0).multiplyByScalar(0.5);
         }
 
         if (defined(lastTangent)) {
             this._to = Cartesian3.clone(lastTangent);
-        } else {
-            var n = controlPoints.length - 1;
-
-            var controlPointn0 = Cartesian3.clone(controlPoints[n].point);
-            var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
-            var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
-
-            this._to = controlPointn0
-                           .subtract(controlPointn1.multiplyByScalar(2.0))
-                           .add(controlPointn2)
-                           .multiplyByScalar(0.5);
         }
+        var n = controlPoints.length - 1;
+
+        var controlPointn0 = Cartesian3.clone(controlPoints[n].point);
+        var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
+        var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
+
+        this._to = controlPointn0.subtract(controlPointn1.multiplyByScalar(2.0)).add(controlPointn2).multiplyByScalar(0.5);
     };
 
-    CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(
-            -0.5,  1.0, -0.5,  0.0,
-             1.5, -2.5,  0.0,  1.0,
-            -1.5,  2.0,  0.5,  0.0,
-             0.5, -0.5,  0.0,  0.0);
+    CatmullRomSpline.catmullRomCoefficientMatrix = new Matrix4(-0.5, 1.0,-0.5, 0.0,//
+                                                                1.5, -2.5, 0.0, 1.0, //
+                                                               -1.5, 2.0, 0.5, 0.0, //
+                                                                0.5, -0.5, 0.0, 0.0);
 
     /**
      * Returns the array of control points.

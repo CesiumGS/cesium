@@ -334,9 +334,9 @@ define([
      * @private
      */
     function getRandomIndex(length) {
-        var random = '0.'+Math.sin(rseed).toString().substr(5);
-        rseed+=0.2;
-        var i = Math.floor(random*length);
+        var random = '0.' + Math.sin(rseed).toString().substr(5);
+        rseed += 0.2;
+        var i = Math.floor(random * length);
         if (i === length) {
             i--;
         }
@@ -356,8 +356,8 @@ define([
      */
     function cleanCut(a1i, a2i, pArray) {
         return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
-                !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !pArray[a1i].position.equals(pArray[a2i].position);
+               !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
+               !pArray[a1i].position.equals(pArray[a2i].position);
     }
 
     /**
@@ -402,15 +402,13 @@ define([
         } else if (angleLessThan180(s1, s2)) { // Angle at point is less than 180
             if (isInsideSmallAngle(s1, s2, cut)) { // Cut is in-between sides
                 return true;
-            } else {
-                return false;
             }
+            return false;
         } else if (angleGreaterThan180(s1, s2)) { // Angle at point is greater than 180
             if (isInsideBigAngle(s1, s2, cut)) { // Cut is in-between sides
                 return false;
-            } else {
-                return true;
             }
+            return true;
         }
     }
 
@@ -469,12 +467,11 @@ define([
         var cutMag = cut.magnitude();
         if (cutMag < sideMag) { // The cut is shorter than the side and thus internal
             return true;
-        } else {
-            /* The cut is longer than or equal to the side and thus external unless
-             * side is formed by a superfluous vertex
-             */
-            return false;
         }
+        /* The cut is longer than or equal to the side and thus external unless
+         * side is formed by a superfluous vertex
+         */
+        return false;
     }
 
     /**
@@ -487,8 +484,12 @@ define([
      */
     function getNextVertex(index, pArray, direction) {
         var next = index + direction;
-        if (next < 0) { next = pArray.length-1; }
-        if (next === pArray.length) { next = 0; }
+        if (next < 0) {
+            next = pArray.length - 1;
+        }
+        if (next === pArray.length) {
+            next = 0;
+        }
 
         validateVertex(next, pArray);
 
@@ -505,10 +506,14 @@ define([
      * @returns {undefined}
      */
     function validateVertex(index, pArray) {
-        var before = index-1;
-        var after = index+1;
-        if (before < 0) { before = pArray.length-1; }
-        if (after === pArray.length) { after = 0; }
+        var before = index - 1;
+        var after = index + 1;
+        if (before < 0) {
+            before = pArray.length - 1;
+        }
+        if (after === pArray.length) {
+            after = 0;
+        }
 
         var s1 = pArray[before].position.subtract(pArray[index].position);
         var s2 = pArray[after].position.subtract(pArray[index].position);
@@ -589,8 +594,6 @@ define([
         return s1.cross(s3).z < 0 && s3.cross(s2).z < 0;
     }
 
-
-
     /**
      * Determine whether this segment intersects any other polygon sides.
      *
@@ -602,12 +605,12 @@ define([
      * @private
      */
     function intersectsSide(a1, a2, pArray) {
-        for (var i = 0; i < pArray.length; i++) {
+        for ( var i = 0; i < pArray.length; i++) {
             /* Two points */
             var b1 = pArray[i].position;
             var b2;
-            if (i < pArray.length-1) {
-                b2 = pArray[i+1].position;
+            if (i < pArray.length - 1) {
+                b2 = pArray[i + 1].position;
             } else {
                 b2 = pArray[0].position;
             }
@@ -618,11 +621,11 @@ define([
             }
 
             /* Slopes (NaN means vertical) */
-            var slopeA = (a2.y-a1.y)/(a2.x-a1.x);
-            var slopeB = (b2.y-b1.y)/(b2.x-b1.x);
+            var slopeA = (a2.y - a1.y) / (a2.x - a1.x);
+            var slopeB = (b2.y - b1.y) / (b2.x - b1.x);
 
             /* If parallel, no intersection */
-            if ( slopeA === slopeB || (isNaN(slopeA) && isNaN(slopeB)) ) {
+            if (slopeA === slopeB || (isNaN(slopeA) && isNaN(slopeB))) {
                 continue;
             }
 
@@ -633,25 +636,19 @@ define([
             } else if (isNaN(slopeB)) {
                 intX = b1.x;
             } else {
-                intX = (a1.y - b1.y - slopeA*a1.x + slopeB*b1.x)/(slopeB - slopeA);
+                intX = (a1.y - b1.y - slopeA * a1.x + slopeB * b1.x) / (slopeB - slopeA);
             }
-            var intY = slopeA*intX + a1.y - slopeA*a1.x;
+            var intY = slopeA * intX + a1.y - slopeA * a1.x;
 
             var intersection = new Cartesian2(intX, intY);
 
             /* If intersection is on an endpoint, count no intersection */
-            if (intersection.equals(a1) || intersection.equals(a2) ||
-                intersection.equals(b1) || intersection.equals(b2) )
-            {
+            if (intersection.equals(a1) || intersection.equals(a2) || intersection.equals(b1) || intersection.equals(b2)) {
                 continue;
             }
 
             /* Is intersection point between segments? */
-            var intersects =
-                isBetween(intX, a1.x, a2.x) &&
-                isBetween(intY, a1.y, a2.y) &&
-                isBetween(intX, b1.x, b2.x) &&
-                isBetween(intY, b1.y, b2.y);
+            var intersects = isBetween(intX, a1.x, a2.x) && isBetween(intY, a1.y, a2.y) && isBetween(intX, b1.x, b2.x) && isBetween(intY, b1.y, b2.y);
 
             /* If intersecting, the cut is not clean */
             if (intersects) {
@@ -697,8 +694,7 @@ define([
      * @private
      */
     function isBetween(number, n1, n2) {
-        return ((number > n1 || number > n2) && (number < n1 || number < n2)) ||
-               (n1 === n2 && n1 === number);
+        return ((number > n1 || number > n2) && (number < n1 || number < n2)) || (n1 === n2 && n1 === number);
     }
 
     /**
@@ -723,11 +719,10 @@ define([
         if (numVertices === 3) {
             /* Only return triangle if it has area (not a line) */
             if (!triangleInLine(nodeArray)) {
-                return [ nodeArray[0].index, nodeArray[1].index, nodeArray[2].index ];
-            } else {
-                /* If it's a line, we don't need it. */
-                return [ ];
+                return [nodeArray[0].index, nodeArray[1].index, nodeArray[2].index];
             }
+            /* If it's a line, we don't need it. */
+            return [];
         } else if (nodeArray.length < 3) {
             throw new DeveloperError('Invalid polygon: must have at least three vertices.');
         }
@@ -737,16 +732,16 @@ define([
         var tries = 0;
         while (!cutFound) {
             /* Make sure we don't go into an endless loop */
-            var maxTries = nodeArray.length*10;
+            var maxTries = nodeArray.length * 10;
             if (tries > maxTries) {
-                throw new DeveloperError('Tried '+maxTries+' times to find a valid cut and couldn\'t.');
+                throw new DeveloperError('Tried ' + maxTries + ' times to find a valid cut and couldn\'t.');
             }
             tries++;
 
             /* Generate random indices */
             var index1 = getRandomIndex(nodeArray.length);
-            var index2 = index1+1;
-            while (Math.abs(index1-index2) < 2 || Math.abs(index1-index2) > nodeArray.length-2)  {
+            var index2 = index1 + 1;
+            while (Math.abs(index1 - index2) < 2 || Math.abs(index1 - index2) > nodeArray.length - 2) {
                 index2 = getRandomIndex(nodeArray.length);
             }
 
@@ -760,7 +755,7 @@ define([
                 /* Check for a clean cut */
                 if (cleanCut(index1, index2, nodeArray)) {
                     /* Divide polygon */
-                    var nodeArray2 = nodeArray.splice(index1, (index2-index1+1), nodeArray[index1], nodeArray[index2]);
+                    var nodeArray2 = nodeArray.splice(index1, (index2 - index1 + 1), nodeArray[index1], nodeArray[index2]);
 
                     /* Chop up resulting polygons */
                     return randomChop(nodeArray).concat(randomChop(nodeArray2));
@@ -770,9 +765,8 @@ define([
                 if (exception.hasOwnProperty("vertexIndex")) {
                     nodeArray.splice(exception.vertexIndex, 1);
                     return randomChop(nodeArray);
-                } else {
-                    throw exception;
                 }
+                throw exception;
             }
         }
     }
@@ -796,7 +790,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         removeDuplicates : function(positions) {
-            if (!defined(positions )) {
+            if (!defined(positions)) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -826,7 +820,7 @@ define([
          * @exception {DeveloperError} At least three positions are required.
          */
         computeArea2D : function(positions) {
-            if (!defined(positions )) {
+            if (!defined(positions)) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -871,7 +865,7 @@ define([
          */
         triangulate : function(positions) {
 
-            if (!defined(positions )) {
+            if (!defined(positions)) {
                 throw new DeveloperError('positions is required.');
             }
 
@@ -898,7 +892,7 @@ define([
          * This method is required for predictable testing
          * @returns {undefined}
          */
-        resetSeed: function(seed) {
+        resetSeed : function(seed) {
             rseed = seed || 0;
         },
 
