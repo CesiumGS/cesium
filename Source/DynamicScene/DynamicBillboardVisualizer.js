@@ -6,6 +6,7 @@ define([
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Ellipsoid',
         '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
@@ -18,6 +19,7 @@ define([
         Color,
         Cartesian2,
         Cartesian3,
+        Ellipsoid,
         NearFarScalar,
         BillboardCollection,
         HorizontalOrigin,
@@ -259,8 +261,10 @@ define([
             billboard.setScale(1.0);
             billboard.setHorizontalOrigin(HorizontalOrigin.CENTER);
             billboard.setVerticalOrigin(VerticalOrigin.CENTER);
+
             // set default Billboard scaleByDistance based on altitude
-            lla = positionProperty.getValueCartographic(time, lla);
+            position = positionProperty.getValue(time, position);
+            lla = Ellipsoid.WGS84.cartesianToCartographic(position);
             if (lla.height < 8.0e5) {
                 billboard.setScaleByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.2));
             } else {
@@ -283,7 +287,7 @@ define([
             return;
         }
 
-        position = positionProperty.getValueCartesian(time, position);
+        position = positionProperty.getValue(time, position);
         if (defined(position)) {
             billboard.setPosition(position);
         }

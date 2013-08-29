@@ -251,6 +251,23 @@ defineSuite([
         expect(intervals.findIntervalContainingDate(interval3.stop).data).toEqual(3);
     });
 
+    it('findDataForIntervalContainingDate works', function() {
+        var interval1 = new TimeInterval(JulianDate.fromTotalDays(1), JulianDate.fromTotalDays(2.5), true, true, 1);
+        var interval2 = new TimeInterval(JulianDate.fromTotalDays(2), JulianDate.fromTotalDays(3), false, true, 2);
+
+        var intervals = new TimeIntervalCollection();
+        intervals.addInterval(interval1);
+        expect(intervals.findDataForIntervalContainingDate(interval1.start)).toEqual(1);
+        expect(intervals.findDataForIntervalContainingDate(interval1.stop)).toEqual(1);
+
+        intervals.addInterval(interval2);
+        expect(intervals.findDataForIntervalContainingDate(interval1.start)).toEqual(1);
+        expect(intervals.findDataForIntervalContainingDate(interval1.stop)).toEqual(2);
+        expect(intervals.findDataForIntervalContainingDate(interval2.stop)).toEqual(2);
+
+        expect(intervals.findDataForIntervalContainingDate(JulianDate.fromTotalDays(5))).toBeUndefined();
+    });
+
     it('addInterval correctly intervals that have the same data when using equalsCallback', function() {
         var intervals = new TimeIntervalCollection();
 
@@ -460,6 +477,13 @@ defineSuite([
         var intervals = new TimeIntervalCollection();
         expect(function() {
             intervals.findIntervalContainingDate(undefined);
+        }).toThrow();
+    });
+
+    it('findDataForIntervalContainingDate throws with undefined date', function() {
+        var intervals = new TimeIntervalCollection();
+        expect(function() {
+            intervals.findDataForIntervalContainingDate(undefined);
         }).toThrow();
     });
 
