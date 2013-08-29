@@ -269,11 +269,13 @@ define([
      * @param {Array} positions The array of type {Number} representing positions.
      * @param {Number|Array} height A number or array of numbers representing the heights of each position.
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Array} [result] An array to place the resultant positions in.
      *
      * @returns {Array} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
      * @exception {DeveloperError} height must be defined.
+     * @exception {DeveloperError} result.length must be equal to positions.length
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
@@ -297,10 +299,13 @@ define([
         var i;
         var p = scaleP;
         var newPositions;
-        if (!defined(result)) {
-            newPositions = new Array(positions.length);
-        } else {
+        if (defined(result)) {
+            if (result.length !== positions.length) {
+                throw new DeveloperError('result.length must be equal to positions.length');
+            }
             newPositions = result;
+        } else {
+            newPositions = new Array(positions.length);
         }
 
         if (height === 0) {
