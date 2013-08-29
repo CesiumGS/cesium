@@ -68,13 +68,7 @@ void main()
 
     float t = (lengthSq-nearDistanceSq)/(farDistanceSq-nearDistanceSq);
 
-    // our exponent used to dampen the interpolation is tied to distance, where greater distances
-    // will yield smaller exponents, and thus more gradual interpolation
-    float x = (farDistanceSq-lengthSq)/farDistanceSq;
-
-    // dampen the exponential distance traveled by the camera
-    // could be interesting to assign this exponent to a uniform for advanced control of interpolation
-    t = pow(t, x);
+    t = pow(t, 0.15);
 
     scale *= mix(scaleAtMin, scaleAtMax, t);
 #endif

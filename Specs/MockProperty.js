@@ -25,6 +25,13 @@ define([
         return this.value;
     };
 
+    MockProperty.prototype.getValueCartographic = function(time, result) {
+        if (defined(this.value) && typeof this.value.clone === 'function') {
+            return this.value.clone(result);
+        }
+        return this.value;
+    };
+
     MockProperty.prototype.getValueSpherical = function(time, result) {
         if (defined(this.value) && typeof this.value.clone === 'function') {
             return this.value.clone(result);
