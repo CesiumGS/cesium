@@ -25,7 +25,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Raytheon Intelligence and Information Systems](http://www.raytheon.com/)
    * [David Hudlow](https://github.com/DavidHudlow)
 * [Evax Software](http://www.evax.fr)
-   *  [Evax Software](https://github.com/evax)
+   * [Evax Software](https://github.com/evax)
 
 ## [Individual CLA](http://www.agi.com/licenses/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
