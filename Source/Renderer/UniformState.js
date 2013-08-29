@@ -245,7 +245,7 @@ define([
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
-            this._eyeHeight2D.x = this.frustum2DWidth*0.5;
+            this._eyeHeight2D.x = this._frustum2DWidth*0.5;
             this._eyeHeight2D.y = this._eyeHeight2D.x*this._eyeHeight2D.x;
         } else {
             this._frustum2DWidth = 0.0;
