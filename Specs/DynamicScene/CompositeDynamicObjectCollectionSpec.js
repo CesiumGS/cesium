@@ -5,8 +5,7 @@ defineSuite([
          'Core/JulianDate',
          'Core/Iso8601',
          'Core/TimeInterval',
-         'DynamicScene/processCzml',
-         'DynamicScene/CzmlDefaults',
+         'DynamicScene/CzmlDataSource',
          'Scene/HorizontalOrigin'
      ], function(
          CompositeDynamicObjectCollection,
@@ -14,8 +13,7 @@ defineSuite([
          JulianDate,
          Iso8601,
          TimeInterval,
-         processCzml,
-         CzmlDefaults,
+         CzmlDataSource,
          HorizontalOrigin) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -38,8 +36,8 @@ defineSuite([
 
     it('default constructor sets expected properties.', function() {
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
-        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CzmlDefaults.mergers);
-        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CzmlDefaults.cleaners);
+        expect(compositeDynamicObjectCollection.mergeFunctions).toEqual(CompositeDynamicObjectCollection.mergers);
+        expect(compositeDynamicObjectCollection.cleanFunctions).toEqual(CompositeDynamicObjectCollection.cleaners);
         expect(compositeDynamicObjectCollection.getCollections().length).toEqual(0);
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(0);
@@ -120,10 +118,10 @@ defineSuite([
 
     it('setCollections works with existing dynamicObjectCollections', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
-        processCzml(czml1, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml1, dynamicObjectCollection1);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
-        processCzml(czml2, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection();
         compositeDynamicObjectCollection.setCollections([dynamicObjectCollection1, dynamicObjectCollection2]);
@@ -142,10 +140,10 @@ defineSuite([
 
     it('Constructing with existing dynamicObjectCollections merges expected objects', function() {
         var dynamicObjectCollection1 = new DynamicObjectCollection();
-        processCzml(czml1, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml1, dynamicObjectCollection1);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
-        processCzml(czml2, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml2, dynamicObjectCollection2);
 
         var compositeDynamicObjectCollection = new CompositeDynamicObjectCollection([dynamicObjectCollection1, dynamicObjectCollection2]);
 
@@ -175,7 +173,7 @@ defineSuite([
                 'horizontalOrigin' : 'CENTER'
             }
         };
-        processCzml(czml3, dynamicObjectCollection1);
+        CzmlDataSource._processCzml(czml3, dynamicObjectCollection1);
 
         var objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -191,11 +189,11 @@ defineSuite([
         var czml4 = {
             'id' : 'testBillboard',
             'billboard' : {
-                'horizontalOrigin' : 'TOP',
+                'horizontalOrigin' : 'LEFT',
                 'scale' : 3.0
             }
         };
-        processCzml(czml4, dynamicObjectCollection2);
+        CzmlDataSource._processCzml(czml4, dynamicObjectCollection2);
 
         objects = compositeDynamicObjectCollection.getObjects();
         expect(objects.length).toEqual(1);
@@ -206,6 +204,6 @@ defineSuite([
 
         expect(object.billboard.show.getValue(new JulianDate())).toEqual(true);
         expect(object.billboard.scale.getValue(new JulianDate())).toEqual(3.0);
-        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.TOP);
+        expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.LEFT);
     });
 });

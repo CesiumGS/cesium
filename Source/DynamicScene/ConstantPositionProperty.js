@@ -1,0 +1,95 @@
+/*global define*/
+define([
+        './ConstantProperty',
+        './PositionProperty',
+        '../Core/Cartesian3',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/ReferenceFrame'
+    ], function(
+        ConstantProperty,
+        PositionProperty,
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        ReferenceFrame) {
+    "use strict";
+
+    /**
+     * A {@link PositionProperty} whose value does not change in respect to the
+     * {@link ReferenceFrame} in which is it defined.
+     *
+     * @alias ConstantPositionProperty
+     * @constructor
+     *
+     * @param {Cartesian3} value The property value.
+     * @param {ReferenceFrame} [referenceFrame=ReferenceFrame.FIXED] The reference frame in which the position is defined.
+     *
+     * @exception {DeveloperError} value is required.
+     *
+     * @example
+     * //Create a constant position in the inertial frame.
+     * var constantProperty = new ConstantPositionProperty(new Cartesian3(-4225824.0, 1261219.0, -5148934.0), ReferenceFrame.INERTIAL);
+     */
+    var ConstantPositionProperty = function(value, referenceFrame) {
+        this._property = new ConstantProperty(value, Cartesian3.clone);
+        this._referenceFrame = defaultValue(referenceFrame, ReferenceFrame.FIXED);
+    };
+
+    defineProperties(ConstantPositionProperty.prototype, {
+        /**
+         * Gets the reference frame in which the position is defined.
+         * @memberof ConstantPositionProperty.prototype
+         * @Type {ReferenceFrame}
+         * @default ReferenceFrame.FIXED;
+         */
+        referenceFrame : {
+            get : function() {
+                return this._referenceFrame;
+            }
+        }
+    });
+
+    /**
+     * Gets the value of the property at the provided time in the fixed frame.
+     * @memberof ConstantPositionProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {Object} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Object} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     */
+    ConstantPositionProperty.prototype.getValue = function(time, result) {
+        return this.getValueInReferenceFrame(time, ReferenceFrame.FIXED, result);
+    };
+
+    /**
+     * Gets the value of the property at the provided time and in the provided reference frame.
+     * @memberof ConstantPositionProperty
+     *
+     * @param {JulianDate} time The time for which to retrieve the value.
+     * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
+     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     *
+     * @exception {DeveloperError} time is required.
+     * @exception {DeveloperError} referenceFrame is required.
+     */
+    ConstantPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(referenceFrame)) {
+            throw new DeveloperError('referenceFrame is required.');
+        }
+        var value = this._property.getValue(time, result);
+        return PositionProperty.convertToReferenceFrame(time, value, this._referenceFrame, referenceFrame, value);
+    };
+
+    return ConstantPositionProperty;
+});

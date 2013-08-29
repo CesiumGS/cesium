@@ -3,7 +3,7 @@ defineSuite([
              'DynamicScene/DynamicBillboardVisualizer',
              'Specs/createScene',
              'Specs/destroyScene',
-             'Specs/MockProperty',
+             'DynamicScene/ConstantProperty',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicObjectCollection',
              'DynamicScene/DynamicObject',
@@ -19,7 +19,7 @@ defineSuite([
               DynamicBillboardVisualizer,
               createScene,
               destroyScene,
-              MockProperty,
+              ConstantProperty,
               DynamicBillboard,
               DynamicObjectCollection,
               DynamicObject,
@@ -90,7 +90,7 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         visualizer.update(new JulianDate());
         var billboardCollection = scene.getPrimitives().get(0);
         expect(billboardCollection.getLength()).toEqual(0);
@@ -102,8 +102,8 @@ defineSuite([
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
         var billboard = testObject.billboard = new DynamicBillboard();
-        billboard.show = new MockProperty(true);
-        billboard.image = new MockProperty('Data/Images/Blue.png');
+        billboard.show = new ConstantProperty(true);
+        billboard.image = new ConstantProperty('Data/Images/Blue.png');
 
         visualizer.update(new JulianDate());
         var billboardCollection = scene.getPrimitives().get(0);
@@ -115,9 +115,9 @@ defineSuite([
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var billboard = testObject.billboard = new DynamicBillboard();
-        billboard.show = new MockProperty(true);
+        billboard.show = new ConstantProperty(true);
 
         visualizer.update(new JulianDate());
         var billboardCollection = scene.getPrimitives().get(0);
@@ -138,17 +138,17 @@ defineSuite([
         var bb;
 
         runs(function() {
-            testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-            billboard.show = new MockProperty(true);
-            billboard.color = new MockProperty(new Color(0.5, 0.5, 0.5, 0.5));
-            billboard.image = new MockProperty('Data/Images/Blue.png');
-            billboard.eyeOffset = new MockProperty(new Cartesian3(1.0, 2.0, 3.0));
-            billboard.scale = new MockProperty(12.5);
-            billboard.rotation = new MockProperty(1.5);
-            billboard.alignedAxis = new MockProperty(Cartesian3.UNIT_Z);
-            billboard.horizontalOrigin = new MockProperty(HorizontalOrigin.RIGHT);
-            billboard.verticalOrigin = new MockProperty(VerticalOrigin.TOP);
-            billboard.pixelOffset = new MockProperty(new Cartesian2(3, 2));
+            testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+            billboard.show = new ConstantProperty(true);
+            billboard.color = new ConstantProperty(new Color(0.5, 0.5, 0.5, 0.5));
+            billboard.image = new ConstantProperty('Data/Images/Blue.png');
+            billboard.eyeOffset = new ConstantProperty(new Cartesian3(1.0, 2.0, 3.0));
+            billboard.scale = new ConstantProperty(12.5);
+            billboard.rotation = new ConstantProperty(1.5);
+            billboard.alignedAxis = new ConstantProperty(Cartesian3.UNIT_Z);
+            billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.RIGHT);
+            billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.TOP);
+            billboard.pixelOffset = new ConstantProperty(new Cartesian2(3, 2));
 
             visualizer.update(time);
 
@@ -159,7 +159,7 @@ defineSuite([
             waitsFor(function() {
                 visualizer.update(time);
                 if (bb.getShow()) {
-                    expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+                    expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
                     expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
@@ -174,23 +174,23 @@ defineSuite([
         });
 
         runs(function() {
-            testObject.position = new MockProperty(new Cartesian3(5678, 1234, 1293434));
-            billboard.show = new MockProperty(true);
-            billboard.color = new MockProperty(new Color(0.15, 0.25, 0.35, 0.45));
-            billboard.image = new MockProperty('Data/Images/Green.png');
-            billboard.eyeOffset = new MockProperty(new Cartesian3(2.0, 3.0, 1.0));
-            billboard.scale = new MockProperty(2.5);
-            billboard.rotation = new MockProperty(2.9);
-            billboard.alignedAxis = new MockProperty(Cartesian3.UNIT_Y);
-            billboard.horizontalOrigin = new MockProperty(HorizontalOrigin.LEFT);
-            billboard.verticalOrigin = new MockProperty(VerticalOrigin.BOTTOM);
-            billboard.pixelOffset = new MockProperty(new Cartesian2(2, 3));
+            testObject.position = new ConstantProperty(new Cartesian3(5678, 1234, 1293434));
+            billboard.show = new ConstantProperty(true);
+            billboard.color = new ConstantProperty(new Color(0.15, 0.25, 0.35, 0.45));
+            billboard.image = new ConstantProperty('Data/Images/Green.png');
+            billboard.eyeOffset = new ConstantProperty(new Cartesian3(2.0, 3.0, 1.0));
+            billboard.scale = new ConstantProperty(2.5);
+            billboard.rotation = new ConstantProperty(2.9);
+            billboard.alignedAxis = new ConstantProperty(Cartesian3.UNIT_Y);
+            billboard.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+            billboard.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+            billboard.pixelOffset = new ConstantProperty(new Cartesian2(2, 3));
 
             waitsFor(function() {
                 visualizer.update(time);
                 var imageReady = bb.getImageIndex() === 1; //true once the green image is loaded
                 if (imageReady) {
-                    expect(bb.getPosition()).toEqual(testObject.position.getValueCartesian(time));
+                    expect(bb.getPosition()).toEqual(testObject.position.getValue(time));
                     expect(bb.getColor()).toEqual(testObject.billboard.color.getValue(time));
                     expect(bb.getEyeOffset()).toEqual(testObject.billboard.eyeOffset.getValue(time));
                     expect(bb.getScale()).toEqual(testObject.billboard.scale.getValue(time));
@@ -205,7 +205,7 @@ defineSuite([
         });
 
         runs(function() {
-            billboard.show = new MockProperty(false);
+            billboard.show = new ConstantProperty(false);
 
             waitsFor(function() {
                 visualizer.update(time);
@@ -226,9 +226,9 @@ defineSuite([
         var time = new JulianDate();
         var billboard = testObject.billboard = new DynamicBillboard();
 
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        billboard.show = new MockProperty(true);
-        billboard.image = new MockProperty('Data/Images/Blue.png');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        billboard.show = new ConstantProperty(true);
+        billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
         expect(billboardCollection.getLength()).toEqual(1);
         var bb = billboardCollection.get(0);
@@ -258,9 +258,9 @@ defineSuite([
         var time = new JulianDate();
         var billboard = testObject.billboard = new DynamicBillboard();
 
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        billboard.show = new MockProperty(true);
-        billboard.image = new MockProperty('Data/Images/Blue.png');
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        billboard.show = new ConstantProperty(true);
+        billboard.image = new ConstantProperty('Data/Images/Blue.png');
         visualizer.update(time);
         expect(billboardCollection.getLength()).toEqual(1);
         var bb = billboardCollection.get(0);
@@ -270,17 +270,17 @@ defineSuite([
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.billboard = new DynamicBillboard();
-        testObject.billboard.show = new MockProperty(true);
-        testObject.billboard.image = new MockProperty('Data/Images/Blue.png');
+        testObject.billboard.show = new ConstantProperty(true);
+        testObject.billboard.image = new ConstantProperty('Data/Images/Blue.png');
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new MockProperty(new Cartesian3(5678, 9101112, 1234));
+        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
         testObject2.billboard = new DynamicBillboard();
-        testObject2.billboard.show = new MockProperty(true);
-        testObject2.billboard.image = new MockProperty('Data/Images/Green.png');
+        testObject2.billboard.show = new ConstantProperty(true);
+        testObject2.billboard.image = new ConstantProperty('Data/Images/Green.png');
 
         visualizer = new DynamicBillboardVisualizer(scene, dynamicObjectCollection);
 
