@@ -9,6 +9,8 @@ Beta Releases
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
 
 * Breaking changes:
+    * The `CameraFlightPath` functions `createAnimation`, `createAnimationCartographic`, and `createAnimationExtent` now take `scene` as their first parameter instead of `frameState`.
+    * `Source/Widgets/Viewer/lighter.css` was deleted, use `Source/Widgets/lighter.css` instead.
     * Replaced `ExtentGeometry` parameters for extruded extent to make them consistent with other geometries.
       * `options.extrudedOptions.height` -> `options.extrudedHeight`
       * `options.extrudedOptions.closeTop` -> `options.closeBottom`
@@ -36,6 +38,7 @@ var geometry = BoxGeometry.createGeometry(box);
     * `DataSourceDisplay` now requires a `DataSourceCollection` to be passed into its constructor.
     * `DeveloperError` and `RuntimeError` no longer contain an `error` property.  Call `toString`, or check the `stack` property directly instead.
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
+    * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
@@ -43,16 +46,19 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added the ability to specify a `minimumTerrainLevel` and `maximumTerrainLevel` when constructing an `ImageryLayer`.  The layer will only be shown for terrain tiles within the specified range.
 * Added `Math.setRandomNumberSeed` and `Math.nextRandomNumber` for generating repeatable random numbers.
 * Added `Color.fromRandom` to generate random and partially random colors.
+* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
+* Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
+* Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
-* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
-* Upgraded Knockout from version 2.2.1 to 2.3.0.
+* `CesiumWidget` and `Viewer` now display an HTML error panel if an error occurs while rendering, which can be disabled with a constructor option.
+* `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
+* Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Fixed triangulation for polygons that cross the international date line.
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
-* `CameraFlightPath` now automatically disables and restores mouse input for the flights it generates.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
+* Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Added `Billboard.scaleByDistance` and `NearFarScalar` to control Billboard minimum/maximum scale based on Camera distance to Billboard.
 
 ### b19 - 2013-08-01

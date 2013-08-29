@@ -43,6 +43,9 @@ define([
         fireMouseDown : function(element, options) {
             element.dispatchEvent(createMouseEvent('mousedown', options));
         },
+        fireClick : function(element, options) {
+            element.dispatchEvent(createMouseEvent('click', options));
+        },
         fireTouchStart : function(element, options) {
             element.dispatchEvent(createTouchEvent('touchstart', options));
         },
