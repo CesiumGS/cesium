@@ -1,18 +1,5 @@
 /*global define*/
-define([
-        '../Core/TimeInterval',
-        '../Core/defaultValue',
-        './CzmlBoolean',
-        './CzmlNumber',
-        './CzmlModel',
-        './DynamicProperty'
-    ], function(
-        TimeInterval,
-        defaultValue,
-        CzmlBoolean,
-        CzmlNumber,
-        CzmlModel,
-        DynamicProperty) {
+define(['../Core/defaultValue'], function(defaultValue) {
     "use strict";
 
     /**
@@ -46,71 +33,6 @@ define([
          * @type DynamicMaterialProperty
          */
         this.uri = undefined;
-    };
-
-    /**
-     * Processes a single CZML packet and merges its data into the provided DynamicObject's model.
-     * If the DynamicObject does not have a model, one is created.  This method is not
-     * normally called directly, but is part of the array of CZML processing functions that is
-     * passed into the DynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject which will contain the model data.
-     * @param {Object} packet The CZML packet to process.
-     * @param {DynamicObject} dynamicObjectCollection The DynamicObjectCollection to which the DynamicObject belongs.
-     *
-     * @returns {Boolean} true if any new properties were created while processing the packet, false otherwise.
-     *
-     * @see DynamicObject
-     * @see DynamicProperty
-     * @see DynamicObjectCollection
-     * @see CzmlDefaults#updaters
-     */
-    DynamicModel.processCzmlPacket = function(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
-        var modelData = packet.model;
-        if (typeof modelData === 'undefined') {
-            return false;
-        }
-
-        var modelUpdated = false;
-        var model = dynamicObject.model;
-        modelUpdated = typeof model === 'undefined';
-        if (modelUpdated) {
-            dynamicObject.model = model = new DynamicModel();
-        }
-
-        var interval = modelData.interval;
-        if (typeof interval !== 'undefined') {
-            interval = TimeInterval.fromIso8601(interval);
-        }
-
-        if (typeof modelData.show !== 'undefined') {
-            var show = model.show;
-            if (typeof show === 'undefined') {
-                model.show = show = new DynamicProperty(CzmlBoolean);
-                modelUpdated = true;
-            }
-            show.processCzmlIntervals(modelData.show, interval, sourceUri);
-        }
-
-        if (typeof modelData.scale !== 'undefined') {
-            var scale = model.scale;
-            if (typeof scale === 'undefined') {
-                model.scale = scale = new DynamicProperty(CzmlNumber);
-                modelUpdated = true;
-            }
-            scale.processCzmlIntervals(modelData.scale, interval, sourceUri);
-        }
-
-        if (typeof modelData.uri !== 'undefined') {
-            var uri = model.uri;
-            if (typeof uri === 'undefined') {
-                model.uri = uri = new DynamicProperty(CzmlModel);
-                modelUpdated = true;
-            }
-            uri.processCzmlIntervals(modelData.uri, interval, sourceUri);
-        }
-
-        return modelUpdated;
     };
 
     /**

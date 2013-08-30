@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
         '../Core/Color',
@@ -11,6 +12,7 @@ define([
         '../Scene/Material'
        ], function(
          defaultValue,
+         defined,
          DeveloperError,
          destroyObject,
          Color,
@@ -49,7 +51,7 @@ define([
      * @see DynamicPolylineVisualizer
      */
     var DynamicModelVisualizer = function(scene, dynamicObjectCollection) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
@@ -85,12 +87,12 @@ define([
     DynamicModelVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
-            if (typeof oldCollection !== 'undefined') {
+            if (defined(oldCollection)) {
                 oldCollection.objectsRemoved.removeEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
-            if (typeof dynamicObjectCollection !== 'undefined') {
+            if (defined(dynamicObjectCollection)) {
                 dynamicObjectCollection.objectsRemoved.addEventListener(DynamicModelVisualizer.prototype._onObjectsRemoved, this);
             }
         }
@@ -105,10 +107,10 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DynamicModelVisualizer.prototype.update = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is requied.');
         }
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
                 this._updateObject(time, dynamicObjects[i]);
@@ -120,12 +122,15 @@ define([
      * Removes all primitives from the scene.
      */
     DynamicModelVisualizer.prototype.removeAllPrimitives = function() {
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = dynamicObjects.length - 1; i > -1; i--) {
-                this._primitives.remove(dynamicObjects[i]._modelPrimitive);
-                dynamicObjects[i]._modelPrimitive.destroy();
-                dynamicObjects[i]._modelPrimitive = undefined;
+                var model = dynamicObjects[i]._modelPrimitive;
+                if (defined(model)) {
+                    this._primitives.remove(model);
+                    model.destroy();
+                    model = undefined;
+                }
             }
         }
     };
@@ -175,35 +180,35 @@ define([
     DynamicModelVisualizer.prototype._updateObject = function(time, dynamicObject) {
         var context = this._scene.getContext();
         var dynamicModel = dynamicObject.model;
-        if (typeof dynamicModel === 'undefined') {
+        if (!defined(dynamicModel)) {
             return;
         }
 
         var uriProperty = dynamicModel.uri;
-        if (typeof uriProperty === 'undefined') {
+        if (!defined(uriProperty)) {
             return;
         }
 
         var positionProperty = dynamicObject.position;
-        if (typeof positionProperty === 'undefined') {
+        if (!defined(positionProperty)) {
             return;
         }
 
         var model = dynamicObject._modelPrimitive;
         var showProperty = dynamicModel.show;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         var uri = uriProperty.getValue(time, context);
-        if (!show || typeof uri === 'undefined') {
+        if (!show || !defined(uri)) {
             //don't bother creating or updating anything else
-            if (typeof model !== 'undefined') {
+            if (defined(model)) {
                 model.destroy();
                 dynamicObject._modelPrimitive = undefined;
             }
             return;
         }
 
-        if (typeof model === 'undefined' || uri !== dynamicObject._modelPrimitiveUri) {
+        if (!defined(model) || uri !== dynamicObject._modelPrimitiveUri) {
             model = Model.fromText({
                 url : uri
             });
@@ -217,22 +222,22 @@ define([
             dynamicObject._modelPrimitive = model;
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), model._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), model._visualizerPosition);
         var orientationProperty = dynamicObject.orientation;
-        if (typeof orientationProperty !== 'undefined') {
+        if (defined(orientationProperty)) {
             orientation = defaultValue(orientationProperty.getValue(time, orientation), model._visualizerOrientation);
         } else {
             orientation = model._visualizerOrientation;
         }
 
-        if (typeof position !== 'undefined' && typeof orientation !== 'undefined' && (!position.equals(model._visualizerPosition) || !orientation.equals(model._visualizerOrientation))) {
-            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation.conjugate(orientation), matrix3Scratch), position, model.modelMatrix);
+        if (defined(position) && defined(orientation) && (!position.equals(model._visualizerPosition) || !orientation.equals(model._visualizerOrientation))) {
+            Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, model.modelMatrix);
             model._visualizerPosition = position.clone(model._visualizerPosition);
             model._visualizerOrientation = orientation.clone(model._visualizerOrientation);
         }
 
         var scaleProperty = dynamicModel.scale;
-        if (typeof scaleProperty !== 'undefined') {
+        if (defined(scaleProperty)) {
             model.scale = scaleProperty.getValue(time, model.scale);
         }
     };
@@ -241,7 +246,7 @@ define([
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var model = dynamicObject._modelPrimitive;
-            if (typeof model !== 'undefined') {
+            if (defined(model)) {
                 model.destroy();
                 dynamicObject._modelPrimitive = undefined;
             }

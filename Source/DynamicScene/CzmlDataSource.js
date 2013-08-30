@@ -41,6 +41,7 @@ define([
         './DynamicEllipsoid',
         './GridMaterialProperty',
         './ImageMaterialProperty',
+        './DynamicModel',
         './DynamicObjectCollection',
         './DynamicPath',
         './DynamicPoint',
@@ -97,6 +98,7 @@ define([
         DynamicEllipsoid,
         GridMaterialProperty,
         ImageMaterialProperty,
+        DynamicModel,
         DynamicObjectCollection,
         DynamicPath,
         DynamicPoint,
@@ -146,6 +148,16 @@ define([
 
     function unwrapImageInterval(czmlInterval, sourceUri) {
         var result = defaultValue(czmlInterval.image, czmlInterval);
+        if (defined(sourceUri)) {
+            var baseUri = new Uri(document.location.href);
+            sourceUri = new Uri(sourceUri);
+            result = new Uri(result).resolve(sourceUri.resolve(baseUri)).toString();
+        }
+        return result;
+    }
+
+    function unwrapUriInterval(czmlInterval, sourceUri) {
+        var result = czmlInterval;
         if (defined(sourceUri)) {
             var baseUri = new Uri(document.location.href);
             sourceUri = new Uri(sourceUri);
@@ -271,6 +283,8 @@ define([
             return defaultValue(czmlInterval.string, czmlInterval);
         case Quaternion:
             return czmlInterval.unitQuaternion;
+        case Uri:
+            return unwrapUriInterval(czmlInterval, sourceUri);
         case VerticalOrigin:
             return VerticalOrigin[defaultValue(czmlInterval.verticalOrigin, czmlInterval)];
         default:
@@ -922,6 +936,32 @@ define([
         return labelUpdated;
     }
 
+    function processModel(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
+        var modelData = packet.model;
+        if (typeof modelData === 'undefined') {
+            return false;
+        }
+
+        var modelUpdated = false;
+        var model = dynamicObject.model;
+        modelUpdated = typeof model === 'undefined';
+        if (modelUpdated) {
+            dynamicObject.model = model = new DynamicModel();
+        }
+
+        var interval = modelData.interval;
+        if (typeof interval !== 'undefined') {
+            interval = TimeInterval.fromIso8601(interval);
+        }
+
+        modelUpdated = processPacketData(Boolean, model, 'show', modelData.show, interval, sourceUri) || modelUpdated;
+        modelUpdated = processPacketData(Number, model, 'scale', modelData.scale, interval, sourceUri) || modelUpdated;
+        if (defined(modelData.uri) && defined(modelData.uri.gltf)) {
+            modelUpdated = processPacketData(Uri, model, 'uri', modelData.uri.gltf, interval, sourceUri) || modelUpdated;
+        }
+        return modelUpdated;
+    }
+
     function processPath(dynamicObject, packet, dynamicObjectCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
@@ -1157,6 +1197,7 @@ define([
                                processEllipsoid, //
                                processCone, //
                                processLabel, //
+                               processModel, //
                                processPath, //
                                processPoint, //
                                processPolygon, //
