@@ -691,7 +691,7 @@ require(['Cesium'], function(Cesium) {
             geometry : boxGeometry,
             modelMatrix : boxModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
 
@@ -699,7 +699,7 @@ require(['Cesium'], function(Cesium) {
             geometry : ellipsoidGeometry,
             modelMatrix : ellipsoidModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
 
@@ -707,7 +707,7 @@ require(['Cesium'], function(Cesium) {
             geometry : sphereGeometry,
             modelMatrix : sphereModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
     }
@@ -715,7 +715,7 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
+            translucent : true,
             closed : true
         })
     }));
