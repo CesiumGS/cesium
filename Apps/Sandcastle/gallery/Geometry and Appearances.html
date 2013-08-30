@@ -785,7 +785,7 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-125.0, 55.0)
         ]),
         width : 100000,
-        vertexFormat : Cesium.VertexFormat.ALL
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
     });
     
     var corridorInstance = new Cesium.GeometryInstance({
@@ -802,7 +802,7 @@ require(['Cesium'], function(Cesium) {
             Cesium.Cartographic.fromDegrees(-125.0, 55.0)
         ]),
         width : 100000,
-        vertexFormat : Cesium.VertexFormat.ALL,
+        vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
         height: 300000,
         extrudedHeight: 400000
     });

@@ -289,6 +289,39 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
+    function renderAsync(instance, afterView) {
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
+        });
+
+        var frameState = createFrameState();
+
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
+
+        runs(function() {
+            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+            if (typeof afterView === 'function') {
+                afterView(frameState, primitive);
+            }
+
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+            primitive = primitive && primitive.destroy();
+        });
+    }
+
     describe('BoxGeometry', function() {
         var instance;
         beforeAll(function() {
@@ -320,6 +353,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -354,6 +391,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -391,6 +432,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance);
         });
+
+        it('async', function() {
+            renderAsync(instance);
+        });
     }, 'WebGL');
 
     describe('EllipseGeometry', function() {
@@ -425,6 +470,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('rotated', function() {
@@ -481,7 +530,7 @@ defineSuite([
                     height : geometryHeight,
                     extrudedHeight : extrudedHeight
                 }),
-                id : 'ellipse',
+                id : 'extrudedEllipse',
                 attributes : {
                     color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
                 }
@@ -504,6 +553,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
@@ -517,10 +570,7 @@ defineSuite([
 
         it('renders wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -559,6 +609,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance);
         });
+
+        it('async', function() {
+            renderAsync(instance);
+        });
     }, 'WebGL');
 
     describe('SphereGeometry', function() {
@@ -592,6 +646,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -627,6 +685,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('rotated geometry', function() {
@@ -681,7 +743,7 @@ defineSuite([
         var extrudedHeight;
         var geometryHeight;
         beforeAll(function() {
-            extent = Extent.fromDegrees(0, 0, 1, 1);
+            extent = Extent.fromDegrees(-1, -1, 1, 1);
             extrudedHeight = 200000.0;
             geometryHeight = 100000.0;
             instance = new GeometryInstance({
@@ -715,12 +777,13 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(CesiumMath.PI, transform);
             };
             render3D(instance, afterView);
@@ -728,10 +791,7 @@ defineSuite([
 
         it('renders north wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -739,10 +799,7 @@ defineSuite([
 
         it('renders south wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -750,10 +807,7 @@ defineSuite([
 
         it('renders west wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -761,10 +815,7 @@ defineSuite([
 
         it('renders east wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -806,6 +857,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('at height', function() {
@@ -882,10 +937,10 @@ defineSuite([
                     vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT,
                     ellipsoid : ellipsoid,
                     positions : ellipsoid.cartographicArrayToCartesianArray([
-                        Cartographic.fromDegrees(0.0, 45.0),
-                        Cartographic.fromDegrees(10.0, 45.0),
-                        Cartographic.fromDegrees(10.0, 55.0),
-                        Cartographic.fromDegrees(0.0, 55.0)
+                        Cartographic.fromDegrees(-1.0, -1.0),
+                        Cartographic.fromDegrees(1.0, -1.0),
+                        Cartographic.fromDegrees(1.0, 1.0),
+                        Cartographic.fromDegrees(-1.0, 1.0)
                     ]),
                     height: geometryHeight,
                     extrudedHeight: extrudedHeight
@@ -913,6 +968,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
@@ -926,47 +985,32 @@ defineSuite([
 
         it('renders wall 1', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateRight(CesiumMath.PI, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateUp(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
 
         it('renders wall 2', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
 
         it('renders wall 3', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
-                frameState.camera.controller.rotateLeft(CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
+                frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
 
         it('renders wall 4', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
-                frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
         });
@@ -1023,6 +1067,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance, afterView3D);
         });
+
+        it('async', function() {
+            renderAsync(instance, afterView3D);
+        });
     }, 'WebGL');
 
     describe('CorridorGeometry', function() {
@@ -1064,6 +1112,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('at height', function() {
@@ -1130,6 +1182,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
@@ -1143,10 +1199,7 @@ defineSuite([
 
         it('renders north wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -1154,10 +1207,7 @@ defineSuite([
 
         it('renders south wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateDown(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -1165,10 +1215,7 @@ defineSuite([
 
         it('renders west wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateRight(-CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -1176,10 +1223,7 @@ defineSuite([
 
         it('renders east wall', function() {
             var afterView = function(frameState, primitive) {
-                var height = (extrudedHeight - geometryHeight) * 0.5;
-                var transform = Matrix4.multiplyByTranslation(
-                        Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center),
-                        new Cartesian3(0.0, 0.0, height));
+                var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
                 frameState.camera.controller.rotateRight(CesiumMath.PI_OVER_TWO, transform);
             };
             render3D(instance, afterView);
@@ -1218,6 +1262,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     });
 

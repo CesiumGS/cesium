@@ -58,15 +58,21 @@ define([
 
     var scratch1= new Cartesian3();
 
+    var scaleArray2 = [new Cartesian3(), new Cartesian3()];
+
     function combine(positions, corners, endPositions, ellipsoid) {
         var attributes = new GeometryAttributes();
         var corner;
         var leftCount = 0;
         var rightCount = 0;
         var i;
-        for (i = 0; i < positions.length; i+=2) {
-            leftCount += positions[i].length - 3; //subtracting 3 to account for duplicate points at corners
-            rightCount += positions[i+1].length - 3;
+        var indicesLength = 0;
+        var length;
+        for (i = 0; i < positions.length; i += 2) {
+            length = positions[i].length - 3;
+            leftCount += length; //subtracting 3 to account for duplicate points at corners
+            indicesLength += length*2;
+            rightCount += positions[i + 1].length - 3;
         }
         leftCount += 3; //add back count for end positions
         rightCount += 3;
@@ -74,44 +80,57 @@ define([
             corner = corners[i];
             var leftSide = corners[i].leftPositions;
             if (defined(leftSide)) {
-                leftCount += leftSide.length;
+                length = leftSide.length;
+                leftCount += length;
+                indicesLength += length;
             } else {
-                rightCount += corners[i].rightPositions.length;
+                length = corners[i].rightPositions.length;
+                rightCount += length;
+                indicesLength += length;
             }
         }
 
         var addEndPositions = defined(endPositions);
         var endPositionLength;
         if (addEndPositions) {
-            endPositionLength = endPositions[0].rightPositions.length - 3;
+            endPositionLength = endPositions[0].length - 3;
             leftCount += endPositionLength;
             rightCount += endPositionLength;
             endPositionLength /= 3;
+            indicesLength += endPositionLength * 6;
         }
         var size = leftCount + rightCount;
         var finalPositions = new Float64Array(size);
         var front = 0;
         var back = size - 1;
-        var indices = [];
         var UL, LL, UR, LR;
         var rightPos, leftPos;
         var halfLength = endPositionLength/2;
-        indices.push(front/3, (back-2)/3);
+
+        var indices = IndexDatatype.createTypedArray(size/3, indicesLength);
+        var index = 0;
+
+        indices[index++] = front/3;
+        indices[index++] = (back-2)/3;
         if (addEndPositions) { // add rounded end
             leftPos = cartesian3;
             rightPos = cartesian4;
-            var firstEndPositions = endPositions[0].rightPositions;
+            var firstEndPositions = endPositions[0];
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(firstEndPositions, (halfLength - 1 - i) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(firstEndPositions, (halfLength + i) * 3, rightPos);
-                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
-                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
+                CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
+                CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
 
                 LL = front/3;
                 LR = LL + 1;
                 UL = (back-2)/3;
                 UR = UL - 1;
-                indices.push(UL, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
+
                 front += 3;
                 back -= 3;
             }
@@ -123,13 +142,18 @@ define([
         finalPositions.set(rightEdge, front);
         finalPositions.set(leftEdge, back - leftEdge.length + 1);
 
-        var length = leftEdge.length - 3;
+        length = leftEdge.length - 3;
         for(i = 0; i < length; i+=3) {
             LL = front/3;
             LR = LL + 1;
             UL = (back-2)/3;
             UR = UL - 1;
-            indices.push(UL, UR, LL, LR);
+            indices[index++] = UL;
+            indices[index++] = UR;
+            indices[index++] = LL;
+            indices[index++] = LR;
+
+
             front += 3;
             back -= 3;
         }
@@ -146,8 +170,9 @@ define([
                 start = UR;
                 for (j = 0; j < l.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(l, j*3, outsidePoint);
-                    indices.push(start - j - 1, start - j);
-                    finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
+                    indices[index++] = start - j - 1;
+                    indices[index++] = start - j;
+                    CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
                     back -= 3;
                 }
                 front += 3;
@@ -156,8 +181,9 @@ define([
                 start = LR;
                 for (j = 0; j < r.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j*3, outsidePoint);
-                    indices.push(start + j, start + j + 1);
-                    finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
+                    indices[index++] = start + j;
+                    indices[index++] = start + j + 1;
+                    CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
                     front += 3;
                 }
                 back -= 3;
@@ -176,6 +202,10 @@ define([
                 UR = (back-2)/3;
                 UL = UR + 1;
                 indices.push(UL, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
                 front += 3;
                 back -= 3;
             }
@@ -188,23 +218,29 @@ define([
             back -= 3;
             leftPos = cartesian3;
             rightPos = cartesian4;
-            var lastEndPositions = endPositions[1].rightPositions;
+            var lastEndPositions = endPositions[1];
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(lastEndPositions, (endPositionLength - i - 1) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
-                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
-                finalPositions = CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
+                CorridorGeometryLibrary.addAttribute(finalPositions, leftPos, undefined, back);
+                CorridorGeometryLibrary.addAttribute(finalPositions, rightPos, front);
 
                 LR = front/3;
                 LL = LR - 1;
                 UR = (back-2)/3;
                 UL = UR + 1;
-                indices.push(UL, UR, LL, LR);
+                indices[index++] = UL;
+                indices[index++] = UR;
+                indices[index++] = LL;
+                indices[index++] = LR;
+
                 front += 3;
                 back -= 3;
             }
         }
-        indices.push(front/3, (back-2)/3);
+        indices[index++] = front/3;
+        indices[index++] = (back-2)/3;
+
 
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -215,8 +251,7 @@ define([
         return {
             attributes: attributes,
             indices: indices,
-            boundingSphere: BoundingSphere.fromVertices(finalPositions),
-            rightCount: rightCount
+            boundingSphere: BoundingSphere.fromVertices(finalPositions)
         };
     }
 
@@ -232,10 +267,10 @@ define([
         var left = cartesian4;
         var cornerDirection = cartesian5;
         var startPoint = cartesian6;
-        var previousLeftPos = cartesian7;
-        var previousRightPos = cartesian8;
-        var rightPos = cartesian9;
-        var leftPos = cartesian10;
+        var previousPos = cartesian7;
+        var rightPos = cartesian8;
+        var leftPos = cartesian9;
+        var center = cartesian10;
         var calculatedPositions = [];
         var position = positions[0]; //add first point
         var nextPosition = positions[1];
@@ -243,11 +278,11 @@ define([
         forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
         left = normal.cross(forward, left).normalize(left);
-        previousLeftPos = Cartesian3.add(position, left.multiplyByScalar(width, previousLeftPos), previousLeftPos);
-        previousRightPos = Cartesian3.add(position, left.multiplyByScalar(width, previousRightPos).negate(previousRightPos), previousRightPos);
+        previousPos = Cartesian3.clone(position, previousPos);
         position = nextPosition;
         backward = forward.negate(backward);
 
+        var subdividedPositions;
         var corners = [];
         var i;
         var length = positions.length;
@@ -265,34 +300,38 @@ define([
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
+                    center = rightPos.add(left.multiplyByScalar(width, center), center);
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+                    scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
+                    scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
+                    subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
+                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     startPoint = leftPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
                     leftPos = rightPos.add(left.multiplyByScalar(width*2, leftPos), leftPos);
-                    if (cornerType.value === CornerType.ROUNDED.value  || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(CorridorGeometryLibrary.computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid));
+                    previousPos = rightPos.add(left.multiplyByScalar(width, previousPos), previousPos);
+                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
+                        corners.push({leftPositions : CorridorGeometryLibrary.computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push(CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid));
+                        corners.push({leftPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
-                    previousRightPos = rightPos.clone(previousRightPos);
-                    previousLeftPos = leftPos.clone(previousLeftPos);
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
+                    center = leftPos.add(left.multiplyByScalar(width, center).negate(center), center);
                     rightPos = leftPos.add(left.multiplyByScalar(width*2, rightPos).negate(rightPos), rightPos);
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-                    calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+                    scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
+                    scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
+                    subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
+                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     startPoint = rightPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
                     rightPos = leftPos.add(left.multiplyByScalar(width*2, rightPos).negate(rightPos), rightPos);
-                    if (cornerType.value === CornerType.ROUNDED.value  || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push(CorridorGeometryLibrary.computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid));
+                    previousPos = leftPos.add(left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
+                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
+                        corners.push({rightPositions : CorridorGeometryLibrary.computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push(CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid));
+                        corners.push({rightPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
                     }
-                    previousRightPos = rightPos.clone(previousRightPos);
-                    previousLeftPos = leftPos.clone(previousLeftPos);
                 }
                 backward = forward.negate(backward);
             }
@@ -300,10 +339,10 @@ define([
         }
 
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-        leftPos = Cartesian3.add(position, left.multiplyByScalar(width, leftPos), leftPos); // add last position
-        rightPos = Cartesian3.add(position, left.multiplyByScalar(width, rightPos).negate(rightPos), rightPos);
-        calculatedPositions.push(PolylinePipeline.scaleToSurface([previousRightPos, rightPos], granularity));
-        calculatedPositions.push(PolylinePipeline.scaleToSurface([leftPos, previousLeftPos], granularity));
+        scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
+        scaleArray2[1] = Cartesian3.clone(position, scaleArray2[1]);
+        subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
+        calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
 
         var endPositions;
         if (cornerType.value === CornerType.ROUNDED.value) {
@@ -321,29 +360,38 @@ define([
         var attributes = attr.attributes;
         var indices = attr.indices;
         var boundingSphere = attr.boundingSphere;
-        var positions = Array.apply([], attributes.position.values);
-        var extrudedPositions = positions.slice(0);
-        var length = positions.length/3;
+        var positions = attributes.position.values;
+        var length = positions.length;
+        var extrudedPositions = new Float64Array(length);
+        extrudedPositions.set(positions);
+        var newPositions = new Float64Array(length * 2);
 
-        positions = PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid);
+        positions = PolylinePipeline.scaleToGeodeticHeight(positions, height, ellipsoid, positions);
         extrudedPositions = PolylinePipeline.scaleToGeodeticHeight(extrudedPositions, extrudedHeight, ellipsoid);
         positions = positions.concat(extrudedPositions);
+        newPositions.set(positions);
+        newPositions.set(extrudedPositions, length);
         boundingSphere = BoundingSphere.fromVertices(positions, undefined, 3, boundingSphere);
-        attributes.position.values = new Float64Array(positions);
+        attributes.position.values = newPositions;
 
+        length /= 3;
         var i;
         var iLength = indices.length;
+        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, (iLength + length) * 2);
+        var index = 0;
         for (i = 0; i < iLength; i+=2) { // bottom indices
             var v0 = indices[i];
             var v1 = indices[i + 1];
-            indices.push(v0 + length, v1 + length);
+            newIndices[index++] = v0 + length;
+            newIndices[index++] = v1 + length;
         }
 
         var UL, LL;
         for (i = 0; i < length; i++) { //wall indices
             UL = i;
             LL = UL + length;
-            indices.push(UL, LL);
+            newIndices[index++] = UL;
+            newIndices[index++] = LL;
         }
 
         return {

@@ -1,18 +1,20 @@
 /*global defineSuite*/
 defineSuite([
              'DynamicScene/DynamicObjectView',
+             'Core/Cartesian3',
              'Core/Ellipsoid',
              'Core/JulianDate',
              'DynamicScene/DynamicObject',
-             'Specs/MockProperty',
+             'DynamicScene/ConstantPositionProperty',
              'Specs/createScene',
              'Specs/destroyScene'
             ], function(
               DynamicObjectView,
+              Cartesian3,
               Ellipsoid,
               JulianDate,
               DynamicObject,
-              MockProperty,
+              ConstantPositionProperty,
               createScene,
               destroyScene) {
     "use strict";
@@ -46,7 +48,7 @@ defineSuite([
 
     it('update throws without time parameter', function() {
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty();
+        dynamicObject.position = new ConstantPositionProperty(Cartesian3.ZERO);
         var view = new DynamicObjectView(dynamicObject, scene);
         expect(function() {
             view.update(undefined);
@@ -63,7 +65,7 @@ defineSuite([
 
     it('update throws without scene property', function() {
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty();
+        dynamicObject.position = new ConstantPositionProperty(Cartesian3.ZERO);
         var view = new DynamicObjectView(dynamicObject, undefined);
         expect(function() {
             view.update(new JulianDate());
@@ -72,7 +74,7 @@ defineSuite([
 
     it('update throws without ellipsoid property', function() {
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty();
+        dynamicObject.position = new ConstantPositionProperty(Cartesian3.ZERO);
         var view = new DynamicObjectView(dynamicObject, scene);
         view.ellipsoid = undefined;
         expect(function() {

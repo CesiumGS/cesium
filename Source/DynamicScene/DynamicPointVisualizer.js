@@ -227,7 +227,7 @@ define([
 
         billboard.setShow(true);
 
-        position = positionProperty.getValueCartesian(time, position);
+        position = positionProperty.getValue(time, position);
         if (defined(position)) {
             billboard.setPosition(position);
         }

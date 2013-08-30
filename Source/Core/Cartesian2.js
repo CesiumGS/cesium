@@ -19,6 +19,7 @@ define([
      * @param {Number} [x=0.0] The X component.
      * @param {Number} [y=0.0] The Y component.
      *
+     * @see Packable
      * @see Cartesian3
      * @see Cartesian4
      */
@@ -147,6 +148,63 @@ define([
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian2.fromCartesian4 = Cartesian2.clone;
+
+    /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    Cartesian2.packedLength = 2;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Cartesian2
+     *
+     * @param {Cartesian2} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    Cartesian2.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.x;
+        array[startingIndex] = value.y;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Cartesian2
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Cartesian2} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
+    Cartesian2.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Cartesian2();
+        }
+        result.x = array[startingIndex++];
+        result.y = array[startingIndex];
+        return result;
+    };
 
     /**
      * Computes the value of the maximum component for the supplied Cartesian.

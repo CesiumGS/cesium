@@ -1,22 +1,6 @@
 /*global define*/
 define([
-        'Core/CorridorGeometry',
-        'Core/CorridorOutlineGeometry',
-        'Core/Cartographic',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/Color',
-        'Core/CornerType',
-        'Core/Extent',
-        'Core/ExtentGeometry',
-        'Core/EllipseGeometry',
-        'Core/GeometryInstance',
-        'Core/VertexFormat',
-        'Scene/createTangentSpaceDebugPrimitive',
-        'Scene/DebugAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
         'Core/defined',
-        'Core/Math',
         'DynamicScene/CzmlDataSource',
         'DynamicScene/GeoJsonDataSource',
         'Scene/PerformanceDisplay',
@@ -26,23 +10,7 @@ define([
         'Widgets/Viewer/viewerDynamicObjectMixin',
         'domReady!'
     ], function(
-        CorridorGeometry,
-        CorridorOutlineGeometry,
-        Cartographic,
-        ColorGeometryInstanceAttribute,
-        Color,
-        CornerType,
-        Extent,
-        ExtentGeometry,
-        EllipseGeometry,
-        GeometryInstance,
-        VertexFormat,
-        createTangentSpaceDebugPrimitive,
-        DebugAppearance,
-        PerInstanceColorAppearance,
-        Primitive,
         defined,
-        CesiumMath,
         CzmlDataSource,
         GeoJsonDataSource,
         PerformanceDisplay,
@@ -82,8 +50,11 @@ define([
             loadingIndicator.style.display = 'none';
         }
     }).otherwise(function(e) {
+        loadingIndicator.style.display = 'none';
         console.error(e);
-        window.alert(e);
+        if (document.getElementsByClassName('cesium-widget-errorPanel').length < 1) {
+            window.alert(e);
+        }
     });
 
     function endsWith(str, suffix) {
@@ -97,14 +68,14 @@ define([
         viewer.extend(viewerDragDropMixin);
         viewer.extend(viewerDynamicObjectMixin);
 
-        viewer.onRenderLoopError.addEventListener(function(viewerArg, error) {
-            console.log(error);
-            window.alert(error);
-        });
+        var showLoadError = function(name, error) {
+            var title = 'An error occurred while loading the file: ' + name;
+            viewer.cesiumWidget.showErrorPanel(title, error);
+            console.error(error);
+        };
 
         viewer.onDropError.addEventListener(function(viewerArg, name, error) {
-            console.log(error);
-            window.alert(error);
+            showLoadError(name, error);
         });
 
         var scene = viewer.scene;
@@ -119,16 +90,18 @@ define([
         if (defined(endUserOptions.source)) {
             var source;
             var sourceUrl = endUserOptions.source.toUpperCase();
-            if (endsWith(sourceUrl, ".GEOJSON") || //
-            endsWith(sourceUrl, ".JSON") || //
-            endsWith(sourceUrl, ".TOPOJSON")) {
+            if (endsWith(sourceUrl, '.GEOJSON') || //
+                endsWith(sourceUrl, '.JSON') || //
+                endsWith(sourceUrl, '.TOPOJSON')) {
                 source = new GeoJsonDataSource();
-            } else if (endsWith(sourceUrl, ".CZML")) {
+            } else if (endsWith(sourceUrl, '.CZML')) {
                 source = new CzmlDataSource();
             } else {
                 loadingIndicator.style.display = 'none';
-                window.alert("Unknown format: " + endUserOptions.source);
+
+                showLoadError(endUserOptions.source, 'Unknown format.');
             }
+
             if (defined(source)) {
                 source.loadUrl(endUserOptions.source).then(function() {
                     viewer.dataSources.add(source);
@@ -138,11 +111,12 @@ define([
                         if (defined(dynamicObject)) {
                             viewer.trackedObject = dynamicObject;
                         } else {
-                            window.alert('No object with id ' + endUserOptions.lookAt + ' exists in the provided source.');
+                            var error = 'No object with id "' + endUserOptions.lookAt + '" exists in the provided source.';
+                            showLoadError(endUserOptions.source, error);
                         }
                     }
-                }, function(e) {
-                    window.alert(e);
+                }, function(error) {
+                    showLoadError(endUserOptions.source, error);
                 }).always(function() {
                     loadingIndicator.style.display = 'none';
                 });
@@ -161,92 +135,10 @@ define([
                 document.body.classList.add('cesium-lighter');
                 viewer.animation.applyThemeChanges();
             } else {
-                window.alert('Unknown theme: ' + theme);
+                var error = 'Unknown theme: ' + theme;
+                viewer.cesiumWidget.showErrorPanel(error);
+                console.error(error);
             }
         }
-
-        var primitives = scene.getPrimitives();
-        var ellipsoid = viewer.centralBody.getEllipsoid();
-
-        var solidWhite = new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0);
-
-     /*   var positions = ellipsoid.cartographicArrayToCartesianArray([
-                                                                     Cartographic.fromDegrees(-89.0, -3.0),
-                                                                     Cartographic.fromDegrees(-89.0, -2.0),
-                                                                     Cartographic.fromDegrees(-90.0, -2.0),
-                                                                     Cartographic.fromDegrees(-90.0, -1.0),
-                                                                     Cartographic.fromDegrees(-90.0, 0.0)
-
-                                                                 ]);
-       */
-//        var positions = ellipsoid.cartographicArrayToCartesianArray([
-  //                                                                   Cartographic.fromDegrees(-120.0, 40.0),
-    //                                                                 Cartographic.fromDegrees(-120.0, 50.0)
-      //                                                           ]);
-
-        var positions = ellipsoid.cartographicArrayToCartesianArray([
-                                   //                                  Cartographic.fromDegrees(-120.0, -50.0),
-                                     //                                Cartographic.fromDegrees(-120.0, -40.0),
-                                                                     Cartographic.fromDegrees(-120.0, -30.0),
-                                                                     Cartographic.fromDegrees(-120.0, -20.0),
-//                                                                     Cartographic.fromDegrees(-120.0, -10.0),
-                                                                     Cartographic.fromDegrees(-120.0, 70.0),
-                                                                     Cartographic.fromDegrees(-120.0, 80.0),
-                                                                     Cartographic.fromDegrees(-120.0, 90.0)//,
-                                                  //                   Cartographic.fromDegrees(-110.0, 60.0)
-                                                                ]);
-
-        var airspaceGeo = new CorridorGeometry({
-            positions : positions,
-//              extrudedHeight: 500000,
-//               cornerType: CornerType.MITERED,
-                width : 500000,
-                height: 50000
-        });
-
-   /*     var airspaceOutlineGeo = new CorridorOutlineGeometry({
-            positions : positions,
-//              extrudedHeight: 500000,
-                width : 300000,
-                height: 100000
-            });*/
-
- /*       var airspaceOutline = new GeometryInstance({
-            geometry: CorridorOutlineGeometry.createGeometry(airspaceOutlineGeo),
-            attributes : {
-                color : solidWhite
-            }
-        });*/
-        var airspace = new GeometryInstance({
-            geometry: airspaceGeo,
-            attributes: {
-                color : ColorGeometryInstanceAttribute.fromColor(Color.fromRandom({alpha : 1.0}))
-            }
-        });
-
-        primitives.add(new Primitive({
-            geometryInstances: [airspace],
-            appearance : new PerInstanceColorAppearance({
-                translucent : false,
-                closed : true
-            })
-        }));
-
-    /*    primitives.add(new Primitive({
-            geometryInstances: [airspaceOutline],
-            appearance : new PerInstanceColorAppearance({
-                flat : true,
-                renderState : {
-                    depthTest : {
-                        enabled : true
-                    },
-                    lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
-                }
-            })
-        }));*/
-
-        primitives.add(createTangentSpaceDebugPrimitive({
-            geometry: airspaceGeo
-        }));
     }
 });
