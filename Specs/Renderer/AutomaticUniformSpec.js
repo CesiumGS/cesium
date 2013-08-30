@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+         'Specs/createCamera',
          'Specs/createContext',
          'Specs/destroyContext',
          'Specs/createFrameState',
@@ -11,8 +12,10 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Scene/FrameState',
+         'Scene/OrthographicFrustum',
          'Scene/SceneMode'
      ], 'Renderer/AutomaticUniforms', function(
+         createCamera,
          createContext,
          destroyContext,
          createFrameState,
@@ -24,6 +27,7 @@ defineSuite([
          BufferUsage,
          ClearCommand,
          FrameState,
+         OrthographicFrustum,
          SceneMode) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -817,7 +821,7 @@ defineSuite([
         verifyDraw(fs);
     });
 
-    it('has czm_eyeHeight2D in Scene3D', function() {
+    it('has czm_eyeHeight2D == 0,0 in Scene3D', function() {
         var fs =
             'void main() { ' +
             '  gl_FragColor = vec4(czm_eyeHeight2D.x == 0.0, czm_eyeHeight2D.y == 0.0, 1.0, 1.0); ' +
@@ -827,13 +831,22 @@ defineSuite([
 
     it('has czm_eyeHeight2D in Scene2D', function() {
         var us = context.getUniformState();
-        var frameState = createFrameState(createMockCamera(undefined, undefined, undefined, new Cartesian3(-1000.0, 0.0, 100000.0)));
+        var camera = createCamera(context);
+        var frustum = new OrthographicFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+        var frameState = createFrameState(camera);
         frameState.mode = SceneMode.SCENE2D;
-        us.update(frameState);
 
+        us.update(frameState);
         var fs =
             'void main() { ' +
-            '  gl_FragColor = vec4(czm_eyeHeight2D.x > 0.0, czm_eyeHeight2D.y > 0.0, 1.0, 1.0); ' +
+            '  gl_FragColor = vec4(czm_eyeHeight2D.x == 2.0, czm_eyeHeight2D.y == 4.0, 1.0, 1.0); ' +
             '}';
         verifyDraw(fs);
     });

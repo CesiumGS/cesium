@@ -60,13 +60,13 @@ void main()
 
     float scaleAtMin = scaleByDistance.y;
     float scaleAtMax = scaleByDistance.w;
-    float nearDistanceSq = scaleByDistance.x*scaleByDistance.x;
-    float farDistanceSq = scaleByDistance.z*scaleByDistance.z;
+    float nearDistanceSq = scaleByDistance.x * scaleByDistance.x;
+    float farDistanceSq = scaleByDistance.z * scaleByDistance.z;
 
     // ensure that t will fall within the range of [0.0, 1.0]
     lengthSq = clamp(lengthSq, nearDistanceSq, farDistanceSq);
 
-    float t = (lengthSq-nearDistanceSq)/(farDistanceSq-nearDistanceSq);
+    float t = (lengthSq-nearDistanceSq) / (farDistanceSq-nearDistanceSq);
 
     t = pow(t, 0.15);
 

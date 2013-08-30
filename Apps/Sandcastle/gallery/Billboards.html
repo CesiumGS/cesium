@@ -155,7 +155,7 @@ require(['Cesium'], function(Cesium) {
             billboards.add({
                 position : ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-75.59777, 40.03883)),
                 imageIndex : 0,
-                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 1.5, 1.5e7, 0.0)
+                scaleByDistance : new Cesium.NearFarScalar(1.5e2, 2.0, 1.5e7, 0.5)
             });
             scene.getPrimitives().add(billboards);
         };
@@ -428,7 +428,7 @@ require(['Cesium'], function(Cesium) {
             scaleBillboardByDistance(scene, ellipsoid);
             Sandcastle.highlight(scaleBillboardByDistance);
         };
-        button.textContent = 'Scale Billboards based on distance to camera';
+        button.textContent = 'Scale by viewer distance';
         toolbar.appendChild(button);
     }
 
