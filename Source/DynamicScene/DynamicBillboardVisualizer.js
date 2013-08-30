@@ -270,7 +270,6 @@ define([
             } else {
                 billboard.setScaleByDistance(new NearFarScalar(1.0e2, 2.0, 3.2e7, 0.2));
             }
-
         } else {
             billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }

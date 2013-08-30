@@ -93,28 +93,5 @@ define([
                 (left.farValue === right.farValue));
     };
 
-    /**
-     * Duplicates this NearFarScalar instance.
-     * @memberof NearFarScalar
-     *
-     * @param {NearFarScalar} [result] The object onto which to store the result.
-     * @return {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided.
-     */
-    NearFarScalar.prototype.clone = function(result) {
-        return NearFarScalar.clone(this, result);
-    };
-
-    /**
-     * Compares this NearFarScalar against the provided NearFarScalar componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof NearFarScalar
-     *
-     * @param {NearFarScalar} [right] The right hand side NearFarScalar.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-     */
-    NearFarScalar.prototype.equals = function(right) {
-        return NearFarScalar.equals(this, right);
-    };
-
     return NearFarScalar;
 });

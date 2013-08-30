@@ -63,6 +63,10 @@ define([
     var Billboard = function(description, billboardCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
 
+        if (defined(description.scaleByDistance) && description.scaleByDistance.far <= description.scaleByDistance.near) {
+            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+        }
+
         this._show = defaultValue(description.show, true);
 
         this._position = Cartesian3.clone(defaultValue(description.position, Cartesian3.ZERO));
@@ -86,10 +90,6 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
-
-        if (defined(this._scaleByDistance) && this._scaleByDistance.far <= this._scaleByDistance.near) {
-            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
-        }
     };
 
     var SHOW_INDEX = Billboard.SHOW_INDEX = 0;
@@ -316,13 +316,7 @@ define([
      * b.setScaleByDistance(undefined);
      */
     Billboard.prototype.setScaleByDistance = function(scale) {
-        if (defined(this._scaleByDistance) && defined(scale) && this._scaleByDistance.equals(scale)) {
-            return;
-        }
-
-        makeDirty(this, SCALE_BY_DISTANCE_INDEX);
-        if (!defined(scale)) {
-            this._scaleByDistance = undefined;
+        if (NearFarScalar.equals(this._scaleByDistance, scale)) {
             return;
         }
 
@@ -330,11 +324,8 @@ define([
             throw new DeveloperError('far distance must be greater than near distance.');
         }
 
-        if (!defined(this._scaleByDistance)) {
-            this._scaleByDistance = new NearFarScalar();
-        }
-
-        NearFarScalar.clone(scale, this._scaleByDistance);
+        makeDirty(this, SCALE_BY_DISTANCE_INDEX);
+        this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
     };
 
     /**

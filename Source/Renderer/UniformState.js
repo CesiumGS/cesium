@@ -245,8 +245,8 @@ define([
 
         if (frameState.mode === SceneMode.SCENE2D) {
             this._frustum2DWidth = camera.frustum.right - camera.frustum.left;
-            this._eyeHeight2D.x = this._frustum2DWidth*0.5;
-            this._eyeHeight2D.y = this._eyeHeight2D.x*this._eyeHeight2D.x;
+            this._eyeHeight2D.x = this._frustum2DWidth * 0.5;
+            this._eyeHeight2D.y = this._eyeHeight2D.x * this._eyeHeight2D.x;
         } else {
             this._frustum2DWidth = 0.0;
             this._eyeHeight2D.x = 0.0;
@@ -928,7 +928,7 @@ define([
      *
      * @memberof UniformState
      *
-     * @return {Cartesian2} Returns the height and height squared above the 2D world plane for SCENE2D {@link SceneMode}.
+     * @returns {Cartesian2} Height and height squared above the 2D world plane for SCENE2D {@link SceneMode}.
      *
      * @see czm_eyeHeight2D
      */

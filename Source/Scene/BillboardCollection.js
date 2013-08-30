@@ -255,7 +255,7 @@ define([
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
-     *   scaleByDistance : [5e6, 1.0, 2e7, 0.0]
+     *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
      *   color : Color.WHITE
      * });
@@ -868,24 +868,29 @@ define([
         var i = billboard._index * 4;
         var allPurposeWriters = vafWriters[allPassPurpose];
         var writer = allPurposeWriters[attributeIndices.scaleByDistance];
+        var near = 0.0;
+        var nearValue = 0.0;
+        var far = 0.0;
+        var farValue = 0.0;
 
         var scale = billboard.getScaleByDistance();
-        if (!defined(scale)) {
-            writer(i + 0, 0.0, 0.0, 0.0, 0.0);
-            writer(i + 1, 0.0, 0.0, 0.0, 0.0);
-            writer(i + 2, 0.0, 0.0, 0.0, 0.0);
-            writer(i + 3, 0.0, 0.0, 0.0, 0.0);
-            return;
-        } else if (scale.nearValue !== 1.0 || scale.farValue !== 1.0) {
-            // scale by distance calculation in shader need not be enabled
-            // until a billboard with near and far !== 1.0 is found
-            billboardCollection._shaderScaleByDistance = true;
+        if (defined(scale)) {
+            near = scale.near;
+            nearValue = scale.nearValue;
+            far = scale.far;
+            farValue = scale.farValue;
+
+            if (nearValue !== 1.0 || farValue !== 1.0) {
+                // scale by distance calculation in shader need not be enabled
+                // until a billboard with near and far !== 1.0 is found
+                billboardCollection._shaderScaleByDistance = true;
+            }
         }
 
-        writer(i + 0, scale.near, scale.nearValue, scale.far, scale.farValue);
-        writer(i + 1, scale.near, scale.nearValue, scale.far, scale.farValue);
-        writer(i + 2, scale.near, scale.nearValue, scale.far, scale.farValue);
-        writer(i + 3, scale.near, scale.nearValue, scale.far, scale.farValue);
+        writer(i + 0, near, nearValue, far, farValue);
+        writer(i + 1, near, nearValue, far, farValue);
+        writer(i + 2, near, nearValue, far, farValue);
+        writer(i + 3, near, nearValue, far, farValue);
     }
 
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
@@ -1165,11 +1170,11 @@ define([
                     (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                         this._sp,
-                    createShaderSource({
-                        defines : [this._shaderRotation ? 'ROTATION' : '',
-                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
-                        sources : [BillboardCollectionVS]
-                    }),
+                        createShaderSource({
+                            defines : [this._shaderRotation ? 'ROTATION' : '',
+                                       this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
+                            sources : [BillboardCollectionVS]
+                        }),
                         BillboardCollectionFS,
                         attributeIndices);
                 this._compiledShaderRotation = this._shaderRotation;

@@ -19,31 +19,25 @@ defineSuite(['Core/NearFarScalar'], function(NearFarScalar) {
         expect(scalar.farValue).toEqual(0.5);
     });
 
-    it('clone without a result parameter', function() {
-        var scalar = new NearFarScalar(1.0, 2.0, 3.0, 4.0);
-        var result = scalar.clone();
-        expect(scalar).toNotBe(result);
-        expect(scalar).toEqual(result);
-    });
-
     it('clone with a result parameter', function() {
         var scalar = new NearFarScalar(1.0, 2.0, 3.0);
         var result = new NearFarScalar();
-        var returnedResult = scalar.clone(result);
+        var returnedResult = NearFarScalar.clone(scalar, result);
         expect(scalar).toNotBe(result);
         expect(result).toBe(returnedResult);
         expect(scalar).toEqual(result);
     });
 
-    it('clone works with "this" result parameter', function() {
+    it('clone without a result parameter', function() {
         var scalar = new NearFarScalar(1.0, 2.0, 3.0);
-        var returnedResult = scalar.clone(scalar);
-        expect(scalar).toBe(returnedResult);
+        var result = NearFarScalar.clone(scalar);
+        expect(scalar).toNotBe(result);
+        expect(scalar).toEqual(result);
     });
 
-    it('static equalsEpsilon throws with no epsilon', function() {
-        expect(function() {
-            NearFarScalar.equalsEpsilon(new NearFarScalar(), new NearFarScalar(), undefined);
-        }).toThrow();
+    it('clone works with "this" result parameter', function() {
+        var scalar = new NearFarScalar(1.0, 2.0, 3.0);
+        var returnedResult = NearFarScalar.clone(scalar, scalar);
+        expect(scalar).toBe(returnedResult);
     });
 });
