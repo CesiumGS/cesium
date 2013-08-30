@@ -180,7 +180,6 @@ define([
                     billboard.setVerticalOrigin(label._verticalOrigin);
                     billboard.setScale(label._scale);
                     billboard._pickIdThis = label;
-                    billboard.setScaleByDistance(undefined);
                 }
 
                 glyph.billboard.setImageIndex(glyphTextureInfo.index);
