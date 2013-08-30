@@ -59,6 +59,8 @@ var geometry = BoxGeometry.createGeometry(box);
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
     * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
+* Added `CorridorGeometry` and `CorridorOutlineGeometry`.
+* Added `Billboard.scaleByDistance` and `NearFarScalar` to control billboard minimum/maximum scale based on camera distance.
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
@@ -81,8 +83,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed triangulation for polygons that cross the international date line.
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
-* Added `CorridorGeometry` and `CorridorGeometryOutline.
-
+* Added `CorridorGeometry`.
 ### b19 - 2013-08-01
 
 * Breaking changes:
