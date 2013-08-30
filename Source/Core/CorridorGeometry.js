@@ -37,18 +37,12 @@ define([
         VertexFormat) {
     "use strict";
 
-    var scaleArray2 = [new Cartesian3(), new Cartesian3()];
-
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
     var cartesian4 = new Cartesian3();
     var cartesian5 = new Cartesian3();
     var cartesian6 = new Cartesian3();
-    var cartesian7 = new Cartesian3();
-    var cartesian8 = new Cartesian3();
-    var cartesian9 = new Cartesian3();
-    var cartesian10 = new Cartesian3();
 
     var scratch1 = new Cartesian3();
     var scratch2 = new Cartesian3();
@@ -69,7 +63,12 @@ define([
         }
     }
 
-    function combine(positions, corners, computedLefts, computedNormals, vertexFormat, endPositions, ellipsoid) {
+    function combine(computedPositions, vertexFormat, ellipsoid) {
+        var positions = computedPositions.positions;
+        var corners = computedPositions.corners;
+        var endPositions = computedPositions.endCaps;
+        var computedLefts = computedPositions.lefts;
+        var computedNormals = computedPositions.normals;
         var attributes = new GeometryAttributes();
         var corner;
         var leftCount = 0;
@@ -416,113 +415,6 @@ define([
         };
     }
 
-    function computePositions(params) {
-        var granularity = params.granularity;
-        var positions = params.positions;
-        var width = params.width / 2;
-        var ellipsoid = params.ellipsoid;
-        var cornerType = params.cornerType;
-        var normal = cartesian1;
-        var forward = cartesian2;
-        var backward = cartesian3;
-        var left = cartesian4;
-        var cornerDirection = cartesian5;
-        var startPoint = cartesian6;
-        var previousPos = cartesian7;
-        var rightPos = cartesian8;
-        var leftPos = cartesian9;
-        var center = cartesian10;
-        var calculatedPositions = [];
-        var calculatedLefts = [];
-        var calculatedNormals = [];
-        var position = positions[0]; //add first point
-        var nextPosition = positions[1];
-
-        forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-        normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-        left = normal.cross(forward, left).normalize(left);
-        calculatedLefts.push(left.x, left.y, left.z);
-        calculatedNormals.push(normal.x, normal.y, normal.z);
-        previousPos = Cartesian3.clone(position, previousPos);
-        position = nextPosition;
-        backward = forward.negate(backward);
-
-        var subdividedPositions;
-        var corners = [];
-        var i;
-        var length = positions.length;
-        for (i = 1; i < length - 1; i++) { // add middle points and corners
-            normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-            nextPosition = positions[i + 1];
-            forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-            cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
-            var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), normal, CesiumMath.EPSILON2);
-            if (doCorner) {
-                cornerDirection = cornerDirection.cross(normal, cornerDirection);
-                cornerDirection = normal.cross(cornerDirection, cornerDirection);
-                var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = CorridorGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
-                cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
-                if (leftIsOutside) {
-                    rightPos = Cartesian3.add(position, cornerDirection, rightPos);
-                    center = rightPos.add(left.multiplyByScalar(width, center), center);
-                    leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
-                    scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
-                    scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
-                    subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
-                    calculatedLefts.push(left.x, left.y, left.z);
-                    calculatedNormals.push(normal.x, normal.y, normal.z);
-                    startPoint = leftPos.clone(startPoint);
-                    left = normal.cross(forward, left).normalize(left);
-                    leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
-                    previousPos = rightPos.add(left.multiplyByScalar(width, previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({leftPositions : CorridorGeometryLibrary.computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
-                    } else {
-                        corners.push({leftPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
-                    }
-                } else {
-                    leftPos = Cartesian3.add(position, cornerDirection, leftPos);
-                    center = leftPos.add(left.multiplyByScalar(width, center).negate(center), center);
-                    rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
-                    scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
-                    subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
-                    calculatedLefts.push(left.x, left.y, left.z);
-                    calculatedNormals.push(normal.x, normal.y, normal.z);
-                    startPoint = rightPos.clone(startPoint);
-                    left = normal.cross(forward, left).normalize(left);
-                    rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    previousPos = leftPos.add(left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
-                    if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({rightPositions : CorridorGeometryLibrary.computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
-                    } else {
-                        corners.push({rightPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
-                    }
-                }
-                backward = forward.negate(backward);
-            }
-            position = nextPosition;
-        }
-
-        normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-        scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
-        scaleArray2[1] = Cartesian3.clone(position, scaleArray2[1]);
-        subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-        calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
-        calculatedLefts.push(left.x, left.y, left.z);
-        calculatedNormals.push(normal.x, normal.y, normal.z);
-
-        var endPositions;
-        if (cornerType.value === CornerType.ROUNDED.value) {
-            endPositions = CorridorGeometryLibrary.addEndCaps(calculatedPositions, width, ellipsoid);
-        }
-
-        return combine(calculatedPositions, corners, calculatedLefts, calculatedNormals, params.vertexFormat, endPositions, ellipsoid);
-    }
-
     function extrudedAttributes(attributes, vertexFormat) {
         if (!vertexFormat.normal && !vertexFormat.binormal && !vertexFormat.tangent && !vertexFormat.st) {
             return attributes;
@@ -660,19 +552,19 @@ define([
         return wallPositions;
     }
 
-    function computePositionsExtruded(params) {
-        var vertexFormat = params.vertexFormat;
-        params.vertexFormat = new VertexFormat({
+    function computePositionsExtruded(params, vertexFormat) {
+        var topVertexFormat = new VertexFormat({
             position : vertexFormat.positon,
             normal : (vertexFormat.normal || vertexFormat.binormal),
             tangent : vertexFormat.tangent,
             binormal : (vertexFormat.normal || vertexFormat.binormal),
             st : vertexFormat.st
         });
-        var attr = computePositions(params);
+        var ellipsoid = params.ellipsoid;
+        var computedPositions = CorridorGeometryLibrary.computePositions(params);
+        var attr = combine(computedPositions, topVertexFormat, ellipsoid);
         var height = params.height;
         var extrudedHeight = params.extrudedHeight;
-        var ellipsoid = params.ellipsoid;
         var attributes = attr.attributes;
         var indices = attr.indices;
         var boundingSphere = attr.boundingSphere;
@@ -807,11 +699,11 @@ define([
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
             ellipsoid : ellipsoid,
-            vertexFormat : vertexFormat,
             positions : cleanPositions,
             width : corridorGeometry._width,
             cornerType : corridorGeometry._cornerType,
-            granularity : corridorGeometry._granularity
+            granularity : corridorGeometry._granularity,
+            saveAttributes: true
         };
         var attr;
         if (extrude) {
@@ -820,9 +712,10 @@ define([
             height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
-            attr = computePositionsExtruded(params);
+            attr = computePositionsExtruded(params, vertexFormat);
         } else {
-            attr = computePositions(params);
+            var computedPositions = CorridorGeometryLibrary.computePositions(params);
+            attr = combine(computedPositions, vertexFormat, ellipsoid);
             if (!vertexFormat.position) {
                 attr.attributes.position.values = undefined;
             } else {
