@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
+define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/Event'
@@ -196,44 +195,19 @@ define([
         }
     });
 
-    /**
-     * Given two DynamicObjects, takes the billboard properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
-     * @memberof DynamicBillboard
-     *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     */
-    DynamicBillboard.mergeProperties = function(targetObject, objectToMerge) {
-        var billboardToMerge = objectToMerge.billboard;
-        if (defined(billboardToMerge)) {
-
-            var targetBillboard = targetObject.billboard;
-            if (!defined(targetBillboard)) {
-                targetObject.billboard = targetBillboard = new DynamicBillboard();
-            }
-
-            targetBillboard.color = defaultValue(targetBillboard.color, billboardToMerge.color);
-            targetBillboard.eyeOffset = defaultValue(targetBillboard.eyeOffset, billboardToMerge.eyeOffset);
-            targetBillboard.horizontalOrigin = defaultValue(targetBillboard.horizontalOrigin, billboardToMerge.horizontalOrigin);
-            targetBillboard.image = defaultValue(targetBillboard.image, billboardToMerge.image);
-            targetBillboard.pixelOffset = defaultValue(targetBillboard.pixelOffset, billboardToMerge.pixelOffset);
-            targetBillboard.scale = defaultValue(targetBillboard.scale, billboardToMerge.scale);
-            targetBillboard.rotation = defaultValue(targetBillboard.rotation, billboardToMerge.rotation);
-            targetBillboard.alignedAxis = defaultValue(targetBillboard.alignedAxis, billboardToMerge.alignedAxis);
-            targetBillboard.show = defaultValue(targetBillboard.show, billboardToMerge.show);
-            targetBillboard.verticalOrigin = defaultValue(targetBillboard.verticalOrigin, billboardToMerge.verticalOrigin);
+    DynamicBillboard.prototype.merge = function(source) {
+        if (defined(source)) {
+            this.color = defaultValue(this.color, source.color);
+            this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
+            this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
+            this.image = defaultValue(this.image, source.image);
+            this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
+            this.scale = defaultValue(this.scale, source.scale);
+            this.rotation = defaultValue(this.rotation, source.rotation);
+            this.alignedAxis = defaultValue(this.alignedAxis, source.alignedAxis);
+            this.show = defaultValue(this.show, source.show);
+            this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the billboard associated with it.
-     * @memberof DynamicBillboard
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
-     */
-    DynamicBillboard.undefineProperties = function(dynamicObject) {
-        dynamicObject.billboard = undefined;
     };
 
     return DynamicBillboard;

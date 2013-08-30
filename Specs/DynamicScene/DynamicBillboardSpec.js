@@ -22,7 +22,7 @@ defineSuite([
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
-    it('mergeProperties does not change a fully configured billboard', function() {
+    it('merge does not change a fully configured billboard', function() {
         var expectedImage = 'image';
         var expectedScale = 'scale';
         var expectedRotation = 'rotation';
@@ -60,7 +60,7 @@ defineSuite([
         targetObject.billboard.pixelOffset = expectedPixelOffset;
         targetObject.billboard.show = expectedShow;
 
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.billboard.image).toEqual(expectedImage);
         expect(targetObject.billboard.scale).toEqual(expectedScale);
@@ -74,7 +74,7 @@ defineSuite([
         expect(targetObject.billboard.show).toEqual(expectedShow);
     });
 
-    it('mergeProperties creates and configures an undefined billboard', function() {
+    it('merge creates and configures an undefined billboard', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.billboard = new DynamicBillboard();
         objectToMerge.billboard.image = 1;
@@ -90,7 +90,7 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
 
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.billboard.image).toEqual(objectToMerge.billboard.image);
         expect(targetObject.billboard.scale).toEqual(objectToMerge.billboard.scale);
@@ -104,7 +104,7 @@ defineSuite([
         expect(targetObject.billboard.show).toEqual(objectToMerge.billboard.show);
     });
 
-    it('mergeProperties does not change when used with an undefined billboard', function() {
+    it('merge does not change when used with an undefined billboard', function() {
         var expectedImage = 'image';
         var expectedScale = 'scale';
         var expectedRotation = 'rotation';
@@ -131,7 +131,7 @@ defineSuite([
         targetObject.billboard.pixelOffset = expectedPixelOffset;
         targetObject.billboard.show = expectedShow;
 
-        DynamicBillboard.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.billboard.image).toEqual(expectedImage);
         expect(targetObject.billboard.scale).toEqual(expectedScale);

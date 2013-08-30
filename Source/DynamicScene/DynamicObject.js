@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/createGuid',
+define(['../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -18,6 +17,16 @@ define([
         JulianDate,
         TimeInterval) {
     "use strict";
+
+    function merge(target, source) {
+        if (defined(target)) {
+            if (typeof target.merge === 'function') {
+                target.merge(source);
+            }
+            return target;
+        }
+        return source;
+    }
 
     /**
      * DynamicObject instances are the primary data store for processed data.
@@ -361,59 +370,48 @@ define([
         return availabilityValue;
     };
 
-    /**
-     * Merge all of the properties of the supplied object onto this object.
-     * Properties which are already defined are not overwritten.
-     * @param other {DynamicObject} The object to merge.
-     * @private
-     */
-    DynamicObject.prototype.merge = function(other) {
-        if (!defined(other)) {
-            throw new DeveloperError('other is required');
-        }
-        for ( var property in other) {
-            if (other.hasOwnProperty(property)) {
-                this[property] = defaultValue(this[property], other[property]);
-            }
-        }
+    DynamicObject.prototype.merge = function(objectToMerge) {
+        this.availability = defaultValue(objectToMerge._availability, this._availability);
+        this.position = defaultValue(this._position, objectToMerge._position);
+        this.orientation = defaultValue(this._orientation, objectToMerge._orientation);
+        this.vertexPositions = defaultValue(this._vertexPositions, objectToMerge._vertexPositions);
+        this.viewFrom = defaultValue(this._viewFrom, objectToMerge._viewFrom);
+
+        this.billboard = merge(this._billboard, objectToMerge._billboard);
+        this.cone = merge(this._cone, objectToMerge._cone);
+        this.ellipsoid = merge(this._ellipsoid, objectToMerge._ellipsoid);
+        this.ellipse = merge(this._ellipse, objectToMerge._ellipse);
+        this.label = merge(this._label, objectToMerge._label);
+        this.path = merge(this._path, objectToMerge._path);
+        this.point = merge(this._point, objectToMerge._point);
+        this.polygon = merge(this._polygon, objectToMerge._polygon);
+        this.polyline = merge(this._polyline, objectToMerge._polyline);
+        this.pyramid = merge(this._pyramid, objectToMerge._pyramid);
+        this.vector = merge(this._vector, objectToMerge._vector);
     };
 
-    /**
-     * Given two DynamicObjects, takes the position, orientation, vertexPositions and availability
-     * properties from the second and assigns them to the first, assuming such properties did not
-     * already exist.
-     *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
-     */
-    DynamicObject.mergeProperties = function(targetObject, objectToMerge) {
-        targetObject.position = defaultValue(targetObject.position, objectToMerge.position);
-        targetObject.orientation = defaultValue(targetObject.orientation, objectToMerge.orientation);
-        targetObject.vertexPositions = defaultValue(targetObject.vertexPositions, objectToMerge.vertexPositions);
-        targetObject.viewFrom = defaultValue(targetObject.viewFrom, objectToMerge.viewFrom);
-        var availability = objectToMerge.availability;
-        if (defined(availability)) {
-            targetObject.availability = availability;
-        }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the position, orientation, vertexPositions and availability
-     * associated with it. This method is not normally called directly, but is part of the array of
-     * CZML processing functions that is passed into the CompositeDynamicObjectCollection constructor.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the billboard from.
-     */
-    DynamicObject.undefineProperties = function(dynamicObject) {
-        dynamicObject.position = undefined;
-        dynamicObject.orientation = undefined;
-        dynamicObject.vertexPositions = undefined;
-        dynamicObject.viewFrom = undefined;
-        dynamicObject.availability = undefined;
+    DynamicObject.prototype.clean = function() {
+        this._availability = undefined;
+        this._position = undefined;
+        this._orientation = undefined;
+        this._billboard = undefined;
+        this._cone = undefined;
+        this._ellipsoid = undefined;
+        this._ellipse = undefined;
+        this._label = undefined;
+        this._path = undefined;
+        this._point = undefined;
+        this._polygon = undefined;
+        this._polyline = undefined;
+        this._pyramid = undefined;
+        this._vertexPositions = undefined;
+        this._vector = undefined;
+        this._viewFrom = undefined;
     };
 
     DynamicObject.prototype._billboardListener = function(billboard, propertyName, value, oldValue) {
         this._propertyAssigned.raiseEvent(billboard, propertyName, value, oldValue);
     };
+
     return DynamicObject;
 });

@@ -50,7 +50,7 @@ defineSuite([
         expect(dynamicObject.isAvailable(interval.stop.addSeconds(1))).toEqual(false);
     });
 
-    it('mergeProperties does not change a fully configured billboard', function() {
+    it('merge does not change a fully configured billboard', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.position = 1;
         objectToMerge.orientation = 2;
@@ -65,7 +65,7 @@ defineSuite([
         targetObject.availability = TimeInterval.fromIso8601('2002-01-01/2003-01-01');
         targetObject.viewFrom = 10;
 
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.position).toEqual(6);
         expect(targetObject.orientation).toEqual(7);
@@ -74,7 +74,7 @@ defineSuite([
         expect(targetObject.viewFrom).toEqual(10);
     });
 
-    it('mergeProperties creates and configures an undefined object', function() {
+    it('merge creates and configures an undefined object', function() {
         var objectToMerge = new DynamicObject('objectToMerge');
         objectToMerge.position = 1;
         objectToMerge.orientation = 2;
@@ -84,7 +84,7 @@ defineSuite([
 
         var targetObject = new DynamicObject('targetObject');
 
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.position).toEqual(objectToMerge.position);
         expect(targetObject.orientation).toEqual(objectToMerge.orientation);
@@ -93,7 +93,7 @@ defineSuite([
         expect(targetObject.viewFrom).toEqual(objectToMerge.viewFrom);
     });
 
-    it('mergeProperties does not change when used with an undefined object', function() {
+    it('merge does not change when used with an undefined object', function() {
         var objectToMerge = new DynamicObject('targetObject');
 
         var targetObject = new DynamicObject('objectToMerge');
@@ -103,7 +103,7 @@ defineSuite([
         targetObject.availability = 4;
         targetObject.viewFrom = 5;
 
-        DynamicObject.mergeProperties(targetObject, objectToMerge);
+        targetObject.merge(objectToMerge);
 
         expect(targetObject.position).toEqual(1);
         expect(targetObject.orientation).toEqual(2);

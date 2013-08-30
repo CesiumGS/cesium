@@ -163,10 +163,10 @@ defineSuite([
         compositeDynamicObjectCollection.collections.push(dynamicObjectCollection2);
 
         var czml3 = {
-            'id' : 'testBillboard',
-            'billboard' : {
-                'show' : true,
-                'horizontalOrigin' : 'CENTER'
+            id : 'testBillboard',
+            billboard : {
+                show : true,
+                horizontalOrigin : 'CENTER'
             }
         };
         CzmlDataSource._processCzml(czml3, dynamicObjectCollection1);
@@ -183,10 +183,10 @@ defineSuite([
         expect(object.billboard.horizontalOrigin.getValue(new JulianDate())).toEqual(HorizontalOrigin.CENTER);
 
         var czml4 = {
-            'id' : 'testBillboard',
-            'billboard' : {
-                'horizontalOrigin' : 'LEFT',
-                'scale' : 3.0
+            id : 'testBillboard',
+            billboard : {
+                horizontalOrigin : 'LEFT',
+                scale : 3.0
             }
         };
         CzmlDataSource._processCzml(czml4, dynamicObjectCollection2);

@@ -1,6 +1,5 @@
 /*global define*/
-define([
-        '../Core/defined',
+define(['../Core/defined',
         '../Core/defineProperties',
         './DynamicObject',
         './DynamicObjectCollection'
@@ -162,7 +161,6 @@ define([
     }
 
     CompositeDynamicObjectCollection.prototype._onCollectionChanged = function() {
-
     };
 
     return CompositeDynamicObjectCollection;
