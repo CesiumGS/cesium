@@ -176,7 +176,7 @@ define([
      *
      * @memberof PolylinePipeline
      *
-     * @param {Array} positions The array of positions.  Each element is usually a {@see Cartesian3}, but all that is required is that the object have an <code>equals</code> function.
+     * @param {Array} positions The array of {Cartesian3} positions.
      *
      * @returns {Array} A new array of positions with no adjacent duplicate positions.  Positions are shallow copied.
      *
@@ -207,7 +207,7 @@ define([
             var v0 = positions[i - 1];
             var v1 = positions[i];
 
-            if (!v0.equals(v1)) {
+            if (!Cartesian3.equals(v0, v1)) {
                 cleanedPositions.push(v1); // Shallow copy!
             }
         }
@@ -269,11 +269,13 @@ define([
      * @param {Array} positions The array of type {Number} representing positions.
      * @param {Number|Array} height A number or array of numbers representing the heights of each position.
      * @param {Ellipsoid} [ellipsoid = Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @param {Array} [result] An array to place the resultant positions in.
      *
      * @returns {Array} The array of positions scaled to height.
 
      * @exception {DeveloperError} positions must be defined.
      * @exception {DeveloperError} height must be defined.
+     * @exception {DeveloperError} result.length must be equal to positions.length
      * @exception {DeveloperError} height.length must be equal to positions.length
      *
      * @example
@@ -284,7 +286,7 @@ define([
      *
      * var raisedPositions = PolylinePipeline.scaleToGeodeticHeight(positions, heights);
      */
-     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid) {
+     PolylinePipeline.scaleToGeodeticHeight = function(positions, height, ellipsoid, result) {
         if (!defined(positions)) {
             throw new DeveloperError('positions must be defined.');
         }
@@ -296,7 +298,16 @@ define([
         var length = positions.length;
         var i;
         var p = scaleP;
-        var newPositions = new Array(positions.length);
+        var newPositions;
+        if (defined(result)) {
+            if (result.length !== positions.length) {
+                throw new DeveloperError('result.length must be equal to positions.length');
+            }
+            newPositions = result;
+        } else {
+            newPositions = new Array(positions.length);
+        }
+
         if (height === 0) {
             for(i = 0; i < length; i+=3) {
                 p = ellipsoid.scaleToGeodeticSurface(Cartesian3.fromArray(positions, i, p), p);
