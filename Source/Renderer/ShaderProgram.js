@@ -654,13 +654,31 @@ define([
         }
 
         if(dependencyNode === undefined) {
-            // strip @see reference comments so we don't accidentally try to determine a dependency for something found
-            // in a reference comment
-            //var modifiedSource = glslSource.replace(new RegExp('@see\\s+.+\\s', 'g'), '@see ');
-            var modifiedSource = glslSource.replace(/\/\*\*[\s\S]*?\*\//gm, '/**\n * Comment replaced to prevent problems when determining dependencies on built-in functions\n */');
+            // strip doc comments so we don't accidentally try to determine a dependency for something found
+            // in a comment
+            var commentBlocks = glslSource.match(/\/\*\*[\s\S]*?\*\//gm);
+            if(commentBlocks !== undefined && commentBlocks !== null) {
+                for(i=0; i<commentBlocks.length; ++i) {
+                    var commentBlock = commentBlocks[i];
+
+                    // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
+                    var numberOfLines = commentBlock.match(/\n/gm).length;
+                    var modifiedComment = '';
+                    for(var lineNumber=0; lineNumber<numberOfLines; ++lineNumber) {
+                        if(lineNumber === 0) {
+                            modifiedComment += '// Comment replaced to prevent problems when determining dependencies on built-in functions\n';
+                        }
+                        else {
+                            modifiedComment += '//\n';
+                        }
+                    }
+
+                    glslSource = glslSource.replace(commentBlock, modifiedComment);
+                }
+            }
 
             // create new node
-            dependencyNode = {name:name, glslSource:modifiedSource, dependsOn:[], requiredBy:[], evaluated:false};
+            dependencyNode = {name:name, glslSource:glslSource, dependsOn:[], requiredBy:[], evaluated:false};
             nodes.push(dependencyNode);
         }
 
