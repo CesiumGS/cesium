@@ -1,4 +1,5 @@
-/*global define*/
+//TODO: remove debugger
+/*global define,debugger*/
 define([
         '../Core/combine',
         '../Core/defined',
@@ -216,6 +217,7 @@ define([
 
     function failedLoad() {
         // TODO
+        debugger;
     }
 
     function bufferLoad(model, name) {
