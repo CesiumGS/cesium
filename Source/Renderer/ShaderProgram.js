@@ -643,43 +643,127 @@ define([
         };
     }
 
-    function identifyBuiltins(source, builtinDictionary) {
-        // This expects well-behaved shaders, e.g., the built-ins are not commented out or redeclared.
-        var definitions = '';
-        for (var b in builtinDictionary) {
-            if (builtinDictionary.hasOwnProperty(b)) {
-                if (source.indexOf(b) !== -1) {
-                    definitions += builtinDictionary[b] + ' \n';
+    function getDependencyNode(name, glslSource, nodes) {
+        var dependencyNode = undefined;
 
-                    // remove the entry from the dictionary so we can't recurse indefinitely
-                    delete builtinDictionary[b];
-                }
-                }
+        // check if already loaded
+        for(var i=0; i<nodes.length; ++i) {
+            if(nodes[i].name === name) {
+                dependencyNode = nodes[i];
             }
-
-        // recurse incase a found builtin calls other builtin functions/structs/constants
-        if(definitions !== '') {
-            definitions = definitions + '\n' + identifyBuiltins(definitions, builtinDictionary);
         }
 
-        return definitions;
+        if(dependencyNode === undefined) {
+            // strip @see reference comments so we don't accidentally try to determine a dependency for something found
+            // in a reference comment
+            //var modifiedSource = glslSource.replace(new RegExp('@see\\s+.+\\s', 'g'), '@see ');
+            var modifiedSource = glslSource.replace(/\/\*\*[\s\S]*?\*\//gm, '/**\n * Comment replaced to prevent problems when determining dependencies on built-in functions\n */');
+
+            // create new node
+            dependencyNode = {name:name, glslSource:modifiedSource, dependsOn:[], requiredBy:[], evaluated:false};
+            nodes.push(dependencyNode);
+        }
+
+        return dependencyNode;
     }
 
-    function getBuiltins(source) {
-        var builtins = identifyBuiltins(source, cloneHashSet(ShadersBuiltinFunctions));
-        builtins = identifyBuiltins(builtins + source, cloneHashSet(ShadersBuiltinStructs)) + builtins;
-        builtins = identifyBuiltins(builtins + source, cloneHashSet(ShadersBuiltinConstants)) + builtins;
-        return builtins;
+    function generateDependencies(currentNode, dependencyNodes, shaderBuiltinDictionary) {
+
+        if(currentNode.evaluated === true) {
+            return;
+        }
+
+        currentNode.evaluated = true;
+
+        // identify all dependencies that are referenced from this glsl source code
+        for (var name in shaderBuiltinDictionary) {
+            if (currentNode.name !== name && shaderBuiltinDictionary.hasOwnProperty(name)) {
+
+                if (currentNode.glslSource.indexOf(name) !== -1) {
+
+                    var referencedNode = getDependencyNode(name, shaderBuiltinDictionary[name], dependencyNodes);
+                    currentNode.dependsOn.push(referencedNode);
+                    referencedNode.requiredBy.push(currentNode);
+
+                    // recursive call to find any dependencies of the new node
+                    generateDependencies(referencedNode, dependencyNodes, shaderBuiltinDictionary);
+                }
+            }
+        }
     }
 
-    function cloneHashSet(originalHashSet) {
-        var copy = {};
-         for ( var property in originalHashSet ) {
-           if ( originalHashSet.hasOwnProperty( property ) ) {
-               copy[ property ] = originalHashSet[ property ];
-           }
-         }
-         return copy;
+    function sortDependencies(dependencyNodes) {
+        var nodesWithoutIncomingEdges = [];
+
+        while(dependencyNodes.length > 0) {
+            var node = dependencyNodes.pop();
+            if(node.requiredBy.length === 0) {
+                nodesWithoutIncomingEdges.push(node);
+            }
+        }
+
+        while(nodesWithoutIncomingEdges.length > 0) {
+            var currentNode = nodesWithoutIncomingEdges.shift();
+
+            dependencyNodes.push(currentNode);
+
+            for(var i=0; i<currentNode.dependsOn.length; ++i) {
+                // remove the edge from the graph
+                var referencedNode = currentNode.dependsOn[i];
+                var index = referencedNode.requiredBy.indexOf(currentNode);
+                referencedNode.requiredBy.splice(index, 1);
+
+                // if referenced node has no more incoming edges, add to list
+                if(referencedNode.requiredBy.length === 0) {
+                    nodesWithoutIncomingEdges.push(referencedNode);
+                }
+            }
+        }
+
+        dependencyNodes.reverse();
+    }
+
+    function getBuiltins(shaderSource) {
+
+        // generate a dependency graph for builtin functions
+        var functionDependencyNodes = [];
+        var originalNode = getDependencyNode('main', shaderSource, functionDependencyNodes);
+        generateDependencies(originalNode, functionDependencyNodes, ShadersBuiltinFunctions);
+        sortDependencies(functionDependencyNodes);
+
+        // concatenate the source code for the function dependencies
+        var functionSource = '';
+        for(var i=0; i<functionDependencyNodes.length; ++i) {
+            functionSource = functionSource + functionDependencyNodes[i].glslSource + '\n';
+        }
+
+
+        // generate a dependency graph for builtin structs
+        var structDependencyNodes = [];
+        var rootNode = getDependencyNode('main', functionSource, structDependencyNodes);
+        generateDependencies(rootNode, structDependencyNodes, ShadersBuiltinStructs);
+        sortDependencies(structDependencyNodes);
+
+        // concatenate the source code for the struct dependencies
+        var structPlusFunctionSource = '';
+        for(i=0; i<structDependencyNodes.length; ++i) {
+            structPlusFunctionSource = structPlusFunctionSource + structDependencyNodes[i].glslSource + '\n';
+        }
+
+
+        // generate a dependency graph for builtin constants
+        var constantDependencyNodes = [];
+        rootNode = getDependencyNode('main', structPlusFunctionSource, constantDependencyNodes);
+        generateDependencies(rootNode, constantDependencyNodes, ShadersBuiltinConstants);
+        sortDependencies(constantDependencyNodes);
+
+        // concatenate the source code for the struct dependencies
+        var constantPlusStructPlusFunctionSource = '';
+        for(i=0; i<constantDependencyNodes.length; ++i) {
+            constantPlusStructPlusFunctionSource = constantPlusStructPlusFunctionSource + constantDependencyNodes[i].glslSource + '\n';
+        }
+
+        return constantPlusStructPlusFunctionSource.replace(originalNode.glslSource, '');
     }
 
     function getFragmentShaderPrecision() {
