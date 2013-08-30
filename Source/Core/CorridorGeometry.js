@@ -66,7 +66,7 @@ define([
     function combine(computedPositions, vertexFormat, ellipsoid) {
         var positions = computedPositions.positions;
         var corners = computedPositions.corners;
-        var endPositions = computedPositions.endCaps;
+        var endPositions = computedPositions.endPositions;
         var computedLefts = computedPositions.lefts;
         var computedNormals = computedPositions.normals;
         var attributes = new GeometryAttributes();

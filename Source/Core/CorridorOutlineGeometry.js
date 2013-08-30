@@ -2,47 +2,37 @@
 define([
         './defined',
         './DeveloperError',
-        './Cartesian2',
         './Cartesian3',
         './CornerType',
         './CorridorGeometryLibrary',
         './ComponentDatatype',
         './Ellipsoid',
-        './EllipsoidTangentPlane',
         './Geometry',
         './IndexDatatype',
         './Math',
-        './Matrix3',
         './PolylinePipeline',
         './PrimitiveType',
-        './Quaternion',
         './defaultValue',
         './BoundingSphere',
         './GeometryAttribute',
-        './GeometryAttributes',
-        './VertexFormat'
+        './GeometryAttributes'
     ], function(
         defined,
         DeveloperError,
-        Cartesian2,
         Cartesian3,
         CornerType,
         CorridorGeometryLibrary,
         ComponentDatatype,
         Ellipsoid,
-        EllipsoidTangentPlane,
         Geometry,
         IndexDatatype,
         CesiumMath,
-        Matrix3,
         PolylinePipeline,
         PrimitiveType,
-        Quaternion,
         defaultValue,
         BoundingSphere,
         GeometryAttribute,
-        GeometryAttributes,
-        VertexFormat) {
+        GeometryAttributes) {
     "use strict";
 
     var cartesian1 = new Cartesian3();
@@ -50,6 +40,7 @@ define([
     var cartesian3 = new Cartesian3();
 
     function combine(computedPositions, ellipsoid) {
+        var wallIndices = [];
         var positions = computedPositions.positions;
         var corners = computedPositions.corners;
         var endPositions = computedPositions.endPositions;
@@ -105,6 +96,7 @@ define([
         indices[index++] = front/3;
         indices[index++] = (back-2)/3;
         if (addEndPositions) { // add rounded end
+            wallIndices.push(front/3);
             leftPos = cartesian1;
             rightPos = cartesian2;
             var firstEndPositions = endPositions[0];
@@ -135,6 +127,7 @@ define([
         finalPositions.set(leftEdge, back - leftEdge.length + 1);
 
         length = leftEdge.length - 3;
+        wallIndices.push(front/3, (back-2)/3);
         for(i = 0; i < length; i+=3) {
             LL = front/3;
             LR = LL + 1;
@@ -160,6 +153,7 @@ define([
             if (defined(l)) {
                 back -= 3;
                 start = UR;
+                wallIndices.push(start, LR);
                 for (j = 0; j < l.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(l, j*3, outsidePoint);
                     indices[index++] = start - j - 1;
@@ -167,10 +161,12 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
                     back -= 3;
                 }
+                wallIndices.push(start - Math.floor(l.length/6), (back-2)/3 + 1);
                 front += 3;
             } else {
                 front += 3;
                 start = LR;
+                wallIndices.push(start, UR);
                 for (j = 0; j < r.length/3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j*3, outsidePoint);
                     indices[index++] = start + j;
@@ -178,6 +174,7 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
                     front += 3;
                 }
+                wallIndices.push(start + Math.floor(r.length/6), front/3 - 1);
                 back -= 3;
             }
             rightEdge = positions[posIndex++];
@@ -202,6 +199,7 @@ define([
             }
             front -= 3;
             back += 3;
+            wallIndices.push(front/3, (back-2)/3);
         }
 
         if (addEndPositions) {  // add rounded end
@@ -232,6 +230,9 @@ define([
         indices[index++] = front/3;
         indices[index++] = (back-2)/3;
 
+        if (i === 0) {
+            wallIndices.push(front/3, (back-2)/3);
+        }
 
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -242,7 +243,8 @@ define([
         return {
             attributes: attributes,
             indices: indices,
-            boundingSphere: BoundingSphere.fromVertices(finalPositions)
+            boundingSphere: BoundingSphere.fromVertices(finalPositions),
+            wallIndices: wallIndices
         };
     }
 
@@ -250,6 +252,7 @@ define([
         var ellipsoid = params.ellipsoid;
         var computedPositions = CorridorGeometryLibrary.computePositions(params);
         var attr = combine(computedPositions, ellipsoid);
+        var wallIndices = attr.wallIndices;
         var height = params.height;
         var extrudedHeight = params.extrudedHeight;
         var attributes = attr.attributes;
@@ -271,7 +274,7 @@ define([
         length /= 3;
         var i;
         var iLength = indices.length;
-        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, (iLength + length) * 2);
+        var newIndices = IndexDatatype.createTypedArray(newPositions.length / 3, (iLength + wallIndices.length) * 2);
         newIndices.set(indices);
         var index = iLength;
         for (i = 0; i < iLength; i+=2) { // bottom indices
@@ -282,8 +285,8 @@ define([
         }
 
         var UL, LL;
-        for (i = 0; i < length; i++) { //wall indices
-            UL = i;
+        for (i = 0; i < wallIndices.length; i++) { //wall indices
+            UL = wallIndices[i];
             LL = UL + length;
             newIndices[index++] = UL;
             newIndices[index++] = LL;
