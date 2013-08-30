@@ -116,6 +116,22 @@ define([
     };
 
     /**
+     * Returns the data for the interval which contains the specified date.
+     *
+     * @param {JulianDate} date The date to search for.
+     *
+     * @memberof TimeIntervalCollection
+     *
+     * @returns The data for the interval containing the specified date, or undefined if no such interval exists.
+     *
+     * @exception {DeveloperError} date is required.
+     */
+    TimeIntervalCollection.prototype.findDataForIntervalContainingDate = function(date) {
+        var index = this.indexOf(date);
+        return index >= 0 ? this._intervals[index].data : undefined;
+    };
+
+    /**
      * Returns true if the specified date is contained in the interval collection.
      *
      * @param {JulianDate} date The date to search for.
