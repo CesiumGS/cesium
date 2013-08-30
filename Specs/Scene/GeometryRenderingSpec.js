@@ -289,6 +289,39 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
+    function renderAsync(instance, afterView) {
+        var primitive = new Primitive({
+            geometryInstances : instance,
+            appearance : new PerInstanceColorAppearance({
+                flat : true
+            })
+        });
+
+        var frameState = createFrameState();
+
+        waitsFor(function() {
+            return render(context, frameState, primitive) > 0;
+        });
+
+        runs(function() {
+            viewSphere3D(frameState.camera, primitive._boundingSphere, primitive.modelMatrix);
+
+            if (typeof afterView === 'function') {
+                afterView(frameState, primitive);
+            }
+
+            context.getUniformState().update(frameState);
+
+            ClearCommand.ALL.execute(context);
+            expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+            render(context, frameState, primitive);
+            expect(context.readPixels()).not.toEqual([0, 0, 0, 0]);
+
+            primitive = primitive && primitive.destroy();
+        });
+    }
+
     describe('BoxGeometry', function() {
         var instance;
         beforeAll(function() {
@@ -320,6 +353,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -354,6 +391,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -391,6 +432,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance);
         });
+
+        it('async', function() {
+            renderAsync(instance);
+        });
     }, 'WebGL');
 
     describe('EllipseGeometry', function() {
@@ -425,6 +470,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('rotated', function() {
@@ -504,6 +553,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
@@ -556,6 +609,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance);
         });
+
+        it('async', function() {
+            renderAsync(instance);
+        });
     }, 'WebGL');
 
     describe('SphereGeometry', function() {
@@ -589,6 +646,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     }, 'WebGL');
 
@@ -624,6 +685,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('rotated geometry', function() {
@@ -712,6 +777,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var transform = Transforms.eastNorthUpToFixedFrame(primitive._boundingSphere.center);
@@ -788,6 +857,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('at height', function() {
@@ -895,6 +968,10 @@ defineSuite([
             pickGeometry(instance);
         });
 
+        it('async', function() {
+            renderAsync(instance);
+        });
+
         it('renders bottom', function() {
             var afterView = function(frameState, primitive) {
                 var height = (extrudedHeight - geometryHeight) * 0.5;
@@ -990,6 +1067,10 @@ defineSuite([
         it('pick', function() {
             pickGeometry(instance, afterView3D);
         });
+
+        it('async', function() {
+            renderAsync(instance, afterView3D);
+        });
     }, 'WebGL');
 
     describe('CorridorGeometry', function() {
@@ -1031,6 +1112,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('at height', function() {
@@ -1095,6 +1180,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
 
         it('renders bottom', function() {
@@ -1173,6 +1262,10 @@ defineSuite([
 
         it('pick', function() {
             pickGeometry(instance);
+        });
+
+        it('async', function() {
+            renderAsync(instance);
         });
     });
 
