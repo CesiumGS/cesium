@@ -16,7 +16,7 @@ define([
      *
      * @param {Number} [near=0.0] The lower bound of the camera range.
      * @param {Number} [nearValue=0.0] The value at the lower bound of the camera range.
-     * @param {Number} [far=0.0] The upper bound of the camera range.
+     * @param {Number} [far=1.0] The upper bound of the camera range.
      * @param {Number} [farValue=0.0] The value at the upper bound of the camera range.
      */
     var NearFarScalar = function(near, nearValue, far, farValue) {
@@ -41,7 +41,7 @@ define([
         /**
          * The value at the upper bound of the camera range.
          * @type {Number}
-         * @default 1.0
+         * @default 0.0
          */
         this.farValue = defaultValue(farValue, 0.0);
     };
@@ -52,7 +52,7 @@ define([
      *
      * @param {NearFarScalar} nearFarScalar The NearFarScalar to duplicate.
      * @param {NearFarScalar} [result] The object onto which to store the result.
-     * @return {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided. (Returns undefined if nearFarScalar is undefined)
+     * @returns {NearFarScalar} The modified result parameter or a new NearFarScalar instance if one was not provided. (Returns undefined if nearFarScalar is undefined)
      */
     NearFarScalar.clone = function(nearFarScalar, result) {
         if (!defined(nearFarScalar)) {
@@ -78,10 +78,10 @@ define([
      * <code>false</code> otherwise.
      * @memberof NearFarScalar
      *
-     * @param {NearFarScalar} [left] The first Extent.
-     * @param {NearFarScalar} [right] The second Extent.
+     * @param {NearFarScalar} [left] The first NearFarScalar.
+     * @param {NearFarScalar} [right] The second NearFarScalar.
      *
-     * @return {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
+     * @returns {Boolean} <code>true</code> if left and right are equal; otherwise <code>false</code>.
      */
     NearFarScalar.equals = function(left, right) {
         return (left === right) ||

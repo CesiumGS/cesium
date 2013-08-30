@@ -1295,7 +1295,8 @@ define([
         },
 
         /**
-         * An automatic GLSL uniform containing height of the eye (camera) in the 2D scene in meters.
+         * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
+         *  of the eye (camera) in the 2D scene in meters.
          * <br /><br />
          * Like all automatic uniforms, <code>czm_eyeHeight2D</code> does not need to be explicitly declared.
          * However, it can be explicitly declared when a shader is also used by other applications such
@@ -1722,6 +1723,11 @@ define([
          *
          * @alias czm_sceneMode
          * @glslUniform
+         *
+         * @see czm_sceneMode2D
+         * @see czm_sceneModeColumbusView
+         * @see czm_sceneMode3D
+         * @see czm_sceneModeMorphing
          *
          * @example
          * // GLSL declaration

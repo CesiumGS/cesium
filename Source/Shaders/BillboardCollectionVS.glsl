@@ -6,7 +6,7 @@ attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (t
 attribute vec2 pixelOffset;
 attribute vec4 eyeOffsetAndScale;               // eye offset in meters
 attribute vec4 rotationAndAlignedAxis;
-attribute vec4 scaleByDistance;                 // minRangeFromEye, scaleAtMinRange, maxRangeFromEye, scaleAtMaxRange
+attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -66,7 +66,7 @@ void main()
     // ensure that t will fall within the range of [0.0, 1.0]
     lengthSq = clamp(lengthSq, nearDistanceSq, farDistanceSq);
 
-    float t = (lengthSq-nearDistanceSq) / (farDistanceSq-nearDistanceSq);
+    float t = (lengthSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
 
     t = pow(t, 0.15);
 

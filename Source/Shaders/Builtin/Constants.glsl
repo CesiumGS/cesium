@@ -286,6 +286,9 @@ const float czm_webMercatorMaxLatitude = 1.4844222297453324;
  * @name czm_sceneMode2D
  * @glslConstant
  * @see czm_sceneMode
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneMode3D
+ * @see czm_sceneModeMorphing
  */
 const float czm_sceneMode2D = 0.0;
 
@@ -295,6 +298,9 @@ const float czm_sceneMode2D = 0.0;
  * @name czm_sceneModeColumbusView
  * @glslConstant
  * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneMode3D
+ * @see czm_sceneModeMorphing
  */
 const float czm_sceneModeColumbusView = 1.0;
 
@@ -304,6 +310,9 @@ const float czm_sceneModeColumbusView = 1.0;
  * @name czm_sceneMode3D
  * @glslConstant
  * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneModeMorphing
  */
 const float czm_sceneMode3D = 2.0;
 
@@ -313,5 +322,8 @@ const float czm_sceneMode3D = 2.0;
  * @name czm_sceneModeMorphing
  * @glslConstant
  * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneMode3D
  */
 const float czm_sceneModeMorphing = 3.0;

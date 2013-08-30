@@ -20,7 +20,7 @@ defineSuite(['Core/NearFarScalar'], function(NearFarScalar) {
     });
 
     it('clone with a result parameter', function() {
-        var scalar = new NearFarScalar(1.0, 2.0, 3.0);
+        var scalar = new NearFarScalar(1.0, 2.0, 3.0, 4.0);
         var result = new NearFarScalar();
         var returnedResult = NearFarScalar.clone(scalar, result);
         expect(scalar).toNotBe(result);
@@ -29,14 +29,14 @@ defineSuite(['Core/NearFarScalar'], function(NearFarScalar) {
     });
 
     it('clone without a result parameter', function() {
-        var scalar = new NearFarScalar(1.0, 2.0, 3.0);
+        var scalar = new NearFarScalar(1.0, 2.0, 3.0, 4.0);
         var result = NearFarScalar.clone(scalar);
         expect(scalar).toNotBe(result);
         expect(scalar).toEqual(result);
     });
 
     it('clone works with "this" result parameter', function() {
-        var scalar = new NearFarScalar(1.0, 2.0, 3.0);
+        var scalar = new NearFarScalar(1.0, 2.0, 3.0, 4.0);
         var returnedResult = NearFarScalar.clone(scalar, scalar);
         expect(scalar).toBe(returnedResult);
     });
