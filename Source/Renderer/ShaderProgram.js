@@ -712,9 +712,12 @@ define([
 
     function sortDependencies(dependencyNodes) {
         var nodesWithoutIncomingEdges = [];
+        var allNodes = [];
 
         while(dependencyNodes.length > 0) {
             var node = dependencyNodes.pop();
+            allNodes.push(node);
+
             if(node.requiredBy.length === 0) {
                 nodesWithoutIncomingEdges.push(node);
             }
@@ -736,6 +739,21 @@ define([
                     nodesWithoutIncomingEdges.push(referencedNode);
                 }
             }
+        }
+
+        // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
+        var badNodes = [];
+        for(var j=0; j<allNodes.length; ++j) {
+            if(allNodes[j].requiredBy.length !== 0) {
+                badNodes.push(allNodes[j]);
+            }
+        }
+        if(badNodes.length !== 0) {
+            var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
+            for(j=0; j<badNodes.length; ++j) {
+                message  = message + badNodes[j].name + '\n';
+            }
+            throw new DeveloperError(message);
         }
 
         dependencyNodes.reverse();

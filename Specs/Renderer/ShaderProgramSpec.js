@@ -11,7 +11,8 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/UniformDatatype'
+         'Renderer/UniformDatatype',
+         'Shaders/Builtin/Functions'
      ], 'Renderer/ShaderProgram', function(
          createContext,
          destroyContext,
@@ -24,7 +25,8 @@ defineSuite([
          PrimitiveType,
          BufferUsage,
          ClearCommand,
-         UniformDatatype) {
+         UniformDatatype,
+         ShadersBuiltinFunctions) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -34,10 +36,16 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
+
+        ShadersBuiltinFunctions.czm_circularDependency1 = 'void czm_circularDependency1() { czm_circularDependency2(); }';
+        ShadersBuiltinFunctions.czm_circularDependency2 = 'void czm_circularDependency2() { czm_circularDependency1(); }';
     });
 
     afterAll(function() {
         destroyContext(context);
+
+        delete ShadersBuiltinFunctions.czm_circularDependency1;
+        delete ShadersBuiltinFunctions.czm_circularDependency2;
     });
 
     it('has vertex and fragment shader source', function() {
@@ -521,6 +529,16 @@ defineSuite([
 
         expect(function() {
             s.destroy();
+        }).toThrow();
+    });
+
+    it('fails with built-in function circular dependency', function() {
+        var vs = 'void main() {  }';
+        var fs = 'void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }';
+
+
+        expect(function() {
+            sp = context.createShaderProgram(vs, fs);
         }).toThrow();
     });
 }, 'WebGL');
