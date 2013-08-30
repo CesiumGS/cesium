@@ -717,7 +717,6 @@ define([
                     colorCommand.renderState = this._backFaceRS;
                     colorCommand.shaderProgram = this._sp;
                     colorCommand.uniformMap = uniforms;
-                    colorCommands.push(colorCommand);
 
                     pickCommand = pickCommands[i];
                     if (!defined(pickCommand)) {
@@ -729,7 +728,6 @@ define([
                     pickCommand.renderState = this._backFaceRS;
                     pickCommand.shaderProgram = this._pickSP;
                     pickCommand.uniformMap = uniforms;
-                    pickCommands.push(pickCommand);
 
                     ++i;
                 }
@@ -744,7 +742,6 @@ define([
                 colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
-                colorCommands.push(colorCommand);
 
                 pickCommand = pickCommands[i];
                 if (!defined(pickCommand)) {
@@ -756,7 +753,6 @@ define([
                 pickCommand.renderState = this._frontFaceRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
-                pickCommands.push(pickCommand);
 
                 ++vaIndex;
             }
