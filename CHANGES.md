@@ -82,6 +82,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 * Added `CorridorGeometry`.
+* Added `Billboard.scaleByDistance` and `NearFarScalar` to control Billboard minimum/maximum scale based on Camera distance to Billboard.
 
 ### b19 - 2013-08-01
 
