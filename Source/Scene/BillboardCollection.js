@@ -62,6 +62,7 @@ define([
     var COLOR_INDEX = Billboard.COLOR_INDEX;
     var ROTATION_INDEX = Billboard.ROTATION_INDEX;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX;
+    var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -76,7 +77,8 @@ define([
         direction : 6,
         pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
         color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
-        rotationAndAlignedAxis : 8
+        rotationAndAlignedAxis : 8,
+        scaleByDistance : 9
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -150,6 +152,10 @@ define([
         this._compiledShaderRotation = false;
         this._compiledShaderRotationPick = false;
 
+        this._shaderScaleByDistance = false;
+        this._compiledShaderScaleByDistance = false;
+        this._compiledShaderScaleByDistancePick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -206,7 +212,8 @@ define([
                               BufferUsage.STATIC_DRAW, // IMAGE_INDEX_INDEX
                               BufferUsage.STATIC_DRAW, // COLOR_INDEX
                               BufferUsage.STATIC_DRAW, // ROTATION_INDEX
-                              BufferUsage.STATIC_DRAW  // ALIGNED_AXIS_INDEX
+                              BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
+                              BufferUsage.STATIC_DRAW  // SCALE_BY_DISTANCE_INDEX
                           ];
 
         var that = this;
@@ -248,6 +255,7 @@ define([
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
+     *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
      *   color : Color.WHITE
      * });
@@ -672,6 +680,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
+        }, {
+            index : attributeIndices.scaleByDistance,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -851,6 +864,35 @@ define([
         writer(i + 3, rotation, x, y, z);
     }
 
+    function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.scaleByDistance];
+        var near = 0.0;
+        var nearValue = 0.0;
+        var far = 0.0;
+        var farValue = 0.0;
+
+        var scale = billboard.getScaleByDistance();
+        if (defined(scale)) {
+            near = scale.near;
+            nearValue = scale.nearValue;
+            far = scale.far;
+            farValue = scale.farValue;
+
+            if (nearValue !== 1.0 || farValue !== 1.0) {
+                // scale by distance calculation in shader need not be enabled
+                // until a billboard with near and far !== 1.0 is found
+                billboardCollection._shaderScaleByDistance = true;
+            }
+        }
+
+        writer(i + 0, near, nearValue, far, farValue);
+        writer(i + 1, near, nearValue, far, farValue);
+        writer(i + 2, near, nearValue, far, farValue);
+        writer(i + 3, near, nearValue, far, farValue);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -860,6 +902,7 @@ define([
         writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1045,6 +1088,10 @@ define([
                     writers.push(writeRotationAndAlignedAxis);
                 }
 
+                if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                    writers.push(writeScaleByDistance);
+                }
+
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1119,16 +1166,19 @@ define([
                 });
             }
 
-            if (!defined(this._sp) || (this._shaderRotation && !this._compiledShaderRotation)) {
+            if (!defined(this._sp) || (this._shaderRotation && !this._compiledShaderRotation) ||
+                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                     this._sp,
                     createShaderSource({
-                        defines : [this._shaderRotation ? 'ROTATION' : ''],
+                        defines : [this._shaderRotation ? 'ROTATION' : '',
+                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     BillboardCollectionFS,
                     attributeIndices);
                 this._compiledShaderRotation = this._shaderRotation;
+                this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1156,19 +1206,24 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            if (!defined(this._spPick) || (this._shaderRotation && !this._compiledShaderRotationPick)) {
+            if (!defined(this._spPick) ||
+                    (this._shaderRotation && !this._compiledShaderRotationPick) ||
+                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
-                        this._spPick,
-                        createShaderSource({
-                            defines : ['RENDER_FOR_PICK', this._shaderRotation ? 'ROTATION' : ''],
-                            sources : [BillboardCollectionVS]
-                        }),
-                        createShaderSource({
-                            defines : ['RENDER_FOR_PICK'],
-                            sources : [BillboardCollectionFS]
-                        }),
-                        attributeIndices);
-                this._compiledShaderRotation = this._shaderRotationPick;
+                    this._spPick,
+                    createShaderSource({
+                        defines : ['RENDER_FOR_PICK',
+                                   this._shaderRotation ? 'ROTATION' : '',
+                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
+                        sources : [BillboardCollectionVS]
+                    }),
+                    createShaderSource({
+                        defines : ['RENDER_FOR_PICK'],
+                        sources : [BillboardCollectionFS]
+                    }),
+                    attributeIndices);
+                this._compiledShaderRotationPick = this._shaderRotation;
+                this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];
