@@ -154,6 +154,17 @@ define([
         this.translucent = translucent;
 
         /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
+         * @readonly
+         *
+         * @default true
+         */
+        this.closed = !aboveGround;
+
+        /**
          * When <code>true</code>, the geometry is expected to be on the ellipsoid's
          * surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState}
          * has backface culling enabled.
