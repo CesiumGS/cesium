@@ -156,6 +156,24 @@ define([
          * @readonly
          */
         this.glslDatatype = glslDatatype;
+
+        /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @readonly
+         *
+         * @default false
+         */
+        this.translucent = defaultValue(options.translucent, false);
+
+        /**
+         * When <code>true</code>, the geometry is expected to be closed.
+         *
+         * @readonly
+         *
+         * @default false
+         */
+        this.closed = defaultValue(options.closed, false);
     };
 
     /**
