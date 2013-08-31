@@ -2636,7 +2636,7 @@ define([
 
                         // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
                         // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
-                        if (typeof uniformArray == 'undefined') {
+                        if (typeof uniformArray === 'undefined') {
                             continue;
                         }
 
