@@ -73,6 +73,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
+* Improved visual quality of closed translucent geometries.
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * `CesiumWidget` and `Viewer` now display an HTML error panel if an error occurs while rendering, which can be disabled with a constructor option.

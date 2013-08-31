@@ -696,8 +696,8 @@ define([
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
             if (defined(this._backFaceRS)) {
-                colorCommands.length = this._va.length * 2.0;
-                pickCommands.length = this._va.length * 2.0;
+                colorCommands.length = this._va.length * 2;
+                pickCommands.length = this._va.length * 2;
             } else {
                 colorCommands.length = this._va.length;
                 pickCommands.length = this._va.length;
