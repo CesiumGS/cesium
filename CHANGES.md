@@ -83,6 +83,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Fixed triangulation for polygons that cross the international date line.
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
+* Fixed Cesium on Nexus 4 with Android 4.3.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 
 ### b19 - 2013-08-01
