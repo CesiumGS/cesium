@@ -59,7 +59,7 @@ define([
      * @param {Number} value The floating-point value to encode.
      * @param {Object} [result] The object onto which to store the result.
      *
-     * @return {Object} The modified result parameter or a new instance if one was not provided.
+     * @returns {Object} The modified result parameter or a new instance if one was not provided.
      *
      * @exception {DeveloperError} value is required.
      *
@@ -108,7 +108,7 @@ define([
      *
      * @param {Cartesian3} cartesian The cartesian to encode.
      * @param {EncodedCartesian3} [result] The object onto which to store the result.
-     * @return {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
+     * @returns {EncodedCartesian3} The modified result parameter or a new EncodedCartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      *

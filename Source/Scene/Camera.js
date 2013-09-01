@@ -234,7 +234,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Matrix4} DOC_TBA
+     * @returns {Matrix4} DOC_TBA
      */
     Camera.prototype.getInverseTransform = function() {
         update(this);
@@ -246,7 +246,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Matrix4} The view matrix.
+     * @returns {Matrix4} The view matrix.
      *
      * @see UniformState#getView
      * @see UniformState#setView
@@ -311,7 +311,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Camera} A new copy of the Camera instance.
+     * @returns {Camera} A new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
         var camera = new Camera(this._canvas);

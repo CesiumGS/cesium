@@ -236,7 +236,7 @@ define([
      *
      * @memberof CentralBody
      *
-     * @return {Ellipsoid}
+     * @returns {Ellipsoid}
      */
     CentralBody.prototype.getEllipsoid = function() {
         return this._ellipsoid;
@@ -763,7 +763,7 @@ define([
      *
      * @memberof CentralBody
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see CentralBody#destroy
      */
@@ -781,7 +781,7 @@ define([
      *
      * @memberof CentralBody
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
