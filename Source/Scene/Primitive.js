@@ -15,11 +15,13 @@ define([
         '../Core/TaskProcessor',
         '../Core/GeographicProjection',
         '../Core/Queue',
+        '../Core/clone',
         '../Renderer/BufferUsage',
         '../Renderer/VertexLayout',
         '../Renderer/CommandLists',
         '../Renderer/DrawCommand',
         '../Renderer/createShaderSource',
+        '../Renderer/CullFace',
         './PrimitivePipeline',
         './PrimitiveState',
         './SceneMode',
@@ -40,11 +42,13 @@ define([
         TaskProcessor,
         GeographicProjection,
         Queue,
+        clone,
         BufferUsage,
         VertexLayout,
         CommandLists,
         DrawCommand,
         createShaderSource,
+        CullFace,
         PrimitivePipeline,
         PrimitiveState,
         SceneMode,
@@ -249,8 +253,10 @@ define([
 
         this._va = [];
         this._attributeIndices = undefined;
+        this._primitiveType = undefined;
 
-        this._rs = undefined;
+        this._frontFaceRS = undefined;
+        this._backFaceRS = undefined;
         this._sp = undefined;
 
         this._pickSP = undefined;
@@ -625,24 +631,7 @@ define([
             }
 
             this._va = va;
-
-            for (i = 0; i < length; ++i) {
-                geometry = geometries[i];
-
-                // renderState, shaderProgram, and uniformMap for commands are set below.
-
-                colorCommand = new DrawCommand();
-                colorCommand.owner = this;
-                colorCommand.primitiveType = geometry.primitiveType;
-                colorCommand.vertexArray = this._va[i];
-                colorCommands.push(colorCommand);
-
-                pickCommand = new DrawCommand();
-                pickCommand.owner = this;
-                pickCommand.primitiveType = geometry.primitiveType;
-                pickCommand.vertexArray = this._va[i];
-                pickCommands.push(pickCommand);
-            }
+            this._primitiveType = geometries[0].primitiveType;
 
             if (this._releaseGeometryInstances) {
                 this.geometryInstances = undefined;
@@ -674,7 +663,19 @@ define([
         }
 
         if (createRS) {
-            this._rs = context.createRenderState(appearance.renderState);
+            if (appearance.closed && appearance.translucent) {
+                var rs = clone(appearance.renderState, false);
+                rs.cull = {
+                    enabled : true,
+                    face : CullFace.BACK
+                };
+                this._frontFaceRS = context.createRenderState(rs);
+
+                rs.cull.face = CullFace.FRONT;
+                this._backFaceRS = context.createRenderState(rs);
+            } else {
+                this._frontFaceRS = context.createRenderState(appearance.renderState);
+            }
         }
 
         if (createSP) {
@@ -694,17 +695,66 @@ define([
         if (createRS || createSP) {
             var uniforms = (defined(material)) ? material._uniforms : undefined;
 
+            if (defined(this._backFaceRS)) {
+                colorCommands.length = this._va.length * 2;
+                pickCommands.length = this._va.length * 2;
+            } else {
+                colorCommands.length = this._va.length;
+                pickCommands.length = this._va.length;
+            }
+
             length = colorCommands.length;
+            var vaIndex = 0;
             for (i = 0; i < length; ++i) {
+                if (defined(this._backFaceRS)) {
+                    colorCommand = colorCommands[i];
+                    if (!defined(colorCommand)) {
+                        colorCommand = colorCommands[i] = new DrawCommand();
+                    }
+                    colorCommand.owner = this;
+                    colorCommand.primitiveType = this._primitiveType;
+                    colorCommand.vertexArray = this._va[vaIndex];
+                    colorCommand.renderState = this._backFaceRS;
+                    colorCommand.shaderProgram = this._sp;
+                    colorCommand.uniformMap = uniforms;
+
+                    pickCommand = pickCommands[i];
+                    if (!defined(pickCommand)) {
+                        pickCommand = pickCommands[i] = new DrawCommand();
+                    }
+                    pickCommand.owner = this;
+                    pickCommand.primitiveType = this._primitiveType;
+                    pickCommand.vertexArray = this._va[vaIndex];
+                    pickCommand.renderState = this._backFaceRS;
+                    pickCommand.shaderProgram = this._pickSP;
+                    pickCommand.uniformMap = uniforms;
+
+                    ++i;
+                }
+
                 colorCommand = colorCommands[i];
-                colorCommand.renderState = this._rs;
+                if (!defined(colorCommand)) {
+                    colorCommand = colorCommands[i] = new DrawCommand();
+                }
+                colorCommand.owner = this;
+                colorCommand.primitiveType = this._primitiveType;
+                colorCommand.vertexArray = this._va[vaIndex];
+                colorCommand.renderState = this._frontFaceRS;
                 colorCommand.shaderProgram = this._sp;
                 colorCommand.uniformMap = uniforms;
 
                 pickCommand = pickCommands[i];
-                pickCommand.renderState = this._rs;
+                if (!defined(pickCommand)) {
+                    pickCommand = pickCommands[i] = new DrawCommand();
+                }
+                pickCommand.owner = this;
+                pickCommand.primitiveType = this._primitiveType;
+                pickCommand.vertexArray = this._va[vaIndex];
+                pickCommand.renderState = this._frontFaceRS;
                 pickCommand.shaderProgram = this._pickSP;
                 pickCommand.uniformMap = uniforms;
+
+                ++vaIndex;
             }
         }
 
