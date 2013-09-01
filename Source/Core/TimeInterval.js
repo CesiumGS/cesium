@@ -92,7 +92,7 @@ define([
      * @param {Boolean} [isStopIncluded=true] <code>true</code> if the stop date is included in the interval, <code>false</code> otherwise.
      * @param {Object} [data] The data associated with this interval.
      *
-     * @return {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
+     * @returns {TimeInterval} The new {@Link TimeInterval} instance or <code>undefined</code> if an invalid ISO8601 string is provided.
      *
      * @see TimeInterval
      * @see TimeIntervalCollection
@@ -117,7 +117,7 @@ define([
      *
      * @param {TimeInterval} [left] The first Cartesian.
      * @param {TimeInterval} [right] The second Cartesian.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     TimeInterval.equals = function(left, right) {
         return left === right ||
@@ -140,7 +140,7 @@ define([
      * @param {TimeInterval} [right] The second TimeInterval.
      * @param {Number} epsilon The epsilon to use for equality testing.
      *
-     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be number.
      */
@@ -187,7 +187,7 @@ define([
      * this will intersect the two intervals and return the new interval with the data from this
      * interval.
      *
-     * @return {TimeInterval} The new {@Link TimeInterval} that is the intersection of the two intervals,
+     * @returns {TimeInterval} The new {@Link TimeInterval} that is the intersection of the two intervals,
      * with its data representing the merge of the data in the two existing intervals.
      */
     TimeInterval.prototype.intersect = function(other, mergeCallback) {
@@ -252,7 +252,7 @@ define([
      *
      * @param {JulianDate} date The date to check for.
      *
-     * @return {Boolean} <code>true</code> if the TimeInterval contains the specified date, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if the TimeInterval contains the specified date, <code>false</code> otherwise.
      */
     TimeInterval.prototype.contains = function(date) {
         if (this.isEmpty) {
@@ -281,7 +281,7 @@ define([
      * @memberof TimeInterval
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     TimeInterval.prototype.equals = function(other) {
         return TimeInterval.equals(this, other);
@@ -295,7 +295,7 @@ define([
      *
      * @param {TimeInterval} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */

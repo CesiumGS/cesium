@@ -33,7 +33,7 @@ define(['./defined'], function(defined) {
      * Creates a string representing this RequestErrorEvent.
      * @memberof RequestErrorEvent
      *
-     * @return {String} A string representing the provided RequestErrorEvent.
+     * @returns {String} A string representing the provided RequestErrorEvent.
      */
     RequestErrorEvent.prototype.toString = function() {
         var str = 'Request has failed.';

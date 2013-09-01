@@ -48,7 +48,7 @@ define(['./defined'], function(defined) {
      *
      * @memberof Enumeration
      *
-     * @return {Number} The numeric value of the enumeration.
+     * @returns {Number} The numeric value of the enumeration.
      */
     Enumeration.prototype.valueOf = function() {
         return this.value;
@@ -59,7 +59,7 @@ define(['./defined'], function(defined) {
      *
      * @memberof Enumeration
      *
-     * @return {String} The name of the enumeration for debugging purposes.
+     * @returns {String} The name of the enumeration for debugging purposes.
      */
     Enumeration.prototype.toString = function() {
         return this.name;

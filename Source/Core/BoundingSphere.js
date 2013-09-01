@@ -73,7 +73,7 @@ define([
      *
      * @param {Array} positions An array of points that the bounding sphere will enclose.  Each point must have <code>x</code>, <code>y</code>, and <code>z</code> properties.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      */
@@ -226,7 +226,7 @@ define([
      * @param {Extent} extent The extent around which to create a bounding sphere.
      * @param {Object} [projection=GeographicProjection] The projection used to project the extent into 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtent2D = function(extent, projection, result) {
         return BoundingSphere.fromExtentWithHeights2D(extent, projection, 0.0, 0.0, result);
@@ -243,7 +243,7 @@ define([
      * @param {Number} [minimumHeight=0.0] The minimum height over the extent.
      * @param {Number} [maximumHeight=0.0] The maximum height over the extent.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtentWithHeights2D = function(extent, projection, minimumHeight, maximumHeight, result) {
         if (!defined(result)) {
@@ -289,7 +289,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid used to determine positions of the extent.
      * @param {Number} [surfaceHeight=0.0] The height above the surface of the ellipsoid.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.fromExtent3D = function(extent, ellipsoid, surfaceHeight, result) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -323,7 +323,7 @@ define([
      *        the stride is 5, however, two array elements are skipped and the next position begins at array
      *        index 5.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @see <a href='http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/'>Bounding Sphere computation article</a>
      *
@@ -501,7 +501,7 @@ define([
      * @param {Number} [oppositeCorner] The maximum height over the extent.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} corner and oppositeCorner are required.
      *
@@ -533,7 +533,7 @@ define([
      * @param {Ellipsoid} ellipsoid The ellipsoid around which to create a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
      *
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} ellipsoid is required.
      *
@@ -560,7 +560,7 @@ define([
      *
      * @param {BoundingSphere} sphere The bounding sphere to duplicate.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided. (Returns undefined if sphere is undefined)
      */
     BoundingSphere.clone = function(sphere, result) {
         if (!defined(sphere)) {
@@ -585,7 +585,7 @@ define([
      * @param {BoundingSphere} left A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} right A sphere to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -626,7 +626,7 @@ define([
      * @param {BoundingSphere} sphere A sphere to expand.
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} point is required.
@@ -658,7 +658,7 @@ define([
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
@@ -696,7 +696,7 @@ define([
      * @param {BoundingSphere} sphere The bounding sphere to apply the transformation to.
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} transform is required.
@@ -734,7 +734,7 @@ define([
      * @param {Cartesian3} position The position to calculate the distance from.
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
-     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      *
      * @exception {DeveloperError} sphere is required.
      * @exception {DeveloperError} position is required.
@@ -784,7 +784,7 @@ define([
      * @param {BoundingSphere} sphere The bounding sphere to transform to 2D.
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      */
@@ -885,7 +885,7 @@ define([
      *
      * @param {BoundingSphere} [left] The first BoundingSphere.
      * @param {BoundingSphere} [right] The second BoundingSphere.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     BoundingSphere.equals = function(left, right) {
         return (left === right) ||
@@ -900,7 +900,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
@@ -912,7 +912,7 @@ define([
      *
      * @param {BoundingSphere} right The sphere to enclose in this bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} sphere is required.
      */
@@ -926,7 +926,7 @@ define([
      *
      * @param {Cartesian3} point A point to enclose in a bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
      * @exception {DeveloperError} point is required.
      */
@@ -941,7 +941,7 @@ define([
      * @param {Cartesian4} plane The coefficients of the plane in the for ax + by + cz + d = 0
      *                           where the coefficients a, b, c, and d are the components x, y, z,
      *                           and w of the {Cartesian4}, respectively.
-     * @return {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
+     * @returns {Intersect} {Intersect.INSIDE} if the entire sphere is on the side of the plane the normal
      *                     is pointing, {Intersect.OUTSIDE} if the entire sphere is on the opposite side,
      *                     and {Intersect.INTERSETING} if the sphere intersects the plane.
      *
@@ -957,7 +957,7 @@ define([
      *
      * @param {Matrix4} transform The transformation matrix to apply to the bounding sphere.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      *
      * @exception {DeveloperError} transform is required.
      */
@@ -976,7 +976,7 @@ define([
      * @param {Cartesian3} position The position to calculate the distance from.
      * @param {Cartesian3} direction The direction from position.
      * @param {Cartesian2} [result] A Cartesian2 to store the nearest and farthest distances.
-     * @return {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
+     * @returns {Interval} The nearest and farthest distances on the bounding sphere from position in direction.
      *
      * @exception {DeveloperError} position is required.
      * @exception {DeveloperError} direction is required.
@@ -991,7 +991,7 @@ define([
      *
      * @param {Object} [projection=GeographicProjection] The projection to 2D.
      * @param {BoundingSphere} [result] The object onto which to store the result.
-     * @return {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
+     * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if none was provided.
      */
     BoundingSphere.prototype.projectTo2D = function(projection, result) {
         return BoundingSphere.projectTo2D(this, projection, result);
@@ -1003,7 +1003,7 @@ define([
      * @memberof BoundingSphere
      *
      * @param {BoundingSphere} [right] The right hand side BoundingSphere.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     BoundingSphere.prototype.equals = function(right) {
         return BoundingSphere.equals(this, right);

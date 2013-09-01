@@ -95,7 +95,7 @@ define([
      *
      * @memberof Appearance
      *
-     * @return String The full GLSL fragment shader source.
+     * @returns String The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         return createShaderSource({
