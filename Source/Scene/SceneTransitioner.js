@@ -324,7 +324,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * @memberof SceneTransitioner
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
     SceneTransitioner.prototype.isDestroyed = function() {
         return false;

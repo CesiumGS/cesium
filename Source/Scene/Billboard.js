@@ -128,7 +128,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
      *
      * @see Billboard#setShow
      */
@@ -164,7 +164,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The Cartesian position of this billboard.
+     * @returns {Cartesian3} The Cartesian position of this billboard.
      *
      * @see Billboard#setPosition
      */
@@ -227,7 +227,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian2} The pixel offset of this billboard.
+     * @returns {Cartesian2} The pixel offset of this billboard.
      *
      * @see Billboard#setPixelOffset
      */
@@ -280,7 +280,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {NearFarScalar} The near/far scaling values based on camera distance to the billboard
+     * @returns {NearFarScalar} The near/far scaling values based on camera distance to the billboard
      *
      * @see Billboard#setScaleByDistance
      */
@@ -333,7 +333,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The 3D Cartesian offset applied to this billboard in eye coordinates.
+     * @returns {Cartesian3} The 3D Cartesian offset applied to this billboard in eye coordinates.
      *
      * @see Billboard#setEyeOffset
      */
@@ -391,7 +391,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {HorizontalOrigin} The horizontal origin of this billboard.
+     * @returns {HorizontalOrigin} The horizontal origin of this billboard.
      *
      * @see Billboard#setHorizontalOrigin
      */
@@ -437,7 +437,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {VerticalOrigin} The vertical origin of this billboard.
+     * @returns {VerticalOrigin} The vertical origin of this billboard.
      *
      * @see Billboard#setVerticalOrigin
      */
@@ -483,7 +483,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The scale used to size the billboard.
+     * @returns {Number} The scale used to size the billboard.
      *
      * @see Billboard#setScale
      */
@@ -561,7 +561,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The color that is multiplied with the billboard's texture.
+     * @returns {Number} The color that is multiplied with the billboard's texture.
      *
      * @see Billboard#setColor
      */
@@ -628,7 +628,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The rotation angle in radians.
+     * @returns {Number} The rotation angle in radians.
      *
      * @see Billboard#setRotation
      * @see Billboard#getAlignedAxis
@@ -668,7 +668,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The aligned axis.
+     * @returns {Cartesian3} The aligned axis.
      *
      * @see Billboard#setRotation
      * @see Billboard#getRotation
@@ -723,7 +723,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The billboard's width or undefined.
+     * @returns {Number} The billboard's width or undefined.
      *
      * @see Billboard#setWidth
      * @see Billboard#getHeight
@@ -756,7 +756,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The billboard's height or undefined.
+     * @returns {Number} The billboard's height or undefined.
      *
      * @see Billboard#setHeight
      * @see Billboard#getWidth
@@ -832,7 +832,7 @@ define([
      * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
      *
-     * @return {Cartesian2} The screen-space position of the billboard.
+     * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      * @exception {DeveloperError} context is required.
@@ -870,7 +870,7 @@ define([
      *
      * @param {Billboard} other The billboard to compare for equality.
      *
-     * @return {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
      */
     Billboard.prototype.equals = function(other) {
         return this === other ||

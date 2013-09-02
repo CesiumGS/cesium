@@ -2708,7 +2708,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
@@ -2719,7 +2719,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Number} DOC_TBA
+     * @returns {Number} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
@@ -2730,7 +2730,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *
@@ -2822,7 +2822,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * @memberof ShaderProgram
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see ShaderProgram#destroy
      */
@@ -2839,7 +2839,7 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * @memberof ShaderProgram
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *

@@ -361,7 +361,7 @@ define([
      *
      * @memberof Framebuffer
      *
-     * @return {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
+     * @returns {Boolean} Returns true if the framebuffer has a depth attachment; otherwise, false.
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      */
@@ -377,7 +377,7 @@ define([
      *
      * @memberof Framebuffer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see Framebuffer#destroy
      */
@@ -398,7 +398,7 @@ define([
      *
      * @memberof Framebuffer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This framebuffer was destroyed, i.e., destroy() was called.
      *

@@ -109,7 +109,7 @@ define([
      *
      * @memberof SkyAtmosphere
      *
-     * @return {Ellipsoid}
+     * @returns {Ellipsoid}
      */
     SkyAtmosphere.prototype.getEllipsoid = function() {
         return this._ellipsoid;
@@ -193,7 +193,7 @@ define([
      *
      * @memberof SkyAtmosphere
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see SkyAtmosphere#destroy
      */
@@ -211,7 +211,7 @@ define([
      *
      * @memberof SkyAtmosphere
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

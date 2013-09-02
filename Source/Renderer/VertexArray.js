@@ -197,7 +197,7 @@ define([
      *
      * @memberof VertexArray
      *
-     * @return {Buffer} DOC_TBA.
+     * @returns {Buffer} DOC_TBA.
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      */
     VertexArray.prototype.getIndexBuffer = function() {
@@ -254,7 +254,7 @@ define([
      *
      * @memberof VertexArray
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see VertexArray#destroy
      */
@@ -278,7 +278,7 @@ define([
      *
      * @memberof VertexArray
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This vertex array was destroyed, i.e., destroy() was called.
      *

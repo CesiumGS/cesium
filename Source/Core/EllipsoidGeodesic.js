@@ -224,7 +224,7 @@ define([
     /**
      * @memberof EllipsoidGeodesic
      *
-     * @return {Number} The surface distance between the start and end point
+     * @returns {Number} The surface distance between the start and end point
      *
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
@@ -259,7 +259,7 @@ define([
 
     /**
      * @memberof EllipsoidGeodesic
-     * @return {Cartographic} The initial planetodetic point on the path.
+     * @returns {Cartographic} The initial planetodetic point on the path.
      */
     EllipsoidGeodesic.prototype.getStart = function() {
         return this._start;
@@ -267,7 +267,7 @@ define([
 
     /**
      * @memberof EllipsoidGeodesic
-     * @return {Cartographic} The final planetodetic point on the path.
+     * @returns {Cartographic} The final planetodetic point on the path.
      */
     EllipsoidGeodesic.prototype.getEnd = function() {
         return this._end;
@@ -276,7 +276,7 @@ define([
     /**
      * @memberof EllipsoidGeodesic
      *
-     * @return {Number} The heading at the initial point.
+     * @returns {Number} The heading at the initial point.
      *
      * @exception {DeveloperError} start and end must be set before calling funciton getSurfaceDistance
      */
@@ -291,7 +291,7 @@ define([
     /**
      * @memberof EllipsoidGeodesic
      *
-     * @return {Number} The heading at the final point.
+     * @returns {Number} The heading at the final point.
      *
      * @exception {DeveloperError} start and end must be set before calling funciton getEndHeading
      */

@@ -140,7 +140,7 @@ define([
      *
      * @memberof DynamicPolygonVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPolygonVisualizer#destroy
      */
@@ -158,7 +158,7 @@ define([
      *
      * @memberof DynamicPolygonVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

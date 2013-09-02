@@ -315,7 +315,7 @@ define([
      *
      * @memberof CubeMap
      *
-     * @return {Boolean} True if the source pixels are flipped vertically; otherwise, false.
+     * @returns {Boolean} True if the source pixels are flipped vertically; otherwise, false.
      *
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      */
@@ -339,7 +339,7 @@ define([
      *
      * @memberof CubeMap
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see CubeMap#destroy
      */
@@ -357,7 +357,7 @@ define([
      *
      * @memberof CubeMap
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This cube map was destroyed, i.e., destroy() was called.
      *
