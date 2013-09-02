@@ -644,31 +644,30 @@ define([
     }
 
     function getDependencyNode(name, glslSource, nodes) {
-        var dependencyNode = undefined;
+        var dependencyNode;
 
         // check if already loaded
-        for(var i=0; i<nodes.length; ++i) {
-            if(nodes[i].name === name) {
+        for ( var i = 0; i < nodes.length; ++i) {
+            if (nodes[i].name === name) {
                 dependencyNode = nodes[i];
             }
         }
 
-        if(dependencyNode === undefined) {
+        if (dependencyNode === undefined) {
             // strip doc comments so we don't accidentally try to determine a dependency for something found
             // in a comment
             var commentBlocks = glslSource.match(/\/\*\*[\s\S]*?\*\//gm);
-            if(commentBlocks !== undefined && commentBlocks !== null) {
-                for(i=0; i<commentBlocks.length; ++i) {
+            if (commentBlocks !== undefined && commentBlocks !== null) {
+                for (i = 0; i < commentBlocks.length; ++i) {
                     var commentBlock = commentBlocks[i];
 
                     // preserve the number of lines in the comment block so the line numbers will be correct when debugging shaders
                     var numberOfLines = commentBlock.match(/\n/gm).length;
                     var modifiedComment = '';
-                    for(var lineNumber=0; lineNumber<numberOfLines; ++lineNumber) {
-                        if(lineNumber === 0) {
+                    for ( var lineNumber = 0; lineNumber < numberOfLines; ++lineNumber) {
+                        if (lineNumber === 0) {
                             modifiedComment += '// Comment replaced to prevent problems when determining dependencies on built-in functions\n';
-                        }
-                        else {
+                        } else {
                             modifiedComment += '//\n';
                         }
                     }
@@ -678,7 +677,13 @@ define([
             }
 
             // create new node
-            dependencyNode = {name:name, glslSource:glslSource, dependsOn:[], requiredBy:[], evaluated:false};
+            dependencyNode = {
+                name : name,
+                glslSource : glslSource,
+                dependsOn : [],
+                requiredBy : [],
+                evaluated : false
+            };
             nodes.push(dependencyNode);
         }
 
@@ -686,19 +691,16 @@ define([
     }
 
     function generateDependencies(currentNode, dependencyNodes, shaderBuiltinDictionary) {
-
-        if(currentNode.evaluated === true) {
+        if (currentNode.evaluated) {
             return;
         }
 
         currentNode.evaluated = true;
 
         // identify all dependencies that are referenced from this glsl source code
-        for (var name in shaderBuiltinDictionary) {
+        for ( var name in shaderBuiltinDictionary) {
             if (currentNode.name !== name && shaderBuiltinDictionary.hasOwnProperty(name)) {
-
                 if (currentNode.glslSource.indexOf(name) !== -1) {
-
                     var referencedNode = getDependencyNode(name, shaderBuiltinDictionary[name], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
@@ -714,28 +716,28 @@ define([
         var nodesWithoutIncomingEdges = [];
         var allNodes = [];
 
-        while(dependencyNodes.length > 0) {
+        while (dependencyNodes.length > 0) {
             var node = dependencyNodes.pop();
             allNodes.push(node);
 
-            if(node.requiredBy.length === 0) {
+            if (node.requiredBy.length === 0) {
                 nodesWithoutIncomingEdges.push(node);
             }
         }
 
-        while(nodesWithoutIncomingEdges.length > 0) {
+        while (nodesWithoutIncomingEdges.length > 0) {
             var currentNode = nodesWithoutIncomingEdges.shift();
 
             dependencyNodes.push(currentNode);
 
-            for(var i=0; i<currentNode.dependsOn.length; ++i) {
+            for ( var i = 0; i < currentNode.dependsOn.length; ++i) {
                 // remove the edge from the graph
                 var referencedNode = currentNode.dependsOn[i];
                 var index = referencedNode.requiredBy.indexOf(currentNode);
                 referencedNode.requiredBy.splice(index, 1);
 
                 // if referenced node has no more incoming edges, add to list
-                if(referencedNode.requiredBy.length === 0) {
+                if (referencedNode.requiredBy.length === 0) {
                     nodesWithoutIncomingEdges.push(referencedNode);
                 }
             }
@@ -743,15 +745,15 @@ define([
 
         // if there are any nodes left with incoming edges, then there was a circular dependency somewhere in the graph
         var badNodes = [];
-        for(var j=0; j<allNodes.length; ++j) {
-            if(allNodes[j].requiredBy.length !== 0) {
+        for ( var j = 0; j < allNodes.length; ++j) {
+            if (allNodes[j].requiredBy.length !== 0) {
                 badNodes.push(allNodes[j]);
             }
         }
-        if(badNodes.length !== 0) {
+        if (badNodes.length !== 0) {
             var message = 'A circular dependency was found in the following built-in functions/structs/constants: \n';
-            for(j=0; j<badNodes.length; ++j) {
-                message  = message + badNodes[j].name + '\n';
+            for (j = 0; j < badNodes.length; ++j) {
+                message = message + badNodes[j].name + '\n';
             }
             throw new DeveloperError(message);
         }
@@ -760,7 +762,6 @@ define([
     }
 
     function getBuiltins(shaderSource) {
-
         // generate a dependency graph for builtin functions
         var functionDependencyNodes = [];
         var originalNode = getDependencyNode('main', shaderSource, functionDependencyNodes);
@@ -769,11 +770,9 @@ define([
 
         // concatenate the source code for the function dependencies
         var functionSource = '';
-        for(var i=0; i<functionDependencyNodes.length; ++i) {
+        for ( var i = 0; i < functionDependencyNodes.length; ++i) {
             functionSource = functionSource + functionDependencyNodes[i].glslSource + '\n';
         }
-
-
         // generate a dependency graph for builtin structs
         var structDependencyNodes = [];
         var rootNode = getDependencyNode('main', functionSource, structDependencyNodes);
@@ -782,11 +781,9 @@ define([
 
         // concatenate the source code for the struct dependencies
         var structPlusFunctionSource = '';
-        for(i=0; i<structDependencyNodes.length; ++i) {
+        for (i = 0; i < structDependencyNodes.length; ++i) {
             structPlusFunctionSource = structPlusFunctionSource + structDependencyNodes[i].glslSource + '\n';
         }
-
-
         // generate a dependency graph for builtin constants
         var constantDependencyNodes = [];
         rootNode = getDependencyNode('main', structPlusFunctionSource, constantDependencyNodes);
@@ -795,7 +792,7 @@ define([
 
         // concatenate the source code for the struct dependencies
         var constantPlusStructPlusFunctionSource = '';
-        for(i=0; i<constantDependencyNodes.length; ++i) {
+        for (i = 0; i < constantDependencyNodes.length; ++i) {
             constantPlusStructPlusFunctionSource = constantPlusStructPlusFunctionSource + constantDependencyNodes[i].glslSource + '\n';
         }
 
@@ -803,11 +800,7 @@ define([
     }
 
     function getFragmentShaderPrecision() {
-        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
-               '  precision highp float; \n' +
-               '#else \n' +
-               '  precision mediump float; \n' +
-               '#endif \n\n';
+        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' + '  precision highp float; \n' + '#else \n' + '  precision mediump float; \n' + '#endif \n\n';
     }
 
     function getAutomaticUniformDeclaration(uniforms, uniform) {
@@ -828,7 +821,7 @@ define([
         // This expects well-behaved shaders, e.g., the automatic uniform is not commented out or redeclared.
         var declarations = '';
         var uniforms = AutomaticUniforms;
-        for (var uniform in uniforms) {
+        for ( var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
                 if (source.indexOf(uniform) !== -1) {
                     declarations += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
@@ -843,20 +836,11 @@ define([
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsAndBuiltins = getBuiltins(vsSourceVersioned.source) +
-                                    '\n#line 0\n' +
-                                    vsSourceVersioned.source;
-        var vsSource = vsSourceVersioned.version +
-                       getAutomaticUniforms(vsAndBuiltins) +
-                       vsAndBuiltins;
+        var vsAndBuiltins = getBuiltins(vsSourceVersioned.source) + '\n#line 0\n' + vsSourceVersioned.source;
+        var vsSource = vsSourceVersioned.version + getAutomaticUniforms(vsAndBuiltins) + vsAndBuiltins;
 
-        var fsAndBuiltins = getBuiltins(fsSourceVersioned.source) +
-                                    '\n#line 0\n' +
-                                    fsSourceVersioned.source;
-        var fsSource = fsSourceVersioned.version +
-                       getFragmentShaderPrecision() +
-                       getAutomaticUniforms(fsAndBuiltins) +
-                       fsAndBuiltins;
+        var fsAndBuiltins = getBuiltins(fsSourceVersioned.source) + '\n#line 0\n' + fsSourceVersioned.source;
+        var fsSource = fsSourceVersioned.version + getFragmentShaderPrecision() + getAutomaticUniforms(fsAndBuiltins) + fsAndBuiltins;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
@@ -946,8 +930,7 @@ define([
         for ( var i = 0; i < numberOfUniforms; ++i) {
             var activeUniform = gl.getActiveUniform(program, i);
             var suffix = '[0]';
-            var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ?
-                    activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
+            var uniformName = activeUniform.name.indexOf(suffix, activeUniform.name.length - suffix.length) !== -1 ? activeUniform.name.slice(0, activeUniform.name.length - 3) : activeUniform.name;
 
             // Ignore GLSL built-in uniforms returned in Firefox.
             if (uniformName.indexOf('gl_') !== 0) {
@@ -1022,7 +1005,7 @@ define([
         var automaticUniforms = [];
         var manualUniforms = {};
 
-        for (var uniform in uniforms) {
+        for ( var uniform in uniforms) {
             if (uniforms.hasOwnProperty(uniform)) {
                 var automaticUniform = AutomaticUniforms[uniform];
                 if (automaticUniform) {
@@ -1117,7 +1100,7 @@ define([
         var automaticUniforms = this._automaticUniforms;
 
         if (uniformMap) {
-            for (var uniform in manualUniforms) {
+            for ( var uniform in manualUniforms) {
                 if (manualUniforms.hasOwnProperty(uniform)) {
                     manualUniforms[uniform].value = uniformMap[uniform]();
                 }

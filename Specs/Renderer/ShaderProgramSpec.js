@@ -533,10 +533,8 @@ defineSuite([
     });
 
     it('fails with built-in function circular dependency', function() {
-        var vs = 'void main() {  }';
+        var vs = 'void main() { gl_Position = vec4(0.0); }';
         var fs = 'void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }';
-
-
         expect(function() {
             sp = context.createShaderProgram(vs, fs);
         }).toThrow();

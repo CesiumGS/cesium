@@ -2,10 +2,9 @@
 define([
         './UniformDatatype'
     ],function(
-            UniformDatatype) {
+        UniformDatatype) {
 
     "use strict";
-    /*global console*/
 
     return {
         /**
