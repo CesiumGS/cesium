@@ -45,11 +45,11 @@ define([
         templateElement.textContent = '<li>\
 <!-- ko if: hasChildren -->\
 <input type="checkbox" data-bind="attr: { id: id }, checked: expanded">\
-<label data-bind="attr: { for: id }, text: name"></label>\
+<label data-bind="attr: { for: id }, text: name" class="cesium-dataSourceBrowser-item"></label>\
 <ul data-bind="template: { name: \'' + templateID + '\', foreach: children }"></ul>\
 <!-- /ko -->\
 <!-- ko ifnot: hasChildren -->\
-<span data-bind="text: name, click: select"></span>\
+<span data-bind="text: name, click: select" class="cesium-dataSourceBrowser-item"></span>\
 <!-- /ko -->';
         element.appendChild(templateElement);
 

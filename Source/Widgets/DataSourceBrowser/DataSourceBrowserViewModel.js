@@ -145,8 +145,17 @@ define([
         var objects = dynamicObjectCollection.getObjects();
         for ( var i = 0, len = objects.length; i < len; ++i) {
             var object = objects[i];
-            var dynamicObjectViewModel = new DataSourceViewModel(object.id, this, object);
-            dataSourceViewModel.children.push(dynamicObjectViewModel);
+            if (defined(object.position)) {
+                var name = object.id;
+                if (defined(object.label) && defined(object.label.text)) {
+                    // TODO: Check if text is a ConstantProperty.
+                    name = object.label.text.getValue(0);
+                } else if (object.id.substring(0, 16) === '/Application/STK') {
+                    name = object.id.substring(object.id.lastIndexOf('/') + 1);
+                }
+                var dynamicObjectViewModel = new DataSourceViewModel(name, this, object);
+                dataSourceViewModel.children.push(dynamicObjectViewModel);
+            }
         }
 
         this._dataSourceViewModels.push(dataSourceViewModel);

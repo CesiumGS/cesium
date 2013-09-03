@@ -99,7 +99,7 @@
 }
 
 .cesium-dataSourceBrowser-dataSources label {
-    background-position: 18px 0;
+    background-position: 23px 0;
 }
 
 .cesium-dataSourceBrowser-dataSources label::before {
@@ -129,4 +129,22 @@
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-hidden {
     display: none;
+}
+
+.cesium-dataSourceBrowser-item {
+    display: block;
+    background-color: transparent;
+    cursor: pointer;
+    padding: 0 5px;
+    border-radius: 4px;
+    box-shadow: 0 0 5px transparent;
+    -webkit-transition: background-color 0.4s, box-shadow 0.4s;
+    -moz-transition: background-color 0.4s, box-shadow 0.4s;
+    transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.cesium-dataSourceBrowser-item:hover {
+    background-color: rgba(68, 136, 187, 0.5);  /* RGB is #48b */
+    text-decoration: underline;
+    box-shadow: 0 0 5px #48b;
 }
