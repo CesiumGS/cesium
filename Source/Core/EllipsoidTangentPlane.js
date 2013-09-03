@@ -105,7 +105,7 @@ define([
      *
      * @param {Cartesian3} cartesian The point to project.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -141,7 +141,7 @@ define([
      *
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian2 instances onto which to store results.
-     * @return {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
+     * @returns {Array} The modified result parameter or a new array of Cartesian2 instances if none was provided.
      *
      * @exception {DeveloperError} cartesians is required.
      */
@@ -175,7 +175,7 @@ define([
      *
      * @param {Array} cartesians The array of points to project.
      * @param {Array} [result] The array of Cartesian3 instances onto which to store results.
-     * @return {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
+     * @returns {Array} The modified result parameter or a new array of Cartesian3 instances if none was provided.
      *
      * @exception {DeveloperError} cartesians is required.
      */

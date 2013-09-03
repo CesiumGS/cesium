@@ -33,7 +33,7 @@ define([
      * @param {Function} requestFunction The actual function that makes the request.
      * This function is expected to return a Promise for the requested data.
      *
-     * @return {Promise} Either undefined, meaning the request would exceed the maximum
+     * @returns {Promise} Either undefined, meaning the request would exceed the maximum
      * number of parallel requests, or a Promise that returns the requested data.
      *
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>

@@ -199,7 +199,7 @@ define([
      *
      * @memberof DynamicConeVisualizerUsingCustomSensor
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicConeVisualizerUsingCustomSensor#destroy
      */
@@ -217,7 +217,7 @@ define([
      *
      * @memberof DynamicConeVisualizerUsingCustomSensor
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

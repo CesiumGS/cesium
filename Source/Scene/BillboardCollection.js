@@ -232,7 +232,7 @@ define([
      *
      * @param {Object}[billboard=undefined] A template describing the billboard's properties as shown in Example 1.
      *
-     * @return {Billboard} The billboard that was added to the collection.
+     * @returns {Billboard} The billboard that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link BillboardCollection#update} is called, the collection's vertex buffer
@@ -282,7 +282,7 @@ define([
      *
      * @param {Billboard} billboard The billboard to remove.
      *
-     * @return {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, when
      * {@link BillboardCollection#update} is called, the collection's vertex buffer
@@ -377,7 +377,7 @@ define([
      *
      * @param {Billboard} billboard The billboard to check for.
      *
-     * @return {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see BillboardCollection#get
      */
@@ -396,7 +396,7 @@ define([
      *
      * @param {Number} index The zero-based index of the billboard.
      *
-     * @return {Billboard} The billboard at the specified index.
+     * @returns {Billboard} The billboard at the specified index.
      *
      * @performance Expected constant time.  If billboards were removed from the collection and
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
@@ -431,7 +431,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {Number} The number of billboards in this collection.
+     * @returns {Number} The number of billboards in this collection.
      *
      * @performance Expected constant time.  If billboards were removed from the collection and
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
@@ -509,7 +509,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return <code>true</code> if the texture atlas is destroyed when the collection is
+     * @returns <code>true</code> if the texture atlas is destroyed when the collection is
      * destroyed; otherwise, <code>false</code>.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -1261,7 +1261,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see BillboardCollection#destroy
      */
@@ -1279,7 +1279,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -98,7 +98,7 @@ define([
      * @param {Credit} left The first credit
      * @param {Credit} left The second credit
      *
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.equals = function(left, right) {
         var leftUndefined = (!defined(left));
@@ -119,7 +119,7 @@ define([
      *
      * @param {Credit} credits The credit to compare to.
      *
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Credit.prototype.equals = function(credit) {
         return Credit.equals(this, credit);

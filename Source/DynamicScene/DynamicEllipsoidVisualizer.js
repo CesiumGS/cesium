@@ -145,7 +145,7 @@ define([
      *
      * @memberof DynamicEllipsoidVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicEllipsoidVisualizer#destroy
      */
@@ -163,7 +163,7 @@ define([
      *
      * @memberof DynamicEllipsoidVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

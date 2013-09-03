@@ -540,7 +540,7 @@ define([
      *
      * @memberof DynamicPathVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPathVisualizer#destroy
      */
@@ -558,7 +558,7 @@ define([
      *
      * @memberof DynamicPathVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
