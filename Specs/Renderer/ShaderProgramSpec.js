@@ -462,6 +462,36 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
+    it('has built-in constant, structs, and functions', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  czm_materialInput materialInput; \n' +
+            '  czm_material material = czm_getDefaultMaterial(materialInput); \n' +
+            '  material.diffuse = vec3(1.0, 1.0, 1.0); \n' +
+            '  material.alpha = 1.0; \n' +
+            '  material.diffuse = czm_hue(material.diffuse, czm_twoPi); \n' +
+            '  gl_FragColor = vec4(material.diffuse, material.alpha); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        va = context.createVertexArray([{
+            index : sp.getVertexAttributes().position.index,
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        }]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        context.draw({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va
+        });
+        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+    });
+
     it('compiles with #version at the top', function() {
         var vs =
             '#version 100 \n' +
