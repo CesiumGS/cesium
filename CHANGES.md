@@ -59,6 +59,8 @@ var geometry = BoxGeometry.createGeometry(box);
     * Replaced `createPickFragmentShaderSource` with `createShaderSource`.
     * Renamed `PolygonPipeline.earClip2D` to `PolygonPipeline.triangulate`.
 * Added outline geometries.  [#1021](https://github.com/AnalyticalGraphicsInc/cesium/pull/1021).
+* Added `CorridorGeometry`.
+* Added `Billboard.scaleByDistance` and `NearFarScalar` to control billboard minimum/maximum scale based on camera distance.
 * Added `EllipsoidGeodesic`.
 * Added `PolylinePipeline.scaleToSurface`.
 * Added `PolylinePipeline.scaleToGeodeticHeight`.
@@ -67,12 +69,12 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Color.fromRandom` to generate random and partially random colors.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
 * Improved geometry batching performance by moving work to a web worker.
 * Improved `WallGeometry` to follow the curvature of the earth.
+* Improved visual quality of closed translucent geometries.
 * Optimized polyline bounding spheres.
 * `Viewer` now automatically sets its clock to that of the first added `DataSource`, regardless of how it was added to the `DataSourceCollection`.  Previously, this was only done for dropped files by `viewerDragDropMixin`.
 * `CesiumWidget` and `Viewer` now display an HTML error panel if an error occurs while rendering, which can be disabled with a constructor option.
@@ -80,6 +82,7 @@ var geometry = BoxGeometry.createGeometry(box);
 * Fixed broken surface rendering in Columbus View when using the `EllipsoidTerrainProvider`.
 * Fixed triangulation for polygons that cross the international date line.
 * Fixed `EllipsoidPrimitive` rendering for some oblate ellipsoids. [#1067](https://github.com/AnalyticalGraphicsInc/cesium/pull/1067).
+* Fixed Cesium on Nexus 4 with Android 4.3.
 * Upgraded Knockout from version 2.2.1 to 2.3.0.
 
 ### b19 - 2013-08-01
