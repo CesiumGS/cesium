@@ -10,9 +10,7 @@ define([
         '../Core/Matrix4',
         './AutomaticUniforms',
         './UniformDatatype',
-        '../Shaders/Builtin/Structs',
-        '../Shaders/Builtin/Constants',
-        '../Shaders/Builtin/Functions'
+        '../Shaders/Builtin/CzmBuiltins'
     ], function(
         defined,
         DeveloperError,
@@ -24,9 +22,7 @@ define([
         Matrix4,
         AutomaticUniforms,
         UniformDatatype,
-        ShadersBuiltinStructs,
-        ShadersBuiltinConstants,
-        ShadersBuiltinFunctions) {
+        ShaderBuiltins) {
     "use strict";
     /*global console*/
 
@@ -690,7 +686,7 @@ define([
         return dependencyNode;
     }
 
-    function generateDependencies(currentNode, dependencyNodes, shaderBuiltinDictionary) {
+    function generateDependencies(currentNode, dependencyNodes) {
         if (currentNode.evaluated) {
             return;
         }
@@ -698,15 +694,15 @@ define([
         currentNode.evaluated = true;
 
         // identify all dependencies that are referenced from this glsl source code
-        for ( var name in shaderBuiltinDictionary) {
-            if (currentNode.name !== name && shaderBuiltinDictionary.hasOwnProperty(name)) {
+        for ( var name in ShaderBuiltins) {
+            if (currentNode.name !== name && ShaderBuiltins.hasOwnProperty(name)) {
                 if (currentNode.glslSource.indexOf(name) !== -1) {
-                    var referencedNode = getDependencyNode(name, shaderBuiltinDictionary[name], dependencyNodes);
+                    var referencedNode = getDependencyNode(name, ShaderBuiltins[name], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
 
                     // recursive call to find any dependencies of the new node
-                    generateDependencies(referencedNode, dependencyNodes, shaderBuiltinDictionary);
+                    generateDependencies(referencedNode, dependencyNodes);
                 }
             }
         }
@@ -763,40 +759,18 @@ define([
 
     function getBuiltins(shaderSource) {
         // generate a dependency graph for builtin functions
-        var functionDependencyNodes = [];
-        var originalNode = getDependencyNode('main', shaderSource, functionDependencyNodes);
-        generateDependencies(originalNode, functionDependencyNodes, ShadersBuiltinFunctions);
-        sortDependencies(functionDependencyNodes);
+        var dependencyNodes = [];
+        var root = getDependencyNode('main', shaderSource, dependencyNodes);
+        generateDependencies(root, dependencyNodes, ShaderBuiltins);
+        sortDependencies(dependencyNodes);
 
         // concatenate the source code for the function dependencies
-        var functionSource = '';
-        for ( var i = 0; i < functionDependencyNodes.length; ++i) {
-            functionSource = functionSource + functionDependencyNodes[i].glslSource + '\n';
-        }
-        // generate a dependency graph for builtin structs
-        var structDependencyNodes = [];
-        var rootNode = getDependencyNode('main', functionSource, structDependencyNodes);
-        generateDependencies(rootNode, structDependencyNodes, ShadersBuiltinStructs);
-        sortDependencies(structDependencyNodes);
-
-        // concatenate the source code for the struct dependencies
-        var structPlusFunctionSource = '';
-        for (i = 0; i < structDependencyNodes.length; ++i) {
-            structPlusFunctionSource = structPlusFunctionSource + structDependencyNodes[i].glslSource + '\n';
-        }
-        // generate a dependency graph for builtin constants
-        var constantDependencyNodes = [];
-        rootNode = getDependencyNode('main', structPlusFunctionSource, constantDependencyNodes);
-        generateDependencies(rootNode, constantDependencyNodes, ShadersBuiltinConstants);
-        sortDependencies(constantDependencyNodes);
-
-        // concatenate the source code for the struct dependencies
-        var constantPlusStructPlusFunctionSource = '';
-        for (i = 0; i < constantDependencyNodes.length; ++i) {
-            constantPlusStructPlusFunctionSource = constantPlusStructPlusFunctionSource + constantDependencyNodes[i].glslSource + '\n';
+        var builtinsSource = '';
+        for ( var i = 0; i < dependencyNodes.length; ++i) {
+            builtinsSource = builtinsSource + dependencyNodes[i].glslSource + '\n';
         }
 
-        return constantPlusStructPlusFunctionSource.replace(originalNode.glslSource, '');
+        return builtinsSource.replace(root.glslSource, '');
     }
 
     function getFragmentShaderPrecision() {

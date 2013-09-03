@@ -12,7 +12,7 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/UniformDatatype',
-         'Shaders/Builtin/Functions'
+         'Shaders/Builtin/CzmBuiltins'
      ], 'Renderer/ShaderProgram', function(
          createContext,
          destroyContext,
@@ -26,7 +26,7 @@ defineSuite([
          BufferUsage,
          ClearCommand,
          UniformDatatype,
-         ShadersBuiltinFunctions) {
+         CzmBuiltins) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -37,15 +37,15 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
 
-        ShadersBuiltinFunctions.czm_circularDependency1 = 'void czm_circularDependency1() { czm_circularDependency2(); }';
-        ShadersBuiltinFunctions.czm_circularDependency2 = 'void czm_circularDependency2() { czm_circularDependency1(); }';
+        CzmBuiltins.czm_circularDependency1 = 'void czm_circularDependency1() { czm_circularDependency2(); }';
+        CzmBuiltins.czm_circularDependency2 = 'void czm_circularDependency2() { czm_circularDependency1(); }';
     });
 
     afterAll(function() {
         destroyContext(context);
 
-        delete ShadersBuiltinFunctions.czm_circularDependency1;
-        delete ShadersBuiltinFunctions.czm_circularDependency2;
+        delete CzmBuiltins.czm_circularDependency1;
+        delete CzmBuiltins.czm_circularDependency2;
     });
 
     it('has vertex and fragment shader source', function() {
