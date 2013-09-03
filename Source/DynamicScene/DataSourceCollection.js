@@ -154,7 +154,7 @@ define([
      *
      * @memberof DataSourceCollection
      *
-     * @return {Boolean} true if this object was destroyed; otherwise, false.
+     * @returns {Boolean} true if this object was destroyed; otherwise, false.
      *
      * @see DataSourceCollection#destroy
      */
@@ -173,7 +173,7 @@ define([
      *
      * @memberof DataSourceCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -69,7 +69,7 @@ define([
      * @memberof DynamicClock
      *
      * @param {DynamicClock} [result] The object onto which to store the result.
-     * @return {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
+     * @returns {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
      */
     DynamicClock.prototype.clone = function(result) {
         if (!defined(result)) {

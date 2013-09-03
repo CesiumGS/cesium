@@ -81,7 +81,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Boolean} <code>true</code> if this label will be shown; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this label will be shown; otherwise, <code>false</code>.
      *
      * @see Label#setShow
      */
@@ -124,7 +124,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Cartesian3} The Cartesian position of this label.
+     * @returns {Cartesian3} The Cartesian position of this label.
      *
      * @see Label#setPosition
      */
@@ -403,7 +403,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Cartesian2} The pixel offset of this label.
+     * @returns {Cartesian2} The pixel offset of this label.
      *
      * @see Label#setPixelOffset
      */
@@ -456,7 +456,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Cartesian3} The 3D Cartesian offset applied to this label in eye coordinates.
+     * @returns {Cartesian3} The 3D Cartesian offset applied to this label in eye coordinates.
      *
      * @see Label#setEyeOffset
      */
@@ -521,7 +521,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {HorizontalOrigin} The horizontal origin of this label.
+     * @returns {HorizontalOrigin} The horizontal origin of this label.
      *
      * @see Label#setHorizontalOrigin
      */
@@ -567,7 +567,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {VerticalOrigin} The vertical origin of this label.
+     * @returns {VerticalOrigin} The vertical origin of this label.
      *
      * @see Label#setVerticalOrigin
      */
@@ -613,7 +613,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Number} The scale used to size the label.
+     * @returns {Number} The scale used to size the label.
      *
      * @see Label#setScale
      */
@@ -675,7 +675,7 @@ define([
      * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link LabelCollection#update}.
      *
-     * @return {Cartesian2} The screen-space position of the label.
+     * @returns {Cartesian2} The screen-space position of the label.
      *
      * @exception {DeveloperError} context is required.
      * @exception {DeveloperError} frameState is required.
@@ -710,7 +710,7 @@ define([
      *
      * @param {Label} other The label to compare for equality.
      *
-     * @return {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the labels are equal; otherwise, <code>false</code>.
      */
     Label.prototype.equals = function(other) {
         return this === other ||
@@ -737,7 +737,7 @@ define([
      *
      * @memberof Label
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      */
     Label.prototype.isDestroyed = function() {
         return false;

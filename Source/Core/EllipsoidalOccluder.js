@@ -57,7 +57,7 @@ define([
      *
      * @memberof EllipsoidalOccluder
      *
-     * @return {Ellipsoid} The ellipsoid.
+     * @returns {Ellipsoid} The ellipsoid.
      */
     EllipsoidalOccluder.prototype.getEllipsoid = function() {
         return this._ellipsoid;
@@ -101,7 +101,7 @@ define([
      *
      * @param {Cartesian3} occludee The point to test for visibility.
      *
-     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cartesian3(0, 0, 2.5);
@@ -125,7 +125,7 @@ define([
      *
      * @param {Cartesian3} occludeeScaledSpacePosition The point to test for visibility, represented in the scaled space.
      *
-     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cartesian3(0, 0, 2.5);

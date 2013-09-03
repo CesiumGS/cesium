@@ -7,6 +7,7 @@ define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
+        '../Core/NearFarScalar',
         './HorizontalOrigin',
         './VerticalOrigin',
         './SceneMode',
@@ -19,6 +20,7 @@ define([
         Cartesian2,
         Cartesian3,
         Cartesian4,
+        NearFarScalar,
         HorizontalOrigin,
         VerticalOrigin,
         SceneMode,
@@ -48,6 +50,8 @@ define([
      * updated, it may be more efficient to clear the collection with {@link BillboardCollection#removeAll}
      * and add new billboards instead of modifying each one.
      *
+     * @exception {DeveloperError} scaleByDistance.far must be greater than scaleByDistance.near
+     *
      * @see BillboardCollection
      * @see BillboardCollection#add
      * @see Label
@@ -58,6 +62,10 @@ define([
      */
     var Billboard = function(description, billboardCollection) {
         description = defaultValue(description, EMPTY_OBJECT);
+
+        if (defined(description.scaleByDistance) && description.scaleByDistance.far <= description.scaleByDistance.near) {
+            throw new DeveloperError('scaleByDistance.far must be greater than scaleByDistance.near.');
+        }
 
         this._show = defaultValue(description.show, true);
 
@@ -75,6 +83,7 @@ define([
         this._alignedAxis = Cartesian3.clone(defaultValue(description.alignedAxis, Cartesian3.ZERO));
         this._width = description.width;
         this._height = description.height;
+        this._scaleByDistance = description.scaleByDistance;
 
         this._pickId = undefined;
         this._pickIdThis = description._pickIdThis;
@@ -94,7 +103,8 @@ define([
     var COLOR_INDEX = Billboard.COLOR_INDEX = 8;
     var ROTATION_INDEX = Billboard.ROTATION_INDEX = 9;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX = 10;
-    Billboard.NUMBER_OF_PROPERTIES = 11;
+    var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX = 11;
+    Billboard.NUMBER_OF_PROPERTIES = 12;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -118,7 +128,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this billboard will be shown; otherwise, <code>false</code>.
      *
      * @see Billboard#setShow
      */
@@ -154,7 +164,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The Cartesian position of this billboard.
+     * @returns {Cartesian3} The Cartesian position of this billboard.
      *
      * @see Billboard#setPosition
      */
@@ -217,7 +227,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian2} The pixel offset of this billboard.
+     * @returns {Cartesian2} The pixel offset of this billboard.
      *
      * @see Billboard#setPixelOffset
      */
@@ -266,11 +276,64 @@ define([
     };
 
     /**
+     * Returns the near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+     *
+     * @memberof Billboard
+     *
+     * @returns {NearFarScalar} The near/far scaling values based on camera distance to the billboard
+     *
+     * @see Billboard#setScaleByDistance
+     */
+    Billboard.prototype.getScaleByDistance = function() {
+        return this._scaleByDistance;
+    };
+
+    /**
+     * Sets near and far scaling properties of a Billboard based on the billboard's distance from the camera.
+     * A billboard's scale will interpolate between the {@link NearFarScalar#nearValue} and
+     * {@link NearFarScalar#farValue} while the camera distance falls within the upper and lower bounds
+     * of the specified {@link NearFarScalar#near} and {@link NearFarScalar#far}.
+     * Outside of these ranges the billboard's scale remains clamped to the nearest bound.  If undefined,
+     * scaleByDistance will be disabled.
+     *
+     * @memberof Billboard
+     *
+     * @param {NearFarScalar} scale The configuration of near and far distances and their respective scale values
+     *
+     * @exception {DeveloperError} far distance must be greater than near distance.
+     *
+     * @see Billboard#getScaleByDistance
+     *
+     * @example
+     * // Example 1.
+     * // Set a billboard's scaleByDistance to scale by 1.5 when the
+     * // camera is 1500 meters from the billboard and disappear as
+     * // the camera distance approaches 8.0e6 meters.
+     * b.setScaleByDistance(new NearFarScalar(1.5e2, 1.5, 8.0e6, 0.0));
+     *
+     * // Example 2.
+     * // disable scaling by distance
+     * b.setScaleByDistance(undefined);
+     */
+    Billboard.prototype.setScaleByDistance = function(scale) {
+        if (NearFarScalar.equals(this._scaleByDistance, scale)) {
+            return;
+        }
+
+        if (scale.far <= scale.near) {
+            throw new DeveloperError('far distance must be greater than near distance.');
+        }
+
+        makeDirty(this, SCALE_BY_DISTANCE_INDEX);
+        this._scaleByDistance = NearFarScalar.clone(scale, this._scaleByDistance);
+    };
+
+    /**
      * Returns the 3D Cartesian offset applied to this billboard in eye coordinates.
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The 3D Cartesian offset applied to this billboard in eye coordinates.
+     * @returns {Cartesian3} The 3D Cartesian offset applied to this billboard in eye coordinates.
      *
      * @see Billboard#setEyeOffset
      */
@@ -328,7 +391,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {HorizontalOrigin} The horizontal origin of this billboard.
+     * @returns {HorizontalOrigin} The horizontal origin of this billboard.
      *
      * @see Billboard#setHorizontalOrigin
      */
@@ -374,7 +437,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {VerticalOrigin} The vertical origin of this billboard.
+     * @returns {VerticalOrigin} The vertical origin of this billboard.
      *
      * @see Billboard#setVerticalOrigin
      */
@@ -420,7 +483,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The scale used to size the billboard.
+     * @returns {Number} The scale used to size the billboard.
      *
      * @see Billboard#setScale
      */
@@ -498,7 +561,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The color that is multiplied with the billboard's texture.
+     * @returns {Number} The color that is multiplied with the billboard's texture.
      *
      * @see Billboard#setColor
      */
@@ -565,7 +628,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The rotation angle in radians.
+     * @returns {Number} The rotation angle in radians.
      *
      * @see Billboard#setRotation
      * @see Billboard#getAlignedAxis
@@ -605,7 +668,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Cartesian3} The aligned axis.
+     * @returns {Cartesian3} The aligned axis.
      *
      * @see Billboard#setRotation
      * @see Billboard#getRotation
@@ -660,7 +723,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The billboard's width or undefined.
+     * @returns {Number} The billboard's width or undefined.
      *
      * @see Billboard#setWidth
      * @see Billboard#getHeight
@@ -693,7 +756,7 @@ define([
      *
      * @memberof Billboard
      *
-     * @return {Number} The billboard's height or undefined.
+     * @returns {Number} The billboard's height or undefined.
      *
      * @see Billboard#setHeight
      * @see Billboard#getWidth
@@ -769,7 +832,7 @@ define([
      * @param {Context} context The context.
      * @param {FrameState} frameState The same state object passed to {@link BillboardCollection#update}.
      *
-     * @return {Cartesian2} The screen-space position of the billboard.
+     * @returns {Cartesian2} The screen-space position of the billboard.
      *
      * @exception {DeveloperError} Billboard must be in a collection.
      * @exception {DeveloperError} context is required.
@@ -807,7 +870,7 @@ define([
      *
      * @param {Billboard} other The billboard to compare for equality.
      *
-     * @return {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the billboards are equal; otherwise, <code>false</code>.
      */
     Billboard.prototype.equals = function(other) {
         return this === other ||
@@ -820,7 +883,8 @@ define([
                Cartesian3.equals(this._position, other._position) &&
                Color.equals(this._color, other._color) &&
                Cartesian2.equals(this._pixelOffset, other._pixelOffset) &&
-               Cartesian3.equals(this._eyeOffset, other._eyeOffset);
+               Cartesian3.equals(this._eyeOffset, other._eyeOffset) &&
+               NearFarScalar.equals(this._scaleByDistance, other._scaleByDistance);
     };
 
     Billboard.prototype._destroy = function() {

@@ -18,6 +18,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Richard Page](https://github.com/rcpage3)
    * [Ryan Pepley](https://github.com/RyanPepley)
    * [Hannah Pinkos](https://github.com/hpinkos)
+   * [Alex Wood](https://github.com/abwood)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
 * [EU Edge](http://euedge.com/)

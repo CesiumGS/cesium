@@ -21,6 +21,7 @@ define([
         '../Core/Math',
         '../Core/Quaternion',
         '../Core/ReferenceFrame',
+        '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Scene/HorizontalOrigin',
@@ -78,6 +79,7 @@ define([
         CesiumMath,
         Quaternion,
         ReferenceFrame,
+        RuntimeError,
         Spherical,
         TimeInterval,
         HorizontalOrigin,
@@ -217,9 +219,9 @@ define([
                 len = cartographic.length;
                 result = new Array(len);
                 for (i = 0; i < len; i += 4) {
-                    scratchCartographic.longitude = cartographic[i + 0];
-                    scratchCartographic.latitude = cartographic[i + 1];
-                    scratchCartographic.height = cartographic[i + 2];
+                    scratchCartographic.longitude = cartographic[i + 1];
+                    scratchCartographic.latitude = cartographic[i + 2];
+                    scratchCartographic.height = cartographic[i + 3];
                     Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
                     result[i] = cartographic[i];
@@ -233,10 +235,10 @@ define([
 
         var cartographicDegrees = czmlInterval.cartographicDegrees;
         if (!defined(cartographicDegrees)) {
-            return undefined;
+            throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
         }
 
-        if (cartographicDegrees.length > 3) {
+        if (cartographicDegrees.length === 3) {
             scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
             scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
             scratchCartographic.height = cartographicDegrees[2];
