@@ -7,22 +7,39 @@
     user-select: none;*/
 }
 
+/* Begin exact copy of cesium-widget-button */
 .cesium-dataSourceBrowser-button {
     display: inline-block;
     background: #303336;
     border: 1px solid #444;
     border-radius: 5px;
     padding: 4px 12px;
-    margin: 5px 3px;
+    margin: 0 3px;
     cursor: pointer;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.cesium-dataSourceBrowser-button:focus {
+    color: #fff;
+    border-color: #ea4;
 }
 
 .cesium-dataSourceBrowser-button:hover {
     color: #fff;
-    background: #777;
-    border-color: #ccc;
-    box-shadow: 0 0 5px #fff;
+    background: #48b;
+    border-color: #aef;
+    box-shadow: 0 0 8px #fff;
 }
+
+.cesium-dataSourceBrowser-button:active {
+    color: #000;
+    background: #adf;
+    border-color: #fff;
+    box-shadow: 0 0 8px #fff;
+}
+/* End copy of cesium-widget-button */
 
 .cesium-dataSourceBrowser-dataSourcePanelContainer-header {
     text-align: center;
