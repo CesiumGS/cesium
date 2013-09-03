@@ -1,3 +1,4 @@
+/*global define*/
 define([
         '../Core/combine',
         '../Core/defined',
@@ -217,7 +218,7 @@ define([
 
     function getFailedLoadFunction(type, path) {
         return function() {
-            throw RuntimeError('Failed to load external ' + type + ': ' + path);
+            throw new RuntimeError('Failed to load external ' + type + ': ' + path);
         };
     }
 
