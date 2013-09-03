@@ -84,6 +84,7 @@ for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {
 }
 
 var generateBuiltinContents = function(contents, builtins, path){
+    "use strict";
     for (var i = 0; i < builtins.length; i++) {
         var builtin = builtins[i];
         contents.amdPath = contents.amdPath + ',\n        \'./' + path + '/' + builtin + '\'';
