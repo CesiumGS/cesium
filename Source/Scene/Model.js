@@ -1,11 +1,10 @@
-//TODO: remove debugger
-/*global define,debugger*/
 define([
         '../Core/combine',
         '../Core/defined',
         '../Core/defaultValue',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/RuntimeError',
         '../Core/Enumeration',
         '../Core/loadArrayBuffer',
         '../Core/loadText',
@@ -34,6 +33,7 @@ define([
         defaultValue,
         destroyObject,
         DeveloperError,
+        RuntimeError,
         Enumeration,
         loadArrayBuffer,
         loadText,
@@ -215,9 +215,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function failedLoad() {
-        // TODO
-        debugger;
+    function getFailedLoadFunction(type, path) {
+        return function() {
+            throw RuntimeError('Failed to load external ' + type + ': ' + path);
+        };
     }
 
     function bufferLoad(model, name) {
@@ -234,7 +235,7 @@ define([
             if (buffers.hasOwnProperty(name)) {
                 ++model._loadResources.pendingBufferLoads;
                 var bufferPath = model.basePath + buffers[name].path;
-                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), failedLoad);
+                loadArrayBuffer(bufferPath).then(bufferLoad(model, name), getFailedLoadFunction('buffer', bufferPath));
             }
         }
     }
@@ -262,7 +263,7 @@ define([
             if (shaders.hasOwnProperty(name)) {
                 ++model._loadResources.pendingShaderLoads;
                 var shaderPath = model.basePath + shaders[name].path;
-                loadText(shaderPath).then(shaderLoad(model, name), failedLoad);
+                loadText(shaderPath).then(shaderLoad(model, name), getFailedLoadFunction('shader', shaderPath));
             }
         }
     }
@@ -294,7 +295,7 @@ define([
             if (textures.hasOwnProperty(name)) {
                 ++model._loadResources.pendingTextureLoads;
                 var imagePath = model.basePath + images[textures[name].source].path;
-                loadImage(imagePath).then(imageLoad(model, name), failedLoad);
+                loadImage(imagePath).then(imageLoad(model, name), getFailedLoadFunction('image', imagePath));
             }
         }
     }
@@ -972,6 +973,8 @@ define([
     }
 
     /**
+     * @exception {RuntimeError} Failed to load external reference.
+     *
      * @private
      */
     Model.prototype.update = function(context, frameState, commandList) {
