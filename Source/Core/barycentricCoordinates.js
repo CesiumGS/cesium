@@ -24,7 +24,7 @@ define([
      * @param {Cartesian2|Cartesian3} p2 The third point of the triangle, corresponding to the barycentric z-axis.
      * @param {Cartesian3} [result] The object onto which to store the result.
      *
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} point, p0, p1, and p2 are required.
      *

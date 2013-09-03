@@ -4,10 +4,12 @@ defineSuite([
         'DynamicScene/DynamicObjectCollection',
         'Core/Cartesian2',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
         'Core/defined',
+        'Core/Ellipsoid',
         'Core/Quaternion',
         'Core/Spherical',
         'DynamicScene/DynamicBillboard',
@@ -26,10 +28,12 @@ defineSuite([
         DynamicObjectCollection,
         Cartesian2,
         Cartesian3,
+        Cartographic,
         ClockRange,
         ClockStep,
         Color,
         defined,
+        Ellipsoid,
         Quaternion,
         Spherical,
         DynamicBillboard,
@@ -575,6 +579,84 @@ defineSuite([
         expect(dynamicObject.cone.silhouetteMaterial.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.cone.intersectionColor.getValue(invalidTime)).toBeUndefined();
         expect(dynamicObject.cone.intersectionWidth.getValue(invalidTime)).toBeUndefined();
+    });
+
+    it('CZML constant cartographicsDegrees positions work.', function() {
+        var czml = {
+            position : {
+                cartographicDegrees : [34, 117, 10000]
+            }
+        };
+        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(czml);
+
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+    });
+
+    it('CZML sampled cartographicsDegrees positions work.', function() {
+        var epoch = new JulianDate();
+
+        var czml = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartographicDegrees : [0, 34, 117, 10000, 1, 34, 117, 20000]
+            }
+        };
+        var cartographic = Cartographic.fromDegrees(34, 117, 10000);
+        var cartographic2 = Cartographic.fromDegrees(34, 117, 20000);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(czml);
+
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var resultCartesian = dynamicObject.position.getValue(epoch);
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+
+        resultCartesian = dynamicObject.position.getValue(epoch.addSeconds(1));
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
+    });
+
+    it('CZML constant cartographicRadians positions work.', function() {
+        var czml = {
+            position : {
+                cartographicRadians : [1, 2, 10000]
+            }
+        };
+        var cartographic = new Cartographic(1, 2, 10000);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(czml);
+
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var resultCartesian = dynamicObject.position.getValue(new JulianDate());
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+    });
+
+    it('CZML sampled cartographicRadians positions work.', function() {
+        var epoch = new JulianDate();
+
+        var czml = {
+            position : {
+                epoch : epoch.toIso8601(),
+                cartographicRadians : [0, 2, 0.3, 10000, 1, 0.2, 0.5, 20000]
+            }
+        };
+        var cartographic = new Cartographic(2, 0.3, 10000);
+        var cartographic2 = new Cartographic(0.2, 0.5, 20000);
+
+        var dataSource = new CzmlDataSource();
+        dataSource.load(czml);
+
+        var dynamicObject = dataSource.getDynamicObjectCollection().getObjects()[0];
+        var resultCartesian = dynamicObject.position.getValue(epoch);
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic));
+
+        resultCartesian = dynamicObject.position.getValue(epoch.addSeconds(1));
+        expect(resultCartesian).toEqual(Ellipsoid.WGS84.cartographicToCartesian(cartographic2));
     });
 
     it('CZML adds data for infinite ellipse.', function() {

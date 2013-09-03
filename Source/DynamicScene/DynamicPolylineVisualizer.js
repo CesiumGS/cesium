@@ -138,7 +138,7 @@ define([
      *
      * @memberof DynamicPolylineVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPolylineVisualizer#destroy
      */
@@ -156,7 +156,7 @@ define([
      *
      * @memberof DynamicPolylineVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

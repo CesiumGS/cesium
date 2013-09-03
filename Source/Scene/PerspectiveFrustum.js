@@ -68,7 +68,7 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @return {Matrix4} The perspective projection matrix.
+     * @returns {Matrix4} The perspective projection matrix.
      *
      * @see PerspectiveFrustum#getInfiniteProjectionMatrix
      */
@@ -82,7 +82,7 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @return {Matrix4} The infinite perspective projection matrix.
+     * @returns {Matrix4} The infinite perspective projection matrix.
      *
      * @see PerspectiveFrustum#getProjectionMatrix
      */
@@ -139,7 +139,7 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {CullingVolume} A culling volume at the given position and orientation.
+     * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
@@ -196,7 +196,7 @@ define([
      *
      * @memberof PerspectiveFrustum
      *
-     * @return {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
+     * @returns {PerspectiveFrustum} A new copy of the PerspectiveFrustum instance.
      */
     PerspectiveFrustum.prototype.clone = function() {
         var frustum = new PerspectiveFrustum();
@@ -215,7 +215,7 @@ define([
      * @memberof PerspectiveFrustum
      *
      * @param {PerspectiveFrustum} [other] The right hand side PerspectiveFrustum.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveFrustum.prototype.equals = function(other) {
         if (!defined(other)) {

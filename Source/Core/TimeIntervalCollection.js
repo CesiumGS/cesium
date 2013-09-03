@@ -36,7 +36,7 @@ define([
      *
      * @memberof TimeIntervalCollection
      * @param {Number} index The index of the interval to retrieve.
-     * @return {TimeInterval} The TimeInterval at the specified index, or undefined if no such index exists.
+     * @returns {TimeInterval} The TimeInterval at the specified index, or undefined if no such index exists.
      * @exception {DeveloperError} index must be a number.
      */
     TimeIntervalCollection.prototype.get = function(index) {
@@ -50,7 +50,7 @@ define([
      * Gets the start date of the collection.
      *
      * @memberof TimeIntervalCollection
-     * @return {JulianDate} The start date of the collection or undefined if the collection is empty.
+     * @returns {JulianDate} The start date of the collection or undefined if the collection is empty.
      */
     TimeIntervalCollection.prototype.getStart = function() {
         var thisIntervals = this._intervals;
@@ -61,7 +61,7 @@ define([
      * Gets the stop date of the collection.
      *
      * @memberof TimeIntervalCollection
-     * @return {JulianDate} The stop date of the collection or undefined if the collection is empty.
+     * @returns {JulianDate} The stop date of the collection or undefined if the collection is empty.
      */
     TimeIntervalCollection.prototype.getStop = function() {
         var thisIntervals = this._intervals;
@@ -73,7 +73,7 @@ define([
      * Gets the number of intervals in the collection.
      *
      * @memberof TimeIntervalCollection
-     * @return {Number} The number of intervals in the collection.
+     * @returns {Number} The number of intervals in the collection.
      */
     TimeIntervalCollection.prototype.getLength = function() {
         return this._intervals.length;

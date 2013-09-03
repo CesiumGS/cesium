@@ -347,7 +347,7 @@ define([
      *
      * @param {Object}[description] A template describing the label's properties as shown in Example 1.
      *
-     * @return {Label} The label that was added to the collection.
+     * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
@@ -402,7 +402,7 @@ define([
      *
      * @param {Label} label The label to remove.
      *
-     * @return {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
@@ -470,7 +470,7 @@ define([
      *
      * @param {Label} label The label to check for.
      *
-     * @return {Boolean} true if this collection contains the label, false otherwise.
+     * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
      */
@@ -489,7 +489,7 @@ define([
      *
      * @param {Number} index The zero-based index of the billboard.
      *
-     * @return {Label} The label at the specified index.
+     * @returns {Label} The label at the specified index.
      *
      * @performance Expected constant time.  If labels were removed from the collection and
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
@@ -523,7 +523,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {Number} The number of labels in this collection.
+     * @returns {Number} The number of labels in this collection.
      *
      * @performance Expected constant time.  If labels were removed from the collection and
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
@@ -593,7 +593,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see LabelCollection#destroy
      */
@@ -611,7 +611,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

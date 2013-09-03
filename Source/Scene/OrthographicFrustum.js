@@ -97,7 +97,7 @@ define([
      *
      * @memberof OrthographicFrustum
      *
-     * @return {Matrix4} The orthographic projection matrix.
+     * @returns {Matrix4} The orthographic projection matrix.
      */
     OrthographicFrustum.prototype.getProjectionMatrix = function() {
         update(this);
@@ -153,7 +153,7 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {CullingVolume} A culling volume at the given position and orientation.
+     * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
@@ -317,7 +317,7 @@ define([
      *
      * @memberof OrthographicFrustum
      *
-     * @return {OrthographicFrustum} A new copy of the OrthographicFrustum instance.
+     * @returns {OrthographicFrustum} A new copy of the OrthographicFrustum instance.
      */
     OrthographicFrustum.prototype.clone = function() {
         var frustum = new OrthographicFrustum();
@@ -337,7 +337,7 @@ define([
      * @memberof OrthographicFrustum
      *
      * @param {OrthographicFrustum} [other] The right hand side OrthographicFrustum.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     OrthographicFrustum.prototype.equals = function(other) {
         return (defined(other) &&

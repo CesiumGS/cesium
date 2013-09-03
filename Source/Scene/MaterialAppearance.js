@@ -190,7 +190,7 @@ define([
      *
      * @memberof MaterialAppearance
      *
-     * @return String The full GLSL fragment shader source.
+     * @returns String The full GLSL fragment shader source.
      */
     MaterialAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

@@ -69,7 +69,7 @@ define([
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
      *
-     * @return {Boolean} <code>true</code> if the provided index datatype is a valid enumeration value; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the provided index datatype is a valid enumeration value; otherwise, <code>false</code>.
      *
      * @example
      * if (!IndexDatatype.validate(indexDatatype)) {
@@ -90,7 +90,7 @@ define([
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
      * @param {Any} indicesLengthOrArray Passed through to the typed array constructor.
      *
-     * @return {Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
+     * @returns {Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @exception {DeveloperError} center is required.
      *
