@@ -39,7 +39,7 @@ define([
     var cartesian2 = new Cartesian3();
     var cartesian3 = new Cartesian3();
 
-    function combine(computedPositions, ellipsoid) {
+    function combine(computedPositions, ellipsoid, cornerType) {
         var wallIndices = [];
         var positions = computedPositions.positions;
         var corners = computedPositions.corners;
@@ -152,7 +152,7 @@ define([
             if (defined(l)) {
                 back -= 3;
                 start = UR;
-                wallIndices.push(start, LR);
+                wallIndices.push(LR);
                 for (j = 0; j < l.length / 3; j++) {
                     outsidePoint = Cartesian3.fromArray(l, j * 3, outsidePoint);
                     indices[index++] = start - j - 1;
@@ -160,12 +160,15 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, undefined, back);
                     back -= 3;
                 }
-                wallIndices.push(start - Math.floor(l.length / 6), (back - 2) / 3 + 1);
+                wallIndices.push(start - Math.floor(l.length / 6));
+                if (cornerType.value === CornerType.BEVELED.value) {
+                    wallIndices.push((back - 2) / 3 + 1);
+                }
                 front += 3;
             } else {
                 front += 3;
                 start = LR;
-                wallIndices.push(start, UR);
+                wallIndices.push(UR);
                 for (j = 0; j < r.length / 3; j++) {
                     outsidePoint = Cartesian3.fromArray(r, j * 3, outsidePoint);
                     indices[index++] = start + j;
@@ -173,7 +176,10 @@ define([
                     CorridorGeometryLibrary.addAttribute(finalPositions, outsidePoint, front);
                     front += 3;
                 }
-                wallIndices.push(start + Math.floor(r.length / 6), front / 3 - 1);
+                wallIndices.push(start + Math.floor(r.length / 6));
+                if (cornerType.value === CornerType.BEVELED.value) {
+                    wallIndices.push(front / 3 - 1);
+                }
                 back -= 3;
             }
             rightEdge = positions[posIndex++];
@@ -225,13 +231,13 @@ define([
                 front += 3;
                 back -= 3;
             }
+
+            wallIndices.push(front / 3);
+        } else {
+            wallIndices.push(front / 3, (back - 2) / 3);
         }
         indices[index++] = front / 3;
         indices[index++] = (back - 2) / 3;
-
-        if (i === 0) {
-            wallIndices.push(front / 3, (back - 2) / 3);
-        }
 
         attributes.position = new GeometryAttribute({
             componentDatatype : ComponentDatatype.DOUBLE,
@@ -249,7 +255,7 @@ define([
     function computePositionsExtruded(params) {
         var ellipsoid = params.ellipsoid;
         var computedPositions = CorridorGeometryLibrary.computePositions(params);
-        var attr = combine(computedPositions, ellipsoid);
+        var attr = combine(computedPositions, ellipsoid, params.cornerType);
         var wallIndices = attr.wallIndices;
         var height = params.height;
         var extrudedHeight = params.extrudedHeight;
@@ -381,7 +387,7 @@ define([
             attr = computePositionsExtruded(params);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
-            attr = combine(computedPositions, ellipsoid);
+            attr = combine(computedPositions, ellipsoid, params.cornerType);
             attr.attributes.position.values = new Float64Array(PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid));
         }
         var attributes = attr.attributes;
