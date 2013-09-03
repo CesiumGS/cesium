@@ -203,7 +203,7 @@ define([
         // Split positions for GPU RTE
         if (!allow3DOnly) {
             // Compute 2D positions
-            GeometryPipeline.projectTo2D(geometry, projection);
+            GeometryPipeline.projectTo2D(geometry, 'position', 'position3D', 'position2D', projection);
 
             GeometryPipeline.encodeAttribute(geometry, 'position3D', 'position3DHigh', 'position3DLow');
             GeometryPipeline.encodeAttribute(geometry, 'position2D', 'position2DHigh', 'position2DLow');
