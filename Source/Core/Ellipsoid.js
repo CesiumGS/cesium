@@ -108,7 +108,7 @@ define([
      * Computes an Ellipsoid from a Cartesian specifying the radii in x, y, and z directions.
      *
      * @param {Cartesian3} [radii=Cartesian3.ZERO] The ellipsoid's radius in the x, y, and z directions.
-     * @return {Ellipsoid} A new Ellipsoid instance.
+     * @returns {Ellipsoid} A new Ellipsoid instance.
      *
      * @exception {DeveloperError} All radii components must be greater than or equal to zero.
      *
@@ -138,7 +138,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} The radii of the ellipsoid.
+     * @returns {Cartesian3} The radii of the ellipsoid.
      */
     Ellipsoid.prototype.getRadii = function() {
         return this._radii;
@@ -146,7 +146,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} The squared radii of the ellipsoid.
+     * @returns {Cartesian3} The squared radii of the ellipsoid.
      */
     Ellipsoid.prototype.getRadiiSquared = function() {
         return this._radiiSquared;
@@ -154,7 +154,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} The radii of the ellipsoid raised to the fourth power.
+     * @returns {Cartesian3} The radii of the ellipsoid raised to the fourth power.
      */
     Ellipsoid.prototype.getRadiiToTheFourth = function() {
         return this._radiiToTheFourth;
@@ -162,7 +162,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} One over the radii of the ellipsoid.
+     * @returns {Cartesian3} One over the radii of the ellipsoid.
      */
     Ellipsoid.prototype.getOneOverRadii = function() {
         return this._oneOverRadii;
@@ -170,7 +170,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} One over the squared radii of the ellipsoid.
+     * @returns {Cartesian3} One over the squared radii of the ellipsoid.
      */
     Ellipsoid.prototype.getOneOverRadiiSquared = function() {
         return this._oneOverRadiiSquared;
@@ -178,7 +178,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} The minimum radius of the ellipsoid.
+     * @returns {Cartesian3} The minimum radius of the ellipsoid.
      */
     Ellipsoid.prototype.getMinimumRadius = function() {
         return this._minimumRadius;
@@ -186,7 +186,7 @@ define([
 
     /**
      * @memberof Ellipsoid
-     * @return {Cartesian3} The maximum radius of the ellipsoid.
+     * @returns {Cartesian3} The maximum radius of the ellipsoid.
      */
     Ellipsoid.prototype.getMaximumRadius = function() {
         return this._maximumRadius;
@@ -211,7 +211,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian for which to to determine the geocentric normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -223,7 +223,7 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic position for which to to determine the geodetic normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartographic is required.
      */
@@ -255,7 +255,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian position for which to to determine the surface normal.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -273,7 +273,7 @@ define([
      *
      * @param {Cartographic} cartographic The cartographic position.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartographic is required.
      *
@@ -300,7 +300,7 @@ define([
      *
      * @param {Array} cartographics An array of cartographic positions.
      * @param {Array} [result] The object onto which to store the result.
-     * @return {Array} The modified result parameter or a new Array instance if none was provided.
+     * @returns {Array} The modified result parameter or a new Array instance if none was provided.
      *
      * @exception {DeveloperError} cartographics is required.
      *
@@ -339,7 +339,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian position to convert to cartographic representation.
      * @param {Cartographic} [result] The object onto which to store the result.
-     * @return {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
+     * @returns {Cartographic} The modified result parameter, new Cartographic instance if none was provided, or undefined if the cartesian is at the center of the ellipsoid.
      *
      * @exception {DeveloperError} cartesian is required.
      *
@@ -378,7 +378,7 @@ define([
      *
      * @param {Array} cartesians An array of Cartesian positions.
      * @param {Array} [result] The object onto which to store the result.
-     * @return {Array} The modified result parameter or a new Array instance if none was provided.
+     * @returns {Array} The modified result parameter or a new Array instance if none was provided.
      *
      * @exception {DeveloperError} cartesians is required.
      *
@@ -417,7 +417,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
+     * @returns {Cartesian3} The modified result parameter, a new Cartesian3 instance if none was provided, or undefined if the position is at the center.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -521,7 +521,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian position to scale.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if none was provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -564,7 +564,7 @@ define([
      * @memberof Ellipsoid
      *
      * @param {Ellipsoid} [right] The other Ellipsoid.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Ellipsoid.prototype.equals = function(right) {
         return (this === right) ||
@@ -576,7 +576,7 @@ define([
      * Creates a string representing this Ellipsoid in the format '(radii.x, radii.y, radii.z)'.
      * @memberof Ellipsoid
      *
-     * @return {String} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
+     * @returns {String} A string representing this ellipsoid in the format '(radii.x, radii.y, radii.z)'.
      */
     Ellipsoid.prototype.toString = function() {
         return this._radii.toString();

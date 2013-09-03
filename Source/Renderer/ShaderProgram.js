@@ -2633,6 +2633,13 @@ define([
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
                         uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+
+                        // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
+                        // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
+                        if (typeof uniformArray === 'undefined') {
+                            continue;
+                        }
+
                         locations = uniformArray._getLocations();
 
                         // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
@@ -2701,7 +2708,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
@@ -2712,7 +2719,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Number} DOC_TBA
+     * @returns {Number} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
@@ -2723,7 +2730,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *
@@ -2815,7 +2822,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * @memberof ShaderProgram
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see ShaderProgram#destroy
      */
@@ -2832,7 +2839,7 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * @memberof ShaderProgram
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *

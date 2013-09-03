@@ -1034,7 +1034,7 @@ define([
      *
      * @memberof ScreenSpaceCameraController
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see ScreenSpaceCameraController#destroy
      */
@@ -1051,7 +1051,7 @@ define([
      *
      * @memberof ScreenSpaceCameraController
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

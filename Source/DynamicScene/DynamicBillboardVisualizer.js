@@ -6,8 +6,6 @@ define([
         '../Core/Color',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Ellipsoid',
-        '../Core/NearFarScalar',
         '../Scene/BillboardCollection',
         '../Scene/HorizontalOrigin',
         '../Scene/VerticalOrigin',
@@ -19,8 +17,6 @@ define([
         Color,
         Cartesian2,
         Cartesian3,
-        Ellipsoid,
-        NearFarScalar,
         BillboardCollection,
         HorizontalOrigin,
         VerticalOrigin,
@@ -166,7 +162,7 @@ define([
      *
      * @memberof DynamicBillboardVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicBillboardVisualizer#destroy
      */
@@ -184,7 +180,7 @@ define([
      *
      * @memberof DynamicBillboardVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -200,7 +196,6 @@ define([
     };
 
     var position;
-    var lla;
     var color;
     var eyeOffset;
     var pixelOffset;
@@ -261,15 +256,6 @@ define([
             billboard.setScale(1.0);
             billboard.setHorizontalOrigin(HorizontalOrigin.CENTER);
             billboard.setVerticalOrigin(VerticalOrigin.CENTER);
-
-            // set default Billboard scaleByDistance based on altitude
-            position = positionProperty.getValue(time, position);
-            lla = Ellipsoid.WGS84.cartesianToCartographic(position);
-            if (lla.height < 8.0e5) {
-                billboard.setScaleByDistance(new NearFarScalar(1.5e2, 1.0, 8.0e6, 0.2));
-            } else {
-                billboard.setScaleByDistance(new NearFarScalar(1.0e2, 2.0, 3.2e7, 0.2));
-            }
         } else {
             billboard = dynamicBillboardVisualizer._billboardCollection.get(billboardVisualizerIndex);
         }
