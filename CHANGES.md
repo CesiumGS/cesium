@@ -69,7 +69,6 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Color.fromRandom` to generate random and partially random colors.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.
