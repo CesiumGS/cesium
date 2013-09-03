@@ -22,7 +22,7 @@ define([
     "use strict";
 
     /**
-     * private
+     * @private
      */
     var CorridorGeometryLibrary = {};
 
@@ -47,6 +47,9 @@ define([
     var originScratch = new Cartesian3();
     var nextScratch = new Cartesian3();
     var prevScratch = new Cartesian3();
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.angleIsGreaterThanPi = function(forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
@@ -61,6 +64,9 @@ define([
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.computeRoundCorner = function (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
         var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
@@ -91,6 +97,9 @@ define([
         return array;
     };
 
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.addEndCaps = function (calculatedPositions, width, ellipsoid) {
         var cornerPoint = cartesian1;
         var startPoint = cartesian2;
@@ -113,6 +122,9 @@ define([
         return [firstEndCap, lastEndCap];
     };
 
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.computeMiteredCorner = function (position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
@@ -124,6 +136,9 @@ define([
         return [cornerPoint.x, cornerPoint.y, cornerPoint.z, lastPoint.x, lastPoint.y, lastPoint.z];
     };
 
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.addAttribute = function (attribute, value, front, back) {
         var x = value.x;
         var y = value.y;
@@ -140,7 +155,7 @@ define([
         }
     };
 
-    CorridorGeometryLibrary.addShiftedPositions = function(positions, left, scalar, calculatedPositions) {
+    function addShiftedPositions (positions, left, scalar, calculatedPositions) {
         var rightPositions = new Array(positions.length);
         var leftPositions = new Array(positions.length);
         var scaledLeft = left.multiplyByScalar(scalar, scratch1);
@@ -163,8 +178,11 @@ define([
         calculatedPositions.push(rightPositions, leftPositions);
 
         return calculatedPositions;
-    };
+    }
 
+    /**
+     * @private
+     */
     CorridorGeometryLibrary.computePositions = function (params) {
         var granularity = params.granularity;
         var positions = params.positions;
@@ -222,7 +240,7 @@ define([
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
+                    calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     if (saveAttributes) {
                         calculatedLefts.push(left.x, left.y, left.z);
                         calculatedNormals.push(normal.x, normal.y, normal.z);
@@ -243,7 +261,7 @@ define([
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-                    calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
+                    calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     if (saveAttributes) {
                         calculatedLefts.push(left.x, left.y, left.z);
                         calculatedNormals.push(normal.x, normal.y, normal.z);
@@ -267,7 +285,7 @@ define([
         scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
         scaleArray2[1] = Cartesian3.clone(position, scaleArray2[1]);
         subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
-        calculatedPositions = CorridorGeometryLibrary.addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
+        calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
         if (saveAttributes) {
             calculatedLefts.push(left.x, left.y, left.z);
             calculatedNormals.push(normal.x, normal.y, normal.z);

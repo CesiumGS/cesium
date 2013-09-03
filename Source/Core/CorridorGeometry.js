@@ -410,8 +410,7 @@ define([
 
         return {
             attributes : attributes,
-            indices : indices,
-            boundingSphere : BoundingSphere.fromVertices(finalPositions)
+            indices : indices
         };
     }
 
@@ -567,7 +566,6 @@ define([
         var extrudedHeight = params.extrudedHeight;
         var attributes = attr.attributes;
         var indices = attr.indices;
-        var boundingSphere = attr.boundingSphere;
         var positions = attributes.position.values;
         var length = positions.length;
         var newPositions = new Float64Array(length * 6);
@@ -582,7 +580,6 @@ define([
         newPositions.set(positions);
         newPositions.set(extrudedPositions, length);
         newPositions.set(wallPositions, length * 2);
-        boundingSphere = BoundingSphere.fromVertices(positions, undefined, 3, boundingSphere);
         attributes.position.values = newPositions;
 
         length /= 3;
@@ -619,8 +616,7 @@ define([
 
         return {
             attributes : attributes,
-            indices : newIndices,
-            boundingSphere : boundingSphere
+            indices : newIndices
         };
     }
 
@@ -716,20 +712,19 @@ define([
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, vertexFormat, ellipsoid);
-            if (!vertexFormat.position) {
-                attr.attributes.position.values = undefined;
-            } else {
-                attr.attributes.position.values = new Float64Array(PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values));
-            }
-
+            attr.attributes.position.values = new Float64Array(PolylinePipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid, attr.attributes.position.values));
         }
         var attributes = attr.attributes;
+        var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);
+        if (!vertexFormat.position) {
+            attr.attributes.position.values = undefined;
+        }
 
         return new Geometry({
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : attr.boundingSphere
+            boundingSphere : boundingSphere
         });
     };
 
