@@ -99,7 +99,7 @@ define([
                 var toInertialDelta = Transforms.computeFixedToIcrfMatrix(deltaTime, update3DMatrix3Scratch2);
                 var toFixed;
 
-                if (!defined(toInertial) || defined(toInertialDelta)) {
+                if (!defined(toInertial) || !defined(toInertialDelta)) {
                     toFixed = Transforms.computeTemeToPseudoFixedMatrix(time, update3DMatrix3Scratch3);
                     toInertial = Matrix3.transpose(toFixed, update3DMatrix3Scratch1);
                     toInertialDelta = Transforms.computeTemeToPseudoFixedMatrix(deltaTime, update3DMatrix3Scratch2);
@@ -339,7 +339,7 @@ define([
             this._lastDynamicObject = dynamicObject;
 
             var viewFromProperty = this.dynamicObject.viewFrom;
-            if (!defined(viewFromProperty) || defined(viewFromProperty.getValue(time, offset))) {
+            if (!defined(viewFromProperty) || !defined(viewFromProperty.getValue(time, offset))) {
                 Cartesian3.clone(dynamicObjectViewDefaultOffset, offset);
             }
 
