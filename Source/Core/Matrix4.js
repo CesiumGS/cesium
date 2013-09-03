@@ -87,7 +87,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to duplicate.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. (Returns undefined if matrix is undefined)
      */
     Matrix4.clone = function(matrix, result) {
         if (!defined(matrix)) {
@@ -798,7 +798,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to use..
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -849,7 +849,7 @@ define([
      *
      * @param {Number} row The zero-based index of the row.
      * @param {Number} column The zero-based index of the column.
-     * @return {Number} The index of the element at the provided row and column.
+     * @returns {Number} The index of the element at the provided row and column.
      *
      * @exception {DeveloperError} row is required and must be 0, 1, 2, or 3.
      * @exception {DeveloperError} column is required and must be 0, 1, 2, or 3.
@@ -877,7 +877,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
@@ -934,7 +934,7 @@ define([
      * @param {Number} index The zero-based index of the column to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified column.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -984,7 +984,7 @@ define([
      * @param {Matrix4} matrix The matrix to use.
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
@@ -1039,7 +1039,7 @@ define([
      * @param {Number} index The zero-based index of the row to set.
      * @param {Cartesian4} cartesian The Cartesian whose values will be assigned to the specified row.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -1089,7 +1089,7 @@ define([
      * @param {Matrix4} left The first matrix.
      * @param {Matrix4} right The second matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -1192,7 +1192,7 @@ define([
      * @param {Cartesian3} translation The translation on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} translation is required.
@@ -1256,7 +1256,7 @@ define([
      * @param {Number} scale The uniform scale on the right-hand side.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} scale is required.
@@ -1313,7 +1313,7 @@ define([
      * @param {Matrix4} matrix The matrix.
      * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} cartesian is required.
@@ -1356,7 +1356,7 @@ define([
      * @param {Matrix4} matrix The matrix.
      * @param {Cartesian3} cartesian The point.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} matrix is required.
@@ -1388,7 +1388,7 @@ define([
      * @param {Matrix4} matrix The matrix.
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -1448,7 +1448,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to negate.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -1504,7 +1504,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to transpose.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -1568,7 +1568,7 @@ define([
      *
      * @param {Matrix4} [left] The first matrix.
      * @param {Matrix4} [right] The second matrix.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      *
      * @example
      * //compares two Matrix4 instances
@@ -1623,7 +1623,7 @@ define([
      * @param {Matrix4} [left] The first matrix.
      * @param {Matrix4} [right] The second matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      *
@@ -1681,7 +1681,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to use.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -1706,7 +1706,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to use.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      *
@@ -1758,7 +1758,7 @@ define([
       *
       * @param {Matrix4} matrix The matrix to invert.
       * @param {Matrix4} [result] The object onto which to store the result.
-      * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
+      * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
       *
       * @exception {DeveloperError} matrix is required.
       * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
@@ -1884,7 +1884,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to invert.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -2052,7 +2052,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
     Matrix4.prototype.clone = function(result) {
         return Matrix4.clone(this, result);
@@ -2063,7 +2063,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Array} [result] The Array onto which to store the result.
-     * @return {Array} The modified Array parameter or a new Array instance if one was not provided.
+     * @returns {Array} The modified Array parameter or a new Array instance if one was not provided.
      */
     Matrix4.prototype.toArray = function(result) {
         return Matrix4.toArray(this, result);
@@ -2075,7 +2075,7 @@ define([
      *
      * @param {Number} index The zero-based index of the column to retrieve.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
@@ -2107,7 +2107,7 @@ define([
      *
      * @param {Number} index The zero-based index of the row to retrieve.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} index is required and must be 0, 1, 2, or 3.
      *
@@ -2139,7 +2139,7 @@ define([
      *
      * @param {Matrix4} right The right hand side matrix.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -2156,7 +2156,7 @@ define([
      * @param {Cartesian3} translation The translation on the right-hand side of the multiplication.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} translation is required.
      */
@@ -2173,7 +2173,7 @@ define([
      * @param {Number} scale The scale on the right-hand side of the multiplication.
      * @param {Matrix4} [result] The object onto which to store the result.
      *
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} scale is required.
      */
@@ -2187,7 +2187,7 @@ define([
      *
      * @param {Cartesian4} cartesian The vector.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -2202,7 +2202,7 @@ define([
      *
      * @param {Cartesian3} cartesian The point.
      * @param {Cartesian4} [result] The object onto which to store the result.
-     * @return {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -2216,7 +2216,7 @@ define([
      *
      * @param {Number} scalar The number to multiply by.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Cartesian4 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -2229,7 +2229,7 @@ define([
      *
      * @param {Matrix4} matrix The matrix to negate.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      *
      * @exception {DeveloperError} matrix is required.
      */
@@ -2242,7 +2242,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided.
      */
     Matrix4.prototype.transpose = function(result) {
         return Matrix4.transpose(this, result);
@@ -2254,7 +2254,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} [right] The right hand side matrix.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Matrix4.prototype.equals = function(right) {
         return Matrix4.equals(this, right);
@@ -2268,7 +2268,7 @@ define([
      *
      * @param {Matrix4} [right] The right hand side matrix.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -2281,7 +2281,7 @@ define([
      * on a separate line and in the format '(column0, column1, column2, column3)'.
      * @memberof Matrix4
      *
-     * @return {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
+     * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
      */
     Matrix4.prototype.toString = function() {
         return '(' + this[0] + ', ' + this[4] + ', ' + this[8] + ', ' + this[12] +')\n' +
@@ -2295,7 +2295,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @see Cartesian3
      */
@@ -2308,7 +2308,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Matrix3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @see Matrix3
      */
@@ -2324,7 +2324,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
      */
@@ -2343,7 +2343,7 @@ define([
      * @memberof Matrix4
      *
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Matrix4} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Matrix4.prototype.inverseTransformation = function(result) {
         return Matrix4.inverseTransformation(this, result);

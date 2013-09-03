@@ -166,7 +166,7 @@ define([
      *
      * @param {Cartesian3} geometry The geometry.
      *
-     * @return {Number} The number of vertices in the geometry.
+     * @returns {Number} The number of vertices in the geometry.
      *
      * @exception {DeveloperError} geometries is required.
      *

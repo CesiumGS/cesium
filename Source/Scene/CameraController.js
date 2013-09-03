@@ -1060,7 +1060,7 @@ define([
      *
      * @exception {DeveloperError} windowPosition is required.
      *
-     * @return {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
+     * @returns {Cartesian3} If the ellipsoid or map was picked, returns the point on the surface of the ellipsoid or map
      * in world coordinates. If the ellipsoid or map was not picked, returns undefined.
      */
     CameraController.prototype.pickEllipsoid = function(windowPosition, ellipsoid, result) {
@@ -1144,7 +1144,7 @@ define([
      *
      * @exception {DeveloperError} windowPosition is required.
      *
-     * @return {Object} Returns the {@link Cartesian3} position and direction of the ray.
+     * @returns {Object} Returns the {@link Cartesian3} position and direction of the ray.
      */
     CameraController.prototype.getPickRay = function(windowPosition, result) {
         if (!defined(windowPosition)) {
