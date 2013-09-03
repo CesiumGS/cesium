@@ -6,6 +6,7 @@ attribute vec3 originAndShow;                   // show is 0.0 (false) or 1.0 (t
 attribute vec2 pixelOffset;
 attribute vec4 eyeOffsetAndScale;               // eye offset in meters
 attribute vec4 rotationAndAlignedAxis;
+attribute vec4 scaleByDistance;                 // near, nearScale, far, farScale
 
 #ifdef RENDER_FOR_PICK
 attribute vec4 pickColor;
@@ -44,6 +45,34 @@ void main()
     
     ///////////////////////////////////////////////////////////////////////////     
     
+#ifdef EYE_DISTANCE_SCALING  // scale based on eye distance
+    float lengthSq;
+    if (czm_sceneMode == czm_sceneMode2D)
+    {
+        // 2D camera distance is a special case
+        // treat all billboards as flattened to the z=0.0 plane
+        lengthSq = czm_eyeHeight2D.y;
+    }
+    else
+    {
+        lengthSq = dot(positionEC.xyz, positionEC.xyz);
+    }
+
+    float scaleAtMin = scaleByDistance.y;
+    float scaleAtMax = scaleByDistance.w;
+    float nearDistanceSq = scaleByDistance.x * scaleByDistance.x;
+    float farDistanceSq = scaleByDistance.z * scaleByDistance.z;
+
+    // ensure that t will fall within the range of [0.0, 1.0]
+    lengthSq = clamp(lengthSq, nearDistanceSq, farDistanceSq);
+
+    float t = (lengthSq - nearDistanceSq) / (farDistanceSq - nearDistanceSq);
+
+    t = pow(t, 0.15);
+
+    scale *= mix(scaleAtMin, scaleAtMax, t);
+#endif
+
     vec4 positionWC = czm_eyeToWindowCoordinates(positionEC);
     
     vec2 halfSize = imageSize * scale * czm_highResolutionSnapScale;

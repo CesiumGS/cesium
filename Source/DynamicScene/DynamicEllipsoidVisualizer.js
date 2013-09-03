@@ -7,7 +7,8 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
-        '../Scene/Material'
+        '../Scene/Material',
+        './MaterialProperty'
     ], function(
         defaultValue,
         defined,
@@ -16,7 +17,8 @@ define([
         Matrix3,
         Matrix4,
         EllipsoidPrimitive,
-        Material) {
+        Material,
+        MaterialProperty) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -143,7 +145,7 @@ define([
      *
      * @memberof DynamicEllipsoidVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicEllipsoidVisualizer#destroy
      */
@@ -161,7 +163,7 @@ define([
      *
      * @memberof DynamicEllipsoidVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -240,7 +242,7 @@ define([
 
         ellipsoid.radii = radiiProperty.getValue(time, ellipsoid.radii);
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), ellipsoid._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), ellipsoid._visualizerPosition);
         orientation = defaultValue(orientationProperty.getValue(time, orientation), ellipsoid._visualizerOrientation);
 
         if (defined(position) &&
@@ -252,10 +254,7 @@ define([
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        var material = dynamicEllipsoid.material;
-        if (defined(material)) {
-            ellipsoid.material = material.getValue(time, context, ellipsoid.material);
-        }
+        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid.material, ellipsoid.material);
     }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, dynamicObjects) {

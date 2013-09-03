@@ -3,7 +3,7 @@ defineSuite([
          'DynamicScene/DynamicPyramidVisualizer',
          'Specs/createScene',
          'Specs/destroyScene',
-         'Specs/MockProperty',
+         'DynamicScene/ConstantProperty',
          'Core/Color',
          'Core/JulianDate',
          'Core/Matrix3',
@@ -13,12 +13,12 @@ defineSuite([
          'Core/Spherical',
          'DynamicScene/DynamicPyramid',
          'DynamicScene/DynamicObjectCollection',
-         'Scene/Material'
+         'DynamicScene/ColorMaterialProperty'
      ], function(
          DynamicPyramidVisualizer,
          createScene,
          destroyScene,
-         MockProperty,
+         ConstantProperty,
          Color,
          JulianDate,
          Matrix3,
@@ -28,7 +28,7 @@ defineSuite([
          Spherical,
          DynamicPyramid,
          DynamicObjectCollection,
-         Material) {
+         ColorMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -86,8 +86,8 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -97,9 +97,9 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -109,9 +109,9 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -122,19 +122,17 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
-        pyramid.intersectionColor = new MockProperty(new Color(0.1, 0.2, 0.3, 0.4));
-        pyramid.intersectionWidth = new MockProperty(0.5);
-        pyramid.showIntersection = new MockProperty(true);
-        pyramid.radius = new MockProperty(123.5);
-        pyramid.show = new MockProperty(true);
-        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        redMaterial.uniforms.color = Color.RED;
-        pyramid.material = new MockProperty(redMaterial);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.intersectionColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        pyramid.intersectionWidth = new ConstantProperty(0.5);
+        pyramid.showIntersection = new ConstantProperty(true);
+        pyramid.radius = new ConstantProperty(123.5);
+        pyramid.show = new ConstantProperty(true);
+        pyramid.material = new ColorMaterialProperty();
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
@@ -144,8 +142,8 @@ defineSuite([
         expect(p.showIntersection).toEqual(testObject.pyramid.showIntersection.getValue(time));
         expect(p.radius).toEqual(testObject.pyramid.radius.getValue(time));
         expect(p.show).toEqual(testObject.pyramid.show.getValue(time));
-        expect(p.material).toEqual(testObject.pyramid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
+        expect(p.material.uniforms).toEqual(testObject.pyramid.material.getValue(time));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         pyramid.show.value = false;
         visualizer.update(time);
@@ -157,10 +155,10 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = new JulianDate();
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -178,10 +176,10 @@ defineSuite([
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var time = new JulianDate();
         visualizer.update(time);
@@ -191,17 +189,17 @@ defineSuite([
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var pyramid = testObject.pyramid = new DynamicPyramid();
-        pyramid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        pyramid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new MockProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.orientation = new MockProperty(new Quaternion(1, 0, 0, 0));
+        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
+        testObject2.orientation = new ConstantProperty(new Quaternion(1, 0, 0, 0));
         var pyramid2 = testObject2.pyramid = new DynamicPyramid();
-        pyramid2.directions = new MockProperty([new Spherical(3, 0, 0), new Spherical(2, 0, 0), new Spherical(1, 0, 0), new Spherical(0.5, 0, 0)]);
+        pyramid2.directions = new ConstantProperty([new Spherical(3, 0, 0), new Spherical(2, 0, 0), new Spherical(1, 0, 0), new Spherical(0.5, 0, 0)]);
 
         visualizer = new DynamicPyramidVisualizer(scene, dynamicObjectCollection);
 

@@ -63,7 +63,7 @@ define([
         czm_columbusViewMorph,
         czm_computePosition,
         czm_eastNorthUpToEyeCoordinates,
-        czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidContainsPoint,
         czm_ellipsoidNew,
         czm_ellipsoidWgs84TextureCoordinates,
         czm_equalsEpsilon,
@@ -1295,6 +1295,33 @@ define([
         },
 
         /**
+         * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
+         *  of the eye (camera) in the 2D scene in meters.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_eyeHeight2D</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_eyeHeight2D
+         * @glslUniform
+         *
+         * @see UniformState#getEyeHeight2D
+         */
+        czm_eyeHeight2D : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT_VECTOR2;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getEyeHeight2D();
+            }
+        },
+
+        /**
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
          * of the frustum defined by the camera.  This is the individual
          * frustum used for multi-frustum rendering.
@@ -1683,6 +1710,46 @@ define([
 
             getValue : function(uniformState) {
                 return uniformState.getFrameState().morphTime;
+            }
+        },
+
+        /**
+         * An automatic GLSL uniform representing the current {@link SceneMode} enumeration, expressed
+         * as a float.
+         * <br /><br />
+         * Like all automatic uniforms, <code>czm_sceneMode</code> does not need to be explicitly declared.
+         * However, it can be explicitly declared when a shader is also used by other applications such
+         * as a third-party authoring tool.
+         *
+         * @alias czm_sceneMode
+         * @glslUniform
+         *
+         * @see czm_sceneMode2D
+         * @see czm_sceneModeColumbusView
+         * @see czm_sceneMode3D
+         * @see czm_sceneModeMorphing
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_sceneMode;
+         *
+         * // Example
+         * if (czm_sceneMode == czm_sceneMode2D)
+         * {
+         *     eyeHeightSq = czm_eyeHeight2D.y;
+         * }
+         */
+        czm_sceneMode : {
+            getSize : function() {
+                return 1;
+            },
+
+            getDatatype : function() {
+                return UniformDatatype.FLOAT;
+            },
+
+            getValue : function(uniformState) {
+                return uniformState.getFrameState().mode.value;
             }
         },
 
@@ -2280,6 +2347,28 @@ define([
         this._samplerUniforms = uniforms.samplerUniforms;
         this._automaticUniforms = partitionedUniforms.automaticUniforms;
         this._manualUniforms = partitionedUniforms.manualUniforms;
+
+        /**
+         * GLSL source for the shader program's vertex shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
+         * @readonly
+         */
+        this.vertexShaderSource = vertexShaderSource;
+
+        /**
+         * GLSL source for the shader program's fragment shader.  This is the version of
+         * the source provided when the shader program was created, not the final
+         * source provided to WebGL, which includes Cesium bulit-ins.
+         *
+         * @type {String}
+         *
+         * @readonly
+         */
+        this.fragmentShaderSource = fragmentShaderSource;
     };
 
     function extractShaderVersion(source) {
@@ -2321,7 +2410,7 @@ define([
         czm_columbusViewMorph : czm_columbusViewMorph,
         czm_computePosition : czm_computePosition,
         czm_eastNorthUpToEyeCoordinates : czm_eastNorthUpToEyeCoordinates,
-        czm_czm_ellipsoidContainsPoint : czm_czm_ellipsoidContainsPoint,
+        czm_ellipsoidContainsPoint : czm_ellipsoidContainsPoint,
         czm_ellipsoidNew : czm_ellipsoidNew,
         czm_ellipsoidWgs84TextureCoordinates : czm_ellipsoidWgs84TextureCoordinates,
         czm_equalsEpsilon : czm_equalsEpsilon,
@@ -2544,6 +2633,13 @@ define([
                     if (indexOfBracket >= 0) {
                         // We're assuming the array elements show up in numerical order - it seems to be true.
                         uniformArray = allUniforms[uniformName.slice(0, indexOfBracket)];
+
+                        // Nexus 4 with Android 4.3 needs this check, because it reports a uniform
+                        // with the strange name webgl_3467e0265d05c3c1[1] in our central body surface shader.
+                        if (typeof uniformArray === 'undefined') {
+                            continue;
+                        }
+
                         locations = uniformArray._getLocations();
 
                         // On the Nexus 4 in Chrome, we get one uniform per sampler, just like in Firefox,
@@ -2612,7 +2708,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getVertexAttributes = function() {
@@ -2623,7 +2719,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Number} DOC_TBA
+     * @returns {Number} DOC_TBA
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      */
     ShaderProgram.prototype.getNumberOfVertexAttributes = function() {
@@ -2634,7 +2730,7 @@ define([
      * DOC_TBA
      * @memberof ShaderProgram
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *
@@ -2726,7 +2822,7 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.
      * @memberof ShaderProgram
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see ShaderProgram#destroy
      */
@@ -2743,7 +2839,7 @@ define([
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * @memberof ShaderProgram
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This shader program was destroyed, i.e., destroy() was called.
      *

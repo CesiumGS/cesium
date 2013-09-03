@@ -22,6 +22,7 @@ define([
      *
      * @see Cartesian2
      * @see Cartesian4
+     * @see Packable
      */
     var Cartesian3 = function(x, y, z) {
         /**
@@ -52,7 +53,7 @@ define([
      *
      * @param {Spherical} spherical The Spherical to be converted to Cartesian3.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} spherical is required.
      */
@@ -81,7 +82,7 @@ define([
      * @param {Number} [offset=0] The offset into the array of the first element, which corresponds to the x component.
      * @param {Cartesian3} [result] The object onto which to store the result.
      *
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} values is required.
      * @exception {DeveloperError} offset + 3 is greater than the length of the array.
@@ -124,7 +125,7 @@ define([
      * @param {Number} y The y coordinate.
      * @param {Number} z The z coordinate.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.fromElements = function(x, y, z, result) {
         if (!defined(result)) {
@@ -143,7 +144,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian to duplicate.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if cartesian is undefined)
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. (Returns undefined if cartesian is undefined)
      */
     Cartesian3.clone = function(cartesian, result) {
         if (!defined(cartesian)) {
@@ -167,18 +168,77 @@ define([
      *
      * @param {Cartesian4} cartesian The Cartesian4 instance to create a Cartesian3 instance from.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
     Cartesian3.fromCartesian4 = Cartesian3.clone;
 
     /**
+     * The number of elements used to pack the object into an array.
+     * @Type {Number}
+     */
+    Cartesian3.packedLength = 3;
+
+    /**
+     * Stores the provided instance into the provided array.
+     * @memberof Cartesian3
+     *
+     * @param {Cartesian3} value The value to pack.
+     * @param {Array} array The array to pack into.
+     * @param {Number} [startingIndex=0] The index into the array at which to start packing the elements.
+     *
+     * @exception {DeveloperError} value is required.
+     * @exception {DeveloperError} array is required.
+     */
+    Cartesian3.pack = function(value, array, startingIndex) {
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        array[startingIndex++] = value.x;
+        array[startingIndex++] = value.y;
+        array[startingIndex] = value.z;
+    };
+
+    /**
+     * Retrieves an instance from a packed array.
+     * @memberof Cartesian3
+     *
+     * @param {Array} array The packed array.
+     * @param {Number} [startingIndex=0] The starting index of the element to be unpacked.
+     * @param {Cartesian3} [result] The object into which to store the result.
+     *
+     * @exception {DeveloperError} array is required.
+     */
+    Cartesian3.unpack = function(array, startingIndex, result) {
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
+
+        startingIndex = defaultValue(startingIndex, 0);
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+        result.x = array[startingIndex++];
+        result.y = array[startingIndex++];
+        result.z = array[startingIndex];
+        return result;
+    };
+
+    /**
      * Computes the value of the maximum component for the supplied Cartesian.
      * @memberof Cartesian3
      *
      * @param {Cartesian3} The cartesian to use.
-     * @return {Number} The value of the maximum component.
+     * @returns {Number} The value of the maximum component.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -194,7 +254,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} The cartesian to use.
-     * @return {Number} The value of the minimum component.
+     * @returns {Number} The value of the minimum component.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -210,7 +270,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian instance whose squared magnitude is to be computed.
-     * @return {Number} The squared magnitude.
+     * @returns {Number} The squared magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -226,7 +286,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} cartesian The Cartesian instance whose magnitude is to be computed.
-     * @return {Number} The magnitude.
+     * @returns {Number} The magnitude.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -243,7 +303,7 @@ define([
      * @param {Cartesian3} left The first point to compute the distance from.
      * @param {Cartesian3} right The second point to compute the distance to.
      *
-     * @return {Number} The distance between two points.
+     * @returns {Number} The distance between two points.
      *
      * @exception {DeveloperError} left and right are required.
      *
@@ -266,7 +326,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian to be normalized.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -290,7 +350,7 @@ define([
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
-     * @return {Number} The dot product.
+     * @returns {Number} The dot product.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -312,7 +372,7 @@ define([
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -340,7 +400,7 @@ define([
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -368,7 +428,7 @@ define([
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -396,7 +456,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian to be scaled.
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -424,7 +484,7 @@ define([
      * @param {Cartesian3} cartesian The Cartesian to be divided.
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      * @exception {DeveloperError} scalar is required and must be a number.
@@ -451,7 +511,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian to be negated.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -474,7 +534,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian whose absolute value is to be computed.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -500,7 +560,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} start is required.
      * @exception {DeveloperError} end is required.
@@ -529,7 +589,7 @@ define([
      *
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
-     * @return {Number} The angle between the Cartesians.
+     * @returns {Number} The angle between the Cartesians.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -555,7 +615,7 @@ define([
      *
      * @param {Cartesian3} cartesian The Cartesian on which to find the most orthogonal axis.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The most orthogonal axis.
+     * @returns {Cartesian3} The most orthogonal axis.
      *
      * @exception {DeveloperError} cartesian is required.
      */
@@ -591,7 +651,7 @@ define([
      *
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
-     * @return {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     Cartesian3.equals = function(left, right) {
         return (left === right) ||
@@ -611,7 +671,7 @@ define([
      * @param {Cartesian3} [left] The first Cartesian.
      * @param {Cartesian3} [right] The second Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if left and right are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -634,7 +694,7 @@ define([
      * @param {Cartesian3} left The first Cartesian.
      * @param {Cartesian3} right The second Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The cross product.
+     * @returns {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -695,7 +755,7 @@ define([
      * Computes the value of the maximum component for this Cartesian.
      * @memberof Cartesian3
      *
-     * @return {Number} The value of the maximum component.
+     * @returns {Number} The value of the maximum component.
      */
     Cartesian3.prototype.getMaximumComponent = function() {
         return Cartesian3.getMaximumComponent(this);
@@ -705,7 +765,7 @@ define([
      * Computes the value of the minimum component for this Cartesian.
      * @memberof Cartesian3
      *
-     * @return {Number} The value of the minimum component.
+     * @returns {Number} The value of the minimum component.
      */
     Cartesian3.prototype.getMinimumComponent = function() {
         return Cartesian3.getMinimumComponent(this);
@@ -716,7 +776,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.prototype.clone = function(result) {
         return Cartesian3.clone(this, result);
@@ -726,7 +786,7 @@ define([
      * Computes this Cartesian's squared magnitude.
      * @memberof Cartesian3
      *
-     * @return {Number} The squared magnitude.
+     * @returns {Number} The squared magnitude.
      */
     Cartesian3.prototype.magnitudeSquared = function() {
         return Cartesian3.magnitudeSquared(this);
@@ -736,7 +796,7 @@ define([
      * Computes this Cartesian's magnitude (length).
      * @memberof Cartesian3
      *
-     * @return {Number} The magnitude.
+     * @returns {Number} The magnitude.
      */
     Cartesian3.prototype.magnitude = function() {
         return Cartesian3.magnitude(this);
@@ -747,7 +807,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.prototype.normalize = function(result) {
         return Cartesian3.normalize(this, result);
@@ -758,7 +818,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} right The right hand side Cartesian.
-     * @return {Number} The dot product.
+     * @returns {Number} The dot product.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -772,7 +832,7 @@ define([
      *
      * @param {Cartesian3} right The right hand side Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -786,7 +846,7 @@ define([
      *
      * @param {Cartesian3} right The right hand side Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -800,7 +860,7 @@ define([
      *
      * @param {Cartesian3} right The right hand side Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} right is required.
      */
@@ -814,7 +874,7 @@ define([
      *
      * @param {Number} scalar The scalar to multiply with.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -828,7 +888,7 @@ define([
      *
      * @param {Number} scalar The scalar to divide by.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} scalar is required and must be a number.
      */
@@ -841,7 +901,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.prototype.negate = function(result) {
         return Cartesian3.negate(this, result);
@@ -852,7 +912,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      */
     Cartesian3.prototype.abs = function(result) {
         return Cartesian3.abs(this, result);
@@ -866,7 +926,7 @@ define([
      * @param end The value corresponding to t at 1.0.
      * @param t The point along t at which to interpolate.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
+     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
      *
      * @exception {DeveloperError} end is required.
      * @exception {DeveloperError} t is required and must be a number.
@@ -880,7 +940,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} right The right hand side Cartesian.
-     * @return {Number} The angle between the Cartesians.
+     * @returns {Number} The angle between the Cartesians.
      *
      * @exception {DeveloperError} left is required.
      * @exception {DeveloperError} right is required.
@@ -894,7 +954,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The most orthogonal axis.
+     * @returns {Cartesian3} The most orthogonal axis.
      */
     Cartesian3.prototype.mostOrthogonalAxis = function(result) {
         return Cartesian3.mostOrthogonalAxis(this, result);
@@ -906,7 +966,7 @@ define([
      * @memberof Cartesian3
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     Cartesian3.prototype.equals = function(right) {
         return Cartesian3.equals(this, right);
@@ -920,7 +980,7 @@ define([
      *
      * @param {Cartesian3} [right] The right hand side Cartesian.
      * @param {Number} epsilon The epsilon to use for equality testing.
-     * @return {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are within the provided epsilon, <code>false</code> otherwise.
      *
      * @exception {DeveloperError} epsilon is required and must be a number.
      */
@@ -932,7 +992,7 @@ define([
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *
-     * @return {String} A string representing this Cartesian in the format '(x, y, z)'.
+     * @returns {String} A string representing this Cartesian in the format '(x, y, z)'.
      */
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
@@ -944,7 +1004,7 @@ define([
      *
      * @param {Cartesian3} right The right hand side Cartesian.
      * @param {Cartesian3} [result] The object onto which to store the result.
-     * @return {Cartesian3} The cross product.
+     * @returns {Cartesian3} The cross product.
      *
      * @exception {DeveloperError} right is required.
      */

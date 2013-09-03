@@ -891,7 +891,7 @@ define([
      * Returns a 1x1 RGBA texture initialized to [255, 255, 255, 255].  This can
      * be used as a placeholder texture while other textures are downloaded.
      *
-     * @return {Texture}
+     * @returns {Texture}
      *
      * @memberof Context
      */
@@ -914,7 +914,7 @@ define([
      * [255, 255, 255, 255].  This can be used as a placeholder cube map while
      * other cube maps are downloaded.
      *
-     * @return {CubeMap}
+     * @returns {CubeMap}
      *
      * @memberof Context
      */
@@ -959,7 +959,7 @@ define([
      * @param {String} fragmentShaderSource The GLSL source for the fragment shader.
      * @param {Object} [attributeLocations=undefined] An optional object that maps vertex attribute names to indices for use with vertex arrays.
      *
-     * @return {ShaderProgram} The compiled and linked shader program, ready for use in a draw call.
+     * @returns {ShaderProgram} The compiled and linked shader program, ready for use in a draw call.
      *
      * @exception {RuntimeError} Vertex shader failed to compile.
      * @exception {RuntimeError} Fragment shader failed to compile.
@@ -1044,7 +1044,7 @@ define([
      * @param {ArrayBufferView|Number} typedArrayOrSizeInBytes A typed array containing the data to copy to the buffer, or a <code>Number</code> defining the size of the buffer in bytes.
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      *
-     * @return {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
+     * @returns {VertexBuffer} The vertex buffer, ready to be attached to a vertex array.
      *
      * @exception {DeveloperError} The size in bytes must be greater than zero.
      * @exception {DeveloperError} Invalid <code>usage</code>.
@@ -1084,7 +1084,7 @@ define([
      * @param {BufferUsage} usage Specifies the expected usage pattern of the buffer.  On some GL implementations, this can significantly affect performance.  See {@link BufferUsage}.
      * @param {IndexDatatype} indexDatatype The datatype of indices in the buffer.
      *
-     * @return {IndexBuffer} The index buffer, ready to be attached to a vertex array.
+     * @returns {IndexBuffer} The index buffer, ready to be attached to a vertex array.
      *
      * @exception {RuntimeError} IndexDatatype.UNSIGNED_INT requires OES_element_index_uint, which is not supported on this system.
      * @exception {DeveloperError} The size in bytes must be greater than zero.
@@ -1150,7 +1150,7 @@ define([
      * @param {Array} [attributes=undefined] An optional array of attributes.
      * @param {IndexBuffer} [indexBuffer=undefined] An optional index buffer.
      *
-     * @return {VertexArray} The vertex array, ready for use with drawing.
+     * @returns {VertexArray} The vertex array, ready for use with drawing.
      *
      * @exception {DeveloperError} Attribute must have a <code>vertexBuffer</code>.
      * @exception {DeveloperError} Attribute must have a <code>componentsPerAttribute</code>.
@@ -1238,7 +1238,7 @@ define([
      *
      * @memberof Context
      *
-     * @return {Texture} DOC_TBA.
+     * @returns {Texture} DOC_TBA.
      *
      * @exception {RuntimeError} When description.pixelFormat is DEPTH_COMPONENT or DEPTH_STENCIL, this WebGL implementation must support WEBGL_depth_texture.
      * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
@@ -1364,7 +1364,7 @@ define([
      * @param {PixelFormat} [width=canvas.clientWidth] The width of the texture in texels.
      * @param {PixelFormat} [height=canvas.clientHeight] The height of the texture in texels.
      *
-     * @return {Texture} A texture with contents from the framebuffer.
+     * @returns {Texture} A texture with contents from the framebuffer.
      *
      * @exception {DeveloperError} Invalid pixelFormat.
      * @exception {DeveloperError} pixelFormat cannot be DEPTH_COMPONENT or DEPTH_STENCIL.
@@ -1452,7 +1452,7 @@ define([
      *
      * @memberof Context
      *
-     * @return {CubeMap} DOC_TBA.
+     * @returns {CubeMap} DOC_TBA.
      *
      * @exception {RuntimeError} When description.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.
      * @exception {DeveloperError} description is required.
@@ -1588,7 +1588,7 @@ define([
      *
      * @param {Object} [description] The initial framebuffer attachments as shown in Example 2.  The possible properties are <code>colorTexture</code>, <code>colorRenderbuffer</code>, <code>depthTexture</code>, <code>depthRenderbuffer</code>, <code>stencilRenderbuffer</code>, <code>depthStencilTexture</code>, and <code>depthStencilRenderbuffer</code>.
      *
-     * @return {Framebuffer} The created framebuffer.
+     * @returns {Framebuffer} The created framebuffer.
      *
      * @exception {DeveloperError} Cannot have both a color texture and color renderbuffer attachment.
      * @exception {DeveloperError} Cannot have both a depth texture and depth renderbuffer attachment.
@@ -1643,7 +1643,7 @@ define([
      *
      * @param {Object} [description] DOC_TBA.
      *
-     * @return {createRenderbuffer} DOC_TBA.
+     * @returns {createRenderbuffer} DOC_TBA.
      *
      * @exception {DeveloperError} Invalid format.
      * @exception {DeveloperError} Width must be greater than zero.
@@ -2101,7 +2101,7 @@ define([
 
         var offset = command.offset;
         var count = command.count;
-        var hasIndexBuffer = (defined(indexBuffer));
+        var hasIndexBuffer = defined(indexBuffer);
 
         if (hasIndexBuffer) {
             offset = (offset || 0) * indexBuffer.getBytesPerIndex(); // in bytes

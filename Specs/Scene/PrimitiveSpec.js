@@ -14,6 +14,7 @@ defineSuite([
          'Core/Extent',
          'Core/Ellipsoid',
          'Core/PrimitiveType',
+         'Core/BoxGeometry',
          'Renderer/ClearCommand',
          'Scene/MaterialAppearance',
          'Scene/PerInstanceColorAppearance',
@@ -41,6 +42,7 @@ defineSuite([
          Extent,
          Ellipsoid,
          PrimitiveType,
+         BoxGeometry,
          ClearCommand,
          MaterialAppearance,
          PerInstanceColorAppearance,
@@ -230,6 +232,34 @@ defineSuite([
         expect(commands.length).toEqual(0);
 
         frameState.mode = SceneMode.SCENE3D;
+        primitive = primitive && primitive.destroy();
+    });
+
+    it('renders in two passes for closed, translucent geometry', function() {
+        var primitive = new Primitive({
+            geometryInstances : new GeometryInstance({
+                geometry : BoxGeometry.fromDimensions({
+                    vertexFormat : PerInstanceColorAppearance.VERTEX_FORMAT,
+                    dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
+                }),
+                id : 'box',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5)
+                }
+            }),
+            appearance : new PerInstanceColorAppearance({
+                closed : true,
+                translucent : true
+            }),
+            allow3DOnly : true,
+            asynchronous : false
+        });
+
+        var commands = [];
+        primitive.update(context, frameState, commands);
+        expect(commands.length).toEqual(1);
+        expect(commands[0].colorList.length).toEqual(2);
+
         primitive = primitive && primitive.destroy();
     });
 
