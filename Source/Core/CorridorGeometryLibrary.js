@@ -47,10 +47,7 @@ define([
     var originScratch = new Cartesian3();
     var nextScratch = new Cartesian3();
     var prevScratch = new Cartesian3();
-    /**
-     * @private
-     */
-    CorridorGeometryLibrary.angleIsGreaterThanPi = function(forward, backward, position, ellipsoid) {
+    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
@@ -60,14 +57,11 @@ define([
         next = Cartesian2.subtract(next, origin, next);
 
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    };
+    }
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
-    /**
-     * @private
-     */
-    CorridorGeometryLibrary.computeRoundCorner = function (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
+    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
         var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
@@ -95,12 +89,9 @@ define([
         }
 
         return array;
-    };
+    }
 
-    /**
-     * @private
-     */
-    CorridorGeometryLibrary.addEndCaps = function (calculatedPositions, width, ellipsoid) {
+    function addEndCaps (calculatedPositions, width, ellipsoid) {
         var cornerPoint = cartesian1;
         var startPoint = cartesian2;
         var endPoint = cartesian3;
@@ -109,7 +100,7 @@ define([
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var firstEndCap = CorridorGeometryLibrary.computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         var length = calculatedPositions.length - 1;
         var rightEdge = calculatedPositions[length - 1];
@@ -117,15 +108,12 @@ define([
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var lastEndCap = CorridorGeometryLibrary.computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         return [firstEndCap, lastEndCap];
-    };
+    }
 
-    /**
-     * @private
-     */
-    CorridorGeometryLibrary.computeMiteredCorner = function (position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
+    function computeMiteredCorner (position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
@@ -134,26 +122,7 @@ define([
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
         }
         return [cornerPoint.x, cornerPoint.y, cornerPoint.z, lastPoint.x, lastPoint.y, lastPoint.z];
-    };
-
-    /**
-     * @private
-     */
-    CorridorGeometryLibrary.addAttribute = function (attribute, value, front, back) {
-        var x = value.x;
-        var y = value.y;
-        var z = value.z;
-        if (defined(front)) {
-            attribute[front] = x;
-            attribute[front + 1] = y;
-            attribute[front + 2] = z;
-        }
-        if (defined(back)) {
-            attribute[back] = z;
-            attribute[back - 1] = y;
-            attribute[back - 2] = x;
-        }
-    };
+    }
 
     function addShiftedPositions (positions, left, scalar, calculatedPositions) {
         var rightPositions = new Array(positions.length);
@@ -179,6 +148,25 @@ define([
 
         return calculatedPositions;
     }
+
+    /**
+     * @private
+     */
+    CorridorGeometryLibrary.addAttribute = function (attribute, value, front, back) {
+        var x = value.x;
+        var y = value.y;
+        var z = value.z;
+        if (defined(front)) {
+            attribute[front] = x;
+            attribute[front + 1] = y;
+            attribute[front + 2] = z;
+        }
+        if (defined(back)) {
+            attribute[back] = z;
+            attribute[back - 1] = y;
+            attribute[back - 2] = x;
+        }
+    };
 
     /**
      * @private
@@ -231,7 +219,7 @@ define([
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = CorridorGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
+                var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
@@ -250,9 +238,9 @@ define([
                     leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
                     previousPos = rightPos.add(left.multiplyByScalar(width, previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({leftPositions : CorridorGeometryLibrary.computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push({leftPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
@@ -271,9 +259,9 @@ define([
                     rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
                     previousPos = leftPos.add(left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({rightPositions : CorridorGeometryLibrary.computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push({rightPositions : CorridorGeometryLibrary.computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({rightPositions : computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 }
                 backward = forward.negate(backward);
@@ -293,7 +281,7 @@ define([
 
         var endPositions;
         if (cornerType.value === CornerType.ROUNDED.value) {
-            endPositions = CorridorGeometryLibrary.addEndCaps(calculatedPositions, width, ellipsoid);
+            endPositions = addEndCaps(calculatedPositions, width, ellipsoid);
         }
 
         return {
