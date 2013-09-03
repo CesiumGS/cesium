@@ -11,10 +11,6 @@ define([
          * An automatic GLSL uniform containing the viewport's <code>x</code>, <code>y</code>, <code>width</code>,
          * and <code>height</code> properties in an <code>vec4</code>'s <code>x</code>, <code>y</code>, <code>z</code>,
          * and <code>w</code> components, respectively.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewport</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewport
          * @glslUniform
@@ -60,10 +56,6 @@ define([
          * Do not confuse {@link czm_viewportTransformation} with <code>czm_viewportOrthographic</code>.
          * The former transforms from normalized device coordinates to window coordinates; the later transforms
          * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewportOrthographic</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewportOrthographic
          * @glslUniform
@@ -108,10 +100,6 @@ define([
          * Do not confuse <code>czm_viewportTransformation</code> with {@link czm_viewportOrthographic}.
          * The former transforms from normalized device coordinates to window coordinates; the later transforms
          * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewportTransformation</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewportTransformation
          * @glslUniform
@@ -149,10 +137,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
          * transforms model coordinates to world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_model</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_model
          * @glslUniform
@@ -186,10 +170,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 model transformation matrix that
          * transforms world coordinates to model coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseModel</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseModel
          * @glslUniform
@@ -222,10 +202,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 view transformation matrix that
          * transforms world coordinates to eye coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_view</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_view
          * @glslUniform
@@ -264,10 +240,6 @@ define([
          * {@link czm_view}, but in 2D and Columbus View it represents the view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_view3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_view3D
          * @glslUniform
@@ -299,10 +271,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 3x3 view rotation matrix that
          * transforms vectors in world coordinates to eye coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewRotation</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewRotation
          * @glslUniform
@@ -339,10 +307,6 @@ define([
          * {@link czm_viewRotation}, but in 2D and Columbus View it represents the view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewRotation3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewRotation3D
          * @glslUniform
@@ -374,10 +338,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseView</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseView
          * @glslUniform
@@ -413,10 +373,6 @@ define([
          * {@link czm_inverseView}, but in 2D and Columbus View it represents the inverse view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseView3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseView3D
          * @glslUniform
@@ -448,10 +404,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that
          * transforms vectors from eye coordinates to world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseViewRotation</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseViewRotation
          * @glslUniform
@@ -488,10 +440,6 @@ define([
          * {@link czm_inverseViewRotation}, but in 2D and Columbus View it represents the inverse view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseViewRotation3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseViewRotation3D
          * @glslUniform
@@ -524,10 +472,6 @@ define([
          * An automatic GLSL uniform representing a 4x4 projection transformation matrix that
          * transforms eye coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_projection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_projection
          * @glslUniform
@@ -562,10 +506,6 @@ define([
          * An automatic GLSL uniform representing a 4x4 inverse projection transformation matrix that
          * transforms from clip coordinates to eye coordinates. Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseProjection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseProjection
          * @glslUniform
@@ -600,10 +540,6 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  An infinite far plane is used
          * in algorithms like shadow volumes and GPU ray casting with proxy geometry to ensure that triangles
          * are not clipped by the far plane.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_infiniteProjection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_infiniteProjection
          * @glslUniform
@@ -639,10 +575,6 @@ define([
          * <br /><br />
          * Positions should be transformed to eye coordinates using <code>czm_modelView</code> and
          * normals should be transformed using {@link czm_normal}.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelView</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelView
          * @glslUniform
@@ -686,10 +618,6 @@ define([
          * <br /><br />
          * Positions should be transformed to eye coordinates using <code>czm_modelView3D</code> and
          * normals should be transformed using {@link czm_normal3D}.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelView3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelView3D
          * @glslUniform
@@ -725,10 +653,6 @@ define([
          * An automatic GLSL uniform representing a 4x4 model-view transformation matrix that
          * transforms model coordinates, relative to the eye, to eye coordinates.  This is used
          * in conjunction with {@link czm_translateRelativeToEye}.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelViewRelativeToEye</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelViewRelativeToEye
          * @glslUniform
@@ -768,10 +692,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 4x4 transformation matrix that
          * transforms from eye coordinates to model coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseModelView</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseModelView
          * @glslUniform
@@ -806,10 +726,6 @@ define([
          * {@link czm_inverseModelView}, but in 2D and Columbus View it represents the inverse model-view matrix
          * as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseModelView3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseModelView3D
          * @glslUniform
@@ -843,10 +759,6 @@ define([
          * An automatic GLSL uniform representing a 4x4 view-projection transformation matrix that
          * transforms world coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_viewProjection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewProjection
          * @glslUniform
@@ -884,10 +796,6 @@ define([
          * An automatic GLSL uniform representing a 4x4 model-view-projection transformation matrix that
          * transforms model coordinates to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelViewProjection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelViewProjection
          * @glslUniform
@@ -929,10 +837,6 @@ define([
          * transforms model coordinates, relative to the eye, to clip coordinates.  Clip coordinates is the
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  This is used in
          * conjunction with {@link czm_translateRelativeToEye}.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelViewProjectionRelativeToEye</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelViewProjectionRelativeToEye
          * @glslUniform
@@ -975,10 +879,6 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.  The projection matrix places
          * the far plane at infinity.  This is useful in algorithms like shadow volumes and GPU ray casting with
          * proxy geometry to ensure that triangles are not clipped by the far plane.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_modelViewInfiniteProjection</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_modelViewInfiniteProjection
          * @glslUniform
@@ -1019,10 +919,6 @@ define([
          * <br /><br />
          * Positions should be transformed to eye coordinates using {@link czm_modelView} and
          * normals should be transformed using <code>czm_normal</code>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_normal</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_normal
          * @glslUniform
@@ -1062,10 +958,6 @@ define([
          * <br /><br />
          * Positions should be transformed to eye coordinates using {@link czm_modelView3D} and
          * normals should be transformed using <code>czm_normal3D</code>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_normal3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_normal3D
          * @glslUniform
@@ -1098,10 +990,6 @@ define([
          * An automatic GLSL uniform representing a 3x3 normal transformation matrix that
          * transforms normal vectors in eye coordinates to model coordinates.  This is
          * the opposite of the transform provided by {@link czm_normal}.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseNormal</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseNormal
          * @glslUniform
@@ -1140,10 +1028,6 @@ define([
          * {@link czm_inverseNormal}, but in 2D and Columbus View it represents the inverse normal transformation
          * matrix as if the camera were at an equivalent location in 3D mode.  This is useful for lighting
          * 2D and Columbus View in the same way that 3D is lit.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_inverseNormal3D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_inverseNormal3D
          * @glslUniform
@@ -1175,10 +1059,6 @@ define([
         /**
          * An automatic GLSL uniform containing height (<code>x</code>) and height squared (<code>y</code>)
          *  of the eye (camera) in the 2D scene in meters.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_eyeHeight2D</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_eyeHeight2D
          * @glslUniform
@@ -1203,10 +1083,6 @@ define([
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
          * of the frustum defined by the camera.  This is the largest possible frustum, not an individual
          * frustum used for multi-frustum rendering.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_entireFrustum</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_entireFrustum
          * @glslUniform
@@ -1239,10 +1115,6 @@ define([
          * An automatic GLSL uniform containing the near distance (<code>x</code>) and the far distance (<code>y</code>)
          * of the frustum defined by the camera.  This is the individual
          * frustum used for multi-frustum rendering.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_currentFrustum</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_currentFrustum
          * @glslUniform
@@ -1274,10 +1146,6 @@ define([
         /**
          * An automatic GLSL uniform representing the size of a pixel in meters at a distance of one meter
          * from the camera. The pixel size is linearly proportional to the distance from the camera.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_pixelSizeInMeters</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_pixelSizeInMeters
          * @glslUniform
@@ -1305,10 +1173,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the sun position in world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sunPositionWC</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_sunPositionWC
          * @glslUniform
@@ -1337,10 +1201,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the sun position in Columbus view world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sunPositionColumbusView</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_sunPositionColumbusView
          * @glslUniform
@@ -1369,10 +1229,6 @@ define([
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in eye coordinates.
          * This is commonly used for directional lighting computations.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sunDirectionEC</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_sunDirectionEC
          * @glslUniform
@@ -1405,10 +1261,6 @@ define([
         /**
          * An automatic GLSL uniform representing the normalized direction to the sun in world coordinates.
          * This is commonly used for directional lighting computations.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_sunDirectionWC
          * @glslUniform
@@ -1438,10 +1290,6 @@ define([
         /**
          * An automatic GLSL uniform representing the normalized direction to the moon in eye coordinates.
          * This is commonly used for directional lighting computations.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_moonDirectionEC</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_moonDirectionEC
          * @glslUniform
@@ -1474,10 +1322,6 @@ define([
          * An automatic GLSL uniform representing the high bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
          * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_encodedCameraPositionMCHigh</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_encodedCameraPositionMCHigh
          * @glslUniform
@@ -1508,10 +1352,6 @@ define([
          * An automatic GLSL uniform representing the low bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
          * as described in <a href="http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/">Precisions, Precisions</a>.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_encodedCameraPositionMCHigh</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_encodedCameraPositionMCLow
          * @glslUniform
@@ -1540,10 +1380,6 @@ define([
 
         /**
          * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sunDirectionWC</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_viewerPositionWC
          * @glslUniform
@@ -1569,10 +1405,6 @@ define([
         /**
          * An automatic GLSL uniform representing the frame number. This uniform is automatically incremented
          * every frame.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_frameNumber</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_frameNumber
          * @glslUniform
@@ -1598,10 +1430,6 @@ define([
         /**
          * An automatic GLSL uniform representing the current morph transition time between
          * 2D/Columbus View and 3D, with 0.0 being 2D or Columbus View and 1.0 being 3D.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_morphTime</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_morphTime
          * @glslUniform
@@ -1630,10 +1458,6 @@ define([
         /**
          * An automatic GLSL uniform representing the current {@link SceneMode} enumeration, expressed
          * as a float.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_sceneMode</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_sceneMode
          * @glslUniform
@@ -1670,10 +1494,6 @@ define([
         /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
-         * <br /><br />
-         * Like all automatic uniforms, <code>czm_temeToPseudoFixed</code> does not need to be explicitly declared.
-         * However, it can be explicitly declared when a shader is also used by other applications such
-         * as a third-party authoring tool.
          *
          * @alias czm_temeToPseudoFixed
          * @glslUniform
