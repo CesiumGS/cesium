@@ -207,7 +207,7 @@ defineSuite([
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(1.0, 5.0);
         var expectedResult = new Cartesian2(1.0, -2.0);
-        var result = left.subtract(right);
+        var result = Cartesian2.subtract(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -216,18 +216,9 @@ defineSuite([
         var right = new Cartesian2(1.0, 5.0);
         var result = new Cartesian2();
         var expectedResult = new Cartesian2(1.0, -2.0);
-        var returnedResult = left.subtract(right, result);
+        var returnedResult = Cartesian2.subtract(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('subtract works with this result parameter', function() {
-        var left = new Cartesian2(2.0, 3.0);
-        var right = new Cartesian2(1.0, 5.0);
-        var expectedResult = new Cartesian2(1.0, -2.0);
-        var returnedResult = left.subtract(right, left);
-        expect(returnedResult).toBe(left);
-        expect(left).toEqual(expectedResult);
     });
 
     it('multiplyByScalar without a result parameter', function() {

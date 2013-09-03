@@ -775,20 +775,6 @@ define([
     };
 
     /**
-     * Computes the componentwise sum of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.add = function(right, result) {
-        return Cartesian4.add(this, right, result);
-    };
-
-    /**
      * Computes the componentwise difference of this Cartesian and the provided Cartesian.
      * @memberof Cartesian4
      *

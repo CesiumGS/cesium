@@ -841,20 +841,6 @@ define([
     };
 
     /**
-     * Computes the componentwise sum of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} right The right hand side Cartesian.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian3.prototype.add = function(right, result) {
-        return Cartesian3.add(this, right, result);
-    };
-
-    /**
      * Computes the componentwise difference of this Cartesian and the provided Cartesian.
      * @memberof Cartesian3
      *

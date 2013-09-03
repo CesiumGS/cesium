@@ -205,7 +205,7 @@ defineSuite([
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(6.0, 8.0, 13.0, 17.0);
-        var result = left.add(right);
+        var result = Cartesian4(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -214,18 +214,9 @@ defineSuite([
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(6.0, 8.0, 13.0,  17.0);
-        var returnedResult = left.add(right, result);
+        var returnedResult = Cartesian4(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('add works with "this" result parameter', function() {
-        var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
-        var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
-        var expectedResult = new Cartesian4(6.0, 8.0, 13.0, 17.0);
-        var returnedResult = left.add(right, left);
-        expect(left).toBe(returnedResult);
-        expect(left).toEqual(expectedResult);
     });
 
     it('subtract works without a result parameter', function() {
