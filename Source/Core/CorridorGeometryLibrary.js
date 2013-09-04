@@ -61,7 +61,7 @@ define([
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
-    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
+    function computeRoundCorner (cornerPoint, startPoint, endPoint, cornerType, leftIsOutside) {
         var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
         var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
@@ -100,7 +100,7 @@ define([
         startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         var length = calculatedPositions.length - 1;
         var rightEdge = calculatedPositions[length - 1];
@@ -108,12 +108,12 @@ define([
         startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
         endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
         cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
-        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
+        var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false);
 
         return [firstEndCap, lastEndCap];
     }
 
-    function computeMiteredCorner (position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
+    function computeMiteredCorner (position, leftCornerDirection, lastPoint, leftIsOutside) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
@@ -238,9 +238,9 @@ define([
                     leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
                     previousPos = rightPos.add(left.multiplyByScalar(width, previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside)});
                     } else {
-                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({leftPositions : computeMiteredCorner(position, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside)});
                     }
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
@@ -259,9 +259,9 @@ define([
                     rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
                     previousPos = leftPos.add(left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
-                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
+                        corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside)});
                     } else {
-                        corners.push({rightPositions : computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({rightPositions : computeMiteredCorner(position, cornerDirection, rightPos, leftIsOutside)});
                     }
                 }
                 backward = forward.negate(backward);
