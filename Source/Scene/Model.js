@@ -19,6 +19,7 @@ define([
         '../Core/IndexDatatype',
         '../Core/ComponentDatatype',
         '../Core/PrimitiveType',
+        '../Core/Math',
         '../Renderer/TextureWrap',
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureMagnificationFilter',
@@ -48,6 +49,7 @@ define([
         IndexDatatype,
         ComponentDatatype,
         PrimitiveType,
+        CesiumMath,
         TextureWrap,
         TextureMinificationFilter,
         TextureMagnificationFilter,
@@ -410,6 +412,26 @@ define([
                         magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
                     });
 
+// TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
+                    var minFilter;
+
+                    if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
+                        (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR')) {
+                        minFilter = 'NEAREST';
+                    } else if ((sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
+                               (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
+                        minFilter = 'LINEAR';
+                    } else {
+                        minFilter = sampler.minFilter;
+                    }
+
+                    sampler.extra.czmSamplerWithoutMipmaps = context.createSampler({
+                        wrapS : TextureWrap[sampler.wrapS],
+                        wrapT : TextureWrap[sampler.wrapT],
+                        minificationFilter : TextureMinificationFilter[minFilter],
+                        magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
+                    });
+// End workaround
                 }
             }
         }
@@ -664,14 +686,20 @@ define([
              var tx = texture.extra.czmTexture;
              var sampler = model.gltf.samplers[texture.sampler];
 
-             if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
-                 (sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
-                 (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
-                 (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
-                 tx.generateMipmap();
+// TODO: Workaround https://github.com/KhronosGroup/glTF/issues/120
+             var dimensions = tx.getDimensions();
+             if (!CesiumMath.isPowerOfTwo(dimensions.x) || !CesiumMath.isPowerOfTwo(dimensions.y)) {
+                 tx.setSampler(sampler.extra.czmSamplerWithoutMipmaps);
+             } else {
+// End workaround
+                 if ((sampler.minFilter === 'NEAREST_MIPMAP_NEAREST') ||
+                     (sampler.minFilter === 'LINEAR_MIPMAP_NEAREST') ||
+                     (sampler.minFilter === 'NEAREST_MIPMAP_LINEAR') ||
+                     (sampler.minFilter === 'LINEAR_MIPMAP_LINEAR')) {
+                     tx.generateMipmap();
+                 }
+                 tx.setSampler(sampler.extra.czmSampler);
              }
-
-             tx.setSampler(sampler.extra.czmSampler);
 
              return function() {
                  return tx;
