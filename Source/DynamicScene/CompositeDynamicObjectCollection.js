@@ -118,8 +118,17 @@ define(['../Core/defined',
             }
         }
 
+        var object;
+        var objects;
+        var iObjects;
         for (i = 0; i < collectionsCopyLength; i++) {
             collectionsCopy[i].collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+            objects = collectionsCopy.getObjects();
+            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+                object.subpropertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, that);
+            }
         }
 
         var composite = that._composite;
@@ -130,9 +139,11 @@ define(['../Core/defined',
             collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
 
             //Merge all of the existing objects.
-            var objects = collection.getObjects();
-            for ( var iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                var object = objects[iObjects];
+            objects = collection.getObjects();
+            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                object.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+                object.subpropertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, that);
 
                 var compositeObject = newObjects.getById(object.id);
                 if (!defined(compositeObject)) {
@@ -160,7 +171,42 @@ define(['../Core/defined',
     }
 
     CompositeDynamicObjectCollection.prototype._propertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+        //If we have a pending full merge, just do it and return.
+        if (mergeIfNeeded(this)) {
+            return;
+        }
 
+        var id = dynamicObject.id;
+        var composite = this._composite;
+        var compositeObject = composite.getById(id);
+        var compositeProperty = compositeObject[propertyName];
+
+        if (defined(compositeProperty) && defined(compositeProperty.clean)) {
+            compositeProperty.clean();
+        } else {
+            compositeProperty = undefined;
+        }
+
+        var collections = this._collectionsCopy;
+        var collectionsLength = collections.length;
+        for ( var q = collectionsLength - 1; q >= 0; q--) {
+            var object = collections[q].getById(dynamicObject.id);
+            if (defined(object)) {
+                var property = object[propertyName];
+                if (defined(property)) {
+                    if (!defined(compositeProperty)) {
+                        compositeProperty = property;
+                        continue;
+                    }
+                    if (defined(compositeProperty.merge)) {
+                        compositeProperty.merge(property);
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+        compositeObject[propertyName] = compositeProperty;
     };
 
     CompositeDynamicObjectCollection.prototype._subPropertyChanged = function(dynamicObject, propertyName, property, subPropertyName, newValue, oldValue) {
@@ -179,7 +225,7 @@ define(['../Core/defined',
             var object = collections[q].getById(dynamicObject.id);
             if (defined(object)) {
                 var subProperty = object[subPropertyName];
-                if (defined()) {
+                if (defined(subProperty)) {
                     compositeProperty[subPropertyName] = subProperty;
                     return;
                 }
@@ -205,7 +251,11 @@ define(['../Core/defined',
         var compositeObject;
         var removedLength = removed.length;
         for (i = 0; i < removedLength; i++) {
-            var removedId = removed[i].id;
+            var removedObject = removed[i];
+            object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
+            object.subpropertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, this);
+
+            var removedId = removedObject.id;
             //Check if the removed object exists in any of the remaining collections
             //If so, we clean and remerge it.
             for (q = collectionsLength - 1; q >= 0; q--) {
@@ -227,7 +277,11 @@ define(['../Core/defined',
 
         var addedLength = added.length;
         for (i = 0; i < addedLength; i++) {
-            var addedId = added[i].id;
+            var addedObject = added[i];
+            addedObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
+            addedObject.subpropertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, this);
+
+            var addedId = addedObject.id;
             //We know the added object exists in at least one collection,
             //but we need to check all collections and re-merge in order
             //to maintain the priority of properties.
