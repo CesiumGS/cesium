@@ -205,7 +205,7 @@ defineSuite([
         var left = new Cartesian4(2.0, 3.0, 6.0, 8.0);
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(6.0, 8.0, 13.0, 17.0);
-        var result = Cartesian4(left, right);
+        var result = Cartesian4.add(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -214,7 +214,7 @@ defineSuite([
         var right = new Cartesian4(4.0, 5.0, 7.0, 9.0);
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(6.0, 8.0, 13.0,  17.0);
-        var returnedResult = Cartesian4(left, right, result);
+        var returnedResult = Cartesian4.add(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
     });
@@ -223,7 +223,7 @@ defineSuite([
         var left = new Cartesian4(2.0, 3.0, 4.0, 8.0);
         var right = new Cartesian4(1.0, 5.0, 7.0, 9.0);
         var expectedResult = new Cartesian4(1.0, -2.0, -3.0, -1.0);
-        var result = left.subtract(right);
+        var result = Cartesian4.subtract(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -232,18 +232,9 @@ defineSuite([
         var right = new Cartesian4(1.0, 5.0, 7.0, 9.0);
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(1.0, -2.0, -3.0, -1.0);
-        var returnedResult = left.subtract(right, result);
+        var returnedResult = Cartesian4.subtract(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('subtract works with this result parameter', function() {
-        var left = new Cartesian4(2.0, 3.0, 4.0, 8.0);
-        var right = new Cartesian4(1.0, 5.0, 7.0, 9.0);
-        var expectedResult = new Cartesian4(1.0, -2.0, -3.0, -1.0);
-        var returnedResult = left.subtract(right, left);
-        expect(returnedResult).toBe(left);
-        expect(left).toEqual(expectedResult);
     });
 
     it('multiplyByScalar without a result parameter', function() {

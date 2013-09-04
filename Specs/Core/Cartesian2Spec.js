@@ -471,6 +471,12 @@ defineSuite([
         }).toThrow();
     });
 
+    it('static dot throws with no right parameter', function() {
+        expect(function() {
+            Cartesian2.dot(new Cartesian2(), undefined);
+        }).toThrow();
+    });
+
     it('static multiplyComponents throw with no left parameter', function() {
         var right = new Cartesian2(4.0, 5.0);
         expect(function() {
@@ -482,12 +488,6 @@ defineSuite([
         var left = new Cartesian2(4.0, 5.0);
         expect(function() {
             Cartesian2.multiplyComponents(left, undefined);
-        }).toThrow();
-    });
-
-    it('static dot throws with no right parameter', function() {
-        expect(function() {
-            Cartesian2.dot(new Cartesian2(), undefined);
         }).toThrow();
     });
 
