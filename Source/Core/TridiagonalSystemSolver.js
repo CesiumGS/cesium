@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './Cartesian3'
     ], function(
         defined,
-        DeveloperError) {
+        DeveloperError,
+        Cartesian3) {
     "use strict";
 
     /**
@@ -87,17 +89,17 @@ define([
         for (; i < c.length; ++i) {
             scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
             c[i] = upper[i] * scalar;
-            d[i] = right[i].subtract(d[i - 1].multiplyByScalar(lower[i - 1]));
+            d[i] = Cartesian3.subtract(right[i], d[i - 1].multiplyByScalar(lower[i - 1]));
             d[i] = d[i].multiplyByScalar(scalar);
         }
 
         scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
-        d[i] = right[i].subtract(d[i - 1].multiplyByScalar(lower[i - 1]));
+        d[i] = Cartesian3.subtract(right[i], d[i - 1].multiplyByScalar(lower[i - 1]));
         d[i] = d[i].multiplyByScalar(scalar);
 
         x[x.length - 1] = d[d.length - 1];
         for (i = x.length - 2; i >= 0; --i) {
-            x[i] = d[i].subtract(x[i + 1].multiplyByScalar(c[i]));
+            x[i] = Cartesian3.subtract(d[i], x[i + 1].multiplyByScalar(c[i]));
         }
 
         return x;

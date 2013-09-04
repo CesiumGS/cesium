@@ -33,13 +33,13 @@ defineSuite([
 
     function getPositions() {
         return [
-                center.add(new Cartesian3(1, 0, 0)),
-                center.add(new Cartesian3(2, 0, 0)),
-                center.add(new Cartesian3(0, 0, 0)),
-                center.add(new Cartesian3(1, 1, 0)),
-                center.add(new Cartesian3(1, -1, 0)),
-                center.add(new Cartesian3(1, 0, 1)),
-                center.add(new Cartesian3(1, 0, -1))
+                Cartesian3.add(center, new Cartesian3(1, 0, 0)),
+                Cartesian3.add(center, new Cartesian3(2, 0, 0)),
+                Cartesian3.add(center, new Cartesian3(0, 0, 0)),
+                Cartesian3.add(center, new Cartesian3(1, 1, 0)),
+                Cartesian3.add(center, new Cartesian3(1, -1, 0)),
+                Cartesian3.add(center, new Cartesian3(1, 0, 1)),
+                Cartesian3.add(center, new Cartesian3(1, 0, -1))
             ];
     }
 
@@ -146,8 +146,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = r.add(center);
-        var min = center.subtract(r);
+        var max = Cartesian3.add(r, center);
+        var min = Cartesian3.subtract(center, r);
 
         var positions = getPositions();
         var numPositions = positions.length;
@@ -167,8 +167,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = r.add(center);
-        var min = center.subtract(r);
+        var max = Cartesian3.add(r, center);
+        var min = Cartesian3.subtract(center, r);
 
         var numPositions = positions.length;
         for ( var i = 0; i < numPositions; i++) {
@@ -204,8 +204,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = r.add(center);
-        var min = center.subtract(r);
+        var max = Cartesian3.add(r, center);
+        var min = Cartesian3.subtract(center, r);
 
         var positions = getPositions();
         var numPositions = positions.length;
@@ -225,8 +225,8 @@ defineSuite([
         var center = sphere.center;
 
         var r = new Cartesian3(radius, radius, radius);
-        var max = r.add(center);
-        var min = center.subtract(r);
+        var max = Cartesian3.add(r, center);
+        var min = Cartesian3.subtract(center, r);
 
         var numElements = positions.length;
         for (var i = 0; i < numElements; i += 3) {
@@ -245,7 +245,7 @@ defineSuite([
     it('fromVertices works with defined center', function() {
         var center = new Cartesian3(1.0, 2.0, 3.0);
         var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5);
-        expect(sphere.center).toEqual(positionsCenter.add(center));
+        expect(sphere.center).toEqual(Cartesian3.add(positionsCenter, center));
         expect(sphere.radius).toEqual(positionsRadius);
     });
 
@@ -261,7 +261,7 @@ defineSuite([
         var result = new BoundingSphere();
         var sphere = BoundingSphere.fromVertices(getPositionsAsFlatArrayWithStride5(), center, 5, result);
         expect(sphere).toEqual(result);
-        expect(result.center).toEqual(positionsCenter.add(center));
+        expect(result.center).toEqual(Cartesian3.add(positionsCenter, center));
         expect(result.radius).toEqual(positionsRadius);
     });
 
@@ -533,7 +533,7 @@ defineSuite([
 
     function expectBoundingSphereToContainPoint(boundingSphere, point, projection) {
         var pointInCartesian = projection.project(point);
-        var distanceFromCenter = pointInCartesian.subtract(boundingSphere.center).magnitude();
+        var distanceFromCenter = Cartesian3.subtract(pointInCartesian, boundingSphere.center).magnitude();
 
         // The distanceFromCenter for corner points at the height extreme should equal the
         // bounding sphere's radius.  But due to rounding errors it can end up being

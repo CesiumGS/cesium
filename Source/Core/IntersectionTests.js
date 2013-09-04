@@ -333,7 +333,7 @@ define([
 
             for ( var i = 0; i < length; ++i) {
                 s = D_I.multiplyByVector(B.multiplyByVector(solutions[i]));
-                var v = s.subtract(position).normalize();
+                var v = Cartesian3.subtract(s, position).normalize();
                 var dotProduct = v.dot(direction);
 
                 if (dotProduct > maximumValue) {
@@ -344,7 +344,7 @@ define([
 
             var surfacePoint = ellipsoid.cartesianToCartographic(closest);
             maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
-            altitude = closest.subtract(position).magnitude() * Math.sqrt(1.0 - maximumValue * maximumValue);
+            altitude = Cartesian3.subtract(closest, position).magnitude() * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             return ellipsoid.cartographicToCartesian(new Cartographic(surfacePoint.longitude, surfacePoint.latitude, altitude));
         }

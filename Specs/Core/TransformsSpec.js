@@ -400,7 +400,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = t.multiplyByVector(inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision
@@ -450,7 +450,7 @@ defineSuite([
                 var t = Transforms.computeIcrfToFixedMatrix(time, resultT);
 
                 var result = t.multiplyByVector(inertialPos);
-                var error = result.subtract(expectedFixedPos);
+                var error = Cartesian3.subtract(result, expectedFixedPos);
 
                 // Given the magnitude of the positions involved (1e8)
                 // this tolerance represents machine precision

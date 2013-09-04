@@ -97,7 +97,7 @@ defineSuite([
             var p2 = pT.multiplyByScalar(c);
             var p3 = qT.multiplyByScalar(d);
 
-            return p0.add(p1).add(p2).add(p3);
+            return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
         };
     };
 

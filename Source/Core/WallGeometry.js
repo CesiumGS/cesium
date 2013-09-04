@@ -252,16 +252,16 @@ define([
 
             if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.binormal) {
                 var nextPosition;
-                var nextTop;
+                var nextTop = new Cartesian3();
                 var groundPosition = Cartesian3.fromArray(newWallPositions, i3, scratchCartesian3Position2);
                 if (i + 1 < length) {
                     nextPosition = Cartesian3.fromArray(newWallPositions, i3 + 3, scratchCartesian3Position3);
-                    nextTop = Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5);
+                    Cartesian3.fromArray(topPositions, i3 + 3, scratchCartesian3Position5, nextTop);
                 }
 
                 if (recomputeNormal) {
-                    var scalednextPosition = nextTop.subtract(topPosition, scratchCartesian3Position4);
-                    var scaledGroundPosition = groundPosition.subtract(topPosition, scratchCartesian3Position1);
+                    var scalednextPosition = Cartesian3.subtract(nextTop, topPosition, scratchCartesian3Position4);
+                    var scaledGroundPosition = Cartesian3.subtract(groundPosition, topPosition, scratchCartesian3Position1);
                     normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
                     recomputeNormal = false;
                 }
@@ -270,7 +270,7 @@ define([
                     recomputeNormal = true;
                 } else {
                     if (vertexFormat.tangent) {
-                        tangent = nextPosition.subtract(groundPosition, tangent).normalize(tangent);
+                        tangent = Cartesian3.subtract(nextPosition, groundPosition, tangent).normalize(tangent);
                     }
                     if (vertexFormat.binormal) {
                         binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);

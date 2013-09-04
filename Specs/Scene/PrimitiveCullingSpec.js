@@ -134,7 +134,7 @@ defineSuite([
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, camera.right.multiplyByScalar(8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
@@ -170,7 +170,7 @@ defineSuite([
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, camera.right.multiplyByScalar(8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();
@@ -215,7 +215,7 @@ defineSuite([
         expect(numRendered).toBeGreaterThan(0);
 
         // reposition camera so bounding volume is outside frustum.
-        camera.position = camera.position.add(camera.right.multiplyByScalar(8000000000.0));
+        Cartesian3.add(camera.position, camera.right.multiplyByScalar(8000000000.0), camera.position);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         numRendered = verifyNoDraw();

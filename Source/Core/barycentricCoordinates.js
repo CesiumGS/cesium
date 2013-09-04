@@ -1,9 +1,11 @@
 /*global define*/
 define([
+        './Cartesian2',
         './Cartesian3',
         './defined',
         './DeveloperError'
     ], function(
+        Cartesian2,
         Cartesian3,
         defined,
         DeveloperError) {
@@ -46,9 +48,16 @@ define([
         }
 
         // Implementation based on http://www.blackpawn.com/texts/pointinpoly/default.html.
-        var v0 = Cartesian3.subtract(p1, p0, scratchCartesian1);
-        var v1 = Cartesian3.subtract(p2, p0, scratchCartesian2);
-        var v2 = Cartesian3.subtract(point, p0, scratchCartesian3);
+        var v0, v1, v2;
+        if(p0 instanceof Cartesian2) {
+          v0 = Cartesian2.subtract(p1, p0, scratchCartesian1);
+          v1 = Cartesian2.subtract(p2, p0, scratchCartesian2);
+          v2 = Cartesian2.subtract(point, p0, scratchCartesian3);
+        } else {
+          v0 = Cartesian3.subtract(p1, p0, scratchCartesian1);
+          v1 = Cartesian3.subtract(p2, p0, scratchCartesian2);
+          v2 = Cartesian3.subtract(point, p0, scratchCartesian3);
+        }
 
         var dot00 = v0.dot(v0);
         var dot01 = v0.dot(v1);

@@ -34,7 +34,7 @@ defineSuite([
         var direction = new Cartesian3(1, 2, 3).normalize();
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         for ( var i = -10; i < 11; i++) {
-            var expectedResult = direction.multiplyByScalar(i).add(Cartesian3.UNIT_X);
+            var expectedResult = Cartesian3.add(direction.multiplyByScalar(i), Cartesian3.UNIT_X);
             var returnedResult = ray.getPoint(i);
             expect(returnedResult).toEqual(expectedResult);
         }
@@ -45,7 +45,7 @@ defineSuite([
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         var result = new Cartesian3();
         for ( var i = -10; i < 11; i++) {
-            var expectedResult = direction.multiplyByScalar(i).add(Cartesian3.UNIT_X);
+            var expectedResult = Cartesian3.add(direction.multiplyByScalar(i), Cartesian3.UNIT_X);
             var returnedResult = ray.getPoint(i, result);
             expect(result).toBe(returnedResult);
             expect(returnedResult).toEqual(expectedResult);

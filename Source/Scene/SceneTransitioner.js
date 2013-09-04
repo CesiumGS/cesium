@@ -118,7 +118,7 @@ define([
         };
 
         position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-        direction = Cartesian3.ZERO.subtract(position).normalize();
+        direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
         var right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
 
@@ -135,7 +135,7 @@ define([
         };
 
         position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
-        direction = Cartesian3.ZERO.subtract(position).normalize();
+        direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
         right = direction.cross(Cartesian3.UNIT_Z).normalize();
         up = right.cross(direction);
 

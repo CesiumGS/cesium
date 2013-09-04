@@ -581,11 +581,11 @@ define([
             maximumHeight = 0.0;
         }
 
-        var vectorFromSouthwestCorner = cameraCartesianPosition.subtract(southwestCornerCartesian, vectorScratch);
+        var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
         var distanceToWestPlane = vectorFromSouthwestCorner.dot(westNormal);
         var distanceToSouthPlane = vectorFromSouthwestCorner.dot(southNormal);
 
-        var vectorFromNortheastCorner = cameraCartesianPosition.subtract(northeastCornerCartesian, vectorScratch);
+        var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
         var distanceToEastPlane = vectorFromNortheastCorner.dot(eastNormal);
         var distanceToNorthPlane = vectorFromNortheastCorner.dot(northNormal);
 

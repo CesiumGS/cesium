@@ -60,10 +60,7 @@ define([
             var controlPoint1 = Cartesian3.clone(controlPoints[1].point);
             var controlPoint2 = Cartesian3.clone(controlPoints[2].point);
 
-            this._ti = controlPoint1
-                           .multiplyByScalar(2.0)
-                           .subtract(controlPoint2)
-                           .subtract(controlPoint0)
+            this._ti = Cartesian3.subtract(Cartesian3.subtract(controlPoint1.multiplyByScalar(2.0), controlPoint2), controlPoint0)
                            .multiplyByScalar(0.5);
         }
 
@@ -76,9 +73,7 @@ define([
             var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
             var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
 
-            this._to = controlPointn0
-                           .subtract(controlPointn1.multiplyByScalar(2.0))
-                           .add(controlPointn2)
+            this._to = Cartesian3.add(Cartesian3.subtract(controlPointn0, controlPointn1.multiplyByScalar(2.0)), controlPointn2)
                            .multiplyByScalar(0.5);
         }
     };
@@ -206,12 +201,12 @@ define([
             p0 = this._points[0].point;
             p1 = this._points[1].point;
             p2 = this._ti;
-            p3 = this._points[2].point.subtract(p0).multiplyByScalar(0.5);
+            p3 = Cartesian3.subtract(this._points[2].point, p0).multiplyByScalar(0.5);
             coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
-            p2 = p1.subtract(this._points[i - 1].point).multiplyByScalar(0.5);
+            p2 = Cartesian3.subtract(p1, this._points[i - 1].point).multiplyByScalar(0.5);
             p3 = this._to;
             coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else {
@@ -226,7 +221,7 @@ define([
         p2 = p2.multiplyByScalar(coefs.z);
         p3 = p3.multiplyByScalar(coefs.w);
 
-        return p0.add(p1.add(p2.add(p3)));
+        return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
     };
 
     return CatmullRomSpline;

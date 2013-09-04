@@ -34,8 +34,8 @@ define([
     "use strict";
 
     function isTipConvex(p0, p1, p2) {
-        var u = p1.subtract(p0);
-        var v = p2.subtract(p1);
+        var u = Cartesian2.subtract(p1, p0);
+        var v = Cartesian2.subtract(p2, p1);
 
         // Use the sign of the z component of the cross product
         return ((u.x * v.y) - (u.y * v.x)) >= 0.0;
@@ -168,7 +168,7 @@ define([
                     var ub = (((point2.x - point.x) * (point.y - v1.y)) - ((point2.y - point.y) * (point.x - v1.x))) * temp;
                     if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
                         var tempIntersection = new Cartesian2(point.x + ua * (point2.x - point.x), point.y + ua * (point2.y - point.y));
-                        var dist = tempIntersection.subtract(point);
+                        var dist = Cartesian2.subtract(tempIntersection, point);
                         temp = dist.magnitudeSquared();
                         if (temp < minDistance) {
                             intersection = tempIntersection;
@@ -208,8 +208,8 @@ define([
         }
 
         // Set P to be the edge endpoint closest to the inner ring vertex
-        var d1 = (outerRing[edgeIndices[0]].subtract(innerRingVertex)).magnitudeSquared();
-        var d2 = (outerRing[edgeIndices[1]].subtract(innerRingVertex)).magnitudeSquared();
+        var d1 = Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex).magnitudeSquared();
+        var d2 = Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex).magnitudeSquared();
         var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
 
         var reflexVertices = getReflexVertices(outerRing);
@@ -233,7 +233,7 @@ define([
         if (pointsInside.length > 0) {
             var v1 = new Cartesian2(1.0, 0.0, 0.0);
             for (i = 0; i < pointsInside.length; i++) {
-                var v2 = pointsInside[i].subtract(innerRingVertex);
+                var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
                 var denominator = v1.magnitude() * v2.magnitude();
                 if (denominator !== 0) {
                     var angle = Math.abs(Math.acos(v1.dot(v2) / denominator));
@@ -386,9 +386,9 @@ define([
         var before = getNextVertex(a1i, pArray, BEFORE);
         var after = getNextVertex(a1i, pArray, AFTER);
 
-        var s1 = pArray[before].position.subtract(a1.position);
-        var s2 = pArray[after].position.subtract(a1.position);
-        var cut = a2.position.subtract(a1.position);
+        var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
+        var s2 = Cartesian2.subtract(pArray[after].position,  a1.position);
+        var cut = Cartesian2.subtract(a2.position, a1.position);
 
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
@@ -514,8 +514,8 @@ define([
             after = 0;
         }
 
-        var s1 = pArray[before].position.subtract(pArray[index].position);
-        var s2 = pArray[after].position.subtract(pArray[index].position);
+        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position);
+        var s2 = Cartesian2.subtract(pArray[after].position,  pArray[index].position);
 
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
@@ -672,8 +672,8 @@ define([
         var v2 = pArray[1].position;
         var v3 = pArray[2].position;
 
-        var side1 = v2.subtract(v1);
-        var side2 = v3.subtract(v1);
+        var side1 = Cartesian2.subtract(v2, v1);
+        var side2 = Cartesian2.subtract(v3, v1);
 
         // Convert to 3-dimensional so we can use cross product
         side1 = new Cartesian3(side1.x, side1.y, 0.0);
@@ -965,7 +965,7 @@ define([
 
                 var max = Math.max(g0, Math.max(g1, g2));
                 var edge;
-                var mid;
+                var mid = new Cartesian3();
 
                 if (max > granularity) {
                     if (g0 === max) {
@@ -973,7 +973,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            mid = Cartesian3.add(v0, v1);
+                            Cartesian3.add(v0, v1, mid);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
@@ -995,7 +995,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            mid = Cartesian3.add(v1, v2);
+                            Cartesian3.add(v1, v2, mid);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
@@ -1017,7 +1017,7 @@ define([
 
                         i = edges[edge];
                         if (!i) {
-                            mid = Cartesian3.add(v2, v0);
+                            Cartesian3.add(v2, v0, mid);
                             Cartesian3.multiplyByScalar(mid, 0.5, mid);
                             subdividedPositions.push(mid);
                             i = subdividedPositions.length - 1;
@@ -1086,7 +1086,7 @@ define([
                 var length = positions.length;
 
                 for ( var i = 0; i < length; i += 3) {
-                    p = Cartesian3.fromArray(positions, i, p);
+                    Cartesian3.fromArray(positions, i, p);
 
                     ellipsoid.scaleToGeodeticSurface(p, p);
                     ellipsoid.geodeticSurfaceNormal(p, n);

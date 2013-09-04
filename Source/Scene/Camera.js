@@ -80,7 +80,7 @@ define([
         this._position = position;
         this._positionWC = position;
 
-        var direction = Cartesian3.ZERO.subtract(position).normalize();
+        var direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
 
         /**
          * The view direction of the camera.
@@ -204,7 +204,7 @@ define([
                 var invUpMag = 1.0 / up.magnitudeSquared();
                 var scalar = up.dot(direction) * invUpMag;
                 var w0 = direction.multiplyByScalar(scalar);
-                up = camera._up = up.subtract(w0).normalize();
+                up = camera._up = Cartesian3.subtract(up, w0).normalize();
                 camera.up = up.clone();
 
                 right = camera._right = direction.cross(up);

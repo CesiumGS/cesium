@@ -3,6 +3,7 @@ define([
         './defaultValue',
         './defined',
         './DeveloperError',
+        './Cartesian2',
         './Cartographic',
         './GeographicProjection',
         './Intersect'
@@ -10,6 +11,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        Cartesian2,
         Cartographic,
         GeographicProjection,
         Intersect) {
@@ -135,7 +137,7 @@ define([
         var lowerLeft = projection.project(extent.getSouthwest(fromExtentLowerLeft));
         var upperRight = projection.project(extent.getNortheast(fromExtentUpperRight));
 
-        upperRight.subtract(lowerLeft, upperRight);
+        Cartesian2.subtract(upperRight, lowerLeft, upperRight);
 
         result.x = lowerLeft.x;
         result.y = lowerLeft.y;

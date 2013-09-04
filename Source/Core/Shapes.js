@@ -40,7 +40,7 @@ define([
             temp = Math.sin(azimuth);
             tempVec = northVec.multiplyByScalar(temp);
 
-            rotAxis = rotAxis.add(tempVec);
+            Cartesian3.add(rotAxis, tempVec, rotAxis);
 
             temp = Math.cos(theta);
             temp = temp * temp;

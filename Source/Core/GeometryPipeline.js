@@ -1095,8 +1095,8 @@ define([
             normalsPerVertex[i1].count++;
             normalsPerVertex[i2].count++;
 
-            v1.subtract(v0, v1);
-            v2.subtract(v0, v2);
+            Cartesian3.subtract(v1, v0, v1);
+            Cartesian3.subtract(v2, v0, v2);
             normalsPerTriangle[j] = v1.cross(v2);
             j++;
         }
@@ -1135,7 +1135,7 @@ define([
             if (vertexNormalData.count > 0) {
                 Cartesian3.ZERO.clone(normal);
                 for (j = 0; j < vertexNormalData.count; j++) {
-                    normal.add(normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
+                    Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
                 normal.normalize(normal);
                 normalValues[i3] = normal.x;
@@ -1282,7 +1282,7 @@ define([
             var t = Cartesian3.fromArray(tan1, i03, tScratch);
             var scalar = n.dot(t);
             n.multiplyByScalar(scalar, normalScale);
-            t.subtract(normalScale, t).normalize(t);
+            Cartesian3.subtract(t, normalScale, t).normalize(t);
 
             tangentValues[i03] = t.x;
             tangentValues[i13] = t.y;
@@ -1491,7 +1491,7 @@ define([
 
     var c3 = new Cartesian3();
     function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
-        p.add(p1.subtract(p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
+        Cartesian3.add(p, Cartesian3.subtract(p1, p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
         Cartesian3.clone(u1, v1);
         offsetPointFromXZPlane(u1, true);
         offsetPointFromXZPlane(v1, false);

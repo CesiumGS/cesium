@@ -250,8 +250,8 @@ define([
                 var p1 = Cartesian3.fromArray(positions, i + 3, v1Scratch);
                 if (recomputeNormal) {
                     var p2 = Cartesian3.fromArray(positions, i + bottomOffset, v2Scratch);
-                    p1 = p1.subtract(p, p1);
-                    p2 = p2.subtract(p, p2);
+                    Cartesian3.subtract(p1, p, p1);
+                    Cartesian3.subtract(p2, p, p2);
                     normal = p2.cross(p1, normal).normalize(normal);
                     recomputeNormal = false;
                 }
@@ -740,10 +740,10 @@ define([
             proj.project(nwCartographic, nw);
             proj.project(centerCartographic, center);
 
-            nw.subtract(center, nw);
+            Cartesian3.subtract(nw, center, nw);
             Matrix2.fromRotation(rotation, rotationMatrix);
             rotationMatrix.multiplyByVector(nw, nw);
-            nw.add(center, nw);
+            Cartesian3.add(nw, center, nw);
             proj.unproject(nw, nwCartographic);
 
             var latitude = nwCartographic.latitude;

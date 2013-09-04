@@ -102,7 +102,7 @@ define([
             if (vertexFormat.st) {
                 var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
                 var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
-                projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
+                Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
                 texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
@@ -350,7 +350,7 @@ define([
             if (vertexFormat.st) {
                 var rotatedPoint = Matrix3.multiplyByVector(textureMatrix, position, scratchCartesian2);
                 var projectedPoint = projection.project(ellipsoid.cartesianToCartographic(rotatedPoint, scratchCartographic), scratchCartesian3);
-                projectedPoint = Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
+                Cartesian3.subtract(projectedPoint, projectedCenter, projectedPoint);
 
                 texCoordScratch.x = (projectedPoint.x + semiMajorAxis) / (2.0 * semiMajorAxis);
                 texCoordScratch.y = (projectedPoint.y + semiMajorAxis) / (2.0 * semiMajorAxis);
@@ -384,8 +384,8 @@ define([
 
                 binormal = normal.clone(binormal);
                 var next = Cartesian3.fromArray(positions, (i + 3) % length, scratchCartesian4);
-                next = next.subtract(position, next);
-                var bottom = extrudedPosition.subtract(position, scratchCartesian3);
+                Cartesian3.subtract(next, position, next);
+                var bottom = Cartesian3.subtract(extrudedPosition, position, scratchCartesian3);
 
                 normal = bottom.cross(next, normal).normalize(normal);
 

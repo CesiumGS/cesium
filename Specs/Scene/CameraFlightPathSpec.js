@@ -301,7 +301,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
 
@@ -337,7 +337,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
@@ -375,7 +375,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 20.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 20.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = startDirection.clone();
@@ -415,7 +415,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
 
@@ -457,7 +457,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
@@ -501,7 +501,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 0.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 0.0));
         var endCartographic = frameState.scene2D.projection.unproject(endPosition);
         var extent = new Extent(endCartographic.longitude - 0.0000019, endCartographic.latitude - 0.0000019, endCartographic.longitude + 0.0000019, endCartographic.latitude + 0.0000019);
         var endDirection = startDirection.clone();
@@ -662,7 +662,7 @@ defineSuite([
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
 
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
         var endDirection = startDirection.clone();
         var endUp = startUp.negate();
 
@@ -692,7 +692,7 @@ defineSuite([
         camera.right = camera.direction.cross(camera.up);
 
         var startPosition = camera.position.clone();
-        var endPosition = startPosition.add(new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
+        var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));
 
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : endPosition,

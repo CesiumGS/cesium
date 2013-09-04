@@ -279,10 +279,10 @@ define([
         var northOffset = nUnit.multiplyByScalar(scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft = radii.multiplyComponents(center.add(northOffset).subtract(eastOffset));
-        var upperRight = radii.multiplyComponents(center.add(northOffset).add(eastOffset));
-        var lowerLeft = radii.multiplyComponents(center.subtract(northOffset).subtract(eastOffset));
-        var lowerRight = radii.multiplyComponents(center.subtract(northOffset).add(eastOffset));
+        var upperLeft  = Cartesian3.subtract(radii.multiplyComponents(Cartesian3.add(center, northOffset)), eastOffset);
+        var upperRight = Cartesian3.add(radii.multiplyComponents(Cartesian3.add(center, northOffset)), eastOffset);
+        var lowerLeft  = Cartesian3.subtract(radii.multiplyComponents(Cartesian3.subtract(center, northOffset)), eastOffset);
+        var lowerRight = Cartesian3.add(radii.multiplyComponents(Cartesian3.subtract(center, northOffset)), eastOffset);
 
         depthQuadScratch[0] = upperLeft.x;
         depthQuadScratch[1] = upperLeft.y;

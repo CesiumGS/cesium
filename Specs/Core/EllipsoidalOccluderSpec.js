@@ -152,7 +152,7 @@ defineSuite([
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
-            var direction = positions[0].subtract(unscaledResult).normalize();
+            var direction = Cartesian3.subtract(positions[0], unscaledResult).normalize();
             var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
             var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
             expect(nearestCartographic.height).toEqualEpsilon(0.0, CesiumMath.EPSILON5);
@@ -172,7 +172,7 @@ defineSuite([
             // position used to compute it should be very nearly zero.
             var foundOneNearZero = false;
             for (var i = 0; i < positions.length; ++i) {
-                var direction = positions[i].subtract(unscaledResult).normalize();
+                var direction = Cartesian3.subtract(positions[i], unscaledResult).normalize();
                 var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
                 var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
                 if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {
@@ -280,7 +280,7 @@ defineSuite([
 
             var foundOneNearZero = false;
             for (var i = 0; i < positions.length; ++i) {
-                var direction = positions[i].subtract(unscaledResult).normalize();
+                var direction = Cartesian3.subtract(positions[i], unscaledResult).normalize();
                 var nearest = IntersectionTests.grazingAltitudeLocation(new Ray(unscaledResult, direction), ellipsoid);
                 var nearestCartographic = ellipsoid.cartesianToCartographic(nearest);
                 if (Math.abs(nearestCartographic.height) < CesiumMath.EPSILON5) {

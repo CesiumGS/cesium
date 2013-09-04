@@ -70,8 +70,8 @@ define([
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
         var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
 
-        prev = Cartesian2.subtract(prev, origin, prev);
-        next = Cartesian2.subtract(next, origin, next);
+        Cartesian2.subtract(prev, origin, prev);
+        Cartesian2.subtract(next, origin, next);
 
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
     }
@@ -111,7 +111,7 @@ define([
     var posScratch = new Cartesian3();
     function scaleToSurface(positions, ellipsoid) {
         for ( var i = 0; i < positions.length; i += 3) {
-            posScratch = Cartesian3.fromArray(positions, i, posScratch);
+            Cartesian3.fromArray(positions, i, posScratch);
             posScratch = ellipsoid.scaleToGeodeticSurface(posScratch, posScratch);
             positions[i] = posScratch.x;
             positions[i + 1] = posScratch.y;
@@ -122,7 +122,10 @@ define([
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
     function computeRoundCorner(cornerPoint, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid) {
-        var angle = Cartesian3.angleBetween(startPoint.subtract(cornerPoint, scratch1), endPoint.subtract(cornerPoint, scratch2));
+        var angle = Cartesian3.angleBetween(
+                      Cartesian3.subtract(startPoint, cornerPoint, scratch1),
+                      Cartesian3.subtract(endPoint, cornerPoint, scratch2)
+        );
         var granularity = (cornerType.value === CornerType.BEVELED.value) ? 1 : Math.ceil(angle / CesiumMath.toRadians(5)) + 1;
 
         var size = granularity * 3;
@@ -157,17 +160,17 @@ define([
         var endPoint = cartesian3;
 
         var leftEdge = calculatedPositions[1];
-        startPoint = Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
-        endPoint = Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
-        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
+        Cartesian3.fromArray(calculatedPositions[1], leftEdge.length - 3, startPoint);
+        Cartesian3.fromArray(calculatedPositions[0], 0, endPoint);
+        Cartesian3.add(startPoint, endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
         var firstEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         var length = calculatedPositions.length - 1;
         var rightEdge = calculatedPositions[length - 1];
         leftEdge = calculatedPositions[length];
-        startPoint = Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
-        endPoint = Cartesian3.fromArray(leftEdge, 0, endPoint);
-        cornerPoint = startPoint.add(endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
+        Cartesian3.fromArray(rightEdge, rightEdge.length - 3, startPoint);
+        Cartesian3.fromArray(leftEdge, 0, endPoint);
+        Cartesian3.add(startPoint, endPoint, cornerPoint).multiplyByScalar(0.5, cornerPoint);
         var lastEndCap = computeRoundCorner(cornerPoint, startPoint, endPoint, CornerType.ROUNDED, false, ellipsoid);
 
         return [firstEndCap, lastEndCap];
@@ -176,10 +179,10 @@ define([
     function computeMiteredCorner(position, startPoint, leftCornerDirection, lastPoint, leftIsOutside, granularity, ellipsoid) {
         var cornerPoint = scratch1;
         if (leftIsOutside) {
-            cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
+            Cartesian3.add(position, leftCornerDirection, cornerPoint);
         } else {
             leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
-            cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
+            Cartesian3.add(position, leftCornerDirection, cornerPoint);
         }
         return [cornerPoint.x, cornerPoint.y, cornerPoint.z, lastPoint.x, lastPoint.y, lastPoint.z];
     }
@@ -247,8 +250,8 @@ define([
             leftPos = cartesian3;
             rightPos = cartesian4;
             var firstEndPositions = endPositions[0];
-            normal = Cartesian3.fromArray(computedNormals, 0, normal);
-            left = Cartesian3.fromArray(computedLefts, 0, left);
+            Cartesian3.fromArray(computedNormals, 0, normal);
+            Cartesian3.fromArray(computedLefts, 0, left);
             for (i = 0; i < halfLength; i++) {
                 leftPos = Cartesian3.fromArray(firstEndPositions, (halfLength - 1 - i) * 3, leftPos);
                 rightPos = Cartesian3.fromArray(firstEndPositions, (halfLength + i) * 3, rightPos);
@@ -279,14 +282,14 @@ define([
         finalPositions.set(rightEdge, front);
         finalPositions.set(leftEdge, back - leftEdge.length + 1);
 
-        left = Cartesian3.fromArray(computedLefts, compIndex, left);
+        Cartesian3.fromArray(computedLefts, compIndex, left);
         var rightNormal;
         var leftNormal;
         length = leftEdge.length - 3;
         for (i = 0; i < length; i += 3) {
             rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, i, scratch1), scratch1);
             leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - i, scratch2), scratch2);
-            normal = rightNormal.add(leftNormal, normal).normalize(normal);
+            normal = Cartesian3.add(rightNormal, leftNormal, normal).normalize(normal);
             addNormals(attr, normal, left, front, back, vertexFormat);
 
             LL = front / 3;
@@ -306,7 +309,7 @@ define([
 
         rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, length, scratch1), scratch1);
         leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length, scratch2), scratch2);
-        normal = rightNormal.add(leftNormal, normal).normalize(normal);
+        normal = Cartesian3.add(rightNormal, leftNormal, normal).normalize(normal);
         compIndex += 3;
         for (i = 0; i < corners.length; i++) {
             var j;
@@ -318,28 +321,28 @@ define([
             var outsidePoint = cartesian6;
             var previousPoint = cartesian3;
             var nextPoint = cartesian4;
-            normal = Cartesian3.fromArray(computedNormals, compIndex, normal);
+            Cartesian3.fromArray(computedNormals, compIndex, normal);
             if (defined(l)) {
                 addNormals(attr, normal, left, undefined, back, vertexFormat);
                 back -= 3;
                 pivot = LR;
                 start = UR;
                 for (j = 0; j < l.length / 3; j++) {
-                    outsidePoint = Cartesian3.fromArray(l, j * 3, outsidePoint);
+                    Cartesian3.fromArray(l, j * 3, outsidePoint);
                     indices[index++] = pivot;
                     indices[index++] = start - j - 1;
                     indices[index++] = start - j;
                     addAttribute(finalPositions, outsidePoint, undefined, back);
-                    previousPoint = Cartesian3.fromArray(finalPositions, (start - j - 1) * 3, previousPoint);
-                    nextPoint = Cartesian3.fromArray(finalPositions, pivot * 3, nextPoint);
-                    left = previousPoint.subtract(nextPoint, left).normalize(left);
+                    Cartesian3.fromArray(finalPositions, (start - j - 1) * 3, previousPoint);
+                    Cartesian3.fromArray(finalPositions, pivot * 3, nextPoint);
+                    left = Cartesian3.subtract(previousPoint, nextPoint, left).normalize(left);
                     addNormals(attr, normal, left, undefined, back, vertexFormat);
                     back -= 3;
                 }
-                outsidePoint = Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
-                previousPoint = Cartesian3.fromArray(finalPositions, (start) * 3, previousPoint).subtract(outsidePoint, previousPoint);
-                nextPoint = Cartesian3.fromArray(finalPositions, (start - j) * 3, nextPoint).subtract(outsidePoint, nextPoint);
-                left = previousPoint.add(nextPoint, left).normalize(left);
+                Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
+                Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start) * 3, previousPoint), outsidePoint, previousPoint);
+                Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start - j) * 3, nextPoint), outsidePoint, nextPoint);
+                left = Cartesian3.add(previousPoint, nextPoint, left).normalize(left);
                 addNormals(attr, normal, left, front, undefined, vertexFormat);
                 front += 3;
             } else {
@@ -348,21 +351,21 @@ define([
                 pivot = UR;
                 start = LR;
                 for (j = 0; j < r.length / 3; j++) {
-                    outsidePoint = Cartesian3.fromArray(r, j * 3, outsidePoint);
+                    Cartesian3.fromArray(r, j * 3, outsidePoint);
                     indices[index++] = pivot;
                     indices[index++] = start + j;
                     indices[index++] = start + j + 1;
                     addAttribute(finalPositions, outsidePoint, front);
-                    previousPoint = Cartesian3.fromArray(finalPositions, pivot * 3, previousPoint);
-                    nextPoint = Cartesian3.fromArray(finalPositions, (start + j) * 3, nextPoint);
-                    left = previousPoint.subtract(nextPoint, left).normalize(left);
+                    Cartesian3.fromArray(finalPositions, pivot * 3, previousPoint);
+                    Cartesian3.fromArray(finalPositions, (start + j) * 3, nextPoint);
+                    left = Cartesian3.subtract(previousPoint, nextPoint, left).normalize(left);
                     addNormals(attr, normal, left, front, undefined, vertexFormat);
                     front += 3;
                 }
-                outsidePoint = Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
-                previousPoint = Cartesian3.fromArray(finalPositions, (start + j) * 3, previousPoint).subtract(outsidePoint, previousPoint);
-                nextPoint = Cartesian3.fromArray(finalPositions, start * 3, nextPoint).subtract(outsidePoint, nextPoint);
-                left = nextPoint.add(previousPoint, left).negate(left).normalize(left);
+                Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
+                Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start + j) * 3, previousPoint), outsidePoint, previousPoint);
+                Cartesian3.subtract(Cartesian3.fromArray(finalPositions, start * 3, nextPoint), outsidePoint, nextPoint);
+                left = Cartesian3.add(nextPoint, previousPoint, left).negate(left).normalize(left);
                 addNormals(attr, normal, left, undefined, back, vertexFormat);
                 back -= 3;
             }
@@ -375,11 +378,11 @@ define([
             length = leftEdge.length - 3;
 
             compIndex += 3;
-            left = Cartesian3.fromArray(computedLefts, compIndex, left);
+            Cartesian3.fromArray(computedLefts, compIndex, left);
             for (j = 0; j < leftEdge.length; j += 3) {
                 rightNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(rightEdge, j, scratch1), scratch1);
                 leftNormal = ellipsoid.geodeticSurfaceNormal(Cartesian3.fromArray(leftEdge, length - j, scratch2), scratch2);
-                normal = rightNormal.add(leftNormal, normal).normalize(normal);
+                normal = Cartesian3.add(rightNormal, leftNormal, normal).normalize(normal);
                 addNormals(attr, normal, left, front, back, vertexFormat);
 
                 LR = front / 3;
@@ -399,7 +402,7 @@ define([
             front -= 3;
             back += 3;
         }
-        normal = Cartesian3.fromArray(computedNormals, computedNormals.length - 3, normal);
+        Cartesian3.fromArray(computedNormals, computedNormals.length - 3, normal);
         addNormals(attr, normal, left, front, back, vertexFormat);
 
         if (addEndPositions) { // add rounded end
@@ -409,8 +412,8 @@ define([
             rightPos = cartesian4;
             var lastEndPositions = endPositions[1];
             for (i = 0; i < halfLength; i++) {
-                leftPos = Cartesian3.fromArray(lastEndPositions, (endPositionLength - i - 1) * 3, leftPos);
-                rightPos = Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
+                Cartesian3.fromArray(lastEndPositions, (endPositionLength - i - 1) * 3, leftPos);
+                Cartesian3.fromArray(lastEndPositions, i * 3, rightPos);
                 addAttribute(finalPositions, leftPos, undefined, back);
                 addAttribute(finalPositions, rightPos, front);
                 addNormals(attr, normal, left, front, back, vertexFormat);
@@ -541,12 +544,12 @@ define([
 
         for (var i = 0; i < positions.length; i += 3) {
             var pos = Cartesian3.fromArray(positions, i, scratch3);
-            var rightPos = pos.add(scaledRight, scratch4);
+            var rightPos = Cartesian3.add(pos, scaledRight, scratch4);
             rightPositions[rightIndex++] = rightPos.x;
             rightPositions[rightIndex++] = rightPos.y;
             rightPositions[rightIndex++] = rightPos.z;
 
-            var leftPos = pos.add(scaledLeft, scratch4);
+            var leftPos = Cartesian3.add(pos, scaledLeft, scratch4);
             leftPositions[leftIndex--] = leftPos.z;
             leftPositions[leftIndex--] = leftPos.y;
             leftPositions[leftIndex--] = leftPos.x;
@@ -595,7 +598,7 @@ define([
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
             nextPosition = positions[i + 1];
             forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-            cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
+            cornerDirection = Cartesian3.add(forward, backward, cornerDirection).normalize(cornerDirection);
             var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), normal, CesiumMath.EPSILON2);
             if (doCorner) {
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
@@ -604,9 +607,9 @@ define([
                 var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
-                    rightPos = Cartesian3.add(position, cornerDirection, rightPos);
-                    center = rightPos.add(left.multiplyByScalar(width, center), center);
-                    leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
+                    Cartesian3.add(position, cornerDirection, rightPos);
+                    Cartesian3.add(rightPos, left.multiplyByScalar(width, center), center);
+                    Cartesian3.add(rightPos, left.multiplyByScalar(width * 2, leftPos), leftPos);
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
@@ -615,27 +618,27 @@ define([
                     calculatedNormals.push(normal.x, normal.y, normal.z);
                     startPoint = leftPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
-                    leftPos = rightPos.add(left.multiplyByScalar(width * 2, leftPos), leftPos);
-                    previousPos = rightPos.add(left.multiplyByScalar(width, previousPos), previousPos);
+                    Cartesian3.add(rightPos, left.multiplyByScalar(width * 2, leftPos), leftPos);
+                    Cartesian3.add(rightPos, left.multiplyByScalar(width, previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
                         corners.push({leftPositions : computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 } else {
-                    leftPos = Cartesian3.add(position, cornerDirection, leftPos);
-                    center = leftPos.add(left.multiplyByScalar(width, center).negate(center), center);
-                    rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
-                    scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
+                    Cartesian3.add(position, cornerDirection, leftPos);
+                    Cartesian3.add(leftPos, left.multiplyByScalar(width, center).negate(center), center);
+                    Cartesian3.add(leftPos, left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
+                    Cartesian3.clone(previousPos, scaleArray2[0]);
+                    Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
                     calculatedPositions = addShiftedPositions(subdividedPositions, left, width, calculatedPositions);
                     calculatedLefts.push(left.x, left.y, left.z);
                     calculatedNormals.push(normal.x, normal.y, normal.z);
                     startPoint = rightPos.clone(startPoint);
                     left = normal.cross(forward, left).normalize(left);
-                    rightPos = leftPos.add(left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    previousPos = leftPos.add(left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
+                    Cartesian3.add(leftPos, left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
+                    Cartesian3.add(leftPos, left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
@@ -693,11 +696,11 @@ define([
             var attrIndex = sixSize;
             for (i = 0; i < threeSize; i += 3) {
                 var attrIndexOffset = attrIndex + sixSize;
-                topPosition = Cartesian3.fromArray(positions, i, topPosition);
-                bottomPosition = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
-                previousPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, previousPosition);
-                bottomPosition = bottomPosition.subtract(topPosition, bottomPosition);
-                previousPosition = previousPosition.subtract(topPosition, previousPosition);
+                Cartesian3.fromArray(positions, i, topPosition);
+                Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
+                Cartesian3.fromArray(positions, (i + 3) % threeSize, previousPosition);
+                Cartesian3.subtract(bottomPosition, topPosition, bottomPosition);
+                Cartesian3.subtract(previousPosition, topPosition, previousPosition);
                 normal = bottomPosition.cross(previousPosition, normal).normalize(normal);
                 if (vertexFormat.normal) {
                     addAttribute(normals, normal, attrIndexOffset);
@@ -706,7 +709,7 @@ define([
                     addAttribute(normals, normal, attrIndex + 3);
                 }
                 if (vertexFormat.tangent || vertexFormat.binormal) {
-                    binormal = Cartesian3.fromArray(topNormals, i, binormal);
+                    Cartesian3.fromArray(topNormals, i, binormal);
                     if (vertexFormat.binormal) {
                         addAttribute(binormals, binormal, attrIndexOffset);
                         addAttribute(binormals, binormal, attrIndexOffset + 3);
