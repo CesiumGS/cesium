@@ -13,8 +13,7 @@ define(['../Core/createGuid',
         '../Core/Iso8601',
         '../Core/loadXML',
         './ConstantProperty',
-        './DynamicProperty',
-        './DynamicMaterialProperty',
+        './ColorMaterialProperty',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -40,8 +39,7 @@ define(['../Core/createGuid',
         Iso8601,
         loadXML,
         ConstantProperty,
-        DynamicProperty,
-        DynamicMaterialProperty,
+        ColorMaterialProperty,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -206,14 +204,9 @@ define(['../Core/createGuid',
             processLinearRing(dataSource, dynamicObject, kml, el[j]);
         }
         var polygon = new DynamicPolygon();
-        polygon.material = new DynamicMaterialProperty();
-        polygon.material.processCzmlIntervals({
-            solidColor : {
-                color : {
-                    rgba : [255, 255, 255, 255]
-                }
-            }
-        }, undefined, undefined);
+        var material = new ColorMaterialProperty();
+        material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
+        polygon.material = material;
         dynamicObject.polygon = polygon;
     }
 
@@ -321,15 +314,10 @@ define(['../Core/createGuid',
                 //TODO Fill, Outline
                 dynamicObject.polygon = defined(dynamicObject.polygon) ? dynamicObject.polygon : new DynamicPolygon();
                 var polygonColor = getColorValue(node, 'color');
-                polygonColor = defined(polygonColor) ? polygonColor : new ConstantProperty(new Color(1, 1, 1, 1));
-                dynamicObject.polygon.material = new DynamicMaterialProperty();
-                dynamicObject.polygon.material.processCzmlIntervals({
-                    solidColor : {
-                        color : {
-                            rgbaf : [polygonColor.red, polygonColor.green, polygonColor.blue, polygonColor.alpha]
-                        }
-                    }
-                }, undefined, undefined);
+                polygonColor = defined(polygonColor) ? polygonColor : new Color(1, 1, 1, 1);
+                var material = new ColorMaterialProperty();
+                material.color = new ConstantProperty(polygonColor);
+                dynamicObject.polygon.material = material;
             }
         }
     }

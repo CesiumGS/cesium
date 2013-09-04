@@ -1,8 +1,8 @@
 /*global defineSuite*/
 defineSuite(['DynamicScene/KmlDataSource',
              'DynamicScene/ConstantProperty',
+             'DynamicScene/ColorMaterialProperty',
              'DynamicScene/DynamicObjectCollection',
-             'DynamicScene/DynamicMaterialProperty',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicPolyline',
              'DynamicScene/DynamicPolygon',
@@ -11,13 +11,12 @@ defineSuite(['DynamicScene/KmlDataSource',
              'Core/Color',
              'Core/Ellipsoid',
              'Core/Event',
-             'Core/JulianDate',
              'Core/Math'
          ], function(
             KmlDataSource,
             ConstantProperty,
+            ColorMaterialProperty,
             DynamicObjectCollection,
-            DynamicMaterialProperty,
             DynamicBillboard,
             DynamicPolyline,
             DynamicPolygon,
@@ -26,7 +25,6 @@ defineSuite(['DynamicScene/KmlDataSource',
             Color,
             Ellipsoid,
             Event,
-            JulianDate,
             CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -301,14 +299,9 @@ defineSuite(['DynamicScene/KmlDataSource',
                 [-122.365662, 37.826988, 0]];
         coordinates = coordinatesArrayToCartesianArray(coordinates);
         var polygon = new DynamicPolygon();
-        polygon.material = new DynamicMaterialProperty();
-        polygon.material.processCzmlIntervals({
-            solidColor : {
-                color : {
-                    rgba : [255, 255, 255, 255]
-                }
-            }
-        }, undefined, undefined);
+        var material = new ColorMaterialProperty();
+        material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
+        polygon.material = material;
         var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
         <kml xmlns="http://www.opengis.net/kml/2.2">\
         <Placemark>\
@@ -628,9 +621,8 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         var polygon = objects[0].polygon;
-        var time = new JulianDate();
-        var material = polygon.material.getValue(time);
-        var generatedColor = material.uniforms.color;
+        var material = polygon.material.getValue();
+        var generatedColor = material.color;
         expect(objects.length).toEqual(1);
         expect(generatedColor.red).toEqual(color.red);
         expect(generatedColor.green).toEqual(color.green);
@@ -657,9 +649,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
         var polygon = objects[0].polygon;
-        var time = new JulianDate();
-        var material = polygon.material.getValue(time);
-        var generatedColor = material.uniforms.color;
+        var generatedColor = polygon.material.color;
         expect(generatedColor).toEqual(new ConstantProperty(new Color(1, 1, 1, 1)));
     });
 
