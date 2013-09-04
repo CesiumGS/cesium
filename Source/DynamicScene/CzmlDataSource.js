@@ -21,6 +21,7 @@ define([
         '../Core/Math',
         '../Core/Quaternion',
         '../Core/ReferenceFrame',
+        '../Core/RuntimeError',
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Scene/HorizontalOrigin',
@@ -77,6 +78,7 @@ define([
         CesiumMath,
         Quaternion,
         ReferenceFrame,
+        RuntimeError,
         Spherical,
         TimeInterval,
         HorizontalOrigin,
@@ -205,9 +207,9 @@ define([
                 len = cartographic.length;
                 result = new Array(len);
                 for (i = 0; i < len; i += 4) {
-                    scratchCartographic.longitude = cartographic[i + 0];
-                    scratchCartographic.latitude = cartographic[i + 1];
-                    scratchCartographic.height = cartographic[i + 2];
+                    scratchCartographic.longitude = cartographic[i + 1];
+                    scratchCartographic.latitude = cartographic[i + 2];
+                    scratchCartographic.height = cartographic[i + 3];
                     Ellipsoid.WGS84.cartographicToCartesian(scratchCartographic, scratchCartesian);
 
                     result[i] = cartographic[i];
@@ -221,10 +223,10 @@ define([
 
         var cartographicDegrees = czmlInterval.cartographicDegrees;
         if (!defined(cartographicDegrees)) {
-            return undefined;
+            throw new RuntimeError(JSON.stringify(czmlInterval) + ' is not a valid CZML interval.');
         }
 
-        if (cartographicDegrees.length > 3) {
+        if (cartographicDegrees.length === 3) {
             scratchCartographic.longitude = CesiumMath.toRadians(cartographicDegrees[0]);
             scratchCartographic.latitude = CesiumMath.toRadians(cartographicDegrees[1]);
             scratchCartographic.height = cartographicDegrees[2];
@@ -1301,6 +1303,49 @@ define([
             return when.reject(error);
         });
     };
+
+    /**
+     * A helper function used by custom CZML updater functions
+     * which creates or updates a {@link Property} from a CZML packet.
+     * @function
+     *
+     * @param {Function} type The constructor function for the property being processed.
+     * @param {Object} object The object on which the property will be added or updated.
+     * @param {String} propertyName The name of the property on the object.
+     * @param {Object} packetData The CZML packet being processed.y
+     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
+     * @param {String} [sourceUri] The originating uri of the data being processed.
+     * @returns {Boolean} True if a new property was created, false otherwise.
+     */
+    CzmlDataSource.processPacketData = processPacketData;
+
+    /**
+     * A helper function used by custom CZML updater functions
+     * which creates or updates a {@link PositionProperty} from a CZML packet.
+     * @function
+     *
+     * @param {Object} object The object on which the property will be added or updated.
+     * @param {String} propertyName The name of the property on the object.
+     * @param {Object} packetData The CZML packet being processed.y
+     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
+     * @param {String} [sourceUri] The originating uri of the data being processed.
+     * @returns {Boolean} True if a new property was created, false otherwise.
+     */
+    CzmlDataSource.processPositionPacketData = processPositionPacketData;
+
+    /**
+     * A helper function used by custom CZML updater functions
+     * which creates or updates a {@link MaterialProperty} from a CZML packet.
+     * @function
+     *
+     * @param {Object} object The object on which the property will be added or updated.
+     * @param {String} propertyName The name of the property on the object.
+     * @param {Object} packetData The CZML packet being processed.y
+     * @param {TimeInterval} [interval] A constraining interval for which the data is valid.
+     * @param {String} [sourceUri] The originating uri of the data being processed.
+     * @returns {Boolean} True if a new property was created, false otherwise.
+     */
+    CzmlDataSource.processMaterialPacketData = processMaterialPacketData;
 
     CzmlDataSource._processCzml = function(czml, dynamicObjectCollection, sourceUri, updaterFunctions) {
         var updatedObjects = [];

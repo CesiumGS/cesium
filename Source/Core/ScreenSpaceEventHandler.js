@@ -625,7 +625,7 @@ define([
      *
      * @memberof ScreenSpaceEventHandler
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see ScreenSpaceEventHandler#destroy
      */
@@ -642,7 +642,7 @@ define([
      *
      * @memberof ScreenSpaceEventHandler
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

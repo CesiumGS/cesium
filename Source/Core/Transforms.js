@@ -61,7 +61,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
      * @exception {DeveloperError} origin is required.
      *
@@ -165,7 +165,7 @@ define([
      * @param {Cartesian3} origin The center point of the local reference frame.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid whose fixed frame is used in the transformation.
      * @param {Matrix4} [result] The object onto which to store the result.
-     * @return {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
+     * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if none was provided.
      *
      * @exception {DeveloperError} origin is required.
      *
@@ -266,7 +266,7 @@ define([
      *
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.
-     * @return {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
+     * @returns {Matrix3} The modified result parameter or a new Matrix3 instance if none was provided.
      *
      * @exception {DeveloperError} date is required.
      *
@@ -401,7 +401,7 @@ define([
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
      *                  not specified, a new instance is created and returned.
-     * @return {Matrix3} The rotation matrix, or undefined if the data necessary to do the
+     * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
      * @exception {DeveloperError} date is required.
@@ -452,7 +452,7 @@ define([
      * @param {JulianDate} date The time at which to compute the rotation matrix.
      * @param {Matrix3} [result] The object onto which to store the result.  If this parameter is
      *                  not specified, a new instance is created and returned.
-     * @return {Matrix3} The rotation matrix, or undefined if the data necessary to do the
+     * @returns {Matrix3} The rotation matrix, or undefined if the data necessary to do the
      *                   transformation is not yet loaded.
      *
      * @exception {DeveloperError} date is required.
@@ -578,7 +578,7 @@ define([
      * @param {Matrix4} viewportTransformation The 4x4 viewport transformation.
      * @param {Cartesian3} point The point to transform.
      * @param {Cartesian2} [result] The object onto which to store the result.
-     * @return {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if none was provided.
      *
      * @exception {DeveloperError} modelViewProjectionMatrix is required.
      * @exception {DeveloperError} viewportTransformation is required.

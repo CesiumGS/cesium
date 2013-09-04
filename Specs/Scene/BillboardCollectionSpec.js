@@ -14,6 +14,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/Matrix4',
          'Core/Math',
+         'Core/NearFarScalar',
          'Renderer/ClearCommand',
          'Renderer/TextureMinificationFilter',
          'Renderer/TextureMagnificationFilter',
@@ -39,6 +40,7 @@ defineSuite([
          Cartographic,
          Matrix4,
          CesiumMath,
+         NearFarScalar,
          ClearCommand,
          TextureMinificationFilter,
          TextureMagnificationFilter,
@@ -121,6 +123,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(1.0);
         expect(b.getRotation()).toEqual(0.0);
         expect(b.getAlignedAxis()).toEqual(Cartesian3.ZERO);
+        expect(b.getScaleByDistance()).not.toBeDefined();
         expect(b.getWidth()).not.toBeDefined();
         expect(b.getHeight()).not.toBeDefined();
     });
@@ -143,6 +146,7 @@ defineSuite([
             },
             rotation : 1.0,
             alignedAxis : new Cartesian3(1.0, 2.0, 3.0),
+            scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0),
             width : 300.0,
             height : 200.0
         });
@@ -161,6 +165,7 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
         expect(b.getRotation()).toEqual(1.0);
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0, 3.0, 1.0e6, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
     });
@@ -185,6 +190,7 @@ defineSuite([
         b.setAlignedAxis(new Cartesian3(1.0, 2.0, 3.0));
         b.setWidth(300.0);
         b.setHeight(200.0);
+        b.setScaleByDistance(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
 
         expect(b.getShow()).toEqual(false);
         expect(b.getPosition()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
@@ -200,8 +206,75 @@ defineSuite([
         expect(b.getColor().alpha).toEqual(4.0);
         expect(b.getRotation()).toEqual(1.0);
         expect(b.getAlignedAxis()).toEqual(new Cartesian3(1.0, 2.0, 3.0));
+        expect(b.getScaleByDistance()).toEqual(new NearFarScalar(1.0e6, 3.0, 1.0e8, 0.0));
         expect(b.getWidth()).toEqual(300.0);
         expect(b.getHeight()).toEqual(200.0);
+    });
+
+    it('disable billboard setScaleByDistance', function() {
+        var b = billboards.add();
+        b.setScaleByDistance(undefined);
+        expect(b.getScaleByDistance()).not.toBeDefined();
+    });
+
+    it('set billboard scaleByDistance farValue to 0', function() {
+        billboards.setTextureAtlas(createTextureAtlas([greenImage]));
+        billboards.add({
+            position : {
+                x : 0.0,
+                y : 0.0,
+                z : 0.0
+            },
+            scaleByDistance: new NearFarScalar(1.0, 1.0, 3.0, 0.0),
+            imageIndex : 0
+        });
+
+        // verify basis
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        // camera at 1.0 above billboard, expect green pixel to be rendered, as scale is near 1.0
+        var us = context.getUniformState();
+        var eye = new Cartesian3(0.0, 0.0, 1.0);
+        var target = Cartesian3.ZERO;
+        var up = Cartesian3.UNIT_Y;
+        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 255, 0, 255]);
+        // clear screen
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        // camera at 6.0 above billboard, expect no green pixels to be rendered, as scale is 0.0
+        eye = new Cartesian3(0.0, 0.0, 6.0);
+        us.update(createFrameState(createCamera(context, eye, target, up, 0.1, 10.0)));
+        render(context, frameState, billboards);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+        // revert framestate
+        us.update(createFrameState(createCamera(context)));
+    });
+
+    it('throws setScaleByDistance with nearDistance === farDistance', function() {
+        var b = billboards.add();
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            b.setScaleByDistance(scale);
+        }).toThrow();
+    });
+
+    it('throws new billboard with invalid scaleByDistance (nearDistance === farDistance)', function() {
+        var scale = new NearFarScalar(2.0e5, 1.0, 2.0e5, 0.0);
+        expect(function() {
+            billboards.add({
+                scaleByDistance : scale
+            });
+        }).toThrow();
+    });
+
+    it('throws setScaleByDistance with nearDistance > farDistance', function() {
+        var b = billboards.add();
+        var scale = new NearFarScalar(1.0e9, 1.0, 1.0e5, 1.0);
+        expect(function() {
+            b.setScaleByDistance(scale);
+        }).toThrow();
     });
 
     it('throws with non number Index', function() {

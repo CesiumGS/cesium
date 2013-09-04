@@ -69,6 +69,24 @@ define([
          * @readonly
          */
         this.renderState = options.renderState;
+
+        /**
+         * When <code>true</code>, the geometry is expected to appear translucent.
+         *
+         * @readonly
+         *
+         * @default true
+         */
+        this.translucent = defaultValue(options.translucent, true);
+
+        /**
+         * When <code>true</code>, the geometry is expected to be closed.
+         *
+         * @readonly
+         *
+         * @default false
+         */
+        this.closed = defaultValue(options.closed, false);
     };
 
     /**
@@ -77,7 +95,7 @@ define([
      *
      * @memberof Appearance
      *
-     * @return String The full GLSL fragment shader source.
+     * @returns String The full GLSL fragment shader source.
      */
     Appearance.prototype.getFragmentShaderSource = function() {
         return createShaderSource({

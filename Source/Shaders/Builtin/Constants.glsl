@@ -279,3 +279,51 @@ const float czm_epsilon7 = 0.0000001;
  * @glslConstant
  */
 const float czm_webMercatorMaxLatitude = 1.4844222297453324;
+
+/**
+ * The constant identifier for the 2D {@link SceneMode}
+ *
+ * @name czm_sceneMode2D
+ * @glslConstant
+ * @see czm_sceneMode
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneMode3D
+ * @see czm_sceneModeMorphing
+ */
+const float czm_sceneMode2D = 0.0;
+
+/**
+ * The constant identifier for the Columbus View {@link SceneMode}
+ *
+ * @name czm_sceneModeColumbusView
+ * @glslConstant
+ * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneMode3D
+ * @see czm_sceneModeMorphing
+ */
+const float czm_sceneModeColumbusView = 1.0;
+
+/**
+ * The constant identifier for the 3D {@link SceneMode}
+ *
+ * @name czm_sceneMode3D
+ * @glslConstant
+ * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneModeMorphing
+ */
+const float czm_sceneMode3D = 2.0;
+
+/**
+ * The constant identifier for the Morphing {@link SceneMode}
+ *
+ * @name czm_sceneModeMorphing
+ * @glslConstant
+ * @see czm_sceneMode
+ * @see czm_sceneMode2D
+ * @see czm_sceneModeColumbusView
+ * @see czm_sceneMode3D
+ */
+const float czm_sceneModeMorphing = 3.0;

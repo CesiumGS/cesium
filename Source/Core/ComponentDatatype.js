@@ -106,7 +106,7 @@ define([
      *
      * @param {ComponentDatatype} componentDatatype The component datatype to validate.
      *
-     * @return {Boolean} <code>true</code> if the provided component datatype is a valid enumeration value; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the provided component datatype is a valid enumeration value; otherwise, <code>false</code>.
      *
      * @example
      * if (!ComponentDatatype.validate(componentDatatype)) {
@@ -130,7 +130,7 @@ define([
      * @param {ComponentDatatype} componentDatatype The component data type.
      * @param {Number|Array} valuesOrLength The length of the array to create or an array.
      *
-     * @return {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
+     * @returns {Int8Array|Uint8Array|Int16Array|Uint16Array|Float32Array|Float64Array} A typed array.
      *
      * @exception {DeveloperError} componentDatatype is required.
      * @exception {DeveloperError} valuesOrLength is required.

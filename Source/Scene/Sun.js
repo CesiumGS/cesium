@@ -175,7 +175,7 @@ define([
      *
      * @memberof Sun
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Sun#destroy
      */
@@ -193,7 +193,7 @@ define([
      *
      * @memberof Sun
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

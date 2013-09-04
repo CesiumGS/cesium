@@ -100,7 +100,7 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {Matrix4} The perspective projection matrix.
+     * @returns {Matrix4} The perspective projection matrix.
      *
      * @see PerspectiveOffCenterFrustum#getInfiniteProjectionMatrix
      */
@@ -114,7 +114,7 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {Matrix4} The infinite perspective projection matrix.
+     * @returns {Matrix4} The infinite perspective projection matrix.
      *
      * @see PerspectiveOffCenterFrustum#getProjectionMatrix
      */
@@ -173,7 +173,7 @@ define([
      * @exception {DeveloperError} direction is required.
      * @exception {DeveloperError} up is required.
      *
-     * @return {CullingVolume} A culling volume at the given position and orientation.
+     * @returns {CullingVolume} A culling volume at the given position and orientation.
      *
      * @example
      * // Check if a bounding volume intersects the frustum.
@@ -366,7 +366,7 @@ define([
      *
      * @memberof PerspectiveOffCenterFrustum
      *
-     * @return {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
+     * @returns {PerspectiveOffCenterFrustum} A new copy of the PerspectiveOffCenterFrustum instance.
      */
     PerspectiveOffCenterFrustum.prototype.clone = function() {
         var frustum = new PerspectiveOffCenterFrustum();
@@ -386,7 +386,7 @@ define([
      * @memberof PerspectiveOffCenterFrustum
      *
      * @param {PerspectiveOffCenterFrustum} [other] The right hand side PerspectiveOffCenterFrustum.
-     * @return {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     PerspectiveOffCenterFrustum.prototype.equals = function(other) {
         return (defined(other) &&

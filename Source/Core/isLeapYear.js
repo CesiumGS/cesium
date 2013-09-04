@@ -12,7 +12,7 @@ define([
      *
      * @param {Number} year The year to be tested.
      *
-     * @return {Boolean} True if <code>year</code> is a leap yer.
+     * @returns {Boolean} True if <code>year</code> is a leap yer.
      *
      * @exception {DeveloperError} year is required and must be a number.
      *
