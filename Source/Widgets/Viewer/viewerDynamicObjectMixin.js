@@ -4,6 +4,7 @@ define([
         '../../Core/defined',
         '../../Core/DeveloperError',
         '../../Core/defineProperties',
+        '../../Core/Event',
         '../../Core/EventHelper',
         '../../Core/ScreenSpaceEventType',
         '../../Core/wrapFunction',
@@ -14,6 +15,7 @@ define([
         defined,
         DeveloperError,
         defineProperties,
+        Event,
         EventHelper,
         ScreenSpaceEventType,
         wrapFunction,
@@ -48,10 +50,18 @@ define([
         if (viewer.hasOwnProperty('trackedObject')) {
             throw new DeveloperError('trackedObject is already defined by another mixin.');
         }
+        if (viewer.hasOwnProperty('onObjectTracked')) {
+            throw new DeveloperError('onObjectTracked is already defined by another mixin.');
+        }
+        if (viewer.hasOwnProperty('_onObjectTracked')) {
+            throw new DeveloperError('_onObjectTracked is already defined by another mixin.');
+        }
 
         var eventHelper = new EventHelper();
         var trackedObject;
         var dynamicObjectView;
+
+        viewer._onObjectTracked = new Event();
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
@@ -96,6 +106,7 @@ define([
                 set : function(value) {
                     if (trackedObject !== value) {
                         trackedObject = value;
+                        viewer._onObjectTracked.raiseEvent(viewer, value);
                         dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
                     }
                     var sceneMode = viewer.scene.getFrameState().mode;
@@ -108,7 +119,19 @@ define([
                         viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
                     }
                 }
-            }
+            },
+
+            /**
+             * Gets an event that will be raised when an object is tracked by the camera.
+             * @memberof viewerDynamicObjectMixin.prototype
+             *
+             * @type {Event}
+             */
+            onObjectTracked : {
+                get : function() {
+                    return this._onObjectTracked;
+                }
+            },
         });
 
         //Wrap destroy to clean up event subscriptions.
