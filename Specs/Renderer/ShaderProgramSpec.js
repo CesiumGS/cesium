@@ -63,12 +63,31 @@ defineSuite([
     afterAll(function() {
         destroyContext(context);
 
-        for(var functionName in injectedTestFunctions) {
-            if(injectedTestFunctions.hasOwnProperty(functionName)) {
+        for ( var functionName in injectedTestFunctions) {
+            if (injectedTestFunctions.hasOwnProperty(functionName)) {
                 delete CzmBuiltins[functionName];
             }
         }
     });
+
+    function renderFragment(context, shaderProgram) {
+        va = context.createVertexArray([{
+            index : shaderProgram.getVertexAttributes().position.index,
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        }]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        context.draw({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : shaderProgram,
+            vertexArray : va
+        });
+
+        return context.readPixels();
+    }
 
     it('has vertex and fragment shader source', function() {
         var vs = 'void main() { gl_Position = vec4(1.0); }';
@@ -467,21 +486,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('has built-in constant, structs, and functions', function() {
@@ -497,21 +502,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('1 level function dependency', function() {
@@ -522,21 +513,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('2 level function dependency', function() {
@@ -547,21 +524,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('3 level function dependency', function() {
@@ -572,21 +535,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('diamond dependency', function() {
@@ -600,21 +549,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('diamond plus 3 level function dependency', function() {
@@ -628,21 +563,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('big mess of function dependencies', function() {
@@ -656,21 +577,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('doc comment with reference to another function', function() {
@@ -682,21 +589,7 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
-
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
-
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('compiles with #version at the top', function() {
