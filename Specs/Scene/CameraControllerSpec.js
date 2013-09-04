@@ -463,7 +463,7 @@ defineSuite([
         var tempCamera = camera.clone();
         tempCamera.controller.lookAt(position, target, up);
         expect(tempCamera.position).toEqual(position);
-        expect(tempCamera.direction).toEqual(target.subtract(position).normalize());
+        expect(tempCamera.direction).toEqual(Cartesian3.subtract(target, position).normalize());
         expect(tempCamera.up).toEqual(up);
         expect(tempCamera.right).toEqual(tempCamera.direction.cross(up).normalize());
 
@@ -815,7 +815,7 @@ defineSuite([
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-        camera.direction = Cartesian3.ZERO.subtract(camera.position).normalize();
+        camera.direction = Cartesian3.subtract(Cartesian3.ZERO, camera.position).normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
         camera.up = camera.right.cross(camera.direction);
 

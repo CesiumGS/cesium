@@ -1265,7 +1265,7 @@ define([
 
         var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
         var scalar = -normal.dot(position) / normal.dot(direction);
-        var center = position.add(direction.multiplyByScalar(scalar));
+        var center = Cartesian3.add(position, direction.multiplyByScalar(scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
         var centerWC = camera.transform.multiplyByVector(center);
 
@@ -1274,7 +1274,7 @@ define([
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
-        var distToC = positionWC.subtract(centerWC).magnitude();
+        var distToC = Cartesian4.subtract(positionWC, centerWC).magnitude();
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 
