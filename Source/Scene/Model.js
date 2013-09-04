@@ -723,6 +723,12 @@ define([
                 for (var i = 0; i < length; ++i) {
                     var instanceParam = instanceParameters[i];
                     var parameterValue = parameterValues[instanceParam.parameter];
+
+// TODO: This works around https://github.com/KhronosGroup/glTF/issues/121
+                    if (!defined(parameters[instanceParam.parameter])) {
+                        continue;
+                    }
+
                     parameterValue.func = gltfUniformFunctions[parameters[instanceParam.parameter].type](instanceParam.value, model, context);
                 }
 
