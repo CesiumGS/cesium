@@ -131,7 +131,7 @@ define([
                 get : function() {
                     return this._onObjectTracked;
                 }
-            },
+            }
         });
 
         //Wrap destroy to clean up event subscriptions.
