@@ -132,15 +132,15 @@ defineSuite([
 
     it('can set glow factor', function() {
         var sun = scene.sun = new Sun();
-        sun.setGlowFactor(0.0);
-        expect(sun.getGlowFactor()).toEqual(0.0);
-        sun.setGlowFactor(2.0);
-        expect(sun.getGlowFactor()).toEqual(2.0);
+        sun.glowFactor = 0.0;
+        expect(sun.glowFactor).toEqual(0.0);
+        sun.glowFactor = 2.0;
+        expect(sun.glowFactor).toEqual(2.0);
     });
 
     it('draws without lens flare', function() {
         scene.sun = new Sun();
-        scene.sun.setGlowFactor(0.0);
+        scene.sun.glowFactor = 0.0;
         scene.initializeFrame();
         scene.render();
 
