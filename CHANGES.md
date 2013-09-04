@@ -6,6 +6,7 @@ Beta Releases
 
 ### b21 - 2013-10-01
 * Added `CorridorOutlineGeometry`.
+* Added `PolylineGeometry`, `PolylineColorAppearance`, and `PolylineMaterialAppearance`.
 
 ### b20 - 2013-09-03
 
