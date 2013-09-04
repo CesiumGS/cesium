@@ -85,20 +85,25 @@ for ( var it = leftOverJsFiles.iterator(); it.hasNext();) {
 
 var generateBuiltinContents = function(contents, builtins, path){
     "use strict";
+    var amdPath = contents.amdPath;
+    var amdClassName = contents.amdClassName;
+    var builtinLookup = contents.builtinLookup;
     for (var i = 0; i < builtins.length; i++) {
         var builtin = builtins[i];
-        contents.amdPath = contents.amdPath + ',\n        \'./' + path + '/' + builtin + '\'';
-        contents.amdClassName = contents.amdClassName + ',\n        ' + 'czm_' + builtin;
-        contents.builtinLookup = contents.builtinLookup + ',\n        ' + 'czm_' + builtin + ' : ' + 'czm_' + builtin;
+        amdPath = amdPath + ',\n        \'./' + path + '/' + builtin + '\'';
+        amdClassName = amdClassName + ',\n        ' + 'czm_' + builtin;
+        builtinLookup = builtinLookup + ',\n        ' + 'czm_' + builtin + ' : ' + 'czm_' + builtin;
     }
-    return contents;
+    contents.amdPath = amdPath;
+    contents.amdClassName = amdClassName;
+    contents.builtinLookup = builtinLookup;
 };
 
 //generate the JS file for Built-in GLSL Functions, Structs, and Constants
 var contents = {amdPath:'', amdClassName:'', builtinLookup:''};
-contents = generateBuiltinContents(contents, builtinConstants, 'Constants');
-contents = generateBuiltinContents(contents, builtinStructs, 'Structs');
-contents = generateBuiltinContents(contents, builtinFunctions, 'Functions');
+generateBuiltinContents(contents, builtinConstants, 'Constants');
+generateBuiltinContents(contents, builtinStructs, 'Structs');
+generateBuiltinContents(contents, builtinFunctions, 'Functions');
 
 contents.amdPath = contents.amdPath.replace(',\n', '');
 contents.amdClassName = contents.amdClassName.replace(',\n', '');
