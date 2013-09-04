@@ -4,6 +4,9 @@ Change Log
 Beta Releases
 -------------
 
+### b21 - 2013-10-01
+* Added `CorridorOutlineGeometry`.
+
 ### b20 - 2013-09-03
 
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
