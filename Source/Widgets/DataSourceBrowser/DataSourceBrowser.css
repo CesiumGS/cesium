@@ -2,9 +2,6 @@
     font-family: sans-serif;
     font-size: 15px;
     color: #edffff;
-/*    -moz-user-select: none;
-    -webkit-user-select: none;
-    user-select: none;*/
 }
 
 /* Begin exact copy of cesium-widget-button */
@@ -134,6 +131,7 @@
 .cesium-dataSourceBrowser-item {
     display: block;
     background-color: transparent;
+    border: 1px solid transparent;
     cursor: pointer;
     padding: 0 5px;
     border-radius: 4px;
@@ -141,6 +139,10 @@
     -webkit-transition: background-color 0.4s, box-shadow 0.4s;
     -moz-transition: background-color 0.4s, box-shadow 0.4s;
     transition: background-color 0.4s, box-shadow 0.4s;
+}
+
+.cesium-dataSourceBrowser-item-selected {
+    border-color: #2e2;
 }
 
 .cesium-dataSourceBrowser-item:hover {
