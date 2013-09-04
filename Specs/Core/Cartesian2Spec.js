@@ -101,12 +101,12 @@ defineSuite([
 
     it('magnitudeSquared', function() {
         var cartesian = new Cartesian2(2.0, 3.0);
-        expect(cartesian.magnitudeSquared()).toEqual(13);
+        expect(Cartesian2.magnitudeSquared(cartesian)).toEqual(13);
     });
 
     it('magnitude', function() {
         var cartesian = new Cartesian2(2.0, 3.0);
-        expect(cartesian.magnitude()).toEqual(Math.sqrt(13.0));
+        expect(Cartesian2.magnitude(cartesian)).toEqual(Math.sqrt(13.0));
     });
 
     it('distance', function() {

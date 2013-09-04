@@ -169,7 +169,7 @@ define([
                     if ((ua >= 0.0) && (ua <= 1.0) && (ub >= 0.0) && (ub <= 1.0)) {
                         var tempIntersection = new Cartesian2(point.x + ua * (point2.x - point.x), point.y + ua * (point2.y - point.y));
                         var dist = Cartesian2.subtract(tempIntersection, point);
-                        temp = dist.magnitudeSquared();
+                        temp = Cartesian2.magnitudeSquared(dist);
                         if (temp < minDistance) {
                             intersection = tempIntersection;
                             minDistance = temp;
@@ -208,8 +208,8 @@ define([
         }
 
         // Set P to be the edge endpoint closest to the inner ring vertex
-        var d1 = Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex).magnitudeSquared();
-        var d2 = Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex).magnitudeSquared();
+        var d1 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[0]], innerRingVertex));
+        var d2 = Cartesian2.magnitudeSquared(Cartesian2.subtract(outerRing[edgeIndices[1]], innerRingVertex));
         var p = (d1 < d2) ? outerRing[edgeIndices[0]] : outerRing[edgeIndices[1]];
 
         var reflexVertices = getReflexVertices(outerRing);
@@ -234,7 +234,7 @@ define([
             var v1 = new Cartesian2(1.0, 0.0, 0.0);
             for (i = 0; i < pointsInside.length; i++) {
                 var v2 = Cartesian2.subtract(pointsInside[i], innerRingVertex);
-                var denominator = v1.magnitude() * v2.magnitude();
+                var denominator = Cartesian2.magnitude(v1) * Cartesian2.magnitudeSquared(v2);
                 if (denominator !== 0) {
                     var angle = Math.abs(Math.acos(v1.dot(v2) / denominator));
                     if (angle < minAngle) {
@@ -467,7 +467,7 @@ define([
      * @private
      */
     function isInternalToParallelSide(side, cut) {
-        return cut.magnitude() < side.magnitude();
+        return Cartesian2.magnitude(cut) < Cartesian2.magnitude(side);
     }
 
     /**

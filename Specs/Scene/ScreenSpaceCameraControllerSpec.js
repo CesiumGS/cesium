@@ -758,7 +758,7 @@ defineSuite([
 
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
-        expect(position.magnitude()).toBeGreaterThan(camera.position.magnitude());
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
     });
 
     it('zoom out in 3D', function() {
@@ -769,7 +769,7 @@ defineSuite([
 
         moveMouse(MouseButtons.RIGHT, startPosition, endPosition);
         updateController(frameState);
-        expect(position.magnitude()).toBeLessThan(camera.position.magnitude());
+        expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
     });
 
     it('zooms out to maximum height in 3D', function() {
@@ -801,7 +801,7 @@ defineSuite([
             wheelDelta : 120
         });
         updateController(frameState);
-        expect(position.magnitude()).toBeGreaterThan(camera.position.magnitude());
+        expect(Cartesian3.magnitude(position)).toBeGreaterThan(Cartesian3.magnitude(camera.position));
     });
 
     it('zoom out in 3D with wheel', function() {
@@ -812,7 +812,7 @@ defineSuite([
             wheelDelta : -120
         });
         updateController(frameState);
-        expect(position.magnitude()).toBeLessThan(camera.position.magnitude());
+        expect(Cartesian3.magnitude(position)).toBeLessThan(Cartesian3.magnitude(camera.position));
     });
 
     it('tilts in 3D', function() {
@@ -933,7 +933,7 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
-        expect(camera.position).toEqualEpsilon(axis.multiplyByScalar(camera.position.magnitude()), CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(axis.multiplyByScalar(Cartesian3.magnitude(camera.position)), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(axis.negate(), CesiumMath.EPSILON15);
         expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
         expect(camera.right).toEqualEpsilon(camera.direction.cross(camera.up), CesiumMath.EPSILON15);

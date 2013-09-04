@@ -114,7 +114,7 @@ defineSuite([
         Cartesian3.normalize(right, right);
         Cartesian3.cross(right, direction, camera.up);
 
-        var scalar = center.magnitude() + radius;
+        var scalar = Cartesian3.magnitude(center) + radius;
         Cartesian3.normalize(center, center);
         Cartesian3.multiplyByScalar(center, scalar, camera.position);
     }

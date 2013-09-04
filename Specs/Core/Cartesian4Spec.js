@@ -117,12 +117,12 @@ defineSuite([
 
     it('magnitudeSquared', function() {
         var cartesian = new Cartesian4(3.0, 4.0, 5.0, 6.0);
-        expect(cartesian.magnitudeSquared()).toEqual(86.0);
+        expect(Cartesian4.magnitudeSquared(cartesian)).toEqual(86.0);
     });
 
     it('magnitude', function() {
         var cartesian = new Cartesian4(3.0, 4.0, 5.0, 6.0);
-        expect(cartesian.magnitude()).toEqual(Math.sqrt(86.0));
+        expect(Cartesian4.magnitude(cartesian)).toEqual(Math.sqrt(86.0));
     });
 
     it('distance', function() {

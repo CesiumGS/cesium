@@ -126,12 +126,12 @@ defineSuite([
 
     it('magnitudeSquared', function() {
         var cartesian = new Cartesian3(3.0, 4.0, 5.0);
-        expect(cartesian.magnitudeSquared()).toEqual(50.0);
+        expect(Cartesian3.magnitudeSquared(cartesian)).toEqual(50.0);
     });
 
     it('magnitude', function() {
         var cartesian = new Cartesian3(3.0, 4.0, 5.0);
-        expect(cartesian.magnitude()).toEqual(Math.sqrt(50.0));
+        expect(Cartesian3.magnitude(cartesian)).toEqual(Math.sqrt(50.0));
     });
 
     it('distance', function() {

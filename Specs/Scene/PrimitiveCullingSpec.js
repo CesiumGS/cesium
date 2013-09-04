@@ -124,7 +124,7 @@ defineSuite([
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
-        camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
+        camera.position = camera.position.normalize().multiplyByScalar(Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);
@@ -237,7 +237,7 @@ defineSuite([
         primitive.update(context, frameState, commandList);
         var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
-        camera.position = camera.position.normalize().multiplyByScalar(camera.position.magnitude() + 1.0);
+        camera.position = camera.position.normalize().multiplyByScalar(Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = camera.position.negate().normalize();
         camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
         camera.up = camera.right.cross(camera.direction);

@@ -475,7 +475,7 @@ define([
         diff.x = diff.y;
         diff.y = diff.z;
         diff.z = temp;
-        var mag = diff.magnitude();
+        var mag = Cartesian3.magnitude(diff);
         if (mag > CesiumMath.EPSILON6) {
             Cartesian3.normalize(diff, diff);
             cameraController.move(diff, mag);
@@ -666,7 +666,7 @@ define([
 
         // CAMERA TODO: remove access to camera, fixes a problem in Columbus view
         //var rho = cameraController.getMagnitude();
-        var rho = cameraController._camera.position.magnitude();
+        var rho = Cartesian3.magnitude(cameraController._camera.position);
         var rotateRate = controller._rotateFactor * (rho - controller._rotateRateRangeAdjustment);
 
         if (rotateRate > controller._maximumRotateRate) {
@@ -885,7 +885,7 @@ define([
         var oldEllipsoid = controller._ellipsoid;
         controller.setEllipsoid(Ellipsoid.UNIT_SPHERE);
 
-        var angle = (minHeight * 0.25) / (Cartesian3.subtract(center, camera.position).magnitude());
+        var angle = (minHeight * 0.25) / Cartesian3.magnitude(Cartesian3.subtract(center, camera.position));
         rotate3D(controller, movement, transform, Cartesian3.UNIT_Z, CesiumMath.PI_OVER_TWO - angle);
 
         controller.setEllipsoid(oldEllipsoid);

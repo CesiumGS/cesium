@@ -91,7 +91,7 @@ define([
         var q = inverseRadii.multiplyComponents(ray.origin);
         var w = inverseRadii.multiplyComponents(ray.direction);
 
-        var q2 = q.magnitudeSquared();
+        var q2 = Cartesian3.magnitudeSquared(q);
         var qw = q.dot(w);
 
         var difference, w2, product, discriminant, temp;
@@ -106,7 +106,7 @@ define([
             // qw < 0.0.
             var qw2 = qw * qw;
             difference = q2 - 1.0; // Positively valued.
-            w2 = w.magnitudeSquared();
+            w2 = Cartesian3.magnitudeSquared(w);
             product = w2 * difference;
 
             if (qw2 < product) {
@@ -140,7 +140,7 @@ define([
         } else if (q2 < 1.0) {
             // Inside ellipsoid (2 intersections).
             difference = q2 - 1.0; // Negatively valued.
-            w2 = w.magnitudeSquared();
+            w2 = Cartesian3.magnitudeSquared(w);
             product = w2 * difference; // Negatively valued.
 
             discriminant = qw * qw - product;
@@ -153,7 +153,7 @@ define([
             // q2 == 1.0. On ellipsoid.
             if (qw < 0.0) {
                 // Looking inward.
-                w2 = w.magnitudeSquared();
+                w2 = Cartesian3.magnitudeSquared(w);
                 return {
                     start : 0.0,
                     stop : -qw / w2
@@ -344,7 +344,7 @@ define([
 
             var surfacePoint = ellipsoid.cartesianToCartographic(closest);
             maximumValue = CesiumMath.clamp(maximumValue, 0.0, 1.0);
-            altitude = Cartesian3.subtract(closest, position).magnitude() * Math.sqrt(1.0 - maximumValue * maximumValue);
+            altitude = Cartesian3.magnitude(Cartesian3.subtract(closest, position)) * Math.sqrt(1.0 - maximumValue * maximumValue);
             altitude = intersects ? -altitude : altitude;
             return ellipsoid.cartographicToCartesian(new Cartographic(surfacePoint.longitude, surfacePoint.latitude, altitude));
         }

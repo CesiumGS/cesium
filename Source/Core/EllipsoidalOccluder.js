@@ -142,7 +142,7 @@ define([
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
         var vtDotVc = -vt.dot(cv);
         var isOccluded = vtDotVc > vhMagnitudeSquared &&
-                         vtDotVc * vtDotVc / vt.magnitudeSquared() > vhMagnitudeSquared;
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared;
         return !isOccluded;
     };
 
@@ -260,7 +260,7 @@ define([
 
         // If the bounding sphere center is too close to the center of the occluder, it doesn't make
         // sense to try to horizon cull it.
-        if (bs.center.magnitude() < 0.1 * ellipsoid.getMinimumRadius()) {
+        if (Cartesian3.magnitude(bs.center) < 0.1 * ellipsoid.getMinimumRadius()) {
             return undefined;
         }
 
@@ -272,7 +272,7 @@ define([
 
     function computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint) {
         var scaledSpacePosition = ellipsoid.transformPositionToScaledSpace(position, scaledSpaceScratch);
-        var magnitudeSquared = scaledSpacePosition.magnitudeSquared();
+        var magnitudeSquared = Cartesian3.magnitudeSquared(scaledSpacePosition);
         var magnitude = Math.sqrt(magnitudeSquared);
         var direction = scaledSpacePosition.divideByScalar(magnitude, directionScratch);
 
@@ -281,7 +281,7 @@ define([
         magnitude = Math.max(1.0, magnitude);
 
         var cosAlpha = direction.dot(scaledSpaceDirectionToPoint);
-        var sinAlpha = direction.cross(scaledSpaceDirectionToPoint).magnitude();
+        var sinAlpha = Cartesian3.magnitude(direction.cross(scaledSpaceDirectionToPoint));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
 

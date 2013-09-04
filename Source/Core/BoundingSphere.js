@@ -609,8 +609,8 @@ define([
         Cartesian3.add(leftCenter, rightCenter, unionScratchCenter);
         var center = Cartesian3.multiplyByScalar(unionScratchCenter, 0.5, unionScratchCenter);
 
-        var radius1 = Cartesian3.subtract(leftCenter, center, unionScratch).magnitude() + left.radius;
-        var radius2 = Cartesian3.subtract(rightCenter, center, unionScratch).magnitude() + right.radius;
+        var radius1 = Cartesian3.magnitude(Cartesian3.subtract(leftCenter, center, unionScratch)) + left.radius;
+        var radius2 = Cartesian3.magnitude(Cartesian3.subtract(rightCenter, center, unionScratch)) + right.radius;
 
         result.radius = Math.max(radius1, radius2);
         Cartesian3.clone(center, result.center);
@@ -642,7 +642,7 @@ define([
 
         result = BoundingSphere.clone(sphere, result);
 
-        var radius = Cartesian3.subtract(point, result.center, expandScratch).magnitude();
+        var radius = Cartesian3.magnitude(Cartesian3.subtract(point, result.center, expandScratch));
         if (radius > result.radius) {
             result.radius = radius;
         }
@@ -759,7 +759,7 @@ define([
 
         var toCenter = Cartesian3.subtract(sphere.center, position, scratchCartesian3);
         var proj = Cartesian3.multiplyByScalar(direction, direction.dot(toCenter), scratchCartesian3);
-        var mag = proj.magnitude();
+        var mag = Cartesian3.magnitude(proj);
 
         result.start = mag - sphere.radius;
         result.stop = mag + sphere.radius;

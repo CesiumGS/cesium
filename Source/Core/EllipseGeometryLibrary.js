@@ -114,7 +114,7 @@ define([
         var bSqr = semiMajorAxis * semiMajorAxis;
         var ab = semiMajorAxis * semiMinorAxis;
 
-        var mag = center.magnitude();
+        var mag = Cartesian3.magnitude(center);
 
         var unitPos = Cartesian3.normalize(center, unitPosScratch);
         var eastVec = Cartesian3.cross(Cartesian3.UNIT_Z, center, eastVecScratch);

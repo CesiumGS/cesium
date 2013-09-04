@@ -533,7 +533,7 @@ defineSuite([
 
     function expectBoundingSphereToContainPoint(boundingSphere, point, projection) {
         var pointInCartesian = projection.project(point);
-        var distanceFromCenter = Cartesian3.subtract(pointInCartesian, boundingSphere.center).magnitude();
+        var distanceFromCenter = Cartesian3.magnitude(Cartesian3.subtract(pointInCartesian, boundingSphere.center));
 
         // The distanceFromCenter for corner points at the height extreme should equal the
         // bounding sphere's radius.  But due to rounding errors it can end up being

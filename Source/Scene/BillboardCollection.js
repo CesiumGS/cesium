@@ -975,7 +975,7 @@ define([
 
         var toCenter = Cartesian3.subtract(camera.getPositionWC(), boundingVolume.center, scratchToCenter);
         var proj = camera.getDirectionWC().multiplyByScalar(toCenter.dot(camera.getDirectionWC()), scratchProj);
-        var distance = Math.max(0.0, proj.magnitude() - boundingVolume.radius);
+        var distance = Math.max(0.0, Cartesian3.magnitude(proj) - boundingVolume.radius);
 
         var canvas = context.getCanvas();
         scratchCanvasDimensions.x = canvas.clientWidth;

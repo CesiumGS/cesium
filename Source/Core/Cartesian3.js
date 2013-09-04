@@ -604,7 +604,7 @@ define([
         Cartesian3.normalize(left, angleBetweenScratch);
         Cartesian3.normalize(right, angleBetweenScratch2);
         var cosine = Cartesian3.dot(angleBetweenScratch, angleBetweenScratch2);
-        var sine = Cartesian3.cross(angleBetweenScratch, angleBetweenScratch2, angleBetweenScratch).magnitude();
+        var sine = Cartesian3.magnitude(Cartesian3.cross(angleBetweenScratch, angleBetweenScratch2, angleBetweenScratch));
         return Math.atan2(sine, cosine);
     };
 
@@ -760,26 +760,6 @@ define([
      */
     Cartesian3.prototype.clone = function(result) {
         return Cartesian3.clone(this, result);
-    };
-
-    /**
-     * Computes this Cartesian's squared magnitude.
-     * @memberof Cartesian3
-     *
-     * @returns {Number} The squared magnitude.
-     */
-    Cartesian3.prototype.magnitudeSquared = function() {
-        return Cartesian3.magnitudeSquared(this);
-    };
-
-    /**
-     * Computes this Cartesian's magnitude (length).
-     * @memberof Cartesian3
-     *
-     * @returns {Number} The magnitude.
-     */
-    Cartesian3.prototype.magnitude = function() {
-        return Cartesian3.magnitude(this);
     };
 
     /**

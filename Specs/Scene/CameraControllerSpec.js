@@ -467,9 +467,9 @@ defineSuite([
         expect(tempCamera.up).toEqual(up);
         expect(tempCamera.right).toEqual(tempCamera.direction.cross(up).normalize());
 
-        expect(1.0 - tempCamera.direction.magnitude()).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - tempCamera.up.magnitude()).toBeLessThan(CesiumMath.EPSILON14);
-        expect(1.0 - tempCamera.right.magnitude()).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
+        expect(1.0 - Cartesian3.magnitude(tempCamera.right)).toBeLessThan(CesiumMath.EPSILON14);
     });
 
     it('lookAt throws with no eye parameter', function() {
@@ -970,7 +970,7 @@ defineSuite([
     });
 
     it('gets magnitude in 3D', function() {
-        expect(controller.getMagnitude()).toEqual(camera.position.magnitude());
+        expect(controller.getMagnitude()).toEqual(Cartesian3.magnitude(camera.position));
     });
 
     it('create animation throws without a duration', function() {

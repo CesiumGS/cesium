@@ -676,7 +676,7 @@ define([
     CameraController.prototype.getMagnitude = function() {
         var camera = this._camera;
         if (this._mode === SceneMode.SCENE3D) {
-            return camera.position.magnitude();
+            return Cartesian3.magnitude(camera.position);
         } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
             return Math.abs(camera.position.z);
         } else if (this._mode === SceneMode.SCENE2D) {
@@ -844,7 +844,7 @@ define([
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
         var d = Math.max(width / tanTheta, height / tanPhi);
 
-        var scalar = center.magnitude() + d;
+        var scalar = Cartesian3.magnitude(center) + d;
         Cartesian3.normalize(center, center);
         return Cartesian3.multiplyByScalar(center, scalar, result);
     }
@@ -1274,7 +1274,7 @@ define([
 
         var tanPhi = Math.tan(controller._camera.frustum.fovy * 0.5);
         var tanTheta = controller._camera.frustum.aspectRatio * tanPhi;
-        var distToC = Cartesian4.subtract(positionWC, centerWC).magnitude();
+        var distToC = Cartesian4.magnitude(Cartesian4.subtract(positionWC, centerWC));
         var dWidth = tanTheta * distToC;
         var dHeight = tanPhi * distToC;
 

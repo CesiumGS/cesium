@@ -118,14 +118,14 @@ define([
         var points;
         var altitude;
         var incrementPercentage;
-        if (start.magnitude() > maxStartAlt) {
+        if (Cartesian3.magnitude(start) > maxStartAlt) {
             altitude = radius + 0.6 * (maxStartAlt - radius);
             incrementPercentage = 0.35;
         } else {
             var diff = Cartesian3.subtract(start, end);
-            altitude = Cartesian3.add(diff.multiplyByScalar(0.5), end).magnitude();
-            var verticalDistance = camera.up.multiplyByScalar(diff.dot(camera.up)).magnitude();
-            var horizontalDistance = camera.right.multiplyByScalar(diff.dot(camera.right)).magnitude();
+            altitude = Cartesian3.magnitude(Cartesian3.add(diff.multiplyByScalar(0.5), end));
+            var verticalDistance = Cartesian3.magnitude(camera.up.multiplyByScalar(diff.dot(camera.up)));
+            var horizontalDistance = Cartesian3.magnitude(camera.right.multiplyByScalar(diff.dot(camera.right)));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
@@ -134,7 +134,7 @@ define([
         var afterStart = start.normalize().multiplyByScalar(altitude);
 
         var axis, angle, rotation, middle;
-        if (end.magnitude() > maxStartAlt && dot > 0.75) {
+        if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
             middle = Cartesian3.add(Cartesian3.subtract(start, end).multiplyByScalar(0.5), end);
 
             points = [{
@@ -144,7 +144,7 @@ define([
             }, {
                 point : end
             }];
-        } else if (start.magnitude() > maxStartAlt && dot > 0) {
+        } else if (Cartesian3.magnitude(start) > maxStartAlt && dot > 0) {
             middle = Cartesian3.add(Cartesian3.subtract(start, aboveEnd).multiplyByScalar(0.5), aboveEnd);
 
             points = [{
@@ -284,7 +284,7 @@ define([
             }];
 
             var v = Cartesian3.subtract(afterStart, aboveEnd);
-            var distance = v.magnitude();
+            var distance = Cartesian3.magnitude(v);
             Cartesian3.normalize(v, v);
 
             var increment = incrementPercentage * distance;

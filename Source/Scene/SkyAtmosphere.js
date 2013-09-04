@@ -173,7 +173,7 @@ define([
 
         var cameraPosition = frameState.camera.getPositionWC();
 
-        this._fCameraHeight2 = cameraPosition.magnitudeSquared();
+        this._fCameraHeight2 = Cartesian3.magnitudeSquared(cameraPosition);
         this._fCameraHeight = Math.sqrt(this._fCameraHeight2);
 
         if (this._fCameraHeight > this._outerRadius) {

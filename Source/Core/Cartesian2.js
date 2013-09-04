@@ -670,26 +670,6 @@ define([
     };
 
     /**
-     * Computes this Cartesian's squared magnitude.
-     * @memberof Cartesian2
-     *
-     * @returns {Number} The squared magnitude.
-     */
-    Cartesian2.prototype.magnitudeSquared = function() {
-        return Cartesian2.magnitudeSquared(this);
-    };
-
-    /**
-     * Computes this Cartesian's magnitude (length).
-     * @memberof Cartesian2
-     *
-     * @returns {Number} The magnitude.
-     */
-    Cartesian2.prototype.magnitude = function() {
-        return Cartesian2.magnitude(this);
-    };
-
-    /**
      * Computes the normalized form of this Cartesian.
      * @memberof Cartesian2
      *

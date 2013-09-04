@@ -691,7 +691,7 @@ define([
         }
 
         if (defined(result)) {
-            console.log('x: ' + result.x + ' y: ' + result.y + ' level: ' + result.level + ' radius: ' + result.boundingSphere3D.radius + ' center magnitude: ' + result.boundingSphere3D.center.magnitude());
+            console.log('x: ' + result.x + ' y: ' + result.y + ' level: ' + result.level + ' radius: ' + result.boundingSphere3D.radius + ' center magnitude: ' + Cartesian3.magnitude(result.boundingSphere3D.center));
         }
 
         this._debug.boundingSphereTile = result;

@@ -201,7 +201,7 @@ define([
                 direction = camera._direction = direction.normalize();
                 camera.direction = direction.clone();
 
-                var invUpMag = 1.0 / up.magnitudeSquared();
+                var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = up.dot(direction) * invUpMag;
                 var w0 = direction.multiplyByScalar(scalar);
                 up = camera._up = Cartesian3.subtract(up, w0).normalize();

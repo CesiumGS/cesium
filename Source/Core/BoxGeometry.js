@@ -719,7 +719,7 @@ define([
         }
 
         var diff = Cartesian3.subtract(max, min, diffScratch);
-        var radius = diff.magnitude() * 0.5;
+        var radius = Cartesian3.magnitude(diff) * 0.5;
 
         return new Geometry({
             attributes : attributes,

@@ -262,7 +262,7 @@ define([
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = centralBody._ellipsoid.getOneOverRadii().multiplyComponents(p);
 
-        var qMagnitude = q.magnitude();
+        var qMagnitude = Cartesian3.magnitude(q);
         var qUnit = q.normalize();
 
         // Determine the east and north directions at q.
@@ -270,7 +270,7 @@ define([
         var nUnit = qUnit.cross(eUnit).normalize();
 
         // Determine the radius of the 'limb' of the ellipsoid.
-        var wMagnitude = Math.sqrt(q.magnitudeSquared() - 1.0);
+        var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
 
         // Compute the center and offsets.
         var center = qUnit.multiplyByScalar(1.0 / qMagnitude);
@@ -302,7 +302,7 @@ define([
     function computePoleQuad(centralBody, frameState, maxLat, maxGivenLat, viewProjMatrix, viewportTransformation) {
         var pt1 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxGivenLat));
         var pt2 = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(Math.PI, maxGivenLat));
-        var radius = pt1.subtract(pt2).magnitude() * 0.5;
+        var radius = Cartesian3.magnitude(pt1.subtract(pt2)) * 0.5;
 
         var center = centralBody._ellipsoid.cartographicToCartesian(new Cartographic(0.0, maxLat));
 
@@ -321,7 +321,7 @@ define([
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenUp, screenUp);
 
-        var halfWidth = Math.floor(Math.max(screenUp.subtract(center).magnitude(), screenRight.subtract(center).magnitude()));
+        var halfWidth = Math.floor(Math.max(Cartesian3.magnitude(screenUp.subtract(center)), Cartesian3.magnitude(screenRight.subtract(center))));
         var halfHeight = halfWidth;
 
         return new BoundingRectangle(

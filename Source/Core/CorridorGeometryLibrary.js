@@ -218,7 +218,7 @@ define([
             if (doCorner) {
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
-                var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
+                var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
                 var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
