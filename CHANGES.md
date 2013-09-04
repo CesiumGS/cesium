@@ -6,6 +6,7 @@ Beta Releases
 
 ### b21 - 2013-10-01
 * Added `CorridorOutlineGeometry`.
+* Improved runtime generation of GLSL shaders.
 
 ### b20 - 2013-09-03
 
