@@ -114,7 +114,7 @@ define(['../Core/defined',
                 }
             }
             if (identical) {
-                return;
+                return false;
             }
         }
 
@@ -123,8 +123,6 @@ define(['../Core/defined',
         }
 
         var composite = that._composite;
-        composite.suspendEvents();
-
         var newObjects = new DynamicObjectCollection();
 
         for (i = collectionsLength - 1; i >= 0; i--) {
@@ -149,18 +147,79 @@ define(['../Core/defined',
                 compositeObject.merge(object);
             }
         }
+        that._collectionsCopy = collections.slice(0);
 
-        var newObjectsArray = newObjects.getObjects();
+        composite.suspendEvents();
         composite.removeAll();
+        var newObjectsArray = newObjects.getObjects();
         for (i = 0; i < newObjectsArray.length; i++) {
             composite.add(newObjectsArray[i]);
         }
-
-        that._collectionsCopy = collections.slice(0);
         composite.resumeEvents();
+        return true;
     }
 
-    CompositeDynamicObjectCollection.prototype._onCollectionChanged = function() {
+    CompositeDynamicObjectCollection.prototype._onCollectionChanged = function(collection, added, removed) {
+        //If we have a pending full merge, just do it and return.
+        if (mergeIfNeeded(this)) {
+            return;
+        }
+
+        var collections = this._collectionsCopy;
+        var collectionsLength = collections.length;
+        var composite = this._composite;
+        composite.suspendEvents();
+
+        var i;
+        var q;
+        var object;
+        var compositeObject;
+        var removedLength = removed.length;
+        for (i = 0; i < removedLength; i++) {
+            var removedId = removed[i].id;
+            //Check if the removed object exists in any of the remaining collections
+            //If so, we clean and remerge it.
+            for (q = collectionsLength - 1; q >= 0; q--) {
+                object = collection[q].getById(removedId);
+                if (defined(object)) {
+                    if (!defined(compositeObject)) {
+                        compositeObject = composite.getById(removedId);
+                        compositeObject.clean();
+                    }
+                    compositeObject.merge(object);
+                }
+            }
+            //We never retrieved the compositeObject, which means it no longer
+            //exists in any of the collections, remove it from the composite.
+            if (!defined(compositeObject)) {
+                composite.removeById(removedId);
+            }
+        }
+
+        var addedLength = added.length;
+        for (i = 0; i < addedLength; i++) {
+            var addedId = added[i].id;
+            //We know the added object exists in at least one collection,
+            //but we need to check all collections and re-merge in order
+            //to maintain the priority of properties.
+            for (q = collectionsLength - 1; q >= 0; q--) {
+                object = collections[q].getById(addedId);
+                if (defined(object)) {
+                    if (!defined(compositeObject)) {
+                        compositeObject = composite.getById(addedId);
+                        if (!defined(compositeObject)) {
+                            compositeObject = new DynamicObject(addedId);
+                            composite.add(compositeObject);
+                        } else {
+                            compositeObject.clean();
+                        }
+                    }
+                    compositeObject.merge(object);
+                }
+            }
+        }
+
+        composite.resumeEvents();
     };
 
     return CompositeDynamicObjectCollection;
