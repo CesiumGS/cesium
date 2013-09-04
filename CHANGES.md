@@ -8,6 +8,9 @@ Beta Releases
 
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
+### b21 - 2013-10-01
+* Added `CorridorOutlineGeometry`.
+
 ### b20 - 2013-09-03
 
 _This releases fixes 2D and other issues with Chrome 29.0.1547.57 ([#1002](https://github.com/AnalyticalGraphicsInc/cesium/issues/1002) and [#1047](https://github.com/AnalyticalGraphicsInc/cesium/issues/1047))._
@@ -73,7 +76,6 @@ var geometry = BoxGeometry.createGeometry(box);
 * Added `Color.fromRandom` to generate random and partially random colors.
 * Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Scene.debugShowFrustums` and `Scene.debugFrustumStatistics` for rendering debugging.
-* Added an `onCancel` callback to `CameraFlightPath` functions that will be executed if the flight is canceled. 
 * Added `Packable` and `PackableForInterpolation` interfaces to aid interpolation and in-memory data storage.  Also made most core Cesium types implement them. 
 * Added `InterpolationAlgorithm` interface to codify the base interface already being used by `LagrangePolynomialApproximation`, `LinearApproximation`, and `HermitePolynomialApproximation`.
 * Improved the performance of polygon triangulation using an O(n log n) algorithm.

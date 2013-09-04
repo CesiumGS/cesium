@@ -7,6 +7,11 @@ define(['../Core/Enumeration'], function(Enumeration) {
      */
     var CornerType = {
         /**
+         *   ___
+         * (  ___
+         * | |
+         *
+         * Corner is circular.
          * @type {Enumeration}
          * @constant
          * @default 0
@@ -14,6 +19,11 @@ define(['../Core/Enumeration'], function(Enumeration) {
         ROUNDED : new Enumeration(0, 'ROUNDED'),
 
         /**
+         *  ______
+         * |  ___
+         * | |
+         *
+         * Corner point is the intersection of adjacent edges.
          * @type {Enumeration}
          * @constant
          * @default 1
@@ -21,6 +31,11 @@ define(['../Core/Enumeration'], function(Enumeration) {
         MITERED : new Enumeration(1, 'MITERED'),
 
         /**
+         *   ___
+         * /  ___
+         * | |
+         *
+         * Corner is clipped.
          * @type {Enumeration}
          * @constant
          * @default 2
