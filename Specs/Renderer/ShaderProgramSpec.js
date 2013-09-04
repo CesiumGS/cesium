@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+         'Renderer/ShaderProgram',
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/Cartesian2',
@@ -12,8 +13,10 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/UniformDatatype',
-         'Shaders/Builtin/CzmBuiltins'
-     ], 'Renderer/ShaderProgram', function(
+         'Shaders/Builtin/CzmBuiltins',
+         'Renderer/ShaderProgram'
+     ], function(
+         ShaderProgram,
          createContext,
          destroyContext,
          Cartesian2,
@@ -58,6 +61,8 @@ defineSuite([
                 CzmBuiltins[functionName] = injectedTestFunctions[functionName];
             }
         }
+        ShaderProgram._rebuildBuiltinAndUniformLookup();
+
     });
 
     afterAll(function() {
@@ -68,6 +73,7 @@ defineSuite([
                 delete CzmBuiltins[functionName];
             }
         }
+        ShaderProgram._rebuildBuiltinAndUniformLookup();
     });
 
     function renderFragment(context, shaderProgram) {

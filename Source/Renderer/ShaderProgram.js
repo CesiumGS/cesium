@@ -110,6 +110,20 @@ define([
         scratchUniformMatrix4 = new Float32Array(16);
     }
 
+    function getAutomaticUniformDeclaration(uniforms, uniform) {
+        var automaticUniform = uniforms[uniform];
+        var declaration = 'uniform ' + automaticUniform.getDatatype().getGLSL() + ' ' + uniform;
+
+        var size = automaticUniform.getSize();
+        if (size === 1) {
+            declaration += ';';
+        } else {
+            declaration += '[' + size.toString() + '];';
+        }
+
+        return declaration;
+    }
+
     /**
      * A shader program's uniform, including the uniform's value.  This is most commonly used to change
      * the value of a uniform, but can also be used retrieve a uniform's name and datatype,
@@ -610,6 +624,28 @@ define([
         this.fragmentShaderSource = fragmentShaderSource;
     };
 
+    /**
+     * Exposed for injection of functions for tests
+     * @ private
+     */
+    ShaderProgram._rebuildBuiltinAndUniformLookup = function() {
+        _czmBuiltinsAndUniforms = {};
+        for ( var builtin in CzmBuiltins) {
+            if (CzmBuiltins.hasOwnProperty(builtin)) {
+                _czmBuiltinsAndUniforms[builtin] = CzmBuiltins[builtin];
+            }
+        }
+        for ( var uniform in AutomaticUniforms) {
+            if (AutomaticUniforms.hasOwnProperty(uniform)) {
+                _czmBuiltinsAndUniforms[uniform] = getAutomaticUniformDeclaration(AutomaticUniforms, uniform);
+            }
+        }
+    };
+
+    // combine automatic uniforms and Cesium built-ins
+    var _czmBuiltinsAndUniforms;
+    ShaderProgram._rebuildBuiltinAndUniformLookup();
+
     function extractShaderVersion(source) {
         // This will fail if the first #version is actually in a comment.
         var index = source.indexOf('#version');
@@ -704,8 +740,8 @@ define([
             });
 
             czmMatches.forEach(function(element, index, array) {
-                if (element !== currentNode.name && CzmBuiltins.hasOwnProperty(element)) {
-                    var referencedNode = getDependencyNode(element, CzmBuiltins[element], dependencyNodes);
+                if (element !== currentNode.name && _czmBuiltinsAndUniforms.hasOwnProperty(element)) {
+                    var referencedNode = getDependencyNode(element, _czmBuiltinsAndUniforms[element], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
 
@@ -763,11 +799,11 @@ define([
         }
     }
 
-    function getBuiltins(shaderSource) {
+    function getBuiltinsAndAutomaticUniforms(shaderSource) {
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes, CzmBuiltins);
+        generateDependencies(root, dependencyNodes, _czmBuiltinsAndUniforms);
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
@@ -788,44 +824,12 @@ define([
                '#endif \n\n';
     }
 
-    function getAutomaticUniformDeclaration(uniforms, uniform) {
-        var automaticUniform = uniforms[uniform];
-        var declaration = 'uniform ' + automaticUniform.getDatatype().getGLSL() + ' ' + uniform;
-
-        var size = automaticUniform.getSize();
-        if (size === 1) {
-            declaration += ';';
-        } else {
-            declaration += '[' + size.toString() + '];';
-        }
-
-        return declaration;
-    }
-
-    function getAutomaticUniforms(source) {
-        // This expects well-behaved shaders, e.g., the automatic uniform is not commented out or redeclared.
-        var declarations = '';
-        var uniforms = AutomaticUniforms;
-        for ( var uniform in uniforms) {
-            if (uniforms.hasOwnProperty(uniform)) {
-                if (source.indexOf(uniform) !== -1) {
-                    declarations += getAutomaticUniformDeclaration(uniforms, uniform) + ' \n';
-                }
-            }
-        }
-
-        return declarations;
-    }
-
     function createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var vsSourceVersioned = extractShaderVersion(vertexShaderSource);
         var fsSourceVersioned = extractShaderVersion(fragmentShaderSource);
 
-        var vsAndBuiltins = getBuiltins(vsSourceVersioned.source) + '\n#line 0\n' + vsSourceVersioned.source;
-        var vsSource = vsSourceVersioned.version + getAutomaticUniforms(vsAndBuiltins) + vsAndBuiltins;
-
-        var fsAndBuiltins = getBuiltins(fsSourceVersioned.source) + '\n#line 0\n' + fsSourceVersioned.source;
-        var fsSource = fsSourceVersioned.version + getFragmentShaderPrecision() + getAutomaticUniforms(fsAndBuiltins) + fsAndBuiltins;
+        var vsSource = vsSourceVersioned.version + getBuiltinsAndAutomaticUniforms(vsSourceVersioned.source) + '\n#line 0\n' + vsSourceVersioned.source;
+        var fsSource = fsSourceVersioned.version + getFragmentShaderPrecision() + getBuiltinsAndAutomaticUniforms(fsSourceVersioned.source) + '\n#line 0\n' + fsSourceVersioned.source;
 
         var vertexShader = gl.createShader(gl.VERTEX_SHADER);
         gl.shaderSource(vertexShader, vsSource);
