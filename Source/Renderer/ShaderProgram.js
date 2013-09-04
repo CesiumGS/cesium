@@ -583,7 +583,6 @@ define([
      * @exception {DeveloperError} A circular dependency was found in the Cesium built-in functions/structs/constants.
      *
      * @see Context#createShaderProgram
-     * @see Context#getShaderCache
      */
     var ShaderProgram = function(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations) {
         var program = createAndLinkProgram(gl, logShaderCompilation, vertexShaderSource, fragmentShaderSource, attributeLocations);
