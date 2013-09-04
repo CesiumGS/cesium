@@ -721,6 +721,30 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(generatedColor.alpha).toEqual(color.alpha);
     });
 
+    it('handles image path properly', function() {
+        var pathKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <Style>\
+            <IconStyle>\
+            <Icon>\
+                <href>images/Earth_Station.png</href>\
+            </Icon>\
+            </IconStyle>\
+            </Style>\
+            </Placemark>\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(pathKml, "text/xml"), 'http://test.invalid');
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var billboard = objects[0].billboard;
+        expect(billboard.image.getValue()).toEqual('http://test.invalid/images/Earth_Station.png');
+    });
+
     it('load throws with undefined KML', function() {
         var dataSource = new KmlDataSource();
         expect(function() {

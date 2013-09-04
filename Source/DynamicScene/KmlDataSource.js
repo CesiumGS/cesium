@@ -424,13 +424,13 @@ define(['../Core/createGuid',
         //Since KML external styles can be asynchonous, we start off
         //my loading all styles first, before doing anything else.
         //The rest of the loading code is synchronous
-        return when.all(processStyles(kml, styleCollection), function() {
+        return when.all(processStyles(kml, styleCollection, sourceUri), function() {
             var array = kml.getElementsByTagName('Placemark');
             for ( var i = 0, len = array.length; i < len; i++) {
                 var placemark = array[i];
                 var placemarkId = defined(placemark.id) ? placemark.id : createGuid();
                 var placemarkDynamicObject = dynamicObjectCollection.getOrCreateObject(placemarkId);
-                processInlineStyles(placemarkDynamicObject, array[i], styleCollection);
+                processInlineStyles(placemarkDynamicObject, array[i], styleCollection, sourceUri);
                 processPlacemark(dataSource, placemarkDynamicObject, placemark, dynamicObjectCollection, styleCollection);
             }
             dataSource._changed.raiseEvent(this);
