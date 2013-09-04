@@ -18,6 +18,30 @@ define(['../Core/createGuid',
         TimeInterval) {
     "use strict";
 
+    function createSetter(propertyName) {
+        var privatePropertyName = '_' + propertyName;
+        var subPropertyAssigned;
+        return function(value) {
+            var that = this; //DynamicObject instance
+            if (!defined(subPropertyAssigned)) {
+                subPropertyAssigned = function(property, subPropertyName, newValue, oldValue) {
+                    that._subpropertyAssigned.raiseEvent(that, propertyName, property, subPropertyName, newValue, oldValue);
+                };
+            }
+            var oldValue = this[privatePropertyName];
+            if (value !== oldValue) {
+                if (defined(oldValue) && defined(oldValue.propertyAssigned)) {
+                    oldValue.propertyAssigned.removeEventListener(subPropertyAssigned, this);
+                }
+                this[privatePropertyName] = value;
+                if (defined(value) && defined(value.propertyAssigned)) {
+                    value.propertyAssigned.addEventListener(subPropertyAssigned, this);
+                }
+                this._propertyAssigned.raiseEvent(this, propertyName, value, oldValue);
+            }
+        };
+    }
+
     function merge(target, source) {
         if (defined(target)) {
             if (typeof target.merge === 'function') {
@@ -27,6 +51,9 @@ define(['../Core/createGuid',
         }
         return source;
     }
+
+    var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyAssigned', //
+                                 'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
 
     /**
      * DynamicObject instances are the primary data store for processed data.
@@ -66,6 +93,10 @@ define(['../Core/createGuid',
         this._vector = undefined;
         this._viewFrom = undefined;
         this._propertyAssigned = new Event();
+        this._subpropertyAssigned = new Event();
+        this._propertyNames = ['availability', 'position', 'orientation', 'billboard', //
+                              'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
+                              'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
     };
 
     defineProperties(DynamicObject.prototype, {
@@ -77,6 +108,26 @@ define(['../Core/createGuid',
         propertyAssigned : {
             get : function() {
                 return this._propertyAssigned;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicObject.prototype
+         * @type {Event}
+         */
+        subpropertyAssigned : {
+            get : function() {
+                return this._subpropertyAssigned;
+            }
+        },
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicObject.prototype
+         * @type {Event}
+         */
+        propertyNames : {
+            get : function() {
+                return this._propertyNames;
             }
         },
         /**
@@ -124,8 +175,10 @@ define(['../Core/createGuid',
             },
             set : function(value) {
                 var oldValue = this._position;
-                this._position = value;
-                this._propertyAssigned.raiseEvent(this, 'position', value, oldValue);
+                if (value !== oldValue) {
+                    this._position = value;
+                    this._propertyAssigned.raiseEvent(this, 'position', value, oldValue);
+                }
             }
         },
         /**
@@ -139,190 +192,10 @@ define(['../Core/createGuid',
             },
             set : function(value) {
                 var oldValue = this._orientation;
-                this._orientation = value;
-                this._propertyAssigned.raiseEvent(this, 'orientation', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the billboard.
-         * @type {DynamicBillboard}
-         * @default undefined
-         */
-        billboard : {
-            get : function() {
-                return this._billboard;
-            },
-            set : function(value) {
-                var oldValue = this._billboard;
-                this._billboard = value;
-                if (defined(oldValue)) {
-                    oldValue.propertyAssigned.removeEventListener(DynamicObject.prototype._billboardListener, this);
+                if (value !== oldValue) {
+                    this._orientation = value;
+                    this._propertyAssigned.raiseEvent(this, 'orientation', value, oldValue);
                 }
-                if (defined(value)) {
-                    value.propertyAssigned.addEventListener(DynamicObject.prototype._billboardListener, this);
-                }
-                this._propertyAssigned.raiseEvent(this, 'billboard', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the cone.
-         * @type {DynamicCone}
-         * @default undefined
-         */
-        cone : {
-            get : function() {
-                return this._cone;
-            },
-            set : function(value) {
-                var oldValue = this._cone;
-                this._cone = value;
-                this._propertyAssigned.raiseEvent(this, 'cone', value, oldValue);
-            }
-        },
-
-        /**
-         * Gets or sets the ellipsoid.
-         * @type {DynamicEllipsoid}
-         * @default undefined
-         */
-        ellipsoid : {
-            get : function() {
-                return this._ellipsoid;
-            },
-            set : function(value) {
-                var oldValue = this._ellipsoid;
-                this._ellipsoid = value;
-                this._propertyAssigned.raiseEvent(this, 'ellipsoid', value, oldValue);
-            }
-        },
-        ellipse : {
-            get : function() {
-                return this._ellipse;
-            },
-            set : function(value) {
-                var oldValue = this._ellipse;
-                this._ellipse = value;
-                this._propertyAssigned.raiseEvent(this, 'ellipse', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the label.
-         * @type {DynamicLabel}
-         * @default undefined
-         */
-        label : {
-            get : function() {
-                return this._label;
-            },
-            set : function(value) {
-                var oldValue = this._label;
-                this._label = value;
-                this._propertyAssigned.raiseEvent(this, 'label', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the path.
-         * @type {DynamicPath}
-         * @default undefined
-         */
-        path : {
-            get : function() {
-                return this._path;
-            },
-            set : function(value) {
-                var oldValue = this._path;
-                this._path = value;
-                this._propertyAssigned.raiseEvent(this, 'path', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the point graphic.
-         * @type {DynamicPoint}
-         * @default undefined
-         */
-        point : {
-            get : function() {
-                return this._point;
-            },
-            set : function(value) {
-                var oldValue = this._point;
-                this._point = value;
-                this._propertyAssigned.raiseEvent(this, 'point', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the polygon.
-         * @type {DynamicPolygon}
-         * @default undefined
-         */
-        polygon : {
-            get : function() {
-                return this._polygon;
-            },
-            set : function(value) {
-                var oldValue = this._polygon;
-                this._polygon = value;
-                this._propertyAssigned.raiseEvent(this, 'polygon', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the polyline.
-         * @type {DynamicPolyline}
-         * @default undefined
-         */
-        polyline : {
-            get : function() {
-                return this._polyline;
-            },
-            set : function(value) {
-                var oldValue = this._polyline;
-                this._polyline = value;
-                this._propertyAssigned.raiseEvent(this, 'polyline', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the pyramid.
-         * @type {DynamicPyramid}
-         * @default undefined
-         */
-        pyramid : {
-            get : function() {
-                return this._pyramid;
-            },
-            set : function(value) {
-                var oldValue = this._pyramid;
-                this._pyramid = value;
-                this._propertyAssigned.raiseEvent(this, 'pyramid', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the vertex positions.
-         * @type {Property}
-         * @default undefined
-         */
-        vertexPositions : {
-            get : function() {
-                return this._vertexPositions;
-            },
-            set : function(value) {
-                var oldValue = this._vertexPositions;
-                this._vertexPositions = value;
-                this._propertyAssigned.raiseEvent(this, 'vertexPositions', value, oldValue);
-            }
-        },
-        /**
-         * Gets or sets the vector.
-         * @type {DynamicVector}
-         * @default undefined
-         */
-        vector : {
-            get : function() {
-                return this._vector;
-            },
-            set : function(value) {
-                var oldValue = this._vector;
-                this._vector = value;
-                this._propertyAssigned.raiseEvent(this, 'vector', value, oldValue);
             }
         },
         /**
@@ -337,9 +210,139 @@ define(['../Core/createGuid',
             },
             set : function(value) {
                 var oldValue = this._viewFrom;
-                this._viewFrom = value;
-                this._propertyAssigned.raiseEvent(this, 'viewFrom', value, oldValue);
+                if (value !== oldValue) {
+                    this._viewFrom = value;
+                    this._propertyAssigned.raiseEvent(this, 'viewFrom', value, oldValue);
+                }
             }
+        },
+        /**
+         * Gets or sets the billboard.
+         * @type {DynamicBillboard}
+         * @default undefined
+         */
+        billboard : {
+            get : function() {
+                return this._billboard;
+            },
+            set : createSetter('billboard')
+        },
+        /**
+         * Gets or sets the cone.
+         * @type {DynamicCone}
+         * @default undefined
+         */
+        cone : {
+            get : function() {
+                return this._cone;
+            },
+            set : createSetter('cone')
+        },
+
+        /**
+         * Gets or sets the ellipsoid.
+         * @type {DynamicEllipsoid}
+         * @default undefined
+         */
+        ellipsoid : {
+            get : function() {
+                return this._ellipsoid;
+            },
+            set : createSetter('ellipsoid')
+        },
+        ellipse : {
+            get : function() {
+                return this._ellipse;
+            },
+            set : createSetter('ellipse')
+        },
+        /**
+         * Gets or sets the label.
+         * @type {DynamicLabel}
+         * @default undefined
+         */
+        label : {
+            get : function() {
+                return this._label;
+            },
+            set : createSetter('label')
+        },
+        /**
+         * Gets or sets the path.
+         * @type {DynamicPath}
+         * @default undefined
+         */
+        path : {
+            get : function() {
+                return this._path;
+            },
+            set : createSetter('path')
+        },
+        /**
+         * Gets or sets the point graphic.
+         * @type {DynamicPoint}
+         * @default undefined
+         */
+        point : {
+            get : function() {
+                return this._point;
+            },
+            set : createSetter('point')
+        },
+        /**
+         * Gets or sets the polygon.
+         * @type {DynamicPolygon}
+         * @default undefined
+         */
+        polygon : {
+            get : function() {
+                return this._polygon;
+            },
+            set : createSetter('polygon')
+        },
+        /**
+         * Gets or sets the polyline.
+         * @type {DynamicPolyline}
+         * @default undefined
+         */
+        polyline : {
+            get : function() {
+                return this._polyline;
+            },
+            set : createSetter('polyline')
+        },
+        /**
+         * Gets or sets the pyramid.
+         * @type {DynamicPyramid}
+         * @default undefined
+         */
+        pyramid : {
+            get : function() {
+                return this._pyramid;
+            },
+            set : createSetter('pyramid')
+        },
+        /**
+         * Gets or sets the vertex positions.
+         * @type {Property}
+         * @default undefined
+         */
+        vertexPositions : {
+            get : function() {
+                return this._vertexPositions;
+            },
+            set : createSetter('vertexPositions')
+        },
+        /**
+         * Gets or sets the vector.
+         * @type {DynamicVector}
+         * @default undefined
+         */
+        vector : {
+            get : function() {
+                return this._vector;
+            },
+            set : createSetter('vector')
         }
     });
 
@@ -370,47 +373,74 @@ define(['../Core/createGuid',
         return availabilityValue;
     };
 
+    DynamicObject.prototype.addProperty = function(propertyName) {
+        var propertyNames = this._propertyNames;
+        if (propertyNames.indexOf(propertyName) !== -1) {
+            throw new DeveloperError();
+        }
+        if (reservedPropertyNames.indexOf(propertyName) !== -1) {
+            throw new DeveloperError();
+
+        }
+
+        propertyNames.push(propertyName);
+        var privatePropertyName = '_' + propertyName;
+
+        var that = this;
+        function subPropertyAssigned(property, subPropertyName, newValue, oldValue) {
+            that._subpropertyAssigned.raiseEvent(that, propertyName, property, subPropertyName, newValue, oldValue);
+        }
+
+        defineProperties(this, {
+            propertyName : {
+                get : function() {
+                    return this[privatePropertyName];
+                },
+                set : createSetter(propertyName)
+            }
+        });
+    };
+
+    DynamicObject.prototype._onSubPropertyAssigned = function(property, propertyName, newValue, oldValue) {
+        this._subpropertyAssigned.raiseEvent(this, property, propertyName, newValue, oldValue);
+    };
+
+    DynamicObject.prototype.removeProperty = function(propertyName) {
+        var propertyNames = this._propertyNames;
+        if (reservedPropertyNames.indexOf(propertyName) !== -1) {
+            throw new DeveloperError();
+        }
+        if (propertyNames.indexOf(propertyName) === -1) {
+            throw new DeveloperError();
+        }
+
+        this._propertyNames.push(propertyName);
+        var privatePropertyName = '_' + propertyName;
+        delete this[propertyName];
+        delete this[privatePropertyName];
+    };
+
     DynamicObject.prototype.merge = function(objectToMerge) {
         this.availability = defaultValue(objectToMerge._availability, this._availability);
-        this.position = defaultValue(this._position, objectToMerge._position);
-        this.orientation = defaultValue(this._orientation, objectToMerge._orientation);
-        this.vertexPositions = defaultValue(this._vertexPositions, objectToMerge._vertexPositions);
-        this.viewFrom = defaultValue(this._viewFrom, objectToMerge._viewFrom);
 
-        this.billboard = merge(this._billboard, objectToMerge._billboard);
-        this.cone = merge(this._cone, objectToMerge._cone);
-        this.ellipsoid = merge(this._ellipsoid, objectToMerge._ellipsoid);
-        this.ellipse = merge(this._ellipse, objectToMerge._ellipse);
-        this.label = merge(this._label, objectToMerge._label);
-        this.path = merge(this._path, objectToMerge._path);
-        this.point = merge(this._point, objectToMerge._point);
-        this.polygon = merge(this._polygon, objectToMerge._polygon);
-        this.polyline = merge(this._polyline, objectToMerge._polyline);
-        this.pyramid = merge(this._pyramid, objectToMerge._pyramid);
-        this.vector = merge(this._vector, objectToMerge._vector);
+        var propertyNames = this._propertyNames;
+        var propertyNamesLength = propertyNames.length;
+        for ( var i = 0; i < propertyNamesLength; i++) {
+            var name = propertyNames[i];
+            //TODO Remove this once availability is refactored.
+            if (name !== 'availability') {
+                var privateName = '_' + name;
+                this[name] = merge(this[privateName], objectToMerge[privateName]);
+            }
+        }
     };
 
     DynamicObject.prototype.clean = function() {
-        this._availability = undefined;
-        this._position = undefined;
-        this._orientation = undefined;
-        this._billboard = undefined;
-        this._cone = undefined;
-        this._ellipsoid = undefined;
-        this._ellipse = undefined;
-        this._label = undefined;
-        this._path = undefined;
-        this._point = undefined;
-        this._polygon = undefined;
-        this._polyline = undefined;
-        this._pyramid = undefined;
-        this._vertexPositions = undefined;
-        this._vector = undefined;
-        this._viewFrom = undefined;
-    };
-
-    DynamicObject.prototype._billboardListener = function(billboard, propertyName, value, oldValue) {
-        this._propertyAssigned.raiseEvent(billboard, propertyName, value, oldValue);
+        var propertyNames = this._propertyNames;
+        var propertyNamesLength = propertyNames.length;
+        for ( var i = 0; i < propertyNamesLength; i++) {
+            this[propertyNames[i]] = undefined;
+        }
     };
 
     return DynamicObject;

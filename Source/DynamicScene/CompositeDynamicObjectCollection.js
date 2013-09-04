@@ -159,6 +159,35 @@ define(['../Core/defined',
         return true;
     }
 
+    CompositeDynamicObjectCollection.prototype._propertyChanged = function(dynamicObject, propertyName, newValue, oldValue) {
+
+    };
+
+    CompositeDynamicObjectCollection.prototype._subPropertyChanged = function(dynamicObject, propertyName, property, subPropertyName, newValue, oldValue) {
+        //If we have a pending full merge, just do it and return.
+        if (mergeIfNeeded(this)) {
+            return;
+        }
+
+        var id = dynamicObject.id;
+        var composite = this._composite;
+        var compositeObject = composite.getById(id);
+        var compositeProperty = compositeObject[property];
+        var collections = this._collectionsCopy;
+        var collectionsLength = collections.length;
+        for ( var q = collectionsLength - 1; q >= 0; q--) {
+            var object = collections[q].getById(dynamicObject.id);
+            if (defined(object)) {
+                var subProperty = object[subPropertyName];
+                if (defined()) {
+                    compositeProperty[subPropertyName] = subProperty;
+                    return;
+                }
+            }
+        }
+        compositeProperty[subPropertyName] = undefined;
+    };
+
     CompositeDynamicObjectCollection.prototype._onCollectionChanged = function(collection, added, removed) {
         //If we have a pending full merge, just do it and return.
         if (mergeIfNeeded(this)) {
