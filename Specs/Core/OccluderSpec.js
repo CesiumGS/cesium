@@ -163,7 +163,7 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = (occludeePosition.subtract(occluderPosition)).normalize();
+        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
         var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
@@ -185,7 +185,7 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = (occludeePosition.subtract(occluderPosition)).normalize();
+        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
         var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
@@ -207,7 +207,7 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = (occludeePosition.subtract(occluderPosition)).normalize();
+        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
         var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
