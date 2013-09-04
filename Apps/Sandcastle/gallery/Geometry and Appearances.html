@@ -752,6 +752,23 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
+    
+    positions = [];
+    for (i = 0; i < 40; ++i) {
+        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 15.0)));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolylineGeometry({
+                positions : positions,
+                width : 10.0
+            })
+        }),
+        appearance : new Cesium.PolylineMaterialAppearance({
+            material : Cesium.Material.fromType(scene.getContext(), Cesium.Material.PolylineGlowType)
+        })
+    }));
 
     // Create a single wall
     positions = ellipsoid.cartographicArrayToCartesianArray([
