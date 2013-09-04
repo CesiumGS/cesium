@@ -138,7 +138,7 @@ define([
      *
      * @memberof DynamicVectorVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicVectorVisualizer#destroy
      */
@@ -156,7 +156,7 @@ define([
      *
      * @memberof DynamicVectorVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -227,7 +227,7 @@ define([
         polyline.setShow(true);
 
         var positions = polyline._visualizerPositions;
-        var position = positionProperty.getValueCartesian(time, positions[0]);
+        var position = positionProperty.getValue(time, positions[0]);
         var direction = directionProperty.getValue(time, positions[1]);
         var length = lengthProperty.getValue(time);
         if (defined(position) && defined(direction) && defined(length)) {

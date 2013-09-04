@@ -148,7 +148,7 @@ define([
      *
      * @param {Object} primitive DOC_TBA
      *
-     * @return {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive was not found in the composite.
+     * @returns {Boolean} <code>true</code> if the primitive was removed; <code>false</code> if the primitive was not found in the composite.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -414,7 +414,7 @@ define([
      *
      * @memberof CompositePrimitive
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see CompositePrimitive#destroy
      */
@@ -436,7 +436,7 @@ define([
      *
      * @memberof CompositePrimitive
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

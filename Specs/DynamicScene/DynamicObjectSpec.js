@@ -40,130 +40,14 @@ defineSuite([
         expect(object.id).toNotEqual(object2.id);
     });
 
-    it('processCzmlPacketPosition works.', function() {
-        var packet = {
-            'position' : {
-                'cartesian' : [1.0, 2.0, 3.0]
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketPosition(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.position.getValueCartesian(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-    });
-
-    it('processCzmlPacketPosition returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketPosition(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.position).toBeUndefined();
-    });
-
-    it('processCzmlPacketOrientation works.', function() {
-        var packet = {
-            'orientation' : {
-                'unitQuaternion' : [0.0, 0.0, 0.0, 1.0]
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketOrientation(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.orientation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Quaternion(0.0, 0.0, 0.0, 1.0));
-    });
-
-    it('processCzmlPacketOrientation returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketOrientation(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.orientation).toBeUndefined();
-    });
-
-    it('processCzmlPacketVertexPositions works.', function() {
-        var packet = {
-            'vertexPositions' : {
-                'cartesian' : [1.0, 2.0, 3.0, 5.0, 6.0, 7.0]
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketVertexPositions(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.vertexPositions.getValueCartesian(Iso8601.MINIMUM_VALUE)).toEqual([new Cartesian3(1.0, 2.0, 3.0), new Cartesian3(5.0, 6.0, 7.0)]);
-    });
-
-    it('processCzmlPacketVertexPositions returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketVertexPositions(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.vertexPositions).toBeUndefined();
-    });
-
-    it('processCzmlPacketViewFrom works.', function() {
-        var packet = {
-            'viewFrom' : {
-                'cartesian' : [1.0, 2.0, 3.0]
-            }
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketViewFrom(dynamicObject, packet)).toEqual(true);
-        expect(dynamicObject.viewFrom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
-    });
-
-    it('processCzmlPacketViewFrom returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketViewFrom(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.viewFrom).toBeUndefined();
-    });
-
-
-    it('processCzmlPacketAvailability works.', function() {
-        var packet = {
-            availability : '2000-01-01/2001-01-01'
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketAvailability(dynamicObject, packet)).toEqual(true);
-
-        var interval = TimeInterval.fromIso8601(packet.availability);
-        expect(dynamicObject.availability).toEqual(interval);
-    });
-
-    it('processCzmlPacketAvailability returns false if no data.', function() {
-        var packet = {};
-        var dynamicObject = new DynamicObject('dynamicObject');
-        expect(DynamicObject.processCzmlPacketAvailability(dynamicObject, packet)).toEqual(false);
-        expect(dynamicObject.availability).toBeUndefined();
-    });
-
     it('isAvailable works.', function() {
-        var packet = {
-            availability : '2000-01-01/2001-01-01'
-        };
-
         var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicObject.processCzmlPacketAvailability(dynamicObject, packet);
-
-        var interval = TimeInterval.fromIso8601(packet.availability);
+        var interval = TimeInterval.fromIso8601('2000-01-01/2001-01-01');
+        dynamicObject._setAvailability(interval);
         expect(dynamicObject.isAvailable(interval.start.addSeconds(-1))).toEqual(false);
         expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
         expect(dynamicObject.isAvailable(interval.stop.addSeconds(1))).toEqual(false);
-    });
-
-    it('isAvailable caching works.', function() {
-        var packet = {
-            availability : '2000-01-01/2001-01-01'
-        };
-
-        var dynamicObject = new DynamicObject('dynamicObject');
-        DynamicObject.processCzmlPacketAvailability(dynamicObject, packet);
-
-        var interval = TimeInterval.fromIso8601(packet.availability);
-        expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.start)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
-        expect(dynamicObject.isAvailable(interval.stop)).toEqual(true);
     });
 
     it('mergeProperties does not change a fully configured billboard', function() {

@@ -691,7 +691,7 @@ require(['Cesium'], function(Cesium) {
             geometry : boxGeometry,
             modelMatrix : boxModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
 
@@ -699,7 +699,7 @@ require(['Cesium'], function(Cesium) {
             geometry : ellipsoidGeometry,
             modelMatrix : ellipsoidModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
 
@@ -707,7 +707,7 @@ require(['Cesium'], function(Cesium) {
             geometry : sphereGeometry,
             modelMatrix : sphereModelMatrix,
             attributes : {
-                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.5}))
             }
         }));
     }
@@ -715,7 +715,7 @@ require(['Cesium'], function(Cesium) {
     primitives.add(new Cesium.Primitive({
         geometryInstances : instances,
         appearance : new Cesium.PerInstanceColorAppearance({
-            translucent : false,
+            translucent : true,
             closed : true
         })
     }));
@@ -775,6 +775,82 @@ require(['Cesium'], function(Cesium) {
         appearance : new Cesium.MaterialAppearance({
             material : wallMaterial,
             faceForward : true
+        })
+    }));
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+        Cesium.Cartographic.fromDegrees(-120.0, 45.0),
+        Cesium.Cartographic.fromDegrees(-125.0, 50.0),
+        Cesium.Cartographic.fromDegrees(-125.0, 55.0)
+    ]);
+    var width = 100000;
+
+    var corridor = new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorGeometry({
+            positions : positions,
+            width : width,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+        }
+    });
+    
+    var extrudedCorridor = new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorGeometry({
+            positions : positions,
+            width : width,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 300000,
+            extrudedHeight: 400000
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
+        }
+    });
+    
+    var corridorOutline = new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorOutlineGeometry( {
+            positions: positions,
+            width: width,
+            height: 700000
+        }),
+        attributes: {
+            color : solidWhite
+        }
+    });
+    
+    var corridorFill = new Cesium.GeometryInstance({
+        geometry: new Cesium.CorridorGeometry({
+            positions : positions,
+            width : width,
+            vertexFormat : Cesium.PerInstanceColorAppearance.VERTEX_FORMAT,
+            height: 700000
+        }),
+        attributes : {
+            color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 0.7}))
+        }
+    });
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : [corridor, extrudedCorridor, corridorFill],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : true,
+            closed : true,
+            faceForward : true
+        })
+    }));
+    
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : corridorOutline,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(4.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
         })
     }));
 

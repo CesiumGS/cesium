@@ -250,7 +250,7 @@ define([
      *
      * @memberof CentralBodySurface
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see CentralBodySurface#destroy
      */
@@ -268,7 +268,7 @@ define([
      *
      * @memberof CentralBodySurface
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -892,7 +892,7 @@ define([
                     }
                     command.owner = tile;
 
-                    command.debugShowBoundingVolume = tile === surface._debug.boundingSphereTile;
+                    command.debugShowBoundingVolume = (tile === surface._debug.boundingSphereTile);
 
                     var uniformMap = tileCommandUniformMaps[tileCommandIndex];
                     mergeUniformMap(uniformMap, centralBodyUniformMap);

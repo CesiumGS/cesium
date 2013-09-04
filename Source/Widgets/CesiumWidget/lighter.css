@@ -1,0 +1,38 @@
+.cesium-lighter .cesium-widget-button {
+    color: #111;
+    background: #e2f0ff;
+    border: 1px solid #759dc0;
+}
+
+.cesium-lighter .cesium-widget-button:focus {
+    color: #000;
+    border-color: #ea4;
+}
+
+.cesium-lighter .cesium-widget-button:hover {
+    color: #000;
+    background: #a6d2ff;
+    border-color: #aef;
+    box-shadow: 0 0 8px #777;
+}
+
+.cesium-lighter .cesium-widget-button:active {
+    color: #fff;
+    background: #48b;
+    border-color: #ea0;
+}
+
+.cesium-lighter .cesium-widget-errorPanel {
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.cesium-lighter .cesium-widget-errorPanel-content {
+    border: 1px solid #526F82;
+    border-radius: 7px;
+    background-color: white;
+    color: black;
+}
+
+.cesium-lighter .cesium-widget-errorPanel-header {
+    color: #B87D00;
+}

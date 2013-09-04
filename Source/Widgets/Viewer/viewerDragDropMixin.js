@@ -219,6 +219,7 @@ define([
             DataSource = KmlDataSource;
         } else {
             viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
+            return undefined;
         }
 
         return function(evt) {

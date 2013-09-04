@@ -66,7 +66,7 @@ define([
      *
      * @memberof Occluder
      *
-     * @return {Cartesian3} The position of the occluder.
+     * @returns {Cartesian3} The position of the occluder.
      */
     Occluder.prototype.getPosition = function() {
         return this._occluderPosition;
@@ -75,7 +75,7 @@ define([
     /**
      * Returns the radius of the occluder.
      *
-     * @return {Number} The radius of the occluder.
+     * @returns {Number} The radius of the occluder.
      */
     Occluder.prototype.getRadius = function() {
         return this._occluderRadius;
@@ -121,7 +121,7 @@ define([
      *
      * @param {Cartesian3} occludee The point surrounding the occludee object.
      *
-     * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+     * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
      *
      * @example
      * var cameraPosition = new Cartesian3(0, 0, 0);
@@ -153,7 +153,7 @@ define([
     *
     * @param {BoundingSphere} occludee The bounding sphere surrounding the occludee object.
     *
-    * @return {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
+    * @returns {boolean} <code>true</code> if the occludee is visible; otherwise <code>false</code>.
     *
     * @example
     * var cameraPosition = new Cartesian3(0, 0, 0);
@@ -211,7 +211,7 @@ define([
      *
      * @param {BoundingSphere} occludeeBS
      *
-     * @return {Enumeration} Visibility.NONE if the occludee is not visible,
+     * @returns {Enumeration} Visibility.NONE if the occludee is not visible,
      *                       Visibility.PARTIAL if the occludee is partially visible, or
      *                       Visibility.FULL if the occludee is fully visible.
      * @example
@@ -288,7 +288,7 @@ define([
      * @exception {DeveloperError} <code>occluderBoundingSphere</code> is required.
      * @exception {DeveloperError} <code>occludeePosition</code> must have a value other than <code>occluderBoundingSphere.center</code>.
      *
-     * @return {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      *
      * @example
@@ -367,7 +367,7 @@ define([
      *
      * @exception {DeveloperError} extent is required.
      *
-     * @return {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
+     * @returns {Object} An object containing two attributes: <code>occludeePoint</code> and <code>valid</code>
      * which is a boolean value.
      */
     Occluder.computeOccludeePointFromExtent = function(extent, ellipsoid) {

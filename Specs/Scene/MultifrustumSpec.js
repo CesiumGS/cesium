@@ -182,6 +182,20 @@ defineSuite([
         expect(context.readPixels()).toEqual([255, 255, 255, 255]);
     });
 
+    it('renders primitive in last frustum with debugShowFrustums', function() {
+        createBillboards();
+        var color = new Color(1.0, 1.0, 1.0, 0.0);
+        billboard0.setColor(color);
+        billboard1.setColor(color);
+
+        scene.debugShowFrustums = true;
+        scene.initializeFrame();
+        scene.render();
+        expect(context.readPixels()).toEqual([0, 0, 255, 255]);
+        expect(scene.debugFrustumStatistics.totalCommands).toEqual(3);
+        expect(scene.debugFrustumStatistics.commandsInFrustums).toEqual({ 1 : 1, 2 : 1, 4 : 1});
+    });
+
     function createPrimitive(bounded, closestFrustum) {
         bounded = defaultValue(bounded, true);
         closestFrustum = defaultValue(closestFrustum, false);
@@ -196,12 +210,12 @@ defineSuite([
 
             var that = this;
             this._um = {
-                    u_color : function() {
-                        return that.color;
-                    },
-                    u_model : function() {
-                        return that._modelMatrix;
-                    }
+                u_color : function() {
+                    return that.color;
+                },
+                u_model : function() {
+                    return that._modelMatrix;
+                }
             };
         };
 

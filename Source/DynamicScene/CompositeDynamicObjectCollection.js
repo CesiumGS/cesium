@@ -7,7 +7,18 @@ define([
         '../Core/TimeInterval',
         '../Core/DeveloperError',
         './DynamicObject',
-        './CzmlDefaults'
+        './DynamicBillboard',
+        './DynamicClock',
+        './DynamicEllipse',
+        './DynamicEllipsoid',
+        './DynamicCone',
+        './DynamicLabel',
+        './DynamicPath',
+        './DynamicPoint',
+        './DynamicPolygon',
+        './DynamicPolyline',
+        './DynamicPyramid',
+        './DynamicVector'
     ], function(
         defaultValue,
         defined,
@@ -16,7 +27,18 @@ define([
         TimeInterval,
         DeveloperError,
         DynamicObject,
-        CzmlDefaults) {
+        DynamicBillboard,
+        DynamicClock,
+        DynamicEllipse,
+        DynamicEllipsoid,
+        DynamicCone,
+        DynamicLabel,
+        DynamicPath,
+        DynamicPoint,
+        DynamicPolygon,
+        DynamicPolyline,
+        DynamicPyramid,
+        DynamicVector) {
     "use strict";
 
     /**
@@ -36,7 +58,6 @@ define([
      *
      * @see DynamicObjectCollection
      * @see DynamicObject
-     * @see CzmlDefaults
      */
     var CompositeDynamicObjectCollection = function(collections, mergeFunctions, cleanFunctions) {
         this._hash = {};
@@ -46,12 +67,12 @@ define([
         /**
          * The array of functions which merge DynamicObject instances together.
          */
-        this.mergeFunctions = defaultValue(mergeFunctions, CzmlDefaults.mergers);
+        this.mergeFunctions = defaultValue(mergeFunctions, CompositeDynamicObjectCollection.mergers);
 
         /**
          * The array of functions which remove data from a DynamicObject instance.
          */
-        this.cleanFunctions = defaultValue(cleanFunctions, CzmlDefaults.cleaners);
+        this.cleanFunctions = defaultValue(cleanFunctions, CompositeDynamicObjectCollection.cleaners);
 
         /**
          * An {@link Event} that is fired whenever DynamicObjects in the collection have properties added.
@@ -65,6 +86,42 @@ define([
 
         this.setCollections(collections);
     };
+
+    /**
+     * The standard set of mergers for processing CZML.  This array is the default
+     * set of updater methods used by CompositeDynamicObjectCollection.
+     */
+    CompositeDynamicObjectCollection.mergers = [DynamicClock.mergeProperties,
+               DynamicBillboard.mergeProperties,
+               DynamicEllipse.mergeProperties,
+               DynamicEllipsoid.mergeProperties,
+               DynamicCone.mergeProperties,
+               DynamicLabel.mergeProperties,
+               DynamicPath.mergeProperties,
+               DynamicPoint.mergeProperties,
+               DynamicPolygon.mergeProperties,
+               DynamicPolyline.mergeProperties,
+               DynamicPyramid.mergeProperties,
+               DynamicVector.mergeProperties,
+               DynamicObject.mergeProperties];
+
+    /**
+     * The standard set of cleaners for processing CZML.  This array is the default
+     * set of updater methods used by CompositeDynamicObjectCollection.
+     */
+    CompositeDynamicObjectCollection.cleaners = [DynamicBillboard.undefineProperties,
+                DynamicEllipse.undefineProperties,
+                DynamicEllipsoid.undefineProperties,
+                DynamicCone.undefineProperties,
+                DynamicLabel.undefineProperties,
+                DynamicPath.undefineProperties,
+                DynamicPoint.undefineProperties,
+                DynamicPolygon.undefineProperties,
+                DynamicPolyline.undefineProperties,
+                DynamicPyramid.undefineProperties,
+                DynamicVector.undefineProperties,
+                DynamicObject.undefineProperties,
+                DynamicClock.undefineProperties];
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.
