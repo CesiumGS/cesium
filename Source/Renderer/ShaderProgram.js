@@ -759,8 +759,6 @@ define([
             }
             throw new DeveloperError(message);
         }
-
-        dependencyNodes.reverse();
     }
 
     function getBuiltins(shaderSource) {
@@ -770,9 +768,10 @@ define([
         generateDependencies(root, dependencyNodes, ShaderBuiltins);
         sortDependencies(dependencyNodes);
 
-        // concatenate the source code for the function dependencies
+        // Concatenate the source code for the function dependencies.
+        // Iterate in reverse so that dependent items are declared before they are used.
         var builtinsSource = '';
-        for ( var i = 0; i < dependencyNodes.length; ++i) {
+        for ( var i = dependencyNodes.length - 1; i >= 0; --i) {
             builtinsSource = builtinsSource + dependencyNodes[i].glslSource + '\n';
         }
 
