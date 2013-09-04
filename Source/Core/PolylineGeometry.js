@@ -9,6 +9,7 @@ define([
         './BoundingSphere',
         './Cartesian3',
         './PolylinePipeline',
+        './VertexFormat',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes'
@@ -22,6 +23,7 @@ define([
         BoundingSphere,
         Cartesian3,
         PolylinePipeline,
+        VertexFormat,
         Geometry,
         GeometryAttribute,
         GeometryAttributes) {
@@ -45,6 +47,7 @@ define([
 
         this._positions = positions;
         this._width = width;
+        this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._workerName = 'createPolylineGeometry';
     };
 

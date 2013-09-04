@@ -12,9 +12,9 @@ varying vec2 v_st;
 
 void main() 
 {
-    float expandDir = texCoordExpandWidthAndShow.x;
-    float width = abs(texCoordExpandWidthAndShow.y) + 0.5;
-    bool usePrev = texCoordExpandWidthAndShow.y < 0.0;
+    float expandDir = expandAndWidth.x;
+    float width = abs(expandAndWidth.y) + 0.5;
+    bool usePrev = expandAndWidth.y < 0.0;
     
     vec4 p = czm_computePosition();
     vec4 prev = czm_computePrevPosition();
