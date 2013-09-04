@@ -36,7 +36,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @return {Number} The average cache miss ratio (ACMR).
+     * @returns {Number} The average cache miss ratio (ACMR).
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];
@@ -111,7 +111,7 @@ define([
      * @exception {DeveloperError} indices length must be a multiple of three.
      * @exception {DeveloperError} cacheSize must be greater than two.
      *
-     * @return {Array} A list of the input indices in an optimized order.
+     * @returns {Array} A list of the input indices in an optimized order.
      *
      * @example
      * var indices = [0, 1, 2, 3, 4, 5];

@@ -62,6 +62,7 @@ define([
     var COLOR_INDEX = Billboard.COLOR_INDEX;
     var ROTATION_INDEX = Billboard.ROTATION_INDEX;
     var ALIGNED_AXIS_INDEX = Billboard.ALIGNED_AXIS_INDEX;
+    var SCALE_BY_DISTANCE_INDEX = Billboard.SCALE_BY_DISTANCE_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     // PERFORMANCE_IDEA:  Use vertex compression so we don't run out of
@@ -76,7 +77,8 @@ define([
         direction : 6,
         pickColor : 7,  // pickColor and color shared an index because pickColor is only used during
         color : 7,      // the 'pick' pass and 'color' is only used during the 'color' pass.
-        rotationAndAlignedAxis : 8
+        rotationAndAlignedAxis : 8,
+        scaleByDistance : 9
     };
 
     // Identifies to the VertexArrayFacade the attributes that are used only for the pick
@@ -150,6 +152,10 @@ define([
         this._compiledShaderRotation = false;
         this._compiledShaderRotationPick = false;
 
+        this._shaderScaleByDistance = false;
+        this._compiledShaderScaleByDistance = false;
+        this._compiledShaderScaleByDistancePick = false;
+
         this._propertiesChanged = new Uint32Array(NUMBER_OF_PROPERTIES);
 
         this._maxSize = 0.0;
@@ -206,7 +212,8 @@ define([
                               BufferUsage.STATIC_DRAW, // IMAGE_INDEX_INDEX
                               BufferUsage.STATIC_DRAW, // COLOR_INDEX
                               BufferUsage.STATIC_DRAW, // ROTATION_INDEX
-                              BufferUsage.STATIC_DRAW  // ALIGNED_AXIS_INDEX
+                              BufferUsage.STATIC_DRAW, // ALIGNED_AXIS_INDEX
+                              BufferUsage.STATIC_DRAW  // SCALE_BY_DISTANCE_INDEX
                           ];
 
         var that = this;
@@ -225,7 +232,7 @@ define([
      *
      * @param {Object}[billboard=undefined] A template describing the billboard's properties as shown in Example 1.
      *
-     * @return {Billboard} The billboard that was added to the collection.
+     * @returns {Billboard} The billboard that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link BillboardCollection#update} is called, the collection's vertex buffer
@@ -248,6 +255,7 @@ define([
      *   horizontalOrigin : HorizontalOrigin.CENTER,
      *   verticalOrigin : VerticalOrigin.CENTER,
      *   scale : 1.0,
+     *   scaleByDistance : new NearFarScalar(5e6, 1.0, 2e7, 0.0),
      *   imageIndex : 0,
      *   color : Color.WHITE
      * });
@@ -274,7 +282,7 @@ define([
      *
      * @param {Billboard} billboard The billboard to remove.
      *
-     * @return {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the billboard was removed; <code>false</code> if the billboard was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, when
      * {@link BillboardCollection#update} is called, the collection's vertex buffer
@@ -369,7 +377,7 @@ define([
      *
      * @param {Billboard} billboard The billboard to check for.
      *
-     * @return {Boolean} true if this collection contains the billboard, false otherwise.
+     * @returns {Boolean} true if this collection contains the billboard, false otherwise.
      *
      * @see BillboardCollection#get
      */
@@ -388,7 +396,7 @@ define([
      *
      * @param {Number} index The zero-based index of the billboard.
      *
-     * @return {Billboard} The billboard at the specified index.
+     * @returns {Billboard} The billboard at the specified index.
      *
      * @performance Expected constant time.  If billboards were removed from the collection and
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
@@ -423,7 +431,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {Number} The number of billboards in this collection.
+     * @returns {Number} The number of billboards in this collection.
      *
      * @performance Expected constant time.  If billboards were removed from the collection and
      * {@link BillboardCollection#update} was not called, an implicit <code>O(n)</code>
@@ -501,7 +509,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return <code>true</code> if the texture atlas is destroyed when the collection is
+     * @returns <code>true</code> if the texture atlas is destroyed when the collection is
      * destroyed; otherwise, <code>false</code>.
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
@@ -672,6 +680,11 @@ define([
             componentsPerAttribute : 4,
             componentDatatype : ComponentDatatype.FLOAT,
             usage : buffersUsage[ROTATION_INDEX] // buffersUsage[ALIGNED_AXIS_INDEX] ignored
+        }, {
+            index : attributeIndices.scaleByDistance,
+            componentsPerAttribute : 4,
+            componentDatatype : ComponentDatatype.FLOAT,
+            usage : buffersUsage[SCALE_BY_DISTANCE_INDEX]
         }], 4 * numberOfBillboards); // 4 vertices per billboard
     }
 
@@ -851,6 +864,35 @@ define([
         writer(i + 3, rotation, x, y, z);
     }
 
+    function writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        var i = billboard._index * 4;
+        var allPurposeWriters = vafWriters[allPassPurpose];
+        var writer = allPurposeWriters[attributeIndices.scaleByDistance];
+        var near = 0.0;
+        var nearValue = 0.0;
+        var far = 0.0;
+        var farValue = 0.0;
+
+        var scale = billboard.getScaleByDistance();
+        if (defined(scale)) {
+            near = scale.near;
+            nearValue = scale.nearValue;
+            far = scale.far;
+            farValue = scale.farValue;
+
+            if (nearValue !== 1.0 || farValue !== 1.0) {
+                // scale by distance calculation in shader need not be enabled
+                // until a billboard with near and far !== 1.0 is found
+                billboardCollection._shaderScaleByDistance = true;
+            }
+        }
+
+        writer(i + 0, near, nearValue, far, farValue);
+        writer(i + 1, near, nearValue, far, farValue);
+        writer(i + 2, near, nearValue, far, farValue);
+        writer(i + 3, near, nearValue, far, farValue);
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePosition(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writePixelOffset(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -860,6 +902,7 @@ define([
         writeOriginAndShow(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinatesAndImageSize(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeRotationAndAlignedAxis(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeScaleByDistance(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1045,6 +1088,10 @@ define([
                     writers.push(writeRotationAndAlignedAxis);
                 }
 
+                if (properties[SCALE_BY_DISTANCE_INDEX]) {
+                    writers.push(writeScaleByDistance);
+                }
+
                 vafWriters = this._vaf.writers;
 
                 if ((billboardsToUpdateLength / billboardsLength) > 0.1) {
@@ -1119,16 +1166,19 @@ define([
                 });
             }
 
-            if (!defined(this._sp) || (this._shaderRotation && !this._compiledShaderRotation)) {
+            if (!defined(this._sp) || (this._shaderRotation && !this._compiledShaderRotation) ||
+                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistance)) {
                 this._sp = context.getShaderCache().replaceShaderProgram(
                     this._sp,
                     createShaderSource({
-                        defines : [this._shaderRotation ? 'ROTATION' : ''],
+                        defines : [this._shaderRotation ? 'ROTATION' : '',
+                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
                         sources : [BillboardCollectionVS]
                     }),
                     BillboardCollectionFS,
                     attributeIndices);
                 this._compiledShaderRotation = this._shaderRotation;
+                this._compiledShaderScaleByDistance = this._shaderScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[colorPassPurpose];
@@ -1156,19 +1206,24 @@ define([
             var pickList = this._pickCommands;
             commandLists.pickList = pickList;
 
-            if (!defined(this._spPick) || (this._shaderRotation && !this._compiledShaderRotationPick)) {
+            if (!defined(this._spPick) ||
+                    (this._shaderRotation && !this._compiledShaderRotationPick) ||
+                    (this._shaderScaleByDistance && !this._compiledShaderScaleByDistancePick)) {
                 this._spPick = context.getShaderCache().replaceShaderProgram(
-                        this._spPick,
-                        createShaderSource({
-                            defines : ['RENDER_FOR_PICK', this._shaderRotation ? 'ROTATION' : ''],
-                            sources : [BillboardCollectionVS]
-                        }),
-                        createShaderSource({
-                            defines : ['RENDER_FOR_PICK'],
-                            sources : [BillboardCollectionFS]
-                        }),
-                        attributeIndices);
-                this._compiledShaderRotation = this._shaderRotationPick;
+                    this._spPick,
+                    createShaderSource({
+                        defines : ['RENDER_FOR_PICK',
+                                   this._shaderRotation ? 'ROTATION' : '',
+                                   this._shaderScaleByDistance ? 'EYE_DISTANCE_SCALING' : ''],
+                        sources : [BillboardCollectionVS]
+                    }),
+                    createShaderSource({
+                        defines : ['RENDER_FOR_PICK'],
+                        sources : [BillboardCollectionFS]
+                    }),
+                    attributeIndices);
+                this._compiledShaderRotationPick = this._shaderRotation;
+                this._compiledShaderScaleByDistancePick = this._shaderScaleByDistance;
             }
 
             va = this._vaf.vaByPurpose[pickPassPurpose];
@@ -1206,7 +1261,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see BillboardCollection#destroy
      */
@@ -1224,7 +1279,7 @@ define([
      *
      * @memberof BillboardCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

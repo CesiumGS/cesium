@@ -232,7 +232,7 @@ define([
      *
      * @memberof Tile
      *
-     * @return {Array} The list of child tiles.
+     * @returns {Array} The list of child tiles.
      */
     Tile.prototype.getChildren = function() {
         if (!defined(this.children)) {

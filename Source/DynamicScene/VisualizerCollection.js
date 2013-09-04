@@ -2,15 +2,11 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        './CzmlDefaults'
+        '../Core/destroyObject'
     ], function(
         defaultValue,
         defined,
-        destroyObject,
-        DeveloperError,
-        CzmlDefaults) {
+        destroyObject) {
     "use strict";
 
     /**
@@ -21,32 +17,11 @@ define([
      *
      * @param {Object} The array of visualizers to use.
      * @param {DynamicObjectCollection} The objects to be visualized.
-     *
-     * @see CzmlDefaults#createVisualizers
      */
     var VisualizerCollection = function(visualizers, dynamicObjectCollection) {
         this._visualizers = defined(visualizers) ? visualizers : [];
         this._dynamicObjectCollection = undefined;
         this.setDynamicObjectCollection(dynamicObjectCollection);
-    };
-
-    /**
-     * Creates a new VisualizerCollection which includes all standard visualizers.
-     *
-     * @memberof VisualizerCollection
-     *
-     * @param {Scene} The scene where visualization will take place.
-     * @param {DynamicObjectCollection} The objects to be visualized.
-     *
-     * @exception {DeveloperError} scene is required.
-     *
-     * @see CzmlDefaults#createVisualizers
-     */
-    VisualizerCollection.createCzmlStandardCollection = function(scene, dynamicObjectCollection) {
-        if (!defined(scene)) {
-            throw new DeveloperError('scene is required.');
-        }
-        return new VisualizerCollection(CzmlDefaults.createVisualizers(scene), dynamicObjectCollection);
     };
 
     /**
@@ -139,7 +114,7 @@ define([
      *
      * @memberof VisualizerCollection
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see VisualizerCollection#destroy
      */
@@ -157,7 +132,7 @@ define([
      *
      * @memberof VisualizerCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

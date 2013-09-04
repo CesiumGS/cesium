@@ -8,7 +8,8 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/CustomSensorVolume',
-        '../Scene/Material'
+        '../Scene/Material',
+        './MaterialProperty'
        ], function(
          defaultValue,
          defined,
@@ -18,7 +19,8 @@ define([
          Matrix3,
          Matrix4,
          CustomSensorVolume,
-         Material) {
+         Material,
+         MaterialProperty) {
     "use strict";
 
     var matrix3Scratch = new Matrix3();
@@ -146,7 +148,7 @@ define([
      *
      * @memberof DynamicPyramidVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPyramidVisualizer#destroy
      */
@@ -164,7 +166,7 @@ define([
      *
      * @memberof DynamicPyramidVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -246,13 +248,13 @@ define([
 
         pyramid.show = true;
 
-        var directions = directionsProperty.getValueSpherical(time);
+        var directions = directionsProperty.getValue(time);
         if (defined(directions) && pyramid._visualizerDirections !== directions) {
             pyramid.setDirections(directions);
             pyramid._visualizerDirections = directions;
         }
 
-        position = defaultValue(positionProperty.getValueCartesian(time, position), pyramid._visualizerPosition);
+        position = defaultValue(positionProperty.getValue(time, position), pyramid._visualizerPosition);
         orientation = defaultValue(orientationProperty.getValue(time, orientation), pyramid._visualizerOrientation);
 
         if (defined(position) &&
@@ -264,10 +266,7 @@ define([
             orientation.clone(pyramid._visualizerOrientation);
         }
 
-        var material = dynamicPyramid.material;
-        if (defined(material)) {
-            pyramid.material = material.getValue(time, context, pyramid.material);
-        }
+        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid.material, pyramid.material);
 
         var property = dynamicPyramid.intersectionColor;
         if (defined(property)) {

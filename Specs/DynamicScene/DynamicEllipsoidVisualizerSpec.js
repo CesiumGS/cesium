@@ -3,7 +3,7 @@ defineSuite([
          'DynamicScene/DynamicEllipsoidVisualizer',
          'Specs/createScene',
          'Specs/destroyScene',
-         'Specs/MockProperty',
+         'DynamicScene/ConstantProperty',
          'Core/JulianDate',
          'Core/Matrix3',
          'Core/Matrix4',
@@ -13,12 +13,12 @@ defineSuite([
          'Core/Color',
          'DynamicScene/DynamicEllipsoid',
          'DynamicScene/DynamicObjectCollection',
-         'Scene/Material'
+         'DynamicScene/ColorMaterialProperty'
      ], function(
          DynamicEllipsoidVisualizer,
          createScene,
          destroyScene,
-         MockProperty,
+         ConstantProperty,
          JulianDate,
          Matrix3,
          Matrix4,
@@ -28,7 +28,7 @@ defineSuite([
          Color,
          DynamicEllipsoid,
          DynamicObjectCollection,
-         Material) {
+         ColorMaterialProperty) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -86,8 +86,8 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -97,9 +97,9 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
-        ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -109,8 +109,8 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         testObject.ellipsoid = new DynamicEllipsoid();
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -121,9 +121,9 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
         testObject.ellipsoid = new DynamicEllipsoid();
-        testObject.ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
+        testObject.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
         visualizer.update(new JulianDate());
         expect(scene.getPrimitives().getLength()).toEqual(0);
     });
@@ -134,24 +134,22 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
 
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
-        ellipsoid.directions = new MockProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
-        ellipsoid.radii = new MockProperty(123.5);
-        ellipsoid.show = new MockProperty(true);
-        var redMaterial = Material.fromType(scene.getContext(), Material.ColorType);
-        redMaterial.uniforms.color = Color.RED;
-        ellipsoid.material = new MockProperty(redMaterial);
+        ellipsoid.directions = new ConstantProperty([new Spherical(0, 0, 0), new Spherical(1, 0, 0), new Spherical(2, 0, 0), new Spherical(3, 0, 0)]);
+        ellipsoid.radii = new ConstantProperty(123.5);
+        ellipsoid.show = new ConstantProperty(true);
+        ellipsoid.material = new ColorMaterialProperty();
         visualizer.update(time);
 
         expect(scene.getPrimitives().getLength()).toEqual(1);
         var p = scene.getPrimitives().get(0);
         expect(p.radii).toEqual(testObject.ellipsoid.radii.getValue(time));
         expect(p.show).toEqual(testObject.ellipsoid.show.getValue(time));
-        expect(p.material).toEqual(testObject.ellipsoid.material.getValue(time));
-        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValueCartesian(time)));
+        expect(p.material.uniforms).toEqual(testObject.ellipsoid.material.getValue(time));
+        expect(p.modelMatrix).toEqual(Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(testObject.orientation.getValue(time).conjugate()), testObject.position.getValue(time)));
 
         ellipsoid.show.value = false;
         visualizer.update(time);
@@ -163,10 +161,10 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
-        ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var time = new JulianDate();
         expect(scene.getPrimitives().getLength()).toEqual(0);
@@ -184,10 +182,10 @@ defineSuite([
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
-        ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var time = new JulianDate();
         visualizer.update(time);
@@ -197,17 +195,17 @@ defineSuite([
     it('setDynamicObjectCollection removes old objects and add new ones.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var testObject = dynamicObjectCollection.getOrCreateObject('test');
-        testObject.position = new MockProperty(new Cartesian3(1234, 5678, 9101112));
-        testObject.orientation = new MockProperty(new Quaternion(0, 0, 0, 1));
+        testObject.position = new ConstantProperty(new Cartesian3(1234, 5678, 9101112));
+        testObject.orientation = new ConstantProperty(new Quaternion(0, 0, 0, 1));
         var ellipsoid = testObject.ellipsoid = new DynamicEllipsoid();
-        ellipsoid.radii = new MockProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
 
         var dynamicObjectCollection2 = new DynamicObjectCollection();
         var testObject2 = dynamicObjectCollection2.getOrCreateObject('test2');
-        testObject2.position = new MockProperty(new Cartesian3(5678, 9101112, 1234));
-        testObject2.orientation = new MockProperty(new Quaternion(1, 0, 0, 0));
+        testObject2.position = new ConstantProperty(new Cartesian3(5678, 9101112, 1234));
+        testObject2.orientation = new ConstantProperty(new Quaternion(1, 0, 0, 0));
         var ellipsoid2 = testObject2.ellipsoid = new DynamicEllipsoid();
-        ellipsoid2.radii = new MockProperty(new Cartesian3(4, 5, 6));
+        ellipsoid2.radii = new ConstantProperty(new Cartesian3(4, 5, 6));
 
         visualizer = new DynamicEllipsoidVisualizer(scene, dynamicObjectCollection);
 

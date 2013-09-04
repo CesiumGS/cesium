@@ -293,7 +293,7 @@ define([
      *
      * @memberof CreditDisplay
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      */
@@ -308,7 +308,7 @@ define([
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      */
     CreditDisplay.prototype.isDestroyed = function() {
         return false;
