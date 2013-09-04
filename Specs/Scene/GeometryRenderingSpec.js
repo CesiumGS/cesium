@@ -10,6 +10,7 @@ defineSuite([
          'Core/ExtentGeometry',
          'Core/PolygonGeometry',
          'Core/SimplePolylineGeometry',
+         'Core/PolylineGeometry',
          'Core/WallGeometry',
          'Core/CorridorGeometry',
          'Core/CornerType',
@@ -31,6 +32,7 @@ defineSuite([
          'Core/Math',
          'Renderer/ClearCommand',
          'Scene/PerInstanceColorAppearance',
+         'Scene/PolylineColorAppearance',
          'Scene/Primitive',
          'Scene/SceneMode',
          'Scene/OrthographicFrustum',
@@ -54,6 +56,7 @@ defineSuite([
          ExtentGeometry,
          PolygonGeometry,
          SimplePolylineGeometry,
+         PolylineGeometry,
          WallGeometry,
          CorridorGeometry,
          CornerType,
@@ -75,6 +78,7 @@ defineSuite([
          CesiumMath,
          ClearCommand,
          PerInstanceColorAppearance,
+         PolylineColorAppearance,
          Primitive,
          SceneMode,
          OrthographicFrustum,
@@ -167,12 +171,16 @@ defineSuite([
         camera.position.z = center.x + radius;
     }
 
-    function renderCV(instance, afterView) {
+    function renderCV(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -226,12 +234,16 @@ defineSuite([
         frustum.bottom = -frustum.top;
     }
 
-    function render2D(instance) {
+    function render2D(instance, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -264,12 +276,16 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function pickGeometry(instance, afterView) {
+    function pickGeometry(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            }),
+            appearance : appearance,
             asynchronous : false
         });
 
@@ -289,12 +305,16 @@ defineSuite([
         primitive = primitive && primitive.destroy();
     }
 
-    function renderAsync(instance, afterView) {
+    function renderAsync(instance, afterView, appearance) {
+        if (!defined(appearance)) {
+            appearance = new PerInstanceColorAppearance({
+                flat : true
+            });
+        }
+
         var primitive = new Primitive({
             geometryInstances : instance,
-            appearance : new PerInstanceColorAppearance({
-                flat : true
-            })
+            appearance : appearance
         });
 
         var frameState = createFrameState();
@@ -1266,6 +1286,51 @@ defineSuite([
 
         it('async', function() {
             renderAsync(instance);
+        });
+    });
+
+    describe('PolylineGeometry', function() {
+        var instance;
+        var appearance;
+
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                },
+                id : 'polyline'
+            });
+
+            appearance = new PolylineColorAppearance({
+                translucent : false
+            });
+        });
+
+        it('3D', function() {
+            render3D(instance, undefined, appearance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance, undefined, appearance);
+        });
+
+        it('2D', function() {
+            render2D(instance, appearance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance, undefined, appearance);
+        });
+
+        it('async', function() {
+            renderAsync(instance, undefined, appearance);
         });
     });
 
