@@ -297,7 +297,7 @@ define([
     var distanceScratch = new Cartesian3();
 
     /**
-     * Computes the distance between two points
+      state_;* Computes the distance between two points
      * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first point to compute the distance from.
@@ -760,17 +760,6 @@ define([
      */
     Cartesian3.prototype.clone = function(result) {
         return Cartesian3.clone(this, result);
-    };
-
-    /**
-     * Computes the normalized form of this Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Cartesian3.prototype.normalize = function(result) {
-        return Cartesian3.normalize(this, result);
     };
 
     /**

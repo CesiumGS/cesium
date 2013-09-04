@@ -163,8 +163,8 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
-        var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
@@ -185,8 +185,8 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
-        var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
@@ -207,8 +207,8 @@ defineSuite([
 
         var occluderPosition = occluder.getPosition();
         var occludeePosition = occludee.getPosition();
-        var occluderPlaneNormal = Cartesian3.subtract(occludeePosition, occluderPosition).normalize();
-        var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePosition, occluderPosition));
+        var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
         var tempVec0 = occluderPlaneNormal.clone().abs();
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;

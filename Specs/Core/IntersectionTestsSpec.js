@@ -127,7 +127,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
 
         var origin = new Cartesian3(20000.0, 0.0, 0.0);
-        var direction = origin.normalize().negate();
+        var direction = Cartesian3.negate(Cartesian3.normalize(origin));
         var ray = new Ray(origin, direction);
 
         var expected = {
@@ -145,7 +145,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
 
         var origin = new Cartesian3(20000.0, 0.0, 0.0);
-        var direction = origin.normalize();
+        var direction = Cartesian3.normalize(origin);
         var ray = new Ray(origin, direction);
 
         var expected = {

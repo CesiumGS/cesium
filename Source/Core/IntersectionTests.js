@@ -300,10 +300,10 @@ define([
         var f = ellipsoid.transformPositionToScaledSpace(direction);
 
         // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
-        var firstAxis = f.normalize();
+        var firstAxis = Cartesian3.normalize(f);
         var reference = f.mostOrthogonalAxis();
-        var secondAxis = reference.cross(firstAxis).normalize();
-        var thirdAxis = firstAxis.cross(secondAxis).normalize();
+        var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis));
+        var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis));
         var B = new Matrix3(firstAxis.x, secondAxis.x, thirdAxis.x,
                             firstAxis.y, secondAxis.y, thirdAxis.y,
                             firstAxis.z, secondAxis.z, thirdAxis.z);
@@ -333,8 +333,8 @@ define([
 
             for ( var i = 0; i < length; ++i) {
                 s = D_I.multiplyByVector(B.multiplyByVector(solutions[i]));
-                var v = Cartesian3.subtract(s, position).normalize();
-                var dotProduct = v.dot(direction);
+                var v = Cartesian3.normalize(Cartesian3.subtract(s, position));
+                var dotProduct = Cartesian3.dot(v, direction);
 
                 if (dotProduct > maximumValue) {
                     maximumValue = dotProduct;

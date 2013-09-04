@@ -155,7 +155,7 @@ define([
                     normal.y = y;
 
                     if (computeTangent) {
-                        tangent = Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent).normalize(tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
                     }
 
                     if (vertexFormat.normal) {
@@ -177,7 +177,7 @@ define([
                     }
 
                     if (vertexFormat.binormal) {
-                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                         binormals[binormalIndex++] = binormal.x;
                         binormals[binormalIndex++] = binormal.y;
                         binormals[binormalIndex++] = binormal.z;

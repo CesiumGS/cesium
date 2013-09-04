@@ -96,7 +96,7 @@ defineSuite([
     });
 
     it('moves', function() {
-        var direction = new Cartesian3(1.0, 1.0, 0.0).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1.0, 1.0, 0.0));
         controller.move(direction, moveAmount);
         expect(camera.position).toEqualEpsilon(new Cartesian3(direction.x * moveAmount, direction.y * moveAmount, 1.0), CesiumMath.EPSILON10);
         expect(camera.up).toEqual(up);
@@ -344,14 +344,14 @@ defineSuite([
     });
 
     it('rotates', function() {
-        var axis = new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0).normalize();
+        var axis = Cartesian3.normalize(new Cartesian3(Math.cos(CesiumMath.PI_OVER_FOUR), Math.sin(CesiumMath.PI_OVER_FOUR), 0.0));
         var angle = CesiumMath.PI_OVER_TWO;
         controller.rotate(axis, angle);
 
         expect(camera.position).toEqualEpsilon(new Cartesian3(-axis.x, axis.y, 0.0), CesiumMath.EPSILON15);
-        expect(camera.direction).toEqualEpsilon(camera.position.normalize().negate(), CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(new Cartesian3(0.5, 0.5, axis.x).normalize(), CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.normalize(new Cartesian3(0.5, 0.5, axis.x)), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction), CesiumMath.EPSILON15);
     });
 
     it('rotate past constrained axis stops at constained axis', function() {
@@ -463,9 +463,9 @@ defineSuite([
         var tempCamera = camera.clone();
         tempCamera.controller.lookAt(position, target, up);
         expect(tempCamera.position).toEqual(position);
-        expect(tempCamera.direction).toEqual(Cartesian3.subtract(target, position).normalize());
+        expect(tempCamera.direction).toEqual(Cartesian3.normalize(Cartesian3.subtract(target, position)));
         expect(tempCamera.up).toEqual(up);
-        expect(tempCamera.right).toEqual(tempCamera.direction.cross(up).normalize());
+        expect(tempCamera.right).toEqual(Cartesian3.normalize(Cartesian3.cross(tempCamera.direction, up)));
 
         expect(1.0 - Cartesian3.magnitude(tempCamera.direction)).toBeLessThan(CesiumMath.EPSILON14);
         expect(1.0 - Cartesian3.magnitude(tempCamera.up)).toBeLessThan(CesiumMath.EPSILON14);
@@ -759,7 +759,7 @@ defineSuite([
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
-        camera.direction = camera.position.negate().normalize();
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.UNIT_Z;
         camera.right = camera.direction.cross(camera.up);
 
@@ -785,7 +785,7 @@ defineSuite([
         var maxRadii = ellipsoid.getMaximumRadius();
 
         camera.position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        camera.direction = camera.position.negate().normalize();
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.UNIT_Y;
 
         var frustum = new OrthographicFrustum();
@@ -814,10 +814,10 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-        camera.direction = Cartesian3.subtract(Cartesian3.ZERO, camera.position).normalize();
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z).normalize();
-        camera.up = camera.right.cross(camera.direction);
+        camera.position = Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)).multiplyByScalar(5.0 * maxRadii);
+        camera.direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, camera.position));
+        camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z));
+        camera.up = Cartesian3.cross(camera.right, camera.direction);
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
@@ -904,7 +904,7 @@ defineSuite([
         controller.setPositionCartographic(cart);
 
         expect(camera.position).toEqual(ellipsoid.cartographicToCartesian(cart));
-        expect(camera.direction).toEqual(camera.position.negate().normalize());
+        expect(camera.direction).toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15);
         expect(camera.right).toEqual(camera.direction.cross(camera.up));
     });
@@ -920,7 +920,7 @@ defineSuite([
         var ray = controller.getPickRay(windowCoord);
 
         var windowHeight = camera.frustum.near * Math.tan(camera.frustum.fovy * 0.5);
-        var expectedDirection = new Cartesian3(0.0, -windowHeight, -1.0).normalize();
+        var expectedDirection = Cartesian3.normalize(new Cartesian3(0.0, -windowHeight, -1.0));
         expect(ray.origin).toEqual(camera.position);
         expect(ray.direction).toEqualEpsilon(expectedDirection, CesiumMath.EPSILON15);
     });

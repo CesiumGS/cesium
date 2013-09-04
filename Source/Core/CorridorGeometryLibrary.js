@@ -194,9 +194,9 @@ define([
         var position = positions[0]; //add first point
         var nextPosition = positions[1];
 
-        forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
+        forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
         normal = ellipsoid.geodeticSurfaceNormal(position, normal);
-        left = normal.cross(forward, left).normalize(left);
+        left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
         if (saveAttributes) {
             calculatedLefts.push(left.x, left.y, left.z);
             calculatedNormals.push(normal.x, normal.y, normal.z);
@@ -212,8 +212,8 @@ define([
         for (i = 1; i < length - 1; i++) { // add middle points and corners
             normal = ellipsoid.geodeticSurfaceNormal(position, normal);
             nextPosition = positions[i + 1];
-            forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-            cornerDirection = Cartesian3.add(forward, backward, cornerDirection).normalize(cornerDirection);
+            forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
+            cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
             var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), normal, CesiumMath.EPSILON2);
             if (doCorner) {
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
@@ -234,7 +234,7 @@ define([
                         calculatedNormals.push(normal.x, normal.y, normal.z);
                     }
                     startPoint = leftPos.clone(startPoint);
-                    left = normal.cross(forward, left).normalize(left);
+                    left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     leftPos = Cartesian3.add(rightPos, left.multiplyByScalar(width * 2, leftPos), leftPos);
                     previousPos = Cartesian3.add(rightPos, left.multiplyByScalar(width, previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
@@ -255,7 +255,7 @@ define([
                         calculatedNormals.push(normal.x, normal.y, normal.z);
                     }
                     startPoint = rightPos.clone(startPoint);
-                    left = normal.cross(forward, left).normalize(left);
+                    left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     rightPos = Cartesian3.add(leftPos, left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {

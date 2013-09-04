@@ -263,11 +263,11 @@ define([
         var q = centralBody._ellipsoid.getOneOverRadii().multiplyComponents(p);
 
         var qMagnitude = Cartesian3.magnitude(q);
-        var qUnit = q.normalize();
+        var qUnit = Cartesian3.normalize(q);
 
         // Determine the east and north directions at q.
-        var eUnit = Cartesian3.UNIT_Z.cross(q).normalize();
-        var nUnit = qUnit.cross(eUnit).normalize();
+        var eUnit = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, q));
+        var nUnit = Cartesian3.normalize(Cartesian3.cross(qUnit, eUnit));
 
         // Determine the radius of the 'limb' of the ellipsoid.
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
@@ -311,11 +311,11 @@ define([
         if (1.0 - Cartesian3.UNIT_Z.negate().dot(dir) < CesiumMath.EPSILON6) {
             right = Cartesian3.UNIT_X;
         } else {
-            right = dir.cross(Cartesian3.UNIT_Z).normalize();
+            right = Cartesian3.normalize(Cartesian3.cross(dir, Cartesian3.UNIT_Z));
         }
 
         var screenRight = center.add(right.multiplyByScalar(radius));
-        var screenUp = center.add(Cartesian3.UNIT_Z.cross(right).normalize().multiplyByScalar(radius));
+        var screenUp = center.add(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)).multiplyByScalar(radius));
 
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);

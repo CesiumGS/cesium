@@ -552,9 +552,9 @@ defineSuite([
     it('does not create a path to the same point', function() {
         var camera = frameState.camera;
         camera.position = new Cartesian3(7000000.0, 0.0, 0.0);
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.UNIT_Z.clone();
-        camera.right = camera.direction.cross(camera.up).normalize();
+        camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, camera.up));
 
         var startPosition = camera.position.clone();
         var startDirection = camera.direction.clone();

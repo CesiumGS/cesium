@@ -95,7 +95,7 @@ define([
         // Position camera and size frustum so the entire 2D map is visible
         var maxRadii = this._ellipsoid.getMaximumRadius();
         var position = new Cartesian3(0.0, 0.0, 2.0 * maxRadii);
-        var direction = position.negate().normalize();
+        var direction = Cartesian3.normalize(Cartesian3.negate(position));
         var up = Cartesian3.UNIT_Y;
 
         var frustum = new OrthographicFrustum();
@@ -117,9 +117,9 @@ define([
             transform : transform
         };
 
-        position = new Cartesian3(0.0, -1.0, 1.0).normalize().multiplyByScalar(5.0 * maxRadii);
-        direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
-        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+        position = Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)).multiplyByScalar(5.0 * maxRadii);
+        direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
+        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         up = right.cross(direction);
 
         frustum = new PerspectiveFrustum();
@@ -134,9 +134,9 @@ define([
             transform : transform
         };
 
-        position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.0 * maxRadii);
-        direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
-        right = direction.cross(Cartesian3.UNIT_Z).normalize();
+        position = Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)).multiplyByScalar(2.0 * maxRadii);
+        direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
+        right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         up = right.cross(direction);
 
         this._camera3D = {
@@ -399,9 +399,9 @@ define([
         var maxRadii = transitioner._ellipsoid.getMaximumRadius();
         var endPos = transitioner._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
         endPos = endPos.normalize().multiplyByScalar(2.0 * maxRadii);
-        var endDir = Cartesian3.ZERO.subtract(endPos).normalize();
-        var endRight = endDir.cross(Cartesian3.UNIT_Z).normalize();
-        var endUp = endRight.cross(endDir);
+        var endDir = Cartesian3.normalize(Cartesian3.ZERO.subtract(endPos));
+        var endRight = Cartesian3.normalize(Cartesian3.cross(endDir, Cartesian3.UNIT_Z));
+        var endUp = Cartesian3.cross(endRight, endDir);
 
         var update = function(value) {
             camera.position = columbusViewMorph(startPos, endPos, value.time);
@@ -457,7 +457,7 @@ define([
             camera.frustum.fovy = CesiumMath.lerp(startFOVy, endFOVy, value.time);
 
             var distance = d / Math.tan(camera.frustum.fovy * 0.5);
-            camera.position = camera.position.normalize().multiplyByScalar(distance);
+            camera.position = Cartesian3.normalize(camera.position).multiplyByScalar(distance);
         };
 
         var animation = scene.getAnimations().add({
@@ -493,7 +493,7 @@ define([
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
 
-        var endPos = transitioner._camera2D.position.normalize().multiplyByScalar(d);
+        var endPos = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
         var endDir = transitioner._camera2D.direction.clone();
         var endUp = transitioner._camera2D.up.clone();
 
@@ -532,7 +532,7 @@ define([
         var d = (maxRadii * Math.PI) / tanTheta;
 
         var camera3DTo2D = {};
-        camera3DTo2D.position = transitioner._camera2D.position.normalize().multiplyByScalar(d);
+        camera3DTo2D.position = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
         camera3DTo2D.direction = transitioner._camera2D.direction.clone();
         camera3DTo2D.up = transitioner._camera2D.up.clone();
 
@@ -550,7 +550,7 @@ define([
         var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
-        var endPos2D = transitioner._camera2D.position.normalize().multiplyByScalar(d);
+        var endPos2D = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
 
         var top = camera.frustum.top;
         var bottom = camera.frustum.bottom;

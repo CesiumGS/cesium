@@ -697,17 +697,6 @@ define([
     };
 
     /**
-     * Computes the normalized form of this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.normalize = function(result) {
-        return Cartesian4.normalize(this, result);
-    };
-
-    /**
      * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
      * @memberof Cartesian4
      *

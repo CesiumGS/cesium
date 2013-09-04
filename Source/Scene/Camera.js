@@ -69,7 +69,7 @@ define([
         this._invTransform = Matrix4.IDENTITY.clone();
 
         var maxRadii = Ellipsoid.WGS84.getMaximumRadius();
-        var position = new Cartesian3(0.0, -2.0, 1.0).normalize().multiplyByScalar(2.5 * maxRadii);
+        var position = Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)).multiplyByScalar(2.5 * maxRadii);
 
         /**
          * The position of the camera.
@@ -80,7 +80,7 @@ define([
         this._position = position;
         this._positionWC = position;
 
-        var direction = Cartesian3.subtract(Cartesian3.ZERO, position).normalize();
+        var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
 
         /**
          * The view direction of the camera.
@@ -91,7 +91,7 @@ define([
         this._direction = direction;
         this._directionWC = direction;
 
-        var right = direction.cross(Cartesian3.UNIT_Z).normalize();
+        var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         var up = right.cross(direction);
 
         /**
@@ -198,13 +198,13 @@ define([
             var det = direction.dot(up.cross(right));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
-                direction = camera._direction = direction.normalize();
+                direction = camera._direction = Cartesian3.normalize(direction);
                 camera.direction = direction.clone();
 
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
                 var scalar = up.dot(direction) * invUpMag;
                 var w0 = direction.multiplyByScalar(scalar);
-                up = camera._up = Cartesian3.subtract(up, w0).normalize();
+                up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
                 camera.up = up.clone();
 
                 right = camera._right = direction.cross(up);

@@ -544,7 +544,7 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
         updateController(frameState);
         expect(camera.position).toEqual(position);
-        expect(camera.direction).not.toEqual(camera.position.negate().normalize());
+        expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.up.cross(camera.right)).toEqualEpsilon(camera.direction, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
@@ -609,10 +609,10 @@ defineSuite([
 
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
-        expect(camera.position.normalize().dot(Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
-        expect(camera.direction.dot(Cartesian3.UNIT_Z)).toBeLessThan(0.0);
-        expect(camera.up.dot(Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
-        expect(camera.right.dot(Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
+        expect(Cartesian3.dot(Cartesian3.normalize(camera.position), Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
+        expect(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z)).toBeLessThan(0.0);
+        expect(Cartesian3.dot(camera.up, Cartesian3.UNIT_Z)).toBeGreaterThan(0.0);
+        expect(Cartesian3.dot(camera.right, Cartesian3.UNIT_Z)).toBeLessThan(CesiumMath.EPSILON16);
     });
 
     it('rotates in Columus view locked mode', function() {
@@ -627,7 +627,7 @@ defineSuite([
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -702,7 +702,7 @@ defineSuite([
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -730,7 +730,7 @@ defineSuite([
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -745,7 +745,7 @@ defineSuite([
         updateController(frameState);
 
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -824,7 +824,7 @@ defineSuite([
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
 
@@ -847,7 +847,7 @@ defineSuite([
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).not.toEqual(position);
-        expect(camera.direction).not.toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).not.toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -861,7 +861,7 @@ defineSuite([
         moveMouse(MouseButtons.MIDDLE, startPosition, endPosition);
         updateController(frameState);
         expect(camera.position).toEqualEpsilon(position, CesiumMath.EPSILON8);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON14);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
     });
@@ -894,7 +894,7 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition, true);
         updateController(frameState);
         expect(camera.position).toEqual(position);
-        expect(camera.direction).not.toEqual(camera.position.negate().normalize());
+        expect(camera.direction).not.toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
         expect(camera.direction.cross(camera.up)).toEqualEpsilon(camera.right, CesiumMath.EPSILON15);
         expect(camera.up.cross(camera.right)).toEqualEpsilon(camera.direction, CesiumMath.EPSILON15);
         expect(camera.right.cross(camera.direction)).toEqualEpsilon(camera.up, CesiumMath.EPSILON15);
@@ -903,7 +903,7 @@ defineSuite([
     it('pans with constrained axis other than z-axis', function() {
         var frameState = setUp3D();
         camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.UNIT_X.clone();
         camera.right = camera.direction.cross(camera.up);
 
@@ -916,9 +916,9 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
         expect(Cartesian3.dot(camera.position, axis)).toBeGreaterThan(0.0);
-        expect(camera.direction).toEqualEpsilon(camera.position.negate().normalize(), CesiumMath.EPSILON15);
-        expect(camera.right).toEqualEpsilon(axis.cross(camera.position).normalize(), CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.normalize(Cartesian3.negate(camera.position)), CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(Cartesian3.normalize(Cartesian3.cross(axis, camera.position)), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction), CesiumMath.EPSILON15);
     });
 
     it('rotates with constrained axis', function() {
@@ -942,9 +942,9 @@ defineSuite([
     it('pans with constrained axis and is tilted', function() {
         var frameState = setUp3D();
         camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.UNIT_X.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var axis = Cartesian3.UNIT_Z;
         camera.controller.constrainedAxis = axis;
@@ -956,15 +956,15 @@ defineSuite([
         updateController(frameState);
 
         expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
-        expect(camera.direction).toEqualEpsilon(camera.position.normalize().negate(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position)), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON15);
-        expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
+        expect(camera.up).toEqualEpsilon(Cartesian3.cross(camera.right, camera.direction), CesiumMath.EPSILON15);
     });
 
     it('rotates with constrained axis and is tilted', function() {
         var frameState = setUp3D();
         camera.position = new Cartesian3(0.0, 2.0 * Ellipsoid.WGS84.getMaximumRadius(), 0.0);
-        camera.direction = camera.position.normalize().negate();
+        camera.direction = Cartesian3.negate(Cartesian3.normalize(camera.position));
         camera.up = Cartesian3.UNIT_X.clone();
         camera.right = camera.direction.cross(camera.up);
 
@@ -978,7 +978,7 @@ defineSuite([
         updateController(frameState);
 
         expect(Cartesian3.dot(camera.position, axis)).toBeLessThan(CesiumMath.EPSILON2);
-        expect(camera.direction).toEqualEpsilon(camera.position.normalize().negate(), CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(Cartesian3.negate(Cartesian3.normalize(camera.position)), CesiumMath.EPSILON15);
         expect(camera.right).toEqualEpsilon(axis, CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(camera.right.cross(camera.direction), CesiumMath.EPSILON15);
     });

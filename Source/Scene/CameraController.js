@@ -783,8 +783,8 @@ define([
 
         var camera = this._camera;
         camera.position = Cartesian3.clone(eye, camera.position);
-        camera.direction = Cartesian3.subtract(target, eye, camera.direction).normalize(camera.direction);
-        camera.right = Cartesian3.cross(camera.direction, up, camera.right).normalize(camera.right);
+        camera.direction = Cartesian3.normalize(Cartesian3.subtract(target, eye, camera.direction), camera.direction);
+        camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, up, camera.right), camera.right);
         camera.up = Cartesian3.cross(camera.right, camera.direction, camera.up);
     };
 

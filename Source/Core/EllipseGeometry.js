@@ -387,7 +387,7 @@ define([
                 Cartesian3.subtract(next, position, next);
                 var bottom = Cartesian3.subtract(extrudedPosition, position, scratchCartesian3);
 
-                normal = bottom.cross(next, normal).normalize(normal);
+                normal = Cartesian3.normalize(Cartesian3.cross(bottom, next, normal), normal);
 
                 if (vertexFormat.normal) {
                     normals[i] = normal.x;
@@ -400,7 +400,7 @@ define([
                 }
 
                 if (vertexFormat.tangent) {
-                    tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                    tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
                     tangents[i] = tangent.x;
                     tangents[i1] = tangent.y;
                     tangents[i2] = tangent.z;

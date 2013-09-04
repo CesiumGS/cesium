@@ -1137,7 +1137,7 @@ define([
                 for (j = 0; j < vertexNormalData.count; j++) {
                     Cartesian3.add(normal, normalsPerTriangle[normalIndices[vertexNormalData.indexOffset + j]], normal);
                 }
-                normal.normalize(normal);
+                Cartesian3.normalize(normal, normal);
                 normalValues[i3] = normal.x;
                 normalValues[i3 + 1] = normal.y;
                 normalValues[i3 + 2] = normal.z;
@@ -1282,13 +1282,13 @@ define([
             var t = Cartesian3.fromArray(tan1, i03, tScratch);
             var scalar = n.dot(t);
             n.multiplyByScalar(scalar, normalScale);
-            Cartesian3.subtract(t, normalScale, t).normalize(t);
+            Cartesian3.normalize(Cartesian3.subtract(t, normalScale, t), t);
 
             tangentValues[i03] = t.x;
             tangentValues[i13] = t.y;
             tangentValues[i23] = t.z;
 
-            n.cross(t, t).normalize(t);
+            Cartesian3.normalize(Cartesian3.cross(n, t, t), t);
 
             binormalValues[i03] = t.x;
             binormalValues[i13] = t.y;

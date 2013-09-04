@@ -113,7 +113,7 @@ define([
         var frustum = camera.frustum;
         var maxStartAlt = getAltitude(frustum, radius, radius);
 
-        var dot = start.normalize().dot(end.normalize());
+        var dot = Cartesian3.dot(Cartesian3.normalize(start), Cartesian3.normalize(end));
 
         var points;
         var altitude;
@@ -130,8 +130,8 @@ define([
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = end.normalize().multiplyByScalar(altitude);
-        var afterStart = start.normalize().multiplyByScalar(altitude);
+        var aboveEnd = Cartesian3.normalize(end).multiplyByScalar(altitude);
+        var afterStart = Cartesian3.normalize(start).multiplyByScalar(altitude);
 
         var axis, angle, rotation, middle;
         if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
@@ -159,7 +159,7 @@ define([
                 point : start
             }];
 
-            angle = Math.acos(afterStart.normalize().dot(aboveEnd.normalize()));
+            angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
             axis = afterStart.cross(aboveEnd);
             if (axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
@@ -196,8 +196,8 @@ define([
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            point.point.negate(direction3D).normalize(direction3D);
-            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
+            Cartesian3.normalize(point.point.negate(direction3D), direction3D);
+            Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
             right3D.cross(direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
@@ -206,8 +206,8 @@ define([
         if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
-            point.point.negate(direction3D).normalize(direction3D);
-            direction3D.cross(Cartesian3.UNIT_Z, right3D).normalize(right3D);
+            Cartesian3.normalize(point.point.negate(direction3D), direction3D);
+            Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
             right3D.cross(direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
@@ -309,7 +309,7 @@ define([
     }
 
     var direction2D = Cartesian3.UNIT_Z.negate();
-    var right2D = direction2D.cross(Cartesian3.UNIT_Y).normalize();
+    var right2D = Cartesian3.normalize(direction2D.cross(Cartesian3.UNIT_Y));
     var up2D = right2D.cross(direction2D);
     var quat = createQuaternion(direction2D, up2D);
     function createOrientations2D(camera, points, endDirection, endUp) {
@@ -494,20 +494,20 @@ define([
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
                     if (!defined(description.direction) && !defined(description.up)){
-                        dirScratch = position.negate(dirScratch).normalize(dirScratch);
-                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
+                        dirScratch = Cartesian3.normalize(position.negate(dirScratch), dirScratch);
+                        rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Z, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                        rightScratch = Cartesian3.normalize(dirScratch.cross(description.up, rightScratch), rightScratch);
                     }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
                     if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
-                        rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
+                        rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Y, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = dirScratch.cross(description.up, rightScratch).normalize(rightScratch);
+                        rightScratch = Cartesian3.normalize(dirScratch.cross(description.up, rightScratch), rightScratch);
                     }
                     upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
                 }

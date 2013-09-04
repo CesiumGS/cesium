@@ -31,7 +31,7 @@ defineSuite([
     });
 
     it('getPoint along ray works without a result parameter', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         for ( var i = -10; i < 11; i++) {
             var expectedResult = Cartesian3.add(direction.multiplyByScalar(i), Cartesian3.UNIT_X);
@@ -41,7 +41,7 @@ defineSuite([
     });
 
     it('getPoint works with a result parameter', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         var result = new Cartesian3();
         for ( var i = -10; i < 11; i++) {
@@ -53,7 +53,7 @@ defineSuite([
     });
 
     it('getPoint throws without a point', function() {
-        var direction = new Cartesian3(1, 2, 3).normalize();
+        var direction = Cartesian3.normalize(new Cartesian3(1, 2, 3));
         var ray = new Ray(Cartesian3.UNIT_X, direction);
         expect(function() {
             ray.getPoint(undefined);

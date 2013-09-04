@@ -687,9 +687,9 @@ define([
 
         if (defined(cameraController.constrainedAxis) && !defined(transform)) {
             var camera = cameraController._camera;
-            var p = camera.position.normalize();
+            var p = Cartesian3.normalize(camera.position);
             var northParallel = p.equalsEpsilon(cameraController.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = p.equalsEpsilon(cameraController.constrainedAxis.negate(), CesiumMath.EPSILON2);
+            var southParallel = p.equalsEpsilon(Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
 
             if (!northParallel && !southParallel) {
                 var up;
@@ -700,10 +700,10 @@ define([
                 }
 
                 var east;
-                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, camera.position.normalize(), CesiumMath.EPSILON2)) {
+                if (Cartesian3.equalsEpsilon(cameraController.constrainedAxis, Cartesian3.normalize(camera.position), CesiumMath.EPSILON2)) {
                     east = camera.right;
                 } else {
-                    east = Cartesian3.cross(cameraController.constrainedAxis, camera.position).normalize();
+                    east = Cartesian3.normalize(Cartesian3.cross(cameraController.constrainedAxis, camera.position));
                 }
 
                 var rDotE = Cartesian3.dot(camera.right, east);

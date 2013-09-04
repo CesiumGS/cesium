@@ -325,8 +325,8 @@ define([
         }
 
         // Compute a plane with a normal from the occluder to the occludee position.
-        var occluderPlaneNormal = Cartesian3.subtract(occludeePos, occluderPosition).normalize();
-        var occluderPlaneD = -(occluderPlaneNormal.dot(occluderPosition));
+        var occluderPlaneNormal = Cartesian3.normalize(Cartesian3.subtract(occludeePos, occluderPosition));
+        var occluderPlaneD = -(Cartesian3.dot(occluderPlaneNormal, occluderPosition));
 
         //For each position, determine the horizon intersection. Choose the position and intersection
         //that results in the greatest angle with the occcluder plane.
@@ -411,19 +411,19 @@ define([
             tempVec0.z = occluderPosition.z;
             tempVec1 = Cartesian3.UNIT_Z;
         }
-        var u = ((occluderPlaneNormal.dot(tempVec0)) + occluderPlaneD) / -(occluderPlaneNormal.dot(tempVec1));
-        return Cartesian3.subtract(Cartesian3.add(tempVec0, tempVec1.multiplyByScalar(u)), occluderPosition).normalize();
+        var u = (Cartesian3.normalize(occluderPlaneNormal, tempVec0) + occluderPlaneD) / -(Cartesian3.dot(occluderPlaneNormal, tempVec1));
+        return Cartesian3.normalize(Cartesian3.subtract(Cartesian3.add(tempVec0, tempVec1.multiplyByScalar(u)), occluderPosition));
     };
 
     Occluder._rotationVector = function(occluderPosition, occluderPlaneNormal, occluderPlaneD, position, anyRotationVector) {
         //Determine the angle between the occluder plane normal and the position direction
         var positionDirection = Cartesian3.subtract(position, occluderPosition);
-        positionDirection = positionDirection.normalize();
-        if (occluderPlaneNormal.dot(positionDirection) < 0.99999998476912904932780850903444) {
-            var crossProduct = occluderPlaneNormal.cross(positionDirection);
+        positionDirection = Cartesian3.normalize(positionDirection);
+        if (Cartesian3.dot(occluderPlaneNormal, positionDirection) < 0.99999998476912904932780850903444) {
+            var crossProduct = Cartesian3.cross(occluderPlaneNormal, positionDirection);
             var length = Cartesian3.magnitude(crossProduct);
             if (length > CesiumMath.EPSILON13) {
-                return crossProduct.normalize();
+                return Cartesian3.normalize(crossProduct);
             }
         }
         //The occluder plane normal and the position direction are colinear. Use any
@@ -451,7 +451,7 @@ define([
         var invOccluderToPositionDistance = 1.0 / occluderToPositionDistance;
         var cosTheta = horizonDistance * invOccluderToPositionDistance;
         var horizonPlaneDistance = cosTheta * horizonDistance;
-        positionToOccluder = positionToOccluder.normalize();
+        positionToOccluder = Cartesian3.normalize(positionToOccluder);
         var horizonPlanePosition = Cartesian3.add(pos, positionToOccluder.multiplyByScalar(horizonPlaneDistance));
         var horizonCrossDistance = Math.sqrt(horizonDistanceSquared - (horizonPlaneDistance * horizonPlaneDistance));
 
@@ -461,14 +461,14 @@ define([
                 (tempVec.x * tempVec.x * positionToOccluder.x) + ((tempVec.x * tempVec.y - tempVec.z) * positionToOccluder.y) + ((tempVec.x * tempVec.z + tempVec.y) * positionToOccluder.z),
                 ((tempVec.x * tempVec.y + tempVec.z) * positionToOccluder.x) + (tempVec.y * tempVec.y * positionToOccluder.y) + ((tempVec.y * tempVec.z - tempVec.x) * positionToOccluder.z),
                 ((tempVec.x * tempVec.z - tempVec.y) * positionToOccluder.x) + ((tempVec.y * tempVec.z + tempVec.x) * positionToOccluder.y) + (tempVec.z * tempVec.z * positionToOccluder.z));
-        horizonCrossDirection = horizonCrossDirection.normalize();
+        horizonCrossDirection = Cartesian3.normalize(horizonCrossDirection);
 
         //Horizon positions
         var offset = horizonCrossDirection.multiplyByScalar(horizonCrossDistance);
-        tempVec = Cartesian3.subtract(Cartesian3.add(horizonPlanePosition, offset), occluderPosition).normalize();
-        var dot0 = occluderPlaneNormal.dot(tempVec);
-        tempVec = Cartesian3.subtract(Cartesian3.subtract(horizonPlanePosition, offset), occluderPosition).normalize();
-        var dot1 = occluderPlaneNormal.dot(tempVec);
+        tempVec = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.add(horizonPlanePosition, offset), occluderPosition));
+        var dot0 = Cartesian3.dot(occluderPlaneNormal, tempVec);
+        tempVec = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.subtract(horizonPlanePosition, offset), occluderPosition));
+        var dot1 = Cartesian3.dot(occluderPlaneNormal, tempVec);
         return (dot0 < dot1) ? dot0 : dot1;
     };
 

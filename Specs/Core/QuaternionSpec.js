@@ -370,7 +370,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var returnedResult = quaternion.getAxis();
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -381,7 +381,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var expected = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var expected = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * expected.x, sin * expected.y, sin * expected.z, cos);
         var result = new Cartesian3();
         var returnedResult = quaternion.getAxis(result);
@@ -410,7 +410,7 @@ defineSuite([
         var angle = Math.PI / 3.0;
         var cos = Math.cos(angle / 2.0);
         var sin = Math.sin(angle / 2.0);
-        var axis = new Cartesian3(2.0, 3.0, 6.0).normalize();
+        var axis = Cartesian3.normalize(new Cartesian3(2.0, 3.0, 6.0));
         var quaternion = new Quaternion(sin * axis.x, sin * axis.y, sin * axis.z, cos);
         var result = quaternion.getAngle();
         expect(result).toEqualEpsilon(angle, CesiumMath.EPSILON15);

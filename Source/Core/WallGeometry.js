@@ -262,7 +262,7 @@ define([
                 if (recomputeNormal) {
                     var scalednextPosition = Cartesian3.subtract(nextTop, topPosition, scratchCartesian3Position4);
                     var scaledGroundPosition = Cartesian3.subtract(groundPosition, topPosition, scratchCartesian3Position1);
-                    normal = Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal).normalize(normal);
+                    normal = Cartesian3.normalize(Cartesian3.cross(scaledGroundPosition, scalednextPosition, normal), normal);
                     recomputeNormal = false;
                 }
 
@@ -270,10 +270,10 @@ define([
                     recomputeNormal = true;
                 } else {
                     if (vertexFormat.tangent) {
-                        tangent = Cartesian3.subtract(nextPosition, groundPosition, tangent).normalize(tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.subtract(nextPosition, groundPosition, tangent), tangent);
                     }
                     if (vertexFormat.binormal) {
-                        binormal = Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        binormal = Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                     }
                 }
 

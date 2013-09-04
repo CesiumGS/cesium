@@ -181,7 +181,7 @@ define([
                     Cartesian3.normalize(tangent, tangent);
 
                     if (vertexFormat.binormal) {
-                        Cartesian3.cross(normal, tangent, binormal).normalize(binormal);
+                        Cartesian3.normalize(Cartesian3.cross(normal, tangent, binormal), binormal);
                     }
                 }
 
@@ -252,7 +252,7 @@ define([
                     var p2 = Cartesian3.fromArray(positions, i + bottomOffset, v2Scratch);
                     Cartesian3.subtract(p1, p, p1);
                     Cartesian3.subtract(p2, p, p2);
-                    normal = p2.cross(p1, normal).normalize(normal);
+                    normal = Cartesian3.normalize(Cartesian3.cross(p2, p1, normal), normal);
                     recomputeNormal = false;
                 }
 
@@ -263,7 +263,7 @@ define([
                 if (vertexFormat.tangent || vertexFormat.binormal) {
                     binormal = ellipsoid.geodeticSurfaceNormal(p, binormal);
                     if (vertexFormat.tangent) {
-                        tangent = Cartesian3.cross(binormal, normal, tangent).normalize(tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
                     }
                 }
 

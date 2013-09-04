@@ -670,17 +670,6 @@ define([
     };
 
     /**
-     * Computes the normalized form of this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     */
-    Cartesian2.prototype.normalize = function(result) {
-        return Cartesian2.normalize(this, result);
-    };
-
-    /**
      * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
      * @memberof Cartesian2
      *

@@ -302,7 +302,7 @@ define([
 
     function computeScaledSpaceDirectionToPoint(ellipsoid, directionToPoint) {
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
-        return directionToPointScratch.normalize(directionToPointScratch);
+        return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }
 
     return EllipsoidalOccluder;

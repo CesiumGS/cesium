@@ -145,7 +145,7 @@ defineSuite([
     it('normalize works without a result parameter', function() {
         var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-        var result = cartesian.normalize();
+        var result = Cartesian4.normalize(cartesian);
         expect(result).toEqual(expectedResult);
     });
 
@@ -153,17 +153,9 @@ defineSuite([
         var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
         var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);
         var result = new Cartesian4();
-        var returnedResult = cartesian.normalize(result);
+        var returnedResult = Cartesian4.normalize(cartesian, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('normalize works with "this" result parameter', function() {
-        var cartesian = new Cartesian4(2.0, 0.0, 0.0, 0.0);
-        var expectedResult = new Cartesian4(1.0, 0.0, 0.0, 0.0);
-        var returnedResult = cartesian.normalize(cartesian);
-        expect(cartesian).toBe(returnedResult);
-        expect(cartesian).toEqual(expectedResult);
     });
 
     it('multiplyComponents works without a result parameter', function() {
