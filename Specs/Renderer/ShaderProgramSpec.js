@@ -58,10 +58,9 @@ defineSuite([
 
         for(var functionName in injectedTestFunctions) {
             if(injectedTestFunctions.hasOwnProperty(functionName)) {
-                CzmBuiltins[functionName] = injectedTestFunctions[functionName];
+                ShaderProgram._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
             }
         }
-        ShaderProgram._rebuildBuiltinAndUniformLookup();
 
     });
 
@@ -70,10 +69,9 @@ defineSuite([
 
         for ( var functionName in injectedTestFunctions) {
             if (injectedTestFunctions.hasOwnProperty(functionName)) {
-                delete CzmBuiltins[functionName];
+                delete ShaderProgram._czmBuiltinsAndUniforms[functionName];
             }
         }
-        ShaderProgram._rebuildBuiltinAndUniformLookup();
     });
 
     function renderFragment(context, shaderProgram) {

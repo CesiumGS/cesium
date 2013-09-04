@@ -624,26 +624,22 @@ define([
     };
 
     /**
-     * Exposed for injection of functions for tests
-     * @ private
+     * For ShaderProgram testing
+     * @private
      */
-    ShaderProgram._rebuildBuiltinAndUniformLookup = function() {
-        _czmBuiltinsAndUniforms = {};
-        for ( var builtin in CzmBuiltins) {
-            if (CzmBuiltins.hasOwnProperty(builtin)) {
-                _czmBuiltinsAndUniforms[builtin] = CzmBuiltins[builtin];
-            }
-        }
-        for ( var uniform in AutomaticUniforms) {
-            if (AutomaticUniforms.hasOwnProperty(uniform)) {
-                _czmBuiltinsAndUniforms[uniform] = getAutomaticUniformDeclaration(AutomaticUniforms, uniform);
-            }
-        }
-    };
+    ShaderProgram._czmBuiltinsAndUniforms = {};
 
     // combine automatic uniforms and Cesium built-ins
-    var _czmBuiltinsAndUniforms;
-    ShaderProgram._rebuildBuiltinAndUniformLookup();
+    for ( var builtin in CzmBuiltins) {
+        if (CzmBuiltins.hasOwnProperty(builtin)) {
+            ShaderProgram._czmBuiltinsAndUniforms[builtin] = CzmBuiltins[builtin];
+        }
+    }
+    for ( var uniform in AutomaticUniforms) {
+        if (AutomaticUniforms.hasOwnProperty(uniform)) {
+            ShaderProgram._czmBuiltinsAndUniforms[uniform] = getAutomaticUniformDeclaration(AutomaticUniforms, uniform);
+        }
+    }
 
     function extractShaderVersion(source) {
         // This will fail if the first #version is actually in a comment.
@@ -739,8 +735,8 @@ define([
             });
 
             czmMatches.forEach(function(element, index, array) {
-                if (element !== currentNode.name && _czmBuiltinsAndUniforms.hasOwnProperty(element)) {
-                    var referencedNode = getDependencyNode(element, _czmBuiltinsAndUniforms[element], dependencyNodes);
+                if (element !== currentNode.name && ShaderProgram._czmBuiltinsAndUniforms.hasOwnProperty(element)) {
+                    var referencedNode = getDependencyNode(element, ShaderProgram._czmBuiltinsAndUniforms[element], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
 
@@ -802,7 +798,7 @@ define([
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes, _czmBuiltinsAndUniforms);
+        generateDependencies(root, dependencyNodes, ShaderProgram._czmBuiltinsAndUniforms);
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
