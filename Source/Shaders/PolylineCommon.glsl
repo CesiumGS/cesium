@@ -52,8 +52,6 @@ vec4 getPolylineWindowCoordinates(vec4 position, vec4 previous, vec4 next, float
     
     if (culledByNearPlane)
     {
-        //gl_Position = czm_projection * vec4(0.0, 0.0, 0.0, 1.0);
-        //return;
         return vec4(0.0, 0.0, 0.0, 1.0);
     }
     
