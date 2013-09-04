@@ -22,7 +22,7 @@ define([
         Matrix4,
         AutomaticUniforms,
         UniformDatatype,
-        ShaderBuiltins) {
+        CzmBuiltins) {
     "use strict";
     /*global console*/
 
@@ -566,6 +566,8 @@ define([
      * @alias ShaderProgram
      * @internalConstructor
      *
+     * @exception {DeveloperError} A circular dependency was found in the Cesium built-in functions/structs/constants.
+     *
      * @see Context#createShaderProgram
      * @see Context#getShaderCache
      */
@@ -702,8 +704,8 @@ define([
             });
 
             czmMatches.forEach(function(element, index, array) {
-                if (element !== currentNode.name && ShaderBuiltins.hasOwnProperty(element)) {
-                    var referencedNode = getDependencyNode(element, ShaderBuiltins[element], dependencyNodes);
+                if (element !== currentNode.name && CzmBuiltins.hasOwnProperty(element)) {
+                    var referencedNode = getDependencyNode(element, CzmBuiltins[element], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
 
@@ -765,7 +767,7 @@ define([
         // generate a dependency graph for builtin functions
         var dependencyNodes = [];
         var root = getDependencyNode('main', shaderSource, dependencyNodes);
-        generateDependencies(root, dependencyNodes, ShaderBuiltins);
+        generateDependencies(root, dependencyNodes, CzmBuiltins);
         sortDependencies(dependencyNodes);
 
         // Concatenate the source code for the function dependencies.
@@ -779,7 +781,11 @@ define([
     }
 
     function getFragmentShaderPrecision() {
-        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' + '  precision highp float; \n' + '#else \n' + '  precision mediump float; \n' + '#endif \n\n';
+        return '#ifdef GL_FRAGMENT_PRECISION_HIGH \n' +
+               '  precision highp float; \n' +
+               '#else \n' +
+               '  precision mediump float; \n' +
+               '#endif \n\n';
     }
 
     function getAutomaticUniformDeclaration(uniforms, uniform) {
