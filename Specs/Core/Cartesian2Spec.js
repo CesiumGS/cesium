@@ -81,22 +81,22 @@ defineSuite([
 
     it('getMaximumComponent works when X is greater', function() {
         var cartesian = new Cartesian2(2.0, 1.0);
-        expect(cartesian.getMaximumComponent()).toEqual(cartesian.x);
+        expect(Cartesian2.getMaximumComponent(cartesian)).toEqual(cartesian.x);
     });
 
     it('getMaximumComponent works when Y is greater', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
-        expect(cartesian.getMaximumComponent()).toEqual(cartesian.y);
+        expect(Cartesian2.getMaximumComponent(cartesian)).toEqual(cartesian.y);
     });
 
     it('getMinimumComponent works when X is lesser', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
-        expect(cartesian.getMinimumComponent()).toEqual(cartesian.x);
+        expect(Cartesian2.getMinimumComponent(cartesian)).toEqual(cartesian.x);
     });
 
-    it('getMaximumComponent works when Y is lesser', function() {
+    it('getMinimumComponent works when Y is lesser', function() {
         var cartesian = new Cartesian2(2.0, 1.0);
-        expect(cartesian.getMinimumComponent()).toEqual(cartesian.y);
+        expect(Cartesian2.getMinimumComponent(cartesian)).toEqual(cartesian.y);
     });
 
     it('magnitudeSquared', function() {

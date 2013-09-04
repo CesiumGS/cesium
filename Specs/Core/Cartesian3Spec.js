@@ -96,32 +96,32 @@ defineSuite([
 
     it('getMaximumComponent works when X is greater', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 0.0);
-        expect(cartesian.getMaximumComponent()).toEqual(cartesian.x);
+        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.x);
     });
 
     it('getMaximumComponent works when Y is greater', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 0.0);
-        expect(cartesian.getMaximumComponent()).toEqual(cartesian.y);
+        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.y);
     });
 
     it('getMaximumComponent works when Z is greater', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(cartesian.getMaximumComponent()).toEqual(cartesian.z);
+        expect(Cartesian3.getMaximumComponent(cartesian)).toEqual(cartesian.z);
     });
 
     it('getMinimumComponent works when X is lesser', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(cartesian.getMinimumComponent()).toEqual(cartesian.x);
+        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.x);
     });
 
-    it('getMaximumComponent works when Y is lesser', function() {
+    it('getMinimumComponent works when Y is lesser', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 3.0);
-        expect(cartesian.getMinimumComponent()).toEqual(cartesian.y);
+        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.y);
     });
 
-    it('getMaximumComponent works when Z is lesser', function() {
+    it('getMinimumComponent works when Z is lesser', function() {
         var cartesian = new Cartesian3(2.0, 1.0, 0.0);
-        expect(cartesian.getMinimumComponent()).toEqual(cartesian.z);
+        expect(Cartesian3.getMinimumComponent(cartesian)).toEqual(cartesian.z);
     });
 
     it('magnitudeSquared', function() {

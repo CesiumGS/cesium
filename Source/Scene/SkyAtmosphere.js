@@ -2,6 +2,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/Cartesian3',
         '../Core/EllipsoidGeometry',
         '../Core/destroyObject',
         '../Core/GeometryPipeline',
@@ -18,6 +19,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        Cartesian3,
         EllipsoidGeometry,
         destroyObject,
         GeometryPipeline,
@@ -70,7 +72,7 @@ define([
 
         this._fCameraHeight = undefined;
         this._fCameraHeight2 = undefined;
-        this._outerRadius = ellipsoid.getRadii().multiplyByScalar(1.025).getMaximumComponent();
+        this._outerRadius = Cartesian3.getMaximumComponent(ellipsoid.getRadii().multiplyByScalar(1.025));
         var innerRadius = ellipsoid.getMaximumRadius();
         var rayleighScaleDepth = 0.25;
 

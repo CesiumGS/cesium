@@ -686,26 +686,6 @@ define([
     Cartesian4.UNIT_W = freezeObject(new Cartesian4(0.0, 0.0, 0.0, 1.0));
 
     /**
-     * Computes the value of the maximum component for this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The value of the maximum component.
-     */
-    Cartesian4.prototype.getMaximumComponent = function() {
-        return Cartesian4.getMaximumComponent(this);
-    };
-
-    /**
-     * Computes the value of the minimum component for this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @returns {Number} The value of the minimum component.
-     */
-    Cartesian4.prototype.getMinimumComponent = function() {
-        return Cartesian4.getMinimumComponent(this);
-    };
-
-    /**
      * Duplicates this Cartesian4 instance.
      * @memberof Cartesian4
      *

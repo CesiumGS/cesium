@@ -659,26 +659,6 @@ define([
     Cartesian2.UNIT_Y = freezeObject(new Cartesian2(0.0, 1.0));
 
     /**
-     * Computes the value of the maximum component for this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @returns {Number} The value of the maximum component.
-     */
-    Cartesian2.prototype.getMaximumComponent = function() {
-        return Cartesian2.getMaximumComponent(this);
-    };
-
-    /**
-     * Computes the value of the minimum component for this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @returns {Number} The value of the minimum component.
-     */
-    Cartesian2.prototype.getMinimumComponent = function() {
-        return Cartesian2.getMinimumComponent(this);
-    };
-
-    /**
      * Duplicates this Cartesian2 instance.
      * @memberof Cartesian2
      *
