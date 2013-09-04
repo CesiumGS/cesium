@@ -762,7 +762,8 @@ require(['Cesium'], function(Cesium) {
         geometryInstances : new Cesium.GeometryInstance({
             geometry : new Cesium.PolylineGeometry({
                 positions : positions,
-                width : 10.0
+                width : 10.0,
+                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
             })
         }),
         appearance : new Cesium.PolylineMaterialAppearance({

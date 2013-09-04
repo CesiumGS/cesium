@@ -16,7 +16,39 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for {@link GeometryInstance} instances with color attributes and {@link PolylineGeometry}.
+     * This allows several geometry instances, each with a different color, to
+     * be drawn with the same {@link Primitive} as shown in the second example below.
+     *
+     * @alias PolylineColorAppearance
+     * @constructor
+     *
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineColorAppearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PolylineColorAppearance#renderState} has backface culling enabled.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
+     * @example
+     * // A solid white line segment
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *     geometry : new PolylineGeometry({
+     *       positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(0.0, 0.0),
+     *         Cartographic.fromDegrees(5.0, 0.0)
+     *       ]),
+     *       width : 10.0,
+     *       vertexFormat : PolylineColorApperance.VERTEX_FORMAT
+     *     }),
+     *     attributes : {
+     *       color : Cesium.ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 1.0, 1.0))
+     *     }
+     *   }),
+     *   appearance : new PolylineColorAppearance({
+     *     translucent : false
+     *   })
+     * }));
      */
     var PolylineColorAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

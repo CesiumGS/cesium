@@ -20,7 +20,36 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * An appearance for {@link PolylineGeometry} that supports shading with materials.
+     *
+     * @alias PolylineMaterialAppearance
+     * @constructor
+     *
+     * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
+     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PolylineMaterialAppearance#renderState} has backface culling enabled.
+     * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
+     * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
+     * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
+     * @param {RenderState} [options.renderState=undefined] Optional render state to override the default render state.
+     *
+     * @example
+     * var primitive = new Primitive({
+     *   geometryInstances : new GeometryInstance({
+     *     geometry : new PolylineGeometry({
+     *       positions : ellipsoid.cartographicArrayToCartesianArray([
+     *         Cartographic.fromDegrees(0.0, 0.0),
+     *         Cartographic.fromDegrees(5.0, 0.0)
+     *       ]),
+     *       width : 10.0,
+     *       vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT
+     *     })
+     *   }),
+     *   appearance : new PolylineMaterialAppearance({
+     *     material : Material.fromType(scene.getContext(), 'Color')
+     *   })
+     * }));
+     *
+     * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
      */
     var PolylineMaterialAppearance = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

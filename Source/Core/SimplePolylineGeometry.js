@@ -30,11 +30,11 @@ define([
      * @alias SimplePolylineGeometry
      * @constructor
      *
-     * @param {Array} [options.positions] An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
-     * @see SimplePolylineGeometry.createGeometry
+     * @see SimplePolylineGeometry#createGeometry
      *
      * @example
      * // A polyline with two connected line segments

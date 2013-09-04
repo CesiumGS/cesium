@@ -30,7 +30,32 @@ define([
     "use strict";
 
     /**
-     * DOC_TBA
+     * A description of a polyline modeled as a line strip; the first two positions define a line segment,
+     * and each additional position defines a line segment from the previous position. The polyline is capable of
+     * displaying with a material.
+     *
+     * @alias PolylineGeometry
+     * @constructor
+     *
+     * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
+     * @param {Number} options.width The width in pixels.
+     *
+     * @exception {DeveloperError} At least two positions are required.
+     * @exception {DeveloperError} width is required and must be greater than or equal to one.
+     *
+     * @see PolylineGeometry#createGeometry
+     *
+     * @example
+     * // A polyline with two connected line segments
+     * var polyline = new PolylineGeometry({
+     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+     *     Cartographic.fromDegrees(0.0, 0.0),
+     *     Cartographic.fromDegrees(5.0, 0.0),
+     *     Cartographic.fromDegrees(5.0, 5.0)
+     *   ]),
+     *   width : 10.0
+     * });
+     * var geometry = PolylineGeometry.createGeometry(polyline);
      */
     var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -56,7 +81,10 @@ define([
     var scratchPrevPosition = new Cartesian3();
     var scratchNextPosition = new Cartesian3();
     /**
-     * DOC_TBA
+     * Computes the geometric representation of a polyline, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {PolylineGeometry} polylineGeometry A description of the polyline.
+     * @returns {Geometry} The computed vertices and indices.
      */
     PolylineGeometry.createGeometry = function(polylineGeometry) {
         var width = polylineGeometry._width;
