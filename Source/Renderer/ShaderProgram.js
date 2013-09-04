@@ -649,11 +649,11 @@ define([
             }
         }
 
-        if (dependencyNode === undefined) {
+        if (!defined(dependencyNode)) {
             // strip doc comments so we don't accidentally try to determine a dependency for something found
             // in a comment
             var commentBlocks = glslSource.match(/\/\*\*[\s\S]*?\*\//gm);
-            if (commentBlocks !== undefined && commentBlocks !== null) {
+            if (defined(commentBlocks) && commentBlocks !== null) {
                 for (i = 0; i < commentBlocks.length; ++i) {
                     var commentBlock = commentBlocks[i];
 
@@ -694,17 +694,23 @@ define([
         currentNode.evaluated = true;
 
         // identify all dependencies that are referenced from this glsl source code
-        for ( var name in ShaderBuiltins) {
-            if (currentNode.name !== name && ShaderBuiltins.hasOwnProperty(name)) {
-                if (currentNode.glslSource.indexOf(name) !== -1) {
-                    var referencedNode = getDependencyNode(name, ShaderBuiltins[name], dependencyNodes);
+        var czmMatches = currentNode.glslSource.match(/\bczm_[a-zA-Z0-9_]*/g);
+        if (defined(czmMatches) && czmMatches !== null) {
+            // remove duplicates
+            czmMatches = czmMatches.filter(function(elem, pos) {
+                return czmMatches.indexOf(elem) === pos;
+            });
+
+            czmMatches.forEach(function(element, index, array) {
+                if (element !== currentNode.name && ShaderBuiltins.hasOwnProperty(element)) {
+                    var referencedNode = getDependencyNode(element, ShaderBuiltins[element], dependencyNodes);
                     currentNode.dependsOn.push(referencedNode);
                     referencedNode.requiredBy.push(currentNode);
 
                     // recursive call to find any dependencies of the new node
                     generateDependencies(referencedNode, dependencyNodes);
                 }
-            }
+            });
         }
     }
 
