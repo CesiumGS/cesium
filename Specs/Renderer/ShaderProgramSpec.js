@@ -38,19 +38,19 @@ defineSuite([
     var va;
 
     var injectedTestFunctions = {
-            czm_circularDependency1 : 'void czm_circularDependency1() { czm_circularDependency2(); }',
-            czm_circularDependency2 : 'void czm_circularDependency2() { czm_circularDependency1(); }',
-            czm_testFunction3 : 'void czm_testFunction3(vec4 color) { czm_testFunction2(color); }',
-            czm_testFunction2 : 'void czm_testFunction2(vec4 color) { czm_testFunction1(color); }',
-            czm_testFunction1 : 'void czm_testFunction1(vec4 color) { gl_FragColor = color; }',
-            czm_testDiamondDependency1 : 'vec4 czm_testDiamondDependency1(vec4 color) { return czm_testAddAlpha(color); }',
-            czm_testDiamondDependency2 : 'vec4 czm_testDiamondDependency2(vec4 color) { return czm_testAddAlpha(color); }',
-            czm_testAddAlpha : 'vec4 czm_testAddAlpha(vec4 color) { color.a = clamp(color.a + 0.1, 0.0, 1.0); return color; }',
-            czm_testAddRed : 'vec4 czm_testAddRed(vec4 color) { color.r = clamp(color.r + 0.1, 0.0, 1.0); return color; }',
-            czm_testAddGreen : 'vec4 czm_testAddGreen(vec4 color) { color.g = clamp(color.g + 0.1, 0.0, 1.0); return color; }',
-            czm_testAddRedGreenAlpha : 'vec4 czm_testAddRedGreenAlpha(vec4 color) { color = czm_testAddRed(color); color = czm_testAddGreen(color); color = czm_testAddAlpha(color); return color; }',
-            czm_testFunction4 : 'void czm_testFunction4(vec4 color) { color = czm_testAddAlpha(color); color = czm_testAddRedGreenAlpha(color); czm_testFunction3(color); }',
-            czm_testFunctionWithComment : '/**\n czm_circularDependency1()  \n*/\nvoid czm_testFunctionWithComment(vec4 color) { czm_testFunction1(color); }'
+        czm_circularDependency1 : 'void czm_circularDependency1() { czm_circularDependency2(); }',
+        czm_circularDependency2 : 'void czm_circularDependency2() { czm_circularDependency1(); }',
+        czm_testFunction3 : 'void czm_testFunction3(vec4 color) { czm_testFunction2(color); }',
+        czm_testFunction2 : 'void czm_testFunction2(vec4 color) { czm_testFunction1(color); }',
+        czm_testFunction1 : 'void czm_testFunction1(vec4 color) { gl_FragColor = color; }',
+        czm_testDiamondDependency1 : 'vec4 czm_testDiamondDependency1(vec4 color) { return czm_testAddAlpha(color); }',
+        czm_testDiamondDependency2 : 'vec4 czm_testDiamondDependency2(vec4 color) { return czm_testAddAlpha(color); }',
+        czm_testAddAlpha : 'vec4 czm_testAddAlpha(vec4 color) { color.a = clamp(color.a + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddRed : 'vec4 czm_testAddRed(vec4 color) { color.r = clamp(color.r + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddGreen : 'vec4 czm_testAddGreen(vec4 color) { color.g = clamp(color.g + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddRedGreenAlpha : 'vec4 czm_testAddRedGreenAlpha(vec4 color) { color = czm_testAddRed(color); color = czm_testAddGreen(color); color = czm_testAddAlpha(color); return color; }',
+        czm_testFunction4 : 'void czm_testFunction4(vec4 color) { color = czm_testAddAlpha(color); color = czm_testAddRedGreenAlpha(color); czm_testFunction3(color); }',
+        czm_testFunctionWithComment : '/**\n czm_circularDependency1()  \n*/\nvoid czm_testFunctionWithComment(vec4 color) { czm_testFunction1(color); }'
     };
 
     beforeAll(function() {
