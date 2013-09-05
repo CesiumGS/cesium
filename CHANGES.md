@@ -10,6 +10,8 @@ Beta Releases
 
 ### b21 - 2013-10-01
 * Added `CorridorOutlineGeometry`.
+* Improved runtime generation of GLSL shaders.
+* Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
 
 ### b20 - 2013-09-03
 
