@@ -123,19 +123,19 @@ define([
             incrementPercentage = 0.35;
         } else {
             var diff = Cartesian3.subtract(start, end);
-            altitude = Cartesian3.magnitude(Cartesian3.add(diff.multiplyByScalar(0.5), end));
-            var verticalDistance = Cartesian3.magnitude(camera.up.multiplyByScalar(Cartesian3.dot(diff, camera.up)));
-            var horizontalDistance = Cartesian3.magnitude(camera.right.multiplyByScalar(Cartesian3.dot(diff, camera.right)));
+            altitude = Cartesian3.magnitude(Cartesian3.add(Cartesian3.multiplyByScalar(diff, 0.5), end));
+            var verticalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.up, Cartesian3.dot(diff, camera.up)));
+            var horizontalDistance = Cartesian3.magnitude(Cartesian3.multiplyByScalar(camera.right, Cartesian3.dot(diff, camera.right)));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }
 
-        var aboveEnd = Cartesian3.normalize(end).multiplyByScalar(altitude);
-        var afterStart = Cartesian3.normalize(start).multiplyByScalar(altitude);
+        var aboveEnd = Cartesian3.multiplyByScalar(Cartesian3.normalize(end), altitude);
+        var afterStart = Cartesian3.multiplyByScalar(Cartesian3.normalize(start), altitude);
 
         var axis, angle, rotation, middle;
         if (Cartesian3.magnitude(end) > maxStartAlt && dot > 0.75) {
-            middle = Cartesian3.add(Cartesian3.subtract(start, end).multiplyByScalar(0.5), end);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
 
             points = [{
                 point : start
@@ -259,7 +259,7 @@ define([
 
         var middle;
         if (end.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.subtract(start, end).multiplyByScalar(0.5), end);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, end), 0.5), end);
 
             points = [{
                 point : start
@@ -269,7 +269,7 @@ define([
                 point : end
             }];
         } else if (start.z > maxStartAlt) {
-            middle = Cartesian3.add(Cartesian3.subtract(start, aboveEnd).multiplyByScalar(0.5), aboveEnd);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
 
             points = [{
                 point : start
@@ -291,7 +291,7 @@ define([
             var startCondition = distance - increment;
             for ( var i = startCondition; i > 0.0; i = i - increment) {
                 points.push({
-                    point : Cartesian3.add(v.multiplyByScalar(i), aboveEnd)
+                    point : Cartesian3.add(Cartesian3.multiplyByScalar(v, i), aboveEnd)
                 });
             }
 

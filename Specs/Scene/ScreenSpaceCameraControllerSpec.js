@@ -933,7 +933,7 @@ defineSuite([
         moveMouse(MouseButtons.LEFT, startPosition, endPosition);
         updateController(frameState);
 
-        expect(camera.position).toEqualEpsilon(axis.multiplyByScalar(Cartesian3.magnitude(camera.position)), CesiumMath.EPSILON8);
+        expect(camera.position).toEqualEpsilon(Cartesian3.multiplyByScalar(axis, Cartesian3.magnitude(camera.position)), CesiumMath.EPSILON8);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(axis), CesiumMath.EPSILON15);
         expect(Cartesian3.dot(camera.up, axis)).toBeLessThan(CesiumMath.EPSILON2);
         expect(camera.right).toEqualEpsilon(Cartesian3.cross(camera.direction, camera.up), CesiumMath.EPSILON15);

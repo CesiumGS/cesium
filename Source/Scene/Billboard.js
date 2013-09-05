@@ -815,7 +815,7 @@ define([
 
         // Apply pixel offset
         var uniformState = context.getUniformState();
-        var po = pixelOffset.multiplyByScalar(uniformState.getHighResolutionSnapScale());
+        var po = Cartesian2.multiplyByScalar(pixelOffset, uniformState.getHighResolutionSnapScale());
         positionWC.x += po.x;
         positionWC.y += po.y;
 

@@ -208,7 +208,7 @@ defineSuite([
         var cartesian = new Cartesian2(1.0, 2.0);
         var scalar = 2;
         var expectedResult = new Cartesian2(2.0, 4.0);
-        var result = cartesian.multiplyByScalar(scalar);
+        var result = Cartesian2.multiplyByScalar(cartesian, scalar);
         expect(result).toEqual(expectedResult);
     });
 
@@ -217,18 +217,9 @@ defineSuite([
         var result = new Cartesian2();
         var scalar = 2;
         var expectedResult = new Cartesian2(2, 4);
-        var returnedResult = cartesian.multiplyByScalar(scalar, result);
+        var returnedResult = Cartesian2.multiplyByScalar(cartesian, scalar, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('multiplyByScalar with "this" result parameter', function() {
-        var cartesian = new Cartesian2(1, 2);
-        var scalar = 2;
-        var expectedResult = new Cartesian2(2, 4);
-        var returnedResult = cartesian.multiplyByScalar(scalar, cartesian);
-        expect(cartesian).toBe(returnedResult);
-        expect(cartesian).toEqual(expectedResult);
     });
 
     it('divideByScalar without a result parameter', function() {

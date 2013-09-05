@@ -231,7 +231,7 @@ define([
         var direction = directionProperty.getValue(time, positions[1]);
         var length = lengthProperty.getValue(time);
         if (defined(position) && defined(direction) && defined(length)) {
-            Cartesian3.add(position, Cartesian3.normalize(direction, direction).multiplyByScalar(length, direction), direction);
+            Cartesian3.add(position, Cartesian3.multiplyByScalar(Cartesian3.normalize(direction, direction), length, direction), direction);
             polyline.setPositions(positions);
         }
 

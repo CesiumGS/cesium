@@ -60,8 +60,7 @@ define([
             var controlPoint1 = Cartesian3.clone(controlPoints[1].point);
             var controlPoint2 = Cartesian3.clone(controlPoints[2].point);
 
-            this._ti = Cartesian3.subtract(Cartesian3.subtract(controlPoint1.multiplyByScalar(2.0), controlPoint2), controlPoint0)
-                           .multiplyByScalar(0.5);
+            this._ti = Cartesian3.multiplyByScalar(Cartesian3.subtract(Cartesian3.subtract(Cartesian3.multiplyByScalar(controlPoint1, 2.0), controlPoint2), controlPoint0), 0.5);
         }
 
         if (defined(lastTangent)) {
@@ -73,8 +72,7 @@ define([
             var controlPointn1 = Cartesian3.clone(controlPoints[n - 1].point);
             var controlPointn2 = Cartesian3.clone(controlPoints[n - 2].point);
 
-            this._to = Cartesian3.add(Cartesian3.subtract(controlPointn0, controlPointn1.multiplyByScalar(2.0)), controlPointn2)
-                           .multiplyByScalar(0.5);
+            this._to = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.subtract(controlPointn0, Cartesian3.multiplyByScalar(controlPointn1, 2.0)), controlPointn2), 0.5);
         }
     };
 
@@ -201,12 +199,12 @@ define([
             p0 = this._points[0].point;
             p1 = this._points[1].point;
             p2 = this._ti;
-            p3 = Cartesian3.subtract(this._points[2].point, p0).multiplyByScalar(0.5);
+            p3 = Cartesian3.multiplyByScalar(Cartesian3.subtract(this._points[2].point, p0), 0.5);
             coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else if (i === this._points.length - 2) {
             p0 = this._points[i].point;
             p1 = this._points[i + 1].point;
-            p2 = Cartesian3.subtract(p1, this._points[i - 1].point).multiplyByScalar(0.5);
+            p2 = Cartesian3.multiplyByScalar(Cartesian3.subtract(p1, this._points[i - 1].point), 0.5);
             p3 = this._to;
             coefs = HermiteSpline.hermiteCoefficientMatrix.multiplyByPoint(timeVec);
         } else {
@@ -216,10 +214,10 @@ define([
             p3 = this._points[i + 2].point;
             coefs = CatmullRomSpline.catmullRomCoefficientMatrix.multiplyByPoint(timeVec);
         }
-        p0 = p0.multiplyByScalar(coefs.x);
-        p1 = p1.multiplyByScalar(coefs.y);
-        p2 = p2.multiplyByScalar(coefs.z);
-        p3 = p3.multiplyByScalar(coefs.w);
+        p0 = Cartesian3.multiplyByScalar(p0, coefs.x);
+        p1 = Cartesian3.multiplyByScalar(p1, coefs.y);
+        p2 = Cartesian3.multiplyByScalar(p2, coefs.z);
+        p3 = Cartesian3.multiplyByScalar(p3, coefs.w);
 
         return Cartesian3.add(Cartesian3.add(Cartesian3.add(p0, p1), p2), p3);
     };

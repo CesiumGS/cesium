@@ -443,8 +443,10 @@ define([
         var squaredNorm = x2 + y2 + z2;
         var ratio = Math.sqrt(1.0 / squaredNorm);
 
+        var intersection;
+
         // As an initial approximation, assume that the radial intersection is the projection point.
-        var intersection = Cartesian3.multiplyByScalar(cartesian, ratio, scaleToGeodeticSurfaceIntersection);
+        intersection = Cartesian3.multiplyByScalar(cartesian, ratio, scaleToGeodeticSurfaceIntersection);
 
         //* If the position is near the center, the iteration will not converge.
         if (squaredNorm < this._centerToleranceSquared) {

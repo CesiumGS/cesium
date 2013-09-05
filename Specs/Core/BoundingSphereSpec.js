@@ -377,7 +377,7 @@ defineSuite([
     });
 
     it('union result parameter is caller', function() {
-        var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X).multiplyByScalar(3.0), 3.0);
+        var bs1 = new BoundingSphere(Cartesian3.multiplyByScalar(Cartesian3.negate(Cartesian3.UNIT_X), 3.0), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 5.0);
         bs1.union(bs2, bs1);

@@ -295,7 +295,7 @@ define([
             return undefined;
         }
 
-        return scaledSpaceDirectionToPoint.multiplyByScalar(resultMagnitude, result);
+        return Cartesian3.multiplyByScalar(scaledSpaceDirectionToPoint, resultMagnitude, result);
     }
 
     var directionToPointScratch = new Cartesian3();

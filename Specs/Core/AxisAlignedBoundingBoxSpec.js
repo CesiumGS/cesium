@@ -132,7 +132,7 @@ defineSuite([
     });
 
     it('intersect works with box intersecting a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.UNIT_X.multiplyByScalar(2.0));
+        var box = new AxisAlignedBoundingBox(Cartesian3.ZERO, Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0));
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));

@@ -117,7 +117,7 @@ define([
             transform : transform
         };
 
-        position = Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)).multiplyByScalar(5.0 * maxRadii);
+        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
         direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
         var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         up = Cartesian3.cross(right, direction);
@@ -134,7 +134,7 @@ define([
             transform : transform
         };
 
-        position = Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)).multiplyByScalar(2.0 * maxRadii);
+        position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -2.0, 1.0)), 2.0 * maxRadii);
         direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
         right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
         up = Cartesian3.cross(right, direction);

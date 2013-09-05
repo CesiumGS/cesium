@@ -273,10 +273,10 @@ define([
         var wMagnitude = Math.sqrt(Cartesian3.magnitudeSquared(q) - 1.0);
 
         // Compute the center and offsets.
-        var center = qUnit.multiplyByScalar(1.0 / qMagnitude);
+        var center = Cartesian3.multiplyByScalar(qUnit, 1.0 / qMagnitude);
         var scalar = wMagnitude / qMagnitude;
-        var eastOffset = eUnit.multiplyByScalar(scalar);
-        var northOffset = nUnit.multiplyByScalar(scalar);
+        var eastOffset = Cartesian3.multiplyByScalar(eUnit, scalar);
+        var northOffset = Cartesian3.multiplyByScalar(nUnit, scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
         var upperLeft  = Cartesian3.subtract(Cartesian3.multiplyComponents(radii,      Cartesian3.add(center, northOffset)), eastOffset);
@@ -315,7 +315,7 @@ define([
         }
 
         var screenRight = center.add(right.multiplyByScalar(radius));
-        var screenUp = center.add(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)).multiplyByScalar(radius));
+        var screenUp = center.add(Cartesian3.multiplyByScalar(Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, right)), radius));
 
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, center, center);
         Transforms.pointToWindowCoordinates(viewProjMatrix, viewportTransformation, screenRight, screenRight);

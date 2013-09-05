@@ -62,8 +62,7 @@ defineSuite([
         var controlPoint1 = Cartesian3.clone(points[1].point);
         var controlPoint2 = Cartesian3.clone(points[2].point);
 
-        var start = Cartesian3.subtract(Cartesian3.subtract(controlPoint1.multiplyByScalar(2.0), controlPoint2), controlPoint0)
-                       .multiplyByScalar(0.5);
+        var start = Cartesian3.multiplyByScalar(Cartesian3.subtract(Cartesian3.subtract(Cartesian3.multiplyByScalar(controlPoint1, 2.0), controlPoint2), controlPoint0), 0.5);
 
         var n = points.length - 1;
 
@@ -72,8 +71,7 @@ defineSuite([
         var controlPointn2 = Cartesian3.clone(points[n - 2].point);
 
         
-        var end = Cartesian3.add(Cartesian3.subtract(controlPointn0, controlPointn1.multiplyByScalar(2.0)), controlPointn2)
-                       .multiplyByScalar(0.5);
+        var end = Cartesian3.multiplyByScalar(Cartesian3.add(Cartesian3.subtract(controlPointn0, Cartesian3.multiplyByScalar(controlPointn1, 2.0)), controlPointn2), 0.5);
 
 
         var crs = new CatmullRomSpline(points);
@@ -107,7 +105,7 @@ defineSuite([
 
         points[0].tangent = crs.getStartTangent();
         for ( var i = 1; i < points.length - 1; ++i) {
-            points[i].tangent = Cartesian3.subtract(points[i + 1].point, points[i - 1].point).multiplyByScalar(0.5);
+            points[i].tangent = Cartesian3.multiplyByScalar(Cartesian3.subtract(points[i + 1].point, points[i - 1].point), 0.5);
         }
         points[points.length - 1].tangent = crs.getEndTangent();
 

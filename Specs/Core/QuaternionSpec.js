@@ -35,7 +35,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = axis.multiplyByScalar(s);
+        var a = Cartesian3.multiplyByScalar(axis, s);
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle);
         expect(returnedResult).toEqual(expected);
@@ -46,7 +46,7 @@ defineSuite([
         var angle = CesiumMath.PI_OVER_TWO;
         var s = Math.sin(angle / 2.0);
         var c = Math.cos(angle / 2.0);
-        var a = axis.multiplyByScalar(s);
+        var a = Cartesian3.multiplyByScalar(axis, s);
         var result = new Quaternion();
         var expected = new Quaternion(a.x, a.y, a.z, c);
         var returnedResult = Quaternion.fromAxisAngle(axis, angle, result);

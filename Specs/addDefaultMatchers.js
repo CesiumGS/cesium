@@ -37,19 +37,26 @@ define([
 
         toEqualEpsilon : function(expected, epsilon) {
             function equalityTester(a, b) {
+                var to_run;
                 if (defined(a)) {
                     if (typeof a.equalsEpsilon === 'function') {
                         return a.equalsEpsilon(b, epsilon);
-                    } else if(typeof a.__proto__.constructor.equalsEpsilon === 'function') {
-                        return a.__proto__.constructor.equalsEpsilon(a, b, epsilon);
+                    } else if(a instanceof Object) {
+                        to_run = Object.getPrototypeOf(a).constructor.equalsEpsilon;
+                        if( typeof to_run === 'function') {
+                            return to_run(a, b, epsilon);
+                        }
                     }
                 }
                 
                 if (defined(b)) {
                     if (typeof b.equalsEpsilon === 'function') {
                         return b.equalsEpsilon(a, epsilon);
-                    } else if(typeof b.__proto__.constructor.equalsEpsilon === 'function') {
-                        return b.__proto__.constructor.equalsEpsilon(b, a, epsilon);
+                    } else if(b instanceof Object) {
+                        to_run = Object.getPrototypeOf(b).constructor.equalsEpsilon;
+                        if( typeof to_run === 'function') {
+                            return to_run(b, a, epsilon);
+                        }
                     }
                 }
 

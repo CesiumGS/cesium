@@ -758,7 +758,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.UNIT_Z;
         camera.right = Cartesian3.cross(camera.direction, camera.up);
@@ -814,7 +814,7 @@ defineSuite([
         var projection = new GeographicProjection(ellipsoid);
         var maxRadii = ellipsoid.getMaximumRadius();
 
-        camera.position = Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)).multiplyByScalar(5.0 * maxRadii);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)), 5.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, camera.position));
         camera.right = Cartesian3.normalize(Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z));
         camera.up = Cartesian3.cross(camera.right, camera.direction);
@@ -1076,7 +1076,7 @@ defineSuite([
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
-        camera.position = Cartesian3.UNIT_Z.multiplyByScalar(maxRadii * 5.0);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, maxRadii * 5.0);
         camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,
@@ -1126,7 +1126,7 @@ defineSuite([
         frustum.near = 100;
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
-        camera.position = Cartesian3.UNIT_Z.multiplyByScalar(maxRadii * 5.0);
+        camera.position = Cartesian3.multiplyByScalar(Cartesian3.UNIT_Z, maxRadii * 5.0);
         camera.transform = new Matrix4(0.0, 0.0, 1.0, 0.0,
                 1.0, 0.0, 0.0, 0.0,
                 0.0, 1.0, 0.0, 0.0,

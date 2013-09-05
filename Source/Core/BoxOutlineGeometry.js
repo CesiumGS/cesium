@@ -95,7 +95,7 @@ define([
             throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
         }
 
-        var corner = dimensions.multiplyByScalar(0.5);
+        var corner = Cartesian3.multiplyByScalar(dimensions, 0.5);
         var min = Cartesian3.negate(corner);
         var max = corner;
 

@@ -1281,7 +1281,7 @@ define([
             var n = Cartesian3.fromArray(normals, i03, normalScratch);
             var t = Cartesian3.fromArray(tan1, i03, tScratch);
             var scalar = Cartesian3.dot(n, t);
-            n.multiplyByScalar(scalar, normalScale);
+            Cartesian3.multiplyByScalar(n, scalar, normalScale);
             Cartesian3.normalize(Cartesian3.subtract(t, normalScale, t), t);
 
             tangentValues[i03] = t.x;
@@ -1491,7 +1491,7 @@ define([
 
     var c3 = new Cartesian3();
     function getXZIntersectionOffsetPoints(p, p1, u1, v1) {
-        Cartesian3.add(p, Cartesian3.subtract(p1, p, c3).multiplyByScalar(p.y/(p.y-p1.y), c3), u1);
+        Cartesian3.add(p, Cartesian3.multiplyByScalar(Cartesian3.subtract(p1, p, c3), p.y/(p.y-p1.y), c3), u1);
         Cartesian3.clone(u1, v1);
         offsetPointFromXZPlane(u1, true);
         offsetPointFromXZPlane(v1, false);

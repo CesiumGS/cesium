@@ -236,7 +236,7 @@ defineSuite([
                 fs += '}';
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
-                var maximumCorner = dimensions.multiplyByScalar(0.5);
+                var maximumCorner = Cartesian3.multiplyByScalar(dimensions, 0.5);
                 var minimumCorner = Cartesian3.negate(maximumCorner);
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
                     minimumCorner: minimumCorner,

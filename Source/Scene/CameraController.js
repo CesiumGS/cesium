@@ -1275,7 +1275,7 @@ define([
 
         var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
         var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
-        var center = Cartesian3.add(position, direction.multiplyByScalar(scalar));
+        var center = Cartesian3.add(position, Cartesian3.multiplyByScalar(direction, scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
         var centerWC = camera.transform.multiplyByVector(center);
 

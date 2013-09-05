@@ -763,20 +763,6 @@ define([
     };
 
     /**
-     * Multiplies this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian3
-     *
-     * @param {Number} scalar The scalar to multiply with.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian3.prototype.multiplyByScalar = function(scalar, result) {
-        return Cartesian3.multiplyByScalar(this, scalar, result);
-    };
-
-    /**
      * Divides this Cartesian componentwise by the provided scalar.
      * @memberof Cartesian3
      *

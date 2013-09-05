@@ -710,20 +710,6 @@ define([
     };
 
     /**
-     * Multiplies this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
-     *
-     * @param {Number} scalar The scalar to multiply with.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian4.prototype.multiplyByScalar = function(scalar, result) {
-        return Cartesian4.multiplyByScalar(this, scalar, result);
-    };
-
-    /**
      * Divides this Cartesian componentwise by the provided scalar.
      * @memberof Cartesian4
      *

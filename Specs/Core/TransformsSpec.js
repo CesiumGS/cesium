@@ -520,7 +520,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works at the center', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });
@@ -533,7 +533,7 @@ defineSuite([
 
     it('pointToWindowCoordinates works with a result parameter', function() {
         var view = Matrix4.fromCamera({
-            eye : Cartesian3.UNIT_X.multiplyByScalar(2.0),
+            eye : Cartesian3.multiplyByScalar(Cartesian3.UNIT_X, 2.0),
             target : Cartesian3.ZERO,
             up : Cartesian3.UNIT_Z
         });

@@ -37,10 +37,10 @@ define([
 
             temp = -Math.cos(azimuth);
 
-            rotAxis = eastVec.multiplyByScalar(temp);
+            rotAxis = Cartesian3.multiplyByScalar(eastVec, temp);
 
             temp = Math.sin(azimuth);
-            tempVec = northVec.multiplyByScalar(temp);
+            tempVec = Cartesian3.multiplyByScalar(northVec, temp);
 
             rotAxis = Cartesian3.add(rotAxis, tempVec, rotAxis);
 
@@ -61,7 +61,7 @@ define([
 
             var tmpEllipsePts = rotMtx.multiplyByVector(unitPos);
             var unitCart = Cartesian3.normalize(tmpEllipsePts);
-            tmpEllipsePts = unitCart.multiplyByScalar(mag);
+            tmpEllipsePts = Cartesian3.multiplyByScalar(unitCart, mag);
             ellipsePts[ellipsePtsIndex] = tmpEllipsePts;
         }
     }
@@ -193,7 +193,7 @@ define([
             var tempVec = new Cartesian3(0.0, 0.0, 1);
             var temp = 1.0 / mag;
 
-            var unitPos = surfPos.multiplyByScalar(temp);
+            var unitPos = Cartesian3.multiplyByScalar(surfPos, temp);
             var eastVec = Cartesian3.normalize(Cartesian3.cross(tempVec, surfPos));
             var northVec = Cartesian3.cross(unitPos, eastVec);
 

@@ -83,23 +83,23 @@ define([
         d.length = x.length = right.length;
 
         c[0] = upper[0] / diagonal[0];
-        d[0] = right[0].multiplyByScalar(1.0 / diagonal[0]);
+        d[0] = Cartesian3.multiplyByScalar(right[0], 1.0 / diagonal[0]);
 
         var scalar, i = 1;
         for (; i < c.length; ++i) {
             scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
             c[i] = upper[i] * scalar;
-            d[i] = Cartesian3.subtract(right[i], d[i - 1].multiplyByScalar(lower[i - 1]));
-            d[i] = d[i].multiplyByScalar(scalar);
+            d[i] = Cartesian3.subtract(right[i], Cartesian3.multiplyByScalar(d[i - 1], lower[i - 1]));
+            d[i] = Cartesian3.multiplyByScalar(d[i], scalar);
         }
 
         scalar = 1.0 / (diagonal[i] - c[i - 1] * lower[i - 1]);
-        d[i] = Cartesian3.subtract(right[i], d[i - 1].multiplyByScalar(lower[i - 1]));
-        d[i] = d[i].multiplyByScalar(scalar);
+        d[i] = Cartesian3.subtract(right[i], Cartesian3.multiplyByScalar(d[i - 1], lower[i - 1]));
+        d[i] = Cartesian3.multiplyByScalar(d[i], scalar);
 
         x[x.length - 1] = d[d.length - 1];
         for (i = x.length - 2; i >= 0; --i) {
-            x[i] = Cartesian3.subtract(d[i], x[i + 1].multiplyByScalar(c[i]));
+            x[i] = Cartesian3.subtract(d[i], Cartesian3.multiplyByScalar(x[i + 1], c[i]));
         }
 
         return x;
