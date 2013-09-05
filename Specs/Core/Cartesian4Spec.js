@@ -396,12 +396,12 @@ defineSuite([
 
     it('equals', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
-        expect(cartesian.equals(new Cartesian4(1.0, 2.0, 3.0, 4.0))).toEqual(true);
-        expect(cartesian.equals(new Cartesian4(2.0, 2.0, 3.0, 4.0))).toEqual(false);
-        expect(cartesian.equals(new Cartesian4(2.0, 1.0, 3.0, 4.0))).toEqual(false);
-        expect(cartesian.equals(new Cartesian4(1.0, 2.0, 4.0, 4.0))).toEqual(false);
-        expect(cartesian.equals(new Cartesian4(1.0, 2.0, 3.0, 5.0))).toEqual(false);
-        expect(cartesian.equals(undefined)).toEqual(false);
+        expect(Cartesian4.equals(cartesian, new Cartesian4(1.0, 2.0, 3.0, 4.0))).toEqual(true);
+        expect(Cartesian4.equals(cartesian, new Cartesian4(2.0, 2.0, 3.0, 4.0))).toEqual(false);
+        expect(Cartesian4.equals(cartesian, new Cartesian4(2.0, 1.0, 3.0, 4.0))).toEqual(false);
+        expect(Cartesian4.equals(cartesian, new Cartesian4(1.0, 2.0, 4.0, 4.0))).toEqual(false);
+        expect(Cartesian4.equals(cartesian, new Cartesian4(1.0, 2.0, 3.0, 5.0))).toEqual(false);
+        expect(Cartesian4.equals(cartesian, undefined)).toEqual(false);
     });
 
     it('equalsEpsilon', function() {

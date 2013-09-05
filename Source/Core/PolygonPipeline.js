@@ -116,7 +116,7 @@ define([
      */
     function isVertex(positions, point) {
         for ( var i = 0; i < positions.length; i++) {
-            if (point.equals(positions[i])) {
+            if (Cartesian2.equals(point, positions[i])) {
                 return i;
             }
         }
@@ -266,7 +266,7 @@ define([
             var ring = innerRings[i];
 
             // Ensure each hole's first and last points are the same.
-            if (!(ring[0]).equals(ring[ring.length - 1])) {
+            if (!Cartesian3.equals(ring[0], ring[ring.length - 1])) {
                 ring.push(ring[0]);
             }
 
@@ -358,7 +358,7 @@ define([
     function cleanCut(a1i, a2i, pArray) {
         return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
                 !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !pArray[a1i].position.equals(pArray[a2i].position);
+                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position);
     }
 
     /**
@@ -624,7 +624,7 @@ define([
             }
 
             // If there's a duplicate point, there's no intersection here.
-            if (a1.equals(b1) || a2.equals(b2) || a1.equals(b2) || a2.equals(b1)) {
+            if (Cartesian2.equals(a1, b1) || Cartesian2.equals(a2, b2) || Cartesian2.equals(a1, b2) || Cartesian2.equals(a2, b1)) {
                 continue;
             }
 
@@ -651,7 +651,7 @@ define([
             var intersection = new Cartesian2(intX, intY);
 
             // If intersection is on an endpoint, count no intersection
-            if (intersection.equals(a1) || intersection.equals(a2) || intersection.equals(b1) || intersection.equals(b2)) {
+            if (Cartesian2.equals(intersection, a1) || Cartesian2.equals(intersection, a2) || Cartesian2.equals(intersection, b1) || Cartesian2.equals(intersection, b2)) {
                 continue;
             }
 

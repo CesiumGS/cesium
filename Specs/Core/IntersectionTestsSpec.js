@@ -344,7 +344,7 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(3 + 6);
-        expect(triangles.positions[triangles.indices[0]].equals(p0)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p0)).toEqual(true);
     });
 
     it('triangle intersects plane with p1 behind', function() {
@@ -356,7 +356,7 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(3 + 6);
-        expect(triangles.positions[triangles.indices[0]].equals(p1)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p1)).toEqual(true);
     });
 
     it('triangle intersects plane with p2 behind', function() {
@@ -368,7 +368,7 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(3 + 6);
-        expect(triangles.positions[triangles.indices[0]].equals(p2)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p2)).toEqual(true);
     });
 
     it('triangle intersects plane with p0 in front', function() {
@@ -380,8 +380,8 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(6 + 3);
-        expect(triangles.positions[triangles.indices[0]].equals(p1)).toEqual(true);  // p0 is in front
-        expect(triangles.positions[triangles.indices[1]].equals(p2)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p1)).toEqual(true);  // p0 is in front
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[1]], p2)).toEqual(true);
     });
 
     it('triangle intersects plane with p1 in front', function() {
@@ -393,8 +393,8 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(6 + 3);
-        expect(triangles.positions[triangles.indices[0]].equals(p2)).toEqual(true);  // p1 is in front
-        expect(triangles.positions[triangles.indices[1]].equals(p0)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p2)).toEqual(true);  // p1 is in front
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[1]], p0)).toEqual(true);
     });
 
     it('triangle intersects plane with p2 in front', function() {
@@ -406,8 +406,8 @@ defineSuite([
         var triangles = IntersectionTests.trianglePlaneIntersection(p0, p1, p2, plane);
         expect(triangles).toBeDefined();
         expect(triangles.indices.length).toEqual(6 + 3);
-        expect(triangles.positions[triangles.indices[0]].equals(p0)).toEqual(true);  // p2 is in front
-        expect(triangles.positions[triangles.indices[1]].equals(p1)).toEqual(true);
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[0]], p0), true);  // p2 is in front
+        expect(Cartesian3.equals(triangles.positions[triangles.indices[1]], p1)).toEqual(true);
     });
 
     it('trianglePlaneIntersection throws without p0', function() {

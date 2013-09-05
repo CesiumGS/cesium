@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Scene/EllipsoidPrimitive',
@@ -14,6 +15,7 @@ define([
         defined,
         DeveloperError,
         destroyObject,
+        Cartesian3,
         Matrix3,
         Matrix4,
         EllipsoidPrimitive,
@@ -247,8 +249,8 @@ define([
 
         if (defined(position) &&
             defined(orientation) &&
-            (!position.equals(ellipsoid._visualizerPosition) ||
-             !orientation.equals(ellipsoid._visualizerOrientation))) {
+            (!Cartesian3.equals(position, ellipsoid._visualizerPosition) ||
+             !Cartesian3.equals(orientation, ellipsoid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, ellipsoid.modelMatrix);
             ellipsoid._visualizerPosition = position.clone(ellipsoid._visualizerPosition);
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);

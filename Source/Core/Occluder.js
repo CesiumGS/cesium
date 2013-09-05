@@ -320,7 +320,7 @@ define([
         var occluderRadius = occluderBoundingSphere.radius;
         var numPositions = positions.length;
 
-        if (occluderPosition.equals(occludeePosition)) {
+        if (Cartesian3.equals(occluderPosition, occludeePosition)) {
             throw new DeveloperError('occludeePosition must be different than occluderBoundingSphere.center');
         }
 
@@ -381,7 +381,7 @@ define([
 
         // TODO: get correct ellipsoid center
         var ellipsoidCenter = Cartesian3.ZERO;
-        if (!ellipsoidCenter.equals(bs.center)) {
+        if (!Cartesian3.equals(ellipsoidCenter, bs.center)) {
             return Occluder.getOccludeePoint(new BoundingSphere(ellipsoidCenter, ellipsoid.getMinimumRadius()), bs.center, positions);
         }
 

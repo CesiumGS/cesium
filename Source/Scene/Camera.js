@@ -159,31 +159,31 @@ define([
 
     function update(camera) {
         var position = camera._position;
-        var positionChanged = !position.equals(camera.position);
+        var positionChanged = !Cartesian3.equals(position, camera.position);
         if (positionChanged) {
             position = camera._position = camera.position.clone();
         }
 
         var direction = camera._direction;
-        var directionChanged = !direction.equals(camera.direction);
+        var directionChanged = !Cartesian3.equals(direction, camera.direction);
         if (directionChanged) {
             direction = camera._direction = camera.direction.clone();
         }
 
         var up = camera._up;
-        var upChanged = !up.equals(camera.up);
+        var upChanged = !Cartesian3.equals(up, camera.up);
         if (upChanged) {
             up = camera._up = camera.up.clone();
         }
 
         var right = camera._right;
-        var rightChanged = !right.equals(camera.right);
+        var rightChanged = !Cartesian3.equals(right, camera.right);
         if (rightChanged) {
             right = camera._right = camera.right.clone();
         }
 
         var transform = camera._transform;
-        var transformChanged = !transform.equals(camera.transform);
+        var transformChanged = !Matrix4.equals(transform, camera.transform);
         if (transformChanged) {
             transform = camera._transform = camera.transform.clone();
 

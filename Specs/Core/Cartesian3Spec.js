@@ -417,11 +417,11 @@ defineSuite([
 
     it('equals', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        expect(cartesian.equals(new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
-        expect(cartesian.equals(new Cartesian3(2.0, 2.0, 3.0))).toEqual(false);
-        expect(cartesian.equals(new Cartesian3(2.0, 1.0, 3.0))).toEqual(false);
-        expect(cartesian.equals(new Cartesian3(1.0, 2.0, 4.0))).toEqual(false);
-        expect(cartesian.equals(undefined)).toEqual(false);
+        expect(Cartesian3.equals(cartesian, new Cartesian3(1.0, 2.0, 3.0))).toEqual(true);
+        expect(Cartesian3.equals(cartesian, new Cartesian3(2.0, 2.0, 3.0))).toEqual(false);
+        expect(Cartesian3.equals(cartesian, new Cartesian3(2.0, 1.0, 3.0))).toEqual(false);
+        expect(Cartesian3.equals(cartesian, new Cartesian3(1.0, 2.0, 4.0))).toEqual(false);
+        expect(Cartesian3.equals(cartesian, undefined)).toEqual(false);
     });
 
     it('equalsEpsilon', function() {

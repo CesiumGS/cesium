@@ -844,18 +844,6 @@ define([
     };
 
     /**
-     * Compares this Cartesian against the provided Cartesian componentwise and returns
-     * <code>true</code> if they are equal, <code>false</code> otherwise.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} [right] The right hand side Cartesian.
-     * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
-     */
-    Cartesian3.prototype.equals = function(right) {
-        return Cartesian3.equals(this, right);
-    };
-
-    /**
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *

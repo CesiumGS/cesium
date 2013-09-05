@@ -4,6 +4,7 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/destroyObject',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -15,6 +16,7 @@ define([
          defined,
          DeveloperError,
          destroyObject,
+         Cartesian3,
          Color,
          Matrix3,
          Matrix4,
@@ -259,8 +261,8 @@ define([
 
         if (defined(position) &&
             defined(orientation) &&
-            (!position.equals(pyramid._visualizerPosition) ||
-             !orientation.equals(pyramid._visualizerOrientation))) {
+            (!Cartesian3.equals(position, pyramid._visualizerPosition) ||
+             !Cartesian3.equals(orientation, pyramid._visualizerOrientation))) {
             Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, pyramid.modelMatrix);
             position.clone(pyramid._visualizerPosition);
             orientation.clone(pyramid._visualizerOrientation);
