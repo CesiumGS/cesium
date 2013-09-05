@@ -281,7 +281,7 @@ define([
         magnitude = Math.max(1.0, magnitude);
 
         var cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
-        var sinAlpha = Cartesian3.magnitude(direction.cross(scaledSpaceDirectionToPoint));
+        var sinAlpha = Cartesian3.magnitude(Cartesian3.cross(direction, scaledSpaceDirectionToPoint));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;
 

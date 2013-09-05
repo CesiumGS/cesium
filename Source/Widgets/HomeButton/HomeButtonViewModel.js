@@ -88,8 +88,8 @@ define([
             var maxRadii = ellipsoid.getMaximumRadius();
             var position = Cartesian3.normalize(new Cartesian3(0.0, -1.0, 1.0)).multiplyByScalar(5.0 * maxRadii);
             var direction = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, position));
-            var right = direction.cross(Cartesian3.UNIT_Z);
-            var up = right.cross(direction);
+            var right = Cartesian3.cross(direction, Cartesian3.UNIT_Z);
+            var up = Cartesian3.cross(right, direction);
 
             description = {
                 destination : position,

@@ -521,7 +521,7 @@ define([
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
         s2 = new Cartesian3(s2.x, s2.y, 0.0);
 
-        if (s1.cross(s2).z === 0.0) {
+        if (isParallel(s1, s2)) {
             var e = new DeveloperError("Superfluous vertex found.");
             e.vertexIndex = index;
             throw e;
@@ -538,7 +538,7 @@ define([
      * @private
      */
     function isParallel(s1, s2) {
-        return s1.cross(s2).z === 0.0;
+        return Cartesian3.cross(s1, s2).z === 0.0;
     }
 
     /**
@@ -552,7 +552,7 @@ define([
      * @private
      */
     function angleLessThan180(s1, s2) {
-        return s1.cross(s2).z < 0.0;
+        return Cartesian3.cross(s1, s2).z < 0.0;
     }
 
     /**
@@ -566,7 +566,7 @@ define([
      * @private
      */
     function angleGreaterThan180(s1, s2) {
-        return s1.cross(s2).z > 0.0;
+        return Cartesian3.cross(s1, s2).z > 0.0;
     }
 
     /**
@@ -583,7 +583,7 @@ define([
      * @private
      */
     function isInsideBigAngle(s1, s2, s3) {
-        return (s1.cross(s3).z > 0.0) && (s3.cross(s2).z > 0.0);
+        return (Cartesian3.cross(s1, s3).z > 0.0) && (Cartesian3.cross(s3, s2).z > 0.0);
     }
 
     /**
@@ -600,7 +600,7 @@ define([
      * @private
      */
     function isInsideSmallAngle(s1, s2, s3) {
-        return (s1.cross(s3).z < 0.0) && (s3.cross(s2).z < 0.0);
+        return (Cartesian3.cross(s1, s3).z < 0.0) && (Cartesian3.cross(s3, s2).z < 0.0);
     }
 
     /**
@@ -680,7 +680,7 @@ define([
         side2 = new Cartesian3(side2.x, side2.y, 0.0);
 
         // If they're parallel, so is the last
-        return side1.cross(side2).z === 0.0;
+        return isParallel(side1, side2);
     }
 
     /**

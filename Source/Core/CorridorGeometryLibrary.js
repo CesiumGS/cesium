@@ -216,15 +216,15 @@ define([
             cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
             var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), normal, CesiumMath.EPSILON2);
             if (doCorner) {
-                cornerDirection = cornerDirection.cross(normal, cornerDirection);
-                cornerDirection = normal.cross(cornerDirection, cornerDirection);
+                cornerDirection = Cartesian3.cross(cornerDirection, normal, cornerDirection);
+                cornerDirection = Cartesian3.cross(normal, cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1)));
                 var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
                 cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
-                    center = Cartesian3.add(rightPos, left.multiplyByScalar(width, center), center);
-                    leftPos = Cartesian3.add(rightPos, left.multiplyByScalar(width * 2, leftPos), leftPos);
+                    center   = Cartesian3.add(rightPos, left.multiplyByScalar(width, center), center);
+                    leftPos  = Cartesian3.add(rightPos, left.multiplyByScalar(width * 2, leftPos), leftPos);
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
@@ -243,8 +243,8 @@ define([
                         corners.push({leftPositions : computeMiteredCorner(position, startPoint, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 } else {
-                    leftPos = Cartesian3.add(position, cornerDirection, leftPos);
-                    center = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width, center), center), center);
+                    leftPos  = Cartesian3.add(position, cornerDirection, leftPos);
+                    center   = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width, center), center), center);
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width * 2, rightPos), rightPos), rightPos);
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
@@ -255,7 +255,7 @@ define([
                         calculatedNormals.push(normal.x, normal.y, normal.z);
                     }
                     startPoint = rightPos.clone(startPoint);
-                    left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
+                    left     = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
                     rightPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width * 2, rightPos), rightPos), rightPos);
                     previousPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width, previousPos), previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {

@@ -446,7 +446,7 @@ defineSuite([
         var left = new Cartesian3(1, 2, 5);
         var right = new Cartesian3(4, 3, 6);
         var expectedResult = new Cartesian3(-3, 14, -5);
-        var returnedResult = left.cross(right);
+        var returnedResult = Cartesian3.cross(left, right);
         expect(returnedResult).toEqual(expectedResult);
     });
 
@@ -455,18 +455,9 @@ defineSuite([
         var right = new Cartesian3(4, 3, 6);
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(-3, 14, -5);
-        var returnedResult = left.cross(right, result);
+        var returnedResult = Cartesian3.cross(left, right, result);
         expect(returnedResult).toBe(result);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('cross works with "this" result parameter', function() {
-        var left = new Cartesian3(1, 2, 5);
-        var right = new Cartesian3(4, 3, 6);
-        var expectedResult = new Cartesian3(-3, 14, -5);
-        var returnedResult = left.cross(right, left);
-        expect(returnedResult).toBe(left);
-        expect(left).toEqual(expectedResult);
     });
 
     it('fromSpherical throws with no spherical parameter', function() {

@@ -50,8 +50,8 @@ define([
     var cqRight = new Cartesian3();
     var cqUp = new Cartesian3();
     function createQuaternion(direction, up, result) {
-        direction.cross(up, cqRight);
-        cqRight.cross(direction, cqUp);
+        Cartesian3.cross(direction, up, cqRight);
+        Cartesian3.cross(cqRight, direction, cqUp);
         viewMat[0] = cqRight.x;
         viewMat[1] = cqUp.x;
         viewMat[2] = -direction.x;
@@ -160,7 +160,7 @@ define([
             }];
 
             angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
-            axis = afterStart.cross(aboveEnd);
+            axis = Cartesian3.cross(afterStart, aboveEnd);
             if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
             }
@@ -197,8 +197,8 @@ define([
         for (var i = 1; i < length; ++i) {
             point = points[i];
             Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
-            Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
-            right3D.cross(direction3D, up3D);
+            Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
+            Cartesian3.cross(right3D, direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
@@ -207,8 +207,8 @@ define([
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
-            Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
-            right3D.cross(direction3D, up3D);
+            Cartesian3.normalize(Cartesian3.cross(direction3D, Cartesian3.UNIT_Z, right3D), right3D);
+            Cartesian3.cross(right3D, direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
         }
 
@@ -309,8 +309,8 @@ define([
     }
 
     var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
-    var right2D = Cartesian3.normalize(direction2D.cross(Cartesian3.UNIT_Y));
-    var up2D = right2D.cross(direction2D);
+    var right2D = Cartesian3.normalize(Cartesian3.cross(direction2D, Cartesian3.UNIT_Y));
+    var up2D = Cartesian3.cross(right2D, direction2D);
     var quat = createQuaternion(direction2D, up2D);
     function createOrientations2D(camera, points, endDirection, endUp) {
         points[0].orientation = createQuaternion(camera.direction, camera.up);
@@ -495,7 +495,7 @@ define([
                 if (frameState.mode === SceneMode.SCENE3D) {
                     if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.normalize(Cartesian3.negate(position, dirScratch), dirScratch);
-                        rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Z, rightScratch), rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Z, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
                         rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);
@@ -504,7 +504,7 @@ define([
                 } else {
                     if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.negate(Cartesian3.UNIT_Z, dirScratch);
-                        rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Y, rightScratch), rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, Cartesian3.UNIT_Y, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
                         rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);

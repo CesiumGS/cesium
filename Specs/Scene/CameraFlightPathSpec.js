@@ -295,7 +295,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var startPosition = camera.position.clone();
         var startDirection = camera.direction.clone();
@@ -331,7 +331,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var startPosition = camera.position.clone();
         var startDirection = camera.direction.clone();
@@ -370,7 +370,7 @@ defineSuite([
         camera.position = startPosition;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var startDirection = camera.direction.clone();
         var startUp = camera.up.clone();
@@ -407,7 +407,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var startHeight = camera.frustum.right - camera.frustum.left;
@@ -449,7 +449,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var startHeight = camera.frustum.right - camera.frustum.left;
@@ -493,7 +493,7 @@ defineSuite([
         camera.position = new Cartesian3(CesiumMath.PI, 0.0, 20.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var startHeight = camera.frustum.right - camera.frustum.left;
@@ -602,7 +602,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
         var frustum = camera.frustum;
         var destination = camera.position.clone();
@@ -622,7 +622,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var flight = CameraFlightPath.createAnimation(scene, {
@@ -639,7 +639,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var flight = CameraFlightPath.createAnimation(scene, {
             destination : camera.position
@@ -655,7 +655,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         camera.frustum = createOrthographicFrustum();
 
         var startPosition = camera.position.clone();
@@ -689,7 +689,7 @@ defineSuite([
         camera.position = new Cartesian3(0.0, 0.0, 1000.0);
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y.clone();
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var startPosition = camera.position.clone();
         var endPosition = Cartesian3.add(startPosition, new Cartesian3(-6e6 * Math.PI, 6e6 * CesiumMath.PI_OVER_FOUR, 100.0));

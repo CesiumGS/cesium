@@ -63,7 +63,7 @@ defineSuite([
         position = Cartesian3.UNIT_Z.clone();
         up = Cartesian3.UNIT_Y.clone();
         dir = Cartesian3.negate(Cartesian3.UNIT_Z);
-        right = dir.cross(up);
+        right = Cartesian3.cross(dir, up);
 
         canvas = new FakeCanvas();
 
@@ -269,7 +269,7 @@ defineSuite([
     it('rotates up with constrained axis 1', function() {
         camera.up = Cartesian3.negate(dir);
         camera.direction = right;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         controller.constrainedAxis = Cartesian3.UNIT_Y;
         controller.rotateUp(rotateAmount);
@@ -299,7 +299,7 @@ defineSuite([
     it('rotates down with constrained axis 1', function() {
         camera.up = Cartesian3.negate(dir);
         camera.direction = right;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         controller.constrainedAxis = Cartesian3.UNIT_Y;
         controller.rotateDown(rotateAmount);
@@ -761,7 +761,7 @@ defineSuite([
         camera.position = Cartesian3.UNIT_X.multiplyByScalar(2.0 * maxRadii);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
         camera.up = Cartesian3.UNIT_Z;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
 
         var frustum = new PerspectiveFrustum();
         frustum.fovy = CesiumMath.toRadians(60.0);
@@ -906,7 +906,7 @@ defineSuite([
         expect(camera.position).toEqual(ellipsoid.cartographicToCartesian(cart));
         expect(camera.direction).toEqual(Cartesian3.normalize(Cartesian3.negate(camera.position)));
         expect(camera.up).toEqualEpsilon(Cartesian3.UNIT_Z, CesiumMath.EPSILON15);
-        expect(camera.right).toEqual(camera.direction.cross(camera.up));
+        expect(camera.right).toEqual(Cartesian3.cross(camera.direction, camera.up));
     });
 
     it('get pick ray throws without a position', function() {

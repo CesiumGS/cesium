@@ -443,12 +443,12 @@ define([
             var attrIndex = sixSize;
             for (i = 0; i < threeSize; i += 3) {
                 var attrIndexOffset = attrIndex + sixSize;
-                topPosition = Cartesian3.fromArray(positions, i, topPosition);
-                bottomPosition = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
+                topPosition      = Cartesian3.fromArray(positions, i, topPosition);
+                bottomPosition   = Cartesian3.fromArray(positions, i + threeSize, bottomPosition);
                 previousPosition = Cartesian3.fromArray(positions, (i + 3) % threeSize, previousPosition);
-                bottomPosition = Cartesian3.subtract(bottomPosition, topPosition, bottomPosition);
+                bottomPosition   = Cartesian3.subtract(bottomPosition,   topPosition, bottomPosition);
                 previousPosition = Cartesian3.subtract(previousPosition, topPosition, previousPosition);
-                normal = Cartesian3.normalize(bottomPosition.cross(previousPosition, normal), normal);
+                normal = Cartesian3.normalize(Cartesian3.cross(bottomPosition, previousPosition, normal), normal);
                 if (vertexFormat.normal) {
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset);
                     CorridorGeometryLibrary.addAttribute(normals, normal, attrIndexOffset + 3);
@@ -465,7 +465,7 @@ define([
                     }
 
                     if (vertexFormat.tangent) {
-                        tangent = Cartesian3.normalize(binormal.cross(normal, tangent), tangent);
+                        tangent = Cartesian3.normalize(Cartesian3.cross(binormal, normal, tangent), tangent);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndexOffset + 3);
                         CorridorGeometryLibrary.addAttribute(tangents, tangent, attrIndex);

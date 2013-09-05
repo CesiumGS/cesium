@@ -92,7 +92,7 @@ define([
         this._directionWC = direction;
 
         var right = Cartesian3.normalize(Cartesian3.cross(direction, Cartesian3.UNIT_Z));
-        var up = right.cross(direction);
+        var up = Cartesian3.cross(right, direction);
 
         /**
          * The up direction of the camera.
@@ -103,7 +103,7 @@ define([
         this._up = up;
         this._upWC = up;
 
-        right = direction.cross(up);
+        right = Cartesian3.cross(direction, up);
 
         /**
          * The right direction of the camera.
@@ -207,7 +207,7 @@ define([
                 up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
                 camera.up = up.clone();
 
-                right = camera._right = direction.cross(up);
+                right = camera._right = Cartesian3.cross(direction, up);
                 camera.right = right.clone();
             }
         }

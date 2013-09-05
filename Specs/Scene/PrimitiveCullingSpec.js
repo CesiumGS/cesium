@@ -126,8 +126,8 @@ defineSuite([
         camera.position = bv.center.clone();
         camera.position = Cartesian3.normalize(camera.position).multiplyByScalar(Cartesian3.magnitude(camera.position) + 1.0);
         camera.direction = Cartesian3.normalize(Cartesian3.negate(camera.position));
-        camera.right = camera.direction.cross(Cartesian3.UNIT_Z);
-        camera.up = camera.right.cross(camera.direction);
+        camera.right = Cartesian3.cross(camera.direction, Cartesian3.UNIT_Z);
+        camera.up = Cartesian3.cross(camera.right, camera.direction);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
@@ -163,7 +163,7 @@ defineSuite([
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();
@@ -208,7 +208,7 @@ defineSuite([
         camera.position.z += 1.0;
         camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
-        camera.right = camera.direction.cross(camera.up);
+        camera.right = Cartesian3.cross(camera.direction, camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
 
         var numRendered = verifyDraw();

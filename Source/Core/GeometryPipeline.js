@@ -1097,7 +1097,7 @@ define([
 
             Cartesian3.subtract(v1, v0, v1);
             Cartesian3.subtract(v2, v0, v2);
-            normalsPerTriangle[j] = v1.cross(v2);
+            normalsPerTriangle[j] = Cartesian3.cross(v1, v2);
             j++;
         }
 

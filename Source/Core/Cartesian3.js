@@ -865,19 +865,5 @@ define([
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
 
-    /**
-     * Computes the cross (outer) product of this and the provided Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} right The right hand side Cartesian.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The cross product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian3.prototype.cross = function(right, result) {
-        return Cartesian3.cross(this, right, result);
-    };
-
     return Cartesian3;
 });
