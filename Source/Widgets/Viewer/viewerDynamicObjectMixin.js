@@ -53,15 +53,11 @@ define([
         if (viewer.hasOwnProperty('onObjectTracked')) {
             throw new DeveloperError('onObjectTracked is already defined by another mixin.');
         }
-        if (viewer.hasOwnProperty('_onObjectTracked')) {
-            throw new DeveloperError('_onObjectTracked is already defined by another mixin.');
-        }
 
         var eventHelper = new EventHelper();
+        var onObjectTracked = new Event();
         var trackedObject;
         var dynamicObjectView;
-
-        viewer._onObjectTracked = new Event();
 
         //Subscribe to onTick so that we can update the view each update.
         function updateView(clock) {
@@ -104,11 +100,6 @@ define([
                     return trackedObject;
                 },
                 set : function(value) {
-                    if (trackedObject !== value) {
-                        trackedObject = value;
-                        viewer._onObjectTracked.raiseEvent(viewer, value);
-                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
-                    }
                     var sceneMode = viewer.scene.getFrameState().mode;
 
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE2D) {
@@ -118,18 +109,25 @@ define([
                     if (sceneMode === SceneMode.COLUMBUS_VIEW || sceneMode === SceneMode.SCENE3D) {
                         viewer.scene.getScreenSpaceCameraController().enableTilt = !defined(value);
                     }
+
+                    if (trackedObject !== value) {
+                        trackedObject = value;
+                        dynamicObjectView = defined(value) ? new DynamicObjectView(value, viewer.scene, viewer.centralBody.getEllipsoid()) : undefined;
+                        onObjectTracked.raiseEvent(viewer, value);
+                    }
                 }
             },
 
             /**
-             * Gets an event that will be raised when an object is tracked by the camera.
-             * @memberof viewerDynamicObjectMixin.prototype
+             * Gets an event that will be raised when an object is tracked by the camera.  The event
+             * has two parameters: a reference to the viewer instance, and the newly tracked object.
              *
+             * @memberof viewerDynamicObjectMixin.prototype
              * @type {Event}
              */
             onObjectTracked : {
                 get : function() {
-                    return this._onObjectTracked;
+                    return onObjectTracked;
                 }
             }
         });
