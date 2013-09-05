@@ -763,23 +763,6 @@ define([
     };
 
     /**
-     * Computes the linear interpolation or extrapolation at t using this Cartesian
-     * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
-     * @memberof Cartesian3
-     *
-     * @param end The value corresponding to t at 1.0.
-     * @param t The point along t at which to interpolate.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} end is required.
-     * @exception {DeveloperError} t is required and must be a number.
-     */
-    Cartesian3.prototype.lerp = function(end, t, result) {
-        return Cartesian3.lerp(this, end, t, result);
-    };
-
-    /**
      * Returns the angle, in radians, between this Cartesian and the provided Cartesian.
      * @memberof Cartesian3
      *

@@ -302,7 +302,7 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = 0.25;
         var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
-        var result = start.lerp(end, t);
+        var result = Cartesian3.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -312,19 +312,9 @@ defineSuite([
         var t = 0.25;
         var result = new Cartesian3();
         var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
-        var returnedResult = start.lerp(end, t, result);
+        var returnedResult = Cartesian3.lerp(start, end, t, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('lerp works with "this" result parameter', function() {
-        var start = new Cartesian3(4.0, 8.0, 10.0);
-        var end = new Cartesian3(8.0, 20.0, 20.0);
-        var t = 0.25;
-        var expectedResult = new Cartesian3(5.0, 11.0, 12.5);
-        var returnedResult = start.lerp(end, t, start);
-        expect(start).toBe(returnedResult);
-        expect(start).toEqual(expectedResult);
     });
 
     it('lerp extrapolate forward', function() {
@@ -332,7 +322,7 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = 2.0;
         var expectedResult = new Cartesian3(12.0, 32.0, 30.0);
-        var result = start.lerp(end, t);
+        var result = Cartesian3.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -341,7 +331,7 @@ defineSuite([
         var end = new Cartesian3(8.0, 20.0, 20.0);
         var t = -1.0;
         var expectedResult = new Cartesian3(0.0, -4.0, 0.0);
-        var result = start.lerp(end, t);
+        var result = Cartesian3.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -626,9 +616,9 @@ defineSuite([
     });
 
     it('fromElements returns a cartesian3 with corrrect coordinates', function(){
-        var cartesian2 = Cartesian3.fromElements(2, 2, 4);
+        var Cartesian3 = Cartesian3.fromElements(2, 2, 4);
         var expectedResult = new Cartesian3(2, 2, 4);
-        expect(cartesian2).toEqual(expectedResult);
+        expect(Cartesian3).toEqual(expectedResult);
     });
 
     it('fromElements result param returns cartesian3 with correct coordinates', function(){

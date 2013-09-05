@@ -1207,7 +1207,7 @@ define([
 
             var update2D = function(value) {
                 if (animatePosition) {
-                    camera.position = position.lerp(translatedPosition, value.time);
+                    camera.position = Cartesian3.lerp(position, translatedPosition, value.time);
                 }
                 if (animateFrustum) {
                     camera.frustum.top = CesiumMath.lerp(top, startFrustum.top, value.time);
@@ -1250,7 +1250,7 @@ define([
 
         var camera = controller._camera;
         var updateCV = function(value) {
-            var interp = position.lerp(newPosition, value.time);
+            var interp = Cartesian3.lerp(position, newPosition, value.time);
             var pos = new Cartesian4(interp.x, interp.y, interp.z, 1.0);
             camera.position = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(pos));
         };

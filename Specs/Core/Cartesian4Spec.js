@@ -293,7 +293,7 @@ defineSuite([
         var end = new Cartesian4(8.0, 20.0, 20.0, 30.0);
         var t = 0.25;
         var expectedResult = new Cartesian4(5.0, 11.0, 12.5, 22.5);
-        var result = start.lerp(end, t);
+        var result = Cartesian4.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -303,19 +303,9 @@ defineSuite([
         var t = 0.25;
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(5.0, 11.0, 12.5, 22.5);
-        var returnedResult = start.lerp(end, t, result);
+        var returnedResult = Cartesian4.lerp(start, end, t, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('lerp works with "this" result parameter', function() {
-        var start = new Cartesian4(4.0, 8.0, 10.0, 20.0);
-        var end = new Cartesian4(8.0, 20.0, 20.0, 30.0);
-        var t = 0.25;
-        var expectedResult = new Cartesian4(5.0, 11.0, 12.5, 22.5);
-        var returnedResult = start.lerp(end, t, start);
-        expect(start).toBe(returnedResult);
-        expect(start).toEqual(expectedResult);
     });
 
     it('lerp extrapolate forward', function() {
@@ -323,7 +313,7 @@ defineSuite([
         var end = new Cartesian4(8.0, 20.0, 20.0, 30.0);
         var t = 2.0;
         var expectedResult = new Cartesian4(12.0, 32.0, 30.0, 40.0);
-        var result = start.lerp(end, t);
+        var result = Cartesian4.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
@@ -332,7 +322,7 @@ defineSuite([
         var end = new Cartesian4(8.0, 20.0, 20.0, 30.0);
         var t = -1.0;
         var expectedResult = new Cartesian4(0.0, -4.0, 0.0, 10.0);
-        var result = start.lerp(end, t);
+        var result = Cartesian4.lerp(start, end, t);
         expect(result).toEqual(expectedResult);
     });
 
