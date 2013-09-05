@@ -1,5 +1,6 @@
 /*global defineSuite*/
 defineSuite([
+         'Renderer/ShaderProgram',
          'Specs/createContext',
          'Specs/destroyContext',
          'Core/Cartesian2',
@@ -11,8 +12,10 @@ defineSuite([
          'Core/PrimitiveType',
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
-         'Renderer/UniformDatatype'
-     ], 'Renderer/ShaderProgram', function(
+         'Renderer/UniformDatatype',
+         'Renderer/ShaderProgram'
+     ], function(
+         ShaderProgram,
          createContext,
          destroyContext,
          Cartesian2,
@@ -32,13 +35,61 @@ defineSuite([
     var sp;
     var va;
 
+    var injectedTestFunctions = {
+        czm_circularDependency1 : 'void czm_circularDependency1() { czm_circularDependency2(); }',
+        czm_circularDependency2 : 'void czm_circularDependency2() { czm_circularDependency1(); }',
+        czm_testFunction3 : 'void czm_testFunction3(vec4 color) { czm_testFunction2(color); }',
+        czm_testFunction2 : 'void czm_testFunction2(vec4 color) { czm_testFunction1(color); }',
+        czm_testFunction1 : 'void czm_testFunction1(vec4 color) { gl_FragColor = color; }',
+        czm_testDiamondDependency1 : 'vec4 czm_testDiamondDependency1(vec4 color) { return czm_testAddAlpha(color); }',
+        czm_testDiamondDependency2 : 'vec4 czm_testDiamondDependency2(vec4 color) { return czm_testAddAlpha(color); }',
+        czm_testAddAlpha : 'vec4 czm_testAddAlpha(vec4 color) { color.a = clamp(color.a + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddRed : 'vec4 czm_testAddRed(vec4 color) { color.r = clamp(color.r + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddGreen : 'vec4 czm_testAddGreen(vec4 color) { color.g = clamp(color.g + 0.1, 0.0, 1.0); return color; }',
+        czm_testAddRedGreenAlpha : 'vec4 czm_testAddRedGreenAlpha(vec4 color) { color = czm_testAddRed(color); color = czm_testAddGreen(color); color = czm_testAddAlpha(color); return color; }',
+        czm_testFunction4 : 'void czm_testFunction4(vec4 color) { color = czm_testAddAlpha(color); color = czm_testAddRedGreenAlpha(color); czm_testFunction3(color); }',
+        czm_testFunctionWithComment : '/**\n czm_circularDependency1()  \n*/\nvoid czm_testFunctionWithComment(vec4 color) { czm_testFunction1(color); }'
+    };
+
     beforeAll(function() {
         context = createContext();
+
+        for(var functionName in injectedTestFunctions) {
+            if(injectedTestFunctions.hasOwnProperty(functionName)) {
+                ShaderProgram._czmBuiltinsAndUniforms[functionName] = injectedTestFunctions[functionName];
+            }
+        }
+
     });
 
     afterAll(function() {
         destroyContext(context);
+
+        for ( var functionName in injectedTestFunctions) {
+            if (injectedTestFunctions.hasOwnProperty(functionName)) {
+                delete ShaderProgram._czmBuiltinsAndUniforms[functionName];
+            }
+        }
     });
+
+    function renderFragment(context, shaderProgram) {
+        va = context.createVertexArray([{
+            index : shaderProgram.getVertexAttributes().position.index,
+            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
+            componentsPerAttribute : 4
+        }]);
+
+        ClearCommand.ALL.execute(context);
+        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+
+        context.draw({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : shaderProgram,
+            vertexArray : va
+        });
+
+        return context.readPixels();
+    }
 
     it('has vertex and fragment shader source', function() {
         var vs = 'void main() { gl_Position = vec4(1.0); }';
@@ -437,21 +488,110 @@ defineSuite([
             '}';
         sp = context.createShaderProgram(vs, fs);
 
-        va = context.createVertexArray([{
-            index : sp.getVertexAttributes().position.index,
-            vertexBuffer : context.createVertexBuffer(new Float32Array([0, 0, 0, 1]), BufferUsage.STATIC_DRAW),
-            componentsPerAttribute : 4
-        }]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
 
-        ClearCommand.ALL.execute(context);
-        expect(context.readPixels()).toEqual([0, 0, 0, 0]);
+    it('has built-in constant, structs, and functions', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  czm_materialInput materialInput; \n' +
+            '  czm_material material = czm_getDefaultMaterial(materialInput); \n' +
+            '  material.diffuse = vec3(1.0, 1.0, 1.0); \n' +
+            '  material.alpha = 1.0; \n' +
+            '  material.diffuse = czm_hue(material.diffuse, czm_twoPi); \n' +
+            '  gl_FragColor = vec4(material.diffuse, material.alpha); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
 
-        context.draw({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va
-        });
-        expect(context.readPixels()).toEqual([255, 255, 255, 255]);
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('1 level function dependency', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  czm_testFunction1(vec4(1.0)); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('2 level function dependency', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  czm_testFunction2(vec4(1.0)); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('3 level function dependency', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  czm_testFunction3(vec4(1.0)); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('diamond dependency', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n' +
+            '  color = czm_testDiamondDependency1(color); \n' +
+            '  color = czm_testDiamondDependency2(color); \n' +
+            '  gl_FragColor = color; \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('diamond plus 3 level function dependency', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  vec4 color = vec4(1.0, 1.0, 1.0, 0.8); \n' +
+            '  color = czm_testDiamondDependency1(color); \n' +
+            '  color = czm_testDiamondDependency2(color); \n' +
+            '  czm_testFunction3(color); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('big mess of function dependencies', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  vec4 color = vec4(0.9, 0.9, 1.0, 0.6); \n' +
+            '  color = czm_testDiamondDependency1(color); \n' +
+            '  color = czm_testDiamondDependency2(color); \n' +
+            '  czm_testFunction4(color); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
+    });
+
+    it('doc comment with reference to another function', function() {
+        var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
+        var fs =
+            'void main() { \n' +
+            '  vec4 color = vec4(1.0, 1.0, 1.0, 1.0); \n' +
+            '  czm_testFunctionWithComment(color); \n' +
+            '}';
+        sp = context.createShaderProgram(vs, fs);
+
+        expect(renderFragment(context, sp)).toEqual([255, 255, 255, 255]);
     });
 
     it('compiles with #version at the top', function() {
@@ -521,6 +661,14 @@ defineSuite([
 
         expect(function() {
             s.destroy();
+        }).toThrow();
+    });
+
+    it('fails with built-in function circular dependency', function() {
+        var vs = 'void main() { gl_Position = vec4(0.0); }';
+        var fs = 'void main() { czm_circularDependency1(); gl_FragColor = vec4(1.0); }';
+        expect(function() {
+            sp = context.createShaderProgram(vs, fs);
         }).toThrow();
     });
 }, 'WebGL');
