@@ -2,7 +2,7 @@
 define(function() {
     "use strict";
 
-    function createProperty(name, privateName) {
+    function createObservableProperty(name, privateName) {
         return {
             get : function() {
                 return this[privateName];
@@ -17,5 +17,5 @@ define(function() {
         };
     }
 
-    return createProperty;
+    return createObservableProperty;
 });
