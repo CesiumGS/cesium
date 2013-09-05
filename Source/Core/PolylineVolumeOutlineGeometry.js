@@ -52,9 +52,9 @@ define([
         });
 
         var shapeLength = shape.length;
-        var vertexCount = attributes.position.values.length/3;
-        var positionLength = positions.length/3;
-        var shapeCount = positionLength/shapeLength;
+        var vertexCount = attributes.position.values.length / 3;
+        var positionLength = positions.length / 3;
+        var shapeCount = positionLength / shapeLength;
         var indices = IndexDatatype.createTypedArray(vertexCount, 2 * shapeLength * (shapeCount + 1));
         var i, j;
         var index = 0;
@@ -66,7 +66,6 @@ define([
         }
         indices[index++] = shapeLength - 1 + offset;
         indices[index++] = offset;
-
 
         i = shapeCount - 1;
         offset = i * shapeLength;

@@ -44,7 +44,9 @@ define([
         VertexFormat,
         WindingOrder) {
     "use strict";
-    function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
+
+
+        function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
         var attributes = new GeometryAttributes();
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -54,7 +56,7 @@ define([
             });
         }
         var shapeLength = shape.length;
-        var vertexCount = combinedPositions.length/3;
+        var vertexCount = combinedPositions.length / 3;
         var length = (vertexCount - shapeLength * 2) / (shapeLength * 2);
         var firstEndIndices = PolygonPipeline.triangulate(shape);
 
@@ -92,7 +94,7 @@ define([
         }
 
         if (vertexFormat.st) {
-            var st = new Float32Array(vertexCount*2);
+            var st = new Float32Array(vertexCount * 2);
             var lengthSt = 1 / (length - 1);
             var heightSt = 1 / (boundingRectangle.height);
             var heightOffset = boundingRectangle.height / 2;

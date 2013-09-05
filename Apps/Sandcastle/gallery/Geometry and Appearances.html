@@ -853,7 +853,6 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
-    
 
     function starPositions(arms, rOuter, rInner) {
         var angle = Math.PI / arms;
@@ -871,7 +870,7 @@ require(['Cesium'], function(Cesium) {
          Cesium.Cartographic.fromDegrees(-95.0, 15.0),
          Cesium.Cartographic.fromDegrees(-100.0, 15.0)
      ]);
-    
+
     var tube = new Cesium.GeometryInstance({
             geometry: new Cesium.PolylineVolumeGeometry({
                 polylinePositions : positions,

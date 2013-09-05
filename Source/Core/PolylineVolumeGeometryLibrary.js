@@ -66,7 +66,7 @@ define([
     var originScratch = new Cartesian3();
     var nextScratch = new Cartesian3();
     var prevScratch = new Cartesian3();
-    PolylineVolumeGeometryLibrary.angleIsGreaterThanPi = function (forward, backward, position, ellipsoid) {
+    PolylineVolumeGeometryLibrary.angleIsGreaterThanPi = function(forward, backward, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
@@ -78,7 +78,7 @@ define([
         return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
     };
 
-    function computeRotationAngle (start, end, position, ellipsoid) {
+    function computeRotationAngle(start, end, position, ellipsoid) {
         var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
         var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
         var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, start, nextScratch), nextScratch);
@@ -114,7 +114,7 @@ define([
         var scale = scaleMatrix;
         scale[0] = xScalar;
 
-        for (var j = 0; j < repeat; j++) {
+        for ( var j = 0; j < repeat; j++) {
             for ( var i = 0; i < shape.length; i += 3) {
                 finalPosition = Cartesian3.fromArray(shape, i, finalPosition);
                 finalPosition = Matrix3.multiplyByVector(scale, finalPosition, finalPosition);
@@ -233,7 +233,7 @@ define([
     /**
      * @private
      */
-    PolylineVolumeGeometryLibrary.computePositions = function (positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
+    PolylineVolumeGeometryLibrary.computePositions = function(positions, shape2D, boundingRectangle, geometry, duplicatePoints) {
         var granularity = geometry._granularity;
         var cornerType = geometry._cornerType;
         var ellipsoid = geometry._ellipsoid;
@@ -339,7 +339,6 @@ define([
         if (duplicatePoints) {
             combinedPositions.set(ends, length);
         }
-
 
         return combinedPositions;
     };
