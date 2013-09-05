@@ -1,23 +1,11 @@
-float getLambertDiffuse(vec3 lightDirectionEC, vec3 normalEC)
+float czm_private_getLambertDiffuseOfMaterial(vec3 lightDirectionEC, czm_material material)
 {
-    return max(dot(lightDirectionEC, normalEC), 0.0);
+    return czm_getLambertDiffuse(lightDirectionEC, material.normal);
 }
 
-float getLambertDiffuseOfMaterial(vec3 lightDirectionEC, czm_material material)
+float czm_private_getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material material)
 {
-    return getLambertDiffuse(lightDirectionEC, material.normal);
-}
-
-float getSpecular(vec3 lightDirectionEC, vec3 toEyeEC, vec3 normalEC, float shininess)
-{
-    vec3 toReflectedLight = reflect(-lightDirectionEC, normalEC);
-    float specular = max(dot(toReflectedLight, toEyeEC), 0.0);
-    return pow(specular, shininess);
-}
-
-float getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material material)
-{
-    return getSpecular(lightDirectionEC, toEyeEC, material.normal, material.shininess);
+    return czm_getSpecular(lightDirectionEC, toEyeEC, material.normal, material.shininess);
 }
 
 /**
@@ -41,10 +29,10 @@ float getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm_material ma
 vec4 czm_phong(vec3 toEye, czm_material material)
 {
     // Diffuse from directional light sources at eye (for top-down and horizon views)
-    float diffuse = getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
+    float diffuse = czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 0.0, 1.0), material) + czm_private_getLambertDiffuseOfMaterial(vec3(0.0, 1.0, 0.0), material);
 
     // Specular from sun and pseudo-moon
-    float specular = getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
+    float specular = czm_private_getSpecularOfMaterial(czm_sunDirectionEC, toEye, material) + czm_private_getSpecularOfMaterial(czm_moonDirectionEC, toEye, material);
 
     vec3 ambient = vec3(0.0);
     vec3 color = ambient + material.emission;
