@@ -49,14 +49,8 @@ define([
      * @private
      */
     PolylineVolumeGeometryLibrary.removeDuplicates = function(shapePositions) {
-        if (!defined(shapePositions)) {
-            throw new DeveloperError('shapePositions is required.');
-        }
-
         var length = shapePositions.length;
-
         var cleanedPositions = [];
-
         for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
             var v0 = shapePositions[i0];
             var v1 = shapePositions[i1];

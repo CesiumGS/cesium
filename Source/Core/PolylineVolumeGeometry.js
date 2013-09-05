@@ -44,9 +44,6 @@ define([
         VertexFormat,
         WindingOrder) {
     "use strict";
-
-    var scratch1 = new Cartesian3();
-    var scratch2 = new Cartesian3();
     function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
         var attributes = new GeometryAttributes();
         if (vertexFormat.position) {
@@ -71,9 +68,6 @@ define([
             for (j = 0; j < shapeLength - 1; j++) {
                 LL = j * 2 + i * shapeLength * 2;
                 LR = LL + offset;
-                if (Cartesian3.equalsEpsilon(Cartesian3.fromArray(combinedPositions, LL, scratch1), Cartesian3.fromArray(combinedPositions, LR, scratch2), CesiumMath.EPSILON5)) {
-                    continue;
-                }
                 UL = LL + 1;
                 UR = UL + offset;
 
