@@ -108,6 +108,7 @@ define([
 
         return when(promise, function(buffer) {
             var pos = 0;
+            var uint16Length = 2;
             var uint32Length = 4;
             var float32Length = 4;
             var float64Length = 8;
@@ -118,7 +119,7 @@ define([
             var vertexElements = 6;
             var vertexLength = float32Length * vertexElements;
             var triangleElements = 3;
-            var triangleLength = uint32Length * triangleElements;
+            var triangleLength = uint16Length * triangleElements;
 
             var view = new DataView(buffer);
             var center = new Cartesian3(view.getFloat64(pos, true), view.getFloat64(pos + 8, true), view.getFloat64(pos + 16, true));
@@ -142,30 +143,37 @@ define([
             var vertexBuffer = new Float32Array(buffer, pos, vertexCount * vertexElements);
             pos += vertexCount * vertexLength;
 
+            if (vertexCount > 64 * 1024) {
+                // More than 64k vertices, so read 32-bit indices.
+                // TODO: Basic WebGL doesn't support 32-bit indices, so we also need to
+                //       split this mesh or maybe use an extension.
+                throw new DeveloperError('TODO: 32-bit indices are not yet supported.');
+            }
+
             var triangleCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var indexBuffer = new Uint32Array(buffer, pos, triangleCount * triangleElements);
+            var indexBuffer = new Uint16Array(buffer, pos, triangleCount * triangleElements);
             pos += triangleCount * triangleLength;
 
             var westVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var westVertices = new Uint32Array(buffer, pos, westVertexCount);
-            pos += westVertexCount * uint32Length;
+            var westVertices = new Uint16Array(buffer, pos, westVertexCount);
+            pos += westVertexCount * uint16Length;
 
             var southVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var southVertices = new Uint32Array(buffer, pos, southVertexCount);
-            pos += southVertexCount * uint32Length;
+            var southVertices = new Uint16Array(buffer, pos, southVertexCount);
+            pos += southVertexCount * uint16Length;
 
             var eastVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var eastVertices = new Uint32Array(buffer, pos, eastVertexCount);
-            pos += eastVertexCount * uint32Length;
+            var eastVertices = new Uint16Array(buffer, pos, eastVertexCount);
+            pos += eastVertexCount * uint16Length;
 
             var northVertexCount = view.getUint32(pos, true);
             pos += uint32Length;
-            var northVertices = new Uint32Array(buffer, pos, northVertexCount);
-            pos += northVertexCount * uint32Length;
+            var northVertices = new Uint16Array(buffer, pos, northVertexCount);
+            pos += northVertexCount * uint16Length;
 
             return new MeshTerrainData({
                 center : center,
