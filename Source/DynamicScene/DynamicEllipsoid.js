@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -51,15 +56,6 @@ define([
             targetEllipsoid.radii = defaultValue(targetEllipsoid.radii, ellipsoidToMerge.radii);
             targetEllipsoid.material = defaultValue(targetEllipsoid.material, ellipsoidToMerge.material);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the ellipsoid associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipsoid from.
-     */
-    DynamicEllipsoid.undefineProperties = function(dynamicObject) {
-        dynamicObject.ellipsoid = undefined;
     };
 
     return DynamicEllipsoid;

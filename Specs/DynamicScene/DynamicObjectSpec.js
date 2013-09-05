@@ -111,22 +111,4 @@ defineSuite([
         expect(targetObject.availability).toEqual(4);
         expect(targetObject.viewFrom).toEqual(5);
     });
-
-    it('undefineProperties works', function() {
-        var dynamicObject = new DynamicObject('testObject');
-
-        dynamicObject.position = 1;
-        dynamicObject.orientation = 2;
-        dynamicObject.vertexPositions = 3;
-        dynamicObject.availability = 4;
-        dynamicObject.viewFrom = 5;
-
-        DynamicObject.undefineProperties(dynamicObject);
-
-        expect(dynamicObject.position).toBeUndefined();
-        expect(dynamicObject.orientation).toBeUndefined();
-        expect(dynamicObject.vertexPositions).toBeUndefined();
-        expect(dynamicObject.availability).toBeUndefined();
-        expect(dynamicObject.viewFrom).toBeUndefined();
-    });
 });

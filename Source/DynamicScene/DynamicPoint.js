@@ -1,10 +1,15 @@
 /*global define*/
-define([
+define(['../Core/defaultValue',
         '../Core/defined',
-        '../Core/defaultValue'
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
-         defined,
-         defaultValue) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -62,15 +67,6 @@ define([
             targetPoint.outlineWidth = defaultValue(targetPoint.outlineWidth, pointToMerge.outlineWidth);
             targetPoint.show = defaultValue(targetPoint.show, pointToMerge.show);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the point associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the point from.
-     */
-    DynamicPoint.undefineProperties = function(dynamicObject) {
-        dynamicObject.point = undefined;
     };
 
     return DynamicPoint;

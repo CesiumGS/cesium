@@ -77,11 +77,4 @@ defineSuite([
         expect(mergedObject.ellipsoid.radii).toEqual(expectedRadii);
         expect(mergedObject.ellipsoid.show).toEqual(expectedShow);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.ellipsoid = new DynamicEllipsoid();
-        DynamicEllipsoid.undefineProperties(testObject);
-        expect(testObject.ellipsoid).toBeUndefined();
-    });
 });

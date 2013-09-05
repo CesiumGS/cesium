@@ -79,11 +79,4 @@ defineSuite([
         expect(targetObject.point.outlineWidth).toEqual(9);
         expect(targetObject.point.show).toEqual(10);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.point = new DynamicPoint();
-        DynamicPoint.undefineProperties(testObject);
-        expect(testObject.point).toBeUndefined();
-    });
 });

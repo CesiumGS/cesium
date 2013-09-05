@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
-       ], function(
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
+    ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -104,15 +109,6 @@ define([
             targetLabel.eyeOffset = defaultValue(targetLabel.eyeOffset, labelToMerge.eyeOffset);
             targetLabel.pixelOffset = defaultValue(targetLabel.pixelOffset, labelToMerge.pixelOffset);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the label associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the label from.
-     */
-    DynamicLabel.undefineProperties = function(dynamicObject) {
-        dynamicObject.label = undefined;
     };
 
     return DynamicLabel;

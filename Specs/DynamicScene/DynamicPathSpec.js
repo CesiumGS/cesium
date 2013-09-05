@@ -100,11 +100,4 @@ defineSuite([
         expect(targetObject.path.trailTime).toEqual(7);
         expect(targetObject.path.resolution).toEqual(8);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.path = new DynamicPath();
-        DynamicPath.undefineProperties(testObject);
-        expect(testObject.path).toBeUndefined();
-    });
 });

@@ -42,16 +42,6 @@ define(['../Core/createGuid',
         };
     }
 
-    function merge(target, source) {
-        if (defined(target)) {
-            if (typeof target.merge === 'function') {
-                target.merge(source);
-            }
-            return target;
-        }
-        return source;
-    }
-
     var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyAssigned', //
                                  'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
 
@@ -430,7 +420,15 @@ define(['../Core/createGuid',
             //TODO Remove this once availability is refactored.
             if (name !== 'availability') {
                 var privateName = '_' + name;
-                this[name] = merge(this[privateName], objectToMerge[privateName]);
+                var target = this[privateName];
+                var source = objectToMerge[privateName];
+                if (defined(target)) {
+                    if (typeof target.merge === 'function' && defined(source)) {
+                        target.merge(source);
+                    }
+                } else {
+                    this[name] = source;
+                }
             }
         }
     };

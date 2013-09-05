@@ -1,16 +1,21 @@
 /*global define*/
-define([
+define(['../Core/Cartesian3',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/Cartesian3',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Ellipsoid',
+        '../Core/Event',
         '../Core/Shapes'
-        ], function (
-            defaultValue,
-            defined,
-            Cartesian3,
-            Ellipsoid,
-            Shapes) {
+    ], function(
+        Cartesian3,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Ellipsoid,
+        Event,
+        Shapes) {
     "use strict";
 
     /**
@@ -64,15 +69,6 @@ define([
             targetEllipse.semiMajorAxis = defaultValue(targetEllipse.semiMajorAxis, ellipseToMerge.semiMajorAxis);
             targetEllipse.semiMinorAxis = defaultValue(targetEllipse.semiMinorAxis, ellipseToMerge.semiMinorAxis);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the ellipse associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the ellipse from.
-     */
-    DynamicEllipse.undefineProperties = function(dynamicObject) {
-        dynamicObject.ellipse = undefined;
     };
 
     /**

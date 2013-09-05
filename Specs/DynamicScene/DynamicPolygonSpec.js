@@ -58,11 +58,4 @@ defineSuite([
         expect(targetObject.polygon.material).toEqual(3);
         expect(targetObject.polygon.show).toEqual(4);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.polygon = new DynamicPolygon();
-        DynamicPolygon.undefineProperties(testObject);
-        expect(testObject.polygon).toBeUndefined();
-    });
 });

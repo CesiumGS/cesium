@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -62,15 +67,6 @@ define([
             targetVector.length = defaultValue(targetVector.length, vectorToMerge.length);
             targetVector.show = defaultValue(targetVector.show, vectorToMerge.show);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the vector associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the vector from.
-     */
-    DynamicVector.undefineProperties = function(dynamicObject) {
-        dynamicObject.vector = undefined;
     };
 
     return DynamicVector;

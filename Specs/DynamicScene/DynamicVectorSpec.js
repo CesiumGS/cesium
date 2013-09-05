@@ -97,11 +97,4 @@ defineSuite([
         expect(targetObject.vector.direction).toEqual(direction);
         expect(targetObject.vector.show).toEqual(show);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.vector = new DynamicVector();
-        DynamicVector.undefineProperties(testObject);
-        expect(testObject.vector).toBeUndefined();
-    });
 });

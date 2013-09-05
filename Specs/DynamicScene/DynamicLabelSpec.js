@@ -168,11 +168,4 @@ defineSuite([
         expect(targetObject.label.scale).toEqual(expectedScale);
         expect(targetObject.label.show).toEqual(expectedShow);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.label = new DynamicLabel();
-        DynamicLabel.undefineProperties(testObject);
-        expect(testObject.label).toBeUndefined();
-    });
 });

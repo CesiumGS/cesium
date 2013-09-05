@@ -97,11 +97,4 @@ defineSuite([
         expect(targetObject.pyramid.showIntersection).toEqual(12);
         expect(targetObject.pyramid.intersectionWidth).toEqual(14);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.pyramid = new DynamicPyramid();
-        DynamicPyramid.undefineProperties(testObject);
-        expect(testObject.pyramid).toBeUndefined();
-    });
 });

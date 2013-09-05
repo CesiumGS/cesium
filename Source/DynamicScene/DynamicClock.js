@@ -1,14 +1,21 @@
 /*global define*/
-define([
-        '../Core/Iso8601',
-        '../Core/ClockRange',
+define(['../Core/ClockRange',
         '../Core/ClockStep',
-        '../Core/defined'
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/Iso8601'
     ], function(
-        Iso8601,
         ClockRange,
         ClockStep,
-        defined) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event,
+        Iso8601) {
     "use strict";
 
     /**
@@ -85,40 +92,22 @@ define([
     };
 
     /**
-     * Given two DynamicObjects, takes the clock properties from the second
-     * and assigns them to the first.
-     * @memberof DynamicClock
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicClock} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicClock.mergeProperties = function(targetObject, objectToMerge) {
-        var clockToMerge = objectToMerge.clock;
-        if (defined(clockToMerge)) {
-
-            var targetClock = targetObject.clock;
-            if (!defined(targetClock)) {
-                targetClock = new DynamicClock();
-                targetObject.clock = targetClock;
-            }
-
-            targetClock.startTime = clockToMerge.startTime;
-            targetClock.stopTime = clockToMerge.stopTime;
-            targetClock.currentTime = clockToMerge.currentTime;
-            targetClock.clockRange = clockToMerge.clockRange;
-            targetClock.clockStep = clockToMerge.clockStep;
-            targetClock.multiplier = clockToMerge.multiplier;
+    DynamicClock.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the clock associated with it.
-     * @memberof DynamicClock
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the clock from.
-     */
-    DynamicClock.undefineProperties = function(dynamicObject) {
-        dynamicObject.clock = undefined;
+        this.startTime = defaultValue(this.startTime, source.startTime);
+        this.stopTime = defaultValue(this.stopTime, source.stopTime);
+        this.currentTime = defaultValue(this.currentTime, source.currentTime);
+        this.clockRange = defaultValue(this.clockRange, source.clockRange);
+        this.clockStep = defaultValue(this.clockStep, source.clockStep);
+        this.multiplier = defaultValue(this.multiplier, source.multiplier);
     };
 
     return DynamicClock;

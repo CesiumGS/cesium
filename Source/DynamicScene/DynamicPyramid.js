@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -76,15 +81,6 @@ define([
             targetPyramid.intersectionWidth = defaultValue(targetPyramid.intersectionWidth, pyramidToMerge.intersectionWidth);
             targetPyramid.material = defaultValue(targetPyramid.material, pyramidToMerge.material);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the pyramid associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the pyramid from.
-     */
-    DynamicPyramid.undefineProperties = function(dynamicObject) {
-        dynamicObject.pyramid = undefined;
     };
 
     return DynamicPyramid;

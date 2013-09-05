@@ -2,11 +2,13 @@
 define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
         '../Core/Event'
     ], function(
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Event) {
     "use strict";
 
@@ -53,8 +55,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._image;
-                this._image = value;
-                this._propertyAssigned.raiseEvent(this, 'image', value, oldValue);
+                if (oldValue !== value) {
+                    this._image = value;
+                    this._propertyAssigned.raiseEvent(this, 'image', value, oldValue);
+                }
             }
         },
 
@@ -69,8 +73,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._scale;
-                this._scale = value;
-                this._propertyAssigned.raiseEvent(this, 'scale', value, oldValue);
+                if (oldValue !== value) {
+                    this._scale = value;
+                    this._propertyAssigned.raiseEvent(this, 'scale', value, oldValue);
+                }
             }
         },
         /**
@@ -84,8 +90,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._rotation;
-                this._rotation = value;
-                this._propertyAssigned.raiseEvent(this, 'rotation', value, oldValue);
+                if (oldValue !== value) {
+                    this._rotation = value;
+                    this._propertyAssigned.raiseEvent(this, 'rotation', value, oldValue);
+                }
             }
         },
         /**
@@ -99,8 +107,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._alignedAxis;
-                this._alignedAxis = value;
-                this._propertyAssigned.raiseEvent(this, 'alignedAxis', value, oldValue);
+                if (oldValue !== value) {
+                    this._alignedAxis = value;
+                    this._propertyAssigned.raiseEvent(this, 'alignedAxis', value, oldValue);
+                }
             }
         },
         /**
@@ -114,8 +124,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._horizontalOrigin;
-                this._horizontalOrigin = value;
-                this._propertyAssigned.raiseEvent(this, 'horizontalOrigin', value, oldValue);
+                if (oldValue !== value) {
+                    this._horizontalOrigin = value;
+                    this._propertyAssigned.raiseEvent(this, 'horizontalOrigin', value, oldValue);
+                }
             }
         },
         /**
@@ -129,8 +141,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._verticalOrigin;
-                this._verticalOrigin = value;
-                this._propertyAssigned.raiseEvent(this, 'verticalOrigin', value, oldValue);
+                if (oldValue !== value) {
+                    this._verticalOrigin = value;
+                    this._propertyAssigned.raiseEvent(this, 'verticalOrigin', value, oldValue);
+                }
             }
         },
         /**
@@ -144,8 +158,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._color;
-                this._color = value;
-                this._propertyAssigned.raiseEvent(this, 'color', value, oldValue);
+                if (oldValue !== value) {
+                    this._color = value;
+                    this._propertyAssigned.raiseEvent(this, 'color', value, oldValue);
+                }
             }
         },
         /**
@@ -159,8 +175,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._eyeOffset;
-                this._eyeOffset = value;
-                this._propertyAssigned.raiseEvent(this, 'eyeOffset', value, oldValue);
+                if (oldValue !== value) {
+                    this._eyeOffset = value;
+                    this._propertyAssigned.raiseEvent(this, 'eyeOffset', value, oldValue);
+                }
             }
         },
         /**
@@ -174,8 +192,10 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._pixelOffset;
-                this._pixelOffset = value;
-                this._propertyAssigned.raiseEvent(this, 'pixelOffset', value, oldValue);
+                if (oldValue !== value) {
+                    this._pixelOffset = value;
+                    this._propertyAssigned.raiseEvent(this, 'pixelOffset', value, oldValue);
+                }
             }
         },
         /**
@@ -189,25 +209,35 @@ define(['../Core/defaultValue',
             },
             set : function(value) {
                 var oldValue = this._show;
-                this._show = value;
-                this._propertyAssigned.raiseEvent(this, 'show', value, oldValue);
+                if (oldValue !== value) {
+                    this._show = value;
+                    this._propertyAssigned.raiseEvent(this, 'show', value, oldValue);
+                }
             }
         }
     });
 
+    /**
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
+     *
+     * @param {DynamicBillboard} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
+     */
     DynamicBillboard.prototype.merge = function(source) {
-        if (defined(source)) {
-            this.color = defaultValue(this.color, source.color);
-            this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
-            this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
-            this.image = defaultValue(this.image, source.image);
-            this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
-            this.scale = defaultValue(this.scale, source.scale);
-            this.rotation = defaultValue(this.rotation, source.rotation);
-            this.alignedAxis = defaultValue(this.alignedAxis, source.alignedAxis);
-            this.show = defaultValue(this.show, source.show);
-            this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.color = defaultValue(this.color, source.color);
+        this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
+        this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
+        this.image = defaultValue(this.image, source.image);
+        this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
+        this.scale = defaultValue(this.scale, source.scale);
+        this.rotation = defaultValue(this.rotation, source.rotation);
+        this.alignedAxis = defaultValue(this.alignedAxis, source.alignedAxis);
+        this.show = defaultValue(this.show, source.show);
+        this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
     };
 
     return DynamicBillboard;

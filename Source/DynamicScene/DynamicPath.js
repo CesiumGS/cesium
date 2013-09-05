@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -80,15 +85,6 @@ define([
             targetpath.leadTime = defaultValue(targetpath.leadTime, pathToMerge.leadTime);
             targetpath.trailTime = defaultValue(targetpath.trailTime, pathToMerge.trailTime);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the path associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the path from.
-     */
-    DynamicPath.undefineProperties = function(dynamicObject) {
-        dynamicObject.path = undefined;
     };
 
     return DynamicPath;

@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
     ], function(
-         defaultValue,
-         defined) {
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -45,15 +50,6 @@ define([
             targetPolygon.show = defaultValue(targetPolygon.show, polygonToMerge.show);
             targetPolygon.material = defaultValue(targetPolygon.material, polygonToMerge.material);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the polygon associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the polygon from.
-     */
-    DynamicPolygon.undefineProperties = function(dynamicObject) {
-        dynamicObject.polygon = undefined;
     };
 
     return DynamicPolygon;

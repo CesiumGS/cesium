@@ -144,11 +144,4 @@ defineSuite([
         expect(targetObject.billboard.pixelOffset).toEqual(expectedPixelOffset);
         expect(targetObject.billboard.show).toEqual(expectedShow);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.billboard = new DynamicBillboard();
-        DynamicBillboard.undefineProperties(testObject);
-        expect(testObject.billboard).toBeUndefined();
-    });
 });

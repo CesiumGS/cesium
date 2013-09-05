@@ -1,10 +1,15 @@
 /*global define*/
-define([
-        '../Core/defaultValue',
-        '../Core/defined'],
-function(
+define(['../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Event'
+    ], function(
         defaultValue,
-        defined) {
+        defined,
+        defineProperties,
+        DeveloperError,
+        Event) {
     "use strict";
 
     /**
@@ -62,15 +67,6 @@ function(
             targetPolyline.outlineWidth = defaultValue(targetPolyline.outlineWidth, polylineToMerge.outlineWidth);
             targetPolyline.show = defaultValue(targetPolyline.show, polylineToMerge.show);
         }
-    };
-
-    /**
-     * Given a DynamicObject, undefines the polyline associated with it.
-     *
-     * @param {DynamicObject} dynamicObject The DynamicObject to remove the polyline from.
-     */
-    DynamicPolyline.undefineProperties = function(dynamicObject) {
-        dynamicObject.polyline = undefined;
     };
 
     return DynamicPolyline;

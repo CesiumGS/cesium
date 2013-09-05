@@ -163,11 +163,4 @@ defineSuite([
         expect(targetObject.cone.showIntersection).toEqual(expectedShowIntersection);
         expect(targetObject.cone.silhouetteMaterial).toEqual(expectedSilhouetteMaterial);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.cone = new DynamicCone();
-        DynamicCone.undefineProperties(testObject);
-        expect(testObject.cone).toBeUndefined();
-    });
 });

@@ -69,11 +69,4 @@ defineSuite([
         expect(targetClock.clockStep).toEqual(clockToMerge.clockStep);
         expect(targetClock.multiplier).toEqual(clockToMerge.multiplier);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.clock = new DynamicClock();
-        DynamicClock.undefineProperties(testObject);
-        expect(testObject.clock).toBeUndefined();
-    });
 });

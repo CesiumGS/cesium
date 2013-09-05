@@ -85,13 +85,6 @@ defineSuite([
         expect(mergedObject.ellipse.bearing).toBe(expectedBearing);
     });
 
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.ellipse = new DynamicEllipse();
-        DynamicEllipse.undefineProperties(testObject);
-        expect(testObject.ellipse).toBeUndefined();
-    });
-
     it('getValue with no properties returns undefined', function() {
         var ellipse = new DynamicEllipse();
         expect(ellipse.getValue(new JulianDate(), position)).toBeUndefined();

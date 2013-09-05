@@ -81,11 +81,4 @@ defineSuite([
         expect(targetObject.polyline.outlineWidth).toEqual(9);
         expect(targetObject.polyline.show).toEqual(10);
     });
-
-    it('undefineProperties works', function() {
-        var testObject = new DynamicObject('testObject');
-        testObject.polyline = new DynamicPolyline();
-        DynamicPolyline.undefineProperties(testObject);
-        expect(testObject.polyline).toBeUndefined();
-    });
 });
