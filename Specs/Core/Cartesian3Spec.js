@@ -251,7 +251,7 @@ defineSuite([
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var scalar = 2;
         var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
-        var result = cartesian.divideByScalar(scalar);
+        var result = Cartesian3.divideByScalar(cartesian, scalar);
         expect(result).toEqual(expectedResult);
     });
 
@@ -260,18 +260,9 @@ defineSuite([
         var result = new Cartesian3();
         var scalar = 2;
         var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
-        var returnedResult = cartesian.divideByScalar(scalar, result);
+        var returnedResult = Cartesian3.divideByScalar(cartesian, scalar, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('divideByScalar with "this" result parameter', function() {
-        var cartesian = new Cartesian3(1.0, 2.0, 3.0);
-        var scalar = 2;
-        var expectedResult = new Cartesian3(0.5, 1.0, 1.5);
-        var returnedResult = cartesian.divideByScalar(scalar, cartesian);
-        expect(cartesian).toBe(returnedResult);
-        expect(cartesian).toEqual(expectedResult);
     });
 
     it('negate without a result parameter', function() {

@@ -710,20 +710,6 @@ define([
     };
 
     /**
-     * Divides this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian4
-     *
-     * @param {Number} scalar The scalar to divide by.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian4.prototype.divideByScalar = function(scalar, result) {
-        return Cartesian4.divideByScalar(this, scalar, result);
-    };
-
-    /**
      * Computes the absolute value of this Cartesian.
      * @memberof Cartesian4
      *

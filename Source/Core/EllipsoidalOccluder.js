@@ -274,7 +274,7 @@ define([
         var scaledSpacePosition = ellipsoid.transformPositionToScaledSpace(position, scaledSpaceScratch);
         var magnitudeSquared = Cartesian3.magnitudeSquared(scaledSpacePosition);
         var magnitude = Math.sqrt(magnitudeSquared);
-        var direction = scaledSpacePosition.divideByScalar(magnitude, directionScratch);
+        var direction = Cartesian3.divideByScalar(scaledSpacePosition, magnitude, directionScratch);
 
         // For the purpose of this computation, points below the ellipsoid are consider to be on it instead.
         magnitudeSquared = Math.max(1.0, magnitudeSquared);

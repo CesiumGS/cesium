@@ -670,20 +670,6 @@ define([
     };
 
     /**
-     * Divides this Cartesian componentwise by the provided scalar.
-     * @memberof Cartesian2
-     *
-     * @param {Number} scalar The scalar to divide by.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} scalar is required and must be a number.
-     */
-    Cartesian2.prototype.divideByScalar = function(scalar, result) {
-        return Cartesian2.divideByScalar(this, scalar, result);
-    };
-
-    /**
      * Computes the absolute value of this Cartesian.
      * @memberof Cartesian2
      *
