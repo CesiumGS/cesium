@@ -37,25 +37,19 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the ellipsoid properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicEllipsoid} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicEllipsoid.mergeProperties = function(targetObject, objectToMerge) {
-        var ellipsoidToMerge = objectToMerge.ellipsoid;
-        if (defined(ellipsoidToMerge)) {
-
-            var targetEllipsoid = targetObject.ellipsoid;
-            if (!defined(targetEllipsoid)) {
-                targetObject.ellipsoid = targetEllipsoid = new DynamicEllipsoid();
-            }
-
-            targetEllipsoid.show = defaultValue(targetEllipsoid.show, ellipsoidToMerge.show);
-            targetEllipsoid.radii = defaultValue(targetEllipsoid.radii, ellipsoidToMerge.radii);
-            targetEllipsoid.material = defaultValue(targetEllipsoid.material, ellipsoidToMerge.material);
+    DynamicEllipsoid.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.show = defaultValue(this.show, source.show);
+        this.radii = defaultValue(this.radii, source.radii);
+        this.material = defaultValue(this.material, source.material);
     };
 
     return DynamicEllipsoid;

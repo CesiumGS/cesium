@@ -50,25 +50,19 @@ define(['../Core/Cartesian3',
     };
 
     /**
-     * Given two DynamicObjects, takes the ellipse properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicEllipse} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicEllipse.mergeProperties = function(targetObject, objectToMerge) {
-        var ellipseToMerge = objectToMerge.ellipse;
-        if (defined(ellipseToMerge)) {
-
-            var targetEllipse = targetObject.ellipse;
-            if (!defined(targetEllipse)) {
-                targetObject.ellipse = targetEllipse = new DynamicEllipse();
-            }
-
-            targetEllipse.bearing = defaultValue(targetEllipse.bearing, ellipseToMerge.bearing);
-            targetEllipse.semiMajorAxis = defaultValue(targetEllipse.semiMajorAxis, ellipseToMerge.semiMajorAxis);
-            targetEllipse.semiMinorAxis = defaultValue(targetEllipse.semiMinorAxis, ellipseToMerge.semiMinorAxis);
+    DynamicEllipse.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.bearing = defaultValue(this.bearing, source.bearing);
+        this.semiMajorAxis = defaultValue(this.semiMajorAxis, source.semiMajorAxis);
+        this.semiMinorAxis = defaultValue(this.semiMinorAxis, source.semiMinorAxis);
     };
 
     /**

@@ -61,30 +61,24 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the path properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPath} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPath.mergeProperties = function(targetObject, objectToMerge) {
-        var pathToMerge = objectToMerge.path;
-        if (defined(pathToMerge)) {
-
-            var targetpath = targetObject.path;
-            if (!defined(targetpath)) {
-                targetObject.path = targetpath = new DynamicPath();
-            }
-
-            targetpath.color = defaultValue(targetpath.color, pathToMerge.color);
-            targetpath.width = defaultValue(targetpath.width, pathToMerge.width);
-            targetpath.resolution = defaultValue(targetpath.resolution, pathToMerge.resolution);
-            targetpath.outlineColor = defaultValue(targetpath.outlineColor, pathToMerge.outlineColor);
-            targetpath.outlineWidth = defaultValue(targetpath.outlineWidth, pathToMerge.outlineWidth);
-            targetpath.show = defaultValue(targetpath.show, pathToMerge.show);
-            targetpath.leadTime = defaultValue(targetpath.leadTime, pathToMerge.leadTime);
-            targetpath.trailTime = defaultValue(targetpath.trailTime, pathToMerge.trailTime);
+    DynamicPath.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.color = defaultValue(this.color, source.color);
+        this.width = defaultValue(this.width, source.width);
+        this.resolution = defaultValue(this.resolution, source.resolution);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.show = defaultValue(this.show, source.show);
+        this.leadTime = defaultValue(this.leadTime, source.leadTime);
+        this.trailTime = defaultValue(this.trailTime, source.trailTime);
     };
 
     return DynamicPath;

@@ -81,34 +81,28 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the label properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicLabel} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicLabel.mergeProperties = function(targetObject, objectToMerge) {
-        var labelToMerge = objectToMerge.label;
-        if (defined(labelToMerge)) {
-
-            var targetLabel = targetObject.label;
-            if (!defined(targetLabel)) {
-                targetObject.label = targetLabel = new DynamicLabel();
-            }
-
-            targetLabel.text = defaultValue(targetLabel.text, labelToMerge.text);
-            targetLabel.font = defaultValue(targetLabel.font, labelToMerge.font);
-            targetLabel.show = defaultValue(targetLabel.show, labelToMerge.show);
-            targetLabel.style = defaultValue(targetLabel.style, labelToMerge.style);
-            targetLabel.fillColor = defaultValue(targetLabel.fillColor, labelToMerge.fillColor);
-            targetLabel.outlineColor = defaultValue(targetLabel.outlineColor, labelToMerge.outlineColor);
-            targetLabel.outlineWidth = defaultValue(targetLabel.outlineWidth, labelToMerge.outlineWidth);
-            targetLabel.scale = defaultValue(targetLabel.scale, labelToMerge.scale);
-            targetLabel.horizontalOrigin = defaultValue(targetLabel.horizontalOrigin, labelToMerge.horizontalOrigin);
-            targetLabel.verticalOrigin = defaultValue(targetLabel.verticalOrigin, labelToMerge.verticalOrigin);
-            targetLabel.eyeOffset = defaultValue(targetLabel.eyeOffset, labelToMerge.eyeOffset);
-            targetLabel.pixelOffset = defaultValue(targetLabel.pixelOffset, labelToMerge.pixelOffset);
+    DynamicLabel.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.text = defaultValue(this.text, source.text);
+        this.font = defaultValue(this.font, source.font);
+        this.show = defaultValue(this.show, source.show);
+        this.style = defaultValue(this.style, source.style);
+        this.fillColor = defaultValue(this.fillColor, source.fillColor);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.scale = defaultValue(this.scale, source.scale);
+        this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
+        this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
+        this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
+        this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
     };
 
     return DynamicLabel;

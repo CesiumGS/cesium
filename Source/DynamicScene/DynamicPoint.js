@@ -46,27 +46,21 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the point properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPoint} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPoint.mergeProperties = function(targetObject, objectToMerge) {
-        var pointToMerge = objectToMerge.point;
-        if (defined(pointToMerge)) {
-
-            var targetPoint = targetObject.point;
-            if (!defined(targetPoint)) {
-                targetObject.point = targetPoint = new DynamicPoint();
-            }
-
-            targetPoint.color = defaultValue(targetPoint.color, pointToMerge.color);
-            targetPoint.pixelSize = defaultValue(targetPoint.pixelSize, pointToMerge.pixelSize);
-            targetPoint.outlineColor = defaultValue(targetPoint.outlineColor, pointToMerge.outlineColor);
-            targetPoint.outlineWidth = defaultValue(targetPoint.outlineWidth, pointToMerge.outlineWidth);
-            targetPoint.show = defaultValue(targetPoint.show, pointToMerge.show);
+    DynamicPoint.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.color = defaultValue(this.color, source.color);
+        this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.show = defaultValue(this.show, source.show);
     };
 
     return DynamicPoint;

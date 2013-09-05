@@ -46,27 +46,21 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the polyline properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPolyline} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPolyline.mergeProperties = function(targetObject, objectToMerge) {
-        var polylineToMerge = objectToMerge.polyline;
-        if (defined(polylineToMerge)) {
-
-            var targetPolyline = targetObject.polyline;
-            if (!defined(targetPolyline)) {
-                targetObject.polyline = targetPolyline = new DynamicPolyline();
-            }
-
-            targetPolyline.color = defaultValue(targetPolyline.color, polylineToMerge.color);
-            targetPolyline.width = defaultValue(targetPolyline.width, polylineToMerge.width);
-            targetPolyline.outlineColor = defaultValue(targetPolyline.outlineColor, polylineToMerge.outlineColor);
-            targetPolyline.outlineWidth = defaultValue(targetPolyline.outlineWidth, polylineToMerge.outlineWidth);
-            targetPolyline.show = defaultValue(targetPolyline.show, polylineToMerge.show);
+    DynamicPolyline.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.color = defaultValue(this.color, source.color);
+        this.width = defaultValue(this.width, source.width);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.show = defaultValue(this.show, source.show);
     };
 
     return DynamicPolyline;

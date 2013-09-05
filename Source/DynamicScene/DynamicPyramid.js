@@ -58,29 +58,23 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the pyramid properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPyramid} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPyramid.mergeProperties = function(targetObject, objectToMerge) {
-        var pyramidToMerge = objectToMerge.pyramid;
-        if (defined(pyramidToMerge)) {
-
-            var targetPyramid = targetObject.pyramid;
-            if (!defined(targetPyramid)) {
-                targetObject.pyramid = targetPyramid = new DynamicPyramid();
-            }
-
-            targetPyramid.show = defaultValue(targetPyramid.show, pyramidToMerge.show);
-            targetPyramid.directions = defaultValue(targetPyramid.directions, pyramidToMerge.directions);
-            targetPyramid.radius = defaultValue(targetPyramid.radius, pyramidToMerge.radius);
-            targetPyramid.showIntersection = defaultValue(targetPyramid.showIntersection, pyramidToMerge.showIntersection);
-            targetPyramid.intersectionColor = defaultValue(targetPyramid.intersectionColor, pyramidToMerge.intersectionColor);
-            targetPyramid.intersectionWidth = defaultValue(targetPyramid.intersectionWidth, pyramidToMerge.intersectionWidth);
-            targetPyramid.material = defaultValue(targetPyramid.material, pyramidToMerge.material);
+    DynamicPyramid.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.show = defaultValue(this.show, source.show);
+        this.directions = defaultValue(this.directions, source.directions);
+        this.radius = defaultValue(this.radius, source.radius);
+        this.showIntersection = defaultValue(this.showIntersection, source.showIntersection);
+        this.intersectionColor = defaultValue(this.intersectionColor, source.intersectionColor);
+        this.intersectionWidth = defaultValue(this.intersectionWidth, source.intersectionWidth);
+        this.material = defaultValue(this.material, source.material);
     };
 
     return DynamicPyramid;

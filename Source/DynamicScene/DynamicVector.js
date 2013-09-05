@@ -46,27 +46,21 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the vector properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicVector} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicVector.mergeProperties = function(targetObject, objectToMerge) {
-        var vectorToMerge = objectToMerge.vector;
-        if (defined(vectorToMerge)) {
-
-            var targetVector = targetObject.vector;
-            if (!defined(targetVector)) {
-                targetObject.vector = targetVector = new DynamicVector();
-            }
-
-            targetVector.color = defaultValue(targetVector.color, vectorToMerge.color);
-            targetVector.width = defaultValue(targetVector.width, vectorToMerge.width);
-            targetVector.direction = defaultValue(targetVector.direction, vectorToMerge.direction);
-            targetVector.length = defaultValue(targetVector.length, vectorToMerge.length);
-            targetVector.show = defaultValue(targetVector.show, vectorToMerge.show);
+    DynamicVector.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.color = defaultValue(this.color, source.color);
+        this.width = defaultValue(this.width, source.width);
+        this.direction = defaultValue(this.direction, source.direction);
+        this.length = defaultValue(this.length, source.length);
+        this.show = defaultValue(this.show, source.show);
     };
 
     return DynamicVector;

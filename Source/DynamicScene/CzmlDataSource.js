@@ -766,6 +766,11 @@ define([
         var clock = dynamicObject.clock;
         if (!defined(clock)) {
             clock = new DynamicClock();
+            clock.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+            clock.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+            clock.clockRange = ClockRange.LOOP_STOP;
+            clock.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+            clock.multiplier = 1.0;
             dynamicObject.clock = clock;
         }
         if (defined(clockPacket.interval)) {

@@ -1,6 +1,7 @@
 /*global define*/
 define(['../Core/ClockRange',
         '../Core/ClockStep',
+        '../Core/Clock',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,6 +11,7 @@ define(['../Core/ClockRange',
     ], function(
         ClockRange,
         ClockStep,
+        Clock,
         defaultValue,
         defined,
         defineProperties,
@@ -30,35 +32,35 @@ define(['../Core/ClockRange',
          * @type {JulianDate}
          * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
-        this.startTime = Iso8601.MAXIMUM_INTERVAL.start;
+        this.startTime = undefined;
 
         /**
          * The stop time of the clock to use when looping or clamped.
          * @type {JulianDate}
          * @default {@link Iso8601.MAXIMUM_INTERVAL.stop}
          */
-        this.stopTime = Iso8601.MAXIMUM_INTERVAL.stop;
+        this.stopTime = undefined;
 
         /**
          * The initial time to use when switching to this clock.
          * @type {JulianDate}
          * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
-        this.currentTime = Iso8601.MAXIMUM_INTERVAL.start;
+        this.currentTime = undefined;
 
         /**
          * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
          * @type {ClockRange}
          * @default {@link ClockRange.LOOP_STOP}
          */
-        this.clockRange = ClockRange.LOOP_STOP;
+        this.clockRange = undefined;
 
         /**
          * Determines if clock advancement is frame dependent or system clock dependent.
          * @type {ClockStep}
          * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
-        this.clockStep = ClockStep.SYSTEM_CLOCK_MULTIPLIER;
+        this.clockStep = undefined;
 
         /**
          * Determines how much time advances with each tick, negative values allow for advancing backwards.
@@ -68,27 +70,7 @@ define(['../Core/ClockRange',
          * @type {Number}
          * @default 1.0
          */
-        this.multiplier = 1.0;
-    };
-
-    /**
-     * Duplicates a DynamicClock instance.
-     * @memberof DynamicClock
-     *
-     * @param {DynamicClock} [result] The object onto which to store the result.
-     * @returns {DynamicClock} The modified result parameter or a new DynamicClock instance if one was not provided.
-     */
-    DynamicClock.prototype.clone = function(result) {
-        if (!defined(result)) {
-            result = new DynamicClock();
-        }
-        result.startTime = this.startTime;
-        result.stopTime = this.stopTime;
-        result.clockRange = this.clockRange;
-        result.clockStep = this.clockStep;
-        result.multiplier = this.multiplier;
-        result.currentTime = this.currentTime;
-        return result;
+        this.multiplier = undefined;
     };
 
     /**
@@ -108,6 +90,25 @@ define(['../Core/ClockRange',
         this.clockRange = defaultValue(this.clockRange, source.clockRange);
         this.clockStep = defaultValue(this.clockStep, source.clockStep);
         this.multiplier = defaultValue(this.multiplier, source.multiplier);
+    };
+
+    /**
+     * Gets the value of this clock instance as a {@link Clock} object.
+     * @memberof DynamicClock
+     *
+     * @returns {Clock} The modified result parameter or a new instance if one was not provided.
+     */
+    DynamicClock.prototype.getValue = function(result) {
+        if (!defined(result)) {
+            result = new Clock();
+        }
+        result.startTime = this.startTime;
+        result.stopTime = this.stopTime;
+        result.clockRange = this.clockRange;
+        result.clockStep = this.clockStep;
+        result.multiplier = this.multiplier;
+        result.currentTime = this.currentTime;
+        return result;
     };
 
     return DynamicClock;

@@ -32,24 +32,18 @@ define(['../Core/defaultValue',
     };
 
     /**
-     * Given two DynamicObjects, takes the polygon properties from the second
-     * and assigns them to the first, assuming such a property did not already exist.
+     * Assigns each unassigned property on this object to the value
+     * of the same property on the provided source object.
      *
-     * @param {DynamicObject} targetObject The DynamicObject which will have properties merged onto it.
-     * @param {DynamicObject} objectToMerge The DynamicObject containing properties to be merged.
+     * @param {DynamicPolygon} source The object to be merged into this object.
+     * @exception {DeveloperError} source is required.
      */
-    DynamicPolygon.mergeProperties = function(targetObject, objectToMerge) {
-        var polygonToMerge = objectToMerge.polygon;
-        if (defined(polygonToMerge)) {
-
-            var targetPolygon = targetObject.polygon;
-            if (!defined(targetPolygon)) {
-                targetObject.polygon = targetPolygon = new DynamicPolygon();
-            }
-
-            targetPolygon.show = defaultValue(targetPolygon.show, polygonToMerge.show);
-            targetPolygon.material = defaultValue(targetPolygon.material, polygonToMerge.material);
+    DynamicPolygon.prototype.merge = function(source) {
+        if (!defined(source)) {
+            throw new DeveloperError('source is required.');
         }
+        this.show = defaultValue(this.show, source.show);
+        this.material = defaultValue(this.material, source.material);
     };
 
     return DynamicPolygon;
