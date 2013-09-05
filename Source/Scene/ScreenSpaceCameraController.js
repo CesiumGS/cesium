@@ -759,9 +759,9 @@ define([
         p1 = cameraController._camera.worldToCameraCoordinates(p1, p1);
 
         if (!defined(cameraController.constrainedAxis)) {
-            Cartesian3.normalize(p0, p0);
-            Cartesian3.normalize(p1, p1);
-            var dot = Cartesian3.dot(p0, p1);
+            Cartesian4.normalize(p0, p0);
+            Cartesian4.normalize(p1, p1);
+            var dot = Cartesian4.dot(p0, p1);
             var axis = Cartesian3.cross(p0, p1, pan3DTemp0);
 
             if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
