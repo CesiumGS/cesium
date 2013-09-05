@@ -389,7 +389,7 @@ define([
     };
 
     Occluder._anyRotationVector = function(occluderPosition, occluderPlaneNormal, occluderPlaneD) {
-        var tempVec0 = occluderPlaneNormal.clone().abs();
+        var tempVec0 = Cartesian3.abs(Cartesian3.clone(occluderPlaneNormal));
         var majorAxis = tempVec0.x > tempVec0.y ? 0 : 1;
         if (((majorAxis === 0) && (tempVec0.z > tempVec0.x)) || ((majorAxis === 1) && (tempVec0.z > tempVec0.y))) {
             majorAxis = 2;

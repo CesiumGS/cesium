@@ -710,17 +710,6 @@ define([
     };
 
     /**
-     * Computes the absolute value of this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.abs = function(result) {
-        return Cartesian4.abs(this, result);
-    };
-
-    /**
      * Computes the linear interpolation or extrapolation at t using this Cartesian
      * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
      * @memberof Cartesian4

@@ -275,7 +275,7 @@ defineSuite([
     it('abs without a result parameter', function() {
         var cartesian = new Cartesian4(-1.0, -2.0, -4.0, -3.0);
         var expectedResult = new Cartesian4(1.0, 2.0, 4.0, 3.0);
-        var result = cartesian.abs();
+        var result = Cartesian4.abs(cartesian, );
         expect(result).toEqual(expectedResult);
     });
 
@@ -283,17 +283,9 @@ defineSuite([
         var cartesian = new Cartesian4(1.0, -2.0, -4.0, -3.0);
         var result = new Cartesian4();
         var expectedResult = new Cartesian4(1.0, 2.0, 4.0, 3.0);
-        var returnedResult = cartesian.abs(result);
+        var returnedResult = Cartesian4.abs(cartesian, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('abs with "this" result parameter', function() {
-        var cartesian = new Cartesian4(1.0, -2.0, -4.0, -3.0);
-        var expectedResult = new Cartesian4(1.0, 2.0, 4.0, 3.0);
-        var returnedResult = cartesian.abs(cartesian);
-        expect(cartesian).toBe(returnedResult);
-        expect(cartesian).toEqual(expectedResult);
     });
 
     it('lerp works without a result parameter', function() {

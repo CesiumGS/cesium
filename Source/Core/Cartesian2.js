@@ -670,17 +670,6 @@ define([
     };
 
     /**
-     * Computes the absolute value of this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     */
-    Cartesian2.prototype.abs = function(result) {
-        return Cartesian2.abs(this, result);
-    };
-
-    /**
      * Computes the linear interpolation or extrapolation at t using this Cartesian
      * and the provided cartesian.  This cartesian is assumed to be t at 0.0.
      * @memberof Cartesian2
