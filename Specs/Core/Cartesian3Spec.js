@@ -338,27 +338,27 @@ defineSuite([
     it('angleBetween works for right angles', function() {
         var x = Cartesian3.UNIT_X;
         var y = Cartesian3.UNIT_Y;
-        expect(x.angleBetween(y)).toEqual(CesiumMath.PI_OVER_TWO);
-        expect(y.angleBetween(x)).toEqual(CesiumMath.PI_OVER_TWO);
+        expect(Cartesian3.angleBetween(x, y)).toEqual(CesiumMath.PI_OVER_TWO);
+        expect(Cartesian3.angleBetween(y, x)).toEqual(CesiumMath.PI_OVER_TWO);
     });
 
     it('angleBetween works for acute angles', function() {
         var x = new Cartesian3(0.0, 1.0, 0.0);
         var y = new Cartesian3(1.0, 1.0, 0.0);
-        expect(x.angleBetween(y)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
-        expect(y.angleBetween(x)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
+        expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
+        expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON14);
     });
 
     it('angleBetween works for obtuse angles', function() {
         var x = new Cartesian3(0.0, 1.0, 0.0);
         var y = new Cartesian3(0.0, -1.0, -1.0);
-        expect(x.angleBetween(y)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
-        expect(y.angleBetween(x)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
+        expect(Cartesian3.angleBetween(x, y)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
+        expect(Cartesian3.angleBetween(y, x)).toEqualEpsilon(CesiumMath.PI * 3.0 / 4.0, CesiumMath.EPSILON14);
     });
 
     it('angleBetween works for zero angles', function() {
         var x = Cartesian3.UNIT_X;
-        expect(x.angleBetween(x)).toEqual(0.0);
+        expect(Cartesian3.angleBetween(x, x)).toEqual(0.0);
     });
 
     it('most orthogonal angle is x', function() {

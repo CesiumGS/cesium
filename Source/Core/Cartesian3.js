@@ -763,20 +763,6 @@ define([
     };
 
     /**
-     * Returns the angle, in radians, between this Cartesian and the provided Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} right The right hand side Cartesian.
-     * @returns {Number} The angle between the Cartesians.
-     *
-     * @exception {DeveloperError} left is required.
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian3.prototype.angleBetween = function(right) {
-        return Cartesian3.angleBetween(this, right);
-    };
-
-    /**
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *
