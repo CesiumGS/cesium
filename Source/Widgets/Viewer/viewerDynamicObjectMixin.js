@@ -89,6 +89,9 @@ define([
         //Subscribe to left clicks and zoom to the picked object.
         viewer.screenSpaceEventHandler.setInputAction(pickAndTrackObject, ScreenSpaceEventType.LEFT_CLICK);
 
+        //Subscribe to data source removals, and clear tracked object.
+        eventHelper.add(viewer.dataSources.dataSourceRemoved, clearTrackedObject);
+
         defineProperties(viewer, {
             /**
              * Gets or sets the DynamicObject instance currently being tracked by the camera.
