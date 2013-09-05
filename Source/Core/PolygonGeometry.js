@@ -200,7 +200,7 @@ define([
                                 recomputeNormal = false;
                             }
 
-                            if (p1.equalsEpsilon(position, CesiumMath.EPSILON10)) { // if we've reached a corner
+                            if (Cartesian3.equalsEpsilon(p1, position, CesiumMath.EPSILON10)) { // if we've reached a corner
                                 recomputeNormal = true;
                             }
                         }

@@ -532,8 +532,8 @@ define([
         var position = camera.position;
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(controller.constrainedAxis)) {
-            var northParallel = p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = p.equalsEpsilon(Cartesian3.negate(controller.constrainedAxis), CesiumMath.EPSILON2);
+            var northParallel = Cartesian3.equalsEpsilon(p, controller.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(controller.constrainedAxis), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
 

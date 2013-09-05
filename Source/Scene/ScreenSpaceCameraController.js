@@ -688,8 +688,8 @@ define([
         if (defined(cameraController.constrainedAxis) && !defined(transform)) {
             var camera = cameraController._camera;
             var p = Cartesian3.normalize(camera.position);
-            var northParallel = p.equalsEpsilon(cameraController.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = p.equalsEpsilon(Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
+            var northParallel = Cartesian3.equalsEpsilon(p, cameraController.constrainedAxis, CesiumMath.EPSILON2);
+            var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(cameraController.constrainedAxis), CesiumMath.EPSILON2);
 
             if (!northParallel && !southParallel) {
                 var up;
@@ -764,7 +764,7 @@ define([
             var dot = Cartesian4.dot(p0, p1);
             var axis = Cartesian3.cross(p0, p1, pan3DTemp0);
 
-            if (dot < 1.0 && !axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
+            if (dot < 1.0 && !Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON14)) { // dot is in [0, 1]
                 var angle = Math.acos(dot);
                 cameraController.rotate(axis, angle);
             }

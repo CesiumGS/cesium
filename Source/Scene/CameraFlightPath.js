@@ -161,7 +161,7 @@ define([
 
             angle = Math.acos(Cartesian3.dot(Cartesian3.normalize(afterStart), Cartesian3.normalize(aboveEnd)));
             axis = afterStart.cross(aboveEnd);
-            if (axis.equalsEpsilon(Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            if (Cartesian3.equalsEpsilon(axis, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
                 axis = Cartesian3.UNIT_Z;
             }
 

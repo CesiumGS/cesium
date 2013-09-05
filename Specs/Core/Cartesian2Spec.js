@@ -401,13 +401,13 @@ defineSuite([
 
     it('equalsEpsilon', function() {
         var cartesian = new Cartesian2(1.0, 2.0);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 0.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 2.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(2.0, 2.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian2(2.0, 2.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(new Cartesian2(1.0, 3.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 2.0), 0.0)).toEqual(true);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 2.0), 1.0)).toEqual(true);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(2.0, 2.0), 1.0)).toEqual(true);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 3.0), 1.0)).toEqual(true);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(2.0, 2.0), 0.99999)).toEqual(false);
+        expect(Cartesian2.equalsEpsilon(cartesian, new Cartesian2(1.0, 3.0), 0.99999)).toEqual(false);
+        expect(Cartesian2.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {

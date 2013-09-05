@@ -415,17 +415,17 @@ defineSuite([
 
     it('equalsEpsilon', function() {
         var cartesian = new Cartesian4(1.0, 2.0, 3.0, 4.0);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
-        expect(cartesian.equalsEpsilon(new Cartesian4(2.0, 2.0, 3.0, 4.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 3.0, 3.0, 4.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 4.0, 4.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(new Cartesian4(1.0, 2.0, 3.0, 5.0), 0.99999)).toEqual(false);
-        expect(cartesian.equalsEpsilon(undefined, 1)).toEqual(false);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 4.0), 0.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(2.0, 2.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 3.0, 3.0, 4.0), 1.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 4.0, 4.0), 1.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 5.0), 1.0)).toEqual(true);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(2.0, 2.0, 3.0, 4.0), 0.99999)).toEqual(false);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 3.0, 3.0, 4.0), 0.99999)).toEqual(false);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 4.0, 4.0), 0.99999)).toEqual(false);
+        expect(Cartesian4.equalsEpsilon(cartesian, new Cartesian4(1.0, 2.0, 3.0, 5.0), 0.99999)).toEqual(false);
+        expect(Cartesian4.equalsEpsilon(cartesian, undefined, 1)).toEqual(false);
     });
 
     it('toString', function() {

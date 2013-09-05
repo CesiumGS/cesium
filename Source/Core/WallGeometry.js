@@ -266,7 +266,7 @@ define([
                     recomputeNormal = false;
                 }
 
-                if (nextPosition.equalsEpsilon(groundPosition, CesiumMath.EPSILON6)) {
+                if (Cartesian3.equalsEpsilon(nextPosition, groundPosition, CesiumMath.EPSILON6)) {
                     recomputeNormal = true;
                 } else {
                     if (vertexFormat.tangent) {

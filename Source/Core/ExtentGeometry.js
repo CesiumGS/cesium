@@ -256,7 +256,7 @@ define([
                     recomputeNormal = false;
                 }
 
-                if (p1.equalsEpsilon(p, CesiumMath.EPSILON10)) { // if we've reached a corner
+                if (Cartesian3.equalsEpsilon(p1, p, CesiumMath.EPSILON10)) { // if we've reached a corner
                     recomputeNormal = true;
                 }
 
@@ -497,7 +497,7 @@ define([
             upperRight = upperLeft + 1;
             var p1 = Cartesian3.fromArray(wallPositions, upperLeft * 3, v1Scratch);
             var p2 = Cartesian3.fromArray(wallPositions, upperRight * 3, v2Scratch);
-            if (p1.equalsEpsilon(p2, CesiumMath.EPSILON10)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10)) {
                 continue;
             }
             lowerLeft = upperLeft + length;
