@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/VertexFormat',
         './Material',
         './Appearance',
@@ -9,6 +10,7 @@ define([
         '../Shaders/Appearances/EllipsoidSurfaceAppearanceFS'
     ], function(
         defaultValue,
+        defined,
         VertexFormat,
         Material,
         Appearance,
@@ -67,7 +69,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = (typeof options.material !== 'undefined') ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = (defined(options.material)) ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * The GLSL source code for the vertex shader.
@@ -152,6 +154,17 @@ define([
         this.translucent = translucent;
 
         /**
+         * When <code>true</code>, the geometry is expected to be closed so
+         * {@link EllipsoidSurfaceAppearance#renderState} has backface culling enabled.
+         * If the viewer enters the geometry, it will not be visible.
+         *
+         * @readonly
+         *
+         * @default true
+         */
+        this.closed = !aboveGround;
+
+        /**
          * When <code>true</code>, the geometry is expected to be on the ellipsoid's
          * surface - not at a constant height above it - so {@link EllipsoidSurfaceAppearance#renderState}
          * has backface culling enabled.
@@ -181,7 +194,7 @@ define([
      *
      * @memberof EllipsoidSurfaceAppearance
      *
-     * @return String The full GLSL fragment shader source.
+     * @returns String The full GLSL fragment shader source.
      */
     EllipsoidSurfaceAppearance.prototype.getFragmentShaderSource = Appearance.prototype.getFragmentShaderSource;
 

@@ -1,11 +1,13 @@
 /*global define*/
 define([
         'Core/defaultValue',
+        'Core/defined',
         'Core/Intersect',
         'Core/Matrix4',
         'Scene/SceneMode'
      ], function(
          defaultValue,
+         defined,
          Intersect,
          Matrix4,
          SceneMode) {
@@ -44,11 +46,11 @@ define([
             for (var j = 0; j < commandListLength; ++j) {
                 var command = commandList[j];
                 var boundingVolume = command.boundingVolume;
-                if (typeof boundingVolume !== 'undefined') {
+                if (defined(boundingVolume)) {
                     var modelMatrix = defaultValue(command.modelMatrix, Matrix4.IDENTITY);
                     var transformedBV = boundingVolume.transform(modelMatrix);
                     if (cullingVolume.getVisibility(transformedBV) === Intersect.OUTSIDE ||
-                            (typeof occluder !== 'undefined' && !occluder.isBoundingSphereVisible(transformedBV))) {
+                            (defined(occluder) && !occluder.isBoundingSphereVisible(transformedBV))) {
                         continue;
                     }
                 }

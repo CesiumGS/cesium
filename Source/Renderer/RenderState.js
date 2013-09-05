@@ -2,6 +2,7 @@
 define([
         '../Core/Color',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/BoundingRectangle',
         '../Core/RuntimeError',
@@ -15,6 +16,7 @@ define([
     ], function(
         Color,
         defaultValue,
+        defined,
         DeveloperError,
         BoundingRectangle,
         RuntimeError,
@@ -121,9 +123,9 @@ define([
             invert : defaultValue(sampleCoverage.invert, false)
         };
         this.dither = defaultValue(rs.dither, true);
-        this.viewport = (typeof viewport !== 'undefined') ? new BoundingRectangle(viewport.x, viewport.y,
-            (typeof viewport.width === 'undefined') ? context.getCanvas().clientWidth : viewport.width,
-            (typeof viewport.height === 'undefined') ? context.getCanvas().clientHeight : viewport.height) : undefined;
+        this.viewport = (defined(viewport)) ? new BoundingRectangle(viewport.x, viewport.y,
+            (!defined(viewport.width)) ? context.getCanvas().clientWidth : viewport.width,
+            (!defined(viewport.height)) ? context.getCanvas().clientHeight : viewport.height) : undefined;
 
         // Validate
 
@@ -228,7 +230,7 @@ define([
             throw new DeveloperError('Invalid renderState.stencilTest.backOperation.zPass.');
         }
 
-        if (typeof this.viewport !== 'undefined') {
+        if (defined(this.viewport)) {
             if (this.viewport.width < 0) {
                 throw new DeveloperError('renderState.viewport.width must be greater than or equal to zero.');
             }
@@ -290,12 +292,12 @@ define([
 
     function applyScissorTest(gl, renderState, passState) {
         var scissorTest = renderState.scissorTest;
-        var enabled = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.enabled : scissorTest.enabled;
+        var enabled = (defined(passState.scissorTest)) ? passState.scissorTest.enabled : scissorTest.enabled;
 
         enableOrDisable(gl, gl.SCISSOR_TEST, enabled);
 
         if (enabled) {
-            var rectangle = (typeof passState.scissorTest !== 'undefined') ? passState.scissorTest.rectangle : scissorTest.rectangle;
+            var rectangle = (defined(passState.scissorTest)) ? passState.scissorTest.rectangle : scissorTest.rectangle;
             gl.scissor(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
         }
     }
@@ -331,7 +333,7 @@ define([
 
     function applyBlending(gl, renderState, passState) {
         var blending = renderState.blending;
-        var enabled = (typeof passState.blendingEnabled !== 'undefined') ? passState.blendingEnabled : blending.enabled;
+        var enabled = (defined(passState.blendingEnabled)) ? passState.blendingEnabled : blending.enabled;
 
         enableOrDisable(gl, gl.BLEND, enabled);
 
@@ -404,7 +406,7 @@ define([
     function applyViewport(gl, renderState, passState) {
         var viewport = renderState.viewport;
 
-        if (typeof viewport === 'undefined') {
+        if (!defined(viewport)) {
             var canvas = passState.context.getCanvas();
             viewport = scratchViewport;
             viewport.width = canvas.clientWidth;
@@ -526,7 +528,7 @@ define([
         // to the other.  In practice, this works well since state-to-state transitions generally only require a
         // few WebGL calls, especially if commands are stored by state.
         var funcs = nextState._applyFunctions[previousState.id];
-        if (typeof funcs === 'undefined') {
+        if (!defined(funcs)) {
             funcs = createFuncs(previousState, nextState);
             nextState._applyFunctions[previousState.id] = funcs;
         }

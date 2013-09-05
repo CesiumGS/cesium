@@ -6,6 +6,7 @@ defineSuite([
          'Specs/destroyContext',
          'Specs/render',
          'Core/Cartesian3',
+         'Core/defined',
          'Core/Ellipsoid',
          'Core/Extent',
          'Core/GeographicProjection',
@@ -24,6 +25,7 @@ defineSuite([
          destroyContext,
          render,
          Cartesian3,
+         defined,
          Ellipsoid,
          Extent,
          GeographicProjection,
@@ -43,7 +45,7 @@ defineSuite([
         var tilesToRenderByTextureCount = surface._tilesToRenderByTextureCount;
         for (var tileSetIndex = 0, tileSetLength = tilesToRenderByTextureCount.length; tileSetIndex < tileSetLength; ++tileSetIndex) {
             var tileSet = tilesToRenderByTextureCount[tileSetIndex];
-            if (typeof tileSet === 'undefined' || tileSet.length === 0) {
+            if (!defined(tileSet) || tileSet.length === 0) {
                 continue;
             }
 
@@ -54,11 +56,11 @@ defineSuite([
             }
         }
 
-        if (typeof minimumTiles !== 'undefined') {
+        if (defined(minimumTiles)) {
             expect(tileCount).not.toBeLessThan(minimumTiles);
         }
 
-        if (typeof maximumTiles !== 'undefined') {
+        if (defined(maximumTiles)) {
             expect(tileCount).not.toBeGreaterThan(maximumTiles);
         }
     }
@@ -73,7 +75,7 @@ defineSuite([
             surface._debug.enableDebugOutput = true;
             var commandLists = [];
             cb.update(context, frameState, commandLists);
-            return typeof cb._surface._tileLoadQueue.head === 'undefined' && surface._debug.tilesWaitingForChildren === 0;
+            return !defined(cb._surface._tileLoadQueue.head) && surface._debug.tilesWaitingForChildren === 0;
         }, 'updating to complete');
     }
 
@@ -184,7 +186,7 @@ defineSuite([
                     var hasImageFromLayer2 = false;
                     for (var i = 0; i < tile.imagery.length; ++i) {
                         var imageryTile = tile.imagery[i].readyImagery;
-                        if (typeof imageryTile === 'undefined') {
+                        if (!defined(imageryTile)) {
                             imageryTile = tile.imagery[i].loadingImagery;
                         }
                         if (imageryTile.imageryLayer === layer2) {
@@ -397,7 +399,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 
@@ -456,7 +458,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 
@@ -499,7 +501,7 @@ defineSuite([
                     var command = commandList[j];
 
                     var uniforms = command.uniformMap;
-                    if (typeof uniforms === 'undefined' || typeof uniforms.u_dayTextureAlpha === 'undefined') {
+                    if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
                         continue;
                     }
 

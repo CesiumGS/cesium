@@ -1,9 +1,11 @@
 /*global define*/
 define([
         './defaultValue',
+        './defined',
         '../ThirdParty/when'
     ], function(
         defaultValue,
+        defined,
         when) {
     "use strict";
 
@@ -12,7 +14,7 @@ define([
     var anchor;
 
     function getServer(url) {
-        if (typeof anchor === 'undefined') {
+        if (!defined(anchor)) {
             anchor = document.createElement('a');
         }
         anchor.href = url;
@@ -31,7 +33,7 @@ define([
      * @param {Function} requestFunction The actual function that makes the request.
      * This function is expected to return a Promise for the requested data.
      *
-     * @return {Promise} Either undefined, meaning the request would exceed the maximum
+     * @returns {Promise} Either undefined, meaning the request would exceed the maximum
      * number of parallel requests, or a Promise that returns the requested data.
      *
      * @see <a href='http://wiki.commonjs.org/wiki/Promises/A'>CommonJS Promises/A</a>
@@ -43,7 +45,7 @@ define([
      *     function(url) {
      *        return loadImage(url);
      *     });
-     * if (typeof promise === 'undefined') {
+     * if (!defined(promise)) {
      *     // too many active requests, try again later.
      * } else {
      *     when(promise, function(image) {

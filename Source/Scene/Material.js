@@ -8,6 +8,7 @@ define([
         '../Core/Color',
         '../Core/combine',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Matrix2',
@@ -48,6 +49,7 @@ define([
         Color,
         combine,
         defaultValue,
+        defined,
         destroyObject,
         Cartesian2,
         Matrix2,
@@ -399,7 +401,7 @@ define([
             writable : false
         });
 
-        if (typeof Material._uniformList[this.type] === 'undefined') {
+        if (!defined(Material._uniformList[this.type])) {
             Material._uniformList[this.type] = Object.keys(this._uniforms);
         }
     };
@@ -425,7 +427,7 @@ define([
      * material.uniforms.color = vec4(1.0, 0.0, 0.0, 1.0);
      */
     Material.fromType = function(context, type) {
-        if (typeof Material._materialCache.getMaterial(type) === 'undefined') {
+        if (!defined(Material._materialCache.getMaterial(type))) {
             throw new DeveloperError('material with type \'' + type + '\' does not exist.');
         }
         return new Material({
@@ -499,7 +501,7 @@ define([
         result._template.uniforms = clone(defaultValue(result._template.uniforms, defaultValue.EMPTY_OBJECT));
         result._template.materials = clone(defaultValue(result._template.materials, defaultValue.EMPTY_OBJECT));
 
-        result.type = typeof result._template.type !== 'undefined' ? result._template.type : createGuid();
+        result.type = defined(result._template.type) ? result._template.type : createGuid();
 
         result.shaderSource = '';
         result.materials = {};
@@ -508,7 +510,7 @@ define([
 
         // If the cache contains this material type, build the material template off of the stored template.
         var cachedTemplate = Material._materialCache.getMaterial(result.type);
-        if (typeof cachedTemplate !== 'undefined') {
+        if (defined(cachedTemplate)) {
             var template = clone(cachedTemplate, true);
             result._template = combine([result._template, template]);
         }
@@ -517,7 +519,7 @@ define([
         checkForTemplateErrors(result);
 
         // If the material has a new type, add it to the cache.
-        if (typeof cachedTemplate === 'undefined') {
+        if (!defined(cachedTemplate)) {
             Material._materialCache.addMaterial(result.type, result._template);
         }
 
@@ -527,7 +529,7 @@ define([
     }
 
     function checkForValidProperties(object, properties, result, throwNotFound) {
-        if (typeof object !== 'undefined') {
+        if (defined(object)) {
             for ( var property in object) {
                 if (object.hasOwnProperty(property)) {
                     var hasProperty = properties.indexOf(property) !== -1;
@@ -563,7 +565,7 @@ define([
         var components = template.components;
 
         // Make sure source and components do not exist in the same template.
-        if ((typeof components !== 'undefined') && (typeof template.source !== 'undefined')) {
+        if (defined(components) && defined(template.source)) {
             throw new DeveloperError('fabric: cannot have source and components in the same template.');
         }
 
@@ -585,12 +587,12 @@ define([
     function createMethodDefinition(material) {
         var components = material._template.components;
         var source = material._template.source;
-        if (typeof source !== 'undefined') {
+        if (defined(source)) {
             material.shaderSource += source + '\n';
         } else {
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
-            if (typeof components !== 'undefined') {
+            if (defined(components)) {
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
@@ -617,7 +619,7 @@ define([
         var materialUniforms = material._template.uniforms;
         var uniformValue = materialUniforms[uniformId];
         var uniformType = getUniformType(uniformValue);
-        if (typeof uniformType === 'undefined') {
+        if (!defined(uniformType)) {
             throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid type.');
         } else if (uniformType === 'channels') {
             if (replaceToken(material, uniformId, uniformValue, false) === 0 && strict) {
@@ -626,7 +628,7 @@ define([
         } else {
             // If uniform type is an image, add image dimension uniforms.
             if (uniformType.indexOf('sampler') !== -1) {
-                if (typeof material._context === 'undefined') {
+                if (!defined(material._context)) {
                     throw new DeveloperError('image: context is not defined');
                 }
             }
@@ -666,13 +668,10 @@ define([
         'mat4' : Matrix4
     };
     function returnUniform(material, uniformId, originalUniformType) {
-        var uniformType;
         return function() {
             var uniforms = material.uniforms;
             var uniformValue = uniforms[uniformId];
-            if (typeof uniformType === 'undefined') {
-                uniformType = getUniformType(uniformValue);
-            }
+            var uniformType = getUniformType(uniformValue);
 
             if (originalUniformType === 'sampler2D' && (uniformType === originalUniformType || uniformValue instanceof Texture)) {
                 if (uniformType === originalUniformType) {
@@ -693,7 +692,7 @@ define([
                 if (uniformType === originalUniformType) {
                     uniformValue = matrixMap[originalUniformType].fromColumnMajorArray(uniformValue);
                 }
-            } else if (typeof uniformType === 'undefined' || originalUniformType !== uniformType) {
+            } else if (!defined(uniformType) || originalUniformType !== uniformType) {
                 throw new DeveloperError('fabric: uniform \'' + uniformId + '\' has invalid value.');
             }
             uniforms[uniformId] = uniformValue;
@@ -704,7 +703,7 @@ define([
     // Determines the uniform type based on the uniform in the template.
     function getUniformType(uniformValue) {
         var uniformType = uniformValue.type;
-        if (typeof uniformType === 'undefined') {
+        if (!defined(uniformType)) {
             var type = typeof uniformValue;
             if (type === 'number') {
                 uniformType = 'float';
@@ -849,7 +848,7 @@ define([
                     'property' : property
                 });
                 texture = this._pathsToTextures[path];
-                if (typeof texture === 'undefined') {
+                if (!defined(texture)) {
                     var oldTexture = material.uniforms[property];
                     var hasOldTexture = oldTexture instanceof CubeMap;
                     texture = hasOldTexture ? oldTexture : material._context.getDefaultCubeMap();
@@ -886,7 +885,7 @@ define([
                     'property' : property
                 });
                 texture = this._pathsToTextures[path];
-                if (typeof texture === 'undefined') {
+                if (!defined(texture)) {
                     var oldTexture = material.uniforms[property];
                     var hasOldTexture = oldTexture instanceof Texture;
                     texture = hasOldTexture ? oldTexture : material._context.getDefaultTexture();

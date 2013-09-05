@@ -4,14 +4,14 @@ defineSuite([
          'Core/Cartesian3',
          'DynamicScene/DynamicObject',
          'Scene/CameraFlightPath',
-         'Specs/MockProperty',
+         'DynamicScene/ConstantProperty',
          'Widgets/Viewer/Viewer'
      ], function(
          viewerDynamicObjectMixin,
          Cartesian3,
          DynamicObject,
          CameraFlightPath,
-         MockProperty,
+         ConstantProperty,
          Viewer) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -44,7 +44,7 @@ defineSuite([
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
@@ -58,7 +58,7 @@ defineSuite([
         viewer.extend(viewerDynamicObjectMixin);
 
         var dynamicObject = new DynamicObject();
-        dynamicObject.position = new MockProperty(new Cartesian3(123456, 123456, 123456));
+        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
 
         viewer.trackedObject = dynamicObject;
         expect(viewer.trackedObject).toBe(dynamicObject);
@@ -84,5 +84,35 @@ defineSuite([
         expect(function() {
             viewer.extend(viewerDynamicObjectMixin);
         }).toThrow();
+    });
+
+    it('adds onObjectTracked event', function() {
+        viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+        expect(viewer.hasOwnProperty('onObjectTracked')).toEqual(true);
+    });
+
+    it('onObjectTracked is raised by trackObject', function() {
+        viewer = new Viewer(container);
+        viewer.extend(viewerDynamicObjectMixin);
+
+        var dynamicObject = new DynamicObject();
+        dynamicObject.position = new ConstantProperty(new Cartesian3(123456, 123456, 123456));
+
+        var spyListener = jasmine.createSpy('listener');
+        viewer.onObjectTracked.addEventListener(spyListener);
+
+        viewer.trackedObject = dynamicObject;
+
+        waitsFor(function() {
+            return spyListener.wasCalled;
+        });
+
+        runs(function() {
+            expect(spyListener).toHaveBeenCalledWith(viewer, dynamicObject);
+
+            viewer.onObjectTracked.removeEventListener(spyListener);
+        });
+
     });
 });

@@ -9,10 +9,16 @@ defineSuite([
          'Widgets/HomeButton/HomeButton',
          'Widgets/SceneModePicker/SceneModePicker',
          'Widgets/Timeline/Timeline',
+         'Core/ClockRange',
+         'Core/ClockStep',
+         'Core/JulianDate',
          'DynamicScene/DataSourceDisplay',
          'DynamicScene/DataSourceCollection',
+         'DynamicScene/DynamicClock',
          'Scene/EllipsoidTerrainProvider',
-         'Scene/SceneMode'
+         'Scene/SceneMode',
+         'Specs/EventHelper',
+         'Specs/MockDataSource'
      ], function(
          Viewer,
          Animation,
@@ -23,10 +29,16 @@ defineSuite([
          HomeButton,
          SceneModePicker,
          Timeline,
+         ClockRange,
+         ClockStep,
+         JulianDate,
          DataSourceDisplay,
          DataSourceCollection,
+         DynamicClock,
          EllipsoidTerrainProvider,
-         SceneMode) {
+         SceneMode,
+         EventHelper,
+         MockDataSource) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -357,6 +369,69 @@ defineSuite([
         runs(function() {
             expect(spyListener).toHaveBeenCalledWith(viewer, error);
             expect(viewer.useDefaultRenderLoop).toEqual(false);
+        });
+    });
+
+    it('sets the clock and timeline based on the first data source', function() {
+        var dataSource = new MockDataSource();
+        dataSource.clock = new DynamicClock();
+        dataSource.clock.startTime = JulianDate.fromIso8601('2013-08-01T18:00Z');
+        dataSource.clock.stopTime = JulianDate.fromIso8601('2013-08-21T02:00Z');
+        dataSource.clock.currentTime = JulianDate.fromIso8601('2013-08-02T00:00Z');
+        dataSource.clock.clockRange = ClockRange.CLAMPED;
+        dataSource.clock.clockStep = ClockStep.TICK_DEPENDENT;
+        dataSource.clock.multiplier = 20.0;
+
+        viewer = new Viewer(container);
+        viewer.dataSources.add(dataSource);
+
+        expect(viewer.clock.startTime).toEqual(dataSource.clock.startTime);
+        expect(viewer.clock.stopTime).toEqual(dataSource.clock.stopTime);
+        expect(viewer.clock.currentTime).toEqual(dataSource.clock.currentTime);
+        expect(viewer.clock.clockRange).toEqual(dataSource.clock.clockRange);
+        expect(viewer.clock.clockStep).toEqual(dataSource.clock.clockStep);
+        expect(viewer.clock.multiplier).toEqual(dataSource.clock.multiplier);
+    });
+
+    it('shows the error panel when render throws', function() {
+        viewer = new Viewer(container);
+
+        var error = 'foo';
+        viewer.render = function() {
+            throw error;
+        };
+
+        waitsFor(function() {
+            return !viewer.useDefaultRenderLoop;
+        });
+
+        runs(function() {
+            expect(viewer._element.querySelector('.cesium-widget-errorPanel')).not.toBeNull();
+            expect(viewer._element.querySelector('.cesium-widget-errorPanel-message').textContent).toEqual(error);
+
+            // click the OK button to dismiss the panel
+            EventHelper.fireClick(viewer._element.querySelector('.cesium-widget-button'));
+
+            expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
+        });
+    });
+
+    it('does not show the error panel if disabled', function() {
+        viewer = new Viewer(container, {
+            showRenderLoopErrors : false
+        });
+
+        var error = 'foo';
+        viewer.render = function() {
+            throw error;
+        };
+
+        waitsFor(function() {
+            return !viewer.useDefaultRenderLoop;
+        });
+
+        runs(function() {
+            expect(viewer._element.querySelector('.cesium-widget-errorPanel')).toBeNull();
         });
     });
 });

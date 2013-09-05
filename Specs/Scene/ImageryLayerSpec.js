@@ -287,4 +287,51 @@ defineSuite([
             expect(tiles[1].imagery.length).toBe(0);
         });
     });
+
+    it('createTileImagerySkeletons honors the minimumTerrainLevel and maximumTerrainLevel properties', function() {
+        var provider = new SingleTileImageryProvider({
+            url : 'Data/Images/Green4x4.png'
+        });
+
+        var layer = new ImageryLayer(provider, {
+            minimumTerrainLevel : 2,
+            maximumTerrainLevel : 4
+        });
+
+        var layers = new ImageryLayerCollection();
+        layers.add(layer);
+
+        var terrainProvider = new EllipsoidTerrainProvider();
+
+        waitsFor(function() {
+            return provider.isReady() && terrainProvider.isReady();
+        }, 'imagery provider to become ready');
+
+        runs(function() {
+            var level0 = terrainProvider.getTilingScheme().createLevelZeroTiles();
+            var level1 = level0[0].getChildren();
+            var level2 = level1[0].getChildren();
+            var level3 = level2[0].getChildren();
+            var level4 = level3[0].getChildren();
+            var level5 = level4[0].getChildren();
+
+            layer._createTileImagerySkeletons(level0[0], terrainProvider);
+            expect(level0[0].imagery.length).toBe(0);
+
+            layer._createTileImagerySkeletons(level1[0], terrainProvider);
+            expect(level1[0].imagery.length).toBe(0);
+
+            layer._createTileImagerySkeletons(level2[0], terrainProvider);
+            expect(level2[0].imagery.length).toBe(1);
+
+            layer._createTileImagerySkeletons(level3[0], terrainProvider);
+            expect(level3[0].imagery.length).toBe(1);
+
+            layer._createTileImagerySkeletons(level4[0], terrainProvider);
+            expect(level4[0].imagery.length).toBe(1);
+
+            layer._createTileImagerySkeletons(level5[0], terrainProvider);
+            expect(level5[0].imagery.length).toBe(0);
+        });
+    });
 }, 'WebGL');

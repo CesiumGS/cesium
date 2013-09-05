@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './DeveloperError',
-        './defaultValue'
+        './defaultValue',
+        './defined'
     ], function(
         DeveloperError,
-        defaultValue) {
+        defaultValue,
+        defined) {
     "use strict";
 
     /**
@@ -35,7 +37,7 @@ define([
      * @exception {DeveloperError} cartesian3 is required.
      */
     Spherical.fromCartesian3 = function(cartesian3, result) {
-        if (typeof cartesian3 === 'undefined') {
+        if (!defined(cartesian3)) {
             throw new DeveloperError('cartesian3 is required');
         }
 
@@ -44,7 +46,7 @@ define([
         var z = cartesian3.z;
         var radialSquared = x * x + y * y;
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             result = new Spherical();
         }
 
@@ -61,14 +63,14 @@ define([
      * @param {Spherical} spherical The spherical to clone.
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return The modified result parameter or a new instance if result was undefined. (Returns undefined if spherical is undefined)
+     * @returns The modified result parameter or a new instance if result was undefined. (Returns undefined if spherical is undefined)
      */
     Spherical.clone = function(spherical, result) {
-        if (typeof spherical === 'undefined') {
+        if (!defined(spherical)) {
             return undefined;
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Spherical(spherical.clock, spherical.cone, spherical.magnitude);
         }
 
@@ -85,16 +87,16 @@ define([
      * @param {Spherical} spherical The spherical to be normalized.
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return The modified result parameter or a new instance if result was undefined.
+     * @returns The modified result parameter or a new instance if result was undefined.
      *
      * @exception {DeveloperError} spherical is required.
      */
     Spherical.normalize = function(spherical, result) {
-        if (typeof spherical === 'undefined') {
+        if (!defined(spherical)) {
             throw new DeveloperError('spherical is required');
         }
 
-        if (typeof result === 'undefined') {
+        if (!defined(result)) {
             return new Spherical(spherical.clock, spherical.cone, 1.0);
         }
 
@@ -111,12 +113,12 @@ define([
      * @param {Spherical} left The first Spherical to be compared.
      * @param {Spherical} right The second Spherical to be compared.
      *
-     * @return true if the first spherical is equal to the second spherical, false otherwise.
+     * @returns true if the first spherical is equal to the second spherical, false otherwise.
      */
     Spherical.equals = function(left, right) {
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (left.clock === right.clock) &&
                 (left.cone === right.cone) &&
                 (left.magnitude === right.magnitude));
@@ -130,13 +132,13 @@ define([
      * @param {Spherical} right The second Spherical to be compared.
      * @param {Number} [epsilon=0.0] The epsilon to compare against.
      *
-     * @return true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
+     * @returns true if the first spherical is within the provided epsilon of the second spherical, false otherwise.
      */
     Spherical.equalsEpsilon = function(left, right, epsilon) {
         epsilon = defaultValue(epsilon, 0.0);
         return (left === right) ||
-               ((typeof left !== 'undefined') &&
-                (typeof right !== 'undefined') &&
+               ((defined(left)) &&
+                (defined(right)) &&
                 (Math.abs(left.clock - right.clock) <= epsilon) &&
                 (Math.abs(left.cone - right.cone) <= epsilon) &&
                 (Math.abs(left.magnitude - right.magnitude) <= epsilon));
@@ -148,7 +150,7 @@ define([
      *
      * @param {Spherical} spherical The object to be converted.
      *
-     * @return A string representing the provided instance.
+     * @returns A string representing the provided instance.
      */
     Spherical.toString = function(spherical) {
         return '(' + spherical.clock + ', ' + spherical.cone + ', ' + spherical.magnitude + ')';
@@ -160,7 +162,7 @@ define([
      *
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return The modified result parameter or a new instance if result was undefined.
+     * @returns The modified result parameter or a new instance if result was undefined.
      */
     Spherical.prototype.clone = function(result) {
         return Spherical.clone(this, result);
@@ -172,7 +174,7 @@ define([
      *
      * @param {Spherical} [result] The object to store the result into, if undefined a new instance will be created.
      *
-     * @return The modified result parameter or a new instance if result was undefined.
+     * @returns The modified result parameter or a new instance if result was undefined.
      */
     Spherical.prototype.normalize = function(result) {
         return Spherical.normalize(this, result);
@@ -184,7 +186,7 @@ define([
      *
      * @param {Spherical} other The Spherical to be compared.
      *
-     * @return true if this spherical is equal to the provided spherical, false otherwise.
+     * @returns true if this spherical is equal to the provided spherical, false otherwise.
      */
     Spherical.prototype.equals = function(other) {
         return Spherical.equals(this, other);
@@ -197,7 +199,7 @@ define([
      * @param {Spherical} other The Spherical to be compared.
      * @param {Number} epsilon The epsilon to compare against.
      *
-     * @return true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
+     * @returns true if this spherical is within the provided epsilon of the provided spherical, false otherwise.
      */
     Spherical.prototype.equalsEpsilon = function(other, epsilon) {
         return Spherical.equalsEpsilon(this, other, epsilon);
@@ -207,7 +209,7 @@ define([
      * Returns a string representing this instance in the format (clock, cone, magnitude).
      * @memberof Spherical
      *
-     * @return A string representing this instance.
+     * @returns A string representing this instance.
      */
     Spherical.prototype.toString = function() {
         return Spherical.toString(this);

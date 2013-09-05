@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
         '../../Core/DeveloperError',
@@ -7,6 +8,7 @@ define([
         './BaseLayerPickerViewModel',
         '../../ThirdParty/knockout'
     ], function(
+        defined,
         defineProperties,
         destroyObject,
         DeveloperError,
@@ -98,11 +100,11 @@ define([
      * baseLayerPicker.viewModel.selectedItem = providerViewModels[0];
      */
     var BaseLayerPicker = function(container, imageryLayers, imageryProviderViewModels) {
-        if (typeof container === 'undefined') {
+        if (!defined(container)) {
             throw new DeveloperError('container is required.');
         }
 
-        if (typeof imageryLayers === 'undefined') {
+        if (!defined(imageryLayers)) {
             throw new DeveloperError('imageryLayers is required.');
         }
 

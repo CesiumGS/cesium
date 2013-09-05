@@ -1,9 +1,11 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defined',
         '../ThirdParty/when'
     ], function(
         DeveloperError,
+        defined,
         when) {
     "use strict";
 
@@ -43,13 +45,13 @@ define([
      * });
      */
     var sampleTerrain = function(terrainProvider, level, positions) {
-        if (typeof terrainProvider === 'undefined') {
+        if (!defined(terrainProvider)) {
             throw new DeveloperError('terrainProvider is required.');
         }
-        if (typeof level === 'undefined') {
+        if (!defined(level)) {
             throw new DeveloperError('level is required.');
         }
-        if (typeof positions === 'undefined') {
+        if (!defined(positions)) {
             throw new DeveloperError('positions is required.');
         }
 

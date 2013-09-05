@@ -3,12 +3,14 @@ defineSuite([
              'Core/Quaternion',
              'Core/Cartesian3',
              'Core/Math',
-             'Core/Matrix3'
+             'Core/Matrix3',
+             'Specs/createPackableSpecs'
             ], function(
               Quaternion,
               Cartesian3,
               CesiumMath,
-              Matrix3) {
+              Matrix3,
+              createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -582,7 +584,7 @@ defineSuite([
     });
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Quaternion.clone()).toEqual('undefined');
+        expect(Quaternion.clone()).toBeUndefined();
     });
 
     it('static conjugate throws with no parameter', function() {
@@ -758,5 +760,6 @@ defineSuite([
             Quaternion.equalsEpsilon(new Quaternion(), new Quaternion(), undefined);
         }).toThrow();
     });
-});
 
+    createPackableSpecs(Quaternion, new Quaternion(1, 2, 3, 4), [1, 2, 3, 4]);
+});

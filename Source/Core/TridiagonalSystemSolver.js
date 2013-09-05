@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './defined',
+        './DeveloperError'
+    ], function(
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -45,19 +50,19 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var solution = TridiagonalSystemSolver.solve(lowerDiagonal, diagonal, upperDiagonal, rightHandSide);
      */
     TridiagonalSystemSolver.solve = function(lower, diagonal, upper, right) {
-        if (typeof lower === 'undefined' || !(lower instanceof Array)) {
+        if (!defined(lower) || !(lower instanceof Array)) {
             throw new DeveloperError('The array lower is required.');
         }
 
-        if (typeof diagonal === 'undefined' || !(diagonal instanceof Array)) {
+        if (!defined(diagonal) || !(diagonal instanceof Array)) {
             throw new DeveloperError('The array diagonal is required.');
         }
 
-        if (typeof upper === 'undefined' || !(upper instanceof Array)) {
+        if (!defined(upper) || !(upper instanceof Array)) {
             throw new DeveloperError('The array upper is required.');
         }
 
-        if (typeof right === 'undefined' || !(right instanceof Array)) {
+        if (!defined(right) || !(right instanceof Array)) {
             throw new DeveloperError('The array right is required.');
         }
 

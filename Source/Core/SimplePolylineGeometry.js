@@ -1,26 +1,30 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './ComponentDatatype',
         './IndexDatatype',
         './PrimitiveType',
         './defaultValue',
         './BoundingSphere',
+        './Geometry',
         './GeometryAttribute',
         './GeometryAttributes'
     ], function(
+        defined,
         DeveloperError,
         ComponentDatatype,
         IndexDatatype,
         PrimitiveType,
         defaultValue,
         BoundingSphere,
+        Geometry,
         GeometryAttribute,
         GeometryAttributes) {
     "use strict";
 
     /**
-     * A {@link Geometry} that represents a polyline modeled as a line strip; the first two positions define a line segment,
+     * A description of a polyline modeled as a line strip; the first two positions define a line segment,
      * and each additional position defines a line segment from the previous position.
      *
      * @alias SimplePolylineGeometry
@@ -30,23 +34,39 @@ define([
      *
      * @exception {DeveloperError} At least two positions are required.
      *
+     * @see SimplePolylineGeometry.createGeometry
+     *
      * @example
      * // A polyline with two connected line segments
-     * var geometry = new SimplePolylineGeometry({
+     * var polyline = new SimplePolylineGeometry({
      *   positions : ellipsoid.cartographicArrayToCartesianArray([
      *     Cartographic.fromDegrees(0.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 0.0),
      *     Cartographic.fromDegrees(5.0, 5.0)
      *   ])
      * });
+     * var geometry = SimplePolylineGeometry.createGeometry(polyline);
      */
     var SimplePolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var positions = options.positions;
 
-        if ((typeof positions === 'undefined') || (positions.length < 2)) {
+        if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
+
+        this._positions = positions;
+        this._workerName = 'createSimplePolylineGeometry';
+    };
+
+    /**
+     * Computes the geometric representation of a simple polyline, including its vertices, indices, and a bounding sphere.
+     *
+     * @param {SimplePolylineGeometry} simplePolylineGeometry A description of the polyline.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    SimplePolylineGeometry.createGeometry = function(simplePolylineGeometry) {
+        var positions = simplePolylineGeometry._positions;
 
         var i;
         var j = 0;
@@ -78,36 +98,12 @@ define([
             indices[j++] = i + 1;
         }
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type Object
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.LINES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.LINES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = BoundingSphere.fromPoints(positions);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.LINES,
+            boundingSphere : BoundingSphere.fromPoints(positions)
+        });
     };
 
     return SimplePolylineGeometry;

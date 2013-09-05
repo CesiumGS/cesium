@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Cartesian2',
         '../Core/Matrix4',
@@ -12,6 +13,7 @@ define([
         './VerticalOrigin'
     ], function(
         DeveloperError,
+        defined,
         destroyObject,
         Cartesian2,
         Matrix4,
@@ -71,7 +73,7 @@ define([
         glyph.dimensions = undefined;
 
         var billboard = glyph.billboard;
-        if (typeof billboard !== 'undefined') {
+        if (defined(billboard)) {
             billboard.setShow(false);
             billboard.setImageIndex(-1);
             labelCollection._spareBillboards.push(billboard);
@@ -124,7 +126,7 @@ define([
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
-            if (typeof glyphTextureInfo === 'undefined') {
+            if (!defined(glyphTextureInfo)) {
                 var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
                 var index = -1;
                 if (canvas.width > 0 && canvas.height > 0) {
@@ -137,7 +139,7 @@ define([
 
             glyph = glyphs[textIndex];
 
-            if (typeof glyph !== 'undefined') {
+            if (defined(glyph)) {
                 // clean up leftover information from the previous glyph
                 if (glyphTextureInfo.index === -1) {
                     // no texture, and therefore no billboard, for this glyph.
@@ -146,7 +148,7 @@ define([
                 } else {
                     // we have a texture and billboard.  If we had one before, release
                     // our reference to that texture info, but reuse the billboard.
-                    if (typeof glyph.textureInfo !== 'undefined') {
+                    if (defined(glyph.textureInfo)) {
                         glyph.textureInfo = undefined;
                     }
                 }
@@ -162,7 +164,7 @@ define([
             // if we have a texture, configure the existing billboard, or obtain one
             if (glyphTextureInfo.index !== -1) {
                 var billboard = glyph.billboard;
-                if (typeof billboard === 'undefined') {
+                if (!defined(billboard)) {
                     if (labelCollection._spareBillboards.length > 0) {
                         glyph.billboard = billboard = labelCollection._spareBillboards.pop();
                     } else {
@@ -233,7 +235,7 @@ define([
                 glyphPixelOffset.y = pixelOffset.y - (maxHeight - dimensions.height) / 2 * scale - dimensions.descent * scale;
             }
 
-            if (typeof glyph.billboard !== 'undefined') {
+            if (defined(glyph.billboard)) {
                 glyph.billboard.setPixelOffset(glyphPixelOffset);
             }
 
@@ -345,7 +347,7 @@ define([
      *
      * @param {Object}[description] A template describing the label's properties as shown in Example 1.
      *
-     * @return {Label} The label that was added to the collection.
+     * @returns {Label} The label that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
@@ -400,7 +402,7 @@ define([
      *
      * @param {Label} label The label to remove.
      *
-     * @return {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
+     * @returns {Boolean} <code>true</code> if the label was removed; <code>false</code> if the label was not found in the collection.
      *
      * @performance Calling <code>remove</code> is expected constant time.  However, when
      * {@link LabelCollection#update} is called, the collection's vertex buffer
@@ -421,7 +423,7 @@ define([
      * labels.remove(l);  // Returns true
      */
     LabelCollection.prototype.remove = function(label) {
-        if (typeof label !== 'undefined' && label._labelCollection === this) {
+        if (defined(label) && label._labelCollection === this) {
             var index = this._labels.indexOf(label);
             if (index !== -1) {
                 this._labels.splice(index, 1);
@@ -468,12 +470,12 @@ define([
      *
      * @param {Label} label The label to check for.
      *
-     * @return {Boolean} true if this collection contains the label, false otherwise.
+     * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
      */
     LabelCollection.prototype.contains = function(label) {
-        return typeof label !== 'undefined' && label._labelCollection === this;
+        return defined(label) && label._labelCollection === this;
     };
 
     /**
@@ -487,7 +489,7 @@ define([
      *
      * @param {Number} index The zero-based index of the billboard.
      *
-     * @return {Label} The label at the specified index.
+     * @returns {Label} The label at the specified index.
      *
      * @performance Expected constant time.  If labels were removed from the collection and
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
@@ -507,7 +509,7 @@ define([
      * }
      */
     LabelCollection.prototype.get = function(index) {
-        if (typeof index === 'undefined') {
+        if (!defined(index)) {
             throw new DeveloperError('index is required.');
         }
 
@@ -521,7 +523,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {Number} The number of labels in this collection.
+     * @returns {Number} The number of labels in this collection.
      *
      * @performance Expected constant time.  If labels were removed from the collection and
      * {@link LabelCollection#update} was not called, an implicit <code>O(n)</code>
@@ -551,7 +553,7 @@ define([
 
         billboardCollection.modelMatrix = this.modelMatrix;
 
-        if (typeof this._textureAtlas === 'undefined') {
+        if (!defined(this._textureAtlas)) {
             this._textureAtlas = context.createTextureAtlas();
             billboardCollection.setTextureAtlas(this._textureAtlas);
         }
@@ -591,7 +593,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see LabelCollection#destroy
      */
@@ -609,7 +611,7 @@ define([
      *
      * @memberof LabelCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

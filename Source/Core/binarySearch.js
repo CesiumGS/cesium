@@ -1,5 +1,10 @@
 /*global define*/
-define(['./DeveloperError'], function(DeveloperError) {
+define([
+        './defined',
+        './DeveloperError'
+    ], function(
+        defined,
+        DeveloperError) {
     "use strict";
 
     /**
@@ -16,7 +21,7 @@ define(['./DeveloperError'], function(DeveloperError) {
      *        the function should return a negative value.  If it is greater, the function should return
      *        a positive value.  If the items are equal, it should return 0.
      *
-     * @return {Number} The index of <code>itemToFind</code> in the array, if it exists.  If <code>itemToFind</code>
+     * @returns {Number} The index of <code>itemToFind</code> in the array, if it exists.  If <code>itemToFind</code>
      *        does not exist, the return value is a negative number which is the bitwise complement (~)
      *        of the index before which the itemToFind should be inserted in order to maintain the
      *        sorted order of the array.
@@ -34,13 +39,13 @@ define(['./DeveloperError'], function(DeveloperError) {
      * var index = binarySearch(numbers, 6, comparator); // 3
      */
     var binarySearch = function(array, itemToFind, comparator) {
-        if (typeof array === 'undefined') {
+        if (!defined(array)) {
             throw new DeveloperError('array is required.');
         }
-        if (typeof itemToFind === 'undefined') {
+        if (!defined(itemToFind)) {
             throw new DeveloperError('itemToFind is required.');
         }
-        if (typeof comparator === 'undefined') {
+        if (!defined(comparator)) {
             throw new DeveloperError('comparator is required.');
         }
 

@@ -1,10 +1,14 @@
 /*global define*/
 define([
         'Core/BoundingRectangle',
+        'Core/Color',
+        'Renderer/ClearCommand',
         'Scene/CreditDisplay',
         'Scene/FrameState'
     ], function(
         BoundingRectangle,
+        Color,
+        ClearCommand,
         CreditDisplay,
         FrameState) {
     "use strict";
@@ -20,6 +24,12 @@ define([
 
         var commandLists = [];
         primitives.update(context, frameState, commandLists);
+
+        var clear = new ClearCommand();
+        clear.color = new Color(0.0, 0.0, 0.0, 0.0);
+        clear.depth = 1.0;
+        clear.stencil = 1.0;
+        clear.execute(context, passState);
 
         var length = commandLists.length;
         for (var i = 0; i < length; ++i) {

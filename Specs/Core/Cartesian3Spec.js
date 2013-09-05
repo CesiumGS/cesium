@@ -1,10 +1,12 @@
 /*global defineSuite*/
 defineSuite([
              'Core/Cartesian3',
-             'Core/Math'
+             'Core/Math',
+             'Specs/createPackableSpecs'
             ], function(
-                    Cartesian3,
-              CesiumMath) {
+              Cartesian3,
+              CesiumMath,
+              createPackableSpecs) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -518,7 +520,7 @@ defineSuite([
 
 
     it('static clone returns undefined with no parameter', function() {
-        expect(typeof Cartesian3.clone()).toEqual('undefined');
+        expect(Cartesian3.clone()).toBeUndefined();
     });
 
     it('static getMaximumComponent throws with no parameter', function() {
@@ -713,4 +715,6 @@ defineSuite([
         var expectedResult = new Cartesian3(2, 2, 4);
         expect(cartesian3).toEqual(expectedResult);
     });
+
+    createPackableSpecs(Cartesian3, new Cartesian3(1, 2, 3), [1, 2, 3]);
 });

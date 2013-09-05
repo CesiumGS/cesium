@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        './defined',
         './DeveloperError',
         './Cartesian3',
         './ComponentDatatype',
@@ -8,8 +9,10 @@ define([
         './BoundingSphere',
         './GeometryAttribute',
         './GeometryAttributes',
-        './VertexFormat'
+        './VertexFormat',
+        './Geometry'
     ], function(
+        defined,
         DeveloperError,
         Cartesian3,
         ComponentDatatype,
@@ -18,13 +21,14 @@ define([
         BoundingSphere,
         GeometryAttribute,
         GeometryAttributes,
-        VertexFormat) {
+        VertexFormat,
+        Geometry) {
     "use strict";
 
     var diffScratch = new Cartesian3();
 
     /**
-     * A {@link Geometry} that represents vertices and indices for a cube centered at the origin.
+     * Describes a cube centered at the origin.
      *
      * @alias BoxGeometry
      * @constructor
@@ -36,12 +40,16 @@ define([
      * @exception {DeveloperError} options.minimumCorner is required.
      * @exception {DeveloperError} options.maximumCorner is required.
      *
+     * @see BoxGeometry#fromDimensions
+     * @see BoxGeometry#createGeometry
+     *
      * @example
      * var box = new BoxGeometry({
      *   vertexFormat : VertexFormat.POSITION_ONLY,
      *   maximumCorner : new Cartesian3(250000.0, 250000.0, 250000.0),
      *   minimumCorner : new Cartesian3(-250000.0, -250000.0, -250000.0)
      * });
+     * var geometry = BoxGeometry.createGeometry(box);
      */
     var BoxGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -49,21 +57,83 @@ define([
         var min = options.minimumCorner;
         var max = options.maximumCorner;
 
-        if (typeof min === 'undefined') {
+        if (!defined(min)) {
             throw new DeveloperError('options.minimumCorner is required.');
         }
 
-        if (typeof max === 'undefined') {
+        if (!defined(max)) {
             throw new DeveloperError('options.maximumCorner is required');
         }
 
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
+        this._minimumCorner = Cartesian3.clone(min);
+        this._maximumCorner = Cartesian3.clone(max);
+        this._vertexFormat = vertexFormat;
+        this._workerName = 'createBoxGeometry';
+    };
+
+    /**
+     * Creates a cube centered at the origin given its dimensions.
+     * @memberof BoxGeometry
+     *
+     * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
+     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     *
+     * @exception {DeveloperError} options.dimensions is required.
+     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
+     *
+     * @see BoxGeometry#createGeometry
+     *
+     * @example
+     * var box = BoxGeometry.fromDimensions({
+     *   vertexFormat : VertexFormat.POSITION_ONLY,
+     *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
+     * });
+     * var geometry = BoxGeometry.createGeometry(box);
+     */
+    BoxGeometry.fromDimensions = function(options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        var dimensions = options.dimensions;
+        if (!defined(dimensions)) {
+            throw new DeveloperError('options.dimensions is required.');
+        }
+
+        if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
+            throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
+        }
+
+        var corner = dimensions.multiplyByScalar(0.5);
+        var min = corner.negate();
+        var max = corner;
+
+        var newOptions = {
+            minimumCorner : min,
+            maximumCorner : max,
+            vertexFormat : options.vertexFormat
+        };
+        return new BoxGeometry(newOptions);
+    };
+
+    /**
+     * Computes the geometric representation of a box, including its vertices, indices, and a bounding sphere.
+     * @memberof BoxGeometry
+     *
+     * @param {BoxGeometry} boxGeometry A description of the box.
+     * @returns {Geometry} The computed vertices and indices.
+     */
+    BoxGeometry.createGeometry = function(boxGeometry) {
+        var min = boxGeometry._minimumCorner;
+        var max = boxGeometry._maximumCorner;
+        var vertexFormat = boxGeometry._vertexFormat;
+
         var attributes = new GeometryAttributes();
         var indices;
         var positions;
 
-        if (vertexFormat !== VertexFormat.POSITION_ONLY) {
+        if (vertexFormat.position &&
+                (vertexFormat.st || vertexFormat.normal || vertexFormat.binormal || vertexFormat.tangent)) {
             if (vertexFormat.position) {
                 // 8 corner points.  Duplicated 3 times each for each incident edge/face.
                 positions = new Float64Array(6 * 4 * 3);
@@ -651,76 +721,12 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = diff.magnitude() * 0.5;
 
-        /**
-         * An object containing {@link GeometryAttribute} properties named after each of the
-         * <code>true</code> values of the {@link VertexFormat} option.
-         *
-         * @type GeometryAttributes
-         *
-         * @see Geometry#attributes
-         */
-        this.attributes = attributes;
-
-        /**
-         * Index data that, along with {@link Geometry#primitiveType}, determines the primitives in the geometry.
-         *
-         * @type Array
-         */
-        this.indices = indices;
-
-        /**
-         * The type of primitives in the geometry.  For this geometry, it is {@link PrimitiveType.TRIANGLES}.
-         *
-         * @type PrimitiveType
-         */
-        this.primitiveType = PrimitiveType.TRIANGLES;
-
-        /**
-         * A tight-fitting bounding sphere that encloses the vertices of the geometry.
-         *
-         * @type BoundingSphere
-         */
-        this.boundingSphere = new BoundingSphere(Cartesian3.ZERO, radius);
-    };
-
-    /**
-     * Creates vertices and indices for a cube centered at the origin given its dimensions.
-     * @memberof BoxGeometry
-     *
-     * @param {Cartesian3} options.dimensions The width, depth, and height of the box stored in the x, y, and z coordinates of the <code>Cartesian3</code>, respectively.
-     * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
-     *
-     * @exception {DeveloperError} options.dimensions is required.
-     * @exception {DeveloperError} All dimensions components must be greater than or equal to zero.
-     *
-     * @example
-     * var box = BoxGeometry.fromDimensions({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   dimensions : new Cartesian3(500000.0, 500000.0, 500000.0)
-     * });
-     */
-    BoxGeometry.fromDimensions = function(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var dimensions = options.dimensions;
-        if (typeof dimensions === 'undefined') {
-            throw new DeveloperError('options.dimensions is required.');
-        }
-
-        if (dimensions.x < 0 || dimensions.y < 0 || dimensions.z < 0) {
-            throw new DeveloperError('All dimensions components must be greater than or equal to zero.');
-        }
-
-        var corner = dimensions.multiplyByScalar(0.5);
-        var min = corner.negate();
-        var max = corner;
-
-        var newOptions = {
-            minimumCorner : min,
-            maximumCorner : max,
-            vertexFormat : options.vertexFormat
-        };
-        return new BoxGeometry(newOptions);
+        return new Geometry({
+            attributes : attributes,
+            indices : indices,
+            primitiveType : PrimitiveType.TRIANGLES,
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+        });
     };
 
     return BoxGeometry;

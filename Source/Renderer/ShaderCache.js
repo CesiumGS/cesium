@@ -1,7 +1,9 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/destroyObject'
     ], function(
+        defined,
         destroyObject) {
     "use strict";
 
@@ -44,7 +46,7 @@ define([
      *     this._shaderProgram, vs, fs, attributeLocations);
      */
     ShaderCache.prototype.replaceShaderProgram = function(shaderProgram, vertexShaderSource, fragmentShaderSource, attributeLocations) {
-        if (typeof shaderProgram !== 'undefined') {
+        if (defined(shaderProgram)) {
             shaderProgram.release();
         }
 

@@ -1,5 +1,6 @@
 /*global define*/
 define([
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Ellipsoid',
@@ -9,6 +10,7 @@ define([
         './CameraController',
         './PerspectiveFrustum'
     ], function(
+        defined,
         DeveloperError,
         CesiumMath,
         Ellipsoid,
@@ -50,7 +52,7 @@ define([
      * @demo <a href="http://cesium.agi.com/Cesium/Apps/Sandcastle/index.html?src=Camera.html">Sandcastle Example</a> from the <a href="http://cesium.agi.com/2013/02/13/Cesium-Camera-Tutorial/">Camera Tutorial</a>
      */
     var Camera = function(canvas) {
-        if (typeof canvas === 'undefined') {
+        if (!defined(canvas)) {
             throw new DeveloperError('canvas is required.');
         }
 
@@ -232,7 +234,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Matrix4} DOC_TBA
+     * @returns {Matrix4} DOC_TBA
      */
     Camera.prototype.getInverseTransform = function() {
         update(this);
@@ -244,7 +246,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Matrix4} The view matrix.
+     * @returns {Matrix4} The view matrix.
      *
      * @see UniformState#getView
      * @see UniformState#setView
@@ -309,7 +311,7 @@ define([
      *
      * @memberof Camera
      *
-     * @return {Camera} A new copy of the Camera instance.
+     * @returns {Camera} A new copy of the Camera instance.
      */
     Camera.prototype.clone = function() {
         var camera = new Camera(this._canvas);
@@ -334,7 +336,7 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.worldToCameraCoordinates = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
         return Matrix4.multiplyByVector(this.getInverseTransform(), cartesian, result);
@@ -352,7 +354,7 @@ define([
      * @returns {Cartesian4} The transformed vector or point.
      */
     Camera.prototype.cameraToWorldCoordinates = function(cartesian, result) {
-        if (typeof cartesian === 'undefined') {
+        if (!defined(cartesian)) {
             throw new DeveloperError('cartesian is required.');
         }
         return Matrix4.multiplyByVector(this.transform, cartesian, result);

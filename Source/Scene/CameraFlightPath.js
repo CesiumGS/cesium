@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/clone',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/DeveloperError',
         '../Core/HermiteSpline',
         '../Core/Math',
@@ -19,6 +20,7 @@ define([
         Cartesian3,
         clone,
         defaultValue,
+        defined,
         DeveloperError,
         HermiteSpline,
         CesiumMath,
@@ -33,6 +35,9 @@ define([
 
     /**
      * Creates animations for camera flights.
+     * <br /><br />
+     * Mouse interaction is disabled during flights.
+     *
      * @exports CameraFlightPath
      */
     var CameraFlightPath = {
@@ -198,7 +203,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
+        if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             point.point.negate(direction3D).normalize(direction3D);
@@ -317,7 +322,7 @@ define([
         }
 
         point = points[length];
-        if (typeof endDirection !== 'undefined' && typeof endUp !== 'undefined') {
+        if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
             point.orientation = quat;
@@ -386,39 +391,64 @@ define([
         return update;
     }
 
+    function disableInput(controller) {
+      var backup = {
+          enableTranslate: controller.enableTranslate,
+          enableZoom: controller.enableZoom,
+          enableRotate: controller.enableRotate,
+          enableTilt: controller.enableTilt,
+          enableLook: controller.enableLook
+      };
+      controller.enableTranslate = false;
+      controller.enableZoom = false;
+      controller.enableRotate = false;
+      controller.enableTilt = false;
+      controller.enableLook = false;
+      return backup;
+    }
+
+    function restoreInput(controller, backup) {
+      controller.enableTranslate = backup.enableTranslate;
+      controller.enableZoom = backup.enableZoom;
+      controller.enableRotate = backup.enableRotate;
+      controller.enableTilt = backup.enableTilt;
+      controller.enableLook = backup.enableLook;
+    }
+
     /**
      * Creates an animation to fly the camera from it's current position to a position given by a Cartesian. All arguments should
      * be in the current camera reference frame.
      *
-     * @param {FrameState} frameState The current frame state.
+     * @param {Scene} scene The scene instance to use.
      * @param {Cartesian3} description.destination The final position of the camera.
      * @param {Cartesian3} [description.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [description.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
+     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
-     * @see Scene#getFrameState
      * @see Scene#getAnimations
      */
     var dirScratch = new Cartesian3();
     var rightScratch = new Cartesian3();
     var upScratch = new Cartesian3();
-    CameraFlightPath.createAnimation = function(frameState, description) {
+    CameraFlightPath.createAnimation = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
-        if (typeof frameState === 'undefined') {
-            throw new DeveloperError('frameState is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
-        if (typeof destination === 'undefined') {
+        if (!defined(destination)) {
             throw new DeveloperError('destination is required.');
         }
+        var frameState = scene.getFrameState();
         if (frameState.mode === SceneMode.MORPHING) {
             throw new DeveloperError('frameState.mode cannot be SceneMode.MORPHING');
         }
@@ -426,20 +456,36 @@ define([
         var direction = description.direction;
         var up = description.up;
         var duration = defaultValue(description.duration, 3000.0);
-        var onComplete = description.onComplete;
+
+        var controller = scene.getScreenSpaceCameraController();
+        var backup = disableInput(controller);
+        var wrapCallback = function(cb) {
+            var wrapped = function() {
+                if (typeof cb === 'function') {
+                    cb();
+                }
+                restoreInput(controller, backup);
+            };
+            return wrapped;
+        };
+        var onComplete = wrapCallback(description.onComplete);
+        var onCancel = wrapCallback(description.onCancel);
+
         var frustum = frameState.camera.frustum;
 
         if (frameState.mode === SceneMode.SCENE2D) {
             if ((Cartesian2.equalsEpsilon(frameState.camera.position, destination, CesiumMath.EPSILON6)) && (CesiumMath.equalsEpsilon(Math.max(frustum.right - frustum.left, frustum.top - frustum.bottom), destination.z, CesiumMath.EPSILON6))) {
                 return {
                     duration : 0,
-                    onComplete : onComplete
+                    onComplete : onComplete,
+                    onCancel: onCancel
                 };
             }
         } else if (Cartesian3.equalsEpsilon(destination, frameState.camera.position, CesiumMath.EPSILON6)) {
             return {
                 duration : 0,
-                onComplete : onComplete
+                onComplete : onComplete,
+                onCancel: onCancel
             };
         }
 
@@ -447,7 +493,7 @@ define([
             var newOnComplete = function() {
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
-                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = position.negate(dirScratch).normalize(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Z, rightScratch).normalize(rightScratch);
                     } else {
@@ -456,7 +502,7 @@ define([
                     }
                     upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
                 } else {
-                    if (typeof description.direction === 'undefined' && typeof description.up === 'undefined'){
+                    if (!defined(description.direction) && !defined(description.up)){
                         dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
                         rightScratch = dirScratch.cross(Cartesian3.UNIT_Y, rightScratch).normalize(rightScratch);
                     } else {
@@ -490,7 +536,8 @@ define([
             };
             return {
                 duration : 0,
-                onComplete : newOnComplete
+                onComplete : newOnComplete,
+                onCancel: onCancel
             };
         }
 
@@ -513,7 +560,8 @@ define([
                 time : duration
             },
             onUpdate : update,
-            onComplete : onComplete
+            onComplete : onComplete,
+            onCancel: onCancel
         };
     };
 
@@ -521,33 +569,34 @@ define([
      * Creates an animation to fly the camera from it's current position to a position given by a Cartographic. Keep in mind that the animation
      * will happen in the camera's current reference frame.
      *
-     * @param {FrameState} frameState The current frame state.
+     * @param {Scene} scene The scene instance to use.
      * @param {Cartographic} description.destination The final position of the camera.
      * @param {Cartesian3} [description.direction] The final direction of the camera. By default, the direction will point towards the center of the frame in 3D and in the negative z direction in Columbus view or 2D.
      * @param {Cartesian3} [description.up] The final up direction. By default, the up direction will point towards local north in 3D and in the positive y direction in Columbus view or 2D.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
+     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
-     * @see Scene#getFrameState
      * @see Scene#getAnimations
      */
-    CameraFlightPath.createAnimationCartographic = function(frameState, description) {
+    CameraFlightPath.createAnimationCartographic = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var destination = description.destination;
 
-        if (typeof frameState === 'undefined') {
-            throw new DeveloperError('frameState is required.');
+        if (!defined(scene)) {
+            throw new DeveloperError('scene is required.');
         }
-        if (typeof destination === 'undefined') {
+        if (!defined(destination)) {
             throw new DeveloperError('description.destination is required.');
         }
 
+        var frameState = scene.getFrameState();
         var projection = frameState.scene2D.projection;
         if (frameState.mode === SceneMode.SCENE3D) {
             var ellipsoid = projection.getEllipsoid();
@@ -560,34 +609,35 @@ define([
 
         var createAnimationDescription = clone(description);
         createAnimationDescription.destination = c3destination;
-        return this.createAnimation(frameState, createAnimationDescription);
+        return this.createAnimation(scene, createAnimationDescription);
     };
 
     /**
      * Creates an animation to fly the camera from it's current position to a position in which the entire extent will be visible. Keep in mind that the animation
      * will happen in the camera's current reference frame.
      *
-     * @param {FrameState} frameState The current frame state.
+     * @param {Scene} scene The scene instance to use.
      * @param {Extent} description.destination The final position of the camera.
      * @param {Number} [description.duration=3000] The duration of the animation in milliseconds.
      * @param {Function} [onComplete] The function to execute when the animation has completed.
+     * @param {Function} [onCancel] The function to execute if the animation is cancelled.
      *
      * @returns {Object} An Object that can be added to an {@link AnimationCollection} for animation.
      *
-     * @exception {DeveloperError} frameState is required.
+     * @exception {DeveloperError} scene is required.
      * @exception {DeveloperError} description.destination is required.
      * @exception {DeveloperError} frameState.mode cannot be SceneMode.MORPHING
      *
-     * @see Scene#getFrameState
      * @see Scene#getAnimations
      */
-    CameraFlightPath.createAnimationExtent = function(frameState, description) {
+    CameraFlightPath.createAnimationExtent = function(scene, description) {
         description = defaultValue(description, defaultValue.EMPTY_OBJECT);
         var extent = description.destination;
-        if (typeof frameState === 'undefined') {
+        var frameState = scene.getFrameState();
+        if (!defined(frameState)) {
             throw new DeveloperError('frameState is required.');
         }
-        if (typeof extent === 'undefined') {
+        if (!defined(extent)) {
             throw new DeveloperError('description.destination is required.');
         }
         if (frameState.mode === SceneMode.MORPHING) {
@@ -599,7 +649,7 @@ define([
         camera.controller.getExtentCameraCoordinates(extent, c3destination);
 
         createAnimationDescription.destination = c3destination;
-        return this.createAnimation(frameState, createAnimationDescription);
+        return this.createAnimation(scene, createAnimationDescription);
     };
 
     return CameraFlightPath;

@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/DeveloperError',
+        '../Core/defined',
         '../Core/destroyObject',
         '../Core/Cartesian3',
         '../Core/Color',
@@ -8,6 +9,7 @@ define([
         '../Scene/PolylineCollection'
        ], function(
          DeveloperError,
+         defined,
          destroyObject,
          Cartesian3,
          Color,
@@ -42,7 +44,7 @@ define([
      *
      */
     var DynamicPolylineVisualizer = function(scene, dynamicObjectCollection) {
-        if (typeof scene === 'undefined') {
+        if (!defined(scene)) {
             throw new DeveloperError('scene is required.');
         }
         this._scene = scene;
@@ -80,12 +82,12 @@ define([
     DynamicPolylineVisualizer.prototype.setDynamicObjectCollection = function(dynamicObjectCollection) {
         var oldCollection = this._dynamicObjectCollection;
         if (oldCollection !== dynamicObjectCollection) {
-            if (typeof oldCollection !== 'undefined') {
+            if (defined(oldCollection)) {
                 oldCollection.objectsRemoved.removeEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved, this);
                 this.removeAllPrimitives();
             }
             this._dynamicObjectCollection = dynamicObjectCollection;
-            if (typeof dynamicObjectCollection !== 'undefined') {
+            if (defined(dynamicObjectCollection)) {
                 dynamicObjectCollection.objectsRemoved.addEventListener(DynamicPolylineVisualizer.prototype._onObjectsRemoved, this);
             }
         }
@@ -100,10 +102,10 @@ define([
      * @exception {DeveloperError} time is required.
      */
     DynamicPolylineVisualizer.prototype.update = function(time) {
-        if (typeof time === 'undefined') {
+        if (!defined(time)) {
             throw new DeveloperError('time is requied.');
         }
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for ( var i = 0, len = dynamicObjects.length; i < len; i++) {
                 updateObject(this, time, dynamicObjects[i]);
@@ -118,7 +120,7 @@ define([
         var i;
         this._polylineCollection.removeAll();
 
-        if (typeof this._dynamicObjectCollection !== 'undefined') {
+        if (defined(this._dynamicObjectCollection)) {
             var dynamicObjects = this._dynamicObjectCollection.getObjects();
             for (i = dynamicObjects.length - 1; i > -1; i--) {
                 dynamicObjects[i]._polylineVisualizerIndex = undefined;
@@ -136,7 +138,7 @@ define([
      *
      * @memberof DynamicPolylineVisualizer
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see DynamicPolylineVisualizer#destroy
      */
@@ -154,7 +156,7 @@ define([
      *
      * @memberof DynamicPolylineVisualizer
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -172,7 +174,7 @@ define([
     var cachedPosition = new Cartesian3();
     function updateObject(dynamicPolylineVisualizer, time, dynamicObject) {
         var dynamicPolyline = dynamicObject.polyline;
-        if (typeof dynamicPolyline === 'undefined') {
+        if (!defined(dynamicPolyline)) {
             return;
         }
 
@@ -182,13 +184,13 @@ define([
         var positionProperty = dynamicObject.position;
         var vertexPositionsProperty = dynamicObject.vertexPositions;
         var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
-        var show = dynamicObject.isAvailable(time) && (typeof showProperty === 'undefined' || showProperty.getValue(time));
+        var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
         if (!show || //
-           (typeof vertexPositionsProperty === 'undefined' && //
-           (typeof ellipseProperty === 'undefined' || typeof positionProperty === 'undefined'))) {
+           (!defined(vertexPositionsProperty) && //
+           (!defined(ellipseProperty) || !defined(positionProperty)))) {
             //Remove the existing primitive if we have one
-            if (typeof polylineVisualizerIndex !== 'undefined') {
+            if (defined(polylineVisualizerIndex)) {
                 polyline = dynamicPolylineVisualizer._polylineCollection.get(polylineVisualizerIndex);
                 polyline.setShow(false);
                 dynamicObject._polylineVisualizerIndex = undefined;
@@ -198,7 +200,7 @@ define([
         }
 
         var uniforms;
-        if (typeof polylineVisualizerIndex === 'undefined') {
+        if (!defined(polylineVisualizerIndex)) {
             var unusedIndexes = dynamicPolylineVisualizer._unusedIndexes;
             var length = unusedIndexes.length;
             if (length > 0) {
@@ -214,7 +216,7 @@ define([
             // CZML_TODO Determine official defaults
             polyline.setWidth(1);
             var material = polyline.getMaterial();
-            if (typeof material === 'undefined' || (material.type !== Material.PolylineOutlineType)) {
+            if (!defined(material) || (material.type !== Material.PolylineOutlineType)) {
                 material = Material.fromType(dynamicPolylineVisualizer._scene.getContext(), Material.PolylineOutlineType);
                 polyline.setMaterial(material);
             }
@@ -230,36 +232,36 @@ define([
         polyline.setShow(true);
 
         var vertexPositions;
-        if (typeof ellipseProperty !== 'undefined') {
-            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValueCartesian(time, cachedPosition));
+        if (defined(ellipseProperty)) {
+            vertexPositions = ellipseProperty.getValue(time, positionProperty.getValue(time, cachedPosition));
         } else {
-            vertexPositions = vertexPositionsProperty.getValueCartesian(time);
+            vertexPositions = vertexPositionsProperty.getValue(time);
         }
 
-        if (typeof vertexPositions !== 'undefined' && polyline._visualizerPositions !== vertexPositions) {
+        if (defined(vertexPositions) && polyline._visualizerPositions !== vertexPositions) {
             polyline.setPositions(vertexPositions);
             polyline._visualizerPositions = vertexPositions;
         }
 
         var property = dynamicPolyline.color;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.color = property.getValue(time, uniforms.color);
         }
 
         property = dynamicPolyline.outlineColor;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
         }
 
         property = dynamicPolyline.outlineWidth;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             uniforms.outlineWidth = property.getValue(time);
         }
 
         property = dynamicPolyline.width;
-        if (typeof property !== 'undefined') {
+        if (defined(property)) {
             var width = property.getValue(time);
-            if (typeof width !== 'undefined') {
+            if (defined(width)) {
                 polyline.setWidth(width);
             }
         }
@@ -271,7 +273,7 @@ define([
         for ( var i = dynamicObjects.length - 1; i > -1; i--) {
             var dynamicObject = dynamicObjects[i];
             var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
-            if (typeof polylineVisualizerIndex !== 'undefined') {
+            if (defined(polylineVisualizerIndex)) {
                 var polyline = thisPolylineCollection.get(polylineVisualizerIndex);
                 polyline.setShow(false);
                 thisUnusedIndexes.push(polylineVisualizerIndex);
