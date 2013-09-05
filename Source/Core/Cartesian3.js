@@ -777,17 +777,6 @@ define([
     };
 
     /**
-     * Returns the axis that is most orthogonal to the this Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The most orthogonal axis.
-     */
-    Cartesian3.prototype.mostOrthogonalAxis = function(result) {
-        return Cartesian3.mostOrthogonalAxis(this, result);
-    };
-
-    /**
      * Creates a string representing this Cartesian in the format '(x, y, z)'.
      * @memberof Cartesian3
      *

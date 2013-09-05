@@ -363,20 +363,20 @@ defineSuite([
 
     it('most orthogonal angle is x', function() {
         var v = new Cartesian3(0.0, 1.0, 2.0);
-        expect(v.mostOrthogonalAxis()).toEqual(Cartesian3.UNIT_X);
+        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_X);
     });
 
     it('most orthogonal angle is y', function() {
         var v = new Cartesian3(1.0, 0.0, 2.0);
-        expect(v.mostOrthogonalAxis()).toEqual(Cartesian3.UNIT_Y);
+        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Y);
     });
 
     it('most orthogonal angle is z', function() {
         var v = new Cartesian3(1.0, 3.0, 0.0);
-        expect(v.mostOrthogonalAxis()).toEqual(Cartesian3.UNIT_Z);
+        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Z);
 
         v = new Cartesian3(3.0, 1.0, 0.0);
-        expect(v.mostOrthogonalAxis()).toEqual(Cartesian3.UNIT_Z);
+        expect(Cartesian3.mostOrthogonalAxis(v)).toEqual(Cartesian3.UNIT_Z);
     });
 
     it('equals', function() {

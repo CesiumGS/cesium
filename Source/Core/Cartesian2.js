@@ -684,17 +684,6 @@ define([
     };
 
     /**
-     * Returns the axis that is most orthogonal to the this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The most orthogonal axis.
-     */
-    Cartesian2.prototype.mostOrthogonalAxis = function(result) {
-        return Cartesian2.mostOrthogonalAxis(this, result);
-    };
-
-    /**
      * Creates a string representing this Cartesian in the format '(x, y)'.
      * @memberof Cartesian2
      *

@@ -697,30 +697,6 @@ define([
     };
 
     /**
-     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.dot = function(right) {
-        return Cartesian4.dot(this, right);
-    };
-
-    /**
-     * Returns the axis that is most orthogonal to the this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The most orthogonal axis.
-     */
-    Cartesian4.prototype.mostOrthogonalAxis = function(result) {
-        return Cartesian4.mostOrthogonalAxis(this, result);
-    };
-
-    /**
      * Creates a string representing this Cartesian in the format '(x, y)'.
      * @memberof Cartesian4
      *

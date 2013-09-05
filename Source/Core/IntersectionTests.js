@@ -301,7 +301,7 @@ define([
 
         // Constructs a basis from the unit scaled direction vector. Construct its rotation and transpose.
         var firstAxis = Cartesian3.normalize(f);
-        var reference = f.mostOrthogonalAxis();
+        var reference = Cartesian3.mostOrthogonalAxis(f);
         var secondAxis = Cartesian3.normalize(Cartesian3.cross(reference, firstAxis));
         var thirdAxis  = Cartesian3.normalize(Cartesian3.cross(firstAxis, secondAxis));
         var B = new Matrix3(firstAxis.x, secondAxis.x, thirdAxis.x,
