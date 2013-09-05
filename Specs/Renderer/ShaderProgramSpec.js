@@ -13,7 +13,6 @@ defineSuite([
          'Renderer/BufferUsage',
          'Renderer/ClearCommand',
          'Renderer/UniformDatatype',
-         'Shaders/Builtin/CzmBuiltins',
          'Renderer/ShaderProgram'
      ], function(
          ShaderProgram,
@@ -28,8 +27,7 @@ defineSuite([
          PrimitiveType,
          BufferUsage,
          ClearCommand,
-         UniformDatatype,
-         CzmBuiltins) {
+         UniformDatatype) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
