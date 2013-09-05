@@ -275,7 +275,7 @@ defineSuite([
     it('abs without a result parameter', function() {
         var cartesian = new Cartesian4(-1.0, -2.0, -4.0, -3.0);
         var expectedResult = new Cartesian4(1.0, 2.0, 4.0, 3.0);
-        var result = Cartesian4.abs(cartesian, );
+        var result = Cartesian4.abs(cartesian);
         expect(result).toEqual(expectedResult);
     });
 
