@@ -148,7 +148,7 @@ defineSuite([
 
             var firstPositionArray = [positions[0]];
             var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, firstPositionArray);
-            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
@@ -166,7 +166,7 @@ defineSuite([
             var boundingSphere = BoundingSphere.fromPoints(positions);
 
             var result = ellipsoidalOccluder.computeHorizonCullingPoint(boundingSphere.center, positions);
-            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.
@@ -269,7 +269,7 @@ defineSuite([
             var extent = new Extent(0.1, 0.2, 0.3, 0.4);
             var result = ellipsoidalOccluder.computeHorizonCullingPointFromExtent(extent, ellipsoid);
             expect(result).toBeDefined();
-            var unscaledResult = result.multiplyComponents(ellipsoid.getRadii());
+            var unscaledResult = Cartesian3.multiplyComponents(result, ellipsoid.getRadii());
 
             // The grazing altitude of the ray from the horizon culling point to the
             // position used to compute it should be very nearly zero.

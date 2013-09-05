@@ -670,20 +670,6 @@ define([
     };
 
     /**
-     * Computes the componentwise product of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} right The right hand side Cartesian.
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian2.prototype.multiplyComponents = function(right, result) {
-        return Cartesian2.multiplyComponents(this, right, result);
-    };
-
-    /**
      * Multiplies this Cartesian componentwise by the provided scalar.
      * @memberof Cartesian2
      *

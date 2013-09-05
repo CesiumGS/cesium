@@ -146,7 +146,7 @@ defineSuite([
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(4.0, 5.0);
         var expectedResult = new Cartesian2(8.0, 15.0);
-        var result = left.multiplyComponents(right);
+        var result = Cartesian2.multiplyComponents(left, right);
         expect(result).toEqual(expectedResult);
     });
 
@@ -155,18 +155,9 @@ defineSuite([
         var right = new Cartesian2(4.0, 5.0);
         var result = new Cartesian2();
         var expectedResult = new Cartesian2(8.0, 15.0);
-        var returnedResult = left.multiplyComponents(right, result);
+        var returnedResult = Cartesian2.multiplyComponents(left, right, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('multiplyComponents works with "this" result parameter', function() {
-        var left = new Cartesian2(2.0, 3.0);
-        var right = new Cartesian2(4.0, 5.0);
-        var expectedResult = new Cartesian2(8.0, 15.0);
-        var returnedResult = left.multiplyComponents(right, left);
-        expect(left).toBe(returnedResult);
-        expect(left).toEqual(expectedResult);
     });
 
     it('dot', function() {

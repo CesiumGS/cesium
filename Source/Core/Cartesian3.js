@@ -763,20 +763,6 @@ define([
     };
 
     /**
-     * Computes the componentwise product of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} right The right hand side Cartesian.
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian3.prototype.multiplyComponents = function(right, result) {
-        return Cartesian3.multiplyComponents(this, right, result);
-    };
-
-    /**
      * Multiplies this Cartesian componentwise by the provided scalar.
      * @memberof Cartesian3
      *

@@ -260,7 +260,7 @@ define([
         var p = frameState.camera.getPositionWC();
 
         // Find the corresponding position in the scaled space of the ellipsoid.
-        var q = centralBody._ellipsoid.getOneOverRadii().multiplyComponents(p);
+        var q = Cartesian3.multiplyComponents(centralBody._ellipsoid.getOneOverRadii(), p);
 
         var qMagnitude = Cartesian3.magnitude(q);
         var qUnit = Cartesian3.normalize(q);
@@ -279,10 +279,10 @@ define([
         var northOffset = nUnit.multiplyByScalar(scalar);
 
         // A conservative measure for the longitudes would be to use the min/max longitudes of the bounding frustum.
-        var upperLeft  = Cartesian3.subtract(radii.multiplyComponents(Cartesian3.add(center, northOffset)), eastOffset);
-        var upperRight = Cartesian3.add(radii.multiplyComponents(Cartesian3.add(center, northOffset)), eastOffset);
-        var lowerLeft  = Cartesian3.subtract(radii.multiplyComponents(Cartesian3.subtract(center, northOffset)), eastOffset);
-        var lowerRight = Cartesian3.add(radii.multiplyComponents(Cartesian3.subtract(center, northOffset)), eastOffset);
+        var upperLeft  = Cartesian3.subtract(Cartesian3.multiplyComponents(radii,      Cartesian3.add(center, northOffset)), eastOffset);
+        var upperRight = Cartesian3.add(     Cartesian3.multiplyComponents(radii,      Cartesian3.add(center, northOffset)), eastOffset);
+        var lowerLeft  = Cartesian3.subtract(Cartesian3.multiplyComponents(radii, Cartesian3.subtract(center, northOffset)), eastOffset);
+        var lowerRight = Cartesian3.add(     Cartesian3.multiplyComponents(radii, Cartesian3.subtract(center, northOffset)), eastOffset);
 
         depthQuadScratch[0] = upperLeft.x;
         depthQuadScratch[1] = upperLeft.y;

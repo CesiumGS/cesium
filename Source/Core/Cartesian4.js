@@ -710,20 +710,6 @@ define([
     };
 
     /**
-     * Computes the componentwise product of this Cartesian and the provided Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.multiplyComponents = function(right, result) {
-        return Cartesian4.multiplyComponents(this, right, result);
-    };
-
-    /**
      * Multiplies this Cartesian componentwise by the provided scalar.
      * @memberof Cartesian4
      *

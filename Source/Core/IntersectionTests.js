@@ -88,8 +88,8 @@ define([
         }
 
         var inverseRadii = ellipsoid.getOneOverRadii();
-        var q = inverseRadii.multiplyComponents(ray.origin);
-        var w = inverseRadii.multiplyComponents(ray.direction);
+        var q = Cartesian3.multiplyComponents(inverseRadii, ray.origin);
+        var w = Cartesian3.multiplyComponents(inverseRadii, ray.direction);
 
         var q2 = Cartesian3.magnitudeSquared(q);
         var qw = Cartesian3.dot(q, w);
