@@ -358,7 +358,7 @@ define([
     function cleanCut(a1i, a2i, pArray) {
         return (internalCut(a1i, a2i, pArray) && internalCut(a2i, a1i, pArray)) &&
                 !intersectsSide(pArray[a1i].position, pArray[a2i].position, pArray) &&
-                !pArray[a1i].position.equals(pArray[a2i].position);
+                !Cartesian2.equals(pArray[a1i].position, pArray[a2i].position);
     }
 
     /**
@@ -386,9 +386,9 @@ define([
         var before = getNextVertex(a1i, pArray, BEFORE);
         var after = getNextVertex(a1i, pArray, AFTER);
 
-        var s1 = pArray[before].position.subtract(a1.position);
-        var s2 = pArray[after].position.subtract(a1.position);
-        var cut = a2.position.subtract(a1.position);
+        var s1 = Cartesian2.subtract(pArray[before].position, a1.position);
+        var s2 = Cartesian2.subtract(pArray[after].position, a1.position);
+        var cut = Cartesian2.subtract(a2.position, a1.position);
 
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
@@ -514,8 +514,8 @@ define([
             after = 0;
         }
 
-        var s1 = pArray[before].position.subtract(pArray[index].position);
-        var s2 = pArray[after].position.subtract(pArray[index].position);
+        var s1 = Cartesian2.subtract(pArray[before].position, pArray[index].position);
+        var s2 = Cartesian2.subtract(pArray[after].position, pArray[index].position);
 
         // Convert to 3-dimensional so we can use cross product
         s1 = new Cartesian3(s1.x, s1.y, 0.0);
@@ -624,7 +624,7 @@ define([
             }
 
             // If there's a duplicate point, there's no intersection here.
-            if (a1.equals(b1) || a2.equals(b2) || a1.equals(b2) || a2.equals(b1)) {
+            if (Cartesian2.equals(a1, b1) || Cartesian2.equals(a2, b2) || Cartesian2.equals(a1, b2) || Cartesian2.equals(a2, b1)) {
                 continue;
             }
 
@@ -672,8 +672,8 @@ define([
         var v2 = pArray[1].position;
         var v3 = pArray[2].position;
 
-        var side1 = v2.subtract(v1);
-        var side2 = v3.subtract(v1);
+        var side1 = Cartesian2.subtract(v2, v1);
+        var side2 = Cartesian2.subtract(v3, v1);
 
         // Convert to 3-dimensional so we can use cross product
         side1 = new Cartesian3(side1.x, side1.y, 0.0);

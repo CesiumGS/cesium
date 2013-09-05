@@ -853,6 +853,79 @@ require(['Cesium'], function(Cesium) {
             }
         })
     }));
+    
+
+    function starPositions(arms, rOuter, rInner) {
+        var angle = Math.PI / arms;
+        var pos = [];
+        for (var i = 0; i < 2 * arms; i++) {
+            var r = (i % 2) === 0 ? rOuter : rInner;
+            var p = new Cesium.Cartesian2(Math.cos(i * angle) * r, Math.sin(i * angle) * r);
+            pos.push(p);
+        }
+        return pos;
+    }
+    
+    positions = ellipsoid.cartographicArrayToCartesianArray([
+         Cesium.Cartographic.fromDegrees(-90.0, 10.0),
+         Cesium.Cartographic.fromDegrees(-95.0, 15.0),
+         Cesium.Cartographic.fromDegrees(-100.0, 15.0)
+     ]);
+    
+    var tube = new Cesium.GeometryInstance({
+            geometry: new Cesium.PolylineVolumeGeometry({
+                polylinePositions : positions,
+                vertexFormat: Cesium.VertexFormat.ALL,
+                shapePositions: starPositions(7, 30000, 20000)
+            }),
+            attributes: {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+            }
+        });
+    height = 300000;
+    var tubeFill = new Cesium.GeometryInstance({
+            geometry: new Cesium.PolylineVolumeGeometry({
+                polylinePositions : positions,
+                vertexFormat: Cesium.VertexFormat.ALL,
+                shapePositions: starPositions(7, 30000, 20000),
+                height: height
+            }),
+            attributes: {
+                color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromRandom({alpha : 1.0}))
+            }
+        });
+
+    var tubeOutline = new Cesium.GeometryInstance({
+            geometry: new Cesium.PolylineVolumeOutlineGeometry({
+                polylinePositions : positions,
+                shapePositions: starPositions(7, 30000, 20000),
+                height: height
+            }),
+            attributes: {
+                color : solidWhite
+            }
+        });
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances: [tube, tubeFill],
+        appearance : new Cesium.PerInstanceColorAppearance({
+            translucent : false,
+            closed : true
+        })
+    }));
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : tubeOutline,
+        appearance : new Cesium.PerInstanceColorAppearance({
+            flat : true,
+            renderState : {
+                depthTest : {
+                    enabled : true
+                },
+                lineWidth : Math.min(1.0, scene.getContext().getMaximumAliasedLineWidth())
+            }
+        })
+    }));
 
     Sandcastle.finishedLoading();
 });
