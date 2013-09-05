@@ -218,16 +218,19 @@ define(['../Core/defined',
         var id = dynamicObject.id;
         var composite = this._composite;
         var compositeObject = composite.getById(id);
-        var compositeProperty = compositeObject[property];
+        var compositeProperty = compositeObject[propertyName];
         var collections = this._collectionsCopy;
         var collectionsLength = collections.length;
         for ( var q = collectionsLength - 1; q >= 0; q--) {
             var object = collections[q].getById(dynamicObject.id);
             if (defined(object)) {
-                var subProperty = object[subPropertyName];
-                if (defined(subProperty)) {
-                    compositeProperty[subPropertyName] = subProperty;
-                    return;
+                var objectProperty = object[propertyName];
+                if (defined(objectProperty)) {
+                    var objectSubProperty = objectProperty[subPropertyName];
+                    if (defined(objectSubProperty)) {
+                        compositeProperty[subPropertyName] = objectSubProperty;
+                        return;
+                    }
                 }
             }
         }
