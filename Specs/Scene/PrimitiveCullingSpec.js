@@ -161,7 +161,7 @@ defineSuite([
         var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
@@ -206,7 +206,7 @@ defineSuite([
         var bv = commandList[0].colorList[0].boundingVolume;
         camera.position = bv.center.clone();
         camera.position.z += 1.0;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
         camera.right = camera.direction.cross(camera.up);
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.position, camera.direction, camera.up);
@@ -281,8 +281,8 @@ defineSuite([
         var numRendered = verifyDraw();
         expect(numRendered).toEqual(1);
 
-        camera.position = camera.position.negate();
-        camera.direction = camera.direction.negate();
+        camera.position  = Cartesian3.negate(camera.position);
+        camera.direction = Cartesian3.negate(camera.direction);
 
         occluder = new Occluder(new BoundingSphere(Cartesian3.ZERO, 536560539.60104907), camera.position);
         frameState.occluder = occluder;

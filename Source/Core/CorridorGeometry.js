@@ -246,7 +246,7 @@ define([
                 outsidePoint = Cartesian3.fromArray(finalPositions, pivot * 3, outsidePoint);
                 previousPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, (start + j) * 3, previousPoint), outsidePoint, previousPoint);
                 nextPoint = Cartesian3.subtract(Cartesian3.fromArray(finalPositions, start * 3, nextPoint), outsidePoint, nextPoint);
-                left = Cartesian3.normalize(Cartesian3.add(nextPoint, previousPoint, left).negate(left), left);
+                left = Cartesian3.normalize(Cartesian3.negate(Cartesian3.add(nextPoint, previousPoint, left), left), left);
                 addNormals(attr, normal, left, undefined, back, vertexFormat);
                 back -= 3;
             }

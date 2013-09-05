@@ -805,17 +805,6 @@ define([
     };
 
     /**
-     * Negates this Cartesian.
-     * @memberof Cartesian3
-     *
-     * @param {Cartesian3} [result] The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided.
-     */
-    Cartesian3.prototype.negate = function(result) {
-        return Cartesian3.negate(this, result);
-    };
-
-    /**
      * Computes the absolute value of this Cartesian.
      * @memberof Cartesian3
      *

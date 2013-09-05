@@ -200,7 +200,7 @@ defineSuite([
         var expected = Matrix4.IDENTITY;
         var returnedResult = Matrix4.fromCamera({
             eye : Cartesian3.ZERO,
-            target : Cartesian3.UNIT_Z.negate(),
+            target : Cartesian3.negate(Cartesian3.UNIT_Z),
             up : Cartesian3.UNIT_Y
         });
         expect(expected).toEqual(returnedResult);
@@ -211,7 +211,7 @@ defineSuite([
         var result = new Matrix4();
         var returnedResult = Matrix4.fromCamera({
             eye : Cartesian3.ZERO,
-            target : Cartesian3.UNIT_Z.negate(),
+            target : Cartesian3.negate(Cartesian3.UNIT_Z),
             up : Cartesian3.UNIT_Y
         }, result);
         expect(returnedResult).toBe(result);

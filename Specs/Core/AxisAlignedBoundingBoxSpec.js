@@ -116,15 +116,15 @@ defineSuite([
     });
 
     it('intersect works with box on the positive side of a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
-        var normal = Cartesian3.UNIT_X.negate();
+        var box = new AxisAlignedBoundingBox(Cartesian3.negate(Cartesian3.UNIT_X), Cartesian3.ZERO);
+        var normal = Cartesian3.negate(Cartesian3.UNIT_X);
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(box.intersect(plane)).toEqual(Intersect.INSIDE);
     });
 
     it('intersect works with box on the negative side of a plane', function() {
-        var box = new AxisAlignedBoundingBox(Cartesian3.UNIT_X.negate(), Cartesian3.ZERO);
+        var box = new AxisAlignedBoundingBox(Cartesian3.negate(Cartesian3.UNIT_X), Cartesian3.ZERO);
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));

@@ -697,6 +697,19 @@ define([
     };
 
     /**
+     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
+     * @memberof Cartesian4
+     *
+     * @param {Cartesian4} right The right hand side Cartesian.
+     * @returns {Number} The dot product.
+     *
+     * @exception {DeveloperError} right is required.
+     */
+    Cartesian4.prototype.dot = function(right) {
+        return Cartesian4.dot(this, right);
+    };
+
+    /**
      * Computes the componentwise product of this Cartesian and the provided Cartesian.
      * @memberof Cartesian4
      *
@@ -736,17 +749,6 @@ define([
      */
     Cartesian4.prototype.divideByScalar = function(scalar, result) {
         return Cartesian4.divideByScalar(this, scalar, result);
-    };
-
-    /**
-     * Negates this Cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} [result] The object onto which to store the result.
-     * @returns {Cartesian4} The modified result parameter or a new Cartesian4 instance if one was not provided.
-     */
-    Cartesian4.prototype.negate = function(result) {
-        return Cartesian4.negate(this, result);
     };
 
     /**

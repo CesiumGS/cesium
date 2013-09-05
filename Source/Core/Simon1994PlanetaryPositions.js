@@ -489,7 +489,7 @@ define([
         }
         //first forward transformation
         translation = computeSimonEarthMoonBarycenter(date, translation);
-        result = translation.negate(result);
+        result = Cartesian3.negate(translation, result);
 
         //second forward transformation
         computeSimonEarth(date, translation);

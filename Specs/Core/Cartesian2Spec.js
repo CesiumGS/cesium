@@ -270,7 +270,7 @@ defineSuite([
     it('negate without a result parameter', function() {
         var cartesian = new Cartesian2(1.0, -2.0);
         var expectedResult = new Cartesian2(-1.0, 2.0);
-        var result = cartesian.negate();
+        var result = Cartesian2.negate(cartesian);
         expect(result).toEqual(expectedResult);
     });
 
@@ -278,17 +278,9 @@ defineSuite([
         var cartesian = new Cartesian2(1.0, -2.0);
         var result = new Cartesian2();
         var expectedResult = new Cartesian2(-1.0, 2.0);
-        var returnedResult = cartesian.negate(result);
+        var returnedResult = Cartesian2.negate(cartesian, result);
         expect(result).toBe(returnedResult);
         expect(result).toEqual(expectedResult);
-    });
-
-    it('negate with "this" result parameter', function() {
-        var cartesian = new Cartesian2(1.0, -2.0);
-        var expectedResult = new Cartesian2(-1.0, 2.0);
-        var returnedResult = cartesian.negate(cartesian);
-        expect(cartesian).toBe(returnedResult);
-        expect(cartesian).toEqual(expectedResult);
     });
 
     it('abs without a result parameter', function() {

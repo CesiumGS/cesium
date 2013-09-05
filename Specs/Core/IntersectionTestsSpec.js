@@ -212,7 +212,7 @@ defineSuite([
         var actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON15);
 
-        ray = new Ray(new Cartesian3(0.0, 2.0, 2.0), Cartesian3.UNIT_Y.negate());
+        ray = new Ray(new Cartesian3(0.0, 2.0, 2.0), Cartesian3.negate(Cartesian3.UNIT_Y));
         expected = new Cartesian3(0.0, 0.0, 2.0);
         actual = IntersectionTests.grazingAltitudeLocation(ray, ellipsoid);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON15);
@@ -326,7 +326,7 @@ defineSuite([
      });
 
     it('triangle is behind a plane', function() {
-        var plane = new Plane(Cartesian3.UNIT_Z.negate(), 0.0);
+        var plane = new Plane(Cartesian3.negate(Cartesian3.UNIT_Z), 0.0);
         var p0 = new Cartesian3(0.0, 0.0, 2.0);
         var p1 = new Cartesian3(0.0, 1.0, 2.0);
         var p2 = new Cartesian3(1.0, 0.0, 2.0);

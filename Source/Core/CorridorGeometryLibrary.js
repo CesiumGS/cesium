@@ -76,7 +76,7 @@ define([
         if (leftIsOutside) {
             m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint, angle / granularity, quaterion), rotMatrix);
         } else {
-            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(cornerPoint.negate(scratch1), angle / granularity, quaterion), rotMatrix);
+            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(Cartesian3.negate(cornerPoint, scratch1), angle / granularity, quaterion), rotMatrix);
         }
 
         var index = 0;
@@ -118,7 +118,7 @@ define([
         if (leftIsOutside) {
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
         } else {
-            leftCornerDirection = leftCornerDirection.negate(leftCornerDirection);
+            leftCornerDirection = Cartesian3.negate(leftCornerDirection, leftCornerDirection);
             cornerPoint = Cartesian3.add(position, leftCornerDirection, cornerPoint);
         }
         return [cornerPoint.x, cornerPoint.y, cornerPoint.z, lastPoint.x, lastPoint.y, lastPoint.z];
@@ -128,7 +128,7 @@ define([
         var rightPositions = new Array(positions.length);
         var leftPositions = new Array(positions.length);
         var scaledLeft = left.multiplyByScalar(scalar, scratch1);
-        var scaledRight = scaledLeft.negate(scratch2);
+        var scaledRight = Cartesian3.negate(scaledLeft, scratch2);
         var rightIndex = 0;
         var leftIndex = positions.length - 1;
 
@@ -203,7 +203,7 @@ define([
         }
         previousPos = Cartesian3.clone(position, previousPos);
         position = nextPosition;
-        backward = forward.negate(backward);
+        backward = Cartesian3.negate(forward, backward);
 
         var subdividedPositions;
         var corners = [];
@@ -214,7 +214,7 @@ define([
             nextPosition = positions[i + 1];
             forward = Cartesian3.normalize(Cartesian3.subtract(nextPosition, position, forward), forward);
             cornerDirection = Cartesian3.normalize(Cartesian3.add(forward, backward, cornerDirection), cornerDirection);
-            var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), normal, CesiumMath.EPSILON2);
+            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), normal, CesiumMath.EPSILON2);
             if (doCorner) {
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
@@ -240,12 +240,12 @@ define([
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         corners.push({leftPositions : computeRoundCorner(rightPos, startPoint, leftPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
-                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, cornerDirection.negate(cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
+                        corners.push({leftPositions : computeMiteredCorner(position, startPoint, Cartesian3.negate(cornerDirection, cornerDirection), leftPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 } else {
                     leftPos = Cartesian3.add(position, cornerDirection, leftPos);
-                    center = Cartesian3.add(leftPos, left.multiplyByScalar(width, center).negate(center), center);
-                    rightPos = Cartesian3.add(leftPos, left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
+                    center = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width, center), center), center);
+                    rightPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width * 2, rightPos), rightPos), rightPos);
                     scaleArray2[0] = Cartesian3.clone(previousPos, scaleArray2[0]);
                     scaleArray2[1] = Cartesian3.clone(center, scaleArray2[1]);
                     subdividedPositions = PolylinePipeline.scaleToSurface(scaleArray2, granularity, ellipsoid);
@@ -256,15 +256,15 @@ define([
                     }
                     startPoint = rightPos.clone(startPoint);
                     left = Cartesian3.normalize(Cartesian3.cross(normal, forward, left), left);
-                    rightPos = Cartesian3.add(leftPos, left.multiplyByScalar(width * 2, rightPos).negate(rightPos), rightPos);
-                    previousPos = Cartesian3.add(leftPos, left.multiplyByScalar(width, previousPos).negate(previousPos), previousPos);
+                    rightPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width * 2, rightPos), rightPos), rightPos);
+                    previousPos = Cartesian3.add(leftPos, Cartesian3.negate(left.multiplyByScalar(width, previousPos), previousPos), previousPos);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         corners.push({rightPositions : computeRoundCorner(leftPos, startPoint, rightPos, cornerType, leftIsOutside, ellipsoid)});
                     } else {
                         corners.push({rightPositions : computeMiteredCorner(position, startPoint, cornerDirection, rightPos, leftIsOutside, granularity, ellipsoid)});
                     }
                 }
-                backward = forward.negate(backward);
+                backward = Cartesian3.negate(forward, backward);
             }
             position = nextPosition;
         }

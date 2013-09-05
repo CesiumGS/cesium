@@ -533,7 +533,7 @@ define([
         var p = Cartesian3.normalize(position, rotateVertScratchP);
         if (defined(controller.constrainedAxis)) {
             var northParallel = p.equalsEpsilon(controller.constrainedAxis, CesiumMath.EPSILON2);
-            var southParallel = p.equalsEpsilon(controller.constrainedAxis.negate(), CesiumMath.EPSILON2);
+            var southParallel = p.equalsEpsilon(Cartesian3.negate(controller.constrainedAxis), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
 
@@ -543,7 +543,7 @@ define([
                     angle = angleToAxis;
                 }
 
-                dot = Cartesian3.dot(p, constrainedAxis.negate());
+                dot = Cartesian3.dot(p, Cartesian3.negate(constrainedAxis));
                 angleToAxis = Math.acos(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis;

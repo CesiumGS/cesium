@@ -347,7 +347,7 @@ defineSuite([
 
     it('sphere on the positive side of a plane', function() {
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
-        var normal = Cartesian3.UNIT_X.negate();
+        var normal = Cartesian3.negate(Cartesian3.UNIT_X);
         var position = Cartesian3.UNIT_X;
         var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
@@ -370,24 +370,24 @@ defineSuite([
     });
 
     it('expands to contain another sphere', function() {
-        var bs1 = new BoundingSphere(Cartesian3.UNIT_X.negate(), 1.0);
+        var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
         var expected = new BoundingSphere(Cartesian3.ZERO, 2.0);
         expect(bs1.union(bs2)).toEqual(expected);
     });
 
     it('union result parameter is caller', function() {
-        var bs1 = new BoundingSphere(Cartesian3.UNIT_X.negate().multiplyByScalar(3.0), 3.0);
+        var bs1 = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X).multiplyByScalar(3.0), 3.0);
         var bs2 = new BoundingSphere(Cartesian3.UNIT_X, 1.0);
-        var expected = new BoundingSphere(Cartesian3.UNIT_X.negate(), 5.0);
+        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 5.0);
         bs1.union(bs2, bs1);
         expect(bs1).toEqual(expected);
     });
 
     it('expands to contain another point', function() {
-        var bs = new BoundingSphere(Cartesian3.UNIT_X.negate(), 1.0);
+        var bs = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 1.0);
         var point = Cartesian3.UNIT_X;
-        var expected = new BoundingSphere(Cartesian3.UNIT_X.negate(), 2.0);
+        var expected = new BoundingSphere(Cartesian3.negate(Cartesian3.UNIT_X), 2.0);
         expect(bs.expand(point)).toEqual(expected);
     });
 

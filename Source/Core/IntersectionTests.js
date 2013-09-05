@@ -322,7 +322,7 @@ define([
         var b = temp.multiplyByVector(position);
 
         // Solve for the solutions to the expression in standard form:
-        var solutions = quadraticVectorExpression(A, b.negate(), 0.0, 0.0, 1.0);
+        var solutions = quadraticVectorExpression(A, Cartesian3.negate(b), 0.0, 0.0, 1.0);
 
         var s;
         var altitude;

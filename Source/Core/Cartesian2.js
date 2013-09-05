@@ -712,17 +712,6 @@ define([
     };
 
     /**
-     * Negates this Cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} [result] The object onto which to store the result.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.
-     */
-    Cartesian2.prototype.negate = function(result) {
-        return Cartesian2.negate(this, result);
-    };
-
-    /**
      * Computes the absolute value of this Cartesian.
      * @memberof Cartesian2
      *

@@ -57,7 +57,7 @@ defineSuite([
 
         var camera = scene.getCamera();
         camera.position = Cartesian3.ZERO;
-        camera.direction = Cartesian3.UNIT_Z.negate();
+        camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
         camera.up = Cartesian3.UNIT_Y;
         camera.right = Cartesian3.UNIT_X;
 
@@ -237,7 +237,7 @@ defineSuite([
 
                 var dimensions = new Cartesian3(500000.0, 500000.0, 500000.0);
                 var maximumCorner = dimensions.multiplyByScalar(0.5);
-                var minimumCorner = maximumCorner.negate();
+                var minimumCorner = Cartesian3.negate(maximumCorner);
                 var geometry = BoxGeometry.createGeometry(new BoxGeometry({
                     minimumCorner: minimumCorner,
                     maximumCorner: maximumCorner

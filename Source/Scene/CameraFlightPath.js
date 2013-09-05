@@ -196,7 +196,7 @@ define([
         var length = points.length - 1;
         for (var i = 1; i < length; ++i) {
             point = points[i];
-            Cartesian3.normalize(point.point.negate(direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
             Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
             right3D.cross(direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
@@ -206,7 +206,7 @@ define([
         if (defined(endDirection) && defined(endUp)) {
             point.orientation = createQuaternion(endDirection, endUp);
         } else {
-            Cartesian3.normalize(point.point.negate(direction3D), direction3D);
+            Cartesian3.normalize(Cartesian3.negate(point.point, direction3D), direction3D);
             Cartesian3.normalize(direction3D.cross(Cartesian3.UNIT_Z, right3D), right3D);
             right3D.cross(direction3D, up3D);
             point.orientation = createQuaternion(direction3D, up3D, quat3D);
@@ -230,7 +230,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
         };
 
         return update;
@@ -308,7 +308,7 @@ define([
         return createSpline(points);
     }
 
-    var direction2D = Cartesian3.UNIT_Z.negate();
+    var direction2D = Cartesian3.negate(Cartesian3.UNIT_Z);
     var right2D = Cartesian3.normalize(direction2D.cross(Cartesian3.UNIT_Y));
     var up2D = right2D.cross(direction2D);
     var quat = createQuaternion(direction2D, up2D);
@@ -346,7 +346,7 @@ define([
             camera.position = path.evaluate(time, camera.position);
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
         };
 
         return update;
@@ -361,7 +361,7 @@ define([
 
         var path = createPath2D(camera, ellipsoid, start, destination, duration);
         var points = path.getControlPoints();
-        var orientations = createOrientations2D(camera, points, Cartesian3.UNIT_Z.negate(), up);
+        var orientations = createOrientations2D(camera, points, Cartesian3.negate(Cartesian3.UNIT_Z), up);
 
         var height = camera.position.z;
 
@@ -376,7 +376,7 @@ define([
 
             camera.right = rotMatrix.getRow(0, camera.right);
             camera.up = rotMatrix.getRow(1, camera.up);
-            camera.direction = rotMatrix.getRow(2, camera.direction).negate(camera.direction);
+            camera.direction = Cartesian3.negate(rotMatrix.getRow(2, camera.direction), camera.direction);
 
             var frustum = camera.frustum;
             var ratio = frustum.top / frustum.right;
@@ -494,22 +494,22 @@ define([
                 var position = destination;
                 if (frameState.mode === SceneMode.SCENE3D) {
                     if (!defined(description.direction) && !defined(description.up)){
-                        dirScratch = Cartesian3.normalize(position.negate(dirScratch), dirScratch);
+                        dirScratch = Cartesian3.normalize(Cartesian3.negate(position, dirScratch), dirScratch);
                         rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Z, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = Cartesian3.normalize(dirScratch.cross(description.up, rightScratch), rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);
                     }
-                    upScratch = defaultValue(description.up, rightScratch.cross(dirScratch, upScratch));
+                    upScratch = defaultValue(description.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
                 } else {
                     if (!defined(description.direction) && !defined(description.up)){
-                        dirScratch = Cartesian3.UNIT_Z.negate(dirScratch);
+                        dirScratch = Cartesian3.negate(Cartesian3.UNIT_Z, dirScratch);
                         rightScratch = Cartesian3.normalize(dirScratch.cross(Cartesian3.UNIT_Y, rightScratch), rightScratch);
                     } else {
                         dirScratch = description.direction;
-                        rightScratch = Cartesian3.normalize(dirScratch.cross(description.up, rightScratch), rightScratch);
+                        rightScratch = Cartesian3.normalize(Cartesian3.cross(dirScratch, description.up, rightScratch), rightScratch);
                     }
-                    upScratch = defaultValue(description.up,  rightScratch.cross(dirScratch, upScratch));
+                    upScratch = defaultValue(description.up, Cartesian3.cross(rightScratch, dirScratch, upScratch));
                 }
 
                 Cartesian3.clone(position, frameState.camera.position);

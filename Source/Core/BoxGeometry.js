@@ -105,7 +105,7 @@ define([
         }
 
         var corner = dimensions.multiplyByScalar(0.5);
-        var min = corner.negate();
+        var min = Cartesian3.negate(corner);
         var max = corner;
 
         var newOptions = {
