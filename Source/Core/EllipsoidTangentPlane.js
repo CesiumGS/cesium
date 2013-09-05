@@ -122,8 +122,8 @@ define([
 
         if (defined(intersectionPoint)) {
             var v = Cartesian2.subtract(intersectionPoint, this._origin, intersectionPoint);
-            var x = this._xAxis.dot(v);
-            var y = this._yAxis.dot(v);
+            var x = Cartesian3.dot(this._xAxis, v);
+            var y = Cartesian3.dot(this._yAxis, v);
 
             if (!defined(result)) {
                 return new Cartesian2(x, y);

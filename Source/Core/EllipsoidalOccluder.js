@@ -140,7 +140,7 @@ define([
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
-        var vtDotVc = -vt.dot(cv);
+        var vtDotVc = -Cartesian3.dot(vt, cv);
         var isOccluded = vtDotVc > vhMagnitudeSquared &&
                          vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared;
         return !isOccluded;
@@ -280,7 +280,7 @@ define([
         magnitudeSquared = Math.max(1.0, magnitudeSquared);
         magnitude = Math.max(1.0, magnitude);
 
-        var cosAlpha = direction.dot(scaledSpaceDirectionToPoint);
+        var cosAlpha = Cartesian3.dot(direction, scaledSpaceDirectionToPoint);
         var sinAlpha = Cartesian3.magnitude(direction.cross(scaledSpaceDirectionToPoint));
         var cosBeta = 1.0 / magnitude;
         var sinBeta = Math.sqrt(magnitudeSquared - 1.0) * cosBeta;

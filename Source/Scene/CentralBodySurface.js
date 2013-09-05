@@ -582,12 +582,12 @@ define([
         }
 
         var vectorFromSouthwestCorner = Cartesian3.subtract(cameraCartesianPosition, southwestCornerCartesian, vectorScratch);
-        var distanceToWestPlane = vectorFromSouthwestCorner.dot(westNormal);
-        var distanceToSouthPlane = vectorFromSouthwestCorner.dot(southNormal);
+        var distanceToWestPlane = Cartesian3.dot(vectorFromSouthwestCorner, westNormal);
+        var distanceToSouthPlane = Cartesian3.dot(vectorFromSouthwestCorner, southNormal);
 
         var vectorFromNortheastCorner = Cartesian3.subtract(cameraCartesianPosition, northeastCornerCartesian, vectorScratch);
-        var distanceToEastPlane = vectorFromNortheastCorner.dot(eastNormal);
-        var distanceToNorthPlane = vectorFromNortheastCorner.dot(northNormal);
+        var distanceToEastPlane = Cartesian3.dot(vectorFromNortheastCorner, eastNormal);
+        var distanceToNorthPlane = Cartesian3.dot(vectorFromNortheastCorner, northNormal);
 
         var cameraHeight;
         if (frameState.mode === SceneMode.SCENE3D) {

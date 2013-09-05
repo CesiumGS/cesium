@@ -124,8 +124,8 @@ define([
         } else {
             var diff = Cartesian3.subtract(start, end);
             altitude = Cartesian3.magnitude(Cartesian3.add(diff.multiplyByScalar(0.5), end));
-            var verticalDistance = Cartesian3.magnitude(camera.up.multiplyByScalar(diff.dot(camera.up)));
-            var horizontalDistance = Cartesian3.magnitude(camera.right.multiplyByScalar(diff.dot(camera.right)));
+            var verticalDistance = Cartesian3.magnitude(camera.up.multiplyByScalar(Cartesian3.dot(diff, camera.up)));
+            var horizontalDistance = Cartesian3.magnitude(camera.right.multiplyByScalar(Cartesian3.dot(diff, camera.right)));
             altitude += getAltitude(frustum, verticalDistance, horizontalDistance);
             incrementPercentage = CesiumMath.clamp(dot + 1.0, 0.25, 0.5);
         }

@@ -349,7 +349,7 @@ defineSuite([
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.UNIT_X.negate();
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(sphere.intersect(plane)).toEqual(Intersect.INSIDE);
     });
 
@@ -357,7 +357,7 @@ defineSuite([
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(sphere.intersect(plane)).toEqual(Intersect.OUTSIDE);
     });
 
@@ -365,7 +365,7 @@ defineSuite([
         var sphere = new BoundingSphere(Cartesian3.UNIT_X, 0.5);
         var normal = Cartesian3.UNIT_X;
         var position = Cartesian3.UNIT_X;
-        var plane = new Cartesian4(normal.x, normal.y, normal.z, -normal.dot(position));
+        var plane = new Cartesian4(normal.x, normal.y, normal.z, -Cartesian3.dot(normal, position));
         expect(sphere.intersect(plane)).toEqual(Intersect.INTERSECTING);
     });
 

@@ -1280,7 +1280,7 @@ define([
 
             var n = Cartesian3.fromArray(normals, i03, normalScratch);
             var t = Cartesian3.fromArray(tan1, i03, tScratch);
-            var scalar = n.dot(t);
+            var scalar = Cartesian3.dot(n, t);
             n.multiplyByScalar(scalar, normalScale);
             Cartesian3.normalize(Cartesian3.subtract(t, normalScale, t), t);
 

@@ -460,13 +460,13 @@ define([
 
         var position = startRay.origin;
         var direction = startRay.direction;
-        var scalar = -normal.dot(position) / normal.dot(direction);
+        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var startPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVStartPos);
         Cartesian3.add(position, startPlanePos, startPlanePos);
 
         position = endRay.origin;
         direction = endRay.direction;
-        scalar = -normal.dot(position) / normal.dot(direction);
+        scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var endPlanePos = Cartesian3.multiplyByScalar(direction, scalar, translateCVEndPos);
         Cartesian3.add(position, endPlanePos, endPlanePos);
 
@@ -495,7 +495,7 @@ define([
 
         var position = ray.origin;
         var direction = ray.direction;
-        var scalar = -normal.dot(position) / normal.dot(direction);
+        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.multiplyByScalar(direction, scalar, rotateCVCenter);
         Cartesian3.add(position, center, center);
         var transform = Matrix4.fromTranslation(center, rotateTransform);
@@ -519,7 +519,7 @@ define([
 
         var position = ray.origin;
         var direction = ray.direction;
-        var scalar = -normal.dot(position) / normal.dot(direction);
+        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
 
         handleZoom(controller, movement, controller._zoomFactor, scalar);
     }
@@ -908,7 +908,7 @@ define([
         var end = cameraController.getPickRay(endPos, look3DEndRay).direction;
 
         var angle = 0.0;
-        var dot = start.dot(end);
+        var dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);
         }
@@ -928,7 +928,7 @@ define([
         end = cameraController.getPickRay(endPos, look3DEndRay).direction;
 
         angle = 0.0;
-        dot = start.dot(end);
+        dot = Cartesian3.dot(start, end);
         if (dot < 1.0) { // dot is in [0, 1]
             angle = Math.acos(dot);
         }

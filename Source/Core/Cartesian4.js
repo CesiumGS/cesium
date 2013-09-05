@@ -697,19 +697,6 @@ define([
     };
 
     /**
-     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
-     * @memberof Cartesian4
-     *
-     * @param {Cartesian4} right The right hand side Cartesian.
-     * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian4.prototype.dot = function(right) {
-        return Cartesian4.dot(this, right);
-    };
-
-    /**
      * Computes the componentwise product of this Cartesian and the provided Cartesian.
      * @memberof Cartesian4
      *

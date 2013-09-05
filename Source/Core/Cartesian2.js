@@ -670,19 +670,6 @@ define([
     };
 
     /**
-     * Computes the dot (scalar) product of this Cartesian and a supplied cartesian.
-     * @memberof Cartesian2
-     *
-     * @param {Cartesian2} right The right hand side Cartesian.
-     * @returns {Number} The dot product.
-     *
-     * @exception {DeveloperError} right is required.
-     */
-    Cartesian2.prototype.dot = function(right) {
-        return Cartesian2.dot(this, right);
-    };
-
-    /**
      * Computes the componentwise product of this Cartesian and the provided Cartesian.
      * @memberof Cartesian2
      *

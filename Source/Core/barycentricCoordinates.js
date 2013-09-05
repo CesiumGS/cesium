@@ -59,11 +59,11 @@ define([
           v2 = Cartesian3.subtract(point, p0, scratchCartesian3);
         }
 
-        var dot00 = v0.dot(v0);
-        var dot01 = v0.dot(v1);
-        var dot02 = v0.dot(v2);
-        var dot11 = v1.dot(v1);
-        var dot12 = v1.dot(v2);
+        var dot00 = Cartesian3.dot(v0, v0);
+        var dot01 = Cartesian3.dot(v0, v1);
+        var dot02 = Cartesian3.dot(v0, v2);
+        var dot11 = Cartesian3.dot(v1, v1);
+        var dot12 = Cartesian3.dot(v1, v2);
 
         var q = 1.0 / (dot00 * dot11 - dot01 * dot01);
         result.y = (dot11 * dot02 - dot01 * dot12) * q;

@@ -263,7 +263,7 @@ define([
                 //Check to see if the occluder is fully or partially visible when the occludee DOES
                 //intersect the occluder
                 tempVec = Cartesian3.subtract(occludeePosition, this._horizonPlanePosition);
-                return (tempVec.dot(this._horizonPlaneNormal) > -occludeeRadius) ? Visibility.PARTIAL : Visibility.FULL;
+                return (Cartesian3.dot(tempVec, this._horizonPlaneNormal) > -occludeeRadius) ? Visibility.PARTIAL : Visibility.FULL;
             }
         }
         return Visibility.NONE;

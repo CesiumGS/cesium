@@ -92,7 +92,7 @@ define([
         var w = inverseRadii.multiplyComponents(ray.direction);
 
         var q2 = Cartesian3.magnitudeSquared(q);
-        var qw = q.dot(w);
+        var qw = Cartesian3.dot(q, w);
 
         var difference, w2, product, discriminant, temp;
 

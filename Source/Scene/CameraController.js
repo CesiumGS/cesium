@@ -537,13 +537,13 @@ define([
             if ((!northParallel && !southParallel)) {
                 var constrainedAxis = Cartesian3.normalize(controller.constrainedAxis, rotateVertScratchA);
 
-                var dot = p.dot(constrainedAxis);
+                var dot = Cartesian3.dot(p, constrainedAxis);
                 var angleToAxis = Math.acos(dot);
                 if (angle > 0 && angle > angleToAxis) {
                     angle = angleToAxis;
                 }
 
-                dot = p.dot(constrainedAxis.negate());
+                dot = Cartesian3.dot(p, constrainedAxis.negate());
                 angleToAxis = Math.acos(dot);
                 if (angle < 0 && -angle > angleToAxis) {
                     angle = -angleToAxis;
@@ -837,8 +837,18 @@ define([
         Cartesian3.normalize(right, right);
         var up = Cartesian3.cross(right, direction, cameraRF.up);
 
-        var height = Math.max(Math.abs(up.dot(northWest)), Math.abs(up.dot(southEast)), Math.abs(up.dot(northEast)), Math.abs(up.dot(southWest)));
-        var width = Math.max(Math.abs(right.dot(northWest)), Math.abs(right.dot(southEast)), Math.abs(right.dot(northEast)), Math.abs(right.dot(southWest)));
+        var height = Math.max(
+          Math.abs(Cartesian3.dot(up, northWest)),
+          Math.abs(Cartesian3.dot(up, southEast)),
+          Math.abs(Cartesian3.dot(up, northEast)),
+          Math.abs(Cartesian3.dot(up, southWest))
+        );
+        var width = Math.max(
+          Math.abs(Cartesian3.dot(right, northWest)),
+          Math.abs(Cartesian3.dot(right, southEast)),
+          Math.abs(Cartesian3.dot(right, northEast)),
+          Math.abs(Cartesian3.dot(right, southWest))
+        );
 
         var tanPhi = Math.tan(camera.frustum.fovy * 0.5);
         var tanTheta = camera.frustum.aspectRatio * tanPhi;
@@ -1264,7 +1274,7 @@ define([
         var direction = camera.direction;
 
         var normal = Cartesian3.fromCartesian4(camera.getInverseTransform().multiplyByVector(Cartesian4.UNIT_X));
-        var scalar = -normal.dot(position) / normal.dot(direction);
+        var scalar = -Cartesian3.dot(normal, position) / Cartesian3.dot(normal, direction);
         var center = Cartesian3.add(position, direction.multiplyByScalar(scalar));
         center = new Cartesian4(center.x, center.y, center.z, 1.0);
         var centerWC = camera.transform.multiplyByVector(center);

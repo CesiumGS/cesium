@@ -149,9 +149,9 @@ define([
         var d = camera._direction;
         var e = camera._position;
 
-        var viewMatrix = new Matrix4( r.x,  r.y,  r.z, -r.dot(e),
-                                      u.x,  u.y,  u.z, -u.dot(e),
-                                     -d.x, -d.y, -d.z,  d.dot(e),
+        var viewMatrix = new Matrix4( r.x,  r.y,  r.z, -Cartesian3.dot(r, e),
+                                      u.x,  u.y,  u.z, -Cartesian3.dot(u, e),
+                                     -d.x, -d.y, -d.z,  Cartesian3.dot(d, e),
                                       0.0,  0.0,  0.0,      1.0);
         camera._viewMatrix = viewMatrix.multiply(camera._invTransform);
         camera._invViewMatrix = camera._viewMatrix.inverseTransformation();
@@ -195,14 +195,14 @@ define([
         }
 
         if (directionChanged || upChanged || rightChanged) {
-            var det = direction.dot(up.cross(right));
+            var det = Cartesian3.dot(direction, Cartesian3.cross(up, right));
             if (Math.abs(1.0 - det) > CesiumMath.EPSILON2) {
                 //orthonormalize axes
                 direction = camera._direction = Cartesian3.normalize(direction);
                 camera.direction = direction.clone();
 
                 var invUpMag = 1.0 / Cartesian3.magnitudeSquared(up);
-                var scalar = up.dot(direction) * invUpMag;
+                var scalar = Cartesian3.dot(up, direction) * invUpMag;
                 var w0 = direction.multiplyByScalar(scalar);
                 up = camera._up = Cartesian3.normalize(Cartesian3.subtract(up, w0));
                 camera.up = up.clone();
