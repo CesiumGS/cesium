@@ -11,9 +11,11 @@ define(['../Core/createGuid',
         '../Core/Ellipsoid',
         '../Core/Event',
         '../Core/Iso8601',
+        '../Core/JulianDate',
         '../Core/loadXML',
         './ConstantProperty',
         './ColorMaterialProperty',
+        './SampledPositionProperty',
         './DynamicClock',
         './DynamicObject',
         './DynamicObjectCollection',
@@ -37,9 +39,11 @@ define(['../Core/createGuid',
         Ellipsoid,
         Event,
         Iso8601,
+        JulianDate,
         loadXML,
         ConstantProperty,
         ColorMaterialProperty,
+        SampledPositionProperty,
         DynamicClock,
         DynamicObject,
         DynamicObjectCollection,
@@ -210,6 +214,22 @@ define(['../Core/createGuid',
         dynamicObject.polygon = polygon;
     }
 
+    function processGxTrack(dataSource, dynamicObject, kml, node){
+        var el = node.getElementsByTagName('coord');
+        var coordinates = [];
+        for(var i = 0; i < el.length; i++){
+            coordinates.push(readCoordinate(el[i]));
+        }
+        el = node.getElementsByTagName('when');
+        var times = [];
+        for(i = 0; i < el.length; i++){
+            times.push(JulianDate.fromIso8601(el[i].firstChild.data));
+        }
+        var property = new SampledPositionProperty();
+        property.addSamples(times, coordinates);
+        dynamicObject.position = property;
+    }
+
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
         var geometryObject = dynamicObject;
         var styleObject = dynamicObject;
@@ -247,6 +267,7 @@ define(['../Core/createGuid',
             LineString : processLineString,
             LinearRing : processLinearRing,
             Polygon: processPolygon,
+            'gx:Track': processGxTrack,
             MultiGeometry: processMultiGeometry
             //TODO Model, gxTrack, gxMultitrack
     };

@@ -332,6 +332,26 @@ defineSuite(['DynamicScene/KmlDataSource',
         }
     });
 
+    it('processGxTrack throws error with invalid input', function() {
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <gx:Track>\
+              <when>2010-05-28T02:02:09Z</when>\
+              <gx:coord>-122.207881 37.371915 156.000000</gx:coord>\
+              <gx:coord>-122.205712 37.373288 152.000000</gx:coord>\
+            </gx:Track>\
+            </Placemark\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        expect(function() {
+            dataSource.load(trackKml);
+        }).toThrow();
+    });
+
     it('handles MultiGeometry', function() {
         var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
         var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
