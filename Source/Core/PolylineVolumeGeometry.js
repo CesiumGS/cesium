@@ -17,6 +17,7 @@ define([
         './Matrix4',
         './PolygonPipeline',
         './PolylinePipeline',
+        './PolylineVolumeGeometryLibrary',
         './PrimitiveType',
         './Quaternion',
         './Transforms',
@@ -45,6 +46,7 @@ define([
         Matrix4,
         PolygonPipeline,
         PolylinePipeline,
+        PolylineVolumeGeometryLibrary,
         PrimitiveType,
         Quaternion,
         Transforms,
@@ -56,6 +58,8 @@ define([
         VertexFormat,
         WindingOrder) {
     "use strict";
+
+    var scratch2Array = [new Cartesian3(), new Cartesian3()];
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -69,149 +73,121 @@ define([
 
     var scratch1 = new Cartesian3();
     var scratch2 = new Cartesian3();
-    var scratch3 = new Cartesian3();
 
-    var scratch2Array = [new Cartesian3(), new Cartesian3()];
-
-    var rotation = new Matrix3();
-    var translation = new Matrix4();
+    var negativeX = Cartesian4.UNIT_X.negate();
     var transform = new Matrix4();
-    var scale = new Matrix3();
-    var scaleCartesian = new Cartesian3(1, 1, 1);
-    var negX = Cartesian4.UNIT_X.negate();
-    function addPositions(centers, left, shape, finalPositions, ellipsoid, height, scalar) {  //TODO: duplicate corner poitns
-        scaleCartesian.x = scalar;
-        scale = Matrix3.fromScale(scaleCartesian, scale);
-        var position = scratch1;
-        var west = scratch2;
-        var finalPosition = scratch3;
-        var i, j;
-        var shapeLength = shape.length;
-        for (j = 0; j < centers.length; j+=3) {
-            position = Cartesian3.fromArray(centers, j, position);
-            transform = Transforms.eastNorthUpToFixedFrame(position, ellipsoid, transform);
-            west = Matrix4.multiplyByVector(transform, negX, west);
-            west = Cartesian3.fromCartesian4(west).normalize(west);
-            var angle = computeRotationAngle(west, left, position, ellipsoid);
-            rotation = Matrix3.fromRotationZ(angle, rotation);
-            transform = Matrix4.multiply(transform, Matrix4.fromRotationTranslation(rotation, new Cartesian3(0.0, 0.0, height), translation), transform);
-            for(i = 0; i < shapeLength; i+=3) {
-                finalPosition = Cartesian3.fromArray(shape, i, finalPosition);
-                finalPosition = Matrix3.multiplyByVector(scale, finalPosition, finalPosition);
-                finalPosition = Matrix4.multiplyByPoint(transform, finalPosition, finalPosition);
-                finalPositions.push(finalPosition.x, finalPosition.y, finalPosition.z);
-            }
+    var translation = new Matrix4();
+    var rotationMatrix = new Matrix3();
+    var scaleMatrix = Matrix3.IDENTITY.clone();
+    var westScratch = new Cartesian3();
+    var finalPosScratch = new Cartesian3();
+    var heightCartesian = new Cartesian3();
+    function addPosition(center, left, shape, finalPositions, ellipsoid, height, xScalar) {
+        var west = westScratch;
+        var finalPosition = finalPosScratch;
+
+        transform = Transforms.eastNorthUpToFixedFrame(center, ellipsoid, transform);
+        west = Matrix4.multiplyByVector(transform, negativeX, west);
+        west = Cartesian3.fromCartesian4(west, west);
+        west = Cartesian3.normalize(west, west);
+        var angle = PolylineVolumeGeometryLibrary.computeRotationAngle(west, left, center, ellipsoid);
+        var rotation = Matrix3.fromRotationZ(angle, rotationMatrix);
+        heightCartesian.z = height;
+        transform = Matrix4.multiply(transform, Matrix4.fromRotationTranslation(rotation, heightCartesian, translation), transform);
+        var scale = scaleMatrix;
+        scale[0] = xScalar;
+
+        for ( var i = 0; i < shape.length; i += 3) {
+            finalPosition = Cartesian3.fromArray(shape, i, finalPosition);
+            finalPosition = Matrix3.multiplyByVector(scale, finalPosition, finalPosition);
+            finalPosition = Matrix4.multiplyByPoint(transform, finalPosition, finalPosition);
+            finalPositions.push(finalPosition.x, finalPosition.y, finalPosition.z);
+        }
+
+        return finalPositions;
+    }
+
+    var centerScratch = new Cartesian3();
+    function addPositions(centers, left, shape, finalPositions, ellipsoid, height, xScalar) {
+        for ( var i = 0; i < centers.length; i += 3) {
+            var center = Cartesian3.fromArray(centers, i, centerScratch);
+            finalPositions = addPosition(center, left, shape, finalPositions, ellipsoid, height, xScalar);
         }
         return finalPositions;
     }
 
     function convertShapeTo3DSides(shape2D, boundingRectangle) { //orientate 2D shape to XZ plane center at (0, 0, 0), duplicate points
         var length = shape2D.length;
-        var shape = new Array(length * 3);
+        var shape = new Array(length * 6);
         var index = 0;
+        var xOffset = boundingRectangle.x + boundingRectangle.width / 2;
+        var yOffset = boundingRectangle.y + boundingRectangle.height / 2;
 
-        shape[index++] = shape2D[0].x - (boundingRectangle.x + (boundingRectangle.width / 2));
+        var point = shape2D[0];
+        shape[index++] = point.x - xOffset;
         shape[index++] = 0;
-        shape[index++] = shape2D[0].y - (boundingRectangle.y + (boundingRectangle.height / 2));
-        for (var i = 1; i < length; i++) {
-            shape[index++] = shape2D[i].x - (boundingRectangle.x + (boundingRectangle.width / 2));
+        shape[index++] = point.y - yOffset;
+        for ( var i = 1; i < length; i++) {
+            point = shape2D[i];
+            var x = point.x - xOffset;
+            var z = point.y - yOffset;
+            shape[index++] = x;
             shape[index++] = 0;
-            shape[index++] = shape2D[i].y - (boundingRectangle.y + (boundingRectangle.height / 2));
+            shape[index++] = z;
 
-            shape[index++] = shape2D[i].x - (boundingRectangle.x + (boundingRectangle.width / 2));
+            shape[index++] = x;
             shape[index++] = 0;
-            shape[index++] = shape2D[i].y - (boundingRectangle.y + (boundingRectangle.height / 2));
+            shape[index++] = z;
         }
-        shape[index++] = shape2D[0].x - (boundingRectangle.x + (boundingRectangle.width / 2));
+        point = shape2D[0];
+        shape[index++] = point.x - xOffset;
         shape[index++] = 0;
-        shape[index++] = shape2D[0].y - (boundingRectangle.y + (boundingRectangle.height / 2));
+        shape[index++] = point.y - yOffset;
 
         return shape;
     }
-
 
     function convertShapeTo3DFirstLast(shape2D, boundingRectangle) { //orientate 2D shape to XZ plane center at (0, 0, 0)
         var length = shape2D.length;
         var shape = new Array(length * 3);
         var index = 0;
+        var xOffset = boundingRectangle.x + boundingRectangle.width / 2;
+        var yOffset = boundingRectangle.y + boundingRectangle.height / 2;
 
-        for (var i = 0; i < length; i++) {
-            shape[index++] = shape2D[i].x - (boundingRectangle.x + (boundingRectangle.width / 2));
+        for ( var i = 0; i < length; i++) {
+            shape[index++] = shape2D[i].x - xOffset;
             shape[index++] = 0;
-            shape[index++] = shape2D[i].y - (boundingRectangle.y + (boundingRectangle.height / 2));
+            shape[index++] = shape2D[i].y - yOffset;
         }
 
         return shape;
     }
 
-    var originScratch = new Cartesian2();
-    var nextScratch = new Cartesian2();
-    var prevScratch = new Cartesian2();
-    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
-        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
-        var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
-        var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
-
-        prev = prev.subtract(origin, prev);
-        next = next.subtract(origin, next);
-
-        return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    }
-
-    function computeRotationAngle (start, end, position, ellipsoid) {
-        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
-        var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, start, nextScratch), nextScratch);
-        var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, end, prevScratch), prevScratch);
-        prev = prev.subtract(origin, prev);
-        next = next.subtract(origin, next);
-
-        var angle = Cartesian2.angleBetween(next, prev);
-
-        return (((prev.x * next.y) - (prev.y * next.x)) >= 0.0) ? -angle : angle;
-    }
-
-    var posScratch = new Cartesian3();
-    function scaleToSurface (positions, ellipsoid){
-        for (var i = 0; i < positions.length; i += 3) {
-            posScratch = Cartesian3.fromArray(positions, i, posScratch);
-            posScratch = ellipsoid.scaleToGeodeticSurface(posScratch, posScratch);
-            positions[i] = posScratch.x;
-            positions[i + 1] = posScratch.y;
-            positions[i + 2] = posScratch.z;
-        }
-
-        return positions;
-    }
-
     var quaterion = new Quaternion();
+    var startPointScratch = new Cartesian3();
     var rotMatrix = new Matrix3();
-    var scratch3Array = new Array(3);
     function computeRoundCorner(pivot, startPoint, endPoint, cornerType, leftIsOutside, ellipsoid, finalPositions, shape, height) {
-        var angle = Cartesian3.angleBetween(startPoint.subtract(pivot, scratch1), endPoint.subtract(pivot, scratch2));
-        var granularity = (cornerType.value === CornerType.BEVELED.value) ? 0 : Math.ceil(angle/CesiumMath.toRadians(5));
+        var angle = Cartesian3.angleBetween(Cartesian3.subtract(startPoint, pivot, scratch1), Cartesian3.subtract(endPoint, pivot, scratch2));
+        var granularity = (cornerType.value === CornerType.BEVELED.value) ? 0 : Math.ceil(angle / CesiumMath.toRadians(5));
 
         var m;
         if (leftIsOutside) {
-            m =  Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pivot, angle/(granularity+1), quaterion), rotMatrix);
+            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pivot, angle / (granularity + 1), quaterion), rotMatrix);
         } else {
-            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(pivot.negate(scratch1), angle/(granularity+1), quaterion), rotMatrix);
+            m = Matrix3.fromQuaternion(Quaternion.fromAxisAngle(Cartesian3.negate(pivot, scratch1), angle / (granularity + 1), quaterion), rotMatrix);
         }
 
-        startPoint = startPoint.clone(scratch1);
-        for (var i = 0; i < granularity; i++) {
-            startPoint = m.multiplyByVector(startPoint, startPoint);
-            scratch3Array[0] = startPoint.x;
-            scratch3Array[1] = startPoint.y;
-            scratch3Array[2] = startPoint.z;
-
-            var left = startPoint.subtract(pivot).normalize();
+        startPoint = Cartesian3.clone(startPoint, startPointScratch);
+        for ( var i = 0; i < granularity; i++) {
+            startPoint = Matrix3.multiplyByVector(m, startPoint, startPoint);
+            var left = Cartesian3.subtract(startPoint, pivot, scratch1);
+            left = Cartesian3.normalize(left, left);
             if (!leftIsOutside) {
-                left = left.negate(left);
+                left = Cartesian3.negate(left, left);
             }
-            scratch3Array = scaleToSurface(scratch3Array, ellipsoid);
-            finalPositions = addPositions(scratch3Array, left, shape, finalPositions, ellipsoid, height, 1);
+
+            var surfacePoint = ellipsoid.scaleToGeodeticSurface(startPoint, scratch2);
+            finalPositions = addPosition(surfacePoint, left, shape, finalPositions, ellipsoid, height, 1);
         }
 
         return finalPositions;
@@ -229,7 +205,7 @@ define([
 
         var shapeLength = shape.length;
         var indices = [];
-        var length = positions.length/(shapeLength*6);
+        var length = positions.length / (shapeLength * 6);
         var i, j;
         var LL, UL, UR, LR;
         var offset = shapeLength * 2;
@@ -255,27 +231,29 @@ define([
             var lengthSt = 1 / (length - 1);
             var heightSt = 1 / (boundingRectangle.height);
 
+            var heightOffset = boundingRectangle.height / 2;
+
             var s, t;
             for (i = 0; i < length; i++) {
                 t = i * lengthSt;
-                s = heightSt * (shape[0].y + boundingRectangle.height/2);
+                s = heightSt * (shape[0].y + heightOffset);
                 st.push(s, t);
-                for(j = 1; j < shapeLength; j++) {
-                    s = heightSt * (shape[j].y + boundingRectangle.height/2);
+                for (j = 1; j < shapeLength; j++) {
+                    s = heightSt * (shape[j].y + heightOffset);
                     st.push(s, t);
                     st.push(s, t);
                 }
-                s = heightSt * (shape[0].y + boundingRectangle.height/2);
+                s = heightSt * (shape[0].y + heightOffset);
                 st.push(s, t);
             }
-            for(j = 0; j < shapeLength; j++) {
+            for (j = 0; j < shapeLength; j++) {
                 t = 0;
-                s = heightSt * (shape[j].y + boundingRectangle.height/2);
+                s = heightSt * (shape[j].y + heightOffset);
                 st.push(s, t);
             }
-            for(j = 0; j < shapeLength; j++) {
+            for (j = 0; j < shapeLength; j++) {
                 t = (length - 1) * lengthSt;
-                s = heightSt * (shape[j].y + boundingRectangle.height/2);
+                s = heightSt * (shape[j].y + heightOffset);
                 st.push(s, t);
             }
 
@@ -297,10 +275,10 @@ define([
         }
 
         var geometry = new Geometry({
-            attributes: attributes,
-            indices: IndexDatatype.createTypedArray(positions.length/3, indices),
-            boundingSphere: BoundingSphere.fromVertices(positions),
-            primitiveType: PrimitiveType.TRIANGLES
+            attributes : attributes,
+            indices : IndexDatatype.createTypedArray(positions.length / 3, indices),
+            boundingSphere : BoundingSphere.fromVertices(positions),
+            primitiveType : PrimitiveType.TRIANGLES
         });
 
         if (vertexFormat.normal) {
@@ -320,22 +298,19 @@ define([
         var cornerType = geometry._cornerType;
         var ellipsoid = geometry._ellipsoid;
         var shape2D = geometry._shape;
-        var windingOrder = PolygonPipeline.computeWindingOrder2D(shape2D);
-        if (windingOrder.value === WindingOrder.CLOCKWISE.value) {
+        if (PolygonPipeline.computeWindingOrder2D(shape2D).value === WindingOrder.CLOCKWISE.value) {
             shape2D.reverse();
         }
 
         var boundingRectangle = BoundingRectangle.fromPoints(shape2D, brScratch);
         var shapeForSides = convertShapeTo3DSides(shape2D, boundingRectangle);
         var shapeForEnds = convertShapeTo3DFirstLast(shape2D, boundingRectangle);
-        var height = geometry._height + boundingRectangle.height/2;
-        var width = boundingRectangle.width/2;
+        var height = geometry._height + boundingRectangle.height / 2;
+        var width = boundingRectangle.width / 2;
+        var length = positions.length;
         var finalPositions = [];
-        var centers = [];
         var ends = [];
 
-        var i;
-        var length = positions.length;
         var forward = scratchCartesian1;
         var backward = scratchCartesian2;
         var cornerDirection = scratchCartesian3;
@@ -349,84 +324,82 @@ define([
         var position = positions[0];
         var nextPosition = positions[1];
         surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
-        forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-        left = surfaceNormal.cross(forward, left).normalize(left);
-
-        ends = addPositions([position.x, position.y, position.z], left, shapeForEnds, ends, ellipsoid, height, 1);
-        previousPosition = position.clone(previousPosition);
+        forward = Cartesian3.subtract(nextPosition, position, forward);
+        forward = Cartesian3.normalize(forward, forward);
+        left = Cartesian3.cross(surfaceNormal, forward, left);
+        left = Cartesian3.normalize(left, left);
+        ends = addPosition(position, left, shapeForEnds, ends, ellipsoid, height, 1);
+        previousPosition = Cartesian3.clone(position, previousPosition);
         position = nextPosition;
-        backward = forward.negate(backward);
+        backward = Cartesian3.negate(forward, backward);
 
         var surfacePositions;
-
-        for (i = 1; i < length - 1; i++) {
+        for ( var i = 1; i < length - 1; i++) {
             nextPosition = positions[i + 1];
-            forward = Cartesian3.subtract(nextPosition, position, forward).normalize(forward);
-            cornerDirection = forward.add(backward, cornerDirection).normalize(cornerDirection);
+            forward = Cartesian3.subtract(nextPosition, position, forward);
+            forward = Cartesian3.normalize(forward, forward);
+            cornerDirection = Cartesian3.add(forward, backward, cornerDirection);
+            cornerDirection = Cartesian3.normalize(cornerDirection, cornerDirection);
             surfaceNormal = ellipsoid.geodeticSurfaceNormal(position, surfaceNormal);
-            var doCorner = !Cartesian3.equalsEpsilon(cornerDirection.negate(scratch1), surfaceNormal, CesiumMath.EPSILON2);
+            var doCorner = !Cartesian3.equalsEpsilon(Cartesian3.negate(cornerDirection, scratch1), surfaceNormal, CesiumMath.EPSILON2);
             if (doCorner) {
-                cornerDirection = cornerDirection.cross(surfaceNormal, cornerDirection);
-                cornerDirection = surfaceNormal.cross(cornerDirection, cornerDirection);
-                var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
-                cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
+                cornerDirection = Cartesian3.cross(cornerDirection, surfaceNormal, cornerDirection);
+                cornerDirection = Cartesian3.cross(surfaceNormal, cornerDirection, cornerDirection);
+                var scalar = width / Math.max(0.25, (Cartesian3.magnitude(Cartesian3.cross(cornerDirection, backward, scratch1))));
+                var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
+                cornerDirection = Cartesian3.multiplyByScalar(cornerDirection, scalar, cornerDirection);
+                var ratio = scalar / width;
                 if (leftIsOutside) {
                     pivot = Cartesian3.add(position, cornerDirection, pivot);
-                    start = pivot.add(left.multiplyByScalar(width, start), start);
-                    scratch2Array[0] = previousPosition.clone(scratch2Array[0]);
-                    scratch2Array[1] = start.clone(scratch2Array[1]);
+                    start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, width, start), start);
+                    scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
+                    scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
                     surfacePositions = PolylinePipeline.scaleToSurface(scratch2Array);
                     finalPositions = addPositions(surfacePositions, left, shapeForSides, finalPositions, ellipsoid, height, 1);
-                    centers = centers.concat(surfacePositions);
-                    left = surfaceNormal.cross(forward, left).normalize(left);
-                    end = pivot.add(left.multiplyByScalar(width, end), end);
+                    left = Cartesian3.cross(surfaceNormal, forward, left);
+                    left = Cartesian3.normalize(left, left);
+                    end = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, width, end), end);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         computeRoundCorner(pivot, start, end, cornerType, leftIsOutside, ellipsoid, finalPositions, shapeForSides, height);
                     } else {
-                        scratch3Array[0] = position.x;
-                        scratch3Array[1] = position.y;
-                        scratch3Array[2] = position.z;
-
-                        finalPositions = addPositions(scratch3Array, cornerDirection.negate(cornerDirection), shapeForSides, finalPositions, ellipsoid, height, scalar/width);
+                        cornerDirection = Cartesian3.negate(cornerDirection, cornerDirection);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, height, ratio);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, height, ratio);
                     }
-                    previousPosition = end.clone(previousPosition);
+                    previousPosition = Cartesian3.clone(end, previousPosition);
                 } else {
                     pivot = Cartesian3.add(position, cornerDirection, pivot);
-                    start = pivot.add(left.multiplyByScalar(-width, start), start);
-                    scratch2Array[0] = previousPosition.clone(scratch2Array[0]);
-                    scratch2Array[1] = start.clone(scratch2Array[1]);
+                    start = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, -width, start), start);
+                    scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
+                    scratch2Array[1] = Cartesian3.clone(start, scratch2Array[1]);
                     surfacePositions = PolylinePipeline.scaleToSurface(scratch2Array, granularity, ellipsoid);
                     finalPositions = addPositions(surfacePositions, left, shapeForSides, finalPositions, ellipsoid, height, 1);
-                    centers = centers.concat(surfacePositions);
-                    left  = surfaceNormal.cross(forward, left).normalize(left);
-                    end = pivot.add(left.multiplyByScalar(-width, end), end);
+                    left = Cartesian3.cross(surfaceNormal, forward, left);
+                    left = Cartesian3.normalize(left, left);
+                    end = Cartesian3.add(pivot, Cartesian3.multiplyByScalar(left, -width, end), end);
                     if (cornerType.value === CornerType.ROUNDED.value || cornerType.value === CornerType.BEVELED.value) {
                         computeRoundCorner(pivot, start, end, cornerType, leftIsOutside, ellipsoid, finalPositions, shapeForSides, height);
                     } else {
-                        scratch3Array[0] = position.x;
-                        scratch3Array[1] = position.y;
-                        scratch3Array[2] = position.z;
-
-                        finalPositions = addPositions(scratch3Array, cornerDirection, shapeForSides, finalPositions, ellipsoid, height, scalar/width);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, height, ratio);
+                        finalPositions = addPosition(position, cornerDirection, shapeForSides, finalPositions, ellipsoid, height, ratio);
                     }
-                    previousPosition = end.clone(previousPosition);
+                    previousPosition = Cartesian3.clone(end, previousPosition);
                 }
-                backward = forward.negate(backward);
+                backward = Cartesian3.negate(forward, backward);
             }
             position = nextPosition;
         }
-        scratch2Array[0] = previousPosition.clone(scratch2Array[0]);
-        scratch2Array[1] = position.clone(scratch2Array[1]);
-        centers = PolylinePipeline.scaleToSurface(scratch2Array, granularity, ellipsoid);
-        finalPositions = addPositions(centers, left, shapeForSides, finalPositions, ellipsoid, height, 1);
-        ends = addPositions([position.x, position.y, position.z], left, shapeForEnds, ends, ellipsoid, height, 1);
+        scratch2Array[0] = Cartesian3.clone(previousPosition, scratch2Array[0]);
+        scratch2Array[1] = Cartesian3.clone(position, scratch2Array[1]);
+        surfacePositions = PolylinePipeline.scaleToSurface(scratch2Array, granularity, ellipsoid);
+        finalPositions = addPositions(surfacePositions, left, shapeForSides, finalPositions, ellipsoid, height, 1);
+        ends = addPosition(position, left, shapeForEnds, ends, ellipsoid, height, 1);
 
         return computeAttributes(finalPositions, ends, shape2D, boundingRectangle, geometry._vertexFormat, ellipsoid);
     }
 
     /**
-     * A description of a polyline volume.
+     * A description of a polyline with a volume (a 2D shape extruded along a polyline).
      *
      * @alias PolylineVolumeGeometry
      * @constructor
@@ -445,13 +418,23 @@ define([
      * @see PolylineVolumeGeometry#createGeometry
      *
      * @example
+     * function computeCirclePositions(radius) {
+     *     var positions = [];
+     *     var theta = CesiumMath.toRadians(1);
+     *     var posCount = Math.PI*2/theta;
+     *     for (var i = 0; i < posCount; i++) {
+     *         positions.push(new Cartesian2(radius * Math.cos(theta * i), radius * Math.sin(theta * i)));
+     *     }
+     *     return positions;
+     * }
+     *
      * var tube = new PolylineVolumeGeometry({
-     *   vertexFormat : VertexFormat.POSITION_ONLY,
-     *   positions : ellipsoid.cartographicArrayToCartesianArray([
+     *     vertexFormat : VertexFormat.POSITION_ONLY,
+     *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0)
      *     ]),
-     *   width : 100000
+     *     shapePositions : circlePositions(10000)
      * });
      */
     var PolylineVolumeGeometry = function(options) {
@@ -462,7 +445,7 @@ define([
         }
         var shape = options.shapePositions;
         if (!defined(shape)) {
-            throw new  DeveloperError('options.shapePositions is required.');
+            throw new DeveloperError('options.shapePositions is required.');
         }
 
         this._positions = positions;
@@ -473,14 +456,13 @@ define([
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createPolylineVolumeGeometry';
-
     };
 
     /**
-     * Computes the geometric representation of a corridor, including its vertices, indices, and a bounding sphere.
+     * Computes the geometric representation of a polyline with a volume, including its vertices, indices, and a bounding sphere.
      * @memberof PolylineVolumeGeometry
      *
-     * @param {PolylineVolumeGeometry} polylineVolumeGeometry A description of the polylineVolume.
+     * @param {PolylineVolumeGeometry} polylineVolumeGeometry A description of the polyline volume.
      *
      * @returns {Geometry} The computed vertices and indices.
      *
@@ -497,5 +479,4 @@ define([
     };
 
     return PolylineVolumeGeometry;
-
 });

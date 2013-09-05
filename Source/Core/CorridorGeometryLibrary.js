@@ -6,6 +6,7 @@ define([
         './CornerType',
         './EllipsoidTangentPlane',
         './PolylinePipeline',
+        './PolylineVolumeGeometryLibrary',
         './Matrix3',
         './Quaternion',
         './Math'
@@ -16,6 +17,7 @@ define([
         CornerType,
         EllipsoidTangentPlane,
         PolylinePipeline,
+        PolylineVolumeGeometryLibrary,
         Matrix3,
         Quaternion,
         CesiumMath) {
@@ -43,21 +45,6 @@ define([
     var cartesian8 = new Cartesian3();
     var cartesian9 = new Cartesian3();
     var cartesian10 = new Cartesian3();
-
-    var originScratch = new Cartesian3();
-    var nextScratch = new Cartesian3();
-    var prevScratch = new Cartesian3();
-    function angleIsGreaterThanPi (forward, backward, position, ellipsoid) {
-        var tangentPlane = new EllipsoidTangentPlane(position, ellipsoid);
-        var origin = tangentPlane.projectPointOntoPlane(position, originScratch);
-        var next = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, forward, nextScratch), nextScratch);
-        var prev = tangentPlane.projectPointOntoPlane(Cartesian3.add(position, backward, prevScratch), prevScratch);
-
-        prev = Cartesian2.subtract(prev, origin, prev);
-        next = Cartesian2.subtract(next, origin, next);
-
-        return ((prev.x * next.y) - (prev.y * next.x)) >= 0.0;
-    }
 
     var quaterion = new Quaternion();
     var rotMatrix = new Matrix3();
@@ -219,8 +206,8 @@ define([
                 cornerDirection = cornerDirection.cross(normal, cornerDirection);
                 cornerDirection = normal.cross(cornerDirection, cornerDirection);
                 var scalar = width / Math.max(0.25, (Cartesian3.cross(cornerDirection, backward, scratch1).magnitude()));
-                var leftIsOutside = angleIsGreaterThanPi(forward, backward, position, ellipsoid);
-                cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection, cornerDirection);
+                var leftIsOutside = PolylineVolumeGeometryLibrary.angleIsGreaterThanPi(forward, backward, position, ellipsoid);
+                cornerDirection = cornerDirection.multiplyByScalar(scalar, cornerDirection);
                 if (leftIsOutside) {
                     rightPos = Cartesian3.add(position, cornerDirection, rightPos);
                     center = rightPos.add(left.multiplyByScalar(width, center), center);
