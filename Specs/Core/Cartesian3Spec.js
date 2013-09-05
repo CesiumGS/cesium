@@ -616,9 +616,9 @@ defineSuite([
     });
 
     it('fromElements returns a cartesian3 with corrrect coordinates', function(){
-        var Cartesian3 = Cartesian3.fromElements(2, 2, 4);
+        var cartesian = Cartesian3.fromElements(2, 2, 4);
         var expectedResult = new Cartesian3(2, 2, 4);
-        expect(Cartesian3).toEqual(expectedResult);
+        expect(cartesian).toEqual(expectedResult);
     });
 
     it('fromElements result param returns cartesian3 with correct coordinates', function(){

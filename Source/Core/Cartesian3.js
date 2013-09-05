@@ -297,7 +297,7 @@ define([
     var distanceScratch = new Cartesian3();
 
     /**
-      state_;* Computes the distance between two points
+     * Computes the distance between two points
      * @memberof Cartesian3
      *
      * @param {Cartesian3} left The first point to compute the distance from.
