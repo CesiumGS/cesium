@@ -29,12 +29,14 @@ define([
         var finishing = knockout.observable(false);
 
         /**
+         * Gets or sets the set of data source panels that can be shown.  This property is observable.
          *
+         * @type Array
          */
         this.dataSourcePanels = defaultValue(dataSourcePanels, DataSourcePanelViewModel.defaultDataSourcePanels).slice(0);
 
         /**
-         *
+         * Gets or sets the active data source panel that is currently shown.  This property is observable.
          */
         this.activeDataSourcePanel = undefined;
 
@@ -46,7 +48,9 @@ define([
         this.visible = false;
 
         /**
+         * Gets or sets the error message that is currently shown.  This property is observable.
          *
+         * @type String
          */
         this.error = '';
 
@@ -129,7 +133,9 @@ define([
     };
 
     /**
+     * The default set of data source panels that can be shown.
      *
+     * @type Array
      */
     DataSourcePanelViewModel.defaultDataSourcePanels = [new CzmlDataSourcePanel(), new GeoJsonDataSourcePanel()];
 
