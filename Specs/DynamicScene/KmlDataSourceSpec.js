@@ -6,11 +6,13 @@ defineSuite(['DynamicScene/KmlDataSource',
              'DynamicScene/DynamicBillboard',
              'DynamicScene/DynamicPolyline',
              'DynamicScene/DynamicPolygon',
+             'Core/Cartesian3',
              'Core/loadXML',
              'Core/Cartographic',
              'Core/Color',
              'Core/Ellipsoid',
              'Core/Event',
+             'Core/JulianDate',
              'Core/Math'
          ], function(
             KmlDataSource,
@@ -20,11 +22,13 @@ defineSuite(['DynamicScene/KmlDataSource',
             DynamicBillboard,
             DynamicPolyline,
             DynamicPolygon,
+            Cartesian3,
             loadXML,
             Cartographic,
             Color,
             Ellipsoid,
             Event,
+            JulianDate,
             CesiumMath) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
@@ -330,6 +334,29 @@ defineSuite(['DynamicScene/KmlDataSource',
         for(var i = 0; i < coordinates.length; i++){
             expect(dynamicObject.vertexPositions._value[i]).toEqual(coordinates[i]);
         }
+    });
+
+    it('handles gx:Track', function() {
+        var cartographic = Cartographic.fromDegrees(7, 8, 9);
+        var value = Ellipsoid.WGS84.cartographicToCartesian(cartographic);
+        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <gx:Track>\
+              <when>2010-05-28T02:02:09Z</when>\
+              <gx:coord>7 8 9</gx:coord>\
+            </gx:Track>\
+            </Placemark\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+
+        var object = dataSource.getDynamicObjectCollection().getObjects()[0];
+        expect(object.position.getValue(time)).toEqual(value);
     });
 
     it('processGxTrack throws error with invalid input', function() {
