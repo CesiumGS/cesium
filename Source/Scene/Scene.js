@@ -127,7 +127,7 @@ define([
 
         this._shaderFrameCount = 0;
 
-        this._sunPostProcess = new SunPostProcess();
+        this._sunPostProcess = undefined;
 
         this._commandList = [];
         this._frustumCommandsList = [];
@@ -167,6 +167,15 @@ define([
          * @default undefined
          */
         this.sun = undefined;
+
+        /**
+         * Uses a bloom filter on the sun when enabled.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.sunBloom = true;
+        this._sunBloom = undefined;
 
         /**
          * The background color, which is only visible if there is no sky box, i.e., {@link Scene#skyBox} is undefined.
@@ -657,12 +666,25 @@ define([
         var context = scene._context;
         var us = context.getUniformState();
 
+        if (defined(scene.sun) && scene.sunBloom !== scene._sunBloom) {
+            if (scene.sunBloom) {
+                scene._sunPostProcess = new SunPostProcess();
+            } else {
+                scene._sunPostProcess = scene._sunPostProcess.destroy();
+            }
+
+            scene._sunBloom = scene.sunBloom;
+        } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
+            scene._sunPostProcess = scene._sunPostProcess.destroy();
+            scene._sunBloom = undefined;
+        }
+
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;
         var skyAtmosphereCommand = (frameState.passes.color && defined(scene.skyAtmosphere)) ? scene.skyAtmosphere.update(context, frameState) : undefined;
         var sunCommand = (frameState.passes.color && defined(scene.sun)) ? scene.sun.update(context, frameState) : undefined;
         var sunVisible = isSunVisible(sunCommand, frameState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             passState.framebuffer = scene._sunPostProcess.update(context);
         }
 
@@ -670,7 +692,7 @@ define([
         Color.clone(clearColor, clear.color);
         clear.execute(context, passState);
 
-        if (sunVisible) {
+        if (sunVisible && scene.sunBloom) {
             scene._sunPostProcess.clear(context, scene.backgroundColor);
         }
 
@@ -690,8 +712,11 @@ define([
 
         if (defined(sunCommand) && sunVisible) {
             sunCommand.execute(context, passState);
-            scene._sunPostProcess.execute(context);
-            passState.framebuffer = undefined;
+
+            if (scene.sunBloom) {
+                scene._sunPostProcess.execute(context);
+                passState.framebuffer = undefined;
+            }
         }
 
         var clearDepthStencil = scene._clearDepthStencilCommand;
