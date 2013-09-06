@@ -12,7 +12,7 @@ vec4 addBurst(vec2 position, vec2 direction)
 {
     vec2 rotatedPosition = rotate(position, direction) * vec2(25.0, 0.75);
     float radius = length(rotatedPosition);
-    float burst = 1.0 - smoothstep(0.0, u_glowLengthTS + u_radiusTS, radius);
+    float burst = 1.0 - smoothstep(0.0, 0.55, radius);
 
     return vec4(burst);
 }
@@ -24,7 +24,7 @@ void main()
     float surface = step(radius, u_radiusTS);
     vec4 color = vec4(1.0, 1.0, surface + 0.2, surface);
 
-    float glow = 1.0 - smoothstep(0.0, u_glowLengthTS + u_radiusTS, radius);
+    float glow = 1.0 - smoothstep(0.0, 0.55, radius);
     color.ba += mix(vec2(0.0), vec2(1.0), glow) * 0.75;
 
     // The following loop has been manually unrolled for speed, to

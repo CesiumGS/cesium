@@ -83,12 +83,10 @@ define([
         this._radiusTS = undefined;
         this._size = undefined;
 
-        var that = this;
-
-        //this.glowFactor = 1.0;
-        this.glowFactor = 0.0;
+        this.glowFactor = 0.3;
         this._glowFactorChanged = false;
 
+        var that = this;
         this._uniformMap = {
             u_texture : function() {
                 return that._texture;
@@ -102,12 +100,12 @@ define([
     defineProperties(Sun.prototype, {
         /**
          * Gets or sets a number that controls how "bright" the Sun's lens flare appears
-         * to be.  Zero shows just the Sun's disc without any flare.  The default
-         * is 1.0.  Use larger values for a more pronounced flare around the Sun.
+         * to be.  Zero shows just the Sun's disc without any flare.
+         * Use larger values for a more pronounced flare around the Sun.
          *
          * @memberof Sun.prototype
          * @type {Number}
-         * @default 1.0
+         * @default 0.3
          */
         glowFactor : {
             get : function () { return this._glowFactor; },
@@ -221,7 +219,7 @@ define([
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
-            this._glowLengthTS = Math.min(this._glowFactor * 2, 0.4);
+            this._glowLengthTS = this._glowFactor * 10.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
             var that = this;
