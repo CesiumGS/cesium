@@ -6,7 +6,8 @@ define(['../Core/createGuid',
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/JulianDate',
-        '../Core/TimeInterval'
+        '../Core/TimeInterval',
+        './createObservableProperty'
     ], function(
         createGuid,
         defaultValue,
@@ -15,33 +16,9 @@ define(['../Core/createGuid',
         DeveloperError,
         Event,
         JulianDate,
-        TimeInterval) {
+        TimeInterval,
+        createObservableProperty) {
     "use strict";
-
-    function createProperty(propertyName, privatePropertyName) {
-        var subPropertyAssigned = function(property, subPropertyName, newValue, oldValue) {
-            this._subpropertyAssigned.raiseEvent(this, propertyName, property, subPropertyName, newValue, oldValue);
-        };
-
-        return {
-            get : function() {
-                return this[privatePropertyName];
-            },
-            set : function(value) {
-                var oldValue = this[privatePropertyName];
-                if (value !== oldValue) {
-                    if (defined(oldValue) && defined(oldValue.propertyAssigned)) {
-                        oldValue.propertyAssigned.removeEventListener(subPropertyAssigned, this);
-                    }
-                    this[privatePropertyName] = value;
-                    if (defined(value) && defined(value.propertyAssigned)) {
-                        value.propertyAssigned.addEventListener(subPropertyAssigned, this);
-                    }
-                    this._propertyAssigned.raiseEvent(this, propertyName, value, oldValue);
-                }
-            }
-        };
-    }
 
     var reservedPropertyNames = ['cachedAvailabilityDate', 'cachedAvailabilityValue', 'id', 'propertyAssigned', //
                                  'propertyNames', 'isAvailable', 'clean', 'merge', 'addProperty', 'removeProperty'];
@@ -67,8 +44,24 @@ define(['../Core/createGuid',
         }
 
         this._id = id;
+        this._availability = undefined;
+        this._position = undefined;
+        this._orientation = undefined;
+        this._billboard = undefined;
+        this._cone = undefined;
+        this._ellipsoid = undefined;
+        this._ellipse = undefined;
+        this._label = undefined;
+        this._path = undefined;
+        this._point = undefined;
+        this._polygon = undefined;
+        this._polyline = undefined;
+        this._pyramid = undefined;
+        this._vertexPositions = undefined;
+        this._vector = undefined;
+        this._viewFrom = undefined;
+
         this._propertyAssigned = new Event();
-        this._subpropertyAssigned = new Event();
         this._propertyNames = ['availability', 'position', 'orientation', 'billboard', //
                                'cone', 'ellipsoid', 'ellipse', 'label', 'path', 'point', 'polygon', //
                                'polyline', 'pyramid', 'vertexPositions', 'vector', 'viewFrom'];
@@ -83,16 +76,6 @@ define(['../Core/createGuid',
         propertyAssigned : {
             get : function() {
                 return this._propertyAssigned;
-            }
-        },
-        /**
-         * Gets the event that is raised whenever a new property is assigned.
-         * @memberof DynamicObject.prototype
-         * @type {Event}
-         */
-        subpropertyAssigned : {
-            get : function() {
-                return this._subpropertyAssigned;
             }
         },
         /**
@@ -196,74 +179,74 @@ define(['../Core/createGuid',
          * @type {DynamicBillboard}
          * @default undefined
          */
-        billboard : createProperty('billboard', '_billboard'),
+        billboard : createObservableProperty('billboard', '_billboard'),
         /**
          * Gets or sets the cone.
          * @type {DynamicCone}
          * @default undefined
          */
-        cone : createProperty('cone', '_cone'),
+        cone : createObservableProperty('cone', '_cone'),
 
         /**
          * Gets or sets the ellipsoid.
          * @type {DynamicEllipsoid}
          * @default undefined
          */
-        ellipsoid : createProperty('ellipsoid', '_ellipsoid'),
+        ellipsoid : createObservableProperty('ellipsoid', '_ellipsoid'),
         /**
          * Gets or sets the ellipse.
          * @type {DynamicEllipse}
          * @default undefined
          */
-        ellipse : createProperty('ellipse', '_ellipse'),
+        ellipse : createObservableProperty('ellipse', '_ellipse'),
         /**
          * Gets or sets the label.
          * @type {DynamicLabel}
          * @default undefined
          */
-        label : createProperty('label', '_label'),
+        label : createObservableProperty('label', '_label'),
         /**
          * Gets or sets the path.
          * @type {DynamicPath}
          * @default undefined
          */
-        path : createProperty('path', '_path'),
+        path : createObservableProperty('path', '_path'),
         /**
          * Gets or sets the point graphic.
          * @type {DynamicPoint}
          * @default undefined
          */
-        point : createProperty('point', '_point'),
+        point : createObservableProperty('point', '_point'),
         /**
          * Gets or sets the polygon.
          * @type {DynamicPolygon}
          * @default undefined
          */
-        polygon : createProperty('polygon', '_polygon'),
+        polygon : createObservableProperty('polygon', '_polygon'),
         /**
          * Gets or sets the polyline.
          * @type {DynamicPolyline}
          * @default undefined
          */
-        polyline : createProperty('polyline', '_polyline'),
+        polyline : createObservableProperty('polyline', '_polyline'),
         /**
          * Gets or sets the pyramid.
          * @type {DynamicPyramid}
          * @default undefined
          */
-        pyramid : createProperty('pyramid', '_pyramid'),
+        pyramid : createObservableProperty('pyramid', '_pyramid'),
         /**
          * Gets or sets the vertex positions.
          * @type {Property}
          * @default undefined
          */
-        vertexPositions : createProperty('vertexPositions', '_vertexPositions'),
+        vertexPositions : createObservableProperty('vertexPositions', '_vertexPositions'),
         /**
          * Gets or sets the vector.
          * @type {DynamicVector}
          * @default undefined
          */
-        vector : createProperty('vector', '_vector')
+        vector : createObservableProperty('vector', '_vector')
     });
 
     /**
@@ -305,11 +288,7 @@ define(['../Core/createGuid',
 
         propertyNames.push(propertyName);
 
-        Object.defineProperty(this, propertyName, createProperty(propertyName));
-    };
-
-    DynamicObject.prototype._onSubPropertyAssigned = function(property, propertyName, newValue, oldValue) {
-        this._subpropertyAssigned.raiseEvent(this, property, propertyName, newValue, oldValue);
+        Object.defineProperty(this, propertyName, createObservableProperty(propertyName, '_' + propertyName));
     };
 
     DynamicObject.prototype.removeProperty = function(propertyName) {

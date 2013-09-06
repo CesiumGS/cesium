@@ -10,6 +10,12 @@ define(['../Core/defined',
         DynamicObjectCollection) {
     "use strict";
 
+    function subscribe(dynamicObject) {
+    }
+
+    function unsubscribe(dynamicObject) {
+    }
+
     /**
      * Non-destructively composites multiple DynamicObjectCollection instances into a single collection.
      * If a DynamicObject with the same ID exists in multiple collections, it is non-destructively
@@ -29,6 +35,7 @@ define(['../Core/defined',
         this._composite = new DynamicObjectCollection();
         this._collections = defined(collections) ? collections.slice() : [];
         this._collectionsCopy = [];
+        mergeIfNeeded(this);
     };
 
     defineProperties(CompositeDynamicObjectCollection.prototype, {
@@ -56,6 +63,33 @@ define(['../Core/defined',
             }
         }
     });
+
+    /**
+     * Prevents {@link DynamicObjectCollection#collectionChanged} events from being raised
+     * until a corresponding call is made to {@link DynamicObjectCollection#resumeEvents}, at which
+     * point a single event will be raised that covers all suspended operations.
+     * This allows for many items to be added and removed efficiently.
+     * This function is reference counted and can safely be called multiple times as long as there
+     * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
+     * @memberof DynamicObjectCollection
+     */
+    CompositeDynamicObjectCollection.prototype.suspendEvents = function() {
+        this._composite.suspendEvents();
+    };
+
+    /**
+     * Resumes raising {@link DynamicObjectCollection#collectionChanged} events immediately
+     * when an item is added or removed.  Any modifications made while while events were suspended
+     * will be triggered as a single event when this function is called.
+     * This function is reference counted and can safely be called multiple times as long as there
+     * are corresponding calls to {@link DynamicObjectCollection#resumeEvents}.
+     * @memberof DynamicObjectCollection
+     *
+     * @exception {DeveloperError} resumeEvents can not be called before suspendEvents.
+     */
+    CompositeDynamicObjectCollection.prototype.resumeEvents = function() {
+        this._composite.resumeEvents();
+    };
 
     /**
      * Computes the maximum availability of the DynamicObjects in the collection.
@@ -121,21 +155,23 @@ define(['../Core/defined',
         var object;
         var objects;
         var iObjects;
-        for (i = 0; i < collectionsCopyLength; i++) {
-            collectionsCopy[i].collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
-            objects = collectionsCopy.getObjects();
-            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
-                object = objects[iObjects];
-                object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
-                object.subpropertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, that);
-            }
-        }
-
+        var collection;
         var composite = that._composite;
         var newObjects = new DynamicObjectCollection();
 
+        for (i = 0; i < collectionsCopyLength; i++) {
+            collection = collectionsCopy[i];
+            collection.collectionChanged.removeEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
+            objects = collection.getObjects();
+            for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
+                object = objects[iObjects];
+                object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
+                unsubscribe(object);
+            }
+        }
+
         for (i = collectionsLength - 1; i >= 0; i--) {
-            var collection = collections[i];
+            collection = collections[i];
             collection.collectionChanged.addEventListener(CompositeDynamicObjectCollection.prototype._onCollectionChanged, that);
 
             //Merge all of the existing objects.
@@ -143,7 +179,7 @@ define(['../Core/defined',
             for ( iObjects = objects.length - 1; iObjects > -1; iObjects--) {
                 object = objects[iObjects];
                 object.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, that);
-                object.subpropertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, that);
+                subscribe(object);
 
                 var compositeObject = newObjects.getById(object.id);
                 if (!defined(compositeObject)) {
@@ -255,14 +291,14 @@ define(['../Core/defined',
         var removedLength = removed.length;
         for (i = 0; i < removedLength; i++) {
             var removedObject = removed[i];
-            object.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
-            object.subpropertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, this);
+            removedObject.propertyAssigned.removeEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
+            unsubscribe(removedObject);
 
             var removedId = removedObject.id;
             //Check if the removed object exists in any of the remaining collections
             //If so, we clean and remerge it.
             for (q = collectionsLength - 1; q >= 0; q--) {
-                object = collection[q].getById(removedId);
+                object = collections[q].getById(removedId);
                 if (defined(object)) {
                     if (!defined(compositeObject)) {
                         compositeObject = composite.getById(removedId);
@@ -282,7 +318,7 @@ define(['../Core/defined',
         for (i = 0; i < addedLength; i++) {
             var addedObject = added[i];
             addedObject.propertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._propertyChanged, this);
-            addedObject.subpropertyAssigned.addEventListener(CompositeDynamicObjectCollection.prototype._subPropertyChanged, this);
+            subscribe(addedObject);
 
             var addedId = addedObject.id;
             //We know the added object exists in at least one collection,
