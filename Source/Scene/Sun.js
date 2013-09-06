@@ -1,6 +1,7 @@
 /*global define*/
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
         '../Core/defined',
@@ -8,14 +9,25 @@ define([
         '../Core/destroyObject',
         '../Core/Math',
         '../Core/PrimitiveType',
+        '../Core/Geometry',
+        '../Core/GeometryAttribute',
+        '../Core/Color',
+        '../Core/BoundingRectangle',
+        '../Core/Matrix4',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
+        '../Renderer/PixelFormat',
+        '../Renderer/ClearCommand',
+        './SceneTransforms',
         './SceneMode',
         '../Shaders/SunVS',
-        '../Shaders/SunFS'
+        '../Shaders/SunFS',
+        '../Shaders/ViewportQuadVS',
+        '../Shaders/SunTextureFS'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         ComponentDatatype,
         defined,
@@ -23,12 +35,22 @@ define([
         destroyObject,
         CesiumMath,
         PrimitiveType,
+        Geometry,
+        GeometryAttribute,
+        Color,
+        BoundingRectangle,
+        Matrix4,
         BlendingState,
         BufferUsage,
         DrawCommand,
+        PixelFormat,
+        ClearCommand,
+        SceneTransforms,
         SceneMode,
         SunVS,
-        SunFS) {
+        SunFS,
+        ViewportQuadVS,
+        SunTextureFS) {
     "use strict";
 
     /**
@@ -56,6 +78,11 @@ define([
         this._boundingVolume = new BoundingSphere();
         this._boundingVolume2D = new BoundingSphere();
 
+        this._texture = undefined;
+        this._dimensions = undefined;
+        this._radiusTS = undefined;
+        this._size = undefined;
+
         var that = this;
         defineProperties(this, {
             glowFactor : {
@@ -63,10 +90,7 @@ define([
                 set : function (glowFactor) {
                     glowFactor = Math.max(glowFactor, 0.0);
                     this._glowFactor = glowFactor;
-                    this._glowLengthTS = Math.min(glowFactor * 2, 0.4);
-                    this._sizeMultiplier = glowFactor * 18 + 5.0;
-                    this._boundingVolume.radius = CesiumMath.SOLAR_RADIUS * this._sizeMultiplier;
-                    this._boundingVolume2D.radius = this._boundingVolume.radius;
+                    this._glowFactorChanged = true;
                 }
             }
         });
@@ -79,17 +103,69 @@ define([
          * @type {Number}
          * @default 1.0
          */
-        this.glowFactor = 1.0;
+        //this.glowFactor = 1.0;
+        this.glowFactor = 0.0;
+        this._glowFactorChanged = false;
 
         this._uniformMap = {
-            u_sizeMultiplier : function() {
-                return that._sizeMultiplier;
+            u_texture : function() {
+                return that._texture;
             },
-            u_glowLengthTS : function() {
-                return that._glowLengthTS;
+            u_size : function() {
+                return that._size;
             }
         };
     };
+
+    var viewportAttributeIndices = {
+        position : 0,
+        textureCoordinates : 1
+    };
+
+    function getVertexArray(context) {
+        // Per-context cache for viewport quads
+        var vertexArray = context.cache.viewportQuad_vertexArray;
+
+        if (defined(vertexArray)) {
+            return vertexArray;
+        }
+
+        var geometry = new Geometry({
+            attributes : {
+                position : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                       -1.0, -1.0,
+                        1.0, -1.0,
+                        1.0,  1.0,
+                       -1.0,  1.0
+                    ]
+                }),
+
+                textureCoordinates : new GeometryAttribute({
+                    componentDatatype : ComponentDatatype.FLOAT,
+                    componentsPerAttribute : 2,
+                    values : [
+                        0.0, 0.0,
+                        1.0, 0.0,
+                        1.0, 1.0,
+                        0.0, 1.0
+                    ]
+                })
+            },
+            primitiveType : PrimitiveType.TRIANGLES
+        });
+
+        vertexArray = context.createVertexArrayFromGeometry({
+            geometry : geometry,
+            attributeIndices : viewportAttributeIndices,
+            bufferUsage : BufferUsage.STATIC_DRAW
+        });
+
+        context.cache.viewportQuad_vertexArray = vertexArray;
+        return vertexArray;
+    }
 
     /**
      * @private
@@ -106,6 +182,61 @@ define([
 
         if (!frameState.passes.color) {
             return undefined;
+        }
+
+        var canvasDimensions = frameState.canvasDimensions;
+
+        if (!defined(this._texture) || !Cartesian2.equals(canvasDimensions, this._dimensions) || this._glowFactorChanged) {
+            this._texture = this._texture && this._texture.destroy();
+            this._dimensions = Cartesian2.clone(canvasDimensions, this._dimensions);
+            this._glowFactorChanged = false;
+
+            var size = Math.max(canvasDimensions.x, canvasDimensions.y);
+            size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2)) - 2);
+
+            this._texture = context.createTexture2D({
+                width : size,
+                height : size,
+                pixelFormat : PixelFormat.RGBA
+            });
+
+            var fbo = context.createFramebuffer({
+                colorTexture : this._texture
+            });
+            fbo.destroyAttachments = false;
+
+            var clearCommand = new ClearCommand();
+            clearCommand.color = new Color(0.0, 0.0, 0.0, 0.0);
+            clearCommand.framebuffer = fbo;
+
+            var drawCommand = new DrawCommand();
+            drawCommand.owner = this;
+            drawCommand.primitiveType = PrimitiveType.TRIANGLE_FAN;
+            drawCommand.vertexArray = getVertexArray(context);
+            drawCommand.shaderProgram = context.getShaderCache().getShaderProgram(ViewportQuadVS, SunTextureFS, viewportAttributeIndices);
+            drawCommand.framebuffer = fbo;
+            drawCommand.renderState = context.createRenderState({
+                viewport : new BoundingRectangle(0.0, 0.0, size, size)
+            });
+
+            this._glowLengthTS = Math.min(this._glowFactor * 2, 0.4);
+            this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
+
+            var that = this;
+            drawCommand.uniformMap = {
+                u_glowLengthTS : function() {
+                    return that._glowLengthTS;
+                },
+                u_radiusTS : function() {
+                    return that._radiusTS;
+                }
+            };
+
+            clearCommand.execute(context);
+            drawCommand.execute(context);
+
+            drawCommand.shaderProgram.release();
+            fbo.destroy();
         }
 
         var command = this._command;
@@ -158,11 +289,27 @@ define([
         boundingVolume2D.center.y = sunPositionCV.x;
         boundingVolume2D.center.z = sunPositionCV.y;
 
+        boundingVolume.radius = CesiumMath.SOLAR_RADIUS + CesiumMath.SOLAR_RADIUS * this._glowLengthTS;
+        boundingVolume2D.radius = boundingVolume.radius;
+
         if (mode === SceneMode.SCENE3D) {
             BoundingSphere.clone(boundingVolume, command.boundingVolume);
         } else if (mode === SceneMode.COLUMBUS_VIEW) {
             BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
         }
+
+        var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition);
+
+        var viewProjection = context.getUniformState().getViewProjection();
+        var positionCC = viewProjection.multiplyByPoint(position);
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC);
+
+        var limb = Cartesian3.add(position, Cartesian3.multiplyByScalar(frameState.camera.right, CesiumMath.SOLAR_RADIUS));
+        var limbCC = viewProjection.multiplyByPoint(limb);
+        var limbWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), limbCC);
+
+        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC)));
+        this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
         return command;
     };
@@ -206,6 +353,9 @@ define([
         var command = this._command;
         command.vertexArray = command.vertexArray && command.vertexArray.destroy();
         command.shaderProgram = command.shaderProgram && command.shaderProgram.release();
+
+        this._texture = this._texture && this._texture.destroy();
+
         return destroyObject(this);
     };
 
