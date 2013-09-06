@@ -200,23 +200,23 @@ define([
     var eyeOffset;
     var pixelOffset;
     function updateObject(dynamicBillboardVisualizer, time, dynamicObject) {
-        var dynamicBillboard = dynamicObject.billboard;
+        var dynamicBillboard = dynamicObject._billboard;
         if (!defined(dynamicBillboard)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var textureProperty = dynamicBillboard.image;
+        var textureProperty = dynamicBillboard._image;
         if (!defined(textureProperty)) {
             return;
         }
 
         var billboard;
-        var showProperty = dynamicBillboard.show;
+        var showProperty = dynamicBillboard._show;
         var billboardVisualizerIndex = dynamicObject._billboardVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -277,7 +277,7 @@ define([
             billboard.setPosition(position);
         }
 
-        var property = dynamicBillboard.color;
+        var property = dynamicBillboard._color;
 
         if (defined(property)) {
             color = property.getValue(time, color);
@@ -286,7 +286,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.eyeOffset;
+        property = dynamicBillboard._eyeOffset;
         if (defined(property)) {
             eyeOffset = property.getValue(time, eyeOffset);
             if (defined(eyeOffset)) {
@@ -294,7 +294,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.pixelOffset;
+        property = dynamicBillboard._pixelOffset;
         if (defined(property)) {
             pixelOffset = property.getValue(time, pixelOffset);
             if (defined(pixelOffset)) {
@@ -302,7 +302,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.scale;
+        property = dynamicBillboard._scale;
         if (defined(property)) {
             var scale = property.getValue(time);
             if (defined(scale)) {
@@ -310,7 +310,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.rotation;
+        property = dynamicBillboard._rotation;
         if (defined(property)) {
             var rotation = property.getValue(time);
             if (defined(rotation)) {
@@ -318,7 +318,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.alignedAxis;
+        property = dynamicBillboard._alignedAxis;
         if (defined(property)) {
             var alignedAxis = property.getValue(time);
             if (defined(alignedAxis)) {
@@ -326,7 +326,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.horizontalOrigin;
+        property = dynamicBillboard._horizontalOrigin;
         if (defined(property)) {
             var horizontalOrigin = property.getValue(time);
             if (defined(horizontalOrigin)) {
@@ -334,7 +334,7 @@ define([
             }
         }
 
-        property = dynamicBillboard.verticalOrigin;
+        property = dynamicBillboard._verticalOrigin;
         if (defined(property)) {
             var verticalOrigin = property.getValue(time);
             if (defined(verticalOrigin)) {

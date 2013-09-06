@@ -184,28 +184,28 @@ define([
     var orientation;
     function updateObject(dynamicPyramidVisualizer, time, dynamicObject) {
         var context = dynamicPyramidVisualizer._scene.getContext();
-        var dynamicPyramid = dynamicObject.pyramid;
+        var dynamicPyramid = dynamicObject._pyramid;
         if (!defined(dynamicPyramid)) {
             return;
         }
 
-        var directionsProperty = dynamicPyramid.directions;
+        var directionsProperty = dynamicPyramid._directions;
         if (!defined(directionsProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var pyramid;
-        var showProperty = dynamicPyramid.show;
+        var showProperty = dynamicPyramid._show;
         var pyramidVisualizerIndex = dynamicObject._pyramidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -266,9 +266,9 @@ define([
             orientation.clone(pyramid._visualizerOrientation);
         }
 
-        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid.material, pyramid.material);
+        pyramid.material = MaterialProperty.getValue(time, context, dynamicPyramid._material, pyramid.material);
 
-        var property = dynamicPyramid.intersectionColor;
+        var property = dynamicPyramid._intersectionColor;
         if (defined(property)) {
             var intersectionColor = property.getValue(time, intersectionColor);
             if (defined(intersectionColor)) {
@@ -276,7 +276,7 @@ define([
             }
         }
 
-        property = dynamicPyramid.intersectionWidth;
+        property = dynamicPyramid._intersectionWidth;
         if (defined(property)) {
             var intersectionWidth = property.getValue(time, intersectionWidth);
             if (defined(intersectionWidth)) {
@@ -284,7 +284,7 @@ define([
             }
         }
 
-        property = dynamicPyramid.radius;
+        property = dynamicPyramid._radius;
         if (defined(property)) {
             var radius = property.getValue(time, radius);
             if (defined(radius)) {

@@ -277,7 +277,7 @@ define(['../Core/createGuid',
             throw new DeveloperError('time is required.');
         }
 
-        var availability = this.availability;
+        var availability = this._availability;
         if (!defined(availability)) {
             return true;
         }

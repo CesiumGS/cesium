@@ -174,18 +174,18 @@ define([
     var position;
     var outlineColor;
     function updateObject(dynamicPointVisualizer, time, dynamicObject) {
-        var dynamicPoint = dynamicObject.point;
+        var dynamicPoint = dynamicObject._point;
         if (!defined(dynamicPoint)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
         var billboard;
-        var showProperty = dynamicPoint.show;
+        var showProperty = dynamicPoint._show;
         var pointVisualizerIndex = dynamicObject._pointVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -232,7 +232,7 @@ define([
             billboard.setPosition(position);
         }
 
-        var property = dynamicPoint.color;
+        var property = dynamicPoint._color;
         if (defined(property)) {
             color = property.getValue(time, color);
             if (!Color.equals(billboard._visualizerColor, color)) {
@@ -241,7 +241,7 @@ define([
             }
         }
 
-        property = dynamicPoint.outlineColor;
+        property = dynamicPoint._outlineColor;
         if (defined(property)) {
             outlineColor = property.getValue(time, outlineColor);
             if (!Color.equals(billboard._visualizerOutlineColor, outlineColor)) {
@@ -250,7 +250,7 @@ define([
             }
         }
 
-        property = dynamicPoint.outlineWidth;
+        property = dynamicPoint._outlineWidth;
         if (defined(property)) {
             var outlineWidth = property.getValue(time);
             if (billboard._visualizerOutlineWidth !== outlineWidth) {
@@ -259,7 +259,7 @@ define([
             }
         }
 
-        property = dynamicPoint.pixelSize;
+        property = dynamicPoint._pixelSize;
         if (defined(property)) {
             var pixelSize = property.getValue(time);
             if (billboard._visualizerPixelSize !== pixelSize) {

@@ -181,28 +181,28 @@ define([
     var orientation;
     function updateObject(dynamicEllipsoidVisualizer, time, dynamicObject) {
         var context = dynamicEllipsoidVisualizer._scene.getContext();
-        var dynamicEllipsoid = dynamicObject.ellipsoid;
+        var dynamicEllipsoid = dynamicObject._ellipsoid;
         if (!defined(dynamicEllipsoid)) {
             return;
         }
 
-        var radiiProperty = dynamicEllipsoid.radii;
+        var radiiProperty = dynamicEllipsoid._radii;
         if (!defined(radiiProperty)) {
             return;
         }
 
-        var positionProperty = dynamicObject.position;
+        var positionProperty = dynamicObject._position;
         if (!defined(positionProperty)) {
             return;
         }
 
-        var orientationProperty = dynamicObject.orientation;
+        var orientationProperty = dynamicObject._orientation;
         if (!defined(orientationProperty)) {
             return;
         }
 
         var ellipsoid;
-        var showProperty = dynamicEllipsoid.show;
+        var showProperty = dynamicEllipsoid._show;
         var ellipsoidVisualizerIndex = dynamicObject._ellipsoidVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -254,7 +254,7 @@ define([
             ellipsoid._visualizerOrientation = orientation.clone(ellipsoid._visualizerOrientation);
         }
 
-        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid.material, ellipsoid.material);
+        ellipsoid.material = MaterialProperty.getValue(time, context, dynamicEllipsoid._material, ellipsoid.material);
     }
 
     DynamicEllipsoidVisualizer.prototype._onObjectsRemoved = function(dynamicObjectCollection, added, dynamicObjects) {

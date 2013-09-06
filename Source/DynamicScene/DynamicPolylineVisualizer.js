@@ -173,16 +173,16 @@ define([
 
     var cachedPosition = new Cartesian3();
     function updateObject(dynamicPolylineVisualizer, time, dynamicObject) {
-        var dynamicPolyline = dynamicObject.polyline;
+        var dynamicPolyline = dynamicObject._polyline;
         if (!defined(dynamicPolyline)) {
             return;
         }
 
         var polyline;
-        var showProperty = dynamicPolyline.show;
-        var ellipseProperty = dynamicObject.ellipse;
-        var positionProperty = dynamicObject.position;
-        var vertexPositionsProperty = dynamicObject.vertexPositions;
+        var showProperty = dynamicPolyline._show;
+        var ellipseProperty = dynamicObject._ellipse;
+        var positionProperty = dynamicObject._position;
+        var vertexPositionsProperty = dynamicObject._vertexPositions;
         var polylineVisualizerIndex = dynamicObject._polylineVisualizerIndex;
         var show = dynamicObject.isAvailable(time) && (!defined(showProperty) || showProperty.getValue(time));
 
@@ -243,22 +243,22 @@ define([
             polyline._visualizerPositions = vertexPositions;
         }
 
-        var property = dynamicPolyline.color;
+        var property = dynamicPolyline._color;
         if (defined(property)) {
             uniforms.color = property.getValue(time, uniforms.color);
         }
 
-        property = dynamicPolyline.outlineColor;
+        property = dynamicPolyline._outlineColor;
         if (defined(property)) {
             uniforms.outlineColor = property.getValue(time, uniforms.outlineColor);
         }
 
-        property = dynamicPolyline.outlineWidth;
+        property = dynamicPolyline._outlineWidth;
         if (defined(property)) {
             uniforms.outlineWidth = property.getValue(time);
         }
 
-        property = dynamicPolyline.width;
+        property = dynamicPolyline._width;
         if (defined(property)) {
             var width = property.getValue(time);
             if (defined(width)) {
