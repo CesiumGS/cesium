@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -19,72 +21,125 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicCone = function() {
+        this._minimumClockAngle = undefined;
+        this._maximumClockAngle = undefined;
+        this._innerHalfAngle = undefined;
+        this._outerHalfAngle = undefined;
+        this._capMaterial = undefined;
+        this._innerMaterial = undefined;
+        this._outerMaterial = undefined;
+        this._silhouetteMaterial = undefined;
+        this._intersectionColor = undefined;
+        this._intersectionWidth = undefined;
+        this._showIntersection = undefined;
+        this._radius = undefined;
+        this._show = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicCone.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicCone.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's minimum clock angle.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.minimumClockAngle = undefined;
+        minimumClockAngle : createObservableProperty('minimumClockAngle', '_minimumClockAngle'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's maximum clock angle.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.maximumClockAngle = undefined;
+        maximumClockAngle : createObservableProperty('maximumClockAngle', '_maximumClockAngle'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's inner half-angle.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.innerHalfAngle = undefined;
+        innerHalfAngle : createObservableProperty('innerHalfAngle', '_innerHalfAngle'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the cone's outer half-angle.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.outerHalfAngle = undefined;
+        outerHalfAngle : createObservableProperty('outerHalfAngle', '_outerHalfAngle'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's cap material.
+         * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        this.capMaterial = undefined;
+        capMaterial : createObservableProperty('capMaterial', '_capMaterial'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's inner material.
+         * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        this.innerMaterial = undefined;
+        innerMaterial : createObservableProperty('innerMaterial', '_innerMaterial'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's outer material.
+         * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        this.outerMaterial = undefined;
+        outerMaterial : createObservableProperty('outerMaterial', '_outerMaterial'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the cone's silhouette material.
+         * @memberof DynamicCone.prototype
          * @type {MaterialProperty}
          */
-        this.silhouetteMaterial = undefined;
+        silhouetteMaterial : createObservableProperty('silhouetteMaterial', '_silhouetteMaterial'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the cone and other central bodies.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.intersectionColor = undefined;
+        intersectionColor : createObservableProperty('intersectionColor', '_intersectionColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the cone and other central bodies.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.intersectionWidth = undefined;
+        intersectionWidth : createObservableProperty('intersectionWidth', '_intersectionWidth'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the cone and other central bodies.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.showIntersection = undefined;
+        showIntersection : createObservableProperty('showIntersection', '_showIntersection'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the cone's projection.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.radius = undefined;
+        radius : createObservableProperty('radius', '_radius'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the cone.
+         * @memberof DynamicCone.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : createObservableProperty('show', '_show')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

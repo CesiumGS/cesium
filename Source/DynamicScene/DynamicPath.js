@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -18,47 +20,85 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicPath = function() {
+        this._color = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._show = undefined;
+        this._width = undefined;
+        this._resolution = undefined;
+        this._leadTime = undefined;
+        this._trailTime = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicPath.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPath.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the path's color.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createObservableProperty('color', '_color'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the path's outline color.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.outlineColor = undefined;
+        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's outline width.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.outlineWidth = undefined;
+        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the path's visibility.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createObservableProperty('show', '_show'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the path's width.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.width = undefined;
+        width : createObservableProperty('width', '_width'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the maximum step size, in seconds, to take when sampling the position.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.resolution = undefined;
+        resolution : createObservableProperty('resolution', '_resolution'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds in front of the object to show.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.leadTime = undefined;
+        leadTime : createObservableProperty('leadTime', '_leadTime'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the number of seconds behind the object to show.
+         * @memberof DynamicPath.prototype
          * @type {Property}
          */
-        this.trailTime = undefined;
-    };
+        trailTime : createObservableProperty('trailTime', '_trailTime')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

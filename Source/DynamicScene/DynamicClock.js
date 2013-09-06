@@ -1,23 +1,19 @@
 /*global define*/
-define(['../Core/ClockRange',
-        '../Core/ClockStep',
-        '../Core/Clock',
+define(['../Core/Clock',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/Iso8601'
+        './createObservableProperty'
     ], function(
-        ClockRange,
-        ClockStep,
         Clock,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        Iso8601) {
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -27,51 +23,72 @@ define(['../Core/ClockRange',
      * @constructor
      */
     var DynamicClock = function() {
+        this._startTime = undefined;
+        this._stopTime = undefined;
+        this._currentTime = undefined;
+        this._clockRange = undefined;
+        this._clockStep = undefined;
+        this._multiplier = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicClock.prototype, {
         /**
-         * The start time of the clock to use when looping or clamped.
-         * @type {JulianDate}
-         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicClock.prototype
+         * @type {Event}
          */
-        this.startTime = undefined;
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
 
         /**
-         * The stop time of the clock to use when looping or clamped.
+         * Gets or sets the start time of the clock to use when looping or clamped.
+         * @memberof DynamicClock.prototype
          * @type {JulianDate}
-         * @default {@link Iso8601.MAXIMUM_INTERVAL.stop}
          */
-        this.stopTime = undefined;
+        startTime : createObservableProperty('startTime', '_startTime'),
 
         /**
-         * The initial time to use when switching to this clock.
+         * Gets or sets the stop time of the clock to use when looping or clamped.
+         * @memberof DynamicClock.prototype
          * @type {JulianDate}
-         * @default {@link Iso8601.MAXIMUM_INTERVAL.start}
          */
-        this.currentTime = undefined;
+        stopTime : createObservableProperty('stopTime', '_stopTime'),
 
         /**
-         * Determines how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * Gets or sets the initial time to use when switching to this clock.
+         * @memberof DynamicClock.prototype
+         * @type {JulianDate}
+         */
+        currentTime : createObservableProperty('currentTime', '_currentTime'),
+
+        /**
+         * Gets or sets how the clock should behave when <code>startTime</code> or <code>stopTime</code> is reached.
+         * @memberof DynamicClock.prototype
          * @type {ClockRange}
-         * @default {@link ClockRange.LOOP_STOP}
          */
-        this.clockRange = undefined;
+        clockRange : createObservableProperty('clockRange', '_clockRange'),
 
         /**
-         * Determines if clock advancement is frame dependent or system clock dependent.
+         * Gets or sets if clock advancement is frame dependent or system clock dependent.
+         * @memberof DynamicClock.prototype
          * @type {ClockStep}
-         * @default {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}
          */
-        this.clockStep = undefined;
+        clockStep : createObservableProperty('clockStep', '_clockStep'),
 
         /**
-         * Determines how much time advances with each tick, negative values allow for advancing backwards.
+         * Gets or sets how much time advances with each tick, negative values allow for advancing backwards.
          * If <code>clockStep</code> is set to ClockStep.TICK_DEPENDENT this is the number of seconds to advance.
          * If <code>clockStep</code> is set to ClockStep.SYSTEM_CLOCK_MULTIPLIER this value is multiplied by the
          * elapsed system time since the last call to tick.
+         * @memberof DynamicClock.prototype
          * @type {Number}
-         * @default 1.0
          */
-        this.multiplier = undefined;
-    };
+        multiplier : createObservableProperty('multiplier', '_multiplier')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

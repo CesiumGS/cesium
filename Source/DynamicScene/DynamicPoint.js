@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -18,32 +20,61 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicPoint = function() {
+        this._color = undefined;
+        this._pixelSize = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._show = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicPoint.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPoint.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's color.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createObservableProperty('color', '_color'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the point's size in pixels.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.pixelSize = undefined;
+        pixelSize : createObservableProperty('pixelSize', '_pixelSize'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the point's outline color.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.outlineColor = undefined;
+        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the point's outline width.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.outlineWidth = undefined;
+        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the point's visibility.
+         * @memberof DynamicPoint.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : createObservableProperty('show', '_show')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

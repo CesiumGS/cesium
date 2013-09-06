@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -18,32 +20,61 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicVector = function() {
+        this._color = undefined;
+        this._show = undefined;
+        this._width = undefined;
+        this._direction = undefined;
+        this._length = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicVector.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicVector.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the vector's color.
+         * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createObservableProperty('color', '_color'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the vector's visibility.
+         * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createObservableProperty('show', '_show'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's width.
+         * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        this.width = undefined;
+        width : createObservableProperty('width', '_width'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the the vector's direction.
+         * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        this.direction = undefined;
+        direction : createObservableProperty('direction', '_direction'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the vector's graphical length in meters.
+         * @memberof DynamicVector.prototype
          * @type {Property}
          */
-        this.length = undefined;
-    };
+        length : createObservableProperty('length', '_length')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

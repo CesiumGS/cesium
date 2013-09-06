@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -19,43 +21,77 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicPyramid = function() {
+        this._show = undefined;
+        this._directions = undefined;
+        this._radius = undefined;
+        this._showIntersection = undefined;
+        this._intersectionColor = undefined;
+        this._intersectionWidth = undefined;
+        this._material = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicPyramid.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPyramid.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the pyramid.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createObservableProperty('show', '_show'),
+
         /**
          * A {@link Property} which returns an array of {@link Spherical} instances representing the pyramid's projection.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
-         * @default undefined
          */
-        this.directions = undefined;
+        directions : createObservableProperty('directions', '_directions'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the radius of the pyramid's projection.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        this.radius = undefined;
+        radius : createObservableProperty('radius', '_radius'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the line formed by the intersection of the pyramid and other central bodies.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        this.showIntersection = undefined;
+        showIntersection : createObservableProperty('showIntersection', '_showIntersection'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the color of the line formed by the intersection of the pyramid and other central bodies.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        this.intersectionColor = undefined;
+        intersectionColor : createObservableProperty('intersectionColor', '_intersectionColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the width of the line formed by the intersection of the pyramid and other central bodies.
+         * @memberof DynamicPyramid.prototype
          * @type {Property}
          */
-        this.intersectionWidth = undefined;
+        intersectionWidth : createObservableProperty('intersectionWidth', '_intersectionWidth'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the the pyramid's appearance.
+         * @memberof DynamicPyramid.prototype
          * @type {MaterialProperty}
          */
-        this.material = undefined;
-    };
+        material : createObservableProperty('material', '_material')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

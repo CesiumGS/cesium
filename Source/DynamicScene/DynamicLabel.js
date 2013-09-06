@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -18,67 +20,117 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicLabel = function() {
+        this._text = undefined;
+        this._font = undefined;
+        this._style = undefined;
+        this._fillColor = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._horizontalOrigin = undefined;
+        this._verticalOrigin = undefined;
+        this._eyeOffset = undefined;
+        this._pixelOffset = undefined;
+        this._scale = undefined;
+        this._show = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicLabel.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicLabel.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the string {@link Property} specifying the the label's text.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.text = undefined;
+        text : createObservableProperty('text', '_text'),
+
         /**
          * Gets or sets the string {@link Property} specifying the the label's font.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.font = undefined;
+        font : createObservableProperty('font', '_font'),
+
         /**
          * Gets or sets the {@link LabelStyle} {@link Property} specifying the the label's style.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.style = undefined;
+        style : createObservableProperty('style', '_style'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's fill color.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.fillColor = undefined;
+        fillColor : createObservableProperty('fillColor', '_fillColor'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the label's outline color.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.outlineColor = undefined;
+        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the label outline's width.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.outlineWidth = undefined;
+        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+
         /**
          * Gets or sets the {@link HorizontalOrigin} {@link Property} specifying the label's horizontal origin.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.horizontalOrigin = undefined;
+        horizontalOrigin : createObservableProperty('horizontalOrigin', '_horizontalOrigin'),
+
         /**
          * Gets or sets the {@link VerticalOrigin} {@link Property} specifying the label's vertical origin.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.verticalOrigin = undefined;
+        verticalOrigin : createObservableProperty('verticalOrigin', '_verticalOrigin'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the label's eye offset.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.eyeOffset = undefined;
+        eyeOffset : createObservableProperty('eyeOffset', '_eyeOffset'),
+
         /**
          * Gets or sets the {@link Cartesian2} {@link Property} specifying the label's pixel offset.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.pixelOffset = undefined;
+        pixelOffset : createObservableProperty('pixelOffset', '_pixelOffset'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the label's scale.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.scale = undefined;
+        scale : createObservableProperty('scale', '_scale'),
+
         /**
          * Gets or sets the boolean {@link Property} specifying the label's visibility.
+         * @memberof DynamicLabel.prototype
          * @type {Property}
          */
-        this.show = undefined;
-    };
+        show : createObservableProperty('show', '_show')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

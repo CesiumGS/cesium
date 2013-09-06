@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -18,32 +20,61 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicPolyline = function() {
+        this._color = undefined;
+        this._outlineColor = undefined;
+        this._outlineWidth = undefined;
+        this._show = undefined;
+        this._width = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicPolyline.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicPolyline.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the line's color.
+         * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        this.color = undefined;
+        color : createObservableProperty('color', '_color'),
+
         /**
          * Gets or sets the {@link Color} {@link Property} specifying the the line's outline color.
+         * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        this.outlineColor = undefined;
+        outlineColor : createObservableProperty('outlineColor', '_outlineColor'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's outline width.
+         * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        this.outlineWidth = undefined;
+        outlineWidth : createObservableProperty('outlineWidth', '_outlineWidth'),
+
         /**
+         * @memberof DynamicPolyline.prototype
          * Gets or sets the boolean {@link Property} specifying the line's visibility.
          * @type {Property}
          */
-        this.show = undefined;
+        show : createObservableProperty('show', '_show'),
+
         /**
          * Gets or sets the numeric {@link Property} specifying the the line's width.
+         * @memberof DynamicPolyline.prototype
          * @type {Property}
          */
-        this.width = undefined;
-    };
+        width : createObservableProperty('width', '_width')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

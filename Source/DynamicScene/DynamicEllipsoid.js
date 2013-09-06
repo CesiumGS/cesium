@@ -3,13 +3,15 @@ define(['../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
-        '../Core/Event'
+        '../Core/Event',
+        './createObservableProperty'
     ], function(
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Event) {
+        Event,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -19,22 +21,45 @@ define(['../Core/defaultValue',
      * @constructor
      */
     var DynamicEllipsoid = function() {
+        this._show = undefined;
+        this._radii = undefined;
+        this._material = undefined;
+        this._propertyAssigned = new Event();
+    };
+
+    defineProperties(DynamicEllipsoid.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicEllipsoid.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
         /**
          * Gets or sets the boolean {@link Property} specifying the visibility of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        this.show = undefined;
+        show : createObservableProperty('show', '_show'),
+
         /**
          * Gets or sets the {@link Cartesian3} {@link Property} specifying the radii of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {Property}
          */
-        this.radii = undefined;
+        radii : createObservableProperty('radii', '_radii'),
+
         /**
          * Gets or sets the {@link MaterialProperty} specifying the appearance of the ellipsoid.
+         * @memberof DynamicEllipsoid.prototype
          * @type {MaterialProperty}
          */
-        this.material = undefined;
-    };
+        material : createObservableProperty('material', '_material')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value

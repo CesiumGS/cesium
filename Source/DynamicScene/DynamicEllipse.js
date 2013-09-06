@@ -6,7 +6,8 @@ define(['../Core/Cartesian3',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/Event',
-        '../Core/Shapes'
+        '../Core/Shapes',
+        './createObservableProperty'
     ], function(
         Cartesian3,
         defaultValue,
@@ -15,7 +16,8 @@ define(['../Core/Cartesian3',
         DeveloperError,
         Ellipsoid,
         Event,
-        Shapes) {
+        Shapes,
+        createObservableProperty) {
     "use strict";
 
     /**
@@ -25,29 +27,50 @@ define(['../Core/Cartesian3',
      * @constructor
      */
     var DynamicEllipse = function() {
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
-         * @type {Property}
-         */
-        this.semiMajorAxis = undefined;
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
-         * @type {Property}
-         */
-        this.semiMinorAxis = undefined;
-
-        /**
-         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
-         * @type {Property}
-         */
-        this.bearing = undefined;
-
+        this._semiMajorAxis = undefined;
+        this._semiMinorAxis = undefined;
+        this._bearing = undefined;
         this._lastPosition = undefined;
         this._lastSemiMajorAxis = undefined;
         this._lastSemiMinorAxis = undefined;
         this._lastBearing = undefined;
         this._cachedVertexPositions = undefined;
+        this._propertyAssigned = new Event();
     };
+
+    defineProperties(DynamicEllipse.prototype, {
+        /**
+         * Gets the event that is raised whenever a new property is assigned.
+         * @memberof DynamicEllipse.prototype
+         * @type {Event}
+         */
+        propertyAssigned : {
+            get : function() {
+                return this._propertyAssigned;
+            }
+        },
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-major-axis.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        semiMajorAxis : createObservableProperty('semiMajorAxis', '_semiMajorAxis'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's semi-minor-axis.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        semiMinorAxis : createObservableProperty('semiMinorAxis', '_semiMinorAxis'),
+
+        /**
+         * Gets or sets the numeric {@link Property} specifying the ellipse's bearing.
+         * @memberof DynamicEllipse.prototype
+         * @type {Property}
+         */
+        bearing : createObservableProperty('bearing', '_bearing')
+    });
 
     /**
      * Assigns each unassigned property on this object to the value
@@ -74,8 +97,8 @@ define(['../Core/Cartesian3',
      * @returns An array of vertex positions.
      */
     DynamicEllipse.prototype.getValue = function(time, position) {
-        var semiMajorAxisProperty = this.semiMajorAxis;
-        var semiMinorAxisProperty = this.semiMinorAxis;
+        var semiMajorAxisProperty = this._semiMajorAxis;
+        var semiMinorAxisProperty = this._semiMinorAxis;
 
         if (!defined(position) || //
             !defined(semiMajorAxisProperty) || //
@@ -87,7 +110,7 @@ define(['../Core/Cartesian3',
         var semiMinorAxis = semiMinorAxisProperty.getValue(time);
 
         var bearing = 0.0;
-        var bearingProperty = this.bearing;
+        var bearingProperty = this._bearing;
         if (defined(bearingProperty)) {
             bearing = bearingProperty.getValue(time);
         }
