@@ -707,8 +707,8 @@ define([
             if (!defined(mipmapSampler)) {
                 var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
                 mipmapSampler = context.cache.imageryLayer_mipmapSampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR,
                     maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy))
@@ -720,8 +720,8 @@ define([
             var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
             if (!defined(nonMipmapSampler)) {
                 nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = context.createSampler({
-                    wrapS : TextureWrap.CLAMP,
-                    wrapT : TextureWrap.CLAMP,
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
                     minificationFilter : TextureMinificationFilter.LINEAR,
                     magnificationFilter : TextureMagnificationFilter.LINEAR
                 });
@@ -862,8 +862,8 @@ define([
 
             var maximumSupportedAnisotropy = context.getMaximumTextureFilterAnisotropy();
             reproject.sampler = context.createSampler({
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : TextureMinificationFilter.LINEAR,
                 magnificationFilter : TextureMagnificationFilter.LINEAR,
                 maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
