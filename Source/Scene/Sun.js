@@ -110,7 +110,7 @@ define([
          * @default 1.0
          */
         glowFactor : {
-            get : function () { return that._glowFactor; },
+            get : function () { return this._glowFactor; },
             set : function (glowFactor) {
                 glowFactor = Math.max(glowFactor, 0.0);
                 this._glowFactor = glowFactor;
