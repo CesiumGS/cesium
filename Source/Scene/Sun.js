@@ -3,6 +3,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/ComponentDatatype',
         '../Core/defined',
         '../Core/defineProperties',
@@ -13,6 +14,7 @@ define([
         '../Core/GeometryAttribute',
         '../Core/Color',
         '../Core/BoundingRectangle',
+        '../Core/Matrix4',
         '../Renderer/BlendingState',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -28,6 +30,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         ComponentDatatype,
         defined,
         defineProperties,
@@ -38,6 +41,7 @@ define([
         GeometryAttribute,
         Color,
         BoundingRectangle,
+        Matrix4,
         BlendingState,
         BufferUsage,
         DrawCommand,
@@ -164,6 +168,11 @@ define([
         context.cache.viewportQuad_vertexArray = vertexArray;
         return vertexArray;
     }
+
+    var scratchPositionWC = new Cartesian2();
+    var scratchLimbWC = new Cartesian2();
+    var scratchCartesian3 = new Cartesian3();
+    var scratchCartesian4 = new Cartesian4();
 
     /**
      * @private
@@ -296,17 +305,21 @@ define([
             BoundingSphere.clone(boundingVolume2D, command.boundingVolume);
         }
 
-        var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition);
+        var position = SceneTransforms.computeActualWgs84Position(frameState, sunPosition, scratchCartesian4);
 
-        var viewProjection = context.getUniformState().getViewProjection();
-        var positionCC = viewProjection.multiplyByPoint(position);
-        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC);
+        var dist = Cartesian3.magnitude(Cartesian3.subtract(position, frameState.camera.position, scratchCartesian4));
+        var projMatrix = context.getUniformState().getProjection();
 
-        var limb = Cartesian3.add(position, Cartesian3.multiplyByScalar(frameState.camera.right, CesiumMath.SOLAR_RADIUS));
-        var limbCC = viewProjection.multiplyByPoint(limb);
-        var limbWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), limbCC);
+        var positionEC = Cartesian3.clone(Cartesian3.ZERO, scratchCartesian3);
+        positionEC.z = -dist;
+        var positionCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
+        var positionWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), positionCC, scratchPositionWC);
 
-        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC)));
+        positionEC.x = CesiumMath.SOLAR_RADIUS;
+        var limbCC = Matrix4.multiplyByPoint(projMatrix, positionEC, scratchCartesian4);
+        var limbWC = SceneTransforms.clipToWindowCoordinates(context.getCanvas(), limbCC, scratchLimbWC);
+
+        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
 
         return command;
