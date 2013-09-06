@@ -15,7 +15,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @constant
          * @default 0x812F
          */
-        CLAMP : new Enumeration(0x812F, 'CLAMP'),
+        CLAMP_TO_EDGE : new Enumeration(0x812F, 'CLAMP_TO_EDGE'),
 
         /**
          * DOC_TBA
@@ -43,7 +43,7 @@ define(['../Core/Enumeration'], function(Enumeration) {
          * @returns {Boolean}
          */
         validate : function(textureWrap) {
-            return ((textureWrap === TextureWrap.CLAMP) ||
+            return ((textureWrap === TextureWrap.CLAMP_TO_EDGE) ||
                     (textureWrap === TextureWrap.REPEAT) ||
                     (textureWrap === TextureWrap.MIRRORED_REPEAT));
         }
