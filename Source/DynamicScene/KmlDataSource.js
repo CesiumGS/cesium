@@ -215,6 +215,7 @@ define(['../Core/createGuid',
     }
 
     function processGxTrack(dataSource, dynamicObject, kml, node){
+        //TODO altitudeMode, gx:angles
         var coordsEl = node.getElementsByTagName('coord');
         var coordinates = new Array(coordsEl.length);
         var timesEl = node.getElementsByTagName('when');
@@ -226,6 +227,38 @@ define(['../Core/createGuid',
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
         dynamicObject.position = property;
+    }
+
+    function processGxMultiTrack(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
+        //TODO gx:interpolate, altitudeMode
+        var geometryObject = dynamicObject;
+        var styleObject = dynamicObject;
+        // I want to iterate over every placemark
+        for(var i = 0, len = node.childNodes.length; i < len; i++){
+            var innerNode = node.childNodes.item(i);
+            //Checking if the node holds a supported Geometry type
+            if(geometryTypes.hasOwnProperty(innerNode.nodeName)){
+                kml.geometry = innerNode.nodeName;
+                var geometryType = kml.geometry;
+                var geometryHandler = geometryTypes[geometryType];
+                if (geometryHandler !== processGxTrack) {
+                    throw new DeveloperError('gx:MultiTrack takes one or more gx:Track elements');
+                }
+                //only create a new dynamicObject if the placemark's object was used already
+                if (!defined(geometryObject)){
+                    var innerNodeId = defined(innerNode.id) ? innerNode.id : createGuid();
+                    geometryObject = dynamicObjectCollection.getOrCreateObject(innerNodeId);
+                    DynamicBillboard.mergeProperties(geometryObject, styleObject);
+                    DynamicLabel.mergeProperties(geometryObject, styleObject);
+                    DynamicPoint.mergeProperties(geometryObject, styleObject);
+                    DynamicPolygon.mergeProperties(geometryObject, styleObject);
+                    DynamicPolyline.mergeProperties(geometryObject, styleObject);
+                    DynamicObject.mergeProperties(geometryObject, styleObject);
+                }
+                geometryHandler(dataSource, geometryObject, kml, innerNode, dynamicObjectCollection);
+                geometryObject = undefined;
+            }
+        }
     }
 
     function processMultiGeometry(dataSource, dynamicObject, kml, node, dynamicObjectCollection){
@@ -266,6 +299,7 @@ define(['../Core/createGuid',
             LinearRing : processLinearRing,
             Polygon: processPolygon,
             'gx:Track': processGxTrack,
+            'gx:MultiTrack': processGxMultiTrack,
             MultiGeometry: processMultiGeometry
             //TODO Model, gxTrack, gxMultitrack
     };

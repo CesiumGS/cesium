@@ -379,6 +379,36 @@ defineSuite(['DynamicScene/KmlDataSource',
         }).toThrow();
     });
 
+    it('handles gx:MultiTrack', function() {
+        var time = new JulianDate.fromIso8601('2010-05-28T02:02:09Z');
+        var trackKml = '<?xml version="1.0" encoding="UTF-8"?>\
+            <kml xmlns="http://www.opengis.net/kml/2.2">\
+            <Document>\
+            <Placemark>\
+            <gx:MultiTrack>\
+            <gx:Track>\
+              <when>2010-05-28T02:02:09Z</when>\
+              <gx:coord>7 8 9</gx:coord>\
+            </gx:Track>\
+            <gx:Track>\
+            <when>2010-05-28T02:02:09Z</when>\
+            <gx:coord>7 8 9</gx:coord>\
+            </gx:Track>\
+            </gx:MultiTrack>\
+            </Placemark\
+            </Document>\
+            </kml>';
+
+        var dataSource = new KmlDataSource();
+        dataSource.load(parser.parseFromString(trackKml, "text/xml"));
+
+        var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var object0 = objects[0];
+        var object1 = objects[1];
+        expect(objects.length).toEqual(2);
+        expect(object0.position.getValue(time)).toEqual(object1.position.getValue(time));
+    });
+
     it('handles MultiGeometry', function() {
         var position1 = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 0);
         var cartesianPosition1 = Ellipsoid.WGS84.cartographicToCartesian(position1);
