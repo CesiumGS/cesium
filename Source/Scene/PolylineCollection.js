@@ -1039,7 +1039,7 @@ define([
             return;
         }
 
-        var vsSource = PolylineCommon + '\n\n' + PolylineVS;
+        var vsSource = createShaderSource({ sources : [PolylineCommon, PolylineVS] });
         var fsSource = createShaderSource({ sources : [this.material.shaderSource, PolylineFS] });
         var fsPick = createShaderSource({ sources : [fsSource], pickColorQualifier : 'varying' });
         this.shaderProgram = context.getShaderCache().getShaderProgram(vsSource, fsSource, attributeIndices);

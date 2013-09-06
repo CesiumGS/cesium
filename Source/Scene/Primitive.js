@@ -372,7 +372,7 @@ define([
             }
         }
 
-        return forwardDecl + '\n\n' + attributes + '\n' + vertexShaderSource + '\n\n' + computeFunctions;
+        return createShaderSource({ sources : [forwardDecl, attributes, vertexShaderSource, computeFunctions] });
     }
 
     function createPickVertexShaderSource(vertexShaderSource) {

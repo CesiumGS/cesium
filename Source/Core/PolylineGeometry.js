@@ -38,10 +38,10 @@ define([
      * @constructor
      *
      * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
-     * @param {Number} options.width The width in pixels.
+     * @param {Number} [options.width=1.0] The width in pixels.
      *
      * @exception {DeveloperError} At least two positions are required.
-     * @exception {DeveloperError} width is required and must be greater than or equal to one.
+     * @exception {DeveloperError} width must be greater than or equal to one.
      *
      * @see PolylineGeometry#createGeometry
      *
@@ -59,15 +59,16 @@ define([
      */
     var PolylineGeometry = function(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
         var positions = options.positions;
-        var width = options.width;
+        var width = defaultValue(options.width, 1.0);
 
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
 
-        if (!defined(width) || width < 1.0) {
-            throw new DeveloperError('width is required and must be greater than or equal to one.');
+        if (width < 1.0) {
+            throw new DeveloperError('width must be greater than or equal to one.');
         }
 
         this._positions = positions;
@@ -108,7 +109,7 @@ define([
         var prevPositions = new Float64Array(size * 3);
         var nextPositions = new Float64Array(size * 3);
         var expandAndWidth = new Float32Array(size * 2);
-        var st = (vertexFormat.st) ? new Float32Array(size * 2) : undefined;
+        var st = vertexFormat.st ? new Float32Array(size * 2) : undefined;
 
         var positionIndex = 0;
         var expandAndWidthIndex = 0;
@@ -129,14 +130,8 @@ define([
                 position = positions[j - 1];
             }
 
-            scratchPrevPosition.x = position.x;
-            scratchPrevPosition.y = position.y;
-            scratchPrevPosition.z = position.z;
-
-            position = positions[j];
-            scratchPosition.x = position.x;
-            scratchPosition.y = position.y;
-            scratchPosition.z = position.z;
+            Cartesian3.clone(position, scratchPrevPosition);
+            Cartesian3.clone(positions[j], scratchPosition);
 
             if (j === positionsLength - 1) {
                 position = scratchCartesian3;
@@ -146,9 +141,7 @@ define([
                 position = positions[j + 1];
             }
 
-            scratchNextPosition.x = position.x;
-            scratchNextPosition.y = position.y;
-            scratchNextPosition.z = position.z;
+            Cartesian3.clone(position, scratchNextPosition);
 
             segmentLength = lengths[segmentIndex];
             if (j === count + segmentLength) {
@@ -159,26 +152,17 @@ define([
             var segmentStart = j - count === 0;
             var segmentEnd = j === count + lengths[segmentIndex] - 1;
 
-            var startK = (segmentStart) ? 2 : 0;
-            var endK = (segmentEnd) ? 2 : 4;
+            var startK = segmentStart ? 2 : 0;
+            var endK = segmentEnd ? 2 : 4;
 
             for (k = startK; k < endK; ++k) {
-                finalPositions[positionIndex]     = scratchPosition.x;
-                finalPositions[positionIndex + 1] = scratchPosition.y;
-                finalPositions[positionIndex + 2] = scratchPosition.z;
-
-                prevPositions[positionIndex]     = scratchPrevPosition.x;
-                prevPositions[positionIndex + 1] = scratchPrevPosition.y;
-                prevPositions[positionIndex + 2] = scratchPrevPosition.z;
-
-                nextPositions[positionIndex]     = scratchNextPosition.x;
-                nextPositions[positionIndex + 1] = scratchNextPosition.y;
-                nextPositions[positionIndex + 2] = scratchNextPosition.z;
-
+                Cartesian3.writeElements(scratchPosition, finalPositions, positionIndex);
+                Cartesian3.writeElements(scratchPrevPosition, prevPositions, positionIndex);
+                Cartesian3.writeElements(scratchNextPosition, nextPositions, positionIndex);
                 positionIndex += 3;
 
                 var direction = (k - 2 < 0) ? -1.0 : 1.0;
-                expandAndWidth[expandAndWidthIndex++]     = 2 * (k % 2) - 1;       // expand direction
+                expandAndWidth[expandAndWidthIndex++] = 2 * (k % 2) - 1;       // expand direction
                 expandAndWidth[expandAndWidthIndex++] = direction * width;
 
                 if (vertexFormat.st) {

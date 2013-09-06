@@ -72,6 +72,39 @@ defineSuite([
         }).toThrow();
     });
 
+    it('writeElements writes components to an array', function() {
+        var array = [1.0, 2.0, 3.0, 4.0 , 5.0, 6.0];
+        var cartesian = new Cartesian3(3.0, 2.0, 1.0);
+        var index = 3;
+
+        Cartesian3.writeElements(cartesian, array, index);
+        expect(array).toEqual([1.0, 2.0, 3.0, 3.0, 2.0, 1.0]);
+    });
+
+    it('writeElements throws without cartesian', function() {
+        expect(function() {
+            Cartesian3.writeElements();
+        }).toThrow();
+    });
+
+    it('writeElements throws without cartesianArray', function() {
+        expect(function() {
+            Cartesian3.writeElements(Cartesian3.ZERO);
+        }).toThrow();
+    });
+
+    it('writeElements throws without index', function() {
+        expect(function() {
+            Cartesian3.writeElements(Cartesian3.ZERO, []);
+        }).toThrow();
+    });
+
+    it('writeElements throws with invalid index', function() {
+        expect(function () {
+            Cartesian3.writeElements(Cartesian3.ZERO, [0.0, 0.0, 0.0], 1);
+        }).toThrow();
+    });
+
     it('clone without a result parameter', function() {
         var cartesian = new Cartesian3(1.0, 2.0, 3.0);
         var result = cartesian.clone();

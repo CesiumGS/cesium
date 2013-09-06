@@ -26,10 +26,11 @@ defineSuite([
         }).toThrow();
     });
 
-    it('constructor throws without width', function() {
+    it('constructor throws with invalid width', function() {
         expect(function() {
             return new PolylineGeometry({
-                positions : [Cartesian3.ZERO, Cartesian3.UNIT_X]
+                positions : [Cartesian3.ZERO, Cartesian3.UNIT_X],
+                width : -1
             });
         }).toThrow();
     });

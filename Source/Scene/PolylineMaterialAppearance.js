@@ -5,6 +5,7 @@ define([
         '../Core/VertexFormat',
         './Material',
         './Appearance',
+        '../Renderer/createShaderSource',
         '../Shaders/Appearances/PolylineMaterialAppearanceVS',
         '../Shaders/PolylineFS',
         '../Shaders/PolylineCommon'
@@ -14,6 +15,7 @@ define([
         VertexFormat,
         Material,
         Appearance,
+        createShaderSource,
         PolylineMaterialAppearanceVS,
         PolylineFS,
         PolylineCommon) {
@@ -26,7 +28,6 @@ define([
      * @constructor
      *
      * @param {Boolean} [options.translucent=true] When <code>true</code>, the geometry is expected to appear translucent so {@link PolylineMaterialAppearance#renderState} has alpha blending enabled.
-     * @param {Boolean} [options.closed=false] When <code>true</code>, the geometry is expected to be closed so {@link PolylineMaterialAppearance#renderState} has backface culling enabled.
      * @param {Material} [options.material=Material.ColorType] The material used to determine the fragment color.
      * @param {String} [options.vertexShaderSource=undefined] Optional GLSL vertex shader source to override the default vertex shader.
      * @param {String} [options.fragmentShaderSource=undefined] Optional GLSL fragment shader source to override the default fragment shader.
@@ -55,8 +56,8 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var translucent = defaultValue(options.translucent, true);
-        var closed = defaultValue(options.closed, false);
-        var vs = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
+        var closed = false;
+        var vs = createShaderSource({ sources : [PolylineCommon, PolylineMaterialAppearanceVS] });
         var fs = PolylineFS;
         var vertexFormat = PolylineMaterialAppearance.VERTEX_FORMAT;
 
@@ -70,7 +71,7 @@ define([
          *
          * @see <a href='https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric'>Fabric</a>
          */
-        this.material = (defined(options.material)) ? options.material : Material.fromType(undefined, Material.ColorType);
+        this.material = defined(options.material) ? options.material : Material.fromType(undefined, Material.ColorType);
 
         /**
          * The GLSL source code for the vertex shader.
