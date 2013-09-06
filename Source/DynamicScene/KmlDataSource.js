@@ -215,15 +215,13 @@ define(['../Core/createGuid',
     }
 
     function processGxTrack(dataSource, dynamicObject, kml, node){
-        var el = node.getElementsByTagName('coord');
-        var coordinates = [];
-        for(var i = 0; i < el.length; i++){
-            coordinates.push(readCoordinate(el[i]));
-        }
-        el = node.getElementsByTagName('when');
-        var times = [];
-        for(i = 0; i < el.length; i++){
-            times.push(JulianDate.fromIso8601(el[i].firstChild.data));
+        var coordsEl = node.getElementsByTagName('coord');
+        var coordinates = new Array(coordsEl.length);
+        var timesEl = node.getElementsByTagName('when');
+        var times = new Array(timesEl.length);
+        for(var i = 0; i < times.length; i++){
+            coordinates[i] = readCoordinate(coordsEl[i]);
+            times[i] = JulianDate.fromIso8601(timesEl[i].firstChild.data);
         }
         var property = new SampledPositionProperty();
         property.addSamples(times, coordinates);
