@@ -81,7 +81,7 @@ define([
         this._radiusTS = undefined;
         this._size = undefined;
 
-        this.glowFactor = 0.3;
+        this.glowFactor = 1.0;
         this._glowFactorChanged = false;
 
         var that = this;
@@ -103,7 +103,7 @@ define([
          *
          * @memberof Sun.prototype
          * @type {Number}
-         * @default 0.3
+         * @default 1.0
          */
         glowFactor : {
             get : function () { return this._glowFactor; },
@@ -217,7 +217,7 @@ define([
                 viewport : new BoundingRectangle(0.0, 0.0, size, size)
             });
 
-            this._glowLengthTS = this._glowFactor * 10.0;
+            this._glowLengthTS = this._glowFactor * 5.0;
             this._radiusTS = (1.0 / (1.0 + 2.0 * this._glowLengthTS)) * 0.5;
 
             var that = this;
