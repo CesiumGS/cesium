@@ -24,6 +24,8 @@ define(['../Core/defined',
                 collection._collectionChanged.raiseEvent(collection, added, removed);
                 added.length = 0;
                 removed.length = 0;
+                collection._addedHash = {};
+                collection._removedHash = {};
             }
         }
     }
@@ -34,12 +36,14 @@ define(['../Core/defined',
      * @constructor
      */
     var DynamicObjectCollection = function() {
-        this._added = [];
         this._array = [];
-        this._collectionChanged = new Event();
-        this._removed = [];
         this._hash = {};
+        this._added = [];
+        this._addedHash = {};
+        this._removed = [];
+        this._removedHash = {};
         this._suspectRefCount = 0;
+        this._collectionChanged = new Event();
     };
 
     /**
@@ -159,11 +163,17 @@ define(['../Core/defined',
         this._array.push(dynamicObject);
 
         var removed = this._removed;
-        var index = removed.indexOf(dynamicObject);
+        var index = -1;
+        var removedObject = this._removedHash[id];
+        if (defined(removedObject)) {
+            index = removed.indexOf(removedObject);
+        }
         if (index !== -1) {
             removed.splice(index, 1);
+            this._removedHash[id] = undefined;
         } else {
             this._added.push(dynamicObject);
+            this._addedHash[id] = dynamicObject;
         }
         fireChangedEvent(this);
     };
@@ -206,11 +216,17 @@ define(['../Core/defined',
             array.splice(array.indexOf(dynamicObject), 1);
 
             var added = this._added;
-            var index = added.indexOf(dynamicObject);
+            var index = -1;
+            var addedObject = this._addedHash[id];
+            if (defined(addedObject)) {
+                index = added.indexOf(addedObject);
+            }
             if (index !== -1) {
                 added.splice(index, 1);
+                this._addedHash[id] = undefined;
             } else {
                 this._removed.push(dynamicObject);
+                this._removedHash[id] = dynamicObject;
             }
             fireChangedEvent(this);
         }
@@ -222,20 +238,28 @@ define(['../Core/defined',
      * @memberof DynamicObjectCollection
      */
     DynamicObjectCollection.prototype.removeAll = function() {
-        var removed = this._removed;
-        var added = this._added;
+        //The event should only contain items added before events were suspended
+        //and the contents of the collection.
         var array = this._array;
         var arrayLength = array.length;
 
-        //The remove event should only contain items added before events were suspended
+        var removed = this._removed;
+        var removedHash = this._removedHash;
+
+        var addedHash = this._addedHash;
+
         for ( var i = 0; i < arrayLength; i++) {
             var existingItem = array[i];
-            if (added.indexOf(existingItem) === -1) {
+            var existingItemId = existingItem.id;
+            var addedItem = addedHash[existingItemId];
+            if (!defined(addedItem)) {
                 removed.push(existingItem);
+                removedHash[existingItemId] = existingItem;
             }
         }
 
-        added.length = 0;
+        this._addedHash = {};
+        this._added.length = 0;
         array.length = 0;
         this._hash = {};
 

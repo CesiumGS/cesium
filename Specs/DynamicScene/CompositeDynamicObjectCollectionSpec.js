@@ -35,7 +35,7 @@ defineSuite([
     it('constructor has expected defaults', function() {
         var composite = new CompositeDynamicObjectCollection();
         expect(composite.collectionChanged).toBeDefined();
-        expect(composite.collections.length).toEqual(0);
+        expect(composite.getLength()).toEqual(0);
         expect(composite.getObjects().length).toEqual(0);
     });
 
@@ -146,7 +146,7 @@ defineSuite([
 
         dynamicObjectCollection.add(dynamicObject);
         dynamicObjectCollection.add(dynamicObject2);
-        composite.collections.length = 0;
+        composite.removeAll();
         expect(composite.getObjects().length).toEqual(0);
     });
 
@@ -162,7 +162,7 @@ defineSuite([
         dynamicObjectCollection.add(dynamicObject2);
 
         composite.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
-        composite.collections.length = 0;
+        composite.removeAll();
 
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
@@ -170,7 +170,7 @@ defineSuite([
         expect(listener.removed[1].id).toBe(dynamicObject2.id);
         expect(listener.added.length).toEqual(0);
 
-        composite.collections.length = 0;
+        composite.removeAll();
         expect(listener.timesCalled).toEqual(1);
 
         composite.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
@@ -190,18 +190,17 @@ defineSuite([
         composite.collectionChanged.addEventListener(listener.onCollectionChanged, listener);
 
         composite.suspendEvents();
-        composite.collections.length = 0;
+        composite.removeAll();
         composite.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
         expect(listener.removed.length).toEqual(2);
         expect(listener.removed[0].id).toBe(dynamicObject.id);
         expect(listener.removed[1].id).toBe(dynamicObject2.id);
         expect(listener.added.length).toEqual(0);
+        expect(composite.getLength()).toEqual(0);
 
         composite.suspendEvents();
-        dynamicObjectCollection.add(dynamicObject);
-        dynamicObjectCollection.add(dynamicObject2);
-        dynamicObjectCollection.remove(dynamicObject2);
+        composite.add(dynamicObjectCollection);
         dynamicObjectCollection.removeAll();
         composite.resumeEvents();
         expect(listener.timesCalled).toEqual(1);
@@ -218,7 +217,7 @@ defineSuite([
         dynamicObjectCollection.add(dynamicObject2);
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.collections.push(dynamicObjectCollection);
+        composite.add(dynamicObjectCollection);
         expect(composite.getById(dynamicObject.id).id).toEqual(dynamicObject.id);
         expect(composite.getById(dynamicObject2.id).id).toEqual(dynamicObject2.id);
     });
@@ -231,13 +230,13 @@ defineSuite([
     it('computeAvailability returns infinite with no data.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
         var composite = new CompositeDynamicObjectCollection();
-        composite.collections.push(dynamicObjectCollection);
+        composite.add(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(Iso8601.MINIMUM_VALUE);
         expect(availability.stop).toEqual(Iso8601.MAXIMUM_VALUE);
     });
 
-    it('computeAvailability returns intersction of collections.', function() {
+    it('computeAvailability returns intersection of collections.', function() {
         var dynamicObjectCollection = new DynamicObjectCollection();
 
         var dynamicObject = dynamicObjectCollection.getOrCreateObject('1');
@@ -249,7 +248,7 @@ defineSuite([
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.collections.push(dynamicObjectCollection);
+        composite.add(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));
@@ -267,7 +266,7 @@ defineSuite([
         dynamicObject3.availability = undefined;
 
         var composite = new CompositeDynamicObjectCollection();
-        composite.collections.push(dynamicObjectCollection);
+        composite.add(dynamicObjectCollection);
         var availability = composite.computeAvailability();
         expect(availability.start).toEqual(JulianDate.fromIso8601('2012-08-01'));
         expect(availability.stop).toEqual(JulianDate.fromIso8601('2012-08-06'));

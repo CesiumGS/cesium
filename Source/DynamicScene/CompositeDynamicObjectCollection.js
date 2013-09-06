@@ -1,11 +1,15 @@
 /*global define*/
 define(['../Core/defined',
         '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/Math',
         './DynamicObject',
         './DynamicObjectCollection'
     ], function(
         defined,
         defineProperties,
+        DeveloperError,
+        CesiumMath,
         DynamicObject,
         DynamicObjectCollection) {
     "use strict";
@@ -38,18 +42,206 @@ define(['../Core/defined',
         mergeIfNeeded(this);
     };
 
-    defineProperties(CompositeDynamicObjectCollection.prototype, {
-        /**
-         * Gets the array of collections.
-         * @memberof CompositeDynamicObjectCollection.prototype
-         *
-         * @type {Array}
-         */
-        collections : {
-            get : function() {
-                return this._collections;
+    /**
+     * Adds a collection to the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to add.
+     * @param {Number} [index] the index to add the collection at.  If omitted, the collection will
+     *                         added on top of all existing collections.
+     *
+     * @exception {DeveloperError} collection is required.
+     * @exception {DeveloperError} index, if supplied, must be greater than or equal to zero and less than or equal to the number of collections.
+     */
+    CompositeDynamicObjectCollection.prototype.add = function(collection, index) {
+        if (!defined(collection)) {
+            throw new DeveloperError('collection is required.');
+        }
+
+        if (!defined(index)) {
+            index = this._collections.length;
+            this._collections.push(collection);
+        } else {
+            if (index < 0) {
+                throw new DeveloperError('index must be greater than or equal to zero.');
+            } else if (index > this._collections.length) {
+                throw new DeveloperError('index must be less than or equal to the number of collections.');
             }
-        },
+            this._collections.splice(index, 0, collection);
+        }
+
+        mergeIfNeeded(this);
+    };
+
+    /**
+     * Removes a collection from this composite, if present.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection The collection to remove.
+     *
+     * @returns {Boolean} true if the collection was in the composite and was removed,
+     *                    false if the collection was not in the composite.
+     */
+    CompositeDynamicObjectCollection.prototype.remove = function(collection) {
+        var index = this._collections.indexOf(collection);
+        if (index !== -1) {
+            this._collections.splice(index, 1);
+            mergeIfNeeded(this);
+            return true;
+        }
+        return false;
+    };
+
+    /**
+     * Removes all collections from this composite.
+     * @memberof CompositeDynamicObjectCollection
+     */
+    CompositeDynamicObjectCollection.prototype.removeAll = function() {
+        this._collections.length = [];
+        mergeIfNeeded(this);
+    };
+
+    /**
+     * Checks to see if the composite contains a given collection.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to check for.
+     * @returns {Boolean} true if the composite contains the collection, false otherwise.
+     */
+    CompositeDynamicObjectCollection.prototype.contains = function(collection) {
+        return this.indexOf(collection) !== -1;
+    };
+
+    /**
+     * Determines the index of a given collection in the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection The collection to find the index of.
+     * @returns {Number} The index of the collection in the composite, or -1 if the collection does not exist in the composite.
+     */
+    CompositeDynamicObjectCollection.prototype.indexOf = function(collection) {
+        return this._collections.indexOf(collection);
+    };
+
+    /**
+     * Gets a collection by index from the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {Number} index the index to retrieve.
+     *
+     * @exception {DeveloperError} index is required.
+     */
+    CompositeDynamicObjectCollection.prototype.get = function(index) {
+        if (!defined(index)) {
+            throw new DeveloperError('index is required.', 'index');
+        }
+
+        return this._collections[index];
+    };
+
+    /**
+     * Gets the number of collections in this composite.
+     * @memberof CompositeDynamicObjectCollection
+     */
+    CompositeDynamicObjectCollection.prototype.getLength = function() {
+        return this._collections.length;
+    };
+
+    function getCollectionIndex(collections, collection) {
+        if (!defined(collection)) {
+            throw new DeveloperError('collection is required.');
+        }
+
+        var index = collections.indexOf(collection);
+        if (index === -1) {
+            throw new DeveloperError('collection is not in this composite.');
+        }
+
+        return index;
+    }
+
+    function swapCollections(composite, i, j) {
+        var arr = composite._collections;
+        i = CesiumMath.clamp(i, 0, arr.length - 1);
+        j = CesiumMath.clamp(j, 0, arr.length - 1);
+
+        if (i === j) {
+            return;
+        }
+
+        var temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+
+        mergeIfNeeded(composite);
+    }
+
+    /**
+     * Raises a collection up one position in the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to move.
+     *
+     * @exception {DeveloperError} collection is not in this composite.
+     */
+    CompositeDynamicObjectCollection.prototype.raise = function(collection) {
+        var index = getCollectionIndex(this._collections, collection);
+        swapCollections(this, index, index + 1);
+    };
+
+    /**
+     * Lowers a collection down one position in the compoiste.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to move.
+     *
+     * @exception {DeveloperError} collection is not in this composite.
+     */
+    CompositeDynamicObjectCollection.prototype.lower = function(collection) {
+        var index = getCollectionIndex(this._collections, collection);
+        swapCollections(this, index, index - 1);
+    };
+
+    /**
+     * Raises a collection to the top of the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to move.
+     *
+     * @exception {DeveloperError} collection is not in this composite.
+     */
+    CompositeDynamicObjectCollection.prototype.raiseToTop = function(collection) {
+        var index = getCollectionIndex(this._collections, collection);
+        if (index === this._collections.length - 1) {
+            return;
+        }
+        this._collections.splice(index, 1);
+        this._collections.push(collection);
+
+        mergeIfNeeded(this);
+    };
+
+    /**
+     * Lowers a collection to the bottom of the composite.
+     * @memberof CompositeDynamicObjectCollection
+     *
+     * @param {DynamicObjectCollection} collection the collection to move.
+     *
+     * @exception {DeveloperError} collection is not in this composite.
+     */
+    CompositeDynamicObjectCollection.prototype.lowerToBottom = function(collection) {
+        var index = getCollectionIndex(this._collections, collection);
+        if (index === 0) {
+            return;
+        }
+        this._collections.splice(index, 1);
+        this._collections.splice(0, 0, collection);
+
+        mergeIfNeeded(this);
+    };
+
+
+    defineProperties(CompositeDynamicObjectCollection.prototype, {
         /**
          * Gets the event that is fired when objects are added or removed from the collection.
          * The generated event is a {@link DynamicObjectCollection.collectionChangedEventCallback}.
