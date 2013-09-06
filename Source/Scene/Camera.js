@@ -42,7 +42,7 @@ define([
      * // with a field of view of 60 degrees, and 1:1 aspect ratio.
      * var camera = new Camera(canvas);
      * camera.position = new Cartesian3();
-     * camera.direction = Cartesian3.UNIT_Z.negate();
+     * camera.direction = Cartesian3.negate(Cartesian3.UNIT_Z);
      * camera.up = Cartesian3.UNIT_Y;
      * camera.frustum.fovy = CesiumMath.PI_OVER_THREE;
      * camera.frustum.near = 1.0;

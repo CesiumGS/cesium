@@ -145,7 +145,7 @@ define([
                 point : end
             }];
         } else if (Cartesian3.magnitude(start) > maxStartAlt && dot > 0) {
-            middle = Cartesian3.add(Cartesian3.subtract(start, aboveEnd).multiplyByScalar(0.5), aboveEnd);
+            middle = Cartesian3.add(Cartesian3.multiplyByScalar(Cartesian3.subtract(start, aboveEnd), 0.5), aboveEnd);
 
             points = [{
                 point : start

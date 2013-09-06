@@ -398,8 +398,8 @@ define([
 
         var maxRadii = transitioner._ellipsoid.getMaximumRadius();
         var endPos = transitioner._ellipsoid.cartographicToCartesian(new Cartographic(0.0, 0.0, 10.0));
-        endPos = endPos.normalize().multiplyByScalar(2.0 * maxRadii);
-        var endDir = Cartesian3.normalize(Cartesian3.ZERO.subtract(endPos));
+        endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(endPos), 2.0 * maxRadii);
+        var endDir = Cartesian3.normalize(Cartesian3.subtract(Cartesian3.ZERO, endPos));
         var endRight = Cartesian3.normalize(Cartesian3.cross(endDir, Cartesian3.UNIT_Z));
         var endUp = Cartesian3.cross(endRight, endDir);
 
@@ -440,7 +440,7 @@ define([
 
     function columbusViewMorph(startPosition, endPosition, time) {
         // Just linear for now.
-        return startPosition.lerp(endPosition, time);
+        return Cartesian4.lerp(startPosition, endPosition, time);
     }
 
     function morphPerspectiveToOrthographic(transitioner, duration, onComplete) {
@@ -450,14 +450,14 @@ define([
         var startPos = camera.position;
         var startFOVy = camera.frustum.fovy;
         var endFOVy = CesiumMath.RADIANS_PER_DEGREE * 0.5;
-        var d = startPos.magnitude() * Math.tan(startFOVy * 0.5);
+        var d = Cartesian3.magnitude(startPos) * Math.tan(startFOVy * 0.5);
         camera.frustum.far = d / Math.tan(endFOVy * 0.5) + 10000000.0;
 
         var update = function(value) {
             camera.frustum.fovy = CesiumMath.lerp(startFOVy, endFOVy, value.time);
 
             var distance = d / Math.tan(camera.frustum.fovy * 0.5);
-            camera.position = Cartesian3.normalize(camera.position).multiplyByScalar(distance);
+            camera.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(camera.position), distance);
         };
 
         var animation = scene.getAnimations().add({
@@ -493,7 +493,7 @@ define([
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
 
-        var endPos = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
+        var endPos = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position), d);
         var endDir = transitioner._camera2D.direction.clone();
         var endUp = transitioner._camera2D.up.clone();
 
@@ -532,7 +532,7 @@ define([
         var d = (maxRadii * Math.PI) / tanTheta;
 
         var camera3DTo2D = {};
-        camera3DTo2D.position = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
+        camera3DTo2D.position = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position), d);
         camera3DTo2D.direction = transitioner._camera2D.direction.clone();
         camera3DTo2D.up = transitioner._camera2D.up.clone();
 
@@ -550,7 +550,7 @@ define([
         var tanPhi = Math.tan(transitioner._cameraCV.frustum.fovy * 0.5);
         var tanTheta = transitioner._cameraCV.frustum.aspectRatio * tanPhi;
         var d = (maxRadii * Math.PI) / tanTheta;
-        var endPos2D = Cartesian3.normalize(transitioner._camera2D.position).multiplyByScalar(d);
+        var endPos2D = Cartesian3.multiplyByScalar(Cartesian3.normalize(transitioner._camera2D.position), d);
 
         var top = camera.frustum.top;
         var bottom = camera.frustum.bottom;
@@ -578,7 +578,7 @@ define([
 
         var partialDuration = (endTime - startTime) * duration;
         if (partialDuration < CesiumMath.EPSILON6) {
-            if (!startPos.equalsEpsilon(endPos2D, CesiumMath.EPSILON6)) {
+            if (!Cartesian3.equalsEpsilon(startPos, endPos2D, CesiumMath.EPSILON6)) {
                 partialDuration = duration;
                 startTime = 0.0;
                 endTime = 1.0;

@@ -270,7 +270,7 @@ define([
             // Extend position so the volume encompasses the sensor's radius.
             var theta = Math.max(Cartesian3.angleBetween(n0, n1), Cartesian3.angleBetween(n1, n2));
             var distance = r / Math.cos(theta * 0.5);
-            var p = n1.multiplyByScalar(distance);
+            var p = Cartesian3.multiplyByScalar(n1, distance);
 
             positions[(j * 3) + 0] = p.x;
             positions[(j * 3) + 1] = p.y;
@@ -294,7 +294,7 @@ define([
         for ( var i = length - 1, j = 0; j < length; i = j++) {
             var p0 = new Cartesian3(positions[(i * 3) + 0], positions[(i * 3) + 1], positions[(i * 3) + 2]);
             var p1 = new Cartesian3(positions[(j * 3) + 0], positions[(j * 3) + 1], positions[(j * 3) + 2]);
-            var n = p1.cross(p0).normalize(); // Per-face normals
+            var n = Cartesian3.normalize(Cartesian3.cross(p1, p0)); // Per-face normals
 
             vertices[k++] = 0.0; // Sensor vertex
             vertices[k++] = 0.0;

@@ -221,7 +221,7 @@ define([
     }
 
     function sameMousePosition(movement) {
-        return movement.startPosition.equalsEpsilon(movement.endPosition, CesiumMath.EPSILON14);
+        return Cartesian2.equalsEpsilon(movement.startPosition, movement.endPosition, CesiumMath.EPSILON14);
     }
 
     // If the time between mouse down and mouse up is not between
