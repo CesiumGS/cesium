@@ -349,8 +349,8 @@ defineSuite([
         });
 
         var sampler = texture.getSampler();
-        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP);
-        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP);
+        expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+        expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
         expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.LINEAR);
         expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.LINEAR);
         expect(sampler.maximumAnisotropy).toEqual(1.0);
@@ -365,8 +365,8 @@ defineSuite([
             });
 
             var sampler = texture.getSampler();
-            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP);
-            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP);
+            expect(sampler.wrapS).toEqual(TextureWrap.CLAMP_TO_EDGE);
+            expect(sampler.wrapT).toEqual(TextureWrap.CLAMP_TO_EDGE);
             expect(sampler.minificationFilter).toEqual(TextureMinificationFilter.NEAREST);
             expect(sampler.magnificationFilter).toEqual(TextureMagnificationFilter.NEAREST);
             expect(sampler.maximumAnisotropy).toEqual(1.0);

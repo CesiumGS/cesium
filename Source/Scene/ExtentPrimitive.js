@@ -155,11 +155,11 @@ define([
          *
          * @type Boolean
          *
-         * @default true
+         * @default false
          *
          * @private
          */
-        this.asynchronous = defaultValue(options.asynchronous, true);
+        this.asynchronous = defaultValue(options.asynchronous, false);
 
         this._primitive = undefined;
     };

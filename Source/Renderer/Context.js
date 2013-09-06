@@ -1848,8 +1848,8 @@ define([
      */
     Context.prototype.createSampler = function(sampler) {
         var s = {
-            wrapS : sampler.wrapS || TextureWrap.CLAMP,
-            wrapT : sampler.wrapT || TextureWrap.CLAMP,
+            wrapS : sampler.wrapS || TextureWrap.CLAMP_TO_EDGE,
+            wrapT : sampler.wrapT || TextureWrap.CLAMP_TO_EDGE,
             minificationFilter : sampler.minificationFilter || TextureMinificationFilter.LINEAR,
             magnificationFilter : sampler.magnificationFilter || TextureMagnificationFilter.LINEAR,
             maximumAnisotropy : (defined(sampler.maximumAnisotropy)) ? sampler.maximumAnisotropy : 1.0
