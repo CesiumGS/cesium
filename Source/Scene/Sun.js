@@ -84,25 +84,7 @@ define([
         this._size = undefined;
 
         var that = this;
-        defineProperties(this, {
-            glowFactor : {
-                get : function () { return that._glowFactor; },
-                set : function (glowFactor) {
-                    glowFactor = Math.max(glowFactor, 0.0);
-                    this._glowFactor = glowFactor;
-                    this._glowFactorChanged = true;
-                }
-            }
-        });
 
-        /**
-         * Gets or sets a number that controls how "bright" the Sun's lens flare appears
-         * to be.  Zero shows just the Sun's disc without any flare.  The default
-         * is 1.0.  Use larger values for a more pronounced flare around the Sun.
-         *
-         * @type {Number}
-         * @default 1.0
-         */
         //this.glowFactor = 1.0;
         this.glowFactor = 0.0;
         this._glowFactorChanged = false;
@@ -116,6 +98,26 @@ define([
             }
         };
     };
+
+    defineProperties(Sun.prototype, {
+        /**
+         * Gets or sets a number that controls how "bright" the Sun's lens flare appears
+         * to be.  Zero shows just the Sun's disc without any flare.  The default
+         * is 1.0.  Use larger values for a more pronounced flare around the Sun.
+         *
+         * @memberof Sun.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        glowFactor : {
+            get : function () { return that._glowFactor; },
+            set : function (glowFactor) {
+                glowFactor = Math.max(glowFactor, 0.0);
+                this._glowFactor = glowFactor;
+                this._glowFactorChanged = true;
+            }
+        }
+    });
 
     var viewportAttributeIndices = {
         position : 0,
