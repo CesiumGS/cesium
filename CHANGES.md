@@ -8,6 +8,10 @@ Beta Releases
 
 * Breaking changes:
    * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
+   * The following prototype functions were removed:
+      * From `Cartesian2`, `Cartesian3`, and `Cartesian4`: `getMaximumComponent`, `getMinimumComponent`, `magnitudeSquared`, `magnitude`, `normalize`, `dot`, `multiplyComponents`, `add`, `subtract`, `multiplyByScalar`, `divideByScalar`, `negate`, `abs`, `lerp`, `angleBetween`, `mostOrthogonalAxis`, `equals`, equalsEpsilon` 
+      * From `Cartesian3`: `cross` 
+      * Code that previously looked like `cartesian2.magnitude();` should now look like `Cartesian2.magnitude(cartesian2);`.
 * Added `CorridorOutlineGeometry`.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
