@@ -9,6 +9,9 @@ Beta Releases
 * Added `czm_inverseViewProjection` and `czm_inverseModelViewProjection` automatic GLSL uniform.
 
 ### b21 - 2013-10-01
+
+* Breaking changes:
+   * Renamed `TextureWrap.CLAMP` to `TextureWrap.CLAMP_TO_EDGE`.
 * Added `CorridorOutlineGeometry`.
 * Improved runtime generation of GLSL shaders.
 * Added new built-in GLSL functions `czm_getLambertDiffuse` and `czm_getSpecular`.
