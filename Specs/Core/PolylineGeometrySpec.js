@@ -3,12 +3,14 @@ defineSuite([
          'Core/PolylineGeometry',
          'Core/Cartesian3',
          'Core/PrimitiveType',
-         'Core/VertexFormat'
+         'Core/VertexFormat',
+         'Core/Color'
      ], function(
          PolylineGeometry,
          Cartesian3,
          PrimitiveType,
-         VertexFormat) {
+         VertexFormat,
+         Color) {
     "use strict";
     /*global jasmine,describe,xdescribe,it,xit,expect,beforeEach,afterEach,beforeAll,afterAll,spyOn,runs,waits,waitsFor*/
 
@@ -56,5 +58,38 @@ defineSuite([
         expect(line.attributes.expandAndWidth.values.length).toEqual(numVertices * 2);
         expect(line.attributes.st.values.length).toEqual(numVertices * 2);
         expect(line.indices.length).toEqual(positions.length * 6 - 6);
+    });
+
+    it('constructor computes per segment colors', function() {
+        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
+        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : positions,
+            colors : colors,
+            width : 10.0,
+            vertexFormat : VertexFormat.ALL
+        }));
+
+        expect(line.attributes.color).toBeDefined();
+
+        var numVertices = (positions.length * 4 - 4);
+        expect(line.attributes.color.values.length).toEqual(numVertices * 4);
+    });
+
+    it('constructor computes per vertex colors', function() {
+        var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
+        var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
+        var line = PolylineGeometry.createGeometry(new PolylineGeometry({
+            positions : positions,
+            colors : colors,
+            colorsPerVertex : true,
+            width : 10.0,
+            vertexFormat : VertexFormat.ALL
+        }));
+
+        expect(line.attributes.color).toBeDefined();
+
+        var numVertices = (positions.length * 4 - 4);
+        expect(line.attributes.color.values.length).toEqual(numVertices * 4);
     });
 });

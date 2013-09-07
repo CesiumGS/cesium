@@ -30,6 +30,7 @@ defineSuite([
          'Core/Cartographic',
          'Core/BoundingSphere',
          'Core/Math',
+         'Core/Color',
          'Renderer/ClearCommand',
          'Scene/PerInstanceColorAppearance',
          'Scene/PolylineColorAppearance',
@@ -76,6 +77,7 @@ defineSuite([
          Cartographic,
          BoundingSphere,
          CesiumMath,
+         Color,
          ClearCommand,
          PerInstanceColorAppearance,
          PolylineColorAppearance,
@@ -1331,6 +1333,43 @@ defineSuite([
 
         it('async', function() {
             renderAsync(instance, undefined, appearance);
+        });
+
+        it('per segment colors', function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0,
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                },
+                id : 'polyline'
+            });
+            render3D(instance, undefined, appearance);
+        });
+
+        it('per vertex colors', function() {
+            instance = new GeometryInstance({
+                geometry : new PolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    width : 20.0,
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    colorsPerVertex : true
+                }),
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
+                },
+                id : 'polyline'
+            });
+            render3D(instance, undefined, appearance);
         });
     });
 
