@@ -12,7 +12,8 @@ define([
         './VertexFormat',
         './Geometry',
         './GeometryAttribute',
-        './GeometryAttributes'
+        './GeometryAttributes',
+        './Color'
     ], function(
         defined,
         DeveloperError,
@@ -26,7 +27,8 @@ define([
         VertexFormat,
         Geometry,
         GeometryAttribute,
-        GeometryAttributes) {
+        GeometryAttributes,
+        Color) {
     "use strict";
 
     /**
@@ -39,9 +41,12 @@ define([
      *
      * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
+     * @param {Array} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
      * @exception {DeveloperError} width must be greater than or equal to one.
+     * @exception {DeveloperError} colors has an invalid length.
      *
      * @see PolylineGeometry#createGeometry
      *
@@ -61,7 +66,9 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var positions = options.positions;
+        var colors = options.colors;
         var width = defaultValue(options.width, 1.0);
+        var perVertex = defaultValue(options.colorsPerVertex, false);
 
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
@@ -71,8 +78,14 @@ define([
             throw new DeveloperError('width must be greater than or equal to one.');
         }
 
+        if (defined(colors) && ((perVertex && colors.length < positions.length) || (!perVertex && colors.length < positions.length - 1))) {
+            throw new DeveloperError('colors has an invalid length.');
+        }
+
         this._positions = positions;
+        this._colors = colors;
         this._width = width;
+        this._perVertex = perVertex;
         this._vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
         this._workerName = 'createPolylineGeometry';
     };
@@ -90,6 +103,8 @@ define([
     PolylineGeometry.createGeometry = function(polylineGeometry) {
         var width = polylineGeometry._width;
         var vertexFormat = polylineGeometry._vertexFormat;
+        var colors = polylineGeometry._colors;
+        var perVertex = polylineGeometry._perVertex;
 
         var segments = PolylinePipeline.wrapLongitude(polylineGeometry._positions);
         var positions = segments.positions;
@@ -110,10 +125,12 @@ define([
         var nextPositions = new Float64Array(size * 3);
         var expandAndWidth = new Float32Array(size * 2);
         var st = vertexFormat.st ? new Float32Array(size * 2) : undefined;
+        var finalColors = defined(colors) ? new Uint8Array(size * 4) : undefined;
 
         var positionIndex = 0;
         var expandAndWidthIndex = 0;
         var stIndex = 0;
+        var colorIndex = 0;
 
         var segmentLength;
         var segmentIndex = 0;
@@ -155,6 +172,20 @@ define([
             var startK = segmentStart ? 2 : 0;
             var endK = segmentEnd ? 2 : 4;
 
+            var color0, color1;
+            if (defined(finalColors)) {
+                var colorSegmentIndex = j - segmentIndex;
+                if (!segmentStart && !perVertex) {
+                    color0 = colors[colorSegmentIndex - 1];
+                } else {
+                    color0 = colors[colorSegmentIndex];
+                }
+
+                if (!segmentEnd) {
+                    color1 = colors[colorSegmentIndex];
+                }
+            }
+
             for (k = startK; k < endK; ++k) {
                 Cartesian3.writeElements(scratchPosition, finalPositions, positionIndex);
                 Cartesian3.writeElements(scratchPrevPosition, prevPositions, positionIndex);
@@ -168,6 +199,15 @@ define([
                 if (vertexFormat.st) {
                     st[stIndex++] = j / (positionsLength - 1);
                     st[stIndex++] = Math.max(expandAndWidth[expandAndWidthIndex - 2], 0.0);
+                }
+
+                if (defined(finalColors)) {
+                    var color = (k < 2) ? color0 : color1;
+
+                    finalColors[colorIndex++] = Color.floatToByte(color.red);
+                    finalColors[colorIndex++] = Color.floatToByte(color.green);
+                    finalColors[colorIndex++] = Color.floatToByte(color.blue);
+                    finalColors[colorIndex++] = Color.floatToByte(color.alpha);
                 }
             }
         }
@@ -203,6 +243,15 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 2,
                 values : st
+            });
+        }
+
+        if (defined(finalColors)) {
+            attributes.color = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 4,
+                values : finalColors,
+                normalize : true
             });
         }
 

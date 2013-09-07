@@ -753,6 +753,7 @@ require(['Cesium'], function(Cesium) {
         })
     }));
     
+    // create a polyline with a material
     positions = [];
     for (i = 0; i < 40; ++i) {
         positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 15.0)));
@@ -763,12 +764,55 @@ require(['Cesium'], function(Cesium) {
             geometry : new Cesium.PolylineGeometry({
                 positions : positions,
                 width : 10.0,
-                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT
+                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+                colors : colors,
+                colorsPerVertex : true
             })
         }),
         appearance : new Cesium.PolylineMaterialAppearance({
             material : Cesium.Material.fromType(scene.getContext(), Cesium.Material.PolylineGlowType)
         })
+    }));
+    
+    // create a polyline with per segment colors
+    positions = [];
+    var colors = [];
+    for (i = 0; i < 40; ++i) {
+        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 12.0)));
+        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolylineGeometry({
+                positions : positions,
+                width : 10.0,
+                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+                colors : colors
+            })
+        }),
+        appearance : new Cesium.PolylineColorAppearance()
+    }));
+    
+    // create a polyline with per vertex colors
+    positions = [];
+    colors = [];
+    for (i = 0; i < 40; ++i) {
+        positions.push(ellipsoid.cartographicToCartesian(Cesium.Cartographic.fromDegrees(-100.0 + i, 9.0)));
+        colors.push(Cesium.Color.fromRandom({alpha : 1.0}));
+    }
+
+    primitives.add(new Cesium.Primitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolylineGeometry({
+                positions : positions,
+                width : 10.0,
+                vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+                colors : colors,
+                colorsPerVertex : true
+            })
+        }),
+        appearance : new Cesium.PolylineColorAppearance()
     }));
 
     // Create a single wall
