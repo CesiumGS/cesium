@@ -1289,6 +1289,35 @@ defineSuite([
         it('async', function() {
             renderAsync(instance);
         });
+
+        it('per segment colors', function() {
+            instance = new GeometryInstance({
+                geometry : new SimplePolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
+                }),
+                id : 'polyline'
+            });
+            render3D(instance);
+        });
+
+        it('per vertex colors', function() {
+            instance = new GeometryInstance({
+                geometry : new SimplePolylineGeometry({
+                    positions : ellipsoid.cartographicArrayToCartesianArray([
+                        Cartographic.fromDegrees(0.0, 0.0),
+                        Cartographic.fromDegrees(5.0, 0.0)
+                    ]),
+                    colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
+                    colorsPerVertex : true
+                }),
+                id : 'polyline'
+            });
+            render3D(instance);
+        });
     });
 
     describe('PolylineGeometry', function() {
@@ -1345,9 +1374,6 @@ defineSuite([
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)]
                 }),
-                attributes : {
-                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
-                },
                 id : 'polyline'
             });
             render3D(instance, undefined, appearance);
@@ -1364,9 +1390,6 @@ defineSuite([
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
                     colorsPerVertex : true
                 }),
-                attributes : {
-                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 1.0, 1.0)
-                },
                 id : 'polyline'
             });
             render3D(instance, undefined, appearance);
