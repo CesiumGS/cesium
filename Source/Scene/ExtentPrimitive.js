@@ -155,11 +155,11 @@ define([
          *
          * @type Boolean
          *
-         * @default true
+         * @default false
          *
          * @private
          */
-        this.asynchronous = defaultValue(options.asynchronous, true);
+        this.asynchronous = defaultValue(options.asynchronous, false);
 
         this._primitive = undefined;
     };
@@ -236,7 +236,7 @@ define([
      *
      * @memberof Extent
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see Extent#destroy
      */
@@ -254,7 +254,7 @@ define([
      *
      * @memberof Extent
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -347,7 +347,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @return {Boolean} true if this object was destroyed; otherwise, false.
+     * @returns {Boolean} true if this object was destroyed; otherwise, false.
      *
      * @see ImageryLayerCollection#destroy
      */
@@ -366,7 +366,7 @@ define([
      *
      * @memberof ImageryLayerCollection
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -275,8 +275,8 @@ define([
             }
 
             sampler = {
-                wrapS : TextureWrap.CLAMP,
-                wrapT : TextureWrap.CLAMP,
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
                 minificationFilter : minFilter,
                 magnificationFilter : magFilter,
                 maximumAnisotropy : 1.0
@@ -340,7 +340,7 @@ define([
      *
      * @memberof Texture
      *
-     * @return {Cartesian2} The dimensions of this texture.
+     * @returns {Cartesian2} The dimensions of this texture.
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
@@ -363,7 +363,7 @@ define([
      *
      * @memberof Texture
      *
-     * @return {Boolean} True if the source pixels are flipped vertically; otherwise, false.
+     * @returns {Boolean} True if the source pixels are flipped vertically; otherwise, false.
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      */
@@ -407,7 +407,7 @@ define([
      *
      * @memberof Texture
      *
-     * @return {Boolean} True if this object was destroyed; otherwise, false.
+     * @returns {Boolean} True if this object was destroyed; otherwise, false.
      *
      * @see Texture#destroy
      */
@@ -425,7 +425,7 @@ define([
      *
      * @memberof Texture
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      *

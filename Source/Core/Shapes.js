@@ -145,7 +145,7 @@ define([
          * @see Polyline#setPositions
          * @see Polygon#setPositions
          *
-         * @return The set of points that form the ellipse's boundary.
+         * @returns The set of points that form the ellipse's boundary.
          *
          * @example
          * // Create a filled ellipse.

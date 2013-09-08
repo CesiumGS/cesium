@@ -21,7 +21,7 @@ define([
      * @param {Cartesian2|Cartesian3} p1 The second point of the triangle.
      * @param {Cartesian2|Cartesian3} p2 The third point of the triangle.
      *
-     * @return {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the point is inside the triangle; otherwise, <code>false</code>.
      *
      * @exception {DeveloperError} point, p0, p1, and p2 are required.
      *

@@ -163,7 +163,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Boolean} DOC_TBA
+     * @returns {Boolean} DOC_TBA
      */
     CameraEventAggregator.prototype.isMoving = function() {
         return !this._update;
@@ -174,7 +174,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      */
     CameraEventAggregator.prototype.getMovement = function() {
         var movement = this._movement;
@@ -187,7 +187,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Object} DOC_TBA
+     * @returns {Object} DOC_TBA
      */
     CameraEventAggregator.prototype.getLastMovement = function() {
         return this._lastMovement;
@@ -198,7 +198,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Boolean} DOC_TBA
+     * @returns {Boolean} DOC_TBA
      *
      */
     CameraEventAggregator.prototype.isButtonDown = function() {
@@ -210,7 +210,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Date} DOC_TBA
+     * @returns {Date} DOC_TBA
      *
      */
     CameraEventAggregator.prototype.getButtonPressTime = function() {
@@ -222,7 +222,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Date} DOC_TBA
+     * @returns {Date} DOC_TBA
      *
      */
     CameraEventAggregator.prototype.getButtonReleaseTime = function() {
@@ -237,7 +237,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
      * @see CameraEventAggregator#destroy
      */
@@ -254,7 +254,7 @@ define([
      *
      * @memberof CameraEventAggregator
      *
-     * @return {undefined}
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

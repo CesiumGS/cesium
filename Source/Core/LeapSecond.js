@@ -91,7 +91,7 @@ define([
      *
      * @memberof LeapSecond
      *
-     * @return {Array} A list of {@link LeapSecond} objects.
+     * @returns {Array} A list of {@link LeapSecond} objects.
      *
      * @see LeapSecond.setLeapSeconds
      */
@@ -106,7 +106,7 @@ define([
      *
      * @param {LeapSecond} other The leap second to compare against.
      *
-     * @return {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
+     * @returns {Boolean} <code>true</code> if the leap seconds are equal; otherwise, <code>false</code>.
      *
      * @example
      * var date = new Date('January 1, 1990 00:00:00 UTC');
@@ -127,7 +127,7 @@ define([
      * @param {LeapSecond} leapSecond1 The first leap second to be compared.
      * @param {LeapSecond} leapSecond2 The second leap second to be compared.
      *
-     * @return {Number} A negative value if the first leap second is earlier than the second,
+     * @returns {Number} A negative value if the first leap second is earlier than the second,
      *                  a positive value if the first leap second is later than the second, or
      *                  zero if the two leap seconds are equal (ignoring their offsets).
      *
