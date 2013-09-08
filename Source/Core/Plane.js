@@ -1,10 +1,12 @@
 /*global define*/
 define([
         './Cartesian3',
+        './Cartesian4',
         './defined',
         './DeveloperError'
     ], function(
         Cartesian3,
+        Cartesian4,
         defined,
         DeveloperError) {
     "use strict";
@@ -89,7 +91,12 @@ define([
             throw new DeveloperError('normal is required.');
         }
 
-        var distance = -Cartesian3.dot(normal, point);
+        var distance;
+        if(point instanceof Cartesian4) {
+          distance = -Cartesian4.dot(normal, point);
+        } else {
+          distance = -Cartesian3.dot(normal, point);
+        }
 
         if (!defined(result)) {
             return new Plane(normal, distance);

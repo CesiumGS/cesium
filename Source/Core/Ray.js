@@ -2,11 +2,13 @@
 define([
         './DeveloperError',
         './defaultValue',
+        './Cartesian3',
         './Cartesian3'
        ], function(
          DeveloperError,
          defaultValue,
-         Cartesian3) {
+         Cartesian3,
+         Cartesian4) {
     "use strict";
 
     /**
@@ -43,7 +45,7 @@ define([
      * @memberof Ray
      *
      * @param {Number} t A scalar value.
-     * @param {Cartesian3} [result] The object in which the result will be stored.
+     * @param {Cartesian3/Cartesian4} [result] The object in which the result will be stored.
      * @returns The modified result parameter, or a new instance if none was provided.
      *
      * @exception {DeveloperError} t is a required number
@@ -57,8 +59,13 @@ define([
         if (typeof t !== 'number') {
             throw new DeveloperError('t is a required number');
         }
-        result = Cartesian3.multiplyByScalar(this.direction, t, result);
-        return Cartesian3.add(this.origin, result, result);
+        if(result instanceof Cartesian4) {
+          result = Cartesian4.multiplyByScalar(this.direction, t, result);
+          return Cartesian4.add(this.origin, result, result);
+        } else {
+          result = Cartesian3.multiplyByScalar(this.direction, t, result);
+          return Cartesian3.add(this.origin, result, result);
+        }
     };
 
     return Ray;
