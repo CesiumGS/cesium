@@ -206,8 +206,14 @@ define([
         return (suffixLength < strLength) && (str.indexOf(suffix, strLength - suffixLength) !== -1);
     }
 
+    function parseXML(xmlString) {
+        var parser = new DOMParser();
+        return parser.parseFromString(xmlString, "text/xml");
+    }
+
     function createOnLoadCallback(viewer, source) {
         var DataSource;
+        var parseFunction = JSON.parse;
         var sourceUpperCase = source.toUpperCase();
         if (endsWith(sourceUpperCase, ".CZML")) {
             DataSource = CzmlDataSource;
@@ -215,8 +221,9 @@ define([
         endsWith(sourceUpperCase, ".JSON") || //
         endsWith(sourceUpperCase, ".TOPOJSON")) {
             DataSource = GeoJsonDataSource;
-        } else if (endsWith(sourceUpperCase, ".KML")){
+        } else if (endsWith(sourceUpperCase, ".KML")) {
             DataSource = KmlDataSource;
+            parseFunction = parseXML;
         } else {
             viewer.onDropError.raiseEvent(viewer, source, 'Unrecognized file extension: ' + source);
             return undefined;
@@ -225,7 +232,7 @@ define([
         return function(evt) {
             var dataSource = new DataSource();
             try {
-                when(dataSource.load(JSON.parse(evt.target.result), source), function() {
+                when(dataSource.load(parseFunction(evt.target.result), source), function() {
                     viewer.dataSources.add(dataSource);
                 }, function(error) {
                     viewer.onDropError.raiseEvent(viewer, source, error);
