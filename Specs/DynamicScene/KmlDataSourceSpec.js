@@ -175,6 +175,7 @@ defineSuite(['DynamicScene/KmlDataSource',
     it('handles Point Geometry', function() {
         var position = new Cartographic(CesiumMath.toRadians(1), CesiumMath.toRadians(2), 3);
         var cartesianPosition = Ellipsoid.WGS84.cartographicToCartesian(position);
+        var time = new JulianDate();
         var pointKml = '<?xml version="1.0" encoding="UTF-8"?>\
             <kml xmlns="http://www.opengis.net/kml/2.2">\
             <Document>\
@@ -191,7 +192,7 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(1);
-        expect(objects[0].position.getValueCartesian()).toEqual(cartesianPosition);
+        expect(objects[0].position.getValue(time)).toEqual(cartesianPosition);
     });
 
     it('processPoint throws error with invalid coordinates', function() {
@@ -270,9 +271,10 @@ defineSuite(['DynamicScene/KmlDataSource',
         dataSource.load(parser.parseFromString(lineKml, "text/xml"));
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
+        var object = objects[0];
         expect(objects.length).toEqual(1);
-        expect(objects[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
-        expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
+        expect(object.vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(object.vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
     });
 
     it('processLineString throws error with invalid coordinates', function() {
@@ -306,6 +308,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         var material = new ColorMaterialProperty();
         material.color = new ConstantProperty(new Color(1.0, 1.0, 1.0, 1.0));
         polygon.material = material;
+        var time = new JulianDate();
         var polygonKml = '<?xml version="1.0" encoding="UTF-8"?>\
         <kml xmlns="http://www.opengis.net/kml/2.2">\
         <Placemark>\
@@ -332,7 +335,7 @@ defineSuite(['DynamicScene/KmlDataSource',
         expect(objects.length).toEqual(1);
         expect(dynamicObject.polygon).toBeDefined();
         for(var i = 0; i < coordinates.length; i++){
-            expect(dynamicObject.vertexPositions._value[i]).toEqual(coordinates[i]);
+            expect(dynamicObject.vertexPositions.getValue()[i]).toEqual(coordinates[i]);
         }
     });
 
@@ -440,10 +443,10 @@ defineSuite(['DynamicScene/KmlDataSource',
 
         var objects = dataSource.getDynamicObjectCollection().getObjects();
         expect(objects.length).toEqual(2);
-        expect(objects[0].vertexPositions._value[0]).toEqual(cartesianPosition1);
-        expect(objects[0].vertexPositions._value[1]).toEqual(cartesianPosition2);
-        expect(objects[1].vertexPositions._value[0]).toEqual(cartesianPosition3);
-        expect(objects[1].vertexPositions._value[1]).toEqual(cartesianPosition4);
+        expect(objects[0].vertexPositions.getValue()[0]).toEqual(cartesianPosition1);
+        expect(objects[0].vertexPositions.getValue()[1]).toEqual(cartesianPosition2);
+        expect(objects[1].vertexPositions.getValue()[0]).toEqual(cartesianPosition3);
+        expect(objects[1].vertexPositions.getValue()[1]).toEqual(cartesianPosition4);
     });
 
     it('handles MultiGeometry with style', function() {

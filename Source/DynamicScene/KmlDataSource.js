@@ -14,6 +14,7 @@ define(['../Core/createGuid',
         '../Core/JulianDate',
         '../Core/loadXML',
         './ConstantProperty',
+        './ConstantPositionProperty',
         './ColorMaterialProperty',
         './SampledPositionProperty',
         './DynamicClock',
@@ -42,6 +43,7 @@ define(['../Core/createGuid',
         JulianDate,
         loadXML,
         ConstantProperty,
+        ConstantPositionProperty,
         ColorMaterialProperty,
         SampledPositionProperty,
         DynamicClock,
@@ -55,23 +57,6 @@ define(['../Core/createGuid',
         when,
         Uri) {
     "use strict";
-
-    //Copied from GeoJsonDataSource
-    var ConstantPositionProperty = function(value) {
-        this._value = value;
-    };
-
-    ConstantPositionProperty.prototype.getValueCartesian = function(time, result) {
-        var value = this._value;
-        if (typeof value.clone === 'function') {
-            return value.clone(result);
-        }
-        return value;
-    };
-
-    ConstantPositionProperty.prototype.setValue = function(value) {
-        this._value = value;
-    };
 
     var scratch = new Cartographic();
 
@@ -187,7 +172,7 @@ define(['../Core/createGuid',
         var el = node.getElementsByTagName('coordinates');
         var coordinates = readCoordinates(el[0]);
 
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinates);
+        dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
 
     function processLinearRing(dataSource, dynamicObject, kml, node){
@@ -198,7 +183,7 @@ define(['../Core/createGuid',
         if (!equalCoordinateTuples(coordinates[0], coordinates[el.length -1])){
             throw new DeveloperError("The first and last coordinate tuples must be the same.");
         }
-        dynamicObject.vertexPositions = new ConstantPositionProperty(coordinates);
+        dynamicObject.vertexPositions = new ConstantProperty(coordinates);
     }
 
     function processPolygon(dataSource, dynamicObject, kml, node){
