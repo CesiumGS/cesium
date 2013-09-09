@@ -44,6 +44,16 @@ defineSuite([
         expect(target.show).toBe(show);
     });
 
+    it('clone works', function() {
+        var source = new DynamicPolygon();
+        source.material = new ColorMaterialProperty();
+        source.show = new ConstantProperty(true);
+
+        var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.show).toBe(source.show);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicPolygon();
         expect(function() {

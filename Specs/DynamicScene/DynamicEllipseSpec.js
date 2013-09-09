@@ -44,6 +44,18 @@ defineSuite([
         expect(target.bearing).toBe(bearing);
     });
 
+    it('clone works', function() {
+        var source = new DynamicEllipse();
+        source.semiMajorAxis = new ConstantProperty(1);
+        source.semiMinorAxis = new ConstantProperty(2);
+        source.bearing = new ConstantProperty(3);
+
+        var result = source.clone();
+        expect(result.semiMajorAxis).toBe(source.semiMajorAxis);
+        expect(result.semiMinorAxis).toBe(source.semiMinorAxis);
+        expect(result.bearing).toBe(source.bearing);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicEllipse();
         expect(function() {

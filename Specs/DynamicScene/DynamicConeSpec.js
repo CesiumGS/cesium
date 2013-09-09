@@ -111,6 +111,38 @@ defineSuite([
         expect(target.intersectionWidth).toBe(intersectionWidth);
     });
 
+    it('clone works', function() {
+        var source = new DynamicCone();
+        source.capMaterial = new ColorMaterialProperty();
+        source.innerMaterial = new ColorMaterialProperty();
+        source.silhouetteMaterial = new ColorMaterialProperty();
+        source.outerMaterial = new ColorMaterialProperty();
+        source.innerHalfAngle = new ConstantProperty(1);
+        source.maximumClockAngle = new ConstantProperty(1);
+        source.minimumClockAngle = new ConstantProperty(1);
+        source.outerHalfAngle = new ConstantProperty(1);
+        source.intersectionColor = new ConstantProperty(Color.WHITE);
+        source.radius = new ConstantProperty(1);
+        source.show = new ConstantProperty(true);
+        source.showIntersection = new ConstantProperty(true);
+        source.intersectionWidth = new ConstantProperty(1);
+
+        var result = source.clone();
+        expect(result.capMaterial).toBe(source.capMaterial);
+        expect(result.innerMaterial).toBe(source.innerMaterial);
+        expect(result.silhouetteMaterial).toBe(source.silhouetteMaterial);
+        expect(result.outerMaterial).toBe(source.outerMaterial);
+        expect(result.innerHalfAngle).toBe(source.innerHalfAngle);
+        expect(result.maximumClockAngle).toBe(source.maximumClockAngle);
+        expect(result.minimumClockAngle).toBe(source.minimumClockAngle);
+        expect(result.outerHalfAngle).toBe(source.outerHalfAngle);
+        expect(result.intersectionColor).toBe(source.intersectionColor);
+        expect(result.radius).toBe(source.radius);
+        expect(result.show).toBe(source.show);
+        expect(result.showIntersection).toBe(source.showIntersection);
+        expect(result.intersectionWidth).toBe(source.intersectionWidth);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicCone();
         expect(function() {

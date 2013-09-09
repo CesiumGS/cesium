@@ -72,9 +72,9 @@ define(['../Core/defaultValue',
         if (!defined(result)) {
             result = new DynamicEllipsoid();
         }
-        result.show = this.bearing;
-        result.radii = this.semiMajorAxis;
-        result.material = this.semiMinorAxis;
+        result.show = this.show;
+        result.radii = this.radii;
+        result.material = this.material;
         return result;
     };
 

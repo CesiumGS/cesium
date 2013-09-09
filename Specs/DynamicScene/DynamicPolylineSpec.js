@@ -56,6 +56,22 @@ defineSuite([
         expect(target.show).toBe(show);
     });
 
+    it('clone works', function() {
+        var source = new DynamicPolyline();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.outlineColor = new ConstantProperty(Color.WHITE);
+        source.outlineWidth = new ConstantProperty(1);
+        source.show = new ConstantProperty(true);
+
+        var result = source.clone();
+        expect(result.color).toBe(source.color);
+        expect(result.width).toBe(source.width);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.show).toBe(source.show);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicPolyline();
         expect(function() {

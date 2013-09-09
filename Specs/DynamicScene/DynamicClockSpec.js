@@ -70,6 +70,24 @@ defineSuite([
         expect(target.multiplier).toBe(multiplier);
     });
 
+    it('clone works', function() {
+        var source = new DynamicClock();
+        source.startTime = new JulianDate();
+        source.stopTime = new JulianDate();
+        source.currentTime = new JulianDate();
+        source.clockRange = ClockRange.CLAMPED;
+        source.clockStep = ClockStep.TICK_DEPENDENT;
+        source.multiplier = 1;
+
+        var result = source.clone();
+        expect(result.startTime).toBe(source.startTime);
+        expect(result.stopTime).toBe(source.stopTime);
+        expect(result.currentTime).toBe(source.currentTime);
+        expect(result.clockRange).toBe(source.clockRange);
+        expect(result.clockStep).toBe(source.clockStep);
+        expect(result.multiplier).toBe(source.multiplier);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicClock();
         expect(function() {

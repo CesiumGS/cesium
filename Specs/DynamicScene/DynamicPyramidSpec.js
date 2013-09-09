@@ -74,6 +74,26 @@ defineSuite([
         expect(target.intersectionWidth).toBe(intersectionWidth);
     });
 
+    it('clone works', function() {
+        var source = new DynamicPyramid();
+        source.material = new ColorMaterialProperty();
+        source.directions = new ConstantProperty([]);
+        source.intersectionColor = new ConstantProperty(Color.WHITE);
+        source.radius = new ConstantProperty(1);
+        source.show = new ConstantProperty(true);
+        source.showIntersection = new ConstantProperty(true);
+        source.intersectionWidth = new ConstantProperty(1);
+
+        var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.directions).toBe(source.directions);
+        expect(result.intersectionColor).toBe(source.intersectionColor);
+        expect(result.radius).toBe(source.radius);
+        expect(result.show).toBe(source.show);
+        expect(result.showIntersection).toBe(source.showIntersection);
+        expect(result.intersectionWidth).toBe(source.intersectionWidth);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicPyramid();
         expect(function() {

@@ -58,6 +58,22 @@ defineSuite([
         expect(target.show).toBe(show);
     });
 
+    it('clone works', function() {
+        var source = new DynamicVector();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.length = new ConstantProperty(2);
+        source.direction = new ConstantProperty(new Cartesian3(1, 0, 0));
+        source.show = new ConstantProperty(true);
+
+        var result = source.clone();
+        expect(result.color).toBe(source.color);
+        expect(result.width).toBe(source.width);
+        expect(result.length).toBe(source.length);
+        expect(result.direction).toBe(source.direction);
+        expect(result.show).toBe(source.show);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicVector();
         expect(function() {

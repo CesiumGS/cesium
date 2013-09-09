@@ -52,6 +52,18 @@ defineSuite([
         expect(target.show).toBe(show);
     });
 
+    it('clone works', function() {
+        var source = new DynamicEllipsoid();
+        source.material = new ColorMaterialProperty();
+        source.radii = new ConstantProperty(new Cartesian3());
+        source.show = new ConstantProperty(true);
+
+        var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.radii).toBe(source.radii);
+        expect(result.show).toBe(source.show);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicEllipsoid();
         expect(function() {

@@ -74,6 +74,28 @@ defineSuite([
         expect(target.resolution).toBe(resolution);
     });
 
+    it('clone works', function() {
+        var source = new DynamicPath();
+        source.color = new ConstantProperty(Color.WHITE);
+        source.width = new ConstantProperty(1);
+        source.outlineColor = new ConstantProperty(Color.WHITE);
+        source.outlineWidth = new ConstantProperty(1);
+        source.show = new ConstantProperty(true);
+        source.leadTime = new ConstantProperty(1);
+        source.trailTime = new ConstantProperty(1);
+        source.resolution = new ConstantProperty(1);
+
+        var result = source.clone();
+        expect(result.color).toBe(source.color);
+        expect(result.width).toBe(source.width);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.show).toBe(source.show);
+        expect(result.leadTime).toBe(source.leadTime);
+        expect(result.trailTime).toBe(source.trailTime);
+        expect(result.resolution).toBe(source.resolution);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicPath();
         expect(function() {

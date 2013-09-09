@@ -110,6 +110,36 @@ defineSuite([
         expect(target.show).toBe(show);
     });
 
+    it('clone works', function() {
+        var source = new DynamicLabel();
+        source.text = new ConstantProperty('not it');
+        source.font = new ConstantProperty('arial');
+        source.style = new ConstantProperty(LabelStyle.FILL);
+        source.fillColor = new ConstantProperty(Color.BLACK);
+        source.outlineColor = new ConstantProperty(Color.BLUE);
+        source.outlineWidth = new ConstantProperty(5);
+        source.horizontalOrigin = new ConstantProperty(HorizontalOrigin.LEFT);
+        source.verticalOrigin = new ConstantProperty(VerticalOrigin.BOTTOM);
+        source.eyeOffset = new ConstantProperty(Cartesian3.UNIT_Y);
+        source.pixelOffset = new ConstantProperty(Cartesian2.UNIT_X);
+        source.scale = new ConstantProperty(1);
+        source.show = new ConstantProperty(false);
+
+        var result = source.clone();
+        expect(result.text).toBe(source.text);
+        expect(result.font).toBe(source.font);
+        expect(result.style).toBe(source.style);
+        expect(result.fillColor).toBe(source.fillColor);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.horizontalOrigin).toBe(source.horizontalOrigin);
+        expect(result.verticalOrigin).toBe(source.verticalOrigin);
+        expect(result.eyeOffset).toBe(source.eyeOffset);
+        expect(result.pixelOffset).toBe(source.pixelOffset);
+        expect(result.scale).toBe(source.scale);
+        expect(result.show).toBe(source.show);
+    });
+
     it('merge throws if source undefined', function() {
         var target = new DynamicLabel();
         expect(function() {
