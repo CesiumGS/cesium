@@ -814,6 +814,71 @@ define([
         }
     };
 
+    function getTiltCV(controller) {
+        var camera = controller._camera;
+
+        // Math.acos(dot(camera.direction, Cartesian3.UNIT_Z.negate())
+        return CesiumMath.PI_OVER_TWO - Math.acos(-camera.direction.z);
+    }
+
+    var scratchTiltCartesian3 = new Cartesian3();
+
+    function getTilt3D(controller) {
+        var camera = controller._camera;
+
+        var direction = Cartesian3.normalize(camera.position, scratchTiltCartesian3);
+        Cartesian3.negate(direction, direction);
+
+        return CesiumMath.PI_OVER_TWO - Math.acos(Cartesian3.dot(camera.direction, direction));
+    }
+
+    /**
+     * Gets the camera tilt.
+     * @memberof CameraController
+     *
+     * @returns {Number} The camera tilt in radians.
+     */
+    CameraController.prototype.getTilt = function() {
+        if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            return getTiltCV(this);
+        } else if (this._mode === SceneMode.SCENE3D) {
+            return getTilt3D(this);
+        }
+    };
+
+    /**
+     * Sets the camera tilt.
+     * @memberof CameraController
+     *
+     * @param {Number} angle The tilt in radians.
+     *
+     * @exception {DeveloperError} angle is required.
+     */
+    CameraController.prototype.setTilt = function(angle) {
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+
+        if (this._mode === SceneMode.COLUMBUS_VIEW || this._mode === SceneMode.SCENE3D) {
+            var camera = this._camera;
+
+            angle = CesiumMath.clamp(angle, 0.0, CesiumMath.PI_OVER_TWO);
+
+            var tilt = this.getTilt();
+            angle = angle - tilt;
+
+            /*
+            if (tilt + angle > CesiumMath.PI_OVER_TWO) {
+                angle = tilt - CesiumMath.PI_OVER_TWO;
+            } else if (tilt + angle < 0.0) {
+                angle = -tilt;
+            }
+            */
+
+            this.look(camera.right, angle);
+        }
+    };
+
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.
