@@ -748,36 +748,50 @@ define([
         }
     };
 
-    function setHeading2D(controller, angle) {
+    function getHeading2D(controller) {
         var camera = controller._camera;
-
-        camera.right.x = Math.cos(angle);
-        camera.right.y = Math.sin(angle);
-
-        camera.up.x = -camera.right.y;
-        camera.up.y = camera.right.x;
+        return Math.atan2(camera.right.y, camera.right.x);
     }
 
-    var headingScratchQuaternion = new Quaternion();
-    var headingScratchMatrix3 = new Matrix3();
+    var scratchHeadingCartesian4 = new Cartesian4();
 
-    function setHeadingCV(controller, angle) {
+    function getHeading3D(controller) {
         var camera = controller._camera;
+        var z = Matrix4.multiplyByVector(camera.getViewMatrix(), Cartesian4.UNIT_Z, scratchHeadingCartesian4);
+        return CesiumMath.PI_OVER_TWO - Math.atan2(z.y, z.x);
+    }
 
-        var dot = Math.abs(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z));
-        if (CesiumMath.equalsEpsilon(dot, 1.0, CesiumMath.EPSILON6)) {
-            setHeading2D(controller, angle);
+    /**
+     * Gets the camera heading.
+     * @memberof CameraController
+     *
+     * @returns {Number} The camera heading in radians.
+     */
+    CameraController.prototype.getHeading = function() {
+        if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
+            return getHeading2D(this);
+        } else if (this._mode === SceneMode.SCENE3D) {
+            return getHeading3D(this);
         }
 
-        var rightAngle = Math.atan2(camera.right.y, camera.right.x);
+        return undefined;
+    };
+
+    function setHeading2D(controller, angle) {
+        var rightAngle = getHeading2D(controller);
         angle = rightAngle - angle;
+        controller.look(Cartesian3.UNIT_Z, angle);
+    }
 
-        var rotQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, angle, headingScratchQuaternion);
-        var rotMat = Matrix3.fromQuaternion(rotQuat, headingScratchMatrix3);
+    var scratchHeadingAxis = new Cartesian3();
 
-        Matrix3.multiplyByVector(rotMat, camera.direction, camera.direction);
-        Matrix3.multiplyByVector(rotMat, camera.up, camera.up);
-        Matrix3.multiplyByVector(rotMat, camera.right, camera.right);
+    function setHeading3D(controller, angle) {
+        var camera = controller._camera;
+
+        var axis = Cartesian3.normalize(camera.position, scratchHeadingAxis);
+        var upAngle = getHeading3D(controller);
+        angle = upAngle - angle;
+        controller.look(axis, angle);
     }
 
     /**
@@ -793,10 +807,10 @@ define([
             throw new DeveloperError('angle is required.');
         }
 
-        if (this._mode === SceneMode.SCENE2D) {
+        if (this._mode === SceneMode.SCENE2D || this._mode === SceneMode.COLUMBUS_VIEW) {
             setHeading2D(this, angle);
-        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
-            setHeadingCV(this, angle);
+        } else if (this._mode === SceneMode.SCENE3D) {
+            setHeading3D(this, angle);
         }
     };
 
