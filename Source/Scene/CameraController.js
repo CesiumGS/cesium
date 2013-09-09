@@ -748,6 +748,58 @@ define([
         }
     };
 
+    function setHeading2D(controller, angle) {
+        var camera = controller._camera;
+
+        camera.right.x = Math.cos(angle);
+        camera.right.y = Math.sin(angle);
+
+        camera.up.x = -camera.right.y;
+        camera.up.y = camera.right.x;
+    }
+
+    var headingScratchQuaternion = new Quaternion();
+    var headingScratchMatrix3 = new Matrix3();
+
+    function setHeadingCV(controller, angle) {
+        var camera = controller._camera;
+
+        var dot = Math.abs(Cartesian3.dot(camera.direction, Cartesian3.UNIT_Z));
+        if (CesiumMath.equalsEpsilon(dot, 1.0, CesiumMath.EPSILON6)) {
+            setHeading2D(controller, angle);
+        }
+
+        var rightAngle = Math.atan2(camera.right.y, camera.right.x);
+        angle = rightAngle - angle;
+
+        var rotQuat = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, angle, headingScratchQuaternion);
+        var rotMat = Matrix3.fromQuaternion(rotQuat, headingScratchMatrix3);
+
+        Matrix3.multiplyByVector(rotMat, camera.direction, camera.direction);
+        Matrix3.multiplyByVector(rotMat, camera.up, camera.up);
+        Matrix3.multiplyByVector(rotMat, camera.right, camera.right);
+    }
+
+    /**
+     * Sets the camera heading.
+     * @memberof CameraController
+     *
+     * @param {Number} angle The heading in radians.
+     *
+     * @exception {DeveloperError} angle is required.
+     */
+    CameraController.prototype.setHeading = function(angle) {
+        if (!defined(angle)) {
+            throw new DeveloperError('angle is required.');
+        }
+
+        if (this._mode === SceneMode.SCENE2D) {
+            setHeading2D(this, angle);
+        } else if (this._mode === SceneMode.COLUMBUS_VIEW) {
+            setHeadingCV(this, angle);
+        }
+    };
+
     /**
      * Sets the camera position and orientation with an eye position, target, and up vector.
      * This method is not supported in 2D mode because there is only one direction to look.
