@@ -230,7 +230,7 @@ define(['../Core/defined',
      * @returns {Boolean} true if the composite contains the collection, false otherwise.
      */
     CompositeDynamicObjectCollection.prototype.containsCollection = function(collection) {
-        return this.indexOf(collection) !== -1;
+        return this._collections.indexOf(collection) !== -1;
     };
 
     /**

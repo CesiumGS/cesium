@@ -45,6 +45,86 @@ defineSuite([
         expect(composite.getObjects().length).toEqual(0);
     });
 
+    it('addCollection/removeCollection works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
+
+        var composite = new CompositeDynamicObjectCollection();
+        composite.addCollection(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection2);
+        expect(composite.getCollectionsLength()).toEqual(2);
+
+        expect(composite.removeCollection(dynamicObjectCollection)).toEqual(true);
+        expect(composite.removeCollection(dynamicObjectCollection2)).toEqual(true);
+        expect(composite.getCollectionsLength()).toEqual(0);
+
+        expect(composite.removeCollection(dynamicObjectCollection)).toEqual(false);
+    });
+
+    it('containsCollection works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+
+        expect(composite.containsCollection(dynamicObjectCollection)).toEqual(false);
+        composite.addCollection(dynamicObjectCollection);
+        expect(composite.containsCollection(dynamicObjectCollection)).toEqual(true);
+    });
+
+    it('indexOfCollection works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+
+        expect(composite.indexOfCollection(dynamicObjectCollection)).toEqual(-1);
+
+        composite.addCollection(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection2);
+
+        expect(composite.indexOfCollection(dynamicObjectCollection)).toEqual(0);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(1);
+
+        composite.removeCollection(dynamicObjectCollection);
+
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+    });
+
+    it('getCollection works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+
+        composite.addCollection(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection2);
+
+        expect(composite.getCollection(0)).toBe(dynamicObjectCollection);
+        expect(composite.getCollection(1)).toBe(dynamicObjectCollection2);
+        expect(composite.getCollection(2)).toBeUndefined();
+    });
+
+    it('raise/lower collection works', function() {
+        var dynamicObjectCollection = new DynamicObjectCollection();
+        var dynamicObjectCollection2 = new DynamicObjectCollection();
+        var dynamicObjectCollection3 = new DynamicObjectCollection();
+        var composite = new CompositeDynamicObjectCollection();
+
+        composite.addCollection(dynamicObjectCollection);
+        composite.addCollection(dynamicObjectCollection2);
+        composite.addCollection(dynamicObjectCollection3);
+
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(1);
+        composite.raiseCollection(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(2);
+        composite.lowerCollection(dynamicObjectCollection2);
+        composite.lowerCollection(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+        composite.lowerCollection(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+        composite.raiseCollectionToTop(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(2);
+        composite.lowerCollectionToBottom(dynamicObjectCollection2);
+        expect(composite.indexOfCollection(dynamicObjectCollection2)).toEqual(0);
+    });
+
     it('add/remove works', function() {
         var dynamicObject = new DynamicObject();
         var dynamicObject2 = new DynamicObject();
@@ -143,7 +223,7 @@ defineSuite([
         composite.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
-    it('removeAll collections works', function() {
+    it('removeAllCollections works', function() {
         var dynamicObject = new DynamicObject();
         var dynamicObject2 = new DynamicObject();
         var dynamicObjectCollection = new DynamicObjectCollection();
@@ -156,7 +236,7 @@ defineSuite([
         expect(composite.getObjects().length).toEqual(0);
     });
 
-    it('removeAll raises expected events', function() {
+    it('removeAllCollections raises expected events', function() {
         var dynamicObject = new DynamicObject();
         var dynamicObject2 = new DynamicObject();
         var dynamicObjectCollection = new DynamicObjectCollection();
@@ -182,7 +262,7 @@ defineSuite([
         composite.collectionChanged.removeEventListener(listener.onCollectionChanged, listener);
     });
 
-    it('suspended removeAll raises expected events', function() {
+    it('suspended removeAllCollections raises expected events', function() {
         var dynamicObject = new DynamicObject();
         var dynamicObject2 = new DynamicObject();
         var dynamicObjectCollection = new DynamicObjectCollection();
@@ -331,7 +411,7 @@ defineSuite([
         expect(compositeObject.viewFrom).toBe(dynamicObject3.viewFrom);
     });
 
-    it('fine property compositing works', function() {
+    it('sub-property compositing works', function() {
         var id = 'test';
         var collection1 = new DynamicObjectCollection();
         var dynamicObject1 = new DynamicObject(id);
