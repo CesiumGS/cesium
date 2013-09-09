@@ -41,7 +41,7 @@ define([
      *
      * @param {Array} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Number} [options.width=1.0] The width in pixels.
-     * @param {Array} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
+     * @param {Array} [options.colors=undefined] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -187,9 +187,9 @@ define([
             }
 
             for (k = startK; k < endK; ++k) {
-                Cartesian3.writeElements(scratchPosition, finalPositions, positionIndex);
-                Cartesian3.writeElements(scratchPrevPosition, prevPositions, positionIndex);
-                Cartesian3.writeElements(scratchNextPosition, nextPositions, positionIndex);
+                Cartesian3.pack(scratchPosition, finalPositions, positionIndex);
+                Cartesian3.pack(scratchPrevPosition, prevPositions, positionIndex);
+                Cartesian3.pack(scratchNextPosition, nextPositions, positionIndex);
                 positionIndex += 3;
 
                 var direction = (k - 2 < 0) ? -1.0 : 1.0;

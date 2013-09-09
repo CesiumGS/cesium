@@ -118,40 +118,6 @@ define([
     };
 
     /**
-     * Writes the provided <code>cartesian</code> components to an array, i.e. <code>[cartesian.x, cartesian.y, cartesian.z]</code>.
-     *
-     * @param {Cartesian3} cartesian The cartesian to write.
-     * @param {Array} cartesianArray The array to write to.
-     * @param {Number} index The index into the array to start writing. Three elements will be written.
-     *
-     * @exception {DeveloperError} cartesian is required.
-     * @exception {DeveloperError} cartesianArray is required.
-     * @exception {DeveloperError} index must be a number greater than or equal to 0.
-     * @exception {DeveloperError} index + 3 is greater than the length of the array.
-     */
-    Cartesian3.writeElements = function(cartesian, cartesianArray, index) {
-        if (!defined(cartesian)) {
-            throw new DeveloperError('cartesian is required');
-        }
-
-        if (!defined(cartesianArray)) {
-            throw new DeveloperError('cartesianArray is required');
-        }
-
-        if (typeof index !== 'number' || index < 0) {
-            throw new DeveloperError('index must be a number greater than or equal to 0.');
-        }
-
-        if (index + 3 > cartesianArray.length) {
-            throw new DeveloperError('index + 3 is greater than the length of the array.');
-        }
-
-        cartesianArray[index] = cartesian.x;
-        cartesianArray[index + 1] = cartesian.y;
-        cartesianArray[index + 2] = cartesian.z;
-    };
-
-    /**
      * Creates a Cartesian3 instance from x, y and z coordinates.
      * @memberof Cartesian3
      *
