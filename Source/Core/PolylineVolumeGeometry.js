@@ -45,8 +45,7 @@ define([
         WindingOrder) {
     "use strict";
 
-
-        function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
+    function computeAttributes(combinedPositions, shape, boundingRectangle, vertexFormat, ellipsoid) {
         var attributes = new GeometryAttributes();
         if (vertexFormat.position) {
             attributes.position = new GeometryAttribute({
@@ -198,7 +197,7 @@ define([
      *     return positions;
      * }
      *
-     * var tube = new PolylineVolumeGeometry({
+     * var volume = new PolylineVolumeGeometry({
      *     vertexFormat : VertexFormat.POSITION_ONLY,
      *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),

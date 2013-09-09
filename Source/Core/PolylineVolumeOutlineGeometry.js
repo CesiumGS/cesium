@@ -105,7 +105,6 @@ define([
      * @param {Number} options.shapePositions An array of {Cartesian2} positions that define the shape to be extruded along the polyline
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
-     * @param {Number} [options.height=0] The distance between the ellipsoid surface and the positions.
      * @param {Boolean} [options.cornerType = CornerType.ROUNDED] Determines the style of the corners.
      *
      * @exception {DeveloperError} options.positions is required.
@@ -124,7 +123,7 @@ define([
      *     return positions;
      * }
      *
-     * var tubeOutline = new PolylineVolumeOutlineGeometry({
+     * var volumeOutline = new PolylineVolumeOutlineGeometry({
      *     polylinePositions : ellipsoid.cartographicArrayToCartesianArray([
      *         Cartographic.fromDegrees(-72.0, 40.0),
      *         Cartographic.fromDegrees(-70.0, 35.0)
@@ -146,7 +145,6 @@ define([
         this._positions = positions;
         this._shape = shape;
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        this._height = defaultValue(options.height, 0);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._workerName = 'createPolylineVolumeOutlineGeometry';
