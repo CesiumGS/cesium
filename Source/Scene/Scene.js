@@ -676,7 +676,7 @@ define([
             scene._sunBloom = scene.sunBloom;
         } else if (!defined(scene.sun) && defined(scene._sunPostProcess)) {
             scene._sunPostProcess = scene._sunPostProcess.destroy();
-            scene._sunBloom = undefined;
+            scene._sunBloom = false;
         }
 
         var skyBoxCommand = (frameState.passes.color && defined(scene.skyBox)) ? scene.skyBox.update(context, frameState) : undefined;

@@ -86,7 +86,7 @@ define([
         this._size = undefined;
 
         this.glowFactor = 1.0;
-        this._glowFactorChanged = false;
+        this._glowFactorDirty = false;
 
         var that = this;
         this._uniformMap = {
@@ -114,7 +114,7 @@ define([
             set : function (glowFactor) {
                 glowFactor = Math.max(glowFactor, 0.0);
                 this._glowFactor = glowFactor;
-                this._glowFactorChanged = true;
+                this._glowFactorDirty = true;
             }
         }
     });
@@ -193,13 +193,13 @@ define([
 
         var canvasDimensions = frameState.canvasDimensions;
 
-        if (!defined(this._texture) || !Cartesian2.equals(canvasDimensions, this._dimensions) || this._glowFactorChanged) {
+        if (!defined(this._texture) || !Cartesian2.equals(canvasDimensions, this._dimensions) || this._glowFactorDirty) {
             this._texture = this._texture && this._texture.destroy();
             this._dimensions = Cartesian2.clone(canvasDimensions, this._dimensions);
-            this._glowFactorChanged = false;
+            this._glowFactorDirty = false;
 
             var size = Math.max(canvasDimensions.x, canvasDimensions.y);
-            size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2)) - 2);
+            size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
 
             this._texture = context.createTexture2D({
                 width : size,
