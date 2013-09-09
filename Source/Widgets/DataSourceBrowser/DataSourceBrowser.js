@@ -107,6 +107,7 @@ click: function($data) { $parent.dataSourcePanelViewModel.visible = true; $paren
         dataSourceOptions.appendChild(dataSourceOption);
 
         var activeDataSourcePanelContainer = document.createElement('div');
+        activeDataSourcePanelContainer.className = 'cesium-dataSourceBrowser-activeDataSourcePanelContainer';
         activeDataSourcePanelContainer.setAttribute('data-bind', '\
 template : { if: activeDataSourcePanel,\
              name: activeDataSourcePanel && activeDataSourcePanel.templateID,\

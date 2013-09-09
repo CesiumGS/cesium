@@ -47,6 +47,13 @@
     margin-top: 5px;
     text-align: right;
 }
+
+.cesium-dataSourceBrowser-activeDataSourcePanelContainer {
+    max-height: 420px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
 .cesium-dataSourceBrowser-dataSourcesContainer,.cesium-dataSourceBrowser-dataSourcePanelContainer {
     background-color: rgba(38, 38, 38, 0.75);
     padding: 6px;
