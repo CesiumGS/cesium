@@ -425,9 +425,10 @@ define([
                         minFilter = sampler.minFilter;
                     }
 
+                    // Can't mipmap, REPEAT, or MIRRORED_REPEAT NPOT texture.
                     sampler.extra.czmSamplerWithoutMipmaps = context.createSampler({
-                        wrapS : TextureWrap[sampler.wrapS],
-                        wrapT : TextureWrap[sampler.wrapT],
+                        wrapS : TextureWrap.CLAMP,
+                        wrapT : TextureWrap.CLAMP,
                         minificationFilter : TextureMinificationFilter[minFilter],
                         magnificationFilter : TextureMagnificationFilter[sampler.magFilter]
                     });
